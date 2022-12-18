@@ -5,6 +5,8 @@ import Footer from "./components/footer/Footer";
 import {Route, Routes} from "react-router-dom";
 import {Registration} from "./pages/registration/Registration";
 import {Login} from "./pages/login/Login";
+import ProductPage from "./pages/productPage/ProductPage";
+
 
 function App() {
     return (
@@ -15,6 +17,7 @@ function App() {
                 <Route path={"/"} element={<Main/>}/>
                 <Route path={"/login"} element={<Login/>}/>
                 <Route path={"/registration"} element={<Registration/>}/>
+                <Route path={"/oneProd"} element={<ProductPage/>}/>
             </Routes>
 
             <Footer/>

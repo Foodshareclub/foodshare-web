@@ -1,0 +1,33 @@
+.root {
+  //height: 70%;
+  margin: 0 2%;
+
+  & .block {
+    display: flex;
+    justify-content: space-between;
+    margin: 10% 10%;
+
+    & .img img {
+      width: 80%;
+    }
+
+    & .aboutProd {
+      width: 40%;
+      margin: 2%;
+      line-height: 25px;
+      font-weight: 400;
+      align-self: center;
+    }
+  }
+
+  & .otherFood {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px 0;
+    margin: 10px auto;
+    background: #FFFFFF;
+    border: 1px solid #55BCB2;
+    border-radius: 14px;
+  }
+}
