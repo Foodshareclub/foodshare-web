@@ -17,6 +17,7 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import MailIcon from '@mui/icons-material/Mail';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import MoreIcon from '@mui/icons-material/MoreVert';
+import {useNavigate} from "react-router-dom";
 
 const Search = styled('div')(({theme}) => ({
     position: 'relative',
@@ -60,6 +61,8 @@ const StyledInputBase = styled(InputBase)(({theme}) => ({
 }));
 
 export default function NavComponent() {
+    const navigate = useNavigate();
+
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [mobileMoreAnchorEl, setMobileMoreAnchorEl] =
         React.useState<null | HTMLElement>(null);
@@ -84,6 +87,16 @@ export default function NavComponent() {
         setMobileMoreAnchorEl(event.currentTarget);
     };
 
+    const navigateToLogin = () => {
+        navigate('/login')
+    }
+    const navigateToRegistration = () => {
+        navigate('/registration')
+    }
+    const navigateToMain = () => {
+        navigate('/')
+    }
+
     const menuId = 'primary-search-account-menu';
     const renderMenu = (
         <Menu
@@ -101,8 +114,14 @@ export default function NavComponent() {
             open={isMenuOpen}
             onClose={handleMenuClose}
         >
-            <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-            <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+            <MenuItem onClick={() => {
+                handleMenuClose();
+                navigateToLogin()
+            }}>Login</MenuItem>
+            <MenuItem onClick={() => {
+                handleMenuClose();
+                navigateToMain()
+            }}>Registration</MenuItem>
         </Menu>
     );
 
@@ -168,8 +187,8 @@ export default function NavComponent() {
                         variant="h6"
                         noWrap
                         component="div"
-
-                        sx={{display: {xs: 'none', sm: 'block'}, fontSize: "25px", color: "#FF2D55", fontWeight: "900"}}
+                        onClick={navigateToMain}
+                        sx={{display: {xs: 'none', sm: 'block'}, cursor: "pointer", fontSize: "25px", color: "#FF2D55", fontWeight: "900"}}
                     >
                         FOODSHARE
                     </Typography>
