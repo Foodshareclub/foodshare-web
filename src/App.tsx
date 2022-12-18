@@ -10,7 +10,7 @@ import ProductPage from "./pages/productPage/ProductPage";
 
 function App() {
     return (
-        <div style={{height: "100vh", margin: "0 5%"}}>
+        <div style={{ margin: "0 5%"}}>
 
             <Header/>
             <Routes>

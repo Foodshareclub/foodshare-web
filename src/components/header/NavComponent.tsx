@@ -120,7 +120,7 @@ export default function NavComponent() {
             }}>Login</MenuItem>
             <MenuItem onClick={() => {
                 handleMenuClose();
-                navigateToMain()
+                navigateToRegistration()
             }}>Registration</MenuItem>
         </Menu>
     );

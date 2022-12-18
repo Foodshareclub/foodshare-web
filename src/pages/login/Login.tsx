@@ -41,11 +41,11 @@ export const Login = () => {
 
     return (
         <>
-            {!isAuth &&
-                <Snackbar open anchorOrigin={{vertical: "bottom", horizontal: "center"}}
-                          // message={"some text"}
-                />
-            }
+            {/*{!isAuth &&*/}
+            {/*    <Snackbar open anchorOrigin={{vertical: "bottom", horizontal: "center"}}*/}
+            {/*              // message={"some text"}*/}
+            {/*    />*/}
+            {/*}*/}
             <Paper classes={{root: styles.root}}>
                 <Typography classes={{root: styles.title}} variant="h5">
                     Log In

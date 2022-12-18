@@ -6,6 +6,8 @@ import Grid from '@mui/material/Grid';
 import {supabase} from "../../supaBase.config";
 import {Button} from "@mui/material";
 import burger from "../../assets/burgers.png";
+import {mockArray} from "../../utils/mockArray";
+import {useNavigate} from "react-router-dom";
 
 const Item = styled(Paper)(({theme}) => ({
     backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
@@ -16,49 +18,39 @@ const Item = styled(Paper)(({theme}) => ({
 }));
 
 export default function Main() {
-    async function getCities() {
-        const countries = await supabase.from('subway_stations').insert({
 
-            name: "testmogilev",
-            created_at: new Date,
-
-        })
-        console.log(countries)
-    }
-
-    async function getCity() {
-        const countries = await supabase.from('subway_stations').select("*")
-        console.log(countries)
-    }
-
-
+    const navigate = useNavigate();
     return (
         <Box sx={{flexGrow: 1, height: "70%"}}>
             <Grid container spacing={3} sx={{margin: "0", width: "98%"}}>
-                <Grid item xs={4}>
-                    <div style={{fontWeight: "700", fontSize: "16px", textAlign: "center", margin: "0 2%"}}>
-                        <img src={burger} alt="soup"/>
-                        <div style={{margin: "2% 8%"}}>
-                            <div style={{display: 'flex', justifyContent: "space-between"}}>
-                                <div style={{fontWeight: "700", fontSize: "16px"}}>Address:</div>
-                                <div style={{fontWeight: "400"}}>Partizanskaya street</div>
-                            </div>
-                            <div style={{display: 'flex', justifyContent: "space-between"}}>
-                                <div style={{fontWeight: "700", fontSize: "16px"}}>Available:</div>
-                                <div style={{fontWeight: "400"}}> 4 - 6 pm</div>
-                            </div>
-                            <div style={{display: 'flex', justifyContent: "space-between"}}>
-                                <div style={{fontWeight: "700", fontSize: "16px"}}>Quantity:</div>
-                                <div style={{fontWeight: "400"}}> 5</div>
-                            </div>
-                            <div style={{display: 'flex', justifyContent: "space-between"}}>
-                                <div style={{fontWeight: "700", fontSize: "16px"}}>Food type:</div>
-                                <div style={{fontWeight: "400"}}>Canned food</div>
-                            </div>
-                        </div>
+                {mockArray.map((item, id) => (
+                    <Grid item xs={4}>
+                        <div style={{fontWeight: "700", fontSize: "16px", textAlign: "center", margin: "0 2%"}}>
+                            <img style={{cursor:"pointer"}} onClick={() => navigate("/oneProd")} src={item.img} alt="soup"/>
+                            <div style={{margin: "2% 8%"}}>
+                                <div style={{display: 'flex', justifyContent: "space-between"}}>
+                                    <div style={{fontWeight: "700", fontSize: "16px"}}>Name:</div>
+                                    <div style={{fontWeight: "400"}}>{item.name}</div>
+                                </div>
+                                <div style={{display: 'flex', justifyContent: "space-between"}}>
+                                    <div style={{fontWeight: "700", fontSize: "16px"}}>Distance:</div>
+                                    <div style={{fontWeight: "400"}}>{item.distance}</div>
+                                </div>
+                                <div style={{display: 'flex', justifyContent: "space-between"}}>
+                                    <div style={{fontWeight: "700", fontSize: "16px"}}>Available:</div>
+                                    <div style={{fontWeight: "400"}}>{item.available_time}</div>
+                                </div>
 
-                    </div>
-                </Grid>
+                                <div style={{display: 'flex', justifyContent: "space-between"}}>
+                                    <div style={{fontWeight: "700", fontSize: "16px"}}>About:</div>
+                                    <div style={{fontWeight: "400"}}>{item.description}</div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </Grid>
+                ))}
+
             </Grid>
         </Box>
     );
