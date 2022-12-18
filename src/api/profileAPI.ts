@@ -42,12 +42,6 @@ export const profileAPI = {
     },
     logOut() {
         return instance.delete<ResponseType>('auth/me');
-    },
-    authMe() {
-        return instance.post<ResponseType>('auth/me', {});
-    },
-    updateMe(payLoad: PayLoadType) {
-        return instance.put<UpdatedUserResponseType>('auth/me', {...payLoad});
     }
 };
 

@@ -33,10 +33,10 @@ export const Registration = () => {
     });
     const onSubmit = async (value: AuthPayload) => {
         const data = await dispatch(registerTC(value));
-        console.log(data)
-        if (!data.payload) {
-            alert("Не удалось зарегистрироваться...");
-        }
+        // console.log(data)
+        // if (!data.payload) {
+        //     alert("Не удалось зарегистрироваться...");
+        // }
         // if ("token" in data.payload) {
         //   localStorage.setItem("token", data.payload.token);
         // } else {
@@ -60,7 +60,7 @@ export const Registration = () => {
                     error={Boolean(errors.fullName?.message)}
                     helperText={errors.fullName?.message}
                     {...register("fullName", {required: "Enter name"})}
-                    className={styles.field}
+                    //className={styles.field}
                     label="Full name"
                     fullWidth
                 />
@@ -69,7 +69,7 @@ export const Registration = () => {
                     error={Boolean(errors.email?.message)}
                     helperText={errors.email?.message}
                     {...register("email", {required: "Enter email"})}
-                    className={styles.field}
+                    //className={styles.field}
                     label="E-Mail"
                     fullWidth
                 />
@@ -78,7 +78,7 @@ export const Registration = () => {
                     error={Boolean(errors.password?.message)}
                     helperText={errors.password?.message}
                     {...register("password", {required: "Enter password"})}
-                    className={styles.field}
+                    //className={styles.field}
                     label="Password"
                     fullWidth
                 />
