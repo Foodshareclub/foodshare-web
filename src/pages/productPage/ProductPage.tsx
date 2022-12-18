@@ -6,12 +6,15 @@ import pizza from "../../assets/pizza.png";
 import macaroon from "../../assets/macaroons.png";
 import likes from "../../assets/likes.svg";
 import {Button, Rating} from "@mui/material";
+import {useLocation} from "react-router-dom";
 
 const ProductPage = () => {
+    const {photo} = useLocation().state;
+
     return (
         <div className={styles.root}>
             <div className={styles.block}>
-                <div className={styles.img}><img src={soup} alt="soup"/></div>
+                <div className={styles.img}><img src={photo} alt="soup"/></div>
                 <div className={styles.aboutProd}>
                     <div style={{fontWeight: "700", fontSize: "22px", lineHeight: "32px"}}>ProductsUserName</div>
                     <div><img src={likes} alt="likes"/> : 5likes</div>
@@ -48,7 +51,7 @@ const ProductPage = () => {
             <div className={styles.block}>
                 <div>
                     <div style={{fontWeight: "700", fontSize: "16px"}}>Location</div>
-                    <iframe style={{border: "none",width:"450px",height:"90%"}}
+                    <iframe style={{border: "none", width: "450px", height: "90%"}}
                             src="https://www.google.com/maps/embed?pb=!1m10!1m8!1m3!1d27766.322249807687!2d30.4071148!3d53.9770381!3m2!1i1024!2i768!4f13.1!5e1!3m2!1sru!2sby!4v1671362093372!5m2!1sru!2sby"
                             loading="lazy"
                             referrerPolicy="no-referrer-when-downgrade"></iframe>

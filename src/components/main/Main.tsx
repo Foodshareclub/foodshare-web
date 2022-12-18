@@ -24,9 +24,9 @@ export default function Main() {
         <Box sx={{flexGrow: 1, height: "70%"}}>
             <Grid container spacing={3} sx={{margin: "0", width: "98%"}}>
                 {mockArray.map((item, id) => (
-                    <Grid item xs={4}>
+                    <Grid key={id} item xs={4}>
                         <div style={{fontWeight: "700", fontSize: "16px", textAlign: "center", margin: "0 2%"}}>
-                            <img style={{cursor:"pointer"}} onClick={() => navigate("/oneProd")} src={item.img} alt="soup"/>
+                            <img style={{cursor:"pointer"}} onClick={() => navigate("/oneProd",{state:{photo:item.img}})} src={item.img} alt="soup"/>
                             <div style={{margin: "2% 8%"}}>
                                 <div style={{display: 'flex', justifyContent: "space-between"}}>
                                     <div style={{fontWeight: "700", fontSize: "16px"}}>Name:</div>
