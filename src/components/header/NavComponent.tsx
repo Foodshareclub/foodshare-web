@@ -1,4 +1,5 @@
 import logo from "../../assets/newLogo.svg";
+import straw from "../../assets/straw.svg";
 import filters from "../../assets/filters.svg";
 import * as React from 'react';
 import {styled, alpha} from '@mui/material/styles';
@@ -182,7 +183,7 @@ export default function NavComponent() {
         <Box sx={{flexGrow: 1, height: "40%"}}>
             <AppBar position="static" sx={{backgroundColor: "#ffff"}}>
                 <Toolbar>
-                    <img style={{margin: "0", marginRight: "1%", padding: "0"}} src={logo} alt="logo"/>
+                    <img style={{margin: "0", marginRight: "1%", padding: "0",width:"20px"}} src={straw} alt="logo"/>
                     <Typography
                         variant="h6"
                         noWrap
