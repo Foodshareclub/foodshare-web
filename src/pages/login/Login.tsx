@@ -26,7 +26,7 @@ export const Login = () => {
     const onSubmit = async (values: AuthPayload) => {
         const data = await dispatch(loginTC(values));
         if (!data.payload) {
-          alert("Не удалось авторизироваться...");
+            alert("Не удалось авторизироваться...");
         }
         // if (localStorage.getItem("token") || "token" in data.payload) {
         //   window.localStorage.setItem("token", data.payload.token);
@@ -43,7 +43,8 @@ export const Login = () => {
         <>
             {!isAuth &&
                 <Snackbar open anchorOrigin={{vertical: "bottom", horizontal: "center"}}
-                          message={"some text"}/>
+                          // message={"some text"}
+                />
             }
             <Paper classes={{root: styles.root}}>
                 <Typography classes={{root: styles.title}} variant="h5">
@@ -56,15 +57,15 @@ export const Login = () => {
                         label="E-Mail"
                         error={Boolean(errors.email?.message)}
                         helperText={errors.email?.message}
-                        {...register("email", {required: "Укажите почту"})}
+                        {...register("email", {required: "Enter email"})}
                         fullWidth
                     />
                     <CssTextField
                         variant="filled"
-                        {...register("password", {required: "Укажите пароль"})}
+                        {...register("password", {required: "Enter password"})}
                         error={Boolean(errors.password?.message)}
                         helperText={errors.password?.message} className={styles.field}
-                        label="Пароль"
+                        label="Password"
                         fullWidth/>
 
                     <button type="submit" disabled={!isValid} className={!isValid ? styles.disable : styles.enable}>

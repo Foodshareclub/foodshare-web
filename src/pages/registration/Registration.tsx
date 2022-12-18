@@ -3,7 +3,7 @@ import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
 import Avatar from "@mui/material/Avatar";
 import {useForm} from "react-hook-form";
-import styles from "../Login/Login.module.scss";
+import styles from "../login/Login.module.scss";
 import {useNavigate} from "react-router-dom";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 
