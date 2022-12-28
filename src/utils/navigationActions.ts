@@ -1,63 +1,81 @@
 import food from "../assets/food.svg";
+import foodRed from "../assets/foodRed.svg";
 import things from "../assets/things.svg";
+import thingsRed from "../assets/thingsRed.svg";
 import borrow from "../assets/borrow.svg";
+import borrowRed from "../assets/borrowRed.svg";
 import wanted from "../assets/wanted.svg";
+import wantedRed from "../assets/wantedRed.svg";
 import foodBanks from "../assets/foodBanks.svg";
+import foodBanksRed from "../assets/foodBanksRed.svg";
 import fridges from "../assets/fridges.svg";
+import fridgesRed from "../assets/fridgesRed.svg";
 import business from "../assets/business.svg";
+import businessRed from "../assets/businessRed.svg";
 import volunteer from "../assets/volunteer.svg";
+import volunteerRed from "../assets/volunteerRed.svg";
 import challenges from "../assets/challenges.svg";
+import challengesRed from "../assets/challengesRed.svg";
 import community from "../assets/community.svg";
-import map from "../assets/map.svg";
+import communityRed from "../assets/communityRed.svg";
+import map from "../assets/mapGray.svg";
+import mapRed from "../assets/mapRed.svg";
 
-type NavigationActionsT = {
-    name: string,
-    src: string
-}
 
-export const navigationActions: Array<NavigationActionsT> = [
+export const navigationActionsSVG = [
     {
         name: 'Food',
-        src: food
+        src: food,
+        red:foodRed
     },
     {
         name: 'Things',
-        src: things
+        src: things,
+        red:thingsRed
     },
     {
         name: 'Borrow',
-        src: borrow
+        src: borrow,
+        red:borrowRed
     },
     {
         name: 'Wanted',
-        src: wanted
+        src: wanted,
+        red:wantedRed
     },
     {
         name: 'FoodBanks',
-        src: foodBanks
+        src: foodBanks,
+        red:foodBanksRed
     },
     {
         name: 'Fridges',
-        src: fridges
+        src: fridges,
+        red:fridgesRed
     },
     {
         name: 'Business',
-        src: business
+        src: business,
+        red:businessRed
     },
     {
         name: 'Volunteer',
-        src: volunteer
+        src: volunteer,
+        red:volunteerRed
     },
     {
         name: 'Challenges',
-        src: challenges
+        src: challenges,
+        red:challengesRed
     },
     {
         name: 'Community',
-        src: community
+        src: community,
+        red:communityRed
     },
     {
         name: 'Map',
-        src: map
+        src: map,
+        red:mapRed
     }
 ]

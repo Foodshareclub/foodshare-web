@@ -6,22 +6,28 @@ import {Route, Routes} from "react-router-dom";
 import {Registration} from "./pages/registration/Registration";
 import {Login} from "./pages/login/Login";
 import ProductPage from "./pages/productPage/ProductPage";
+import {Card, CardBody} from "@chakra-ui/react";
+import AboutUsPage from "./pages/aboutUs/AboutUsPage";
+import ContactUsPage from "./pages/contactUs/ContactUsPage";
 
 
 function App() {
     return (
-        <div style={{ margin: "0 5%"}}>
-
+        <Card size={"lg"} height={"100%"}>
             <Header/>
-            <Routes>
-                <Route path={"/"} element={<Main/>}/>
-                <Route path={"/login"} element={<Login/>}/>
-                <Route path={"/registration"} element={<Registration/>}/>
-                <Route path={"/oneProd"} element={<ProductPage/>}/>
-            </Routes>
-
+            <CardBody >
+                <Routes>
+                    <Route path={"/"} element={<Main/>}/>
+                    <Route path={"/*"} element={<Main/>}/>
+                    <Route path={"/login"} element={<Login/>}/>
+                    <Route path={"/registration"} element={<Registration/>}/>
+                    <Route path={"/oneProd"} element={<ProductPage/>}/>
+                    <Route path={"/aboutUs"} element={<AboutUsPage/>}/>
+                    <Route path={"/contactUs"} element={<ContactUsPage/>}/>
+                </Routes>
+            </CardBody>
             <Footer/>
-        </div>
+        </Card>
     );
 }
 

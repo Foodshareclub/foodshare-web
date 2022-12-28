@@ -1,18 +1,31 @@
+import React from 'react';
+import {
+    Avatar,
+    Box,
+    Button,
+    FormControl,
+    FormErrorMessage,
+    FormLabel,
+    Input,
+    useBreakpointValue
+} from "@chakra-ui/react";
 import {useForm} from "react-hook-form";
-import {useNavigate} from "react-router-dom";
-import {useAppDispatch, useAppSelector} from "../../hook/hooks";
-
-
 import {AuthPayload} from "../../api/profileAPI";
-import {Avatar, Box, Button, FormControl, FormErrorMessage, Input} from "@chakra-ui/react";
 
-
-export const Registration = () => {
-    const navigate = useNavigate();
-    const dispatch = useAppDispatch();
-    const {registration, isRegister} = useAppSelector(state => state.user);
-
-
+const ContactUsPage = () => {
+    const variant = useBreakpointValue(
+        {
+            base: 'ghost',
+            md: 'solid',
+        },
+        {
+            // Breakpoint to use when mediaqueries cannot be used, such as in server-side rendering
+            // (Defaults to 'base')
+            fallback: 'md',
+        },
+    )
+    console.log(variant)
+    console.log(visualViewport?.width)
     const {
         register,
         handleSubmit,
@@ -20,35 +33,26 @@ export const Registration = () => {
     } = useForm({
         defaultValues: {
             email: "",
-            password: "",
+            phone: "",
             fullName: ""
         },
         mode: "onChange"
     });
     const onSubmit = async (value: AuthPayload) => {
         console.log(value)
-        // const data = await dispatch(registerTC(value));
-        // console.log(data)
-        // if (!data.payload) {
-        //     alert("Не удалось зарегистрироваться...");
-        // }
-        // if ("token" in data.payload) {
-        //   localStorage.setItem("token", data.payload.token);
-        // } else {
-        //   alert("Не удалось зарегистрироваться...");
-        // }
+
     };
-    if (isRegister) {
-        navigate("/");
-    }
     return (
         <Box w="50%" m="0 auto" textAlign="center" fontSize={25} fontWeight={600}>
             <Box mb={5}>
-                Registration
+                Contact Us
             </Box>
-            <Avatar m={"2% 0 5% 0"} sx={{width: 100, height: 100}}/>
+            <Box fontSize={20} mb={3}>
+                Sent us a message
+            </Box>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <FormControl isInvalid={!!errors.fullName}>
+                    <FormLabel>Full name</FormLabel>
                     <Input mb={3}
                            id={"fullName"}
                            variant="filled"
@@ -56,32 +60,34 @@ export const Registration = () => {
                                required: "Enter name please",
                                minLength: {value: 4, message: 'Minimum length should be 4'},
                            })}
-                           placeholder="Full name"
+                           placeholder="Enter..."
                     />
                     <FormErrorMessage>
                         {errors.fullName && errors.fullName.message}
                     </FormErrorMessage>
+                    <FormLabel>Email</FormLabel>
                     <Input mb={3}
                            variant="filled"
                            {...register("email", {
                                required: "Enter email",
 
                            })}
-                           placeholder="E-Mail"
+                           placeholder="Enter..."
                     />
                     <FormErrorMessage>
                         {errors.email && errors.email.message}
                     </FormErrorMessage>
+                    <FormLabel>Phone</FormLabel>
                     <Input mb={3}
                            variant="filled"
-                           {...register("password", {required: "Enter password"})}
-                           placeholder="Password"
+                           {...register("phone", {required: "Enter phone number"})}
+                           placeholder="x-xxx-xxx-xxxx"
                     />
                     <FormErrorMessage>
-                        {errors.password && errors.password.message}
+                        {errors.phone && errors.phone.message}
                     </FormErrorMessage>
-                    <Button variant="ghost" m={"5% 0"} w="100%" alignSelf="center" type="submit" disabled={!isValid}>
-                        Register
+                    <Button variant={variant} m={"5% 0"} w="100%" alignSelf="center" type="submit" disabled={!isValid}>
+                        Send message
                     </Button>
                 </FormControl>
             </form>
@@ -89,3 +95,5 @@ export const Registration = () => {
         </Box>
     );
 };
+
+export default ContactUsPage;

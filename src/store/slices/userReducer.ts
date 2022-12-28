@@ -1,6 +1,6 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import {AuthPayload, profileAPI, registrationAPI} from "../../api/profileAPI";
-import {supabase} from "../../supaBase.config";
+// import {supabase} from "../../supaBase.config";
 
 
 const initialState = {
@@ -11,19 +11,19 @@ const initialState = {
 
 };
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
-    const {data, error} = await supabase
-        .from('users')
-        .select()
-        .match({email})
-        .single();
-    console.log(data)
-    console.log(error)
+    // const {data, error} = await supabase
+    //     .from('users')
+    //     .select()
+    //     .match({email})
+    //     .single();
+    // console.log(data)
+    // console.log(error)
 
 
     try {
         // const {data} = await profileAPI.login(email, password);
 
-        return data;
+        // return data;
     } catch (e: any) {
         // if (e.response.data.message) {
         //     return thunkAPI.rejectWithValue(e.response.data.message);
@@ -33,13 +33,13 @@ export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password
     }
 });
 export const registerTC = createAsyncThunk("/auth/registerTC", async ({email, password}: AuthPayload, thunkAPI) => {
-    const {status, error} = await supabase
-        .from('users')
-        .insert({
-            email, password,
-        });
-    console.log(status)
-    console.log(error)
+    // const {status, error} = await supabase
+    //     .from('users')
+    //     .insert({
+    //         email, password,
+    //     });
+    // console.log(status)
+    // console.log(error)
 
     try {
         // const { data } = await registrationAPI.registration(email,password);
@@ -71,10 +71,9 @@ const userSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder.addCase(loginTC.fulfilled, (state, action) => {
-            if (action.payload) {
                 state.isAuth = true
-                state.login = action.payload
-            }
+                // state.login = action.payload
+
         });
         builder.addCase(registerTC.fulfilled, (state, action) => {
             // if (action.payload) {

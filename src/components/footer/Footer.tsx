@@ -5,9 +5,11 @@ import twitter from "../../assets/twiter.svg";
 import insta from "../../assets/instagram.svg";
 import facebook from "../../assets/facebook.svg";
 import {NavLink} from "react-router-dom";
+import {CardFooter} from "@chakra-ui/react";
+
 const Footer = () => {
     return (
-        <div className={styles.root} >
+        <CardFooter className={styles.root} >
             <div className={styles.club}>© 2022
                 Foodshare Club, Limited
             </div>
@@ -19,7 +21,7 @@ const Footer = () => {
                 <NavLink to={"#"}><img src={facebook} alt="facebook"/></NavLink>
             </div>
             <div className={styles.support}>Support & Resources</div>
-        </div>
+        </CardFooter>
     );
 };
 

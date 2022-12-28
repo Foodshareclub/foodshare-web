@@ -1,14 +1,24 @@
-import React from "react";
-import Typography from "@mui/material/Typography";
-import Paper from "@mui/material/Paper";
-import styles from "./Login.module.scss";
+import React, {useState} from "react";
+import facebook from "../../assets/facebookblue.svg"
+import apple from "../../assets/apple.svg"
+import google from "../../assets/google.svg"
 import {loginTC} from "../../store/slices/userReducer";
 import {NavLink, useNavigate} from "react-router-dom";
 import {useForm} from "react-hook-form";
-import {Snackbar} from "@mui/material";
-import {CssTextField} from "../../components/textFieldStyle/textFieldStyle";
 import {AuthPayload} from "../../api/profileAPI";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
+import {
+    Box,
+    Button,
+    Flex,
+    FormControl,
+    FormErrorMessage,
+    Input,
+    InputGroup,
+    InputRightElement,
+    Text, Image
+} from "@chakra-ui/react";
+import {ViewIcon, ViewOffIcon} from "@chakra-ui/icons";
 
 export const Login = () => {
 
@@ -16,12 +26,20 @@ export const Login = () => {
     const dispatch = useAppDispatch();
     const {isAuth} = useAppSelector(state => state.user);
 
-
-    const {register, handleSubmit, setError, formState: {errors, isValid}} = useForm({
+    const {
+        register,
+        handleSubmit,
+        formState: {errors, isSubmitting, isValid}
+    } = useForm({
         defaultValues: {
-            email: "", password: ""
-        }, mode: "onChange"
+            email: "",
+            password: "",
+            fullName: ""
+        },
+        mode: "onChange"
     });
+    const [show, setShow] = useState(false)
+    const handleClick = () => setShow(!show)
 
     const onSubmit = async (values: AuthPayload) => {
         const data = await dispatch(loginTC(values));
@@ -40,47 +58,69 @@ export const Login = () => {
     }
 
     return (
-        <>
-            {/*{!isAuth &&*/}
-            {/*    <Snackbar open anchorOrigin={{vertical: "bottom", horizontal: "center"}}*/}
-            {/*              // message={"some text"}*/}
-            {/*    />*/}
-            {/*}*/}
-            <Paper classes={{root: styles.root}}>
-                <Typography classes={{root: styles.title}} variant="h5">
-                    Log In
-                </Typography>
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    <CssTextField
-                        variant="filled"
-                        type="email" className={styles.field}
-                        label="E-Mail"
-                        error={Boolean(errors.email?.message)}
-                        helperText={errors.email?.message}
-                        {...register("email", {required: "Enter email"})}
-                        fullWidth
+        <Box w="50%" m="0 auto" textAlign="center" fontSize={40} fontWeight={600}>
+            <Box mb={5}>
+                Welcome to Foodshare
+            </Box>
+            <form onSubmit={handleSubmit(onSubmit)}>
+                <FormControl isInvalid={!!errors.email && !!errors.password}>
+                    <Input mb={3}
+                           variant="filled"
+                           {...register("email", {
+                               required: "Enter email",
+
+                           })}
+                           placeholder="E-Mail"
                     />
-                    <CssTextField
-                        variant="filled"
-                        {...register("password", {required: "Enter password"})}
-                        error={Boolean(errors.password?.message)}
-                        helperText={errors.password?.message} className={styles.field}
-                        label="Password"
-                        fullWidth/>
+                    <FormErrorMessage>
+                        {errors.email && errors.email.message}
+                    </FormErrorMessage>
+                </FormControl>
+                <FormControl>
+                    <InputGroup>
+                        <Input
+                            variant="filled"
+                            {...register("password", {required: "Enter password"})}
+                            placeholder="Password"
+                            type={show ? "text" : "password"}
+                        />
+                        <InputRightElement width='4.5rem'>
+                            <Button h='1.75rem' size='sm' onClick={handleClick}>
+                                {show ? <ViewOffIcon/> : <ViewIcon/>}
+                            </Button>
+                        </InputRightElement>
+                    </InputGroup>
 
-                    <button type="submit" disabled={!isValid} className={!isValid ? styles.disable : styles.enable}>
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                        Submit
-                    </button>
-
-                    <NavLink className={styles.navLink} to="/forgot">Forgot password?</NavLink>
-                    <NavLink className={styles.navLink} to="/forgot">Forgot email?</NavLink>
-                </form>
-            </Paper>
-        </>
-
+                    <FormErrorMessage>
+                        {errors.password && errors.password.message}
+                    </FormErrorMessage>
+                    <Button isLoading={false} fontSize={25} variant="solid" m={"5% 0"}
+                            w="100%" alignSelf="center" type="submit"
+                            disabled={!isValid}>
+                        Login
+                    </Button>
+                </FormControl>
+                <Flex align="center" justify="space-around" color={"red.500"} fontSize={15}>
+                    <NavLink to={"#"}>Forgot password?</NavLink>
+                    <NavLink to={"#"}>Forgot username?</NavLink>
+                </Flex>
+                <Flex alignSelf={"center"} align="center" justify="center">
+                    <hr style={{width: "40%"}}/>
+                    <Text mx={3} fontSize={17}>or</Text>
+                    <hr style={{width: "40%"}}/>
+                </Flex>
+                <Button leftIcon={<Image src={facebook} alt={facebook}/>} _hover={{bg: 'red.100'}} fontSize={20}
+                        variant="outline" mb={3} w="100%"
+                        alignSelf="center">
+                    Continue with Facebook
+                </Button>
+                <Button leftIcon={<Image src={apple} alt={facebook}/>} _hover={{bg: 'red.100'}} fontSize={20} variant="outline" mb={3} w="100%" alignSelf="center">
+                    Continue with Apple
+                </Button>
+                <Button leftIcon={<Image src={google} alt={facebook}/>} _hover={{bg: 'red.100'}} fontSize={20} variant="outline" m={0} w="100%" alignSelf="center">
+                    Continue with Google
+                </Button>
+            </form>
+        </Box>
     );
 };

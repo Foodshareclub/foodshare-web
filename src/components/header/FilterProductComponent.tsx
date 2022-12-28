@@ -1,32 +1,43 @@
 import * as React from 'react';
-import Box from '@mui/material/Box';
-import BottomNavigation from '@mui/material/BottomNavigation';
-import BottomNavigationAction from '@mui/material/BottomNavigationAction';
-import {navigationActions} from "../../utils/navigationActions";
+import {navigationActionsSVG} from "../../utils/navigationActions";
+import {Box, Image} from "@chakra-ui/react";
+import "../../index.scss";
+import {useEffect, useState} from "react";
 
+const SimpleBottomNavigation = () => {
+    const [value, setValue] = useState<any>();
+    const f1 = (name: string) => {
+        const obj = navigationActionsSVG.find(item => item.name === name);
+        setValue(obj)
+    }
 
-
-export default function SimpleBottomNavigation() {
-    const [value, setValue] = React.useState(0);
 
     return (
-        <Box sx={{width: "auto" , height:"50%"}}>
-            <BottomNavigation
-                sx={{paddingTop:"2%"}}
-                showLabels
-                value={value}
-                onChange={(event, newValue) => {
-                    setValue(newValue);
-                }}
-            >
-                {navigationActions.map(el => {
-                    return <BottomNavigationAction
-                        key={el.name}
-                        label={el.name}
-                        icon={<img src={el.src} alt={el.src}
-                        />}/>
-                })}
-            </BottomNavigation>
+        <Box display='flex' pt={8} justifyContent="space-around" alignItems='baseline'>
+
+            {navigationActionsSVG.map((el, id) => {
+                return <FilterProductCompBox
+                    el={el}
+                    key={id}
+                    value={value}
+                    f1={f1}
+                />
+            })}
         </Box>
+    )
+}
+
+const FilterProductCompBox = ({value, el, f1}: any) => {
+
+    return (
+        <Box>
+            <Image onClick={() => f1(el.name)} m="0 auto" alignItems="center" cursor="pointer"
+                   src={value?.name === el.name ? el.red : el.src}
+                   boxSize={6}
+            />
+            <div>{el.name}</div>
+        </Box>
+
     );
 }
+export default SimpleBottomNavigation

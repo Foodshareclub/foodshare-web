@@ -1,93 +1,25 @@
-import logo from "../../assets/newLogo.svg";
 import straw from "../../assets/straw.svg";
-import filters from "../../assets/filters.svg";
 import * as React from 'react';
-import {styled, alpha} from '@mui/material/styles';
-import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import IconButton from '@mui/material/IconButton';
-import Typography from '@mui/material/Typography';
-import InputBase from '@mui/material/InputBase';
-import Badge from '@mui/material/Badge';
-import MenuItem from '@mui/material/MenuItem';
-import Menu from '@mui/material/Menu';
-import MenuIcon from '@mui/icons-material/Menu';
-import SearchIcon from '@mui/icons-material/Search';
-import AccountCircle from '@mui/icons-material/AccountCircle';
-import MailIcon from '@mui/icons-material/Mail';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import MoreIcon from '@mui/icons-material/MoreVert';
 import {useNavigate} from "react-router-dom";
-
-const Search = styled('div')(({theme}) => ({
-    position: 'relative',
-    borderRadius: theme.shape.borderRadius,
-    border: `1px solid ${alpha(theme.palette.common.black, 0.25)}`,
-
-    '&:hover': {
-        backgroundColor: alpha(theme.palette.common.black, 0.25),
-    },
-    marginRight: theme.spacing(2),
-    marginLeft: 0,
-    width: '100%',
-    [theme.breakpoints.up('sm')]: {
-        marginLeft: theme.spacing(3),
-        width: '290px',
-    },
-}));
-
-const SearchIconWrapper = styled('div')(({theme}) => ({
-    padding: theme.spacing(0, 2),
-    height: '100%',
-    position: 'absolute',
-    pointerEvents: 'none',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-}));
-
-const StyledInputBase = styled(InputBase)(({theme}) => ({
-    color: 'black',
-    '& .MuiInputBase-input': {
-        padding: theme.spacing(1, 1, 1, 0),
-        // vertical padding + font size from searchIcon
-        paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-        transition: theme.transitions.create('width'),
-        width: '100%',
-        [theme.breakpoints.up('md')]: {
-            width: '20ch',
-        },
-    },
-}));
+import {
+    Avatar,
+    Box,
+    Button,
+    Image,
+    Input,
+    InputGroup,
+    InputLeftElement,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuList,
+    Text
+} from "@chakra-ui/react";
+import {ChevronDownIcon, SearchIcon} from "@chakra-ui/icons";
+import map from "../../assets/globus.svg";
 
 export default function NavComponent() {
     const navigate = useNavigate();
-
-    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [mobileMoreAnchorEl, setMobileMoreAnchorEl] =
-        React.useState<null | HTMLElement>(null);
-
-    const isMenuOpen = Boolean(anchorEl);
-    const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
-
-    const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
-
-    const handleMobileMenuClose = () => {
-        setMobileMoreAnchorEl(null);
-    };
-
-    const handleMenuClose = () => {
-        setAnchorEl(null);
-        handleMobileMenuClose();
-    };
-
-    const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-        setMobileMoreAnchorEl(event.currentTarget);
-    };
-
     const navigateToLogin = () => {
         navigate('/login')
     }
@@ -97,148 +29,87 @@ export default function NavComponent() {
     const navigateToMain = () => {
         navigate('/')
     }
+    const navigateToAboutUs = () => {
+        navigate('/aboutUs')
+    }
+    const navigateToAddList = () => {
+        navigate('/addList')
+    }
+    const navigateToMyLists = () => {
+        navigate('/myListings')
+    }
 
-    const menuId = 'primary-search-account-menu';
-    const renderMenu = (
-        <Menu
-            anchorEl={anchorEl}
-            anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-            }}
-            id={menuId}
-            keepMounted
-            transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-            }}
-            open={isMenuOpen}
-            onClose={handleMenuClose}
-        >
-            <MenuItem onClick={() => {
-                handleMenuClose();
-                navigateToLogin()
-            }}>Login</MenuItem>
-            <MenuItem onClick={() => {
-                handleMenuClose();
-                navigateToRegistration()
-            }}>Registration</MenuItem>
-        </Menu>
-    );
+    const navigateToAccSettings = () => {
 
-    const mobileMenuId = 'primary-search-account-menu-mobile';
-    // for mobile adaptive
-    const renderMobileMenu = (
-        <Menu
-            anchorEl={mobileMoreAnchorEl}
-            anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-            }}
-            id={mobileMenuId}
-            keepMounted
-            transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-            }}
-            open={isMobileMenuOpen}
-            onClose={handleMobileMenuClose}
-        >
-            <MenuItem sx={{color: "gray"}}>
-                <IconButton size="large" aria-label="show 4 new mails" color="inherit">
-                    <Badge badgeContent={4} color="error">
-                        <MailIcon/>
-                    </Badge>
-                </IconButton>
-                <p>Messages</p>
-            </MenuItem>
-            <MenuItem>
-                <IconButton
-                    size="large"
-                    aria-label="show 17 new notifications"
-                    color="inherit"
-                >
-                    <Badge badgeContent={17} color="error">
-                        <NotificationsIcon/>
-                    </Badge>
-                </IconButton>
-                <p>Notifications</p>
-            </MenuItem>
-            <MenuItem onClick={handleProfileMenuOpen}>
-                <IconButton
-                    size="large"
-                    aria-label="account of current user"
-                    aria-controls="primary-search-account-menu"
-                    aria-haspopup="true"
-                    color="inherit"
-                >
-                    <AccountCircle/>
-                </IconButton>
-                <p>Profile</p>
-            </MenuItem>
-        </Menu>
-    );
+    }
+
+    const navigateToHelp = () => {
+    }
+
+    const logOut = () => {
+
+    }
 
     return (
-        <Box sx={{flexGrow: 1, height: "40%"}}>
-            <AppBar position="static" sx={{backgroundColor: "#ffff"}}>
-                <Toolbar>
-                    <img style={{margin: "0", marginRight: "1%", padding: "0",width:"20px"}} src={straw} alt="logo"/>
-                    <Typography
-                        variant="h6"
-                        noWrap
-                        component="div"
-                        onClick={navigateToMain}
-                        sx={{display: {xs: 'none', sm: 'block'}, cursor: "pointer", fontSize: "25px", color: "#FF2D55", fontWeight: "900"}}
-                    >
-                        FOODSHARE
-                    </Typography>
-                    <Search>
-                        <SearchIconWrapper>
-                            <SearchIcon sx={{color: `gray`}}/>
-                        </SearchIconWrapper>
-                        <StyledInputBase
-                            placeholder="Search…"
-                            inputProps={{'aria-label': 'search'}}
-                        />
-                    </Search>
-                    <Box sx={{flexGrow: 1}}/>
-                    <Box sx={{display: {xs: 'none', md: 'flex'}, justifyContent: "space-between", width: "40%"}}>
-                        <IconButton size={"small"}>
-                            <h4>About Us</h4>
-                        </IconButton>
-                        <IconButton size={"small"}>
-                            <img src={filters} alt="about"/>
-                            <h4>Filters</h4>
-                        </IconButton>
-                        <IconButton
-                            size="large"
-                            edge="end"
-                            aria-label="account of current user"
-                            aria-controls={menuId}
-                            aria-haspopup="true"
-                            onClick={handleProfileMenuOpen}
-                            color="inherit"
-                        >
-                            <AccountCircle sx={{color: `gray`}}/>
-                        </IconButton>
-                    </Box>
-                    <Box sx={{display: {xs: 'flex', md: 'none'}}}>
-                        <IconButton
-                            size="large"
-                            aria-label="show more"
-                            aria-controls={mobileMenuId}
-                            aria-haspopup="true"
-                            onClick={handleMobileMenuOpen}
-                            color="default"
-                        >
-                            <MoreIcon/>
-                        </IconButton>
-                    </Box>
-                </Toolbar>
-            </AppBar>
-            {renderMobileMenu}
-            {renderMenu}
+        <Box display='flex' alignItems='baseline'>
+            <Image alignSelf="center" boxSize='25px' src={straw} alt={straw}/>
+            <Box pl={3} alignSelf="center">
+                <Text onClick={() => navigateToMain()} cursor="pointer"
+                      fontSize="25px" fontWeight={900} textTransform="uppercase" color='#FF2D55'>
+                    foodShare
+                </Text>
+            </Box>
+            <InputGroup   alignSelf="center" w={"50%"} ml={"6%"} alignItems={"center"}>
+                <InputLeftElement
+                    pointerEvents='none'
+                    children={<SearchIcon color='gray.300'/>}
+                />
+                <Input focusBorderColor='#FF2D55' type='search' placeholder='What are we in search of today?'/>
+            </InputGroup>
+            <Box onClick={() => navigateToAboutUs()} cursor="pointer" fontSize='22px' textAlign="center"
+                 _hover={{color: "#FF2D55"}}
+                 fontWeight="400"
+                 alignSelf="center" w="40%"
+                 color='#303030'>
+                About Us
+            </Box>
+            <Box alignSelf="center" p={0} color='#303030'>
+                <Menu>
+                    <MenuButton _expanded={{bg: 'gray.100', color: "#FF2D55"}}
+                                _hover={{bg: 'gray.100', color: "#FF2D55"}} variant="styled" as={Button}
+                                rightIcon={<ChevronDownIcon/>}>
+                    </MenuButton>
+                    <MenuList>
+                        <MenuItem>Download</MenuItem>
+                        <MenuItem>Create a Copy</MenuItem>
+                        <MenuItem>Mark as Draft</MenuItem>
+                        <MenuItem>Delete</MenuItem>
+                        <MenuItem>Attend a Workshop</MenuItem>
+                    </MenuList>
+                </Menu>
+            </Box>
+            <Box fontWeight={400} fontSize='22px' alignSelf="center" w='30%' color='#303030'>
+                Filters
+            </Box>
+            <Image mr="5%" alignSelf="center" src={map} alt={map}/>
+            <Box alignSelf="center" p={0} color='#303030'>
+                <Menu>
+                    <MenuButton cursor="pointer" _expanded={{bg: '#FF2D55'}} variant="styled"
+                                boxSize='40px' as={Avatar}>
+                    </MenuButton>
+                    <MenuList>
+                        <MenuItem onClick={() => navigateToLogin()}>login</MenuItem>
+                        <MenuItem onClick={() => navigateToRegistration()}>Registration</MenuItem>
+                        <MenuItem onClick={() => navigateToAddList()}>Add list</MenuItem>
+                        <MenuItem onClick={() => navigateToMyLists()}>My listing's</MenuItem>
+                        <MenuItem onClick={() => navigateToAccSettings()}>Account settings</MenuItem>
+                        <MenuItem onClick={() => navigateToHelp()}>Help</MenuItem>
+                        <MenuItem onClick={() => logOut()}>Log Out</MenuItem>
+                    </MenuList>
+                </Menu>
+            </Box>
+            {/*<Avatar alignSelf="center" boxSize='40px' ml="5%" src='https://bit.ly/broken-link'/>*/}
+            <Box pl={5} fontSize='22px' textAlign="center" fontWeight="400" alignSelf="center">name</Box>
         </Box>
     );
 }

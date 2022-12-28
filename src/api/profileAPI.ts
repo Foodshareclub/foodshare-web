@@ -30,7 +30,8 @@ export type RegistrationResponseType = {
 
 export type AuthPayload = {
     email: string
-    password: string
+    password?: string
+    phone?:string
     rememberMe?: boolean
     captcha?: string
 }
