@@ -1,11 +1,17 @@
 import {
-    Button, Flex,
-    FormControl, FormLabel, Heading,
-    Input, Modal,
-    ModalBody, ModalCloseButton,
-    ModalContent, ModalFooter,
+    Button,
+    Flex,
+    FormControl,
+    FormLabel,
+    Input,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalFooter,
     ModalHeader,
-    ModalOverlay, Select,
+    ModalOverlay,
+    Select,
     useDisclosure
 } from "@chakra-ui/react";
 import React from "react";
@@ -50,11 +56,11 @@ function PickUpRequestModal() {
                                 <Select w={"95%"} variant='outline' placeholder='Tuesday'>
                                     <option value='option1'>Monday</option>
                                     <option value='option2'>Tuesday</option>
-                                    <option value='option3'>Wednesday</option>
-                                    <option value='option3'>Thursday</option>
-                                    <option value='option3'>Friday</option>
-                                    <option value='option3'>Saturday</option>
-                                    <option value='option3'>Sunday</option>
+                                    <option value='option4'>Wednesday</option>
+                                    <option value='option5'>Thursday</option>
+                                    <option value='option6'>Friday</option>
+                                    <option value='option7'>Saturday</option>
+                                    <option value='option8'>Sunday</option>
                                 </Select>
                             </FormControl>
                             <FormControl mt={4}>

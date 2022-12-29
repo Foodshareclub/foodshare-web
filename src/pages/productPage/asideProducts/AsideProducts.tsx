@@ -8,14 +8,16 @@ type AsideProdType = {
     about: string,
     available: string
     distance: string
+    height?:string
 }
-const AsideProducts: React.FC<AsideProdType> = ({img, name, about, available, distance}) => {
+const AsideProducts: React.FC<AsideProdType> = ({height,img, name, about, available, distance}) => {
     return (
         <Flex
             direction={{base: 'column', sm: 'row'}}
             border={"2px solid #55BCB2"}
             borderRadius={10}
             mt={4}
+            height={height?height: "inherit"}
         >
             <Image
                 borderRadius="10%"

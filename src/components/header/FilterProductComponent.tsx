@@ -1,8 +1,9 @@
 import * as React from 'react';
+import {useState} from 'react';
 import {navigationActionsSVG} from "../../utils/navigationActions";
 import {Box, Image} from "@chakra-ui/react";
 import "../../index.scss";
-import {useEffect, useState} from "react";
+import {useNavigate} from "react-router-dom";
 
 const SimpleBottomNavigation = () => {
     const [value, setValue] = useState<any>();
@@ -28,10 +29,13 @@ const SimpleBottomNavigation = () => {
 }
 
 const FilterProductCompBox = ({value, el, f1}: any) => {
-
+const navigate = useNavigate()
     return (
         <Box>
-            <Image onClick={() => f1(el.name)} m="0 auto" alignItems="center" cursor="pointer"
+            <Image onClick={() => {
+                f1(el.name)
+                navigate(`${el.name.toLowerCase()}`)
+            }} m="0 auto" alignItems="center" cursor="pointer"
                    src={value?.name === el.name ? el.red : el.src}
                    boxSize={6}
             />

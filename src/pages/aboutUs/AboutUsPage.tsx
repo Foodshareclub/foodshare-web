@@ -17,18 +17,18 @@ const AboutUsPage = () => {
         <>
             <Grid templateColumns='repeat(5, 1fr)' gap={6}>
                 <GridItem w='100%' h='50vh'/>
-                <GridItem borderRadius={"10%"} w='100%'>
+                <GridItem borderRadius="10%" w='100%'>
                     <Image src={leftImg} alt={leftImg}/>
                 </GridItem>
                 <Grid gap={6}>
-                    <GridItem borderRadius={"10%"} w='100%'>
+                    <GridItem borderRadius="10%" w='100%'>
                         <Image src={centerTop} alt={centerTop}/>
                     </GridItem>
-                    <GridItem borderRadius={"10%"} w='100%'>
+                    <GridItem borderRadius="10%" w='100%'>
                         <Image src={centerBottom} alt={centerBottom}/>
                     </GridItem>
                 </Grid>
-                <GridItem borderRadius={"10%"} w='100%'>
+                <GridItem borderRadius="10%" w='100%'>
                     <Image src={rightImg} alt={rightImg}/>
                 </GridItem>
                 <GridItem w='100%' h='50vh'/>
@@ -56,7 +56,7 @@ const AboutUsPage = () => {
                     </Box>
                 </GridItem>
             </Grid>
-            <Box borderRadius={5} bgColor={"red.100"} mt={10} mb={10} fontWeight={600} fontSize={40}
+            <Box borderRadius={5} bgColor="red.100" mt={10} mb={10} fontWeight={600} fontSize={40}
                  textAlign="center">Team</Box>
             <SimpleGrid columns={2} spacing={3}>
                 {teamMockArray.map((el, id) => <PersonCard
