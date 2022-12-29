@@ -10,12 +10,12 @@ import useMediaQuery from '../../utils/useMediaQuery';
 export default function Main() {
     const isSmallerThan700 = useMediaQuery('(min-width:700px)')
     const isSmallerThan500 = useMediaQuery('(min-width:500px)')
-    const isSmallerThan1120 = useMediaQuery('(min-width:1120px)')
+    const isSmallerThan1460 = useMediaQuery('(min-width:1460px)')
 
     //console.log(isLargeThan700)
     const navigate = useNavigate();
     return (<Box>
-            <SimpleGrid columns={!isSmallerThan500 ? 1 : !isSmallerThan700 ? 2 : !isSmallerThan1120 ? 4 : 6}
+            <SimpleGrid columns={!isSmallerThan500 ? 1 : !isSmallerThan700 ? 2 : !isSmallerThan1460 ? 4 : 6}
                         spacing={10}>
                 {mockArray.map((item, id) => (
                     <GridItem mt='2' mb='2' key={id}>
