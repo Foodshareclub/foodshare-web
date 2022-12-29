@@ -20,34 +20,21 @@ import map from "../../assets/globus.svg";
 
 export default function NavComponent() {
     const navigate = useNavigate();
-    const navigateToLogin = () => {
-        navigate('/login')
-    }
-    const navigateToRegistration = () => {
-        navigate('/registration')
-    }
-    const navigateToMain = () => {
-        navigate('/')
-    }
-    const navigateToAboutUs = () => {
-        navigate('/aboutUs')
-    }
-    const navigateToAddList = () => {
-        navigate('/addList')
-    }
-    const navigateToMyLists = () => {
-        navigate('/myListings')
-    }
+
+    const navigateToLogin = () => navigate('/login');
+    const navigateToRegistration = () => navigate('/registration');
+    const navigateToMain = () => navigate('/');
+    const navigateToAboutUs = () => navigate('/aboutUs');
+    const navigateToAddList = () => navigate('/addList');
+    const navigateToMyLists = () => navigate('/myListings');
 
     const navigateToAccSettings = () => {
-
     }
 
     const navigateToHelp = () => {
     }
 
     const logOut = () => {
-
     }
 
     return (
@@ -59,7 +46,7 @@ export default function NavComponent() {
                     foodShare
                 </Text>
             </Box>
-            <InputGroup   alignSelf="center" w={"50%"} ml={"6%"} alignItems={"center"}>
+            <InputGroup alignSelf="center" w={"50%"} ml={"6%"} alignItems={"center"}>
                 <InputLeftElement
                     pointerEvents='none'
                     children={<SearchIcon color='gray.300'/>}

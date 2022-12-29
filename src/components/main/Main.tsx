@@ -8,14 +8,25 @@ import {ArrowForwardIcon} from "@chakra-ui/icons";
 import useMediaQuery from '../../utils/useMediaQuery';
 
 export default function Main() {
-    const isSmallerThan700 = useMediaQuery('(min-width:700px)')
-    const isSmallerThan500 = useMediaQuery('(min-width:500px)')
-    const isSmallerThan1460 = useMediaQuery('(min-width:1460px)')
+    const isSmallerThan500 = useMediaQuery('(min-width:500px)');
+    const isSmallerThan700 = useMediaQuery('(min-width:700px)');
+    const isSmallerThan1290 = useMediaQuery('(min-width:1290px)');
 
-    //console.log(isLargeThan700)
+    const gridSize = () => {
+        if (isSmallerThan1290) {
+            return 6;
+        }
+        if (isSmallerThan700) {
+            return 4;
+        }
+        if (isSmallerThan500) {
+            return 2;
+        }
+    };
+
     const navigate = useNavigate();
     return (<Box>
-            <SimpleGrid columns={!isSmallerThan500 ? 1 : !isSmallerThan700 ? 2 : !isSmallerThan1460 ? 4 : 6}
+            <SimpleGrid columns={gridSize()}
                         spacing={10}>
                 {mockArray.map((item, id) => (
                     <GridItem mt='2' mb='2' key={id}>

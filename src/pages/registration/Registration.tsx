@@ -46,9 +46,11 @@ export const Registration = () => {
             <Box mb={5}>
                 Registration
             </Box>
+
             <Avatar m={"2% 0 5% 0"} sx={{width: 100, height: 100}}/>
             <form onSubmit={handleSubmit(onSubmit)}>
                 <FormControl isInvalid={!!errors.fullName}>
+
                     <Input mb={3}
                            id={"fullName"}
                            variant="filled"
@@ -58,9 +60,11 @@ export const Registration = () => {
                            })}
                            placeholder="Full name"
                     />
+
                     <FormErrorMessage>
                         {errors.fullName && errors.fullName.message}
                     </FormErrorMessage>
+
                     <Input mb={3}
                            variant="filled"
                            {...register("email", {
@@ -69,17 +73,21 @@ export const Registration = () => {
                            })}
                            placeholder="E-Mail"
                     />
+
                     <FormErrorMessage>
                         {errors.email && errors.email.message}
                     </FormErrorMessage>
+
                     <Input mb={3}
                            variant="filled"
                            {...register("password", {required: "Enter password"})}
                            placeholder="Password"
                     />
+
                     <FormErrorMessage>
                         {errors.password && errors.password.message}
                     </FormErrorMessage>
+
                     <Button variant="ghost" m={"5% 0"} w="100%" alignSelf="center" type="submit" disabled={!isValid}>
                         Register
                     </Button>

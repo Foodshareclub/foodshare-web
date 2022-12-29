@@ -76,6 +76,7 @@ export const Login = () => {
                         {errors.email && errors.email.message}
                     </FormErrorMessage>
                 </FormControl>
+
                 <FormControl>
                     <InputGroup>
                         <Input
@@ -94,30 +95,38 @@ export const Login = () => {
                     <FormErrorMessage>
                         {errors.password && errors.password.message}
                     </FormErrorMessage>
+
                     <Button isLoading={false} fontSize={25} variant="solid" m={"5% 0"}
                             w="100%" alignSelf="center" type="submit"
                             disabled={!isValid}>
                         Login
                     </Button>
                 </FormControl>
+
                 <Flex align="center" justify="space-around" color={"red.500"} fontSize={15}>
                     <NavLink to={"#"}>Forgot password?</NavLink>
                     <NavLink to={"#"}>Forgot username?</NavLink>
                 </Flex>
+
                 <Flex alignSelf={"center"} align="center" justify="center">
                     <hr style={{width: "40%"}}/>
                     <Text mx={3} fontSize={17}>or</Text>
                     <hr style={{width: "40%"}}/>
                 </Flex>
+
                 <Button leftIcon={<Image src={facebook} alt={facebook}/>} _hover={{bg: 'red.100'}} fontSize={20}
                         variant="outline" mb={3} w="100%"
                         alignSelf="center">
                     Continue with Facebook
                 </Button>
-                <Button leftIcon={<Image src={apple} alt={facebook}/>} _hover={{bg: 'red.100'}} fontSize={20} variant="outline" mb={3} w="100%" alignSelf="center">
+
+                <Button leftIcon={<Image src={apple} alt={facebook}/>} _hover={{bg: 'red.100'}} fontSize={20}
+                        variant="outline" mb={3} w="100%" alignSelf="center">
                     Continue with Apple
                 </Button>
-                <Button leftIcon={<Image src={google} alt={facebook}/>} _hover={{bg: 'red.100'}} fontSize={20} variant="outline" m={0} w="100%" alignSelf="center">
+
+                <Button leftIcon={<Image src={google} alt={facebook}/>} _hover={{bg: 'red.100'}} fontSize={20}
+                        variant="outline" m={0} w="100%" alignSelf="center">
                     Continue with Google
                 </Button>
             </form>

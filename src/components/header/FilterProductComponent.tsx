@@ -7,11 +7,11 @@ import {useNavigate} from "react-router-dom";
 
 const SimpleBottomNavigation = () => {
     const [value, setValue] = useState<any>();
-    const f1 = (name: string) => {
+    
+    const selectChapterHandler = (name: string) => {
         const obj = navigationActionsSVG.find(item => item.name === name);
-        setValue(obj)
+        setValue(obj);
     }
-
 
     return (
         <Box display='flex' pt={8} justifyContent="space-around" alignItems='baseline'>
@@ -21,21 +21,24 @@ const SimpleBottomNavigation = () => {
                     el={el}
                     key={id}
                     value={value}
-                    f1={f1}
+                    selectChapterHandler={selectChapterHandler}
                 />
             })}
         </Box>
     )
 }
 
-const FilterProductCompBox = ({value, el, f1}: any) => {
-const navigate = useNavigate()
+const FilterProductCompBox = ({value, el, selectChapterHandler}: any) => {
+    const navigate = useNavigate();
+
+    const navigateHandler = () => {
+        selectChapterHandler(el.name);
+        navigate(`${el.name.toLowerCase()}`);
+    }
+
     return (
-        <Box>
-            <Image onClick={() => {
-                f1(el.name)
-                navigate(`${el.name.toLowerCase()}`)
-            }} m="0 auto" alignItems="center" cursor="pointer"
+        <Box onClick={navigateHandler} cursor="pointer">
+            <Image m="0 auto" alignItems="center"
                    src={value?.name === el.name ? el.red : el.src}
                    boxSize={6}
             />
