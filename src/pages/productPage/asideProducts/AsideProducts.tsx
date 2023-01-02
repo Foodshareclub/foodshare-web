@@ -27,10 +27,10 @@ const AsideProducts: React.FC<AsideProdType> = ({height,img, name, about, availa
                 src={img}
                 alt={img}
             />
-            <CardBody lineHeight={2}>
-                <Heading size='md'>{name}</Heading>
-                <Heading noOfLines={1} size='md'>{about}</Heading>
-                <Flex>
+            <CardBody >
+                <Heading mb={3} size='md'>{name}</Heading>
+                <Heading mb={1} noOfLines={1} size='md'>{about}</Heading>
+                <Flex mb={1}>
                     <Heading alignSelf={"center"} size='md'>Available:</Heading>
                     <Text pl='2'>
                         {available}

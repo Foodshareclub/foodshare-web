@@ -4,6 +4,10 @@ import pizza from '../assets/Rectangle 54.png';
 import sweets from '../assets/Rectangle 55.png';
 import tarlan from '../assets/Tarlan.png';
 import denis from '../assets/den.jpg';
+import vegetables from '../assets/vegetables.png';
+import kitchenSoup from '../assets/soupKitchen.png';
+import grill from '../assets/grilMeat.png';
+import veget from '../assets/veget.png';
 
 type MockElT = {
     img: string,
@@ -162,4 +166,48 @@ export const asideProdProperty = [
         distance: "10mi"
     },
 
-]
+];
+export const opportunities = [
+    {
+        img: vegetables,
+        name: "@Freddiegives",
+        about: "5 bags of fresh fruit and vegetables: include apples, lemons, lettuce, bell peppers.",
+    },
+    {
+        img: grill,
+        name: "Grillin’ Meat",
+        about: "Needing help to cook burgers for a foodshare festival",
+    },
+    {
+        img: kitchenSoup,
+        name: "@Localgiver93",
+        about: "I need some help to give out these canned goods to those in need!!!!",
+    },
+    {
+        img: veget,
+        name: "Forza Storico",
+        about: "2 containers of pizza",
+    },
+    {
+        img: vegetables,
+        name: "@Freddiegives",
+        about: "5 bags of fresh fruit and vegetables: include apples, lemons, lettuce, bell peppers.",
+    },
+    {
+        img: grill,
+        name: "Grillin’ Meat",
+        about: "Needing help to cook burgers for a foodshare festival",
+    },
+    {
+        img: kitchenSoup,
+        name: "@Localgiver93",
+        about: "I need some help to give out these canned goods to those in need!!!!",
+    },
+    {
+        img: pizza,
+        name: "Forza Storico",
+        about: "2 containers of pizza",
+    },
+
+];
+
