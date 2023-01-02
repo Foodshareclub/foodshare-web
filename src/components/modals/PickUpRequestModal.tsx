@@ -23,7 +23,7 @@ function PickUpRequestModal() {
 
     return (
         <>
-            <Button onClick={onOpen} backgroundColor='#FF2D55' width="100%" variant='solid' colorScheme='blue'>
+            <Button onClick={onOpen}  backgroundColor='#FF2D55' width="100%" variant='solid' colorScheme='blue'>
                 Request Pick Up
             </Button>
 
@@ -53,7 +53,7 @@ function PickUpRequestModal() {
                         <Flex>
                             <FormControl mt={4}>
                                 <FormLabel>Pick-up Day</FormLabel>
-                                <Select w={"95%"} variant='outline' placeholder='Tuesday'>
+                                <Select w={"95%"} variant='outline' >
                                     <option value='option1'>Monday</option>
                                     <option value='option2'>Tuesday</option>
                                     <option value='option4'>Wednesday</option>
@@ -65,11 +65,7 @@ function PickUpRequestModal() {
                             </FormControl>
                             <FormControl mt={4}>
                                 <FormLabel>Pick-up Time</FormLabel>
-                                <Select w={"95%"} variant='outline' placeholder='9:30am'>
-                                    <option value='option1'>Option 1</option>
-                                    <option value='option2'>Option 2</option>
-                                    <option value='option3'>Option 3</option>
-                                </Select>
+                                <Input type='time'/>
                             </FormControl>
 
                         </Flex>

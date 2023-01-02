@@ -25,17 +25,19 @@ const ProductPage = () => {
                     />
                 </Box>
 
-                <Box alignSelf="center" w="40%">
+                <Box alignSelf="" w="40%">
                     <Box lineHeight={2}>
                         <Flex>
                             <Heading alignSelf="center" size='md'>{property.name}</Heading>
                             <Image pl={4} src={loc} alt={loc}/>
                             <Text px={2}>{property.distance}</Text>
                         </Flex>
+
                         <Flex>
                             <Image src={likes} alt={likes}/>
                             <Text px={2}>{property.numbLikes}</Text>
                         </Flex>
+
                         <Flex mt='2' alignItems='center'>
                             {Array(5)
                                 .fill('')
@@ -49,18 +51,27 @@ const ProductPage = () => {
                                 {property.reviews} reviews
                             </Box>
                         </Flex>
-                        <Text  lineHeight={1.5}>{property.about}</Text>
+
+                        <Text  lineHeight={1.5}>{
+                            property.about}
+                        </Text>
+
                         <Heading alignSelf="center" size='md'>Pick Up Address</Heading>
+
                         <Text>{property.pickUpAddress}</Text>
+
                         <Flex>
                             <Heading alignSelf="center" size='md'>Available:</Heading>
                             <Text px={2}>{property.available}</Text>
                         </Flex>
+
                         <Flex>
                             <Heading alignSelf="center" size='md'>Quantity:</Heading>
                             <Text px={2}>{property.quantity}</Text>
                         </Flex>
+
                         <Heading alignSelf="center" size='md'>Food Type</Heading>
+
                         <Text>{property.type}</Text>
                     </Box>
 
@@ -75,15 +86,18 @@ const ProductPage = () => {
                     <Box fontWeight={700} fontSize={20} pb={6}>
                         Location:
                     </Box>
+
                     <iframe
                         src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d2417628.5557509!2d27.986708999999998!3d53.718878999999994!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sru!2sby!4v1671868201476!5m2!1sru!2sby"
                         width="90%" height="620" style={{border: "0", borderRadius: "10px"}} loading="lazy"
                         referrerPolicy="no-referrer-when-downgrade"></iframe>
                 </Box>
+
                 <Box w={"40%"}>
                     <Box fontWeight={700} fontSize={20} pb={2}>
                         You May Also Like:
                     </Box>
+
                     {asideProdProperty.map((el, id) => (
                         <AsideProducts
                             key={id}

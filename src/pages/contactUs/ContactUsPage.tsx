@@ -47,12 +47,16 @@ const ContactUsPage = () => {
             <Box mb={5}>
                 Contact Us
             </Box>
+
             <Box fontSize={20} mb={3}>
                 Sent us a message
             </Box>
+
             <form onSubmit={handleSubmit(onSubmit)}>
                 <FormControl isInvalid={!!errors.fullName}>
+
                     <FormLabel>Full name</FormLabel>
+
                     <Input mb={3}
                            id={"fullName"}
                            variant="filled"
@@ -62,10 +66,13 @@ const ContactUsPage = () => {
                            })}
                            placeholder="Enter..."
                     />
+
                     <FormErrorMessage>
                         {errors.fullName && errors.fullName.message}
                     </FormErrorMessage>
+
                     <FormLabel>Email</FormLabel>
+
                     <Input mb={3}
                            variant="filled"
                            {...register("email", {
@@ -74,18 +81,23 @@ const ContactUsPage = () => {
                            })}
                            placeholder="Enter..."
                     />
+
                     <FormErrorMessage>
                         {errors.email && errors.email.message}
                     </FormErrorMessage>
+
                     <FormLabel>Phone</FormLabel>
+
                     <Input mb={3}
                            variant="filled"
                            {...register("phone", {required: "Enter phone number"})}
                            placeholder="x-xxx-xxx-xxxx"
                     />
+
                     <FormErrorMessage>
                         {errors.phone && errors.phone.message}
                     </FormErrorMessage>
+
                     <Button variant={variant} m={"5% 0"} w="100%" alignSelf="center" type="submit" disabled={!isValid}>
                         Send message
                     </Button>
