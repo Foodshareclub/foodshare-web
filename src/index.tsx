@@ -1,8 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
+import './index.scss';
 import App from './App';
-
 import {Provider} from "react-redux";
 import {BrowserRouter} from "react-router-dom";
 import store from "./store/redux-store";
@@ -14,7 +13,7 @@ const root = ReactDOM.createRoot(
 root.render(
     <Provider store={store}>
         <BrowserRouter>
-            <ChakraProvider > <App/></ChakraProvider>
+            <ChakraProvider><App/></ChakraProvider>
         </BrowserRouter>
     </Provider>
 );

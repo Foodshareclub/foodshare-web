@@ -1,5 +1,5 @@
 .root {
-
+  height: 10vh;
   background-color: #EEF5DB;
   display: flex;
   justify-content: space-between;
@@ -8,7 +8,6 @@
   padding: 0 24px;
 
   & .club {
-
     align-self: center;
     align-items: center;
   }
@@ -42,7 +41,8 @@
       margin-right: 2px;
     }
   }
-  & .support{
+
+  & .support {
     align-self: center;
     font-weight: 600;
   }

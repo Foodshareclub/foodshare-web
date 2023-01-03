@@ -5,7 +5,7 @@ import {CardHeader} from "@chakra-ui/react";
 
 const Header = () => {
     return (
-        <CardHeader>
+        <CardHeader height={"20vh"}>
             <NavComponent/>
             <FilterProductComponent/>
         </CardHeader>

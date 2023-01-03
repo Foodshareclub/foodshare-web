@@ -1,5 +1,5 @@
-import React from 'react';
-import {Box, Grid, GridItem, Image, Link, SimpleGrid} from "@chakra-ui/react";
+import React, {useEffect, useState} from 'react';
+import {Box, Grid, GridItem, Image, Link, SimpleGrid, Skeleton} from "@chakra-ui/react";
 import kitchen from "../../assets/Foodies Soup Kitchen.png";
 import PersonCard from "../personCard/PersonCard";
 import {teamMockArray} from "../../utils/mockArray";
@@ -12,27 +12,41 @@ import {ArrowForwardIcon} from "@chakra-ui/icons";
 // colorScheme='teal'
 
 const AboutUsPage = () => {
-
+    const [isLoaded, setIsLoaded] = useState(false)
+    // пока фото загрузятся skeleton
+    useEffect(() => {
+        setTimeout(() => {
+            setIsLoaded(true)
+        }, 1000)
+    }, [])
     return (
         <>
             <Grid templateColumns='repeat(5, 1fr)' gap={6}>
                 <GridItem w='100%' h='50vh'/>
 
                 <GridItem borderRadius="10%" w='100%'>
-                    <Image src={leftImg} alt={leftImg}/>
+                    <Skeleton isLoaded={isLoaded}>
+                        <Image src={leftImg} alt={leftImg}/>
+                    </Skeleton>
                 </GridItem>
 
                 <Grid gap={6}>
                     <GridItem borderRadius="10%" w='100%'>
-                        <Image src={centerTop} alt={centerTop}/>
+                        <Skeleton isLoaded={isLoaded}>
+                            <Image src={centerTop} alt={centerTop}/>
+                        </Skeleton>
                     </GridItem>
                     <GridItem borderRadius="10%" w='100%'>
-                        <Image src={centerBottom} alt={centerBottom}/>
+                        <Skeleton isLoaded={isLoaded}>
+                            <Image src={centerBottom} alt={centerBottom}/>
+                        </Skeleton>
                     </GridItem>
                 </Grid>
 
                 <GridItem borderRadius="10%" w='100%'>
-                    <Image src={rightImg} alt={rightImg}/>
+                    <Skeleton isLoaded={isLoaded}>
+                        <Image src={rightImg} alt={rightImg}/>
+                    </Skeleton>
                 </GridItem>
 
                 <GridItem w='100%' h='50vh'/>
@@ -42,7 +56,12 @@ const AboutUsPage = () => {
                 <GridItem w='100%'>
                     <Box borderRadius={5} bgColor={"red.100"} fontWeight={600} fontSize={40} w="100%"
                          textAlign="center">About Us</Box>
-                    <Image w="55%" m="0 auto" alignItems="center" src={kitchen} alt={kitchen}/>
+                    {!isLoaded ?
+                        <Skeleton  m={5} isLoaded={isLoaded}>
+                            <Image w="55%" m="0 auto" alignItems="center" src={kitchen} alt={kitchen}/>
+                        </Skeleton> :
+                        <Image w="55%" m="0 auto" alignItems="center" src={kitchen} alt={kitchen}/>
+                    }
                 </GridItem>
 
                 <GridItem fontSize="24px" w='100%'>

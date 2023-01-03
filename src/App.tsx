@@ -15,7 +15,7 @@ import OpportunitiesPage from "./pages/volunteerPages/OpportunitiesPage";
 
 function App() {
     return (
-        <Card size={"lg"} height={"100%"}>
+        <Card size={"lg"} >
             <Header/>
             <CardBody>
                 <Routes>
