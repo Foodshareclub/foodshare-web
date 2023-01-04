@@ -57,7 +57,7 @@ const AboutUsPage = () => {
                     <Box borderRadius={5} bgColor={"red.100"} fontWeight={600} fontSize={40} w="100%"
                          textAlign="center">About Us</Box>
                     {!isLoaded ?
-                        <Skeleton  m={5} isLoaded={isLoaded}>
+                        <Skeleton m={5} isLoaded={isLoaded}>
                             <Image w="55%" m="0 auto" alignItems="center" src={kitchen} alt={kitchen}/>
                         </Skeleton> :
                         <Image w="55%" m="0 auto" alignItems="center" src={kitchen} alt={kitchen}/>
@@ -92,7 +92,7 @@ const AboutUsPage = () => {
 
             <SimpleGrid columns={2} spacing={3}>
                 {teamMockArray.map((el, id) => <PersonCard
-                        about={el.about}
+                        aboutExp={el.about}
                         name={el.name}
                         exp={el.exp}
                         img={el.img}

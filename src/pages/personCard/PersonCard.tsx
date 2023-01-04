@@ -1,38 +1,51 @@
 import React from 'react';
-import {Card, CardBody, Heading, Image, Stack, Text} from "@chakra-ui/react";
+import {Button, Card, CardBody, Heading, Image, Skeleton, Stack, Text} from "@chakra-ui/react";
 
 type PropsType = {
     name: string
     img: string
     exp: string
-    about: string
+    aboutExp?: string
+    aboutMe?: string
 }
 
-const PersonCard: React.FC<PropsType> = ({name, img, exp, about}) => {
+const PersonCard: React.FC<PropsType> = ({name, img, exp, aboutExp, aboutMe}) => {
     return (
         <Card
             direction={{base: 'column', sm: 'row'}}
             overflow='hidden'
-            variant='outline'
-            bgColor={"red.100"}
+            variant='filled'
             mt={4} mb={4}
         >
-            <Image
-                borderRadius="50%"
-                p={2}
-                objectFit='none'
-                maxW={{base: '100%', sm: '200px'}}
-                src={img}
-                alt={img}
-            />
-
-            <Stack>
+            <Skeleton borderRadius="50%"
+                      m={2}
+                      isLoaded={true}>
+                <Image
+                    alignSelf="center"
+                    borderRadius="50%"
+                    p={4}
+                    objectFit='none'
+                    maxW={{base: '100%', sm: '200px'}}
+                    src={img}
+                    alt={img}
+                />
+            </Skeleton>
+            <Stack alignSelf={"center"}>
                 <CardBody>
                     <Heading size='md'>{name}</Heading>
                     <Heading size='md'>{exp}</Heading>
-                    <Text py='2'>
-                        {about}
-                    </Text>
+                    {aboutMe ? <>
+                        <Text py='2'>
+                            {aboutMe}
+                        </Text>
+                        <Button background={"#ff2d55"}
+                                _hover={{bg: '#c92040'}}
+                                color="#ffffff"
+                                variant={"solid"}>Add Listing</Button>
+                    </> : <Text py='2'>
+                        {aboutExp}
+                    </Text>}
+
                 </CardBody>
             </Stack>
         </Card>

@@ -26,7 +26,7 @@ export default function NavComponent() {
     const navigateToMain = () => navigate('/');
     const navigateToAboutUs = () => navigate('/aboutUs');
     const navigateToAddList = () => navigate('/addList');
-    const navigateToMyLists = () => navigate('/myListings');
+    const navigateToMyLists = () => navigate('/user-listings');
 
     const navigateToAccSettings = () => {
     }

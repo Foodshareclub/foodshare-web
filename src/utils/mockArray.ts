@@ -210,4 +210,27 @@ export const opportunities = [
     },
 
 ];
+export const commentsArray = [
+    {
+        img: tarlan,
+        name: "Tarlan",
+        rating: "3 stars",
+        comment: "he is a great man!!! he is a great man!!! he is a great man!!! he is a great man!!!",
+        date: `${new Date().getFullYear()}/${new Date().getMonth() + 1}/${new Date().getDate()} `
+    },
+    {
+        img: denis,
+        name: "Denis",
+        rating: "4 stars",
+        comment: "Yes, i know it)))!!! Yes, i know it)))!!! Yes, i know it)))!!! Yes, i know it)))!!!",
+        date: new Date().getDay()
+    },
+    {
+        img: denis,
+        name: "Denis",
+        rating: "4 stars",
+        comment: "Yes, i know it)))!!! Yes, i know it)))!!! Yes, i know it)))!!! Yes, i know it)))!!!",
+        date: new Date().getDay()
+    },
+]
 

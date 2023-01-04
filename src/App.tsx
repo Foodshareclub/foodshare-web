@@ -11,11 +11,12 @@ import AboutUsPage from "./pages/aboutUs/AboutUsPage";
 import ContactUsPage from "./pages/contactUs/ContactUsPage";
 import VolunteerPage from "./pages/volunteerPages/VolunteerPage";
 import OpportunitiesPage from "./pages/volunteerPages/OpportunitiesPage";
+import MyListingsPage from "./pages/prfilePages/MyListingsPage";
 
 
 function App() {
     return (
-        <Card size={"lg"} >
+        <Card size="lg" minH="100vh">
             <Header/>
             <CardBody>
                 <Routes>
@@ -27,6 +28,7 @@ function App() {
                     <Route path={"/aboutUs"} element={<AboutUsPage/>}/>
                     <Route path={"/contactUs"} element={<ContactUsPage/>}/>
                     <Route path={"/volunteer"} element={<VolunteerPage/>}/>
+                    <Route path={"/user-listings"} element={<MyListingsPage/>}/>
                     <Route path={"/volunteer/opportunities"} element={<OpportunitiesPage/>}/>
                 </Routes>
             </CardBody>
