@@ -1,10 +1,12 @@
 import React from 'react';
 import {Avatar, Card, CardBody, Heading, SkeletonCircle, Stack, Text} from "@chakra-ui/react";
+import {StarIcon} from "@chakra-ui/icons";
+import {property} from "../../utils/mockArray";
 
 type PropsCommentsType = {
     name: string
     img: string
-    rating: string
+    rating: number
     comment: string
     date: string | number
 }
@@ -24,7 +26,14 @@ const Comments: React.FC<PropsCommentsType> = ({date, name, img, rating, comment
             <Stack alignSelf={"center"}>
                 <CardBody>
                     <Heading size='sm'>{name}</Heading>
-                    <Text size='sm'>{rating}</Text>
+                    {Array(5)
+                        .fill('')
+                        .map((_, i) => (
+                            <StarIcon
+                                key={i}
+                                color={i < rating ? 'yellow.500' : 'gray.300'}
+                            />
+                        ))}
                     <Text size='sm'>{date}</Text>
                     <Text py='2'>
                         {comment}

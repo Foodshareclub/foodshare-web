@@ -1,5 +1,6 @@
 import React from 'react';
 import {Button, Card, CardBody, Heading, Image, Skeleton, Stack, Text} from "@chakra-ui/react";
+import PublishListingModal from "../../components/modals/PublishListingModal";
 
 type PropsType = {
     name: string
@@ -38,10 +39,7 @@ const PersonCard: React.FC<PropsType> = ({name, img, exp, aboutExp, aboutMe}) =>
                         <Text py='2'>
                             {aboutMe}
                         </Text>
-                        <Button background={"#ff2d55"}
-                                _hover={{bg: '#c92040'}}
-                                color="#ffffff"
-                                variant={"solid"}>Add Listing</Button>
+                        <PublishListingModal/>
                     </> : <Text py='2'>
                         {aboutExp}
                     </Text>}
