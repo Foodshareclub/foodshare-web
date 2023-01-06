@@ -84,16 +84,16 @@ const PublishListingModal = () => {
                                     </Box>
                                 </>
                             }
-                            <Box alignSelf={"center"}>
-                                <Input accept=".png, .jpg" ref={inputFileRef} type="file"
-                                       onChange={(e) => handleChangeFile(e)} hidden/>
+                            <Box alignSelf="center">
+                                <Input opacity={0} position="absolute" h="100%"  left={0} top={0}
+                                    accept=".png, .jpg" ref={inputFileRef} type="file"                                       onChange={(e) => handleChangeFile(e)} />
+
                                 <Button onClick={() => inputFileRef?.current?.click()} background={"#ff2d55"}
                                         _hover={{bg: '#c92040'}}
                                         color="#ffffff">Download
                                 </Button>
                             </Box>
                         </Flex>
-                        {/*<img style={{maxWidth: "50%",borderRadius:"10px",marginTop:"10px"}} src={value2} alt={value2}/>*/}
                     </FormControl>
                     <FormControl mt={4}>
                         <FormLabel>Category</FormLabel>
