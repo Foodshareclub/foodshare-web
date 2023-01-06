@@ -41,7 +41,7 @@ export default function Main() {
                     <GridItem mt='2' mb='2' key={id}>
                         <Skeleton isLoaded={isLoaded}>
                             <Image width="100%" cursor="pointer" borderRadius="10px"
-                                   onClick={() => navigate("/oneProd", {state: {photo: item.img}})} src={item.img}
+                                   onClick={() => navigate("/oneProd", {state: item})} src={item.img}
                                    alt="soup"/>
                         </Skeleton>
                         {!isLoaded ?

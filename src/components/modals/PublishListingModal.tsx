@@ -85,8 +85,9 @@ const PublishListingModal = () => {
                                 </>
                             }
                             <Box alignSelf="center">
-                                <Input opacity={0} position="absolute" h="100%"  left={0} top={0}
-                                    accept=".png, .jpg" ref={inputFileRef} type="file"                                       onChange={(e) => handleChangeFile(e)} />
+                                <Input opacity={0} position="absolute" h="100%" left={0} top={0}
+                                       accept=".png, .jpg" ref={inputFileRef} type="file"
+                                       onChange={(e) => handleChangeFile(e)}/>
 
                                 <Button onClick={() => inputFileRef?.current?.click()} background={"#ff2d55"}
                                         _hover={{bg: '#c92040'}}

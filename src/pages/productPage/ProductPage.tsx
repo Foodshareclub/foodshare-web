@@ -3,23 +3,30 @@ import styles from "./productPage.module.scss";
 import likes from "../../assets/likes.svg";
 import loc from "../../assets/location-blue.svg";
 import {useLocation} from "react-router-dom";
-import {Box, Button, Flex, Heading, Image, Text} from "@chakra-ui/react";
+import {Box, Flex, Heading, Image, Text} from "@chakra-ui/react";
 import {StarIcon} from "@chakra-ui/icons";
-import {asideProdProperty, property} from "../../utils/mockArray";
+import {asideProdProperty, MockElT} from "../../utils/mockArray";
 import AsideProducts from "./asideProducts/AsideProducts";
 import PickUpRequestModal from "../../components/modals/PickUpRequestModal";
 
-const ProductPage = () => {
-    const {photo} = useLocation().state;
+type ProductPageType = {
+    obj?: MockElT
+    buttonValue?:string
+}
+const ProductPage: React.FC<ProductPageType> = ({obj,buttonValue}) => {
+    let item: MockElT = useLocation().state;
+    if (obj) {
+        item = obj
+    }
 
     return (
         <div className={styles.root}>
             <Flex justify="center">
                 <Box w="50%" alignSelf="center">
                     <Image
-                        src={photo}
+                        src={item.img}
                         borderRadius={20}
-                        alt={photo}
+                        alt={item.img}
                         boxSize='90%'
                         objectFit='cover'
                     />
@@ -28,14 +35,14 @@ const ProductPage = () => {
                 <Box alignSelf="" w="40%">
                     <Box lineHeight={2}>
                         <Flex>
-                            <Heading alignSelf="center" size='md'>{property.name}</Heading>
+                            <Heading alignSelf="center" size='md'>{item.name}</Heading>
                             <Image pl={4} src={loc} alt={loc}/>
-                            <Text px={2}>{property.distance}</Text>
+                            <Text px={2}>{item.distance}</Text>
                         </Flex>
 
                         <Flex>
                             <Image src={likes} alt={likes}/>
-                            <Text px={2}>{property.numbLikes}</Text>
+                            <Text px={2}>{item.property.numbLikes}</Text>
                         </Flex>
 
                         <Flex mt='2' alignItems='center'>
@@ -44,39 +51,38 @@ const ProductPage = () => {
                                 .map((_, i) => (
                                     <StarIcon
                                         key={i}
-                                        color={i < property.rating ? 'teal.500' : 'gray.300'}
+                                        color={i < item.property.rating ? 'teal.500' : 'gray.300'}
                                     />
                                 ))}
                             <Box as='span' ml='2' color='gray.600' fontSize='sm'>
-                                {property.reviews} reviews
+                                {item.property.reviews} reviews
                             </Box>
                         </Flex>
 
-                        <Text  lineHeight={1.5}>{
-                            property.about}
+                        <Text lineHeight={1.5}>{
+                            item.property.about}
                         </Text>
 
                         <Heading alignSelf="center" size='md'>Pick Up Address</Heading>
 
-                        <Text>{property.pickUpAddress}</Text>
+                        <Text>{item.property.pickUpAddress}</Text>
 
                         <Flex>
                             <Heading alignSelf="center" size='md'>Available:</Heading>
-                            <Text px={2}>{property.available}</Text>
+                            <Text px={2}>{item.available_time}</Text>
                         </Flex>
 
                         <Flex>
                             <Heading alignSelf="center" size='md'>Quantity:</Heading>
-                            <Text px={2}>{property.quantity}</Text>
+                            <Text px={2}>{item.property.quantity}</Text>
                         </Flex>
 
                         <Heading alignSelf="center" size='md'>Food Type</Heading>
-
-                        <Text>{property.type}</Text>
+                        <Text>{item.property.type}</Text>
                     </Box>
 
                     <Box mt={10}>
-                        <PickUpRequestModal/>
+                        <PickUpRequestModal buttonValue={buttonValue}/>
                     </Box>
                 </Box>
             </Flex>

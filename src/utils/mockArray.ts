@@ -9,12 +9,23 @@ import kitchenSoup from '../assets/soupKitchen.png';
 import grill from '../assets/grilMeat.png';
 import veget from '../assets/veget.png';
 
-type MockElT = {
-    img: string,
-    name: string,
-    description: string,
-    available_time: string,
+export type PropertyType = {
+    imageAlt: string
+    numbLikes: number
+    about: string
+    pickUpAddress: string
+    rating: number
+    type: string
+    reviews: string
+    quantity: number
+}
+export type MockElT = {
+    img: string
+    name: string
+    description: string
+    available_time: string
     distance: string
+    property:PropertyType
 }
 export type MockTeamArr = {
     img: string
@@ -29,56 +40,136 @@ export const mockArray: Array<MockElT> = [
         name: 'Shelly1994',
         description: 'Two bags of carrot',
         available_time: '6 - 9pm',
-        distance: '3.2mi'
+        distance: '3.2mi',
+        property : {
+            imageAlt: 'Rear view of modern home with pool',
+            numbLikes: 4,
+            about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
+            pickUpAddress: '555 North Star Ln\n' + 'Los Angeles, CA 90210',
+            rating: 4,
+            type: 'Canned Food',
+            reviews: "1,000",
+            quantity: 5
+        }
     },
     {
         img: strawberry,
         name: 'Juniper Cafe',
         description: '10 pounds of strawberries',
         available_time: '3/1 - 3-15',
-        distance: '5mi'
+        distance: '5mi',
+        property : {
+            imageAlt: 'Rear view of modern home with pool',
+            numbLikes: 4,
+            about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
+            pickUpAddress: '555 North Star Ln\n' + 'Los Angeles, CA 90210',
+            rating: 4,
+            type: 'Canned Food',
+            reviews: "1,000",
+            quantity: 5
+        }
     },
     {
         img: pizza,
         name: "Paco's Pizzeria",
         description: '5 boxes of pepperoni and sausage pizza',
         available_time: '8pm - 12pm',
-        distance: '10mi'
+        distance: '10mi',
+        property : {
+            imageAlt: 'Rear view of modern home with pool',
+            numbLikes: 4,
+            about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
+            pickUpAddress: '555 North Star Ln\n' + 'Los Angeles, CA 90210',
+            rating: 4,
+            type: 'Canned Food',
+            reviews: "1,000",
+            quantity: 5
+        }
     },
     {
         img: sweets,
         name: '@FoodShare55',
         description: '20 assorted candy bars',
         available_time: '6 - 9pm',
-        distance: '12mi'
+        distance: '12mi',
+        property : {
+            imageAlt: 'Rear view of modern home with pool',
+            numbLikes: 4,
+            about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
+            pickUpAddress: '555 North Star Ln\n' + 'Los Angeles, CA 90210',
+            rating: 4,
+            type: 'Canned Food',
+            reviews: "1,000",
+            quantity: 5
+        }
     },
     {
         img: hello,
         name: 'Shelly1994',
         description: 'Two bags of carrot',
         available_time: '6 - 9pm',
-        distance: '3.2mi'
+        distance: '3.2mi',
+        property : {
+            imageAlt: 'Rear view of modern home with pool',
+            numbLikes: 4,
+            about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
+            pickUpAddress: '555 North Star Ln\n' + 'Los Angeles, CA 90210',
+            rating: 4,
+            type: 'Canned Food',
+            reviews: "1,000",
+            quantity: 5
+        }
     },
     {
         img: strawberry,
         name: 'Juniper Cafe',
         description: '10 pounds of strawberries',
         available_time: '3/1 - 3-15',
-        distance: '5mi'
+        distance: '5mi',
+        property : {
+            imageAlt: 'Rear view of modern home with pool',
+            numbLikes: 4,
+            about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
+            pickUpAddress: '555 North Star Ln\n' + 'Los Angeles, CA 90210',
+            rating: 4,
+            type: 'Canned Food',
+            reviews: "1,000",
+            quantity: 5
+        }
     },
     {
         img: pizza,
         name: "Paco's Pizzeria",
         description: '5 boxes of pepperoni and sausage pizza',
         available_time: '8pm - 12pm',
-        distance: '10mi'
+        distance: '10mi',
+        property : {
+            imageAlt: 'Rear view of modern home with pool',
+            numbLikes: 4,
+            about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
+            pickUpAddress: '555 North Star Ln\n' + 'Los Angeles, CA 90210',
+            rating: 4,
+            type: 'Canned Food',
+            reviews: "1,000",
+            quantity: 5
+        }
     },
     {
         img: sweets,
         name: '@FoodShare55',
         description: '20 assorted candy bars',
         available_time: '6 - 9pm',
-        distance: '12mi'
+        distance: '12mi',
+        property : {
+            imageAlt: 'Rear view of modern home with pool',
+            numbLikes: 4,
+            about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
+            pickUpAddress: '555 North Star Ln\n' + 'Los Angeles, CA 90210',
+            rating: 4,
+            type: 'Canned Food',
+            reviews: "1,000",
+            quantity: 5
+        }
     },
 ]
 export const teamMockArray: Array<MockTeamArr> = [
@@ -130,19 +221,19 @@ export const teamMockArray: Array<MockTeamArr> = [
             "\n"
     },
 ]
-export const property = {
-    imageUrl: 'https://bit.ly/2Z4KKcF',
-    imageAlt: 'Rear view of modern home with pool',
-    name: "@Localgiver123",
-    numbLikes: 4,
-    about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
-    pickUpAddress: '555 North Star Ln\n' +
-        'Los Angeles, CA 90210',
-    available: "4-6pm",
-    rating: 4,
-    distance: "7 mi away",
-    type: 'Canned Food', reviews: "1,000", quantity: 5
-}
+// export const property = {
+//     imageUrl: 'https://bit.ly/2Z4KKcF',
+//     imageAlt: 'Rear view of modern home with pool',
+//     name: "@Localgiver123",
+//     numbLikes: 4,
+//     about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
+//     pickUpAddress: '555 North Star Ln\n' +
+//         'Los Angeles, CA 90210',
+//     available: "4-6pm",
+//     rating: 4,
+//     distance: "7 mi away",
+//     type: 'Canned Food', reviews: "1,000", quantity: 5
+// }
 export const asideProdProperty = [
     {
         img: pizza,

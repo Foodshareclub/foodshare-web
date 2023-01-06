@@ -17,7 +17,7 @@ const VolunteerPage = () => {
                             w="50%" color="#ffffff"
                             background={"#ff2d55"}
                             _hover={{bg: '#c92040'}}
-                            onClick={()=>navigate("/volunteer/opportunities")}
+                            onClick={() => navigate("/volunteer/opportunities")}
                     >Get Started</Button>
                 </Box>
                 <Box>
@@ -26,7 +26,7 @@ const VolunteerPage = () => {
             </Flex>
             <Heading mt={10} mb={4}>Foodshare Locations Near You</Heading>
             <Flex justify="space-around">
-                <Box w="40%" >
+                <Box w="40%">
                     {asideProdProperty.map((item, id) => (
                         <AsideProducts
                             height="25%"

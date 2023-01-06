@@ -1,7 +1,6 @@
 import React from 'react';
-import {Avatar, Card, CardBody, Heading, SkeletonCircle, Stack, Text} from "@chakra-ui/react";
+import {Avatar, Card, CardBody, Heading, Stack, Text} from "@chakra-ui/react";
 import {StarIcon} from "@chakra-ui/icons";
-import {property} from "../../utils/mockArray";
 
 type PropsCommentsType = {
     name: string

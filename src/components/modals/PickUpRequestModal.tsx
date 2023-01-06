@@ -16,7 +16,11 @@ import {
 } from "@chakra-ui/react";
 import React from "react";
 
-function PickUpRequestModal() {
+type ModalType = {
+    buttonValue?:string
+}
+
+const PickUpRequestModal:React.FC<ModalType>=({buttonValue="Request Pick Up"}) =>{
     const {isOpen, onOpen, onClose} = useDisclosure()
     const initialRef = React.useRef(null)
     const finalRef = React.useRef(null)
@@ -24,7 +28,7 @@ function PickUpRequestModal() {
     return (
         <>
             <Button onClick={onOpen}  backgroundColor='#FF2D55' width="100%" variant='solid' colorScheme='blue'>
-                Request Pick Up
+                {buttonValue}
             </Button>
 
             <Modal

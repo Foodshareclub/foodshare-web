@@ -12,6 +12,9 @@ import ContactUsPage from "./pages/contactUs/ContactUsPage";
 import VolunteerPage from "./pages/volunteerPages/VolunteerPage";
 import OpportunitiesPage from "./pages/volunteerPages/OpportunitiesPage";
 import MyListingsPage from "./pages/prfilePages/MyListingsPage";
+import WantedPage from "./pages/wantedPage/WantedPage";
+import BorrowPage from "./pages/borrowPage/BorrowPage";
+import BusinessPage from "./pages/businessPage/BusinessPage";
 
 
 function App() {
@@ -25,6 +28,9 @@ function App() {
                     <Route path={"/login"} element={<Login/>}/>
                     <Route path={"/registration"} element={<Registration/>}/>
                     <Route path={"/oneProd"} element={<ProductPage/>}/>
+                    <Route path={"/wanted"} element={<WantedPage/>}/>
+                    <Route path={"/borrow"} element={<BorrowPage/>}/>
+                    <Route path={"/business"} element={<BusinessPage/>}/>
                     <Route path={"/aboutUs"} element={<AboutUsPage/>}/>
                     <Route path={"/contactUs"} element={<ContactUsPage/>}/>
                     <Route path={"/volunteer"} element={<VolunteerPage/>}/>
