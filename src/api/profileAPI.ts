@@ -1,55 +1,58 @@
-import {instance} from "./axiosInstance";
+import {supabase} from "../supaBase.config";
+import {AuthError, AuthResponse, AuthSession, OAuthResponse, User, UserResponse} from "@supabase/supabase-js";
 
+export type DataType = {
+    user: User
+    session: null | AuthSession
+}
 export type ResponseType = {
-    avatar: string
-    created: string
-    email: string
-    isAdmin: boolean
-    name: string
-    publicCardPacksCount: number
-    rememberMe: boolean
-    token: string
-    tokenDeathTime: number
-    updated: string
-    verified: boolean
-    __v: number
-    _id: string
-}
-export type UpdatedUserResponseType = {
-    updatedUser: ResponseType
-    error?: string
-}
-export type PayLoadType = {
-    name?: string
-    avatar?: string
-}
-export type RegistrationResponseType = {
-    addedUser: any
-    error: string;
+    data: DataType
+    error: null | AuthError
 }
 
 export type AuthPayload = {
     email: string
-    password?: string
-    phone?:string
+    firstName: string
+    lastName: string
+    age?: string
+    password: string
+    phone?: string
     rememberMe?: boolean
     captcha?: string
 }
+export type ProviderType = "google" | "apple" | "github" | "facebook"
 export const profileAPI = {
-    login(email: string, password: string) {
-        return instance.post<ResponseType>('auth/login',
-            {email, password}
-        );
+    registration({email, password, firstName, lastName}: AuthPayload): Promise<AuthResponse> {
+        return supabase.auth.signUp({
+            email,
+            password, options: {data: {firstName, lastName}, emailRedirectTo: window.location.origin}
+        })
     },
-    logOut() {
-        return instance.delete<ResponseType>('auth/me');
-    }
-};
-
-export const registrationAPI = {
-    registration(email: string, password: string) {
-        return instance.post<RegistrationResponseType>('auth/register',
-            {email, password}
-        );
+    loginWithPass(email: string, password: string): Promise<AuthResponse> {
+        return supabase.auth.signInWithPassword({
+                email, password
+            }
+        )
+    },
+    loginWithPhone(phone: string, password: string): Promise<AuthResponse> {
+        return supabase.auth.signInWithPassword({
+                phone, password
+            }
+        )
+    },
+    loginWithOAuth(provider: ProviderType): Promise<OAuthResponse> {
+        return supabase.auth.signInWithOAuth({
+                provider
+            }
+        )
+    },
+    logOut(): Promise<{ error: AuthError | null }> {
+        return supabase.auth.signOut()
+    },
+    getUser(): Promise<UserResponse> {
+        return supabase.auth.getUser()
+    },
+    recoveryPassword(email:string): Promise<{ data: {}; error: null } | { data: null; error: AuthError }> {
+        return supabase.auth.resetPasswordForEmail(email)
     }
 };

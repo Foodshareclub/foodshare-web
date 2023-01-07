@@ -1,30 +1,24 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
-import {AuthPayload, profileAPI, registrationAPI} from "../../api/profileAPI";
-// import {supabase} from "../../supaBase.config";
+import {AuthPayload, profileAPI} from "../../api/profileAPI";
+import {User} from "@supabase/supabase-js";
 
 
 const initialState = {
-    login: {},
-    registration: {},
+    login: {} as User,
+    registration: {} as User,
     isRegister: false,
     isAuth: false
 
 };
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
-    // const {data, error} = await supabase
-    //     .from('users')
-    //     .select()
-    //     .match({email})
-    //     .single();
-    // console.log(data)
-    // console.log(error)
-
-
     try {
-        // const {data} = await profileAPI.login(email, password);
-
-        // return data;
+        const {data, error} = await profileAPI.loginWithPass(email, password)
+        console.log(data)
+        // console.log(error)
+        if (error) throw error
+        return data.user
     } catch (e: any) {
+        console.log(e)
         // if (e.response.data.message) {
         //     return thunkAPI.rejectWithValue(e.response.data.message);
         // } else {
@@ -32,20 +26,19 @@ export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password
         // }
     }
 });
-export const registerTC = createAsyncThunk("/auth/registerTC", async ({email, password}: AuthPayload, thunkAPI) => {
-    // const {status, error} = await supabase
-    //     .from('users')
-    //     .insert({
-    //         email, password,
-    //     });
-    // console.log(status)
-    // console.log(error)
-
+export const registerTC = createAsyncThunk("/auth/registerTC", async ({
+                                                                          email,
+                                                                          password,
+                                                                          firstName,
+                                                                          lastName
+                                                                      }: AuthPayload, thunkAPI) => {
     try {
-        // const { data } = await registrationAPI.registration(email,password);
-
-        // return data;
+        const {data, error} = await profileAPI.registration({email, password, firstName, lastName})
+        console.log(data.user)
+        // console.log(error)
+        return data.user
     } catch (e: any) {
+        console.log(e)
         // if (e.response.data.message) {
         //   return thunkAPI.rejectWithValue(e.response.data.message);
         // } else {
@@ -55,7 +48,13 @@ export const registerTC = createAsyncThunk("/auth/registerTC", async ({email, pa
 });
 
 export const logoutTC = createAsyncThunk("/auth/logoutTC", async (arg, thunkAPI) => {
-
+    try {
+        const {error} = await profileAPI.logOut()
+        console.log(error)
+        return error
+    } catch (e) {
+        console.log(e)
+    }
     await thunkAPI.dispatch(logoutAC());
 });
 
@@ -65,21 +64,22 @@ const userSlice = createSlice({
     initialState: initialState,
     reducers: {
         logoutAC(state) {
-            state.login = {}
+            state.login = {} as User
             state.isAuth = false;
         },
     },
     extraReducers: (builder) => {
         builder.addCase(loginTC.fulfilled, (state, action) => {
+            if (action.payload) {
                 state.isAuth = true
-                // state.login = action.payload
-
+                state.login = action.payload
+            }
         });
         builder.addCase(registerTC.fulfilled, (state, action) => {
-            // if (action.payload) {
+            if (action.payload) {
                 state.isRegister = true
-                // state.login = action.payload
-            // }
+                state.registration = action.payload
+            }
         });
 
     }

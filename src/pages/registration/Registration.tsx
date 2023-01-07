@@ -1,17 +1,16 @@
 import {useForm} from "react-hook-form";
 import {useNavigate} from "react-router-dom";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
-
-
 import {AuthPayload} from "../../api/profileAPI";
 import {Avatar, Box, Button, FormControl, FormErrorMessage, Input} from "@chakra-ui/react";
+import {registerTC} from "../../store/slices/userReducer";
 
 
 export const Registration = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const {registration, isRegister} = useAppSelector(state => state.user);
-
+    // console.log("isRegister :" + isRegister)
 
     const {
         register,
@@ -21,13 +20,13 @@ export const Registration = () => {
         defaultValues: {
             email: "",
             password: "",
-            fullName: ""
+            firstName: "",
+            lastName:""
         },
         mode: "onChange"
     });
     const onSubmit = async (value: AuthPayload) => {
-        console.log(value)
-        // const data = await dispatch(registerTC(value));
+         await dispatch(registerTC(value));
         // console.log(data)
         // if (!data.payload) {
         //     alert("Не удалось зарегистрироваться...");
@@ -47,22 +46,30 @@ export const Registration = () => {
                 Registration
             </Box>
 
-            <Avatar m={"2% 0 5% 0"} sx={{width: 100, height: 100}}/>
+            <Avatar m="2% 0 5% 0" sx={{width: 100, height: 100}}/>
             <form onSubmit={handleSubmit(onSubmit)}>
-                <FormControl isInvalid={!!errors.fullName}>
-
+                <FormControl isInvalid={!!errors.firstName}>
                     <Input mb={3}
-                           id={"fullName"}
                            variant="filled"
-                           {...register("fullName", {
+                           {...register("firstName", {
                                required: "Enter name please",
                                minLength: {value: 4, message: 'Minimum length should be 4'},
                            })}
-                           placeholder="Full name"
+                           placeholder="First Name"
                     />
-
                     <FormErrorMessage>
-                        {errors.fullName && errors.fullName.message}
+                        {errors.firstName && errors.firstName.message}
+                    </FormErrorMessage>
+                    <Input mb={3}
+                           variant="filled"
+                           {...register("lastName", {
+                               required: "Enter name please",
+                               minLength: {value: 4, message: 'Minimum length should be 4'},
+                           })}
+                           placeholder="Last Name"
+                    />
+                    <FormErrorMessage>
+                        {errors.lastName && errors.lastName.message}
                     </FormErrorMessage>
 
                     <Input mb={3}

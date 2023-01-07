@@ -5,7 +5,6 @@ import google from "../../assets/google.svg"
 import {loginTC} from "../../store/slices/userReducer";
 import {NavLink, useNavigate} from "react-router-dom";
 import {useForm} from "react-hook-form";
-import {AuthPayload} from "../../api/profileAPI";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {
     Box,
@@ -13,10 +12,11 @@ import {
     Flex,
     FormControl,
     FormErrorMessage,
+    Image,
     Input,
     InputGroup,
     InputRightElement,
-    Text, Image
+    Text
 } from "@chakra-ui/react";
 import {ViewIcon, ViewOffIcon} from "@chakra-ui/icons";
 
@@ -25,7 +25,7 @@ export const Login = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const {isAuth} = useAppSelector(state => state.user);
-
+    console.log("isAuth: " + isAuth)
     const {
         register,
         handleSubmit,
@@ -33,19 +33,16 @@ export const Login = () => {
     } = useForm({
         defaultValues: {
             email: "",
-            password: "",
-            fullName: ""
+            password: ""
         },
         mode: "onChange"
     });
     const [show, setShow] = useState(false)
     const handleClick = () => setShow(!show)
 
-    const onSubmit = async (values: AuthPayload) => {
-        const data = await dispatch(loginTC(values));
-        if (!data.payload) {
-            alert("Не удалось авторизироваться...");
-        }
+    const onSubmit = async (values: any) => {
+        await dispatch(loginTC(values));
+
         // if (localStorage.getItem("token") || "token" in data.payload) {
         //   window.localStorage.setItem("token", data.payload.token);
         // } else {

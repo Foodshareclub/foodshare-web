@@ -1,16 +1,6 @@
 import React from 'react';
-import {
-    Avatar,
-    Box,
-    Button,
-    FormControl,
-    FormErrorMessage,
-    FormLabel,
-    Input,
-    useBreakpointValue
-} from "@chakra-ui/react";
+import {Box, Button, FormControl, FormErrorMessage, FormLabel, Input, useBreakpointValue} from "@chakra-ui/react";
 import {useForm} from "react-hook-form";
-import {AuthPayload} from "../../api/profileAPI";
 
 const ContactUsPage = () => {
     const variant = useBreakpointValue(
@@ -19,8 +9,6 @@ const ContactUsPage = () => {
             md: 'solid',
         },
         {
-            // Breakpoint to use when mediaqueries cannot be used, such as in server-side rendering
-            // (Defaults to 'base')
             fallback: 'md',
         },
     )
@@ -34,11 +22,12 @@ const ContactUsPage = () => {
         defaultValues: {
             email: "",
             phone: "",
-            fullName: ""
+            firstName: ""
+
         },
         mode: "onChange"
     });
-    const onSubmit = async (value: AuthPayload) => {
+    const onSubmit = async (value: any) => {
         console.log(value)
 
     };
@@ -53,14 +42,14 @@ const ContactUsPage = () => {
             </Box>
 
             <form onSubmit={handleSubmit(onSubmit)}>
-                <FormControl isInvalid={!!errors.fullName}>
+                <FormControl isInvalid={!!errors.firstName}>
 
                     <FormLabel>Full name</FormLabel>
 
                     <Input mb={3}
                            id={"fullName"}
                            variant="filled"
-                           {...register("fullName", {
+                           {...register("firstName", {
                                required: "Enter name please",
                                minLength: {value: 4, message: 'Minimum length should be 4'},
                            })}
@@ -68,7 +57,7 @@ const ContactUsPage = () => {
                     />
 
                     <FormErrorMessage>
-                        {errors.fullName && errors.fullName.message}
+                        {errors.firstName && errors.firstName.message}
                     </FormErrorMessage>
 
                     <FormLabel>Email</FormLabel>
