@@ -1,5 +1,13 @@
 import {supabase} from "../supaBase.config";
-import {AuthError, AuthResponse, AuthSession, OAuthResponse, User, UserResponse} from "@supabase/supabase-js";
+import {
+    AuthError,
+    AuthResponse,
+    AuthSession,
+    OAuthResponse,
+    User,
+    UserResponse,
+} from "@supabase/supabase-js";
+import {MobileOtpType} from "@supabase/gotrue-js/dist/module/lib/types";
 
 export type DataType = {
     user: User
@@ -40,6 +48,11 @@ export const profileAPI = {
             }
         )
     },
+
+    verifyOtp(phone: string, token: string,type:MobileOtpType):Promise<AuthResponse>{
+        return supabase.auth.verifyOtp({token, phone,type})
+    },
+
     loginWithOAuth(provider: ProviderType): Promise<OAuthResponse> {
         return supabase.auth.signInWithOAuth({
                 provider

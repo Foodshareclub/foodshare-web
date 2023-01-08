@@ -39,11 +39,6 @@ export const registerTC = createAsyncThunk("/auth/registerTC", async ({
         return data.user
     } catch (e: any) {
         console.log(e)
-        // if (e.response.data.message) {
-        //   return thunkAPI.rejectWithValue(e.response.data.message);
-        // } else {
-        //   return thunkAPI.rejectWithValue(e.response.data[0].msg);
-        // }
     }
 });
 
