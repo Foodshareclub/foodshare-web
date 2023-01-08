@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import Header from "./components/header/Header";
 import Main from "./components/main/Main";
 import Footer from "./components/footer/Footer";
@@ -15,9 +15,13 @@ import MyListingsPage from "./pages/prfilePages/MyListingsPage";
 import WantedPage from "./pages/wantedPage/WantedPage";
 import BorrowPage from "./pages/borrowPage/BorrowPage";
 import BusinessPage from "./pages/businessPage/BusinessPage";
+import {useAppDispatch} from "./hook/hooks";
+import {getUserTC} from "./store/slices/userReducer";
+import {supabase} from "./supaBase.config";
 
 
 function App() {
+
     return (
         <Card size="lg" minH="100vh">
             <Header/>

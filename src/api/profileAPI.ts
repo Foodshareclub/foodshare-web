@@ -31,7 +31,7 @@ export type AuthPayload = {
 export type ProviderType = "google" | "apple" | "github" | "facebook"
 export const profileAPI = {
     registration({email, password, firstName, lastName}: AuthPayload): Promise<AuthResponse> {
-        return supabase.auth.signUp({
+               return supabase.auth.signUp({
             email,
             password, options: {data: {firstName, lastName}, emailRedirectTo: window.location.origin}
         })
@@ -62,8 +62,8 @@ export const profileAPI = {
     logOut(): Promise<{ error: AuthError | null }> {
         return supabase.auth.signOut()
     },
-    getUser(): Promise<UserResponse> {
-        return supabase.auth.getUser()
+    getUser(jwt: string | undefined): Promise<UserResponse> {
+        return supabase.auth.getUser(jwt)
     },
     recoveryPassword(email:string): Promise<{ data: {}; error: null } | { data: null; error: AuthError }> {
         return supabase.auth.resetPasswordForEmail(email)

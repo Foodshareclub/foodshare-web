@@ -1,11 +1,13 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import {AuthPayload, profileAPI} from "../../api/profileAPI";
 import {User} from "@supabase/supabase-js";
+import {access_token, supabase} from "../../supaBase.config";
 
 
 const initialState = {
     login: {} as User,
     registration: {} as User,
+    user:{} as User,
     isRegister: false,
     isAuth: false
 
@@ -19,11 +21,7 @@ export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password
         return data.user
     } catch (e: any) {
         console.log(e)
-        // if (e.response.data.message) {
-        //     return thunkAPI.rejectWithValue(e.response.data.message);
-        // } else {
-        //     return thunkAPI.rejectWithValue(e.response.data[0].msg);
-        // }
+
     }
 });
 export const registerTC = createAsyncThunk("/auth/registerTC", async ({
@@ -35,7 +33,7 @@ export const registerTC = createAsyncThunk("/auth/registerTC", async ({
     try {
         const {data, error} = await profileAPI.registration({email, password, firstName, lastName})
         console.log(data.user)
-        // console.log(error)
+             // console.log(error)
         return data.user
     } catch (e: any) {
         console.log(e)
@@ -53,7 +51,25 @@ export const logoutTC = createAsyncThunk("/auth/logoutTC", async (arg, thunkAPI)
     await thunkAPI.dispatch(logoutAC());
 });
 
-
+export const getUserTC =createAsyncThunk("/auth/getUserTC", async () => {
+    // const user = await supabase.auth.user()
+    // console.log(user)
+    // if (user) {
+    //     try {
+    //         const { data, error } = await supabase
+    //             .from('users')
+    //             .select()
+    //             .match({ id: user.id })
+    //             .single()
+    //         if (error) throw error
+    //         console.log(data)
+    //         return data
+    //     } catch (e) {
+    //         throw e
+    //     }
+    // }
+    // return null
+})
 const userSlice = createSlice({
     name: "user",
     initialState: initialState,
@@ -76,6 +92,12 @@ const userSlice = createSlice({
                 state.registration = action.payload
             }
         });
+        // builder.addCase(getUserTC.fulfilled, (state, action) => {
+        //     if (action.payload) {
+        //         state.isRegister = true
+        //         state.user = action.payload
+        //     }
+        // });
 
     }
 });
