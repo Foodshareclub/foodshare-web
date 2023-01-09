@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import Header from "./components/header/Header";
 import Main from "./components/main/Main";
 import Footer from "./components/footer/Footer";
@@ -15,12 +15,32 @@ import MyListingsPage from "./pages/prfilePages/MyListingsPage";
 import WantedPage from "./pages/wantedPage/WantedPage";
 import BorrowPage from "./pages/borrowPage/BorrowPage";
 import BusinessPage from "./pages/businessPage/BusinessPage";
-import {useAppDispatch} from "./hook/hooks";
-import {getUserTC} from "./store/slices/userReducer";
+//import "./exampleIndex.css"
 import {supabase} from "./supaBase.config";
+import Auth from "./components/myExample/Auth";
+import Account from "./components/myExample/Account";
+import {Session} from "@supabase/supabase-js";
 
 
 function App() {
+    const [session, setSession] = useState<Session | null>(null)
+
+    useEffect(() => {
+        supabase.auth.getSession().then(({data: {session}}) => {
+            setSession(session);
+        })
+
+        supabase.auth.onAuthStateChange((_event, session) => {
+            setSession(session)
+        })
+    }, [])
+
+    // return (
+    //     <div className="container" style={{padding: '50px 0 100px 0'}}>
+    //         {!session ? <Auth/> : <Account key={session.user.id} session={session}/>}
+    //     </div>
+    // )
+
 
     return (
         <Card size="lg" minH="100vh">

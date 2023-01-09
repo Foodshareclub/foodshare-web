@@ -1,7 +1,7 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import {AuthPayload, profileAPI} from "../../api/profileAPI";
 import {User} from "@supabase/supabase-js";
-import {access_token, supabase} from "../../supaBase.config";
+import {supabase} from "../../supaBase.config";
 
 
 const initialState = {
@@ -14,8 +14,11 @@ const initialState = {
 };
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
     try {
-        const {data, error} = await profileAPI.loginWithPass(email, password)
-        console.log(data)
+        const {data, error } = await supabase.auth.signInWithOtp({ email })
+
+        alert('Check your email for the login link!')
+        //const {data, error} = await profileAPI.loginWithPass(email, password)
+        //console.log(data)
         // console.log(error)
         if (error) throw error
         return data.user
@@ -31,8 +34,12 @@ export const registerTC = createAsyncThunk("/auth/registerTC", async ({
                                                                           lastName
                                                                       }: AuthPayload, thunkAPI) => {
     try {
+        // const {
+        //     data: {session},
+        // } = await supabase.auth.getSession();
         const {data, error} = await profileAPI.registration({email, password, firstName, lastName})
         console.log(data.user)
+        // console.log(session)
              // console.log(error)
         return data.user
     } catch (e: any) {
@@ -88,8 +95,8 @@ const userSlice = createSlice({
         });
         builder.addCase(registerTC.fulfilled, (state, action) => {
             if (action.payload) {
-                state.isRegister = true
-                state.registration = action.payload
+                //state.isRegister = true
+                // state.registration = action.payload
             }
         });
         // builder.addCase(getUserTC.fulfilled, (state, action) => {
