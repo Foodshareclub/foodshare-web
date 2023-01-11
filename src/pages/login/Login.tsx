@@ -41,14 +41,7 @@ export const Login = () => {
     });
     const [show, setShow] = useState(false)
     const handleClick = () => setShow(!show)
-    const toastHandler = () => {
-        error && toast({
-            title: error ? 'Listing error.' : "Listing successfully",
-            description: error ? "Incorrect login or password." : "We've created your Listing for you.",
-            status: error ? 'error' : 'success',
-            isClosable: true,
-        })
-    }
+
     const onSubmit = async (values: any) => {
         await dispatch(loginTC(values));
     };
@@ -96,9 +89,7 @@ export const Login = () => {
                         {errors.password && errors.password.message}
                     </FormErrorMessage>
 
-                    <Button onClick={() => {
-                        toastHandler()
-                    }} isLoading={false} fontSize={25} variant="solid" m={"5% 0"}
+                    <Button isLoading={false} fontSize={25} variant="solid" m={"5% 0"}
                             w="100%" alignSelf="center" type="submit"
                             disabled={!isValid}>
                         Login
