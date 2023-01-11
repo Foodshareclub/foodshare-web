@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import Header from "./components/header/Header";
 import Main from "./components/main/Main";
 import Footer from "./components/footer/Footer";
@@ -16,16 +16,21 @@ import WantedPage from "./pages/wantedPage/WantedPage";
 import BorrowPage from "./pages/borrowPage/BorrowPage";
 import BusinessPage from "./pages/businessPage/BusinessPage";
 import {useAppDispatch} from "./hook/hooks";
-import {getSessionTC} from "./store/slices/userReducer";
+import {getSession} from "./store/slices/userReducer";
+import {Session} from "@supabase/supabase-js";
+import {supabase} from "./supaBase.config";
 
 
 function App() {
     const dispatch = useAppDispatch()
+    const [session, setSession] = useState<Session | null>(null)
     useEffect(() => {
-        dispatch(getSessionTC())
-
+        supabase.auth.getSession().then(({data: {session}}) => setSession(session))
+        supabase.auth.onAuthStateChange((event, session) => setSession(session))
     }, [])
-
+    if (session) {
+        dispatch(getSession(session))
+    }
     return (
         <Card size="lg" minH="100vh">
             <Header/>

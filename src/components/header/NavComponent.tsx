@@ -19,12 +19,14 @@ import {ChevronDownIcon, SearchIcon} from "@chakra-ui/icons";
 import map from "../../assets/globus.svg";
 import {useAppDispatch} from "../../hook/hooks";
 import {logoutTC} from "../../store/slices/userReducer";
+import {useEffect} from "react";
 
 type PropsType = {
     isRegister: boolean
     user_metadata: any
 }
-const NavComponent: React.FC<PropsType> = ({isRegister, user_metadata = null}) => {
+const NavComponent: React.FC<PropsType> = ({isRegister, user_metadata}) => {
+
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const navigateToLogin = () => navigate('/login');

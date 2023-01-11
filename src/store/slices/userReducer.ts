@@ -56,24 +56,18 @@ export const logoutTC = createAsyncThunk("/auth/logoutTC", async (arg, thunkAPI)
     }
 });
 
-export const getSessionTC = createAsyncThunk("/auth/getSessionTC", async () => {
-    try {
-        const {data: {session}, error} = await supabase.auth.getSession()
-        console.log("session1:", session)
-        if (error) throw error
-        supabase.auth.onAuthStateChange((event, session) => {
-            if (event == 'SIGNED_IN') console.log('SIGNED_IN', session)
-            if (event == 'SIGNED_OUT') console.log('SIGNED_OUT', session)
-        })
-        return session
-    } catch (e: any) {
-        console.log(e)
-    }
-})
 const userSlice = createSlice({
     name: "user",
     initialState: initialState,
-    reducers: {},
+    reducers: {
+        getSession:(state, action)=>{
+            if (action.payload) {
+                state.isRegister = true
+                state.isAuth=true
+                state.session = action.payload
+            }
+        }
+    },
     extraReducers: (builder) => {
         builder.addCase(loginTC.fulfilled, (state, action) => {
             if (action.payload) {
@@ -84,7 +78,7 @@ const userSlice = createSlice({
             }
         });
         builder.addCase(loginTC.rejected, (state, action) => {
-              // @ts-ignore
+            // @ts-ignore
             state.error = action.payload.message
         });
         builder.addCase(registerTC.fulfilled, (state, action) => {
@@ -93,17 +87,12 @@ const userSlice = createSlice({
                 state.registration = action.payload
             }
         });
-        builder.addCase(getSessionTC.fulfilled, (state, action) => {
-            if (action.payload) {
-                state.isRegister = true
-                state.session = action.payload
-            }
-        });
+
         builder.addCase(logoutTC.fulfilled, (state) => {
             state.isAuth = false;
             state.isRegister = false;
         });
     }
 });
-
+export const {getSession} = userSlice.actions
 export const userReducer = userSlice.reducer;
