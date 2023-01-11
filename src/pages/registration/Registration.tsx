@@ -10,7 +10,7 @@ export const Registration = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const {registration, isRegister} = useAppSelector(state => state.user);
-    // console.log("isRegister :" + isRegister)
+    console.log("isRegister :" + isRegister)
 
     const {
         register,

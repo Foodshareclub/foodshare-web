@@ -1,4 +1,4 @@
-import { useState, useEffect, SetStateAction} from 'react'
+import {useState, useEffect, SetStateAction} from 'react'
 import {supabase} from "../../supaBase.config";
 import Avatar from "./Avatar";
 
@@ -8,14 +8,13 @@ const Account = ({session}) => {
     const [loading, setLoading] = useState(true)
     const [username, setUsername] = useState<string | null>(null)
     const [website, setWebsite] = useState<string | null>(null)
-    const [avatar_url, setAvatarUrl] = useState<string |null>(null)
+    const [avatar_url, setAvatarUrl] = useState<string | null>(null)
 
-    const [address, setAddress] = useState<string |null>(null)
+    const [address, setAddress] = useState<string | null>(null)
 
 
     useEffect(() => {
         getProfile()
-        //getAddresses()
     }, [session])
 
     const getProfile = async () => {
@@ -69,7 +68,7 @@ const Account = ({session}) => {
         }
     }
 
-    const updateProfile = async (e:any) => {
+    const updateProfile = async (e: any) => {
         e.preventDefault()
 
         try {
@@ -95,7 +94,7 @@ const Account = ({session}) => {
             setLoading(false)
         }
     }
-    const updateAddress = async (e:any) => {
+    const updateAddress = async (e: any) => {
         e.preventDefault()
 
         try {
@@ -125,7 +124,7 @@ const Account = ({session}) => {
             {loading ? (
                 'Saving ...'
             ) : (
-                <form onSubmit={(e)=>{
+                <form onSubmit={(e) => {
                     updateProfile(e)
                     updateAddress(e)
                 }
@@ -135,7 +134,7 @@ const Account = ({session}) => {
                         size={150}
                         onUpload={(url: string) => {
                             setAvatarUrl(url)
-                            updateProfile({ username, website, avatar_url: url })
+                            updateProfile({username, website, avatar_url: url})
                         }}
                     />
                     <div>Email: {session.user.email}</div>

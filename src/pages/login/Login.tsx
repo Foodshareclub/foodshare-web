@@ -16,16 +16,18 @@ import {
     Input,
     InputGroup,
     InputRightElement,
-    Text
+    Text,
+    useToast
 } from "@chakra-ui/react";
 import {ViewIcon, ViewOffIcon} from "@chakra-ui/icons";
 
-export const Login = () => {
 
+export const Login = () => {
+    const {isAuth, error} = useAppSelector(state => state.user);
+
+    console.log(error)
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const {isAuth} = useAppSelector(state => state.user);
-    console.log("isAuth: " + isAuth)
     const {
         register,
         handleSubmit,
@@ -42,12 +44,6 @@ export const Login = () => {
 
     const onSubmit = async (values: any) => {
         await dispatch(loginTC(values));
-
-        // if (localStorage.getItem("token") || "token" in data.payload) {
-        //   window.localStorage.setItem("token", data.payload.token);
-        // } else {
-        //   alert("Не удалось авторизоваться...");
-        // }
     };
 
     if (isAuth) {
@@ -93,9 +89,10 @@ export const Login = () => {
                         {errors.password && errors.password.message}
                     </FormErrorMessage>
 
-                    <Button isLoading={false} fontSize={25} variant="solid" m={"5% 0"}
-                            w="100%" alignSelf="center" type="submit"
-                            disabled={!isValid}>
+                    <Button
+                        isLoading={false} fontSize={25} variant="solid" m={"5% 0"}
+                        w="100%" alignSelf="center" type="submit"
+                        disabled={!isValid}>
                         Login
                     </Button>
                 </FormControl>

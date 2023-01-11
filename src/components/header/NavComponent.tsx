@@ -17,10 +17,16 @@ import {
 } from "@chakra-ui/react";
 import {ChevronDownIcon, SearchIcon} from "@chakra-ui/icons";
 import map from "../../assets/globus.svg";
+import {useAppDispatch} from "../../hook/hooks";
+import {logoutTC} from "../../store/slices/userReducer";
 
-export default function NavComponent() {
+type PropsType = {
+    isRegister: boolean
+    user_metadata: any
+}
+const NavComponent: React.FC<PropsType> = ({isRegister, user_metadata = null}) => {
+    const dispatch = useAppDispatch();
     const navigate = useNavigate();
-
     const navigateToLogin = () => navigate('/login');
     const navigateToRegistration = () => navigate('/registration');
     const navigateToMain = () => navigate('/');
@@ -33,9 +39,10 @@ export default function NavComponent() {
 
     const navigateToHelp = () => {
     }
-
-    const logOut = () => {
+    const navigateToLogout = () => {
+        dispatch(logoutTC())
     }
+
 
     return (
         <Box display='flex' alignItems='baseline'>
@@ -84,19 +91,28 @@ export default function NavComponent() {
                     <MenuButton cursor="pointer" _expanded={{bg: '#FF2D55'}} variant="styled"
                                 boxSize='40px' as={Avatar}>
                     </MenuButton>
-                    <MenuList>
-                        <MenuItem onClick={() => navigateToLogin()}>login</MenuItem>
-                        <MenuItem onClick={() => navigateToRegistration()}>Registration</MenuItem>
-                        <MenuItem onClick={() => navigateToAddList()}>Add list</MenuItem>
-                        <MenuItem onClick={() => navigateToMyLists()}>My listing's</MenuItem>
+                    <MenuList>{isRegister ?
+                        <>
+                            <MenuItem onClick={() => navigateToAddList()}>Add list</MenuItem>
+                            <MenuItem onClick={() => navigateToMyLists()}>My listing's</MenuItem>
+                            <MenuItem onClick={() => navigateToLogout()}>Log Out</MenuItem>
+                        </> :
+                        <>
+                            <MenuItem onClick={() => navigateToLogin()}>login</MenuItem>
+                            <MenuItem onClick={() => navigateToRegistration()}>Registration</MenuItem>
+                        </>}
                         <MenuItem onClick={() => navigateToAccSettings()}>Account settings</MenuItem>
                         <MenuItem onClick={() => navigateToHelp()}>Help</MenuItem>
-                        <MenuItem onClick={() => logOut()}>Log Out</MenuItem>
+
                     </MenuList>
                 </Menu>
             </Box>
             {/*<Avatar alignSelf="center" boxSize='40px' ml="5%" src='https://bit.ly/broken-link'/>*/}
-            <Box pl={5} fontSize='22px' textAlign="center" fontWeight="400" alignSelf="center">name</Box>
+            {isRegister && <Box pl={5} fontSize='22px' textAlign="center" fontWeight="400"
+                                alignSelf="center">{user_metadata?.firstName}
+            </Box>
+            }
         </Box>
     );
 }
+export default NavComponent

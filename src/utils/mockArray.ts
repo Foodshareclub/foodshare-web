@@ -324,4 +324,17 @@ export const commentsArray = [
         date: `${new Date().toLocaleDateString("en-US")} `
     },
 ]
-
+export const toastOptions =[
+   {
+        title: 'Listing created.',
+        description: "We've created your Listing for you.",
+        status: 'success',
+        isClosable: true,
+    },
+    {
+        title: 'Listing error...',
+        description: "invalid login or password",
+        status: 'error',
+        isClosable: true,
+    },
+]

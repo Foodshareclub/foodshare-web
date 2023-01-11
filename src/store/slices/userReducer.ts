@@ -1,30 +1,35 @@
-import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
+import {createAsyncThunk, createSlice, SerializedError} from "@reduxjs/toolkit";
 import {AuthPayload, profileAPI} from "../../api/profileAPI";
-import {User} from "@supabase/supabase-js";
+import {AuthApiError, AuthError, Session, User} from "@supabase/supabase-js";
 import {supabase} from "../../supaBase.config";
+import {Simulate} from "react-dom/test-utils";
+import error = Simulate.error;
+import {isAuthError} from "@supabase/gotrue-js/src/lib/errors";
 
 
 const initialState = {
     login: {} as User,
     registration: {} as User,
-    user:{} as User,
+    user: {} as User,
     isRegister: false,
-    isAuth: false
+    isAuth: false,
+    session: {
+        user: {
+            user_metadata: {}
+        }
+    } as Session,
+    isLoading: false,
+    error: null
 
 };
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
     try {
-        const {data, error } = await supabase.auth.signInWithOtp({ email })
-
-        alert('Check your email for the login link!')
-        //const {data, error} = await profileAPI.loginWithPass(email, password)
-        //console.log(data)
-        // console.log(error)
+        //const {data, error} = await supabase.auth.signInWithOtp({email})
+        const {data, error} = await profileAPI.loginWithPass(email, password)
         if (error) throw error
         return data.user
     } catch (e: any) {
-        console.log(e)
-
+        return thunkAPI.rejectWithValue(e)
     }
 });
 export const registerTC = createAsyncThunk("/auth/registerTC", async ({
@@ -34,13 +39,8 @@ export const registerTC = createAsyncThunk("/auth/registerTC", async ({
                                                                           lastName
                                                                       }: AuthPayload, thunkAPI) => {
     try {
-        // const {
-        //     data: {session},
-        // } = await supabase.auth.getSession();
         const {data, error} = await profileAPI.registration({email, password, firstName, lastName})
-        console.log(data.user)
-        // console.log(session)
-             // console.log(error)
+        if (error) throw error
         return data.user
     } catch (e: any) {
         console.log(e)
@@ -50,65 +50,60 @@ export const registerTC = createAsyncThunk("/auth/registerTC", async ({
 export const logoutTC = createAsyncThunk("/auth/logoutTC", async (arg, thunkAPI) => {
     try {
         const {error} = await profileAPI.logOut()
-        console.log(error)
-        return error
+        if (error) throw error
     } catch (e) {
         console.log(e)
     }
-    await thunkAPI.dispatch(logoutAC());
 });
 
-export const getUserTC =createAsyncThunk("/auth/getUserTC", async () => {
-    // const user = await supabase.auth.user()
-    // console.log(user)
-    // if (user) {
-    //     try {
-    //         const { data, error } = await supabase
-    //             .from('users')
-    //             .select()
-    //             .match({ id: user.id })
-    //             .single()
-    //         if (error) throw error
-    //         console.log(data)
-    //         return data
-    //     } catch (e) {
-    //         throw e
-    //     }
-    // }
-    // return null
+export const getSessionTC = createAsyncThunk("/auth/getSessionTC", async () => {
+    try {
+        const {data: {session}, error} = await supabase.auth.getSession()
+        console.log("session1:", session)
+        if (error) throw error
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event == 'SIGNED_IN') console.log('SIGNED_IN', session)
+            if (event == 'SIGNED_OUT') console.log('SIGNED_OUT', session)
+        })
+        return session
+    } catch (e: any) {
+        console.log(e)
+    }
 })
 const userSlice = createSlice({
     name: "user",
     initialState: initialState,
-    reducers: {
-        logoutAC(state) {
-            state.login = {} as User
-            state.isAuth = false;
-        },
-    },
+    reducers: {},
     extraReducers: (builder) => {
         builder.addCase(loginTC.fulfilled, (state, action) => {
             if (action.payload) {
                 state.isAuth = true
+                state.isRegister = true
                 state.login = action.payload
+                state.error = null
             }
+        });
+        builder.addCase(loginTC.rejected, (state, action) => {
+              // @ts-ignore
+            state.error = action.payload.message
         });
         builder.addCase(registerTC.fulfilled, (state, action) => {
             if (action.payload) {
-                //state.isRegister = true
-                // state.registration = action.payload
+                state.isRegister = true
+                state.registration = action.payload
             }
         });
-        // builder.addCase(getUserTC.fulfilled, (state, action) => {
-        //     if (action.payload) {
-        //         state.isRegister = true
-        //         state.user = action.payload
-        //     }
-        // });
-
+        builder.addCase(getSessionTC.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.isRegister = true
+                state.session = action.payload
+            }
+        });
+        builder.addCase(logoutTC.fulfilled, (state) => {
+            state.isAuth = false;
+            state.isRegister = false;
+        });
     }
 });
 
-
-export const {logoutAC} = userSlice.actions;
 export const userReducer = userSlice.reducer;

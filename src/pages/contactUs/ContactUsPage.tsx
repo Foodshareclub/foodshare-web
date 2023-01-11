@@ -12,8 +12,8 @@ const ContactUsPage = () => {
             fallback: 'md',
         },
     )
-    console.log(variant)
-    console.log(visualViewport?.width)
+    // console.log(variant)
+    // console.log(visualViewport?.width)
     const {
         register,
         handleSubmit,
