@@ -1,36 +1,53 @@
-import {
-    Button,
-    Flex,
-    FormControl,
-    FormLabel,
-    Input,
-    Modal,
-    ModalBody,
-    ModalCloseButton,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalOverlay,
-    Select,
-    useDisclosure
-} from "@chakra-ui/react";
-import React from "react";
+import {Button, Flex,FormControl, FormErrorMessage, FormLabel, Image, Input, InputGroup, InputRightElement,
+    MenuItem, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay,
+    Text, useDisclosure} from "@chakra-ui/react";
+import React, {useState} from "react";
+import {useAppDispatch, useAppSelector} from "../../hook/hooks";
+import {NavLink, useNavigate} from "react-router-dom";
+import {useForm} from "react-hook-form";
+import {loginTC} from "../../store/slices/userReducer";
+import {ViewIcon, ViewOffIcon} from "@chakra-ui/icons";
+import facebook from "../../assets/facebookblue.svg";
+import apple from "../../assets/apple.svg";
+import google from "../../assets/google.svg";
 
 type ModalType = {
-    buttonValue?:string
+    buttonValue?: string
 }
 
-const LoginModal:React.FC<ModalType>=({buttonValue="Login"}) =>{
+const LoginModal: React.FC<ModalType> = ({buttonValue = "Login"}) => {
+    const {isAuth} = useAppSelector(state => state.user);
+    const navigate = useNavigate();
+    const dispatch = useAppDispatch();
     const {isOpen, onOpen, onClose} = useDisclosure()
     const initialRef = React.useRef(null)
     const finalRef = React.useRef(null)
+    const {
+        register,
+        handleSubmit,
+        formState: {errors, isValid}
+    } = useForm({
+        defaultValues: {
+            email: "",
+            password: ""
+        },
+        mode: "onChange"
+    });
 
+    const [show, setShow] = useState(false)
+    const handleClick = () => setShow(!show)
+
+    const onSubmit = async (values: any) => {
+        await dispatch(loginTC(values));
+        onClose()
+    };
+
+    if (isAuth) {
+        navigate("/");
+    }
     return (
         <>
-            <Button onClick={onOpen}  backgroundColor='#FF2D55' width="100%" variant='solid' colorScheme='blue'>
-                {buttonValue}
-            </Button>
-
+            <MenuItem onClick={onOpen}>{buttonValue}</MenuItem>
             <Modal
                 initialFocusRef={initialRef}
                 finalFocusRef={finalRef}
@@ -39,46 +56,82 @@ const LoginModal:React.FC<ModalType>=({buttonValue="Login"}) =>{
             >
                 <ModalOverlay/>
                 <ModalContent>
-                    <ModalHeader>Enter pick-up request info </ModalHeader>
+                    <ModalHeader>Welcome to Foodshare</ModalHeader>
                     <ModalCloseButton/>
                     <ModalBody pb={6}>
-                        <FormControl>
-                            <FormLabel>Full Name</FormLabel>
-                            <Input ref={initialRef} placeholder='Full Name'/>
-                        </FormControl>
-                        <FormControl mt={4}>
-                            <FormLabel>Email Address</FormLabel>
-                            <Input placeholder='Email Address'/>
-                        </FormControl>
-                        <FormControl mt={4}>
-                            <FormLabel>Phone Number</FormLabel>
-                            <Input placeholder='Phone Number'/>
-                        </FormControl>
-                        <Flex>
-                            <FormControl mt={4}>
-                                <FormLabel>Pick-up Day</FormLabel>
-                                <Select w={"95%"} variant='outline' >
-                                    <option value='option1'>Monday</option>
-                                    <option value='option2'>Tuesday</option>
-                                    <option value='option4'>Wednesday</option>
-                                    <option value='option5'>Thursday</option>
-                                    <option value='option6'>Friday</option>
-                                    <option value='option7'>Saturday</option>
-                                    <option value='option8'>Sunday</option>
-                                </Select>
-                            </FormControl>
-                            <FormControl mt={4}>
-                                <FormLabel>Pick-up Time</FormLabel>
-                                <Input type='time'/>
+                        <form onSubmit={handleSubmit(onSubmit)}>
+                            <FormControl isInvalid={!!errors.email && !!errors.password}>
+                                <FormLabel>Email</FormLabel>
+                                <Input mb={3}
+                                       variant="filled"
+                                       {...register("email", {
+                                           required: "Enter email",
+                                       })}
+                                       placeholder="E-Mail"
+                                />
+                                <FormErrorMessage>
+                                    {errors.email && errors.email.message}
+                                </FormErrorMessage>
                             </FormControl>
 
-                        </Flex>
+                            <FormControl isInvalid={!!errors.email && !!errors.password}>
+                                <FormLabel>Password</FormLabel>
+                                <InputGroup>
+                                    <Input
+                                        variant="filled"
+                                        {...register("password", {required: "Enter password"})}
+                                        placeholder="Password"
+                                        type={show ? "text" : "password"}
+                                    />
+                                    <InputRightElement width='4.5rem'>
+                                        <Button h='1.75rem' size='sm' onClick={handleClick}>
+                                            {show ? <ViewOffIcon/> : <ViewIcon/>}
+                                        </Button>
+                                    </InputRightElement>
+                                </InputGroup>
+                                <FormErrorMessage>
+                                    {errors.password && errors.password.message}
+                                </FormErrorMessage>
+                                <Button isLoading={false} fontSize={25} variant="solid" m={"10% 0"}
+                                        w="100%" alignSelf="center" type="submit"
+                                        disabled={!isValid}>
+                                    Login
+                                </Button>
+                            </FormControl>
+
+                            <Flex align="center" justify="space-around" color={"red.500"} fontSize={15}>
+                                <NavLink to={"#"}>Forgot password?</NavLink>
+                                <NavLink to={"#"}>Forgot username?</NavLink>
+                            </Flex>
+
+                            <Flex alignSelf={"center"} align="center" justify="center">
+                                <hr style={{width: "40%"}}/>
+                                <Text mx={3} fontSize={17}>or</Text>
+                                <hr style={{width: "40%"}}/>
+                            </Flex>
+
+                            <Button leftIcon={<Image src={facebook} alt={facebook}/>} _hover={{bg: 'red.100'}}
+                                    fontSize={20}
+                                    variant="outline" mb={3} w="100%"
+                                    alignSelf="center">
+                                Continue with Facebook
+                            </Button>
+
+                            <Button leftIcon={<Image src={apple} alt={facebook}/>} _hover={{bg: 'red.100'}}
+                                    fontSize={20}
+                                    variant="outline" mb={3} w="100%" alignSelf="center">
+                                Continue with Apple
+                            </Button>
+
+                            <Button leftIcon={<Image src={google} alt={facebook}/>} _hover={{bg: 'red.100'}}
+                                    fontSize={20}
+                                    variant="outline" m={0} w="100%" alignSelf="center">
+                                Continue with Google
+                            </Button>
+                        </form>
                     </ModalBody>
-
                     <ModalFooter>
-                        <Button w="100%" onClick={onClose} colorScheme='red'>
-                            Submit
-                        </Button>
+
                     </ModalFooter>
                 </ModalContent>
             </Modal>

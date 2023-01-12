@@ -4,7 +4,6 @@ import Main from "./components/main/Main";
 import Footer from "./components/footer/Footer";
 import {Route, Routes} from "react-router-dom";
 import {Registration} from "./pages/registration/Registration";
-import {Login} from "./pages/login/Login";
 import ProductPage from "./pages/productPage/ProductPage";
 import {Card, CardBody} from "@chakra-ui/react";
 import AboutUsPage from "./pages/aboutUs/AboutUsPage";
@@ -16,7 +15,7 @@ import WantedPage from "./pages/wantedPage/WantedPage";
 import BorrowPage from "./pages/borrowPage/BorrowPage";
 import BusinessPage from "./pages/businessPage/BusinessPage";
 import {useAppDispatch} from "./hook/hooks";
-import {getSession} from "./store/slices/userReducer";
+import {getSession, getValueFromDBTC} from "./store/slices/userReducer";
 import {Session} from "@supabase/supabase-js";
 import {supabase} from "./supaBase.config";
 
@@ -24,13 +23,23 @@ import {supabase} from "./supaBase.config";
 function App() {
     const dispatch = useAppDispatch()
     const [session, setSession] = useState<Session | null>(null)
+    const value = {
+        fromTableName: "chats",
+        columnValue: 'Users',
+        columnValueItem: "c9ec2249-bea0-4b11-aa60-f9ce315132e5",
+        selectRow: "last_message"
+    }
+
     useEffect(() => {
         supabase.auth.getSession().then(({data: {session}}) => setSession(session))
         supabase.auth.onAuthStateChange((event, session) => setSession(session))
     }, [])
     if (session) {
         dispatch(getSession(session))
+        dispatch(getValueFromDBTC(value))
     }
+
+
     return (
         <Card size="lg" minH="100vh">
             <Header/>
@@ -38,7 +47,6 @@ function App() {
                 <Routes>
                     <Route path={"/"} element={<Main/>}/>
                     <Route path={"/*"} element={<Main/>}/>
-                    <Route path={"/login"} element={<Login/>}/>
                     <Route path={"/registration"} element={<Registration/>}/>
                     <Route path={"/oneProd"} element={<ProductPage/>}/>
                     <Route path={"/wanted"} element={<WantedPage/>}/>

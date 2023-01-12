@@ -3,7 +3,7 @@ import {
     AuthError,
     AuthResponse,
     AuthSession,
-    OAuthResponse,
+    OAuthResponse, PostgrestSingleResponse, Session,
     User,
     UserResponse,
 } from "@supabase/supabase-js";
@@ -62,10 +62,23 @@ export const profileAPI = {
     logOut(): Promise<{ error: AuthError | null }> {
         return supabase.auth.signOut()
     },
-    getUser(jwt: string | undefined): Promise<UserResponse> {
-        return supabase.auth.getUser(jwt)
+    getValue(value:GetValueType ):PromiseLike<PostgrestSingleResponse<string>> {
+        if(typeof value.selectRow !== "string"){
+            value.selectRow = value.selectRow.join()
+        }
+        return supabase
+            .from(value.fromTableName)
+            .select(`${value.selectRow}`)
+            .eq(`${value.columnValue}`, `${value.columnValueItem}`)
+            .single()
     },
     recoveryPassword(email:string): Promise<{ data: {}; error: null } | { data: null; error: AuthError }> {
         return supabase.auth.resetPasswordForEmail(email)
     }
 };
+export type GetValueType ={
+    fromTableName: string
+    columnValue:string
+    columnValueItem:string
+    selectRow:  Array<string> | string
+}

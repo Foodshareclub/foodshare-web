@@ -19,7 +19,7 @@ import {ChevronDownIcon, SearchIcon} from "@chakra-ui/icons";
 import map from "../../assets/globus.svg";
 import {useAppDispatch} from "../../hook/hooks";
 import {logoutTC} from "../../store/slices/userReducer";
-import {useEffect} from "react";
+import LoginModal from "../modals/LoginModal";
 
 type PropsType = {
     isRegister: boolean
@@ -100,7 +100,7 @@ const NavComponent: React.FC<PropsType> = ({isRegister, user_metadata}) => {
                             <MenuItem onClick={() => navigateToLogout()}>Log Out</MenuItem>
                         </> :
                         <>
-                            <MenuItem onClick={() => navigateToLogin()}>login</MenuItem>
+                            <LoginModal buttonValue={"Login"}/>
                             <MenuItem onClick={() => navigateToRegistration()}>Registration</MenuItem>
                         </>}
                         <MenuItem onClick={() => navigateToAccSettings()}>Account settings</MenuItem>

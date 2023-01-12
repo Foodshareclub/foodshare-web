@@ -1,10 +1,6 @@
-import {createAsyncThunk, createSlice, SerializedError} from "@reduxjs/toolkit";
-import {AuthPayload, profileAPI} from "../../api/profileAPI";
-import {AuthApiError, AuthError, Session, User} from "@supabase/supabase-js";
-import {supabase} from "../../supaBase.config";
-import {Simulate} from "react-dom/test-utils";
-import error = Simulate.error;
-import {isAuthError} from "@supabase/gotrue-js/src/lib/errors";
+import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
+import {AuthPayload, GetValueType, profileAPI} from "../../api/profileAPI";
+import {Session, User} from "@supabase/supabase-js";
 
 
 const initialState = {
@@ -19,8 +15,8 @@ const initialState = {
         }
     } as Session,
     isLoading: false,
-    error: null
-
+    error: null,
+    value:null
 };
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
     try {
@@ -57,14 +53,32 @@ export const logoutTC = createAsyncThunk("/auth/logoutTC", async (arg, thunkAPI)
     }
 });
 
+export const getValueFromDBTC = createAsyncThunk("/auth/getValueFromDBTC", async ({fromTableName, columnValue,columnValueItem, selectRow}:GetValueType, thunkAPI) => {
+    try {
+
+        let {data, error, status} = await profileAPI.getValue({fromTableName, columnValue,columnValueItem, selectRow})
+        if (error && status !== 406) {
+            throw error
+        }
+        if (data) {
+            console.log(data)
+            console.log(status)
+            return data
+        }
+    } catch (error: any) {
+        alert(error.message)
+    }
+});
+
+
 const userSlice = createSlice({
     name: "user",
     initialState: initialState,
     reducers: {
-        getSession:(state, action)=>{
+        getSession: (state, action) => {
             if (action.payload) {
                 state.isRegister = true
-                state.isAuth=true
+                state.isAuth = true
                 state.session = action.payload
             }
         }
@@ -86,6 +100,13 @@ const userSlice = createSlice({
             if (action.payload) {
                 state.isRegister = true
                 state.registration = action.payload
+            }
+        });
+        builder.addCase(getValueFromDBTC.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.isLoading = true
+                // @ts-ignore
+                state.value = action.payload
             }
         });
 

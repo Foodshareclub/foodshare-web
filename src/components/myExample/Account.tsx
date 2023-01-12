@@ -1,6 +1,8 @@
 import {useState, useEffect, SetStateAction} from 'react'
 import {supabase} from "../../supaBase.config";
 import Avatar from "./Avatar";
+import {Session} from "@supabase/supabase-js";
+
 
 
 // @ts-ignore
@@ -9,7 +11,6 @@ const Account = ({session}) => {
     const [username, setUsername] = useState<string | null>(null)
     const [website, setWebsite] = useState<string | null>(null)
     const [avatar_url, setAvatarUrl] = useState<string | null>(null)
-
     const [address, setAddress] = useState<string | null>(null)
 
 
