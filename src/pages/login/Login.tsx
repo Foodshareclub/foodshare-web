@@ -25,7 +25,7 @@ import {ViewIcon, ViewOffIcon} from "@chakra-ui/icons";
 export const Login = () => {
     const {isAuth, error} = useAppSelector(state => state.user);
     const toast = useToast()
-    console.log(error)
+
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const {
