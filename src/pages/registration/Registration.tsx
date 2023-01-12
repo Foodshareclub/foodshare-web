@@ -52,7 +52,6 @@ export const Registration = () => {
                     <Input mb={3}
                            variant="filled"
                            {...register("firstName", {
-                               required: "Enter name please",
                                minLength: {value: 4, message: 'Minimum length should be 4'},
                            })}
                            placeholder="First Name"
@@ -63,8 +62,7 @@ export const Registration = () => {
                     <Input mb={3}
                            variant="filled"
                            {...register("lastName", {
-                               required: "Enter name please",
-                               minLength: {value: 4, message: 'Minimum length should be 4'},
+                               minLength: {value: 1, message: 'Minimum length should be 1'},
                            })}
                            placeholder="Last Name"
                     />

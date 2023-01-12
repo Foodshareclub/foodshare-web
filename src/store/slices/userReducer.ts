@@ -41,6 +41,7 @@ export const registerTC = createAsyncThunk("/auth/registerTC", async ({
     try {
         const {data, error} = await profileAPI.registration({email, password, firstName, lastName})
         if (error) throw error
+        console.log(data.user)
         return data.user
     } catch (e: any) {
         console.log(e)
