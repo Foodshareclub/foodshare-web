@@ -3,12 +3,26 @@ import {
     AuthError,
     AuthResponse,
     AuthSession,
-    OAuthResponse, PostgrestSingleResponse, Session,
+    OAuthResponse,
+    PostgrestSingleResponse,
     User,
-    UserResponse,
 } from "@supabase/supabase-js";
 import {MobileOtpType} from "@supabase/gotrue-js/dist/module/lib/types";
 
+export type ImgUrlType = {
+    dir: string, imgUrl: string
+}
+export type UploadImgUrlType = {
+    dir: string
+    filePath: string
+    file: File
+}
+export type GetValueType = {
+    fromTableName: string
+    columnValue: string
+    columnValueItem: string
+    selectRow: Array<string> | string
+}
 export type DataType = {
     user: User
     session: null | AuthSession
@@ -31,7 +45,7 @@ export type AuthPayload = {
 export type ProviderType = "google" | "apple" | "github" | "facebook"
 export const profileAPI = {
     registration({email, password, firstName, lastName}: AuthPayload): Promise<AuthResponse> {
-               return supabase.auth.signUp({
+        return supabase.auth.signUp({
             email,
             password, options: {data: {firstName, lastName}, emailRedirectTo: window.location.origin}
         })
@@ -49,8 +63,8 @@ export const profileAPI = {
         )
     },
 
-    verifyOtp(phone: string, token: string,type:MobileOtpType):Promise<AuthResponse>{
-        return supabase.auth.verifyOtp({token, phone,type})
+    verifyOtp(phone: string, token: string, type: MobileOtpType): Promise<AuthResponse> {
+        return supabase.auth.verifyOtp({token, phone, type})
     },
 
     loginWithOAuth(provider: ProviderType): Promise<OAuthResponse> {
@@ -62,8 +76,8 @@ export const profileAPI = {
     logOut(): Promise<{ error: AuthError | null }> {
         return supabase.auth.signOut()
     },
-    getValue(value:GetValueType ):PromiseLike<PostgrestSingleResponse<string>> {
-        if(typeof value.selectRow !== "string"){
+    getValue(value: GetValueType): PromiseLike<PostgrestSingleResponse<string>> {
+        if (typeof value.selectRow !== "string") {
             value.selectRow = value.selectRow.join()
         }
         return supabase
@@ -72,13 +86,13 @@ export const profileAPI = {
             .eq(`${value.columnValue}`, `${value.columnValueItem}`)
             .single()
     },
-    recoveryPassword(email:string): Promise<{ data: {}; error: null } | { data: null; error: AuthError }> {
+    recoveryPassword(email: string): Promise<{ data: {}; error: null } | { data: null; error: AuthError }> {
         return supabase.auth.resetPasswordForEmail(email)
+    },
+    downloadImgFromDB(value: ImgUrlType): Promise<{ data: Blob; error: null } | { data: null; error: RangeError }> {
+        return supabase.storage.from(`${value.dir}`).download(`${value.imgUrl}`)
+    },
+    uploadImgFromDB(value: UploadImgUrlType): Promise<{ data: { path: string }; error: null } | { data: null; error: RangeError }> {
+        return supabase.storage.from(`${value.dir}`).upload(value.filePath, value.file)
     }
 };
-export type GetValueType ={
-    fromTableName: string
-    columnValue:string
-    columnValueItem:string
-    selectRow:  Array<string> | string
-}

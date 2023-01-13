@@ -23,18 +23,24 @@ import {supabase} from "./supaBase.config";
 function App() {
     const dispatch = useAppDispatch()
     const [session, setSession] = useState<Session | null>(null)
-    const value = {
-        fromTableName: "chats",
-        columnValue: 'Users',
-        columnValueItem: "c9ec2249-bea0-4b11-aa60-f9ce315132e5",
-        selectRow: "last_message"
-    }
+    // const value = {
+    //     fromTableName: "chats",
+    //     columnValue: 'Users',
+    //     columnValueItem: "c9ec2249-bea0-4b11-aa60-f9ce315132e5",
+    //     selectRow: "last_message"
+    // }
 
     useEffect(() => {
         supabase.auth.getSession().then(({data: {session}}) => setSession(session))
         supabase.auth.onAuthStateChange((event, session) => setSession(session))
     }, [])
     if (session) {
+        const value = {
+            fromTableName: "profiles",
+            columnValue: 'id',
+            columnValueItem: session.user.id,
+            selectRow: "*"
+        }
         dispatch(getSession(session))
         dispatch(getValueFromDBTC(value))
     }

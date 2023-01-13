@@ -20,6 +20,7 @@ import map from "../../assets/globus.svg";
 import {useAppDispatch} from "../../hook/hooks";
 import {logoutTC} from "../../store/slices/userReducer";
 import LoginModal from "../modals/LoginModal";
+import UpdateProfileModal from "../modals/UpdateProfileModal";
 
 type PropsType = {
     isRegister: boolean
@@ -95,17 +96,16 @@ const NavComponent: React.FC<PropsType> = ({isRegister, user_metadata}) => {
                     </MenuButton>
                     <MenuList>{isRegister ?
                         <>
-                            <MenuItem onClick={() => navigateToAddList()}>Add list</MenuItem>
+                            <UpdateProfileModal buttonValue="Update Profile"/>
                             <MenuItem onClick={() => navigateToMyLists()}>My listing's</MenuItem>
                             <MenuItem onClick={() => navigateToLogout()}>Log Out</MenuItem>
                         </> :
                         <>
-                            <LoginModal buttonValue={"Login"}/>
+                            <LoginModal buttonValue="Login"/>
                             <MenuItem onClick={() => navigateToRegistration()}>Registration</MenuItem>
                         </>}
                         <MenuItem onClick={() => navigateToAccSettings()}>Account settings</MenuItem>
                         <MenuItem onClick={() => navigateToHelp()}>Help</MenuItem>
-
                     </MenuList>
                 </Menu>
             </Box>

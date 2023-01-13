@@ -19,7 +19,7 @@ import {
     useDisclosure,
     useToast
 } from "@chakra-ui/react";
-import {savePhotoOnServer} from "../../utils/savePhotoOnServer";
+import {createPhotoUrl} from "../../utils/createPhotoUrl";
 import cloud from "../../assets/cloud.svg"
 
 const PublishListingModal = () => {
@@ -39,7 +39,7 @@ const PublishListingModal = () => {
         setValue(value)
     }
     const handleChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const data = await savePhotoOnServer(event);
+        const data = await createPhotoUrl(event);
         setValue2(data)
     }
     const publishHandler = () => {
