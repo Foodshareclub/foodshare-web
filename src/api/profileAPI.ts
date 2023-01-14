@@ -76,7 +76,7 @@ export const profileAPI = {
     logOut(): Promise<{ error: AuthError | null }> {
         return supabase.auth.signOut()
     },
-    getValue(value: GetValueType): PromiseLike<PostgrestSingleResponse<string>> {
+    getValue(value: GetValueType): PromiseLike<PostgrestSingleResponse<any>> {
         if (typeof value.selectRow !== "string") {
             value.selectRow = value.selectRow.join()
         }

@@ -1,4 +1,4 @@
-import {ChangeEvent} from 'react'
+import React, {ChangeEvent} from 'react'
 
 type PropsType = {
     url?: string
@@ -8,6 +8,7 @@ type PropsType = {
 }
 
 const Avatar: React.FC<PropsType> = ({url, size, uploading, onUpload}) => {
+
 
     const uploadAvatar = (event: ChangeEvent<HTMLInputElement>) => {
 

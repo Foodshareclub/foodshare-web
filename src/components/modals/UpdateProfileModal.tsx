@@ -26,7 +26,9 @@ type ModalType = {
 }
 
 const UpdateProfileModal: React.FC<ModalType> = ({buttonValue = "Update Profile"}) => {
-    const {session, imgUrl, value} = useAppSelector(state => state.user);
+    const session = useAppSelector(state => state.user.session);
+    const  value = useAppSelector(state => state.user.value);
+    const  imgUrl = useAppSelector(state => state.user.imgUrl);
     const [avatar_url, setAvatar_url] = useState('')
     const dispatch = useAppDispatch();
     useEffect(() => {
@@ -40,19 +42,11 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue = "Update Profile"
             dispatch(getValueFromDBTC(values))
         }
     }, [])
-    // if(value){
-    //     const obj:ImgUrlType ={
-    //         dir:"avatars",
-    //         imgUrl:value.avatar_url
-    //     }
-    //     dispatch(downloadImgFromDBTC(obj))
-    //     console.log(value)
-    // }
-    console.log(value)
+   //console.log(value)
     const onUpload = (filePath: string, url: string) => {
         setAvatar_url(url)
     }
-    let [value2, setValue2] = useState('')
+
     const {isOpen, onOpen, onClose} = useDisclosure()
     const initialRef = React.useRef(null)
     const finalRef = React.useRef(null)
@@ -86,9 +80,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue = "Update Profile"
         // await dispatch(loginTC(values));
         onClose()
     };
-    let handleInputChange = (value: React.SetStateAction<string>) => {
-        setValue2(value)
-    }
+
 
     return (
         <>
@@ -114,8 +106,6 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue = "Update Profile"
                                 <FormLabel>About me</FormLabel>
                                 <Textarea
                                     {...register("about_me")}
-                                    value={value2}
-                                    onChange={(e) => handleInputChange(e.currentTarget.value)}
                                     placeholder='Enter about...'
                                 />
                             </FormControl>

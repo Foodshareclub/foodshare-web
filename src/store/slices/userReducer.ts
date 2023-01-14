@@ -68,7 +68,7 @@ export const getValueFromDBTC = createAsyncThunk("/auth/getValueFromDBTC", async
             throw error
         }
         if (data) {
-            //console.log(data)
+            console.log(data)
             //console.log(status)
             return data
         }
@@ -138,7 +138,6 @@ const userSlice = createSlice({
         });
         builder.addCase(getValueFromDBTC.fulfilled, (state, action) => {
             if (action.payload) {
-                // @ts-ignore
                 state.value = action.payload
             }
         });
