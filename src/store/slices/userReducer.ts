@@ -1,5 +1,5 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
-import {AuthPayload, GetValueType, ImgUrlType, profileAPI, UploadImgUrlType} from "../../api/profileAPI";
+import {AllValuesType, AuthPayload, GetValueType, ImgUrlType, profileAPI, UploadImgUrlType} from "../../api/profileAPI";
 import {Session, User} from "@supabase/supabase-js";
 
 
@@ -68,7 +68,7 @@ export const getValueFromDBTC = createAsyncThunk("/auth/getValueFromDBTC", async
             throw error
         }
         if (data) {
-            console.log(data)
+            //console.log(data)
             //console.log(status)
             return data
         }
@@ -101,7 +101,19 @@ export const uploadImgFromDBTC = createAsyncThunk("/auth/uploadImgFromDBTC", asy
         thunkAPI.rejectWithValue(error.message)
     }
 })
-
+export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (updates: AllValuesType, thunkAPI) => {
+    try {
+        thunkAPI.dispatch(isLoading(true))
+        let {error} = await profileAPI.updateProfile(updates)
+        if (error) {
+            throw error
+        }
+    } catch (error: any) {
+        thunkAPI.rejectWithValue(error.message)
+    } finally {
+        thunkAPI.dispatch(isLoading(false))
+    }
+})
 const userSlice = createSlice({
     name: "user",
     initialState: initialState,
@@ -143,16 +155,23 @@ const userSlice = createSlice({
         });
         builder.addCase(downloadImgFromDBTC.fulfilled, (state, action) => {
             if (action.payload) {
-                state.imgUrl = action.payload
+                if (action.payload) {
+                    state.imgUrl = action.payload
+                }
+
             }
         });
         builder.addCase(uploadImgFromDBTC.fulfilled, (state) => {
-
+            state.error = null
+        });
+        builder.addCase(updateProfileTC.fulfilled, (state) => {
+            state.error = null
         });
 
         builder.addCase(logoutTC.fulfilled, (state) => {
             state.isAuth = false;
             state.isRegister = false;
+            state.error = null
         });
     }
 });

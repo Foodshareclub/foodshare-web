@@ -1,14 +1,23 @@
-import React, {ChangeEvent} from 'react'
+import React, {ChangeEvent, useEffect, useState} from 'react'
+import {downloadImgFromDBTC} from "../../store/slices/userReducer";
+import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 
 type PropsType = {
-    url?: string
+    url: string | null
     size: number
     uploading: boolean
-    onUpload: (filePath: string, file: string) => void
+    onUpload: (filePath: string, url: string, file: File) => void
 }
 
 const Avatar: React.FC<PropsType> = ({url, size, uploading, onUpload}) => {
-
+    const dispatch = useAppDispatch()
+    const [pastUrl, setPastUrl] = useState<string | undefined>("")
+    useEffect(() => {
+        if (url) {
+            dispatch(downloadImgFromDBTC({dir: "avatars", imgUrl: url})).unwrap().then(res => setPastUrl(res))
+        }
+    }, [])
+    const imgUrl = useAppSelector(state => state.user.imgUrl);
 
     const uploadAvatar = (event: ChangeEvent<HTMLInputElement>) => {
 
@@ -18,19 +27,15 @@ const Avatar: React.FC<PropsType> = ({url, size, uploading, onUpload}) => {
         const fileName = `${Math.random()}.${fileExt}`
         const filePath = `${fileName}`
         const url = URL.createObjectURL(file)
-        console.log(file)
-        console.log(fileExt)
-        console.log(fileName)
-        console.log(filePath)
-
-        onUpload(filePath, url)
+        onUpload(filePath, url, file)
+        setPastUrl(url)
     }
 
     return (
         <div style={{width: size}} aria-live="polite">
             <img
-                src={url ? url : `https://place-hold.it/${size}x${size}`}
-                alt={url ? 'Avatar' : 'No image'}
+                src={pastUrl ? pastUrl : `https://place-hold.it/${size}x${size}`}
+                alt={pastUrl ? 'Avatar' : 'No image'}
                 style={{height: size, width: size}}
             />
             <div className="visually-hidden">

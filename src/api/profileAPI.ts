@@ -9,8 +9,27 @@ import {
 } from "@supabase/supabase-js";
 import {MobileOtpType} from "@supabase/gotrue-js/dist/module/lib/types";
 
+export type AllValuesType = {
+    address_id: string | null,
+    created_time: string,
+    email?: string,
+    password: null,
+    id: string,
+    liked_post: string | null,
+    about_me: string |null,
+    avatar_url: string | null,
+    birth_date: string |null,
+    first_name: string |null,
+    phone_number: string |null,
+    second_name: string | null,
+    updated_at: Date,
+    user_address: string | null,
+    user_location: string | null,
+    user_metro_station: string | null,
+    username: string | null
+}
 export type ImgUrlType = {
-    dir: string, imgUrl: string
+    dir: string, imgUrl: string |null
 }
 export type UploadImgUrlType = {
     dir: string
@@ -94,5 +113,8 @@ export const profileAPI = {
     },
     uploadImgFromDB(value: UploadImgUrlType): Promise<{ data: { path: string }; error: null } | { data: null; error: RangeError }> {
         return supabase.storage.from(`${value.dir}`).upload(value.filePath, value.file)
+    },
+    updateProfile(updates: AllValuesType) {
+        return supabase.from('profiles').upsert(updates)
     }
 };
