@@ -1,5 +1,6 @@
 import straw from "../../assets/straw.svg";
 import * as React from 'react';
+import {useEffect, useState} from 'react';
 import {useNavigate} from "react-router-dom";
 import {
     Avatar,
@@ -17,24 +18,41 @@ import {
 } from "@chakra-ui/react";
 import {ChevronDownIcon, SearchIcon} from "@chakra-ui/icons";
 import map from "../../assets/globus.svg";
-import {useAppDispatch} from "../../hook/hooks";
-import {logoutTC} from "../../store/slices/userReducer";
+import {useAppDispatch, useAppSelector} from "../../hook/hooks";
+import {downloadImgFromDBTC, getValueFromDBTC, logoutTC} from "../../store/slices/userReducer";
 import LoginModal from "../modals/LoginModal";
 import UpdateProfileModal from "../modals/UpdateProfileModal";
+import {AllValuesType} from "../../api/profileAPI";
 
 type PropsType = {
     isRegister: boolean
-    user_metadata: any
-}
-const NavComponent: React.FC<PropsType> = ({isRegister, user_metadata}) => {
 
-    const dispatch = useAppDispatch();
+}
+const NavComponent: React.FC<PropsType> = ({isRegister}) => {
+
+    const {user} = useAppSelector(state => state.user.session);
+    const imgUrl = useAppSelector(state => state.user.imgUrl);
+    const value = useAppSelector<AllValuesType>(state => state.user.value);
+    console.log(imgUrl)
+
+    const dispatch = useAppDispatch()
+    console.log(isRegister)
+
+    useEffect(() => {
+        console.log("img")
+        if (value && value.avatar_url) {
+            dispatch(downloadImgFromDBTC({
+                dir: "avatars",
+                imgUrl: value && value.avatar_url
+            }))
+        }
+    }, [value])
+    console.log(value)
     const navigate = useNavigate();
     const navigateToLogin = () => navigate('/login');
     const navigateToRegistration = () => navigate('/registration');
     const navigateToMain = () => navigate('/');
     const navigateToAboutUs = () => navigate('/aboutUs');
-    const navigateToAddList = () => navigate('/addList');
     const navigateToMyLists = () => navigate('/user-listings');
 
     const navigateToAccSettings = () => {
@@ -90,13 +108,18 @@ const NavComponent: React.FC<PropsType> = ({isRegister, user_metadata}) => {
             </Box>
             <Image mr="5%" alignSelf="center" src={map} alt={map}/>
             <Box alignSelf="center" p={0} color='#303030'>
+
+
                 <Menu>
-                    <MenuButton cursor="pointer" _expanded={{bg: '#FF2D55'}} variant="styled"
-                                boxSize='40px' as={Avatar}>
+                    <MenuButton
+
+                        borderRadius={"50%"}
+                                boxSize='40px' as={Box}>
+                        {imgUrl? <Avatar cursor="pointer" src={imgUrl}/>: <Avatar src={straw} cursor="pointer"/>}
                     </MenuButton>
                     <MenuList>{isRegister ?
                         <>
-                            <UpdateProfileModal buttonValue="Update Profile"/>
+                            <UpdateProfileModal value={value} buttonValue="Update Profile"/>
                             <MenuItem onClick={() => navigateToMyLists()}>My listing's</MenuItem>
                             <MenuItem onClick={() => navigateToLogout()}>Log Out</MenuItem>
                         </> :
@@ -109,11 +132,6 @@ const NavComponent: React.FC<PropsType> = ({isRegister, user_metadata}) => {
                     </MenuList>
                 </Menu>
             </Box>
-            {/*<Avatar alignSelf="center" boxSize='40px' ml="5%" src='https://bit.ly/broken-link'/>*/}
-            {isRegister && <Box pl={5} fontSize='22px' textAlign="center" fontWeight="400"
-                                alignSelf="center">{user_metadata?.firstName}
-            </Box>
-            }
         </Box>
     );
 }

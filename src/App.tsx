@@ -14,16 +14,16 @@ import MyListingsPage from "./pages/prfilePages/MyListingsPage";
 import WantedPage from "./pages/wantedPage/WantedPage";
 import BorrowPage from "./pages/borrowPage/BorrowPage";
 import BusinessPage from "./pages/businessPage/BusinessPage";
-import {useAppDispatch} from "./hook/hooks";
+import {useAppDispatch, useAppSelector} from "./hook/hooks";
 import {getSession} from "./store/slices/userReducer";
 import {Session} from "@supabase/supabase-js";
 import {supabase} from "./supaBase.config";
+import {AllValuesType} from "./api/profileAPI";
 
 
 function App() {
     const dispatch = useAppDispatch()
     const [session, setSession] = useState<Session | null>(null)
-
 
     useEffect(() => {
         supabase.auth.getSession().then(({data: {session}}) => setSession(session))

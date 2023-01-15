@@ -16,7 +16,7 @@ const initialState = {
     } as Session,
     isLoading: false,
     error: null,
-    value: null,
+    value: {} as AllValuesType,
     imgUrl: ''
 };
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
@@ -85,7 +85,7 @@ export const downloadImgFromDBTC = createAsyncThunk("/auth/downloadImgFromDBTC",
             throw error
         }
         const url = URL.createObjectURL(data)
-        console.log(url)
+
         return url
     } catch (error: any) {
         console.log('Error downloading image: ', error.message)
@@ -172,6 +172,10 @@ const userSlice = createSlice({
             state.isAuth = false;
             state.isRegister = false;
             state.error = null
+            state.value = {}as  AllValuesType
+            state.login = {} as User
+            state.registration = {} as User
+           state.imgUrl=''
         });
     }
 });

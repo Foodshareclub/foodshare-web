@@ -1,53 +1,65 @@
-import React, {ChangeEvent, useEffect, useState} from 'react'
+import React, {ChangeEvent, useEffect, useRef, useState} from 'react'
 import {downloadImgFromDBTC} from "../../store/slices/userReducer";
-import {useAppDispatch, useAppSelector} from "../../hook/hooks";
+import {useAppDispatch} from "../../hook/hooks";
+import {Box, Button, Flex, Image, Input, Text} from "@chakra-ui/react";
+import cloud from "../../assets/cloud.svg";
 
 type PropsType = {
     url: string | null
     size: number
-    uploading: boolean
-    onUpload: (filePath: string, url: string, file: File) => void
+    onUpload: (filePath: string, file: File) => void
 }
 
-const Avatar: React.FC<PropsType> = ({url, size, uploading, onUpload}) => {
+const Avatar: React.FC<PropsType> = ({url, size, onUpload}) => {
     const dispatch = useAppDispatch()
     const [pastUrl, setPastUrl] = useState<string | undefined>("")
+    const inputFileRef = useRef<HTMLInputElement | null>(null)
     useEffect(() => {
         if (url) {
             dispatch(downloadImgFromDBTC({dir: "avatars", imgUrl: url})).unwrap().then(res => setPastUrl(res))
         }
     }, [])
-    const imgUrl = useAppSelector(state => state.user.imgUrl);
 
     const uploadAvatar = (event: ChangeEvent<HTMLInputElement>) => {
-
         if (!event.target.files || event.target.files.length === 0) return
         const file = event.target.files[0]
         const fileExt = file.name.split('.').pop()
         const fileName = `${Math.random()}.${fileExt}`
         const filePath = `${fileName}`
         const url = URL.createObjectURL(file)
-        onUpload(filePath, url, file)
+        onUpload(filePath, file)
         setPastUrl(url)
     }
 
     return (
-        <div style={{width: size}} aria-live="polite">
-            <img
-                src={pastUrl ? pastUrl : `https://place-hold.it/${size}x${size}`}
-                alt={pastUrl ? 'Avatar' : 'No image'}
-                style={{height: size, width: size}}
-            />
-            <div className="visually-hidden">
-                <input
-                    type="file"
-                    id="single"
-                    accept="image/*"
-                    onChange={uploadAvatar}
-                    disabled={uploading}
-                />
-            </div>
-        </div>
+        <Flex _hover={{bg: 'gray.50'}} justify="space-between" p={4} border="1px dashed #2D9CDB"
+              borderRadius={10}>
+            {pastUrl ?
+                <img style={{height: size, width: size, borderRadius: "10px", margin: '0 auto'}}
+                     src={pastUrl}
+                     alt={pastUrl}/> :
+                <>
+                    <Box alignSelf="center">
+                        <Image borderRadius='full'
+                               boxSize='50px' src={cloud}/>
+                    </Box>
+                    <Box>
+                        <Text>Select a file or drag and drop here</Text>
+                        <Text>JPG or PNG file size no more than 10MB</Text>
+                    </Box>
+                </>
+            }
+            <Box alignSelf="center">
+                <Input opacity={0} position="absolute" h="22%" left={0} top="9%"
+                       accept=".png, .jpg" ref={inputFileRef} type="file"
+                       onChange={(e) => uploadAvatar(e)}/>
+
+                <Button onClick={() => inputFileRef?.current?.click()} background={"#ff2d55"}
+                        _hover={{bg: '#c92040'}}
+                        color="#ffffff">Download
+                </Button>
+            </Box>
+        </Flex>
     )
 }
 export default Avatar;
