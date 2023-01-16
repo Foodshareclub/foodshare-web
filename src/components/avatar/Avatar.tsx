@@ -1,9 +1,7 @@
-import React, {ChangeEvent, useEffect, useRef, useState} from 'react'
-import {downloadImgFromDBTC} from "../../store/slices/userReducer";
+import React, {ChangeEvent, useRef, useState} from 'react'
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {Box, Button, Flex, Image, Input, Text} from "@chakra-ui/react";
 import cloud from "../../assets/cloud.svg";
-import {AllValuesType} from "../../api/profileAPI";
 
 type PropsType = {
     url: string | null
@@ -13,17 +11,11 @@ type PropsType = {
 
 const Avatar: React.FC<PropsType> = ({url, size, onUpload}) => {
     const dispatch = useAppDispatch()
-    const isUpdate = useAppSelector(state => state.user.isUpdate);
+
     const imgUrl = useAppSelector(state => state.user.imgUrl);
-    console.log(imgUrl)
+
     const [pastUrl, setPastUrl] = useState<string | undefined>(imgUrl)
     const inputFileRef = useRef<HTMLInputElement | null>(null)
-    // useEffect(() => {
-    //     if (url) {
-    //         dispatch(downloadImgFromDBTC({dir: "avatars", imgUrl: url})).unwrap().then(res => setPastUrl(res))
-    //         // dispatch(downloadImgFromDBTC({dir: "avatars", imgUrl: url}))
-    //     }
-    // }, [url,isUpdate])
 
     const uploadAvatar = (event: ChangeEvent<HTMLInputElement>) => {
         if (!event.target.files || event.target.files.length === 0) return
