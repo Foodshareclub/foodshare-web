@@ -13,7 +13,7 @@ import {
     Textarea,
     useDisclosure
 } from "@chakra-ui/react";
-import React, {ChangeEvent, useEffect, useLayoutEffect, useState} from "react";
+import React, {ChangeEvent, useLayoutEffect, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import Avatar from "../avatar/Avatar";
 import {updateProfileTC, uploadImgFromDBTC} from "../../store/slices/userReducer";
@@ -26,15 +26,17 @@ type ModalType = {
 
 const UpdateProfileModal: React.FC<ModalType> = ({buttonValue = "Update Profile"}) => {
     const dispatch = useAppDispatch();
+
     const {user} = useAppSelector(state => state.user.session);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
+
     useLayoutEffect(() => {
         setFirstName(value.first_name)
         setAddress(value.user_address)
         setSecondName(value.second_name)
         setAbout(value.about_me)
-        console.log("render")
     }, [value])
+
     const {isOpen, onOpen, onClose} = useDisclosure()
     const initialRef = React.useRef(null)
     const finalRef = React.useRef(null)
@@ -52,18 +54,11 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue = "Update Profile"
         setFilePath(filePath)
         setFile(file)
     }
-    const changeFirstName = (e: ChangeEvent<HTMLInputElement>) => {
-        setFirstName(e.currentTarget.value)
-    }
-    const changeSecondName = (e: ChangeEvent<HTMLInputElement>) => {
-        setSecondName(e.currentTarget.value)
-    }
-    const changeAbout = (e: ChangeEvent<HTMLTextAreaElement>) => {
-        setAbout(e.currentTarget.value)
-    }
-    const changeUserAddress = (e: ChangeEvent<HTMLInputElement>) => {
-        setAddress(e.currentTarget.value)
-    }
+    const changeFirstName = (e: ChangeEvent<HTMLInputElement>) => setFirstName(e.currentTarget.value);
+    const changeSecondName = (e: ChangeEvent<HTMLInputElement>) => setSecondName(e.currentTarget.value);
+    const changeAbout = (e: ChangeEvent<HTMLTextAreaElement>) => setAbout(e.currentTarget.value);
+    const changeUserAddress = (e: ChangeEvent<HTMLInputElement>) => setAddress(e.currentTarget.value);
+
     const defaultValues = {
         liked_post: value && value.liked_post,
         about_me: about,
@@ -83,16 +78,17 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue = "Update Profile"
         email: user.email,
         id: user.id,
     }
-    const onClick = async () => {
-        let update = {...defaultValues, avatar_url: filePath || value && value.avatar_url}
 
-        await dispatch(updateProfileTC(update))
+    const onClick = async () => {
+        let update = {...defaultValues, avatar_url: filePath || value && value.avatar_url};
+
+        await dispatch(updateProfileTC(update));
         if (filePath) {
-            await dispatch(uploadImgFromDBTC({dir: 'avatars', filePath, file}))
+            await dispatch(uploadImgFromDBTC({dir: 'avatars', filePath, file}));
         }
-        setFilePath('')
-        setFile({} as File)
-        onClose()
+        setFilePath('');
+        setFile({} as File);
+        onClose();
     };
 
     return (

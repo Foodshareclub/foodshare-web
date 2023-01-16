@@ -14,11 +14,10 @@ import MyListingsPage from "./pages/prfilePages/MyListingsPage";
 import WantedPage from "./pages/wantedPage/WantedPage";
 import BorrowPage from "./pages/borrowPage/BorrowPage";
 import BusinessPage from "./pages/businessPage/BusinessPage";
-import {useAppDispatch, useAppSelector} from "./hook/hooks";
+import {useAppDispatch} from "./hook/hooks";
 import {getSession} from "./store/slices/userReducer";
 import {Session} from "@supabase/supabase-js";
 import {supabase} from "./supaBase.config";
-import {AllValuesType} from "./api/profileAPI";
 
 
 function App() {
@@ -26,11 +25,10 @@ function App() {
     const [session, setSession] = useState<Session | null>(null)
 
     useEffect(() => {
-        supabase.auth.getSession().then(({data: {session}}) => setSession(session))
-        supabase.auth.onAuthStateChange((event, session) => setSession(session))
-
-        // })
+        supabase.auth.getSession().then(({data: {session}}) => setSession(session));
+        supabase.auth.onAuthStateChange((event, session) => setSession(session));
     }, [])
+
     if (session) {
         dispatch(getSession(session))
     }

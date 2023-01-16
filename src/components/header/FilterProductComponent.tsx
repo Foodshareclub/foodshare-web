@@ -7,7 +7,7 @@ import {useNavigate} from "react-router-dom";
 
 const SimpleBottomNavigation = () => {
     const [value, setValue] = useState<any>();
-    
+
     const selectChapterHandler = (name: string) => {
         const obj = navigationActionsSVG.find(item => item.name === name);
         setValue(obj);

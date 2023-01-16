@@ -2,7 +2,6 @@ import * as React from "react";
 import {
     Avatar,
     Box,
-    Button,
     Drawer,
     DrawerBody,
     DrawerCloseButton,
@@ -19,9 +18,9 @@ import {
     Text,
     useDisclosure
 } from "@chakra-ui/react";
-import {ChevronDownIcon, HamburgerIcon} from "@chakra-ui/icons";
+import {HamburgerIcon} from "@chakra-ui/icons";
 import {useNavigate} from "react-router-dom";
-import {useAppDispatch, useAppSelector} from "../../hook/hooks";
+import {useAppDispatch} from "../../hook/hooks";
 import UpdateProfileModal from "./UpdateProfileModal";
 import LoginModal from "./LoginModal";
 import {logoutTC} from "../../store/slices/userReducer";
@@ -30,14 +29,13 @@ import {logoutTC} from "../../store/slices/userReducer";
 type PropsType = {
     size: string
     isRegister: boolean
-    imgUrl:string
+    imgUrl: string
 }
 
-const NawDrawer: React.FC<PropsType> = ({size, isRegister,imgUrl}) => {
+const NawDrawer: React.FC<PropsType> = ({size, isRegister, imgUrl}) => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch()
     const {isOpen, onOpen, onClose} = useDisclosure()
-
 
 
     const handleClick = () => {
@@ -101,16 +99,19 @@ const NawDrawer: React.FC<PropsType> = ({size, isRegister,imgUrl}) => {
                                     icon={<HamburgerIcon/>}
                                     as={HamburgerIcon}>
                                 </MenuButton>
-                                <MenuList>{isRegister ?
-                                    <>
-                                        <UpdateProfileModal buttonValue="Update Profile"/>
-                                        <MenuItem onClick={() => navigateToMyLists()}>My listing's</MenuItem>
-                                        <MenuItem onClick={() => navigateToLogout()}>Log Out</MenuItem>
-                                    </> :
-                                    <>
-                                        <LoginModal buttonValue="Login"/>
-                                        <MenuItem onClick={() => navigateToRegistration()}>Registration</MenuItem>
-                                    </>}
+                                <MenuList>
+                                    {
+                                        isRegister
+                                            ? <>
+                                                <UpdateProfileModal buttonValue="Update Profile"/>
+                                                <MenuItem onClick={() => navigateToMyLists()}>My listing's</MenuItem>
+                                                <MenuItem onClick={() => navigateToLogout()}>Log Out</MenuItem>
+                                            </>
+                                            : <>
+                                                <LoginModal buttonValue="Login"/>
+                                                <MenuItem onClick={() => navigateToRegistration()}>Registration</MenuItem>
+                                            </>
+                                    }
                                     <MenuItem onClick={() => navigateToAccSettings()}>Account settings</MenuItem>
                                     <MenuItem onClick={() => navigateToHelp()}>Help</MenuItem>
                                 </MenuList>
