@@ -4,15 +4,14 @@ import FilterProductComponent from "./FilterProductComponent";
 import {CardHeader} from "@chakra-ui/react";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {getValueFromDBTC} from "../../store/slices/userReducer";
-import {AllValuesType} from "../../api/profileAPI";
 
 const Header = () => {
     const dispatch = useAppDispatch()
-    const  isRegister= useAppSelector(state => state.user.isRegister);
+    const isRegister = useAppSelector(state => state.user.isRegister);
     const {user} = useAppSelector(state => state.user.session);
     useEffect(() => {
         if (user.id) {
-            console.log("navcomp")
+            console.log("headerEffect")
             const values = {
                 fromTableName: "profiles",
                 columnValue: 'id',
@@ -24,7 +23,7 @@ const Header = () => {
     }, [user])
     return (
         <CardHeader height="20vh">
-            <NavComponent isRegister={isRegister} />
+            <NavComponent isRegister={isRegister}/>
             <FilterProductComponent/>
         </CardHeader>
     );

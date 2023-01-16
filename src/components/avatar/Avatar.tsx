@@ -3,6 +3,7 @@ import {downloadImgFromDBTC} from "../../store/slices/userReducer";
 import {useAppDispatch} from "../../hook/hooks";
 import {Box, Button, Flex, Image, Input, Text} from "@chakra-ui/react";
 import cloud from "../../assets/cloud.svg";
+import {AllValuesType} from "../../api/profileAPI";
 
 type PropsType = {
     url: string | null
@@ -18,7 +19,7 @@ const Avatar: React.FC<PropsType> = ({url, size, onUpload}) => {
         if (url) {
             dispatch(downloadImgFromDBTC({dir: "avatars", imgUrl: url})).unwrap().then(res => setPastUrl(res))
         }
-    }, [])
+    }, [url])
 
     const uploadAvatar = (event: ChangeEvent<HTMLInputElement>) => {
         if (!event.target.files || event.target.files.length === 0) return

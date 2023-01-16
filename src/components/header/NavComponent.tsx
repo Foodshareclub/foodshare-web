@@ -1,6 +1,6 @@
 import straw from "../../assets/straw.svg";
 import * as React from 'react';
-import {useEffect, useState} from 'react';
+import {useEffect, useLayoutEffect} from 'react';
 import {useNavigate} from "react-router-dom";
 import {
     Avatar,
@@ -19,7 +19,7 @@ import {
 import {ChevronDownIcon, SearchIcon} from "@chakra-ui/icons";
 import map from "../../assets/globus.svg";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
-import {downloadImgFromDBTC, getValueFromDBTC, logoutTC} from "../../store/slices/userReducer";
+import {downloadImgFromDBTC, logoutTC} from "../../store/slices/userReducer";
 import LoginModal from "../modals/LoginModal";
 import UpdateProfileModal from "../modals/UpdateProfileModal";
 import {AllValuesType} from "../../api/profileAPI";
@@ -29,17 +29,13 @@ type PropsType = {
 
 }
 const NavComponent: React.FC<PropsType> = ({isRegister}) => {
-
-    const {user} = useAppSelector(state => state.user.session);
     const imgUrl = useAppSelector(state => state.user.imgUrl);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
-    console.log(imgUrl)
 
     const dispatch = useAppDispatch()
-    console.log(isRegister)
 
     useEffect(() => {
-        console.log("img")
+        console.log("imgEffect")
         if (value && value.avatar_url) {
             dispatch(downloadImgFromDBTC({
                 dir: "avatars",
@@ -47,8 +43,7 @@ const NavComponent: React.FC<PropsType> = ({isRegister}) => {
             }))
         }
     }, [value])
-    console.log(value)
-    const navigate = useNavigate();
+     const navigate = useNavigate();
     const navigateToLogin = () => navigate('/login');
     const navigateToRegistration = () => navigate('/registration');
     const navigateToMain = () => navigate('/');
@@ -112,14 +107,14 @@ const NavComponent: React.FC<PropsType> = ({isRegister}) => {
 
                 <Menu>
                     <MenuButton
-
+                        cursor="pointer"
                         borderRadius={"50%"}
-                                boxSize='40px' as={Box}>
-                        {imgUrl? <Avatar cursor="pointer" src={imgUrl}/>: <Avatar src={straw} cursor="pointer"/>}
+                        boxSize='40px' as={Box}>
+                        {imgUrl ? <Avatar src={imgUrl}/> : <Avatar src={straw}/>}
                     </MenuButton>
                     <MenuList>{isRegister ?
                         <>
-                            <UpdateProfileModal value={value} buttonValue="Update Profile"/>
+                            <UpdateProfileModal buttonValue="Update Profile"/>
                             <MenuItem onClick={() => navigateToMyLists()}>My listing's</MenuItem>
                             <MenuItem onClick={() => navigateToLogout()}>Log Out</MenuItem>
                         </> :

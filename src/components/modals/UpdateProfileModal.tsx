@@ -13,7 +13,7 @@ import {
     Textarea,
     useDisclosure
 } from "@chakra-ui/react";
-import React, {ChangeEvent, useState} from "react";
+import React, {ChangeEvent, useEffect, useLayoutEffect, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import Avatar from "../avatar/Avatar";
 import {updateProfileTC, uploadImgFromDBTC} from "../../store/slices/userReducer";
@@ -22,14 +22,19 @@ import {AllValuesType} from "../../api/profileAPI";
 
 type ModalType = {
     buttonValue?: string
-    value:AllValuesType
 }
 
-const UpdateProfileModal: React.FC<ModalType> = ({buttonValue = "Update Profile" ,value}) => {
+const UpdateProfileModal: React.FC<ModalType> = ({buttonValue = "Update Profile"}) => {
     const dispatch = useAppDispatch();
     const {user} = useAppSelector(state => state.user.session);
-    // const value = useAppSelector<AllValuesType>(state => state.user.value);
-    console.log(value);
+    const value = useAppSelector<AllValuesType>(state => state.user.value);
+    useLayoutEffect(() => {
+        setFirstName(value.first_name)
+        setAddress(value.user_address)
+        setSecondName(value.second_name)
+        setAbout(value.about_me)
+        console.log("render")
+    }, [value])
     const {isOpen, onOpen, onClose} = useDisclosure()
     const initialRef = React.useRef(null)
     const finalRef = React.useRef(null)
@@ -37,25 +42,11 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue = "Update Profile"
     const [filePath, setFilePath] = useState('')
     const [file, setFile] = useState<File>({} as File)
 
-    const [firstName, setFirstName] = useState<string>(value.first_name || "")
-    const [secondName, setSecondName] = useState<string>(value && value.second_name || "")
-    const [about, setAbout] = useState<string>(value && value.about_me || "")
-    const [address, setAddress] = useState<string>(value && value.user_address || "")
+    const [firstName, setFirstName] = useState<string>("")
+    const [secondName, setSecondName] = useState<string>("")
+    const [about, setAbout] = useState<string>("")
+    const [address, setAddress] = useState<string>("")
     let randomNumber = Math.floor(Math.random() * new Date().getTime());
-
-    // useEffect(() => {
-    //     if (user.id) {
-    //         const values = {
-    //             fromTableName: "profiles",
-    //             columnValue: 'id',
-    //             columnValueItem: user.id,
-    //             selectRow: "*"
-    //         }
-    //         dispatch(getValueFromDBTC(values))
-    //     }
-    // }, [user])
-
-    console.log(value)
 
     const onUpload = (filePath: string, file: File) => {
         setFilePath(filePath)
@@ -101,7 +92,6 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue = "Update Profile"
         onClose()
     };
 
-    console.log(value.first_name)
     return (
         <>
             <MenuItem onClick={onOpen}>{buttonValue}</MenuItem>
