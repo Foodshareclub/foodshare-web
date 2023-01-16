@@ -13,8 +13,16 @@ const Footer = () => {
             <div className={styles.club}>© 2022
                 Foodshare Club, Limited
             </div>
-            <div className={styles.privacy}><p>Privacy</p><p>Terms</p><p>Sitemap</p></div>
-            <div className={styles.map}><img src={map} alt="map"/> <div>English</div></div>
+            <div className={styles.privacy}>
+                <p>Privacy</p>
+                <p>Terms</p>
+                <p>Sitemap</p>
+            </div>
+            <div className={styles.map}>
+                <img src={map} alt="map"/>
+                <div>English</div>
+            </div>
+
             <div className={styles.socseti}>
                 <NavLink to={"#"}><img src={twitter} alt="twitter"/></NavLink>
                 <NavLink to={"#"}><img src={insta} alt="insta"/></NavLink>

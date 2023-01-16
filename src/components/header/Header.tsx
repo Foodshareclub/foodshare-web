@@ -13,7 +13,6 @@ const Header = () => {
 
     useEffect(() => {
         if (user.id) {
-            console.log("headerEffect")
             const values = {
                 fromTableName: "profiles",
                 columnValue: 'id',

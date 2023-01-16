@@ -16,7 +16,8 @@ export default function Main() {
         setTimeout(() => {
             setIsLoaded(true)
         }, 1000)
-    }, [])
+    }, []);
+
     const isSmallerThan500 = useMediaQuery('(min-width:500px)');
     const isSmallerThan700 = useMediaQuery('(min-width:700px)');
     const isSmallerThan1290 = useMediaQuery('(min-width:1290px)');
@@ -44,14 +45,14 @@ export default function Main() {
                                    onClick={() => navigate("/oneProd", {state: item})} src={item.img}
                                    alt="soup"/>
                         </Skeleton>
-                        {!isLoaded ?
-                            <div>
+                        {!isLoaded
+                            ? <div>
                                 <Skeleton mt={4} height='20px' isLoaded={isLoaded}/>
                                 <Skeleton mt={2} height='20px' isLoaded={isLoaded}/>
                                 <Skeleton mt={2} height='20px' isLoaded={isLoaded}/>
                                 <Skeleton mt={2} height='20px' isLoaded={isLoaded}/>
-                            </div> :
-                            <div>
+                            </div>
+                            : <div>
                                 <Box display='flex' alignItems='baseline' fontSize={25}>
                                     <Box noOfLines={1} mt='2' fontWeight={700}>{item.name}</Box>
                                     <Image ml="2" borderRadius='full' boxSize='20px' src={soup} alt={soup}/>

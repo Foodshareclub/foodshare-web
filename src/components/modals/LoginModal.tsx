@@ -1,6 +1,24 @@
-import {Button, Flex,FormControl, FormErrorMessage, FormLabel, Image, Input, InputGroup, InputRightElement,
-    MenuItem, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay,
-    Text, useDisclosure} from "@chakra-ui/react";
+import {
+    Button,
+    Flex,
+    FormControl,
+    FormErrorMessage,
+    FormLabel,
+    Image,
+    Input,
+    InputGroup,
+    InputRightElement,
+    MenuItem,
+    Modal,
+    ModalBody,
+    ModalCloseButton,
+    ModalContent,
+    ModalFooter,
+    ModalHeader,
+    ModalOverlay,
+    Text,
+    useDisclosure
+} from "@chakra-ui/react";
 import React, {useState} from "react";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {NavLink, useNavigate} from "react-router-dom";
@@ -17,11 +35,16 @@ type ModalType = {
 
 const LoginModal: React.FC<ModalType> = ({buttonValue = "Login"}) => {
     const {isAuth} = useAppSelector(state => state.user);
+
     const navigate = useNavigate();
+
     const dispatch = useAppDispatch();
+
     const {isOpen, onOpen, onClose} = useDisclosure()
+
     const initialRef = React.useRef(null)
     const finalRef = React.useRef(null)
+
     const {
         register,
         handleSubmit,
@@ -35,6 +58,7 @@ const LoginModal: React.FC<ModalType> = ({buttonValue = "Login"}) => {
     });
 
     const [show, setShow] = useState(false)
+
     const handleClick = () => setShow(!show)
 
     const onSubmit = async (values: any) => {

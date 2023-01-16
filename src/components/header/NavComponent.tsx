@@ -22,12 +22,16 @@ type PropsType = {
 
 }
 const NavComponent: React.FC<PropsType> = ({isRegister}) => {
+
     const imgUrl = useAppSelector(state => state.user.imgUrl);
+
     const value = useAppSelector<AllValuesType>(state => state.user.value);
-    const dispatch = useAppDispatch()
-    const size = ['xs', 'sm', 'md', 'lg', 'xl', 'full']
+
+    const dispatch = useAppDispatch();
+
+    const size = ['xs', 'sm', 'md', 'lg', 'xl', 'full'];
+
     useEffect(() => {
-        console.log("imgEffect")
         if (value && value.avatar_url) {
             dispatch(downloadImgFromDBTC({
                 dir: "avatars",
@@ -58,12 +62,14 @@ const NavComponent: React.FC<PropsType> = ({isRegister}) => {
     return (
         <Box display='flex' alignItems='baseline'>
             <Image alignSelf="center" boxSize='25px' src={straw} alt={straw}/>
+
             <Box pl={3} alignSelf="center">
                 <Text onClick={() => navigateToMain()} cursor="pointer"
                       fontSize="25px" fontWeight={900} textTransform="uppercase" color='#FF2D55'>
                     foodShare
                 </Text>
             </Box>
+
             <InputGroup alignSelf="center" w={"50%"} ml={"6%"} alignItems={"center"}>
                 <InputLeftElement
                     pointerEvents='none'
@@ -72,62 +78,101 @@ const NavComponent: React.FC<PropsType> = ({isRegister}) => {
                 <Input focusBorderColor='#FF2D55' type='search' placeholder='What are we in search of today?'/>
             </InputGroup>
 
-            {!isSmallerThan800?<NavDrawer size={'md'} isRegister={isRegister} imgUrl={imgUrl}/>:
-            <>
-                <Box onClick={() => navigateToAboutUs()} cursor="pointer" fontSize='22px' textAlign="center"
-                     _hover={{color: "#FF2D55"}}
-                     fontWeight="400"
-                     alignSelf="center" w="40%"
-                     color='#303030'>
-                    About Us
-                </Box>
-                <Box alignSelf="center" p={0} color='#303030'>
-                    <Menu>
-                        <MenuButton _expanded={{bg: 'gray.100', color: "#FF2D55"}}
-                                    _hover={{bg: 'gray.100', color: "#FF2D55"}} variant="styled" as={Button}
-                                    rightIcon={<ChevronDownIcon/>}>
-                        </MenuButton>
-                        <MenuList>
-                            <MenuItem>Download</MenuItem>
-                            <MenuItem>Create a Copy</MenuItem>
-                            <MenuItem>Mark as Draft</MenuItem>
-                            <MenuItem>Delete</MenuItem>
-                            <MenuItem>Attend a Workshop</MenuItem>
-                        </MenuList>
-                    </Menu>
-                </Box>
-                <Box fontWeight={400} fontSize='22px' alignSelf="center" w='30%' color='#303030'>
-                    Filters
-                </Box>
-                <Image mr="5%" alignSelf="center" src={map} alt={map}/>
-                <Box alignSelf="center" p={0} color='#303030'>
-                    <Menu>
-                        <MenuButton
-                            cursor="pointer"
-                            borderRadius="50%"
-                            icon={<Avatar src={imgUrl}/>}
-                            as={Avatar}>
-                        </MenuButton>
-                        <MenuList>{isRegister ?
-                            <>
-                                <UpdateProfileModal buttonValue="Update Profile"/>
-                                <MenuItem onClick={() => navigateToMyLists()}>My listing's</MenuItem>
-                                <MenuItem onClick={() => navigateToLogout()}>Log Out</MenuItem>
-                            </> :
-                            <>
-                                <LoginModal buttonValue="Login"/>
-                                <MenuItem onClick={() => navigateToRegistration()}>Registration</MenuItem>
-                            </>}
-                            <MenuItem onClick={() => navigateToAccSettings()}>Account settings</MenuItem>
-                            <MenuItem onClick={() => navigateToHelp()}>Help</MenuItem>
-                        </MenuList>
-                    </Menu>
-                </Box>
-            </>
+            {
+                !isSmallerThan800
+                    ? <NavDrawer size={'md'} isRegister={isRegister} imgUrl={imgUrl}/>
+                    : <ProfileSettings
+                        navigateToAccSettings={navigateToAccSettings}
+                        navigateToAboutUs={navigateToAboutUs}
+                        navigateToMyLists={navigateToMyLists}
+                        navigateToRegistration={navigateToRegistration}
+                        navigateToLogout={navigateToLogout}
+                        navigateToHelp={navigateToHelp}
+                        imgUrl={imgUrl}
+                        isRegister={isRegister}
+                    />
             }
-
-
         </Box>
     );
 }
 export default NavComponent
+
+
+type ProfileSettingsProps = {
+    navigateToAboutUs: () => void
+    navigateToMyLists: () => void
+    navigateToLogout: () => void
+    navigateToRegistration: () => void
+    navigateToAccSettings: () => void
+    navigateToHelp: () => void
+    imgUrl: string
+    isRegister: boolean
+}
+
+const ProfileSettings: React.FC<ProfileSettingsProps> = ({
+                                                             navigateToMyLists,
+                                                             navigateToHelp,
+                                                             navigateToLogout,
+                                                             navigateToRegistration,
+                                                             navigateToAccSettings,
+                                                             navigateToAboutUs,
+                                                             imgUrl, isRegister
+                                                         }) => {
+    return (
+        <>
+            <Box onClick={() => navigateToAboutUs()} cursor="pointer" fontSize='22px' textAlign="center"
+                 _hover={{color: "#FF2D55"}}
+                 fontWeight="400"
+                 alignSelf="center" w="40%"
+                 color='#303030'>
+                About Us
+            </Box>
+            <Box alignSelf="center" p={0} color='#303030'>
+                <Menu>
+                    <MenuButton _expanded={{bg: 'gray.100', color: "#FF2D55"}}
+                                _hover={{bg: 'gray.100', color: "#FF2D55"}}
+                                variant="styled" as={Button}
+                                rightIcon={<ChevronDownIcon/>}>
+                    </MenuButton>
+                    <MenuList>
+                        <MenuItem>Download</MenuItem>
+                        <MenuItem>Create a Copy</MenuItem>
+                        <MenuItem>Mark as Draft</MenuItem>
+                        <MenuItem>Delete</MenuItem>
+                        <MenuItem>Attend a Workshop</MenuItem>
+                    </MenuList>
+                </Menu>
+            </Box>
+            <Box fontWeight={400} fontSize='22px' alignSelf="center" w='30%' color='#303030'>
+                Filters
+            </Box>
+            <Image mr="5%" alignSelf="center" src={map} alt={map}/>
+            <Box alignSelf="center" p={0} color='#303030'>
+                <Menu>
+                    <MenuButton
+                        cursor="pointer"
+                        borderRadius="50%"
+                        icon={<Avatar src={imgUrl}/>}
+                        as={Avatar}>
+                    </MenuButton>
+                    <MenuList>
+                        {
+                            isRegister
+                                ? <>
+                                    <UpdateProfileModal buttonValue="Update Profile"/>
+                                    <MenuItem onClick={() => navigateToMyLists()}>My listing's</MenuItem>
+                                    <MenuItem onClick={() => navigateToLogout()}>Log Out</MenuItem>
+                                </>
+                                : <>
+                                    <LoginModal buttonValue="Login"/>
+                                    <MenuItem onClick={() => navigateToRegistration()}>Registration</MenuItem>
+                                </>
+                        }
+                        <MenuItem onClick={() => navigateToAccSettings()}>Account settings</MenuItem>
+                        <MenuItem onClick={() => navigateToHelp()}>Help</MenuItem>
+                    </MenuList>
+                </Menu>
+            </Box>
+        </>
+    )
+}

@@ -47,6 +47,7 @@ export const Registration = () => {
             </Box>
 
             <Avatar m="2% 0 5% 0" sx={{width: 100, height: 100}}/>
+
             <form onSubmit={handleSubmit(onSubmit)}>
                 <FormControl isInvalid={!!errors.firstName}>
                     <Input mb={3}

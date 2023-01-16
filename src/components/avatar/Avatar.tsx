@@ -2,6 +2,7 @@ import React, {ChangeEvent, useRef, useState} from 'react'
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {Box, Button, Flex, Image, Input, Text} from "@chakra-ui/react";
 import cloud from "../../assets/cloud.svg";
+import {createPhotoUrl} from "../../utils/createPhotoUrl";
 
 type PropsType = {
     url: string | null
@@ -10,7 +11,6 @@ type PropsType = {
 }
 
 const Avatar: React.FC<PropsType> = ({url, size, onUpload}) => {
-    const dispatch = useAppDispatch()
 
     const imgUrl = useAppSelector(state => state.user.imgUrl);
 
@@ -18,14 +18,9 @@ const Avatar: React.FC<PropsType> = ({url, size, onUpload}) => {
     const inputFileRef = useRef<HTMLInputElement | null>(null)
 
     const uploadAvatar = (event: ChangeEvent<HTMLInputElement>) => {
-        if (!event.target.files || event.target.files.length === 0) return
-        const file = event.target.files[0]
-        const fileExt = file.name.split('.').pop()
-        const fileName = `${Math.random()}.${fileExt}`
-        const filePath = `${fileName}`
-        const url = URL.createObjectURL(file)
-        onUpload(filePath, file)
-        setPastUrl(url)
+        const {file, filePath, url} = createPhotoUrl(event);
+        onUpload(filePath, file);
+        setPastUrl(url);
     }
 
     return (
