@@ -8,7 +8,9 @@ import {getValueFromDBTC} from "../../store/slices/userReducer";
 const Header = () => {
     const dispatch = useAppDispatch()
     const isRegister = useAppSelector(state => state.user.isRegister);
+    const isUpdate = useAppSelector(state => state.user.isUpdate);
     const {user} = useAppSelector(state => state.user.session);
+    console.log(isUpdate)
     useEffect(() => {
         if (user.id) {
             console.log("headerEffect")
@@ -20,7 +22,7 @@ const Header = () => {
             }
             dispatch(getValueFromDBTC(values))
         }
-    }, [user])
+    }, [user,isUpdate])
     return (
         <CardHeader height="20vh">
             <NavComponent isRegister={isRegister}/>

@@ -31,6 +31,8 @@ type PropsType = {
 const NavComponent: React.FC<PropsType> = ({isRegister}) => {
     const imgUrl = useAppSelector(state => state.user.imgUrl);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
+    const isUpdate = useAppSelector(state => state.user.isUpdate);
+    console.log(isUpdate)
 
     const dispatch = useAppDispatch()
 

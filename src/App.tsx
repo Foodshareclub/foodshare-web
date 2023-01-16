@@ -29,11 +29,11 @@ function App() {
         supabase.auth.getSession().then(({data: {session}}) => setSession(session))
         supabase.auth.onAuthStateChange((event, session) => setSession(session))
 
+        // })
     }, [])
     if (session) {
         dispatch(getSession(session))
     }
-
 
     return (
         <Card size="lg" minH="100vh">

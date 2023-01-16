@@ -17,7 +17,8 @@ const initialState = {
     isLoading: false,
     error: null,
     value: {} as AllValuesType,
-    imgUrl: ''
+    imgUrl: '',
+    isUpdate : false
 };
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
     try {
@@ -93,12 +94,16 @@ export const downloadImgFromDBTC = createAsyncThunk("/auth/downloadImgFromDBTC",
 })
 export const uploadImgFromDBTC = createAsyncThunk("/auth/uploadImgFromDBTC", async (imgValue: UploadImgUrlType, thunkAPI) => {
     try {
+
         const {error} = await profileAPI.uploadImgFromDB(imgValue)
         if (error) {
             throw error
         }
     } catch (error: any) {
         thunkAPI.rejectWithValue(error.message)
+    }
+    finally {
+        thunkAPI.dispatch(isUpdate())
     }
 })
 export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (updates: AllValuesType, thunkAPI) => {
@@ -127,6 +132,9 @@ const userSlice = createSlice({
         },
         isLoading: (state, action) => {
             state.isLoading = action.payload
+        },
+        isUpdate:(state)=>{
+            state.isUpdate=!state.isUpdate
         }
     },
     extraReducers: (builder) => {
@@ -163,6 +171,7 @@ const userSlice = createSlice({
         });
         builder.addCase(uploadImgFromDBTC.fulfilled, (state) => {
             state.error = null
+
         });
         builder.addCase(updateProfileTC.fulfilled, (state) => {
             state.error = null
@@ -179,5 +188,5 @@ const userSlice = createSlice({
         });
     }
 });
-export const {getSession, isLoading} = userSlice.actions
+export const {getSession, isLoading,isUpdate} = userSlice.actions
 export const userReducer = userSlice.reducer;

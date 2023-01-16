@@ -1,6 +1,6 @@
 import React, {ChangeEvent, useEffect, useRef, useState} from 'react'
 import {downloadImgFromDBTC} from "../../store/slices/userReducer";
-import {useAppDispatch} from "../../hook/hooks";
+import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {Box, Button, Flex, Image, Input, Text} from "@chakra-ui/react";
 import cloud from "../../assets/cloud.svg";
 import {AllValuesType} from "../../api/profileAPI";
@@ -13,13 +13,17 @@ type PropsType = {
 
 const Avatar: React.FC<PropsType> = ({url, size, onUpload}) => {
     const dispatch = useAppDispatch()
-    const [pastUrl, setPastUrl] = useState<string | undefined>("")
+    const isUpdate = useAppSelector(state => state.user.isUpdate);
+    const imgUrl = useAppSelector(state => state.user.imgUrl);
+    console.log(imgUrl)
+    const [pastUrl, setPastUrl] = useState<string | undefined>(imgUrl)
     const inputFileRef = useRef<HTMLInputElement | null>(null)
-    useEffect(() => {
-        if (url) {
-            dispatch(downloadImgFromDBTC({dir: "avatars", imgUrl: url})).unwrap().then(res => setPastUrl(res))
-        }
-    }, [url])
+    // useEffect(() => {
+    //     if (url) {
+    //         dispatch(downloadImgFromDBTC({dir: "avatars", imgUrl: url})).unwrap().then(res => setPastUrl(res))
+    //         // dispatch(downloadImgFromDBTC({dir: "avatars", imgUrl: url}))
+    //     }
+    // }, [url,isUpdate])
 
     const uploadAvatar = (event: ChangeEvent<HTMLInputElement>) => {
         if (!event.target.files || event.target.files.length === 0) return
@@ -35,7 +39,7 @@ const Avatar: React.FC<PropsType> = ({url, size, onUpload}) => {
     return (
         <Flex _hover={{bg: 'gray.50'}} justify="space-between" p={4} border="1px dashed #2D9CDB"
               borderRadius={10}>
-            {pastUrl ?
+            {imgUrl ?
                 <img style={{height: size, width: size, borderRadius: "10px", margin: '0 auto'}}
                      src={pastUrl}
                      alt={pastUrl}/> :

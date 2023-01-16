@@ -85,10 +85,13 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue = "Update Profile"
     }
     const onClick = async () => {
         let update = {...defaultValues, avatar_url: filePath || value && value.avatar_url}
+
+        await dispatch(updateProfileTC(update))
         if (filePath) {
             await dispatch(uploadImgFromDBTC({dir: 'avatars', filePath, file}))
         }
-        await dispatch(updateProfileTC(update))
+        setFilePath('')
+        setFile({} as File)
         onClose()
     };
 
