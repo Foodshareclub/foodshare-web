@@ -40,7 +40,6 @@ function App() {
                 <Routes>
                     <Route path={"/"} element={<Main/>}/>
                     <Route path={"/*"} element={<Main/>}/>
-                    <Route path={"/registration"} element={<Registration/>}/>
                     <Route path={"/oneProd"} element={<ProductPage/>}/>
                     <Route path={"/wanted"} element={<WantedPage/>}/>
                     <Route path={"/borrow"} element={<BorrowPage/>}/>

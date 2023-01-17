@@ -23,7 +23,7 @@ import React, {useState} from "react";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {NavLink, useNavigate} from "react-router-dom";
 import {useForm} from "react-hook-form";
-import {loginTC} from "../../store/slices/userReducer";
+import {loginTC, registerTC} from "../../store/slices/userReducer";
 import {ViewIcon, ViewOffIcon} from "@chakra-ui/icons";
 import facebook from "../../assets/facebookblue.svg";
 import apple from "../../assets/apple.svg";
@@ -31,9 +31,10 @@ import google from "../../assets/google.svg";
 
 type ModalType = {
     buttonValue?: string
+    thunk:any
 }
 
-const LoginModal: React.FC<ModalType> = ({buttonValue = "Login"}) => {
+const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue,thunk}) => {
     const {isAuth} = useAppSelector(state => state.user);
 
     const navigate = useNavigate();
@@ -61,8 +62,9 @@ const LoginModal: React.FC<ModalType> = ({buttonValue = "Login"}) => {
 
     const handleClick = () => setShow(!show)
 
-    const onSubmit = async (values: any) => {
-        await dispatch(loginTC(values));
+    const onSubmit = async (values: { email:string,password:string }) => {
+
+        await dispatch(thunk(values));
         onClose()
     };
 
@@ -119,10 +121,9 @@ const LoginModal: React.FC<ModalType> = ({buttonValue = "Login"}) => {
                                 <Button isLoading={false} fontSize={25} variant="solid" m={"10% 0"}
                                         w="100%" alignSelf="center" type="submit"
                                         disabled={!isValid}>
-                                    Login
+                                    {buttonValue}
                                 </Button>
                             </FormControl>
-
                             <Flex align="center" justify="space-around" color={"red.500"} fontSize={15}>
                                 <NavLink to={"#"}>Forgot password?</NavLink>
                                 <NavLink to={"#"}>Forgot username?</NavLink>
@@ -154,13 +155,10 @@ const LoginModal: React.FC<ModalType> = ({buttonValue = "Login"}) => {
                             </Button>
                         </form>
                     </ModalBody>
-                    <ModalFooter>
-
-                    </ModalFooter>
                 </ModalContent>
             </Modal>
         </>
     )
 }
 
-export default LoginModal
+export default AuthenticationUserModal

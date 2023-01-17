@@ -42,8 +42,8 @@ const Avatar: React.FC<PropsType> = ({url, size, onUpload}) => {
                 </>
             }
             <Box alignSelf="center">
-                <Input opacity={0} position="absolute" h="22%" left={0} top="9%"
-                       accept=".png, .jpg" ref={inputFileRef} type="file"
+                <Input  opacity={0} position="absolute" h="22%" left={0} top="9%"
+                       accept=".png" ref={inputFileRef} type="file"
                        onChange={(e) => uploadAvatar(e)}/>
 
                 <Button onClick={() => inputFileRef?.current?.click()} background={"#ff2d55"}

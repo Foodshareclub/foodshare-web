@@ -19,22 +19,24 @@ import {
     useDisclosure
 } from "@chakra-ui/react";
 import {HamburgerIcon} from "@chakra-ui/icons";
-import {useNavigate} from "react-router-dom";
-import {useAppDispatch} from "../../hook/hooks";
 import UpdateProfileModal from "./UpdateProfileModal";
-import LoginModal from "./LoginModal";
-import {logoutTC} from "../../store/slices/userReducer";
+
+import {ProfileSettingsProps} from "../header/NavComponent";
+import {loginTC, registerTC} from "../../store/slices/userReducer";
+import AuthenticationUserModal from "./AuthenticationUserModal";
 
 
-type PropsType = {
-    size: string
-    isRegister: boolean
-    imgUrl: string
-}
+const NawDrawer: React.FC<ProfileSettingsProps> = ({
+                                                       size,
+                                                       isRegister,
+                                                       imgUrl,
+                                                       navigateToHelp,
+                                                       navigateToLogout,
+                                                       navigateToMyLists,
+                                                       navigateToAboutUs,
+                                                       navigateToAccSettings
+                                                   }) => {
 
-const NawDrawer: React.FC<PropsType> = ({size, isRegister, imgUrl}) => {
-    const navigate = useNavigate();
-    const dispatch = useAppDispatch()
     const {isOpen, onOpen, onClose} = useDisclosure()
 
 
@@ -42,28 +44,10 @@ const NawDrawer: React.FC<PropsType> = ({size, isRegister, imgUrl}) => {
         onOpen()
     }
 
-    const navigateToRegistration = () => navigate('/registration');
-    const navigateToMain = () => navigate('/');
-    const navigateToAboutUs = () => navigate('/aboutUs');
-    const navigateToMyLists = () => navigate('/user-listings');
-
-    const navigateToAccSettings = () => {
-    }
-
-    const navigateToHelp = () => {
-    }
-    const navigateToLogout = () => {
-        dispatch(logoutTC())
-    }
     // const size = ['xs', 'sm', 'md', 'lg', 'xl', 'full']
 
     return (
         <>
-            {/*<Button*/}
-            {/*    onClick={handleClick}*/}
-            {/*    key={size}*/}
-            {/*    m={4}*/}
-            {/*></Button>*/}
             <IconButton
                 onClick={handleClick}
                 key={size}
@@ -86,12 +70,6 @@ const NawDrawer: React.FC<PropsType> = ({size, isRegister, imgUrl}) => {
                                     <Text>Creator, Chakra UI</Text>
                                 </Box>
                             </Flex>
-                            {/*<IconButton*/}
-                            {/*    variant='ghost'*/}
-                            {/*    colorScheme='gray'*/}
-                            {/*    aria-label='See menu'*/}
-                            {/*    icon={<HamburgerIcon/>}*/}
-                            {/*/>*/}
                             <Menu>
                                 <MenuButton
                                     cursor="pointer"
@@ -108,8 +86,8 @@ const NawDrawer: React.FC<PropsType> = ({size, isRegister, imgUrl}) => {
                                                 <MenuItem onClick={() => navigateToLogout()}>Log Out</MenuItem>
                                             </>
                                             : <>
-                                                <LoginModal buttonValue="Login"/>
-                                                <MenuItem onClick={() => navigateToRegistration()}>Registration</MenuItem>
+                                                <AuthenticationUserModal buttonValue="Login" thunk={loginTC}/>
+                                                <AuthenticationUserModal buttonValue="Registration" thunk={registerTC}/>
                                             </>
                                     }
                                     <MenuItem onClick={() => navigateToAccSettings()}>Account settings</MenuItem>

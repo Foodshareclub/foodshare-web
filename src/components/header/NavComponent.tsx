@@ -2,24 +2,28 @@ import straw from "../../assets/straw.svg";
 import * as React from 'react';
 import {useEffect} from 'react';
 import {useNavigate} from "react-router-dom";
-import {
-    Avatar, Box, Button, Image, Input,
-    InputGroup, InputLeftElement, Menu, MenuButton,
-    MenuItem, MenuList, Text
-} from "@chakra-ui/react";
-import {ChevronDownIcon, SearchIcon} from "@chakra-ui/icons";
-import map from "../../assets/globus.svg";
+import {Box, Image, Input, InputGroup, InputLeftElement, Text} from "@chakra-ui/react";
+import {SearchIcon} from "@chakra-ui/icons";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {downloadImgFromDBTC, logoutTC} from "../../store/slices/userReducer";
-import LoginModal from "../modals/LoginModal";
-import UpdateProfileModal from "../modals/UpdateProfileModal";
 import {AllValuesType} from "../../api/profileAPI";
 import useMediaQuery from "../../utils/useMediaQuery";
 import NavDrawer from "../modals/NavDrawer";
+import ProfileSettings from "./ProfileSettings";
 
 type PropsType = {
     isRegister: boolean
 
+}
+export type ProfileSettingsProps = {
+    navigateToAboutUs: () => void
+    navigateToMyLists: () => void
+    navigateToLogout: () => void
+    navigateToAccSettings: () => void
+    navigateToHelp: () => void
+    imgUrl: string
+    isRegister: boolean
+    size?: string
 }
 const NavComponent: React.FC<PropsType> = ({isRegister}) => {
 
@@ -42,9 +46,7 @@ const NavComponent: React.FC<PropsType> = ({isRegister}) => {
 
     const isSmallerThan800 = useMediaQuery('(min-width:800px)');
 
-
     const navigate = useNavigate();
-    const navigateToRegistration = () => navigate('/registration');
     const navigateToMain = () => navigate('/');
     const navigateToAboutUs = () => navigate('/aboutUs');
     const navigateToMyLists = () => navigate('/user-listings');
@@ -80,12 +82,18 @@ const NavComponent: React.FC<PropsType> = ({isRegister}) => {
 
             {
                 !isSmallerThan800
-                    ? <NavDrawer size={'md'} isRegister={isRegister} imgUrl={imgUrl}/>
+                    ? <NavDrawer
+                        size={'md'} isRegister={isRegister}
+                        imgUrl={imgUrl}
+                        navigateToMyLists={navigateToMyLists}
+                        navigateToLogout={navigateToLogout}
+                        navigateToHelp={navigateToHelp}
+                        navigateToAboutUs={navigateToAboutUs}
+                        navigateToAccSettings={navigateToAccSettings}/>
                     : <ProfileSettings
                         navigateToAccSettings={navigateToAccSettings}
                         navigateToAboutUs={navigateToAboutUs}
                         navigateToMyLists={navigateToMyLists}
-                        navigateToRegistration={navigateToRegistration}
                         navigateToLogout={navigateToLogout}
                         navigateToHelp={navigateToHelp}
                         imgUrl={imgUrl}
@@ -98,81 +106,3 @@ const NavComponent: React.FC<PropsType> = ({isRegister}) => {
 export default NavComponent
 
 
-type ProfileSettingsProps = {
-    navigateToAboutUs: () => void
-    navigateToMyLists: () => void
-    navigateToLogout: () => void
-    navigateToRegistration: () => void
-    navigateToAccSettings: () => void
-    navigateToHelp: () => void
-    imgUrl: string
-    isRegister: boolean
-}
-
-const ProfileSettings: React.FC<ProfileSettingsProps> = ({
-                                                             navigateToMyLists,
-                                                             navigateToHelp,
-                                                             navigateToLogout,
-                                                             navigateToRegistration,
-                                                             navigateToAccSettings,
-                                                             navigateToAboutUs,
-                                                             imgUrl, isRegister
-                                                         }) => {
-    return (
-        <>
-            <Box onClick={() => navigateToAboutUs()} cursor="pointer" fontSize='22px' textAlign="center"
-                 _hover={{color: "#FF2D55"}}
-                 fontWeight="400"
-                 alignSelf="center" w="40%"
-                 color='#303030'>
-                About Us
-            </Box>
-            <Box alignSelf="center" p={0} color='#303030'>
-                <Menu>
-                    <MenuButton _expanded={{bg: 'gray.100', color: "#FF2D55"}}
-                                _hover={{bg: 'gray.100', color: "#FF2D55"}}
-                                variant="styled" as={Button}
-                                rightIcon={<ChevronDownIcon/>}>
-                    </MenuButton>
-                    <MenuList>
-                        <MenuItem>Download</MenuItem>
-                        <MenuItem>Create a Copy</MenuItem>
-                        <MenuItem>Mark as Draft</MenuItem>
-                        <MenuItem>Delete</MenuItem>
-                        <MenuItem>Attend a Workshop</MenuItem>
-                    </MenuList>
-                </Menu>
-            </Box>
-            <Box fontWeight={400} fontSize='22px' alignSelf="center" w='30%' color='#303030'>
-                Filters
-            </Box>
-            <Image mr="5%" alignSelf="center" src={map} alt={map}/>
-            <Box alignSelf="center" p={0} color='#303030'>
-                <Menu>
-                    <MenuButton
-                        cursor="pointer"
-                        borderRadius="50%"
-                        icon={<Avatar src={imgUrl}/>}
-                        as={Avatar}>
-                    </MenuButton>
-                    <MenuList>
-                        {
-                            isRegister
-                                ? <>
-                                    <UpdateProfileModal buttonValue="Update Profile"/>
-                                    <MenuItem onClick={() => navigateToMyLists()}>My listing's</MenuItem>
-                                    <MenuItem onClick={() => navigateToLogout()}>Log Out</MenuItem>
-                                </>
-                                : <>
-                                    <LoginModal buttonValue="Login"/>
-                                    <MenuItem onClick={() => navigateToRegistration()}>Registration</MenuItem>
-                                </>
-                        }
-                        <MenuItem onClick={() => navigateToAccSettings()}>Account settings</MenuItem>
-                        <MenuItem onClick={() => navigateToHelp()}>Help</MenuItem>
-                    </MenuList>
-                </Menu>
-            </Box>
-        </>
-    )
-}

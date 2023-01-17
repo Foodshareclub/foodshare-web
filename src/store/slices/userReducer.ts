@@ -1,6 +1,7 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import {AllValuesType, AuthPayload, GetValueType, ImgUrlType, profileAPI, UploadImgUrlType} from "../../api/profileAPI";
 import {Session, User} from "@supabase/supabase-js";
+import {supabase} from "../../supaBase.config";
 
 
 const initialState = {
@@ -22,7 +23,7 @@ const initialState = {
 };
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
     try {
-        //const {data, error} = await supabase.auth.signInWithOtp({email})
+        // const {data, error} = await supabase.auth.signInWithOtp({email})
         const {data, error} = await profileAPI.loginWithPass(email, password)
         if (error) throw error
         return data.user
