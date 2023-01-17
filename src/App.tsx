@@ -3,7 +3,6 @@ import Header from "./components/header/Header";
 import Main from "./components/main/Main";
 import Footer from "./components/footer/Footer";
 import {Route, Routes} from "react-router-dom";
-import {Registration} from "./pages/registration/Registration";
 import ProductPage from "./pages/productPage/ProductPage";
 import {Card, CardBody} from "@chakra-ui/react";
 import AboutUsPage from "./pages/aboutUs/AboutUsPage";
