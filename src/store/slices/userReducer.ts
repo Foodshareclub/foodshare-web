@@ -21,6 +21,7 @@ const initialState = {
     imgUrl: '',
     isUpdate : false
 };
+
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
     try {
         // const {data, error} = await supabase.auth.signInWithOtp({email})
@@ -31,6 +32,28 @@ export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password
         return thunkAPI.rejectWithValue(e)
     }
 });
+
+export const loginWithOtpTC = createAsyncThunk("/auth/loginWithOtpTC", async (email: string, thunkAPI) => {
+    try {
+        const {data, error} = await supabase.auth.signInWithOtp({email});
+        console.log(data)
+        if (error) throw error
+        // return data.user
+    } catch (e: any) {
+        return thunkAPI.rejectWithValue(e)
+    }
+});
+export const loginWithPhoneOtpTC = createAsyncThunk("/auth/loginWithPhoneOtpTC", async ({phone, password}: AuthPayload, thunkAPI) => {
+    try {
+        const {data, error} = await profileAPI.loginWithPhone(phone as string, password);
+        console.log(data)
+        if (error) throw error
+        // return data.user
+    } catch (e: any) {
+        return thunkAPI.rejectWithValue(e)
+    }
+});
+
 export const registerTC = createAsyncThunk("/auth/registerTC", async ({
                                                                           email,
                                                                           password,
@@ -80,6 +103,7 @@ export const getValueFromDBTC = createAsyncThunk("/auth/getValueFromDBTC", async
         thunkAPI.dispatch(isLoading(false))
     }
 });
+
 export const downloadImgFromDBTC = createAsyncThunk("/auth/downloadImgFromDBTC", async (imgValue: ImgUrlType, thunkAPI) => {
     try {
         const {data, error} = await profileAPI.downloadImgFromDB(imgValue)
@@ -93,6 +117,7 @@ export const downloadImgFromDBTC = createAsyncThunk("/auth/downloadImgFromDBTC",
         console.log('Error downloading image: ', error.message)
     }
 })
+
 export const uploadImgFromDBTC = createAsyncThunk("/auth/uploadImgFromDBTC", async (imgValue: UploadImgUrlType, thunkAPI) => {
     try {
 
@@ -107,6 +132,7 @@ export const uploadImgFromDBTC = createAsyncThunk("/auth/uploadImgFromDBTC", asy
         thunkAPI.dispatch(isUpdate())
     }
 })
+
 export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (updates: AllValuesType, thunkAPI) => {
     try {
         thunkAPI.dispatch(isLoading(true))
@@ -120,6 +146,7 @@ export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (
         thunkAPI.dispatch(isLoading(false))
     }
 })
+
 const userSlice = createSlice({
     name: "user",
     initialState: initialState,
@@ -151,6 +178,14 @@ const userSlice = createSlice({
             // @ts-ignore
             state.error = action.payload.message
         });
+        builder.addCase(loginWithOtpTC.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.isAuth = true
+                state.isRegister = true
+                state.login = action.payload
+                state.error = null
+            }
+        });
         builder.addCase(registerTC.fulfilled, (state, action) => {
             if (action.payload) {
                 state.isRegister = true
@@ -167,7 +202,6 @@ const userSlice = createSlice({
                 if (action.payload) {
                     state.imgUrl = action.payload
                 }
-
             }
         });
         builder.addCase(uploadImgFromDBTC.fulfilled, (state) => {

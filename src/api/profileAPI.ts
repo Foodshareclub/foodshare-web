@@ -76,7 +76,7 @@ export const profileAPI = {
         )
     },
     loginWithPhone(phone: string, password: string): Promise<AuthResponse> {
-        return supabase.auth.signInWithPassword({
+        return supabase.auth.signUp({
                 phone, password
             }
         )

@@ -23,7 +23,7 @@ import UpdateProfileModal from "./UpdateProfileModal";
 
 import {ProfileSettingsProps} from "../header/NavComponent";
 import {loginTC, registerTC} from "../../store/slices/userReducer";
-import AuthenticationUserModal from "./AuthenticationUserModal";
+import AuthenticationUserModal from "./AuthenticationUser/AuthenticationUserModal";
 
 
 const NawDrawer: React.FC<ProfileSettingsProps> = ({
