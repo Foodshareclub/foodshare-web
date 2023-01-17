@@ -18,7 +18,7 @@ import {
     Text,
     useDisclosure
 } from "@chakra-ui/react";
-import {HamburgerIcon} from "@chakra-ui/icons";
+import {DragHandleIcon} from "@chakra-ui/icons";
 import UpdateProfileModal from "./UpdateProfileModal";
 
 import {ProfileSettingsProps} from "../header/NavComponent";
@@ -47,14 +47,14 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
     // const size = ['xs', 'sm', 'md', 'lg', 'xl', 'full']
 
     return (
-        <>
+        <Box alignSelf={"center"}>
             <IconButton
                 onClick={handleClick}
                 key={size}
                 variant='ghost'
                 colorScheme='gray'
                 aria-label='See menu'
-                icon={<HamburgerIcon/>}
+                icon={<DragHandleIcon/>}
             />
             <Drawer onClose={onClose} isOpen={isOpen} size={size}>
                 <DrawerOverlay/>
@@ -74,8 +74,8 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
                                 <MenuButton
                                     cursor="pointer"
                                     borderRadius="50%"
-                                    icon={<HamburgerIcon/>}
-                                    as={HamburgerIcon}>
+                                    icon={<DragHandleIcon/>}
+                                    as={DragHandleIcon}>
                                 </MenuButton>
                                 <MenuList>
                                     {
@@ -106,7 +106,7 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
                     </DrawerBody>
                 </DrawerContent>
             </Drawer>
-        </>
+        </Box>
     )
 }
 export default NawDrawer

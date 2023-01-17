@@ -2,7 +2,7 @@ import straw from "../../assets/straw.svg";
 import * as React from 'react';
 import {useEffect} from 'react';
 import {useNavigate} from "react-router-dom";
-import {Box, Image, Input, InputGroup, InputLeftElement, Text} from "@chakra-ui/react";
+import {Avatar, Box, Input, InputGroup, InputLeftElement, Text} from "@chakra-ui/react";
 import {SearchIcon} from "@chakra-ui/icons";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {downloadImgFromDBTC, logoutTC} from "../../store/slices/userReducer";
@@ -33,7 +33,7 @@ const NavComponent: React.FC<PropsType> = ({isRegister}) => {
 
     const dispatch = useAppDispatch();
 
-    const size = ['xs', 'sm', 'md', 'lg', 'xl', 'full'];
+    // const size = ['xs', 'sm', 'md', 'lg', 'xl', 'full'];
 
     useEffect(() => {
         if (value && value.avatar_url) {
@@ -62,9 +62,9 @@ const NavComponent: React.FC<PropsType> = ({isRegister}) => {
 
 
     return (
-        <Box display='flex' alignItems='baseline'>
-            <Image alignSelf="center" boxSize='25px' src={straw} alt={straw}/>
-
+        <Box display='flex'  justifyContent={"space-between"}>
+            <Avatar alignSelf="center"
+                    src={straw}/>
             <Box pl={3} alignSelf="center">
                 <Text onClick={() => navigateToMain()} cursor="pointer"
                       fontSize="25px" fontWeight={900} textTransform="uppercase" color='#FF2D55'>
@@ -72,7 +72,7 @@ const NavComponent: React.FC<PropsType> = ({isRegister}) => {
                 </Text>
             </Box>
 
-            <InputGroup alignSelf="center" w={"50%"} ml={"6%"} alignItems={"center"}>
+            <InputGroup alignSelf="center" w={"50%"} ml={"6%"} alignItems="center">
                 <InputLeftElement
                     pointerEvents='none'
                     children={<SearchIcon color='gray.300'/>}

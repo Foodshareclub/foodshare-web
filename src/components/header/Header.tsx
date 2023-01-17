@@ -22,10 +22,14 @@ const Header = () => {
             dispatch(getValueFromDBTC(values))
         }
     }, [user, isUpdate])
+
+
+
+
     return (
         <CardHeader height="20vh">
             <NavComponent isRegister={isRegister}/>
-            <FilterProductComponent/>
+            <FilterProductComponent />
         </CardHeader>
     );
 };
