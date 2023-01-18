@@ -42,7 +42,7 @@ export default function Main() {
             const { data, error } = await supabase
                 .from('posts')
                 .select('*')
-                .eq('post_type', 'food')
+                //.eq('post_type', 'food')
            setData(data as [])
         })()
 
