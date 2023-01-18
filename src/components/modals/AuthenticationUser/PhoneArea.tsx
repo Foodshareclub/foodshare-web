@@ -16,43 +16,41 @@ export const PhoneArea: React.FC<PhoneAreaType> = ({setStartWith}) => {
     const [code, setCode] = useState('');
     const [show, setShow] = useState(false);
     const [codeField, setCodeField] = useState(false);
-    const [codeRepeat, setCodeRepeat] = useState(false);
 
     const handleClick = () => setShow(!show);
 
     const getCode = () => {
         //dispatch('') //first dispatch with phone number and pass
-        setCodeRepeat(true);
         setCodeField(true);
+        setTime(5);
     }
 
+    const [time, setTime] = useState(5);
+
     useEffect(() => {
-        let id: any;
-        if (codeRepeat) {
-            id = setTimeout(() => {
-                setCodeRepeat(false);
-            }, 5000)
-        }
+            let timer = setInterval(() => {
+                codeField
+                && setTime((interval) => interval >= 1 ? interval - 1 : 0);
+            }, 1000)
 
-        return () => clearTimeout(id);
-    }, [codeRepeat])
-
+            return () => clearInterval(timer);
+        }, [codeField]
+    );
+    console.log('render')
 
     const sendCode = () => {
         //dispatch('') // second dispatch with phone and code
-
         setStartWith('Start');
-
     }
 
     if (code.length === 6) {
-        sendCode()
+        sendCode();
     }
 
     return (
         <>
             <FormLabel>Phone</FormLabel>
-            <InputGroup>
+            <InputGroup mb={3}>
                 <InputLeftElement
                     pointerEvents='none'
                     children={<PhoneIcon color='gray.300'/>}
@@ -97,7 +95,7 @@ export const PhoneArea: React.FC<PhoneAreaType> = ({setStartWith}) => {
                 w="100%"
                 alignSelf="center"
                 onClick={getCode}
-                disabled={codeRepeat}
+                disabled={time !== 5 && !!time}
             >
                 Get Code
             </Button>

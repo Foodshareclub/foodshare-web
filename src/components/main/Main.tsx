@@ -6,6 +6,7 @@ import navIcon from '../../assets/map.svg';
 import soup from '../../assets/soup.svg';
 import {ArrowForwardIcon} from "@chakra-ui/icons";
 import useMediaQuery from '../../utils/useMediaQuery';
+import {supabase} from "../../supaBase.config";
 
 export default function Main() {
 
@@ -34,15 +35,28 @@ export default function Main() {
         }
     };
 
+
+    const [data, setData] = useState([]);
+    useEffect(() => {
+       ( async () => {
+            const { data, error } = await supabase
+                .from('posts')
+                .select('*')
+                .eq('post_type', 'food')
+           setData(data as [])
+        })()
+
+    }, [])
+    console.log(data)
     return (
         <Box>
             <SimpleGrid columns={gridSize()}
                         spacing={10}>
-                {mockArray.map((item, id) => (
+                {data.map((item: any, id) => (
                     <GridItem mt='2' mb='2' key={id}>
                         <Skeleton isLoaded={isLoaded}>
                             <Image width="100%" cursor="pointer" borderRadius="10px"
-                                   onClick={() => navigate("/oneProd", {state: item})} src={item.img}
+                                   onClick={() => navigate("/oneProd", {state: item})} src={item.gif_url}
                                    alt="soup"/>
                         </Skeleton>
                         {!isLoaded
@@ -54,7 +68,9 @@ export default function Main() {
                             </div>
                             : <div>
                                 <Box display='flex' alignItems='baseline' fontSize={25}>
-                                    <Box noOfLines={1} mt='2' fontWeight={700}>{item.name}</Box>
+                                    <Box noOfLines={1} mt='2' fontWeight={700}>
+                                        {item.post_name}
+                                    </Box>
                                     <Image ml="2" borderRadius='full' boxSize='20px' src={soup} alt={soup}/>
                                 </Box>
 
@@ -62,7 +78,7 @@ export default function Main() {
                                     <div style={{fontWeight: "700", fontSize: "16px"}}>Distance:</div>
                                     <Box mt='1' ml="2" fontWeight='normal' as='h4' lineHeight='tight' noOfLines={1}
                                     >
-                                        {item.distance}
+                                        {item.post_address}
                                     </Box>
                                     <Image ml="2" borderRadius='full' boxSize='15px' src={navIcon} alt={navIcon}
                                     />
@@ -71,14 +87,14 @@ export default function Main() {
                                     <div style={{fontWeight: "700", fontSize: "16px"}}>Available:</div>
                                     <Box mt='1' ml="2" fontWeight='normal' as='h4' lineHeight='tight' noOfLines={1}
                                     >
-                                        {item.available_time}
+                                        {item.pickup_time}
                                     </Box>
                                 </Box>
 
                                 <Box display='flex' alignItems='baseline'>
                                     <Box mt='1' fontWeight='normal' as='h4' lineHeight='tight' noOfLines={1}
                                     >
-                                        {item.description}
+                                        {item.post_description}
                                     </Box>
                                 </Box>
                             </div>
