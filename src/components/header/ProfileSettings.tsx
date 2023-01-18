@@ -1,5 +1,6 @@
 import * as React from "react";
-import {Avatar, Box, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
+import map from "../../assets/globus.svg"
+import {Avatar, Box, Menu, MenuButton, MenuItem, MenuList,Image} from "@chakra-ui/react";
 import UpdateProfileModal from "../modals/UpdateProfileModal";
 
 import {ProfileSettingsProps} from "./NavComponent";
@@ -16,7 +17,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                                          }) => {
     return (
         <>
-            {/*<Image mr="5%" alignSelf="center" src={map} alt={map}/>*/}
+            <Image mr="5%" alignSelf="center" src={map} alt={map}/>
             <Box alignSelf="center" p={0} color='#303030'>
                 <Menu>
                     <MenuButton

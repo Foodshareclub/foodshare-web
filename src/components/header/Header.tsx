@@ -23,13 +23,10 @@ const Header = () => {
         }
     }, [user, isUpdate])
 
-
-
-
     return (
         <CardHeader height="20vh">
             <NavComponent isRegister={isRegister}/>
-            <FilterProductComponent />
+            <FilterProductComponent/>
         </CardHeader>
     );
 };
