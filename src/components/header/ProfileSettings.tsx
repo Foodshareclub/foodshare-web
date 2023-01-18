@@ -7,6 +7,7 @@ import {ProfileSettingsProps} from "./NavComponent";
 import {loginTC, registerTC} from "../../store/slices/userReducer";
 import AuthenticationUserModal from "../modals/AuthenticationUser/AuthenticationUserModal";
 
+
 const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                                              navigateToMyLists,
                                                              navigateToHelp,

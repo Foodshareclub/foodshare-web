@@ -22,6 +22,7 @@ import map from "../assets/mapGray.svg";
 import mapRed from "../assets/mapRed.svg";
 
 
+
 export const navigationActionsSVG = [
     {
         name: 'Food',

@@ -16,6 +16,7 @@ const SimpleBottomNavigation = () => {
         setValue(obj);
     }
 
+
     return (
         <Box  display='flex' p={8} justifyContent="space-around" >
             <Carousel selectChapterHandler={selectChapterHandler} value={value}/>

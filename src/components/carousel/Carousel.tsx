@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import AliceCarousel, {EventObject} from 'react-alice-carousel';
+import AliceCarousel from 'react-alice-carousel';
 import 'react-alice-carousel/lib/alice-carousel.css';
 import {Box, IconButton, Image, Text} from "@chakra-ui/react";
 import {navigationActionsSVG, responsive} from "../../utils/navigationActions";
@@ -43,6 +43,7 @@ const Carousel: React.FC<PropsType> = ({selectChapterHandler, value}) => {
                 variant="#7D7D7D"
                 colorScheme='teal'
                 aria-label='prev' icon={<ArrowBackIcon/>}/>}
+
 
             <AliceCarousel responsive={responsive} controlsStrategy="responsive" disableButtonsControls={true}
                            keyboardNavigation={true} disableDotsControls={true} infinite
