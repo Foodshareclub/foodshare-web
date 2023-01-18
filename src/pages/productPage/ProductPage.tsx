@@ -15,6 +15,7 @@ type ProductPageType = {
 }
 const ProductPage: React.FC<ProductPageType> = ({obj,buttonValue}) => {
     let item = useLocation().state;
+
     if (obj) {
         item = obj
     }

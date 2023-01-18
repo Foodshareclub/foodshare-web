@@ -1,23 +1,35 @@
 import React, {useEffect, useState} from 'react';
-import {mockArray} from "../../utils/mockArray";
 import {useNavigate} from "react-router-dom";
 import {Box, GridItem, Image, Link, SimpleGrid, Skeleton} from "@chakra-ui/react";
 import navIcon from '../../assets/map.svg';
 import soup from '../../assets/soup.svg';
 import {ArrowForwardIcon} from "@chakra-ui/icons";
 import useMediaQuery from '../../utils/useMediaQuery';
-import {supabase} from "../../supaBase.config";
+import {getProductTC} from "../../store/slices/foodReducer";
+import {useAppDispatch, useAppSelector} from "../../hook/hooks";
+import veget from "../../assets/veget.png"
 
-export default function Main() {
+type MainType = {
+    productType: string
+}
+
+export const Main: React.FC<MainType> = ({productType}) => {
+    const dispatch = useAppDispatch();
 
     const navigate = useNavigate();
-    const [isLoaded, setIsLoaded] = useState(false)
+
+    const [isLoaded, setIsLoaded] = useState(false);
     // пока фото загрузятся skeleton
+
     useEffect(() => {
         setTimeout(() => {
             setIsLoaded(true)
         }, 1000)
     }, []);
+
+    useEffect(() => {dispatch(getProductTC(productType))}, [productType]);
+
+    const products = useAppSelector(state => state.product.products);
 
     const isSmallerThan500 = useMediaQuery('(min-width:500px)');
     const isSmallerThan700 = useMediaQuery('(min-width:700px)');
@@ -35,28 +47,15 @@ export default function Main() {
         }
     };
 
-
-    const [data, setData] = useState([]);
-    useEffect(() => {
-       ( async () => {
-            const { data, error } = await supabase
-                .from('posts')
-                .select('*')
-                //.eq('post_type', 'food')
-           setData(data as [])
-        })()
-
-    }, [])
-    console.log(data)
     return (
         <Box>
             <SimpleGrid columns={gridSize()}
                         spacing={10}>
-                {data.map((item: any, id) => (
+                {products.map((item: any, id) => (
                     <GridItem mt='2' mb='2' key={id}>
                         <Skeleton isLoaded={isLoaded}>
                             <Image width="100%" cursor="pointer" borderRadius="10px"
-                                   onClick={() => navigate("/oneProd", {state: item})} src={item.gif_url}
+                                   onClick={() => navigate("/oneProd", {state: item})} src={veget}
                                    alt="soup"/>
                         </Skeleton>
                         {!isLoaded
