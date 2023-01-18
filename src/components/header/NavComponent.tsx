@@ -23,6 +23,7 @@ export type ProfileSettingsProps = {
     navigateToAccSettings: () => void
     navigateToHelp: () => void
     imgUrl: string
+    value?: AllValuesType
     isRegister: boolean
     size?: string
 }
@@ -64,7 +65,7 @@ const NavComponent: React.FC<PropsType> = ({isRegister}) => {
 
 
     return (
-        <Box display='flex'  justifyContent={"space-between"}>
+        <Box display='flex' justifyContent={"space-between"}>
             <Avatar alignSelf="center"
                     src={straw}/>
             <Box pl={3} alignSelf="center">
@@ -85,6 +86,7 @@ const NavComponent: React.FC<PropsType> = ({isRegister}) => {
             {
                 !isSmallerThan800
                     ? <NavDrawer
+                        value={value}
                         size={'md'} isRegister={isRegister}
                         imgUrl={imgUrl}
                         navigateToMyLists={navigateToMyLists}

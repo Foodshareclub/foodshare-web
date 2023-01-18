@@ -1,6 +1,6 @@
 import * as React from "react";
 import map from "../../assets/globus.svg"
-import {Avatar, Box, Menu, MenuButton, MenuItem, MenuList,Image} from "@chakra-ui/react";
+import {Avatar, Box, Image, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
 import UpdateProfileModal from "../modals/UpdateProfileModal";
 
 import {ProfileSettingsProps} from "./NavComponent";
@@ -31,13 +31,14 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                         {
                             isRegister
                                 ? <>
-                                    <UpdateProfileModal buttonValue="Update Profile"/>
+                                    <UpdateProfileModal fullScreen={true} buttonValue="Update Profile"/>
                                     <MenuItem onClick={() => navigateToMyLists()}>My listing's</MenuItem>
                                     <MenuItem onClick={() => navigateToLogout()}>Log Out</MenuItem>
                                 </>
                                 : <>
-                                    <AuthenticationUserModal buttonValue="Login" thunk={loginTC}/>
-                                    <AuthenticationUserModal buttonValue="Registration" thunk={registerTC}/>
+                                    <AuthenticationUserModal buttonValue="Login" thunk={loginTC} fullScreen/>
+                                    <AuthenticationUserModal buttonValue="Registration" thunk={registerTC}
+                                                             fullScreen/>
 
                                 </>
                         }

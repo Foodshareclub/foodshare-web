@@ -1,4 +1,4 @@
-import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
+import {createAsyncThunk, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import {AllValuesType, AuthPayload, GetValueType, ImgUrlType, profileAPI, UploadImgUrlType} from "../../api/profileAPI";
 import {Session, User} from "@supabase/supabase-js";
 import {supabase} from "../../supaBase.config";
@@ -19,7 +19,7 @@ const initialState = {
     error: null,
     value: {} as AllValuesType,
     imgUrl: '',
-    isUpdate : false
+    isUpdate: false
 };
 
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
@@ -38,12 +38,15 @@ export const loginWithOtpTC = createAsyncThunk("/auth/loginWithOtpTC", async (em
         const {data, error} = await supabase.auth.signInWithOtp({email});
         console.log(data)
         if (error) throw error
-        // return data.user
+        return data.user
     } catch (e: any) {
         return thunkAPI.rejectWithValue(e)
     }
 });
-export const loginWithPhoneOtpTC = createAsyncThunk("/auth/loginWithPhoneOtpTC", async ({phone, password}: AuthPayload, thunkAPI) => {
+export const loginWithPhoneOtpTC = createAsyncThunk("/auth/loginWithPhoneOtpTC", async ({
+                                                                                            phone,
+                                                                                            password
+                                                                                        }: AuthPayload, thunkAPI) => {
     try {
         const {data, error} = await profileAPI.loginWithPhone(phone as string, password);
         console.log(data)
@@ -59,7 +62,7 @@ export const registerTC = createAsyncThunk("/auth/registerTC", async ({
                                                                           password,
                                                                           firstName,
                                                                           lastName
-                                                                      }: AuthPayload, thunkAPI) => {
+                                                                      }: AuthPayload) => {
     try {
         const {data, error} = await profileAPI.registration({email, password, firstName, lastName})
         if (error) throw error
@@ -70,7 +73,7 @@ export const registerTC = createAsyncThunk("/auth/registerTC", async ({
     }
 });
 
-export const logoutTC = createAsyncThunk("/auth/logoutTC", async (arg, thunkAPI) => {
+export const logoutTC = createAsyncThunk("/auth/logoutTC", async () => {
     try {
 
         const {error} = await profileAPI.logOut()
@@ -93,8 +96,6 @@ export const getValueFromDBTC = createAsyncThunk("/auth/getValueFromDBTC", async
             throw error
         }
         if (data) {
-            //console.log(data)
-            //console.log(status)
             return data
         }
     } catch (error: any) {
@@ -104,15 +105,13 @@ export const getValueFromDBTC = createAsyncThunk("/auth/getValueFromDBTC", async
     }
 });
 
-export const downloadImgFromDBTC = createAsyncThunk("/auth/downloadImgFromDBTC", async (imgValue: ImgUrlType, thunkAPI) => {
+export const downloadImgFromDBTC = createAsyncThunk("/auth/downloadImgFromDBTC", async (imgValue: ImgUrlType) => {
     try {
         const {data, error} = await profileAPI.downloadImgFromDB(imgValue)
         if (error) {
             throw error
         }
-        const url = URL.createObjectURL(data)
-
-        return url
+        return URL.createObjectURL(data)
     } catch (error: any) {
         console.log('Error downloading image: ', error.message)
     }
@@ -127,8 +126,7 @@ export const uploadImgFromDBTC = createAsyncThunk("/auth/uploadImgFromDBTC", asy
         }
     } catch (error: any) {
         thunkAPI.rejectWithValue(error.message)
-    }
-    finally {
+    } finally {
         thunkAPI.dispatch(isUpdate())
     }
 })
@@ -161,12 +159,12 @@ const userSlice = createSlice({
         isLoading: (state, action) => {
             state.isLoading = action.payload
         },
-        isUpdate:(state)=>{
-            state.isUpdate=!state.isUpdate
+        isUpdate: (state) => {
+            state.isUpdate = !state.isUpdate
         }
     },
     extraReducers: (builder) => {
-        builder.addCase(loginTC.fulfilled, (state, action) => {
+        builder.addCase(loginTC.fulfilled, (state, action: PayloadAction<User | null, string, { arg: AuthPayload; requestId: string; requestStatus: "fulfilled"; }, never>) => {
             if (action.payload) {
                 state.isAuth = true
                 state.isRegister = true
@@ -178,7 +176,7 @@ const userSlice = createSlice({
             // @ts-ignore
             state.error = action.payload.message
         });
-        builder.addCase(loginWithOtpTC.fulfilled, (state, action) => {
+        builder.addCase(loginWithOtpTC.fulfilled, (state, action: PayloadAction<User | null, string, { arg: string; requestId: string; requestStatus: "fulfilled"; }, never>) => {
             if (action.payload) {
                 state.isAuth = true
                 state.isRegister = true
@@ -192,12 +190,12 @@ const userSlice = createSlice({
                 state.registration = action.payload
             }
         });
-        builder.addCase(getValueFromDBTC.fulfilled, (state, action) => {
+        builder.addCase(getValueFromDBTC.fulfilled, (state, action: PayloadAction<any, string, { arg: GetValueType; requestId: string; requestStatus: "fulfilled"; }, never>) => {
             if (action.payload) {
                 state.value = action.payload
             }
         });
-        builder.addCase(downloadImgFromDBTC.fulfilled, (state, action) => {
+        builder.addCase(downloadImgFromDBTC.fulfilled, (state, action: PayloadAction<string | undefined, string, { arg: ImgUrlType; requestId: string; requestStatus: "fulfilled"; }, never>) => {
             if (action.payload) {
                 if (action.payload) {
                     state.imgUrl = action.payload
@@ -216,12 +214,12 @@ const userSlice = createSlice({
             state.isAuth = false;
             state.isRegister = false;
             state.error = null
-            state.value = {}as  AllValuesType
+            state.value = {} as AllValuesType
             state.login = {} as User
             state.registration = {} as User
-           state.imgUrl=''
+            state.imgUrl = ''
         });
     }
 });
-export const {getSession, isLoading,isUpdate} = userSlice.actions
+export const {getSession, isLoading, isUpdate} = userSlice.actions
 export const userReducer = userSlice.reducer;
