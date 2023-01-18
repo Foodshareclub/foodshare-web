@@ -5,7 +5,11 @@ import {CardHeader} from "@chakra-ui/react";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {getValueFromDBTC} from "../../store/slices/userReducer";
 
-const Header = () => {
+export type HeaderType = {
+    getRoute: (route: string) => void
+}
+
+const Header: React.FC<HeaderType> = ({getRoute}) => {
     const dispatch = useAppDispatch()
     const isRegister = useAppSelector(state => state.user.isRegister);
     const isUpdate = useAppSelector(state => state.user.isUpdate);
@@ -26,7 +30,7 @@ const Header = () => {
     return (
         <CardHeader height="20vh">
             <NavComponent isRegister={isRegister}/>
-            <FilterProductComponent/>
+            <FilterProductComponent getRoute={getRoute}/>
         </CardHeader>
     );
 };

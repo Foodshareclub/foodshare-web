@@ -4,11 +4,15 @@ import {navigationActionsSVG} from "../../utils/navigationActions";
 import {Box} from "@chakra-ui/react";
 import "../../index.scss";
 import Carousel from "../carousel/Carousel";
+import {HeaderType} from "./Header";
 
- export type ValueType ={
-    name:string,src:string,red:string
+ export type ValueType = {
+    name:string
+     src:string
+     red:string
 }
-const SimpleBottomNavigation = () => {
+
+const SimpleBottomNavigation: React.FC<HeaderType> = ({getRoute}) => {
     const [value, setValue] = useState<ValueType | undefined>({} as ValueType);
 
     const selectChapterHandler = (name: string) => {
@@ -16,10 +20,9 @@ const SimpleBottomNavigation = () => {
         setValue(obj);
     }
 
-
     return (
         <Box  display='flex' p={8} justifyContent="space-around" >
-            <Carousel selectChapterHandler={selectChapterHandler} value={value}/>
+            <Carousel selectChapterHandler={selectChapterHandler} value={value} getRoute={getRoute}/>
         </Box>
     )
 }

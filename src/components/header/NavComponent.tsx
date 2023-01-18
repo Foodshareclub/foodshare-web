@@ -10,6 +10,7 @@ import {AllValuesType} from "../../api/profileAPI";
 import useMediaQuery from "../../utils/useMediaQuery";
 import NavDrawer from "../modals/NavDrawer";
 import ProfileSettings from "./ProfileSettings";
+import {getAllProductsTC} from "../../store/slices/foodReducer";
 
 type PropsType = {
     isRegister: boolean
@@ -26,9 +27,7 @@ export type ProfileSettingsProps = {
     size?: string
 }
 const NavComponent: React.FC<PropsType> = ({isRegister}) => {
-
     const imgUrl = useAppSelector(state => state.user.imgUrl);
-
     const value = useAppSelector<AllValuesType>(state => state.user.value);
 
     const dispatch = useAppDispatch();
@@ -47,7 +46,10 @@ const NavComponent: React.FC<PropsType> = ({isRegister}) => {
     const isSmallerThan800 = useMediaQuery('(min-width:800px)');
 
     const navigate = useNavigate();
-    const navigateToMain = () => navigate('/');
+    const navigateToMain = () => {
+        dispatch(getAllProductsTC());
+        navigate('/');
+    }
     const navigateToAboutUs = () => navigate('/aboutUs');
     const navigateToMyLists = () => navigate('/user-listings');
 

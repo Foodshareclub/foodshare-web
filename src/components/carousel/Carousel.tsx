@@ -8,18 +8,25 @@ import "react-alice-carousel/lib/scss/alice-carousel.scss";
 import {ValueType} from "../header/FilterProductComponent";
 import {ArrowBackIcon, ArrowForwardIcon} from "@chakra-ui/icons";
 import useMediaQuery from "../../utils/useMediaQuery";
+import {getProductTC} from "../../store/slices/foodReducer";
+import {useAppDispatch} from "../../hook/hooks";
+import {HeaderType} from "../header/Header";
 
 type PropsType = {
     selectChapterHandler: (name: string) => void
     value?: ValueType
+    getRoute: (route: string) => void
 }
 
-const Carousel: React.FC<PropsType> = ({selectChapterHandler, value}) => {
+const Carousel: React.FC<PropsType> = ({selectChapterHandler, value, getRoute}) => {
     const isSmallerThan1024 = useMediaQuery('(min-width:1024px)');
-    const navigate = useNavigate()
+
+    const navigate = useNavigate();
+
     const navigateHandler = (item: ValueType) => {
         selectChapterHandler(item.name);
         navigate(`${item.name.toLowerCase()}`);
+        getRoute(item.name.toLowerCase());
     }
 
     const [mainIndex, setMainIndex] = useState(0);
