@@ -66,7 +66,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk}) => {
         onClose();
     };
 
-    const continueWithEmail = (value: StartWithType) => setStartWith(value);
+    const continueWith = (value: StartWithType) => setStartWith(value);
 
     const onCloseModalHandler = () => {
         onClose();
@@ -147,7 +147,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk}) => {
                                     _hover={{bg: 'red.100'}}
                                     fontSize={20}
                                     variant="outline" mt={3} w="100%" alignSelf="center"
-                                    onClick={() => continueWithEmail(buttonValue)}
+                                    onClick={() => continueWith(buttonValue)}
                             >
                                 Continue with {buttonValue === 'Login' ? 'Email' : 'Phone'}
                             </Button>

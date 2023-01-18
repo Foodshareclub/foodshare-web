@@ -10,11 +10,11 @@ import AsideProducts from "./asideProducts/AsideProducts";
 import PickUpRequestModal from "../../components/modals/PickUpRequestModal";
 
 type ProductPageType = {
-    obj?: MockElT
+    obj?: any
     buttonValue?:string
 }
 const ProductPage: React.FC<ProductPageType> = ({obj,buttonValue}) => {
-    let item: MockElT = useLocation().state;
+    let item = useLocation().state;
     if (obj) {
         item = obj
     }
@@ -24,9 +24,9 @@ const ProductPage: React.FC<ProductPageType> = ({obj,buttonValue}) => {
             <Flex justify="center">
                 <Box w="50%" alignSelf="center">
                     <Image
-                        src={item.img}
+                        src={item.gif_url}
                         borderRadius={20}
-                        alt={item.img}
+                        alt={item.post_name}
                         boxSize='90%'
                         objectFit='cover'
                     />
@@ -35,14 +35,14 @@ const ProductPage: React.FC<ProductPageType> = ({obj,buttonValue}) => {
                 <Box alignSelf="" w="40%">
                     <Box lineHeight={2}>
                         <Flex>
-                            <Heading alignSelf="center" size='md'>{item.name}</Heading>
+                            <Heading alignSelf="center" size='md'>{item.post_name}</Heading>
                             <Image pl={4} src={loc} alt={loc}/>
-                            <Text px={2}>{item.distance}</Text>
+                            <Text px={2}>{item.post_address}</Text>
                         </Flex>
 
                         <Flex>
                             <Image src={likes} alt={likes}/>
-                            <Text px={2}>{item.property.numbLikes}</Text>
+                            <Text px={2}>{4}</Text>
                         </Flex>
 
                         <Flex mt='2' alignItems='center'>
@@ -51,34 +51,34 @@ const ProductPage: React.FC<ProductPageType> = ({obj,buttonValue}) => {
                                 .map((_, i) => (
                                     <StarIcon
                                         key={i}
-                                        color={i < item.property.rating ? 'teal.500' : 'gray.300'}
+                                        color={i < 4 ? 'teal.500' : 'gray.300'}
                                     />
                                 ))}
                             <Box as='span' ml='2' color='gray.600' fontSize='sm'>
-                                {item.property.reviews} reviews
+                                999 reviews
                             </Box>
                         </Flex>
 
                         <Text lineHeight={1.5}>{
-                            item.property.about}
+                            item.post_description}
                         </Text>
 
                         <Heading alignSelf="center" size='md'>Pick Up Address</Heading>
 
-                        <Text>{item.property.pickUpAddress}</Text>
+                        <Text>{item.post_address}</Text>
 
                         <Flex>
                             <Heading alignSelf="center" size='md'>Available:</Heading>
-                            <Text px={2}>{item.available_time}</Text>
+                            <Text px={2}>{item.pickup_time}</Text>
                         </Flex>
 
                         <Flex>
                             <Heading alignSelf="center" size='md'>Quantity:</Heading>
-                            <Text px={2}>{item.property.quantity}</Text>
+                            <Text px={2}>{item.post_description}</Text>
                         </Flex>
 
                         <Heading alignSelf="center" size='md'>Food Type</Heading>
-                        <Text>{item.property.type}</Text>
+                        <Text>{item.post_type}</Text>
                     </Box>
 
                     <Box mt={10}>
