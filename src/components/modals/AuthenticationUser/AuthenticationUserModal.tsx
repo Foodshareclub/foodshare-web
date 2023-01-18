@@ -24,15 +24,17 @@ import phone from "../../../assets/phone.png";
 import {CredentialsBlock} from "./CredentialsBlock";
 import {EmailArea} from "./EmailArea";
 import {PhoneArea} from "./PhoneArea";
+import {AsyncThunk} from "@reduxjs/toolkit";
 
 type ModalType = {
     buttonValue: StartWithType
-    thunk: any
+    thunk: AsyncThunk<any, any, any>
+    fullScreen: boolean
 }
 
 type StartWithType = 'Start' | 'Login' | 'Registration';
 
-const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk}) => {
+const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullScreen}) => {
     const {isAuth} = useAppSelector(state => state.user);
 
     const navigate = useNavigate();
@@ -78,7 +80,10 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk}) => {
     }
     return (
         <>
-            <MenuItem onClick={onOpen}>{buttonValue}</MenuItem>
+            {fullScreen ?
+                <MenuItem onClick={onOpen}>{buttonValue}</MenuItem> :
+                <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl' onClick={onOpen}>{buttonValue}</Text>
+            }
             <Modal
                 initialFocusRef={initialRef}
                 finalFocusRef={finalRef}
@@ -143,11 +148,12 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk}) => {
                             </Button>
 
                             <Button
-                                leftIcon={<Image src={buttonValue === 'Login' ? envelope : phone} alt={google} boxSize='30px'/>}
-                                    _hover={{bg: 'red.100'}}
-                                    fontSize={20}
-                                    variant="outline" mt={3} w="100%" alignSelf="center"
-                                    onClick={() => continueWith(buttonValue)}
+                                leftIcon={<Image src={buttonValue === 'Login' ? envelope : phone} alt={google}
+                                                 boxSize='30px'/>}
+                                _hover={{bg: 'red.100'}}
+                                fontSize={20}
+                                variant="outline" mt={3} w="100%" alignSelf="center"
+                                onClick={() => continueWith(buttonValue)}
                             >
                                 Continue with {buttonValue === 'Login' ? 'Email' : 'Phone'}
                             </Button>

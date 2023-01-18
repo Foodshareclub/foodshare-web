@@ -11,10 +11,7 @@ import {
     Flex,
     Heading,
     IconButton,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuList,
+    Stack,
     Text,
     useDisclosure
 } from "@chakra-ui/react";
@@ -34,7 +31,8 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
                                                        navigateToLogout,
                                                        navigateToMyLists,
                                                        navigateToAboutUs,
-                                                       navigateToAccSettings
+                                                       navigateToAccSettings,
+                                                       value
                                                    }) => {
 
     const {isOpen, onOpen, onClose} = useDisclosure()
@@ -60,49 +58,42 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
                 <DrawerOverlay/>
                 <DrawerContent>
                     <DrawerCloseButton/>
-                    <DrawerHeader>{`Hi ${size}`}</DrawerHeader>
+                    <DrawerHeader>{`Hi ${value && value.first_name}`}</DrawerHeader>
                     <DrawerBody>
-                        <Flex>
-                            <Flex flex='1' gap='4' alignItems='center' flexWrap='wrap'>
-                                <Avatar name='Avatar' src={imgUrl}/>
-                                <Box>
-                                    <Heading size='sm'>Segun Adebayo</Heading>
-                                    <Text>Creator, Chakra UI</Text>
-                                </Box>
-                            </Flex>
-                            <Menu>
-                                <MenuButton
-                                    cursor="pointer"
-                                    borderRadius="50%"
-                                    icon={<DragHandleIcon/>}
-                                    as={DragHandleIcon}>
-                                </MenuButton>
-                                <MenuList>
-                                    {
-                                        isRegister
-                                            ? <>
-                                                <UpdateProfileModal buttonValue="Update Profile"/>
-                                                <MenuItem onClick={() => navigateToMyLists()}>My listing's</MenuItem>
-                                                <MenuItem onClick={() => navigateToLogout()}>Log Out</MenuItem>
-                                            </>
-                                            : <>
-                                                <AuthenticationUserModal buttonValue="Login" thunk={loginTC}/>
-                                                <AuthenticationUserModal buttonValue="Registration" thunk={registerTC}/>
-                                            </>
-                                    }
-                                    <MenuItem onClick={() => navigateToAccSettings()}>Account settings</MenuItem>
-                                    <MenuItem onClick={() => navigateToHelp()}>Help</MenuItem>
-                                </MenuList>
-                            </Menu>
-
+                        <Flex flex='1' gap='4' alignItems='center' flexWrap='wrap'>
+                            <Avatar name={value && value.first_name} src={imgUrl}/>
+                            <Box>
+                                <Heading size='sm'>{value && value.first_name} {value && value.second_name}</Heading>
+                                <Text>Creator, Chakra UI</Text>
+                            </Box>
                         </Flex>
-                        <Box onClick={() => navigateToAboutUs()} cursor="pointer" fontSize='22px' textAlign="center"
-                             _hover={{color: "#FF2D55"}}
-                             fontWeight="400"
-                             alignSelf="center" w="40%"
-                             color='#303030'>
-                            About Us
+                        <Box mt={10}>
+                            {
+                                isRegister
+                                    ?
+                                    <Stack spacing={3}>
+                                        <UpdateProfileModal fullScreen={false} buttonValue="Update Profile"/>
+                                        <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
+                                              onClick={() => navigateToMyLists()}>My listing's</Text>
+                                        <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
+                                              onClick={() => navigateToAccSettings()}>Account
+                                            settings</Text>
+                                        <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
+                                              onClick={() => navigateToLogout()}>Log Out</Text>
+
+                                    </Stack>
+                                    : <Stack>
+                                        <AuthenticationUserModal buttonValue="Login" thunk={loginTC} fullScreen={false}/>
+                                        <AuthenticationUserModal buttonValue="Registration" thunk={registerTC}
+                                                                 fullScreen={false}/>
+                                    </Stack>
+                            }
+                            <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
+                                  onClick={() => navigateToAboutUs()}>About Us</Text>
+                            <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
+                                  onClick={() => navigateToHelp()}>Help</Text>
                         </Box>
+
                     </DrawerBody>
                 </DrawerContent>
             </Drawer>

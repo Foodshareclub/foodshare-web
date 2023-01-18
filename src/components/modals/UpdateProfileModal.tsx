@@ -5,6 +5,7 @@ import {
     Input,
     MenuItem,
     Modal,
+    Text,
     ModalBody,
     ModalCloseButton,
     ModalContent,
@@ -22,9 +23,10 @@ import {AllValuesType} from "../../api/profileAPI";
 
 type ModalType = {
     buttonValue?: string
+    fullScreen:boolean
 }
 
-const UpdateProfileModal: React.FC<ModalType> = ({buttonValue = "Update Profile"}) => {
+const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
     const dispatch = useAppDispatch();
 
     const {user} = useAppSelector(state => state.user.session);
@@ -93,7 +95,10 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue = "Update Profile"
 
     return (
         <>
-            <MenuItem onClick={onOpen}>{buttonValue}</MenuItem>
+            {fullScreen?<MenuItem onClick={onOpen}>{buttonValue}</MenuItem>:
+                <Text cursor={"pointer"} _hover={{color:"red" }} fontSize='3xl' onClick={onOpen}>{buttonValue}</Text>
+            }
+
             <Modal
                 initialFocusRef={initialRef}
                 finalFocusRef={finalRef}
