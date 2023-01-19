@@ -14,7 +14,7 @@ import {getAllProductsTC} from "../../store/slices/foodReducer";
 
 type PropsType = {
     isRegister: boolean
-
+    setIsMainPage: (isMainPage: boolean) => void
 }
 export type ProfileSettingsProps = {
     navigateToAboutUs: () => void
@@ -27,7 +27,7 @@ export type ProfileSettingsProps = {
     isRegister: boolean
     size?: string
 }
-const NavComponent: React.FC<PropsType> = ({isRegister}) => {
+const NavComponent: React.FC<PropsType> = ({isRegister, setIsMainPage}) => {
     const imgUrl = useAppSelector(state => state.user.imgUrl);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
 
@@ -50,19 +50,15 @@ const NavComponent: React.FC<PropsType> = ({isRegister}) => {
     const navigateToMain = () => {
         dispatch(getAllProductsTC());
         navigate('/');
+        setIsMainPage(true);
     }
     const navigateToAboutUs = () => navigate('/aboutUs');
     const navigateToMyLists = () => navigate('/user-listings');
 
-    const navigateToAccSettings = () => {
-    }
+    const navigateToAccSettings = () => {}
+    const navigateToHelp = () => {}
 
-    const navigateToHelp = () => {
-    }
-    const navigateToLogout = () => {
-        dispatch(logoutTC())
-    }
-
+    const navigateToLogout = () => dispatch(logoutTC());
 
     return (
         <Box display='flex' justifyContent={"space-between"}>

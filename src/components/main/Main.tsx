@@ -19,16 +19,20 @@ export const Main: React.FC<MainType> = ({productType}) => {
     const navigate = useNavigate();
 
     const [isLoaded, setIsLoaded] = useState(false);
-    // пока фото загрузятся skeleton
 
     useEffect(() => {
-        setTimeout(() => {
+        const time = setTimeout(() => {// пока фото загрузятся skeleton
             setIsLoaded(true)
         }, 1000)
+
+        return () => clearTimeout(time);
     }, []);
 
-    useEffect(() => {dispatch(getProductTC(productType))}, [productType]);
-
+    useEffect(() => {
+        if (productType) {
+            dispatch(getProductTC(productType))
+        }
+    }, [productType]);
     const products = useAppSelector(state => state.product.products);
 
     const isSmallerThan500 = useMediaQuery('(min-width:500px)');
@@ -51,11 +55,11 @@ export const Main: React.FC<MainType> = ({productType}) => {
         <Box>
             <SimpleGrid columns={gridSize()}
                         spacing={10}>
-                {products.map((item: any, id) => (
+                {products.map((item, id) => (
                     <GridItem mt='2' mb='2' key={id}>
                         <Skeleton isLoaded={isLoaded}>
                             <Image width="100%" cursor="pointer" borderRadius="10px"
-                                   onClick={() => navigate("/oneProd", {state: item})} src={veget}
+                                   onClick={() => navigate(`/oneProd`, {state: item})} src={veget}
                                    alt="soup"/>
                         </Skeleton>
                         {!isLoaded
@@ -98,7 +102,6 @@ export const Main: React.FC<MainType> = ({productType}) => {
                                 </Box>
                             </div>
                         }
-
                     </GridItem>
                 ))}
 

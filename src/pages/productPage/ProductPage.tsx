@@ -1,24 +1,30 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import styles from "./productPage.module.scss";
 import likes from "../../assets/likes.svg";
 import loc from "../../assets/location-blue.svg";
 import {useLocation} from "react-router-dom";
 import {Box, Flex, Heading, Image, Text} from "@chakra-ui/react";
 import {StarIcon} from "@chakra-ui/icons";
-import {asideProdProperty, MockElT} from "../../utils/mockArray";
 import AsideProducts from "./asideProducts/AsideProducts";
 import PickUpRequestModal from "../../components/modals/PickUpRequestModal";
+import {useAppDispatch, useAppSelector} from "../../hook/hooks";
+import {getRandomProducts} from "../../utils/getRandomProduct";
+import {getProductTC} from "../../store/slices/foodReducer";
 
 type ProductPageType = {
     obj?: any
-    buttonValue?:string
+    buttonValue?: string
 }
-const ProductPage: React.FC<ProductPageType> = ({obj,buttonValue}) => {
-    let item = useLocation().state;
+const ProductPage: React.FC<ProductPageType> = ({obj, buttonValue}) => {
+    const dispatch = useAppDispatch();
 
-    if (obj) {
-        item = obj
-    }
+    const products = useAppSelector(state => state.product.products);
+
+    useEffect(() => {
+        dispatch(getProductTC(item.post_type))
+    }, []);
+
+    const item = useLocation().state;
 
     return (
         <div className={styles.root}>
@@ -43,7 +49,7 @@ const ProductPage: React.FC<ProductPageType> = ({obj,buttonValue}) => {
 
                         <Flex>
                             <Image src={likes} alt={likes}/>
-                            <Text px={2}>{4}</Text>
+                            <Text px={2}>{item.post_like_counter}</Text>
                         </Flex>
 
                         <Flex mt='2' alignItems='center'>
@@ -105,11 +111,13 @@ const ProductPage: React.FC<ProductPageType> = ({obj,buttonValue}) => {
                         You May Also Like:
                     </Box>
 
-                    {asideProdProperty.map((el, id) => (
+
+                    {products.length && getRandomProducts(products).map((el, id) => (//data - 3 random elem from array
                         <AsideProducts
                             key={id}
-                            img={el.img} name={el.name} about={el.about}
-                            available={el.available} distance={el.distance}/>
+                            img={el.gif_url} name={el.post_name} about={el.post_name}
+                            available={el.pickup_time} distance={el.post_address}
+                        />
                     ))}
 
                 </Box>
