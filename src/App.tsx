@@ -9,14 +9,11 @@ import ContactUsPage from "./pages/contactUs/ContactUsPage";
 import VolunteerPage from "./pages/volunteerPages/VolunteerPage";
 import OpportunitiesPage from "./pages/volunteerPages/OpportunitiesPage";
 import MyListingsPage from "./pages/prfilePages/MyListingsPage";
-import WantedPage from "./pages/wantedPage/WantedPage";
-import BorrowPage from "./pages/borrowPage/BorrowPage";
-import BusinessPage from "./pages/businessPage/BusinessPage";
 import {useAppDispatch} from "./hook/hooks";
 import {getSession} from "./store/slices/userReducer";
 import {Session} from "@supabase/supabase-js";
 import {supabase} from "./supaBase.config";
-import {getAllProductsTC, getProductTC} from "./store/slices/foodReducer";
+import {getAllProductsTC} from "./store/slices/foodReducer";
 import {Main} from "./components/main/Main";
 
 
@@ -29,17 +26,16 @@ function App() {
         supabase.auth.onAuthStateChange((event, session) => setSession(session));
     }, []);
 
-
     const [productType, setProductType] = useState('');
 
     useEffect(() => {
-            dispatch(getAllProductsTC());
+        dispatch(getAllProductsTC());
     }, []);
 
     const getRoute = (route: string) => setProductType(route);
 
     if (session) {
-        dispatch(getSession(session))
+        dispatch(getSession(session));
     }
 
     return (
@@ -47,8 +43,8 @@ function App() {
             <Header getRoute={getRoute}/>
             <CardBody>
                 <Routes>
-                    <Route path={"/"} element={<Main productType={productType}/>}/>
-                    <Route path={"/*"} element={<Main productType={productType}/>}/>
+                    <Route path={"/"} element={<Main productType={productType} />}/>
+                    <Route path={"/*"} element={<Main productType={productType} />}/>
                     <Route path={"/oneProd"} element={<ProductPage/>}/>
                     <Route path={"/aboutUs"} element={<AboutUsPage/>}/>
                     <Route path={"/contactUs"} element={<ContactUsPage/>}/>
