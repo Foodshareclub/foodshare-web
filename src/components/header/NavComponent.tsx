@@ -15,6 +15,7 @@ import {getAllProductsTC} from "../../store/slices/foodReducer";
 type PropsType = {
     isRegister: boolean
     setIsMainPage: (isMainPage: boolean) => void
+    setProductType: (type: string) => void
 }
 export type ProfileSettingsProps = {
     navigateToAboutUs: () => void
@@ -27,7 +28,7 @@ export type ProfileSettingsProps = {
     isRegister: boolean
     size?: string
 }
-const NavComponent: React.FC<PropsType> = ({isRegister, setIsMainPage}) => {
+const NavComponent: React.FC<PropsType> = ({isRegister, setIsMainPage, setProductType}) => {
     const imgUrl = useAppSelector(state => state.user.imgUrl);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
 
@@ -47,16 +48,21 @@ const NavComponent: React.FC<PropsType> = ({isRegister, setIsMainPage}) => {
     const isSmallerThan800 = useMediaQuery('(min-width:800px)');
 
     const navigate = useNavigate();
+
     const navigateToMain = () => {
         dispatch(getAllProductsTC());
         navigate('/');
         setIsMainPage(true);
+        setProductType('/');
     }
+
     const navigateToAboutUs = () => navigate('/aboutUs');
     const navigateToMyLists = () => navigate('/user-listings');
 
-    const navigateToAccSettings = () => {}
-    const navigateToHelp = () => {}
+    const navigateToAccSettings = () => {
+    }
+    const navigateToHelp = () => {
+    }
 
     const navigateToLogout = () => dispatch(logoutTC());
 

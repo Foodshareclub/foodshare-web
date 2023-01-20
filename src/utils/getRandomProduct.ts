@@ -1,23 +1,21 @@
 import {ProductStateType} from "../store/slices/foodReducer";
 
-export function getRandomProducts (products: Array<ProductStateType>) {
-    const lastElement = products.length;
+export function getRandomProducts(products: Array<ProductStateType>, product: ProductStateType) {
+    const productsWithoutItem = products.filter(prod => prod.id !== product.id);
 
-    const randomProduct = Math.floor(Math.random() * lastElement + 1);
+    const indexesArray = productsWithoutItem
+        .map((el, i) => i)
+        .sort(() => Math.random() - 0.5)
 
-    if (randomProduct >= 3) {
-        return [
-            products[randomProduct - 1],
-            products[randomProduct - 2],
-            products[randomProduct - 3]
-        ];
+    let randomElementsArray = [];
 
-    } else if (randomProduct >= 0 && lastElement < 2 && randomProduct !== lastElement) {
-        return [
-            products[randomProduct],
-            products[lastElement]
-        ];
+    for (let i = 0; i <= productsWithoutItem.length - 1; i++) {
+        if (i < 3) {
+            randomElementsArray.push(productsWithoutItem[indexesArray[i]]);
+        } else {
+            break;
+        }
     }
 
-    return [products[0]];
+    return randomElementsArray;
 }

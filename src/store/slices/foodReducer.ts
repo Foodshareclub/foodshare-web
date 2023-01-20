@@ -24,7 +24,8 @@ export type ProductStateType = {
 }
 
 const initialState = {
-    products: [] as Array<ProductStateType>
+    products: [] as Array<ProductStateType>,
+    currentCategoryProduct: [] as Array<ProductStateType>
 };
 
 export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", async (arg, thunkAPI) => {

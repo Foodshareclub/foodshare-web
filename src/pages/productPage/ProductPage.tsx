@@ -18,13 +18,13 @@ type ProductPageType = {
 const ProductPage: React.FC<ProductPageType> = ({obj, buttonValue}) => {
     const dispatch = useAppDispatch();
 
+    const item = useLocation().state;
+
     const products = useAppSelector(state => state.product.products);
 
     useEffect(() => {
         dispatch(getProductTC(item.post_type))
     }, []);
-
-    const item = useLocation().state;
 
     return (
         <div className={styles.root}>
@@ -111,12 +111,15 @@ const ProductPage: React.FC<ProductPageType> = ({obj, buttonValue}) => {
                         You May Also Like:
                     </Box>
 
-
-                    {products.length && getRandomProducts(products).map((el, id) => (//data - 3 random elem from array
+                    {products.length && getRandomProducts(products, item).map((product, id) => (//data - 3 random elem from array
                         <AsideProducts
                             key={id}
-                            img={el.gif_url} name={el.post_name} about={el.post_name}
-                            available={el.pickup_time} distance={el.post_address}
+                            product={product}
+                            img={product.gif_url}
+                            name={product.post_name}
+                            about={product.post_name}
+                            available={product.pickup_time}
+                            distance={product.post_address}
                         />
                     ))}
 

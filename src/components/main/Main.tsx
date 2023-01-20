@@ -29,10 +29,11 @@ export const Main: React.FC<MainType> = ({productType}) => {
     }, []);
 
     useEffect(() => {
-        if (productType) {
-            dispatch(getProductTC(productType))
+        if (productType && productType !== '/') {
+            dispatch(getProductTC(productType));
         }
     }, [productType]);
+
     const products = useAppSelector(state => state.product.products);
 
     const isSmallerThan500 = useMediaQuery('(min-width:500px)');
