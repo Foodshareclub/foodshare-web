@@ -40,7 +40,7 @@ function App() {
 
     return (
         <Card size="lg" minH="100vh">
-            <Header getRoute={getRoute}/>
+            <Header getRoute={getRoute} setProductType={setProductType}/>
             <CardBody>
                 <Routes>
                     <Route path={"/"} element={<Main productType={productType} />}/>

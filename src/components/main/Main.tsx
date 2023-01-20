@@ -8,6 +8,7 @@ import useMediaQuery from '../../utils/useMediaQuery';
 import {getProductTC} from "../../store/slices/foodReducer";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import veget from "../../assets/veget.png"
+import {navigatePhotosObject} from "../../utils/navigatePhotosObject";
 
 type MainType = {
     productType: string
@@ -29,10 +30,11 @@ export const Main: React.FC<MainType> = ({productType}) => {
     }, []);
 
     useEffect(() => {
-        if (productType) {
-            dispatch(getProductTC(productType))
+        if (productType && productType !== '/') {
+            dispatch(getProductTC(productType));
         }
     }, [productType]);
+
     const products = useAppSelector(state => state.product.products);
 
     const isSmallerThan500 = useMediaQuery('(min-width:500px)');
@@ -50,6 +52,8 @@ export const Main: React.FC<MainType> = ({productType}) => {
             return 2;
         }
     };
+
+
 
     return (
         <Box>
@@ -74,7 +78,14 @@ export const Main: React.FC<MainType> = ({productType}) => {
                                     <Box noOfLines={1} mt='2' fontWeight={700}>
                                         {item.post_name}
                                     </Box>
-                                    <Image ml="2" borderRadius='full' boxSize='20px' src={soup} alt={soup}/>
+                                    <Image
+                                        ml="2"
+                                        borderRadius='full'
+                                        boxSize='20px'
+                                        src={navigatePhotosObject[item.post_type]}
+                                        alt={soup}
+                                    />
+
                                 </Box>
 
                                 <Box display='flex' alignItems='baseline'>

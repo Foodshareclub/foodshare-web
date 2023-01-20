@@ -1,6 +1,7 @@
 import React from 'react';
 import {CardBody, Flex, Heading, Image, Text} from "@chakra-ui/react";
 import rose from "../../../assets/map.svg";
+import {useNavigate} from "react-router-dom";
 
 type AsideProdType = {
     img: string
@@ -9,8 +10,15 @@ type AsideProdType = {
     available: string
     distance: string
     height?:string
+    product?: any
 }
-const AsideProducts: React.FC<AsideProdType> = ({height,img, name, about, available, distance}) => {
+const AsideProducts: React.FC<AsideProdType> = ({product, height,img, name, about, available, distance}) => {
+const navigate = useNavigate();
+    const clicker = () => {
+        navigate('/oneProd', {state: product})
+    }
+
+
     return (
         <Flex
             direction={{base: 'column', sm: 'row'}}
@@ -18,6 +26,8 @@ const AsideProducts: React.FC<AsideProdType> = ({height,img, name, about, availa
             borderRadius={10}
             mt={4}
             height={height?height: "inherit"}
+            cursor="pointer"
+            onClick={clicker}
         >
             <Image
                 borderRadius="10%"
