@@ -11,11 +11,14 @@ import useMediaQuery from "../../utils/useMediaQuery";
 import NavDrawer from "../modals/NavDrawer";
 import ProfileSettings from "./ProfileSettings";
 import {getAllProductsTC} from "../../store/slices/foodReducer";
+import LanguageSelector from "../languageSelector/LanguageSelector";
 
-type PropsType = {
+type PropsLangType = {
     isRegister: boolean
+
     setIsMainPage: (isMainPage: boolean) => void
     setProductType: (type: string) => void
+
 }
 export type ProfileSettingsProps = {
     navigateToAboutUs: () => void
@@ -27,8 +30,12 @@ export type ProfileSettingsProps = {
     value?: AllValuesType
     isRegister: boolean
     size?: string
+    giveLanguage?:(value:string)=>void
+
 }
+
 const NavComponent: React.FC<PropsType> = ({isRegister, setIsMainPage, setProductType}) => {
+
     const imgUrl = useAppSelector(state => state.user.imgUrl);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
 
@@ -70,6 +77,7 @@ const NavComponent: React.FC<PropsType> = ({isRegister, setIsMainPage, setProduc
         <Box display='flex' justifyContent={"space-between"}>
             <Avatar alignSelf="center"
                     src={straw}/>
+
             <Box pl={3} alignSelf="center">
                 <Text onClick={() => navigateToMain()} cursor="pointer"
                       fontSize="25px" fontWeight={900} textTransform="uppercase" color='#FF2D55'>

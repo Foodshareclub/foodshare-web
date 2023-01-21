@@ -1,7 +1,9 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import {productAPI} from "../../api/productAPI";
 
-export type ProductStateType = {
+
+export type InitialProductStateType = {
+
     created_att: string
     five_star: null
     four_star: null
@@ -24,8 +26,9 @@ export type ProductStateType = {
 }
 
 const initialState = {
-    products: [] as Array<ProductStateType>,
-    currentCategoryProduct: [] as Array<ProductStateType>
+
+    products: [] as Array<InitialProductStateType>
+
 };
 
 export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", async (arg, thunkAPI) => {

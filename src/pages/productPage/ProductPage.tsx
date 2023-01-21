@@ -15,6 +15,7 @@ type ProductPageType = {
     obj?: any
     buttonValue?: string
 }
+
 const ProductPage: React.FC<ProductPageType> = ({obj, buttonValue}) => {
     const dispatch = useAppDispatch();
 
@@ -26,6 +27,7 @@ const ProductPage: React.FC<ProductPageType> = ({obj, buttonValue}) => {
         dispatch(getProductTC(item.post_type))
     }, []);
 
+
     return (
         <div className={styles.root}>
             <Flex justify="center">
@@ -34,7 +36,10 @@ const ProductPage: React.FC<ProductPageType> = ({obj, buttonValue}) => {
                         src={item.gif_url}
                         borderRadius={20}
                         alt={item.post_name}
-                        boxSize='50%'
+
+                        m={"0 auto"}
+                        maxWidth={300}
+
                         objectFit='cover'
 
                     />

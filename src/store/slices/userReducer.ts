@@ -19,12 +19,12 @@ const initialState = {
     error: null,
     value: {} as AllValuesType,
     imgUrl: '',
-    isUpdate: false
+    isUpdate: false,
+    language:"en"
 };
 
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
     try {
-        // const {data, error} = await supabase.auth.signInWithOtp({email})
         const {data, error} = await profileAPI.loginWithPass(email, password)
         if (error) throw error
         return data.user
@@ -161,6 +161,9 @@ const userSlice = createSlice({
         },
         isUpdate: (state) => {
             state.isUpdate = !state.isUpdate
+        },
+        changeLanguage:(state,action:PayloadAction<string>)=>{
+            state.language = action.payload
         }
     },
     extraReducers: (builder) => {
@@ -221,5 +224,5 @@ const userSlice = createSlice({
         });
     }
 });
-export const {getSession, isLoading, isUpdate} = userSlice.actions
+export const {getSession, isLoading, isUpdate,changeLanguage} = userSlice.actions
 export const userReducer = userSlice.reducer;

@@ -31,9 +31,11 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType}) => {
     }, [user, isUpdate])
 
     return (
-        <CardHeader bg={useColorModeValue('gray.50', 'gray.900')} height="20vh">
-            <NavComponent isRegister={isRegister} setIsMainPage={setIsMainPage} setProductType={setProductType}/>
+
+        <CardHeader pb={0} bg={useColorModeValue('gray.50', 'gray.900')}>
+                    <NavComponent isRegister={isRegister} setIsMainPage={setIsMainPage} setProductType={setProductType}/>
             <FilterProductComponent getRoute={getRoute} setIsMainPage={setIsMainPage} isMainPage={isMainPage}/>
+
         </CardHeader>
     );
 };

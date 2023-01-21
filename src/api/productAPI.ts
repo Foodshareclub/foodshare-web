@@ -1,7 +1,9 @@
 import {supabase} from "../supaBase.config";
+import {AuthPayload} from "./profileAPI";
+import {InitialProductStateType} from "../store/slices/foodReducer";
 
 export const productAPI = {
-    getAllProducts() {
+    getAllProducts(){
         return supabase
             .from('posts')
             .select('*')

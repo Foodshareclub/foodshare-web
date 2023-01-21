@@ -5,11 +5,14 @@ import {Box} from "@chakra-ui/react";
 import "../../index.scss";
 import Carousel from "../carousel/Carousel";
 
- export type ValueType = {
-    name:string
-     src:string
-     red:string
+
+
+export type ValueType = {
+    name: string
+    src: string
+    red: string
 }
+
 
 type SimpleBottomNavigationType = {
     isMainPage: boolean
@@ -18,6 +21,7 @@ type SimpleBottomNavigationType = {
 }
 
 const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({getRoute, isMainPage, setIsMainPage}) => {
+
     const [value, setValue] = useState<ValueType | undefined>({} as ValueType);
 
     const selectChapterHandler = (name: string) => {
@@ -26,6 +30,7 @@ const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({getRoute,
     }
 
     return (
+
         <Box  display='flex' p={8} justifyContent="space-around" >
             <Carousel
                 selectChapterHandler={selectChapterHandler}
@@ -33,6 +38,7 @@ const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({getRoute,
                 setIsMainPage={setIsMainPage}
                 isMainPage={isMainPage}
             />
+
         </Box>
     )
 }

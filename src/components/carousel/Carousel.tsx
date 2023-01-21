@@ -37,8 +37,21 @@ const Carousel: React.FC<PropsType> = ({
 
     const [mainIndex, setMainIndex] = useState(0);
 
-    const slideNext = () => setMainIndex(mainIndex + 1);
-    const slidePrev = () => setMainIndex(mainIndex - 1);
+
+    const slideNext = () => {
+        if (mainIndex < navigationActionsSVG.length-1) {
+            setMainIndex(mainIndex + 1);
+        }
+if(mainIndex === 10)return
+    };
+
+    const slidePrev = () => {
+        if (mainIndex > 0) {
+            setMainIndex(mainIndex - 1)
+        }
+else return
+    };
+
 
     return (
         <>
@@ -86,16 +99,17 @@ const Carousel: React.FC<PropsType> = ({
                     )
                 )}/>
 
-            {
-                !isSmallerThan1024 && <IconButton
-                    onClick={slideNext}
-                    alignSelf="center" size='xs'
-                    variant="#7D7D7D"
-                    fontSize={30}
-                    colorScheme='lightgray'
-                    aria-label='prev' icon={<ArrowForwardIcon/>}
-                />
-            }
+
+                           
+            {!isSmallerThan1024 && <IconButton
+                display={mainIndex === 10? "none": "block"}
+                onClick={slideNext}
+                alignSelf="center" size='xs'
+                variant="#7D7D7D"
+                fontSize={30}
+                colorScheme='lightgray'
+                aria-label='prev' icon={<ArrowForwardIcon/>}/>}
+
         </>
 
     );

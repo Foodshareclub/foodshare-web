@@ -14,7 +14,10 @@ import {getSession} from "./store/slices/userReducer";
 import {Session} from "@supabase/supabase-js";
 import {supabase} from "./supaBase.config";
 import {getAllProductsTC} from "./store/slices/foodReducer";
+import ChangeLanguageContainer from "./components/localization/ChangeLanguageContainer";
+=======
 import {Main} from "./components/main/Main";
+
 
 
 function App() {
@@ -22,9 +25,12 @@ function App() {
     const [session, setSession] = useState<Session | null>(null);
 
     useEffect(() => {
-        supabase.auth.getSession().then(({data: {session}}) => setSession(session));
+        supabase.auth.getSession().then(({data: {session}}) => setSession(session)
+        );
         supabase.auth.onAuthStateChange((event, session) => setSession(session));
+
     }, []);
+
 
     const [productType, setProductType] = useState('');
 
@@ -38,24 +44,10 @@ function App() {
         dispatch(getSession(session));
     }
 
-    return (
-        <Card size="lg" minH="100vh">
-            <Header getRoute={getRoute} setProductType={setProductType}/>
-            <CardBody>
-                <Routes>
-                    <Route path={"/"} element={<Main productType={productType} />}/>
-                    <Route path={"/*"} element={<Main productType={productType} />}/>
-                    <Route path={"/oneProd"} element={<ProductPage/>}/>
-                    <Route path={"/aboutUs"} element={<AboutUsPage/>}/>
-                    <Route path={"/contactUs"} element={<ContactUsPage/>}/>
-                    <Route path={"/volunteer"} element={<VolunteerPage/>}/>
-                    <Route path={"/user-listings"} element={<MyListingsPage/>}/>
-                    <Route path={"/volunteer/opportunities"} element={<OpportunitiesPage/>}/>
-                </Routes>
-            </CardBody>
-            <Footer/>
-        </Card>
-    );
+
+    return <ChangeLanguageContainer productType={productType} getRoute={getRoute}/>
+
+
 }
 
 export default App;
