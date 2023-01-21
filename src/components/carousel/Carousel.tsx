@@ -33,11 +33,17 @@ const Carousel: React.FC<PropsType> = ({selectChapterHandler, value, getRoute}) 
 
 
     const slideNext = () => {
-        setMainIndex(mainIndex + 1);
+        if (mainIndex < navigationActionsSVG.length-1) {
+            setMainIndex(mainIndex + 1);
+        }
+if(mainIndex === 10)return
     };
 
     const slidePrev = () => {
-        setMainIndex(mainIndex - 1)
+        if (mainIndex > 0) {
+            setMainIndex(mainIndex - 1)
+        }
+else return
     };
 
     return (
@@ -70,6 +76,7 @@ const Carousel: React.FC<PropsType> = ({selectChapterHandler, value, getRoute}) 
                                )
                            )}/>
             {!isSmallerThan1024 && <IconButton
+                display={mainIndex === 10? "none": "block"}
                 onClick={slideNext}
                 alignSelf="center" size='xs'
                 variant="#7D7D7D"

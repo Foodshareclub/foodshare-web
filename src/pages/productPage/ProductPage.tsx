@@ -15,7 +15,7 @@ type ProductPageType = {
 }
 const ProductPage: React.FC<ProductPageType> = ({obj,buttonValue}) => {
     let item = useLocation().state;
-
+    console.log(item)
     if (obj) {
         item = obj
     }
@@ -28,7 +28,8 @@ const ProductPage: React.FC<ProductPageType> = ({obj,buttonValue}) => {
                         src={item.gif_url}
                         borderRadius={20}
                         alt={item.post_name}
-                        boxSize='90%'
+                        m={"0 auto"}
+                        maxWidth={300}
                         objectFit='cover'
                     />
                 </Box>

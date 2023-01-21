@@ -51,11 +51,11 @@ export const Main: React.FC<MainType> = ({productType}) => {
         <Box>
             <SimpleGrid columns={gridSize()}
                         spacing={10}>
-                {products.map((item: any, id) => (
+                {products.map((item, id) => (
                     <GridItem mt='2' mb='2' key={id}>
                         <Skeleton isLoaded={isLoaded}>
                             <Image width="100%" cursor="pointer" borderRadius="10px"
-                                   onClick={() => navigate("/oneProd", {state: item})} src={veget}
+                                   onClick={() => navigate("/oneProd", {state: item})} src={item.gif_url}
                                    alt="soup"/>
                         </Skeleton>
                         {!isLoaded

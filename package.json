@@ -7,6 +7,7 @@
     "@chakra-ui/react": "^2.4.5",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
+    "@lingui/react": "^3.16.0",
     "@reduxjs/toolkit": "^1.9.1",
     "@supabase/supabase-js": "^2.2.1",
     "@testing-library/jest-dom": "^5.16.5",
@@ -33,7 +34,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "extract": "lingui extract",
+    "compile": "lingui compile",
+    "add-locale": "lingui add-locale"
   },
   "eslintConfig": {
     "extends": [
@@ -54,6 +58,8 @@
     ]
   },
   "devDependencies": {
+    "@lingui/cli": "^3.16.0",
+    "@lingui/macro": "^3.16.0",
     "@types/react-redux": "^7.1.24",
     "@types/react-router-dom": "^5.3.3",
     "@types/redux-thunk": "^2.1.0"

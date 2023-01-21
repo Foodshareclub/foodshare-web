@@ -76,7 +76,6 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
         username: value && value.username,
         address_id: value && value.address_id || randomNumber.toString(),
         created_time: user.created_at || value && value.created_time,
-        password: null,
         email: user.email,
         id: user.id,
     }

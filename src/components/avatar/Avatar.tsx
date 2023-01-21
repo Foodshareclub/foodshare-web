@@ -26,7 +26,7 @@ const Avatar: React.FC<PropsType> = ({url, size, onUpload}) => {
     return (
         <Flex _hover={{bg: 'gray.50'}} justify="space-between" p={4} border="1px dashed #2D9CDB"
               borderRadius={10}>
-            {imgUrl ?
+            {imgUrl || pastUrl ?
                 <img style={{height: size, width: size, borderRadius: "10px", margin: '0 auto'}}
                      src={pastUrl}
                      alt={pastUrl}/> :
@@ -43,7 +43,7 @@ const Avatar: React.FC<PropsType> = ({url, size, onUpload}) => {
             }
             <Box alignSelf="center">
                 <Input  opacity={0} position="absolute" h="22%" left={0} top="9%"
-                       accept=".png" ref={inputFileRef} type="file"
+                       accept="image/*" ref={inputFileRef} type="file"
                        onChange={(e) => uploadAvatar(e)}/>
 
                 <Button onClick={() => inputFileRef?.current?.click()} background={"#ff2d55"}

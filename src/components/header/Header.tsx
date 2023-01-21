@@ -1,7 +1,7 @@
 import React, {useEffect} from 'react';
 import NavComponent from "./NavComponent";
 import FilterProductComponent from "./FilterProductComponent";
-import {CardHeader} from "@chakra-ui/react";
+import {CardHeader, useColorModeValue} from "@chakra-ui/react";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {getValueFromDBTC} from "../../store/slices/userReducer";
 
@@ -28,7 +28,7 @@ const Header: React.FC<HeaderType> = ({getRoute}) => {
     }, [user, isUpdate])
 
     return (
-        <CardHeader height="20vh">
+        <CardHeader pb={0} bg={useColorModeValue('gray.50', 'gray.900')}>
             <NavComponent isRegister={isRegister}/>
             <FilterProductComponent getRoute={getRoute}/>
         </CardHeader>
