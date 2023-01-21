@@ -15,6 +15,10 @@ import LanguageSelector from "../languageSelector/LanguageSelector";
 
 type PropsLangType = {
     isRegister: boolean
+
+    setIsMainPage: (isMainPage: boolean) => void
+    setProductType: (type: string) => void
+
 }
 export type ProfileSettingsProps = {
     navigateToAboutUs: () => void
@@ -29,7 +33,9 @@ export type ProfileSettingsProps = {
     giveLanguage?:(value:string)=>void
 
 }
-const NavComponent: React.FC<PropsLangType> = ({isRegister}) => {
+
+const NavComponent: React.FC<PropsType> = ({isRegister, setIsMainPage, setProductType}) => {
+
     const imgUrl = useAppSelector(state => state.user.imgUrl);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
 
@@ -49,22 +55,23 @@ const NavComponent: React.FC<PropsLangType> = ({isRegister}) => {
     const isSmallerThan800 = useMediaQuery('(min-width:800px)');
 
     const navigate = useNavigate();
+
     const navigateToMain = () => {
         dispatch(getAllProductsTC());
         navigate('/');
+        setIsMainPage(true);
+        setProductType('/');
     }
+
     const navigateToAboutUs = () => navigate('/aboutUs');
     const navigateToMyLists = () => navigate('/user-listings');
 
     const navigateToAccSettings = () => {
     }
-
     const navigateToHelp = () => {
     }
-    const navigateToLogout = () => {
-        dispatch(logoutTC())
-    }
 
+    const navigateToLogout = () => dispatch(logoutTC());
 
     return (
         <Box display='flex' justifyContent={"space-between"}>

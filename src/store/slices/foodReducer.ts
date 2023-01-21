@@ -1,7 +1,9 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import {productAPI} from "../../api/productAPI";
 
+
 export type InitialProductStateType = {
+
     created_att: string
     five_star: null
     four_star: null
@@ -24,7 +26,9 @@ export type InitialProductStateType = {
 }
 
 const initialState = {
+
     products: [] as Array<InitialProductStateType>
+
 };
 
 export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", async (arg, thunkAPI) => {
@@ -46,6 +50,14 @@ export const getProductTC = createAsyncThunk("/getProduct", async (productType: 
         return thunkAPI.rejectWithValue(e);
     }
 });
+
+export const createProductTC = createAsyncThunk('/createProductTC', async (arg, thunkAPI) => {
+    try {
+
+    } catch (e) {
+        return thunkAPI.rejectWithValue(e);
+    }
+})
 
 const productSlice = createSlice({
     name: "product",

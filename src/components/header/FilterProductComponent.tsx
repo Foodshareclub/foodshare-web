@@ -6,15 +6,22 @@ import "../../index.scss";
 import Carousel from "../carousel/Carousel";
 
 
+
 export type ValueType = {
     name: string
     src: string
     red: string
 }
-type FilterType = {
+
+
+type SimpleBottomNavigationType = {
+    isMainPage: boolean
+    setIsMainPage: (isMainPage: boolean) => void
     getRoute: (route: string) => void
 }
-const SimpleBottomNavigation: React.FC<FilterType> = ({getRoute}) => {
+
+const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({getRoute, isMainPage, setIsMainPage}) => {
+
     const [value, setValue] = useState<ValueType | undefined>({} as ValueType);
 
     const selectChapterHandler = (name: string) => {
@@ -23,8 +30,15 @@ const SimpleBottomNavigation: React.FC<FilterType> = ({getRoute}) => {
     }
 
     return (
-        <Box display='flex' p={8} justifyContent="space-around">
-            <Carousel selectChapterHandler={selectChapterHandler} value={value} getRoute={getRoute}/>
+
+        <Box  display='flex' p={8} justifyContent="space-around" >
+            <Carousel
+                selectChapterHandler={selectChapterHandler}
+                value={value} getRoute={getRoute}
+                setIsMainPage={setIsMainPage}
+                isMainPage={isMainPage}
+            />
+
         </Box>
     )
 }

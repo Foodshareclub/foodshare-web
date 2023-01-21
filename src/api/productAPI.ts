@@ -13,5 +13,10 @@ export const productAPI = {
             .from('posts')
             .select('*')
             .eq('post_type', productType.toLowerCase())
+    },
+    createProduct(createdProduct: any) {
+        return supabase
+            .from('posts')
+            .insert(createdProduct)
     }
 }

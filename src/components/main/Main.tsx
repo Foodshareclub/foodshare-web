@@ -8,6 +8,7 @@ import useMediaQuery from '../../utils/useMediaQuery';
 import {getProductTC} from "../../store/slices/foodReducer";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import veget from "../../assets/veget.png"
+import {navigatePhotosObject} from "../../utils/navigatePhotosObject";
 
 type MainType = {
     productType: string
@@ -19,15 +20,20 @@ export const Main: React.FC<MainType> = ({productType}) => {
     const navigate = useNavigate();
 
     const [isLoaded, setIsLoaded] = useState(false);
-    // пока фото загрузятся skeleton
 
     useEffect(() => {
-        setTimeout(() => {
+        const time = setTimeout(() => {// пока фото загрузятся skeleton
             setIsLoaded(true)
         }, 1000)
+
+        return () => clearTimeout(time);
     }, []);
 
-    useEffect(() => {dispatch(getProductTC(productType))}, [productType]);
+    useEffect(() => {
+        if (productType && productType !== '/') {
+            dispatch(getProductTC(productType));
+        }
+    }, [productType]);
 
     const products = useAppSelector(state => state.product.products);
 
@@ -54,8 +60,10 @@ export const Main: React.FC<MainType> = ({productType}) => {
                 {products.map((item, id) => (
                     <GridItem mt='2' mb='2' key={id}>
                         <Skeleton isLoaded={isLoaded}>
-                            <Image width="100%" cursor="pointer" borderRadius="10px"
-                                   onClick={() => navigate("/oneProd", {state: item})} src={item.gif_url}
+
+                            <Image width="100%" height={250} cursor="pointer" borderRadius="10px"
+                                   onClick={() => navigate(`/oneProd`, {state: item})} src={item.gif_url}
+
                                    alt="soup"/>
                         </Skeleton>
                         {!isLoaded
@@ -70,7 +78,14 @@ export const Main: React.FC<MainType> = ({productType}) => {
                                     <Box noOfLines={1} mt='2' fontWeight={700}>
                                         {item.post_name}
                                     </Box>
-                                    <Image ml="2" borderRadius='full' boxSize='20px' src={soup} alt={soup}/>
+                                    <Image
+                                        ml="2"
+                                        borderRadius='full'
+                                        boxSize='20px'
+                                        src={navigatePhotosObject[item.post_type]}
+                                        alt={soup}
+                                    />
+
                                 </Box>
 
                                 <Box display='flex' alignItems='baseline'>
@@ -98,7 +113,6 @@ export const Main: React.FC<MainType> = ({productType}) => {
                                 </Box>
                             </div>
                         }
-
                     </GridItem>
                 ))}
 
