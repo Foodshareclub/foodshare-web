@@ -21,13 +21,16 @@ import {
 } from "@chakra-ui/react";
 import {createPhotoUrl} from "../../utils/createPhotoUrl";
 import cloud from "../../assets/cloud.svg"
-import {productAPI} from "../../api/productAPI";
+import {createProductTC} from "../../store/slices/foodReducer";
+import {useAppDispatch} from "../../hook/hooks";
+import {t, Trans} from '@lingui/macro';
 
 type PublishListingModalType = {
-    userID?: string
+    userID: string
 }
 
 const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
+    const dispatch = useAppDispatch()
     const toast = useToast()
     const {isOpen, onOpen, onClose} = useDisclosure()
 
@@ -38,7 +41,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
 
     const statuses = ['success', 'error', 'warning', 'info']
 
-    const [imgUrl, setImgUrl] = useState<string | undefined>('')
+    const [imgUrl, setImgUrl] = useState<string>('')
     const [category, setCategory] = useState('');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -64,6 +67,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
 
 
     const publishHandler = () => {
+        dispatch(createProductTC(productObj))
         onClose()
         toast({
             title: 'Listing created.',
@@ -72,18 +76,15 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
             isClosable: true,
         })
         setImgUrl('')
-
-        productAPI.createProduct(productObj).then(res => console.log(res))
-
     }
     return (
         <>
             <Button onClick={onOpen} background={"#ff2d55"}
                     _hover={{bg: '#c92040'}}
                     color="#ffffff"
-                    variant={"solid"}
+                    variant="solid"
             >
-                Add Listing
+                <Trans>Add Listing</Trans>
             </Button>
 
             <Modal
@@ -91,7 +92,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
                 finalFocusRef={finalRef}
                 isOpen={isOpen}
                 onClose={onClose}
-                size={"xl"}
+                size="xl"
             >
                 <ModalOverlay/>
 
@@ -100,7 +101,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
 
                     <ModalBody pb={6}>
                         <FormControl mt={10}>
-                            <Flex _hover={{bg: 'gray.50'}} justify={"space-between"} p={4} border="1px dashed #2D9CDB"
+                            <Flex _hover={{bg: 'gray.50'}} justify="space-between" p={4} border="1px dashed #2D9CDB"
                                   borderRadius={10}>
                                 {
                                     imgUrl
@@ -114,8 +115,8 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
                                                        boxSize='50px' src={cloud}/>
                                             </Box>
                                             <Box>
-                                                <Text>Select a file or drag and drop here</Text>
-                                                <Text>JPG or PNG file size no more than 10MB</Text>
+                                                <Text><Trans>Select a file or drag and drop here</Trans></Text>
+                                                <Text> <Trans>JPG or PNG file size no more than 10MB</Trans></Text>
                                             </Box>
                                         </>
                                 }
@@ -127,67 +128,86 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
 
                                     <Button onClick={() => inputFileRef?.current?.click()} background={"#ff2d55"}
                                             _hover={{bg: '#c92040'}}
-                                            color="#ffffff">Download
+                                            color="#ffffff">
+                                        <Trans>Download</Trans>
                                     </Button>
                                 </Box>
                             </Flex>
                         </FormControl>
 
                         <FormControl mt={4}>
-                            <FormLabel>Category</FormLabel>
+                            <FormLabel><Trans>Category</Trans></FormLabel>
                             <Select variant='outline'
-                                    placeholder='Select category'
+                                    placeholder={t({
+                                        id: `Select category`,
+                                        message: `Select category`
+                                    })}
                                     onChange={(e) => setCategory(e.currentTarget.value)}
                             >
-                                <option value='food'>Food</option>
-                                <option value='things'>Things</option>
-                                <option value='borrow'>Borrow</option>
-                                <option value='wanted'>Wanted</option>
+                                <option value='food'><Trans>Food</Trans></option>
+                                <option value='things'><Trans>Things</Trans></option>
+                                <option value='borrow'><Trans>Borrow</Trans></option>
+                                <option value='wanted'><Trans>Wanted</Trans></option>
                             </Select>
                         </FormControl>
 
                         <FormControl mt={4}>
-                            <FormLabel>Title</FormLabel>
+                            <FormLabel><Trans>Title</Trans></FormLabel>
                             <Input
                                 value={title}
                                 onChange={(e) => setTitle(e.currentTarget.value)}/// handler
-                                placeholder='What is it called'
+                                placeholder={t({
+                                    id: `What is it called`,
+                                    message: `What is it called`
+                                })}
                             />
                         </FormControl>
 
                         <FormControl mt={4}>
-                            <FormLabel>Description</FormLabel>
+                            <FormLabel><Trans>Description</Trans></FormLabel>
                             <Textarea
                                 value={description}
                                 onChange={(e) => setDescription(e.currentTarget.value)}
-                                placeholder='A few words about...'
+                                placeholder={t({
+                                    id: `A few words about...`,
+                                    message: `A few words about...`
+                                })}
                             />
                         </FormControl>
 
                         <FormControl mt={4}>
-                            <FormLabel>Time</FormLabel>
+                            <FormLabel><Trans>Time</Trans></FormLabel>
                             <Input
                                 value={time}
                                 onChange={(e) => setTime(e.currentTarget.value)}
-                                placeholder='When you will be ready to give'
+                                placeholder={t({
+                                    id: `When you will be ready to give`,
+                                    message: `When you will be ready to give`
+                                })}
                             />
                         </FormControl>
 
                         <FormControl>
-                            <FormLabel>Address</FormLabel>
+                            <FormLabel><Trans>Address</Trans></FormLabel>
                             <Input
                                 value={address}
                                 onChange={(e) => setAddress(e.currentTarget.value)}
-                                placeholder='Where you will be'
+                                placeholder={t({
+                                    id: `Where you will be`,
+                                    message: `Where you will be`
+                                })}
                             />
                         </FormControl>
 
                         <FormControl>
-                            <FormLabel>Metro Station</FormLabel>
+                            <FormLabel><Trans>Metro Station</Trans></FormLabel>
                             <Input
                                 value={metroStation}
                                 onChange={(e) => setMetroStation(e.currentTarget.value)}
-                                placeholder='Nearest station'/>
+                                placeholder={t({
+                                    id: `Nearest station`,
+                                    message: `Nearest station`
+                                })}/>
                         </FormControl>
                     </ModalBody>
 
@@ -197,7 +217,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
                             onClick={() => publishHandler()}
                             colorScheme='red'
                         >
-                            Publish Listing
+                            <Trans>Publish Listing</Trans>
                         </Button>
                     </ModalFooter>
                 </ModalContent>

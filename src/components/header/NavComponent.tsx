@@ -11,7 +11,7 @@ import useMediaQuery from "../../utils/useMediaQuery";
 import NavDrawer from "../modals/NavDrawer";
 import ProfileSettings from "./ProfileSettings";
 import {getAllProductsTC} from "../../store/slices/foodReducer";
-import LanguageSelector from "../languageSelector/LanguageSelector";
+import { t } from "@lingui/macro";
 
 type PropsLangType = {
     isRegister: boolean
@@ -30,12 +30,13 @@ export type ProfileSettingsProps = {
     value?: AllValuesType
     isRegister: boolean
     size?: string
-    giveLanguage?:(value:string)=>void
+    giveLanguage?: (value: string) => void
 
 }
 
-const NavComponent: React.FC<PropsLangType> = ({isRegister, setIsMainPage, setProductType
-}) => {
+const NavComponent: React.FC<PropsLangType> = ({
+                                                   isRegister, setIsMainPage, setProductType
+                                               }) => {
 
     const imgUrl = useAppSelector(state => state.user.imgUrl);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
@@ -91,7 +92,10 @@ const NavComponent: React.FC<PropsLangType> = ({isRegister, setIsMainPage, setPr
                     pointerEvents='none'
                     children={<SearchIcon color='gray.300'/>}
                 />
-                <Input focusBorderColor='#FF2D55' type='search' placeholder='What are we in search of today?'/>
+                <Input focusBorderColor='#FF2D55' type='search' placeholder={t({
+                    id:`msg.Input`,
+                    message:`What are we in search of today?`
+                })}/>
             </InputGroup>
 
             {

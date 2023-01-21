@@ -6,13 +6,11 @@ import "../../index.scss";
 import Carousel from "../carousel/Carousel";
 
 
-
 export type ValueType = {
     name: string
     src: string
     red: string
 }
-
 
 type SimpleBottomNavigationType = {
     isMainPage: boolean

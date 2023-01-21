@@ -4,7 +4,7 @@ import insta from "../../assets/instagram.svg";
 import facebook from "../../assets/facebook.svg";
 import {Avatar, Box, chakra, Container, Link, Stack, Text, useColorModeValue, VisuallyHidden} from "@chakra-ui/react";
 import straw from "../../assets/straw.svg";
-import {Simulate} from "react-dom/test-utils";
+import {Trans} from "@lingui/macro";
 
 const SocialButton = ({
                           children,
@@ -52,13 +52,13 @@ const Footer = () => {
                 align={'center'}>
 
                 <Stack direction={'row'} spacing={6}>
-                    <Link alignSelf="end" href={'/'}>Home</Link>
-                    <Link alignSelf="end" href={'/aboutUs'}>About</Link>
+                    <Link alignSelf="end" href={'/'}><Trans>Home</Trans></Link>
+                    <Link alignSelf="end" href={'/aboutUs'}><Trans>About</Trans></Link>
                     <Avatar
                         size='sm' mr={3}
                         src={straw}/>
-                    <Link alignSelf="end" href={'#'}>Blog</Link>
-                    <Link alignSelf="end" href={'#'}>Contact</Link>
+                    <Link alignSelf="end" href={'#'}><Trans>Blog</Trans></Link>
+                    <Link alignSelf="end" href={'#'}><Trans>Contact</Trans></Link>
                 </Stack>
             </Container>
 
@@ -71,10 +71,9 @@ const Footer = () => {
                     maxW={'6xl'}
                     py={4}
                     direction={{base: 'column', md: 'row'}}
-
                     justify={{base: 'center', md: 'space-between'}}
                     align={{base: 'center', md: 'center'}}>
-                    <Text>© 2022 Foodshare Club, Limited. All rights reserved</Text>
+                    <Text><Trans>© 2022 Foodshare Club, Limited. All rights reserved</Trans></Text>
                     <Stack direction={'row'} spacing={6}>
                         <SocialButton label={'Twitter'} href={'#'}>
                             <Avatar size='xs' src={twitter}/>

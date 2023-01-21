@@ -26,56 +26,100 @@ import mapRed from "../assets/mapRed.svg";
 export const navigationActionsSVG = [
     {
         name: 'Food',
+        "en": 'Food',
+        "ru": 'Еда',
+        "fr": 'Nourriture',
+        "cs": 'Jídlo',
         src: food,
         red: foodRed
     },
     {
         name: 'Things',
+        "en": 'Things',
+        "ru": 'Вещи',
+        "fr": 'Des choses',
+        "cs": 'Věci',
         src: things,
         red: thingsRed
     },
     {
         name: 'Borrow',
+        "en": 'Borrow',
+        "ru": 'Одолжить',
+        "fr": 'Emprunter',
+        "cs": 'Půjčit si',
         src: borrow,
         red: borrowRed
     },
     {
         name: 'Wanted',
+        "en": 'Wanted',
+        "ru": 'В розыске',
+        "fr": 'Voulait',
+        "cs": 'Hledaný',
         src: wanted,
         red: wantedRed
     },
     {
         name: 'FoodBanks',
+        "en": 'FoodBanks',
+        "ru": 'FoodBanks',
+        "fr": 'Banques alimentaires',
+        "cs": 'FoodBanks',
         src: foodBanks,
         red: foodBanksRed
     },
     {
         name: 'Fridges',
+        "en": 'Fridges',
+        "ru": 'Холодильники',
+        "fr": 'Réfrigérateurs',
+        "cs": 'Lednice',
         src: fridges,
         red: fridgesRed
     },
     {
         name: 'Business',
+        "en": 'Business',
+        "ru": 'Бизнес',
+        "fr": 'Affaires',
+        "cs": 'Podnikání',
         src: business,
         red: businessRed
     },
     {
         name: 'Volunteer',
+        "en": 'Volunteer',
+        "ru": 'Волонтеры',
+        "fr": 'Bénévole',
+        "cs": 'Dobrovolník',
         src: volunteer,
         red: volunteerRed
     },
     {
         name: 'Challenges',
+        "en": 'Challenges',
+        "ru": 'Вызовы',
+        "fr": 'Défis',
+        "cs": 'Výzvy',
         src: challenges,
         red: challengesRed
     },
     {
         name: 'Community',
+        "en": 'Community',
+        "ru": 'Сообщество',
+        "fr": 'Communauté',
+        "cs": 'Společenství',
         src: community,
         red: communityRed
     },
     {
         name: 'Map',
+        "en": 'Map',
+        "ru": 'Карта',
+        "fr": 'Carte',
+        "cs": 'Mapa',
         src: map,
         red: mapRed
     }

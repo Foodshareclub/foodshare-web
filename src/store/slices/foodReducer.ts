@@ -1,5 +1,5 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
-import {productAPI} from "../../api/productAPI";
+import {productAPI, ProductObjType} from "../../api/productAPI";
 
 
 export type InitialProductStateType = {
@@ -27,8 +27,8 @@ export type InitialProductStateType = {
 
 const initialState = {
 
-    products: [] as Array<InitialProductStateType>
-
+    products: [] as Array<InitialProductStateType>,
+    isCreated: false
 };
 
 export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", async (arg, thunkAPI) => {
@@ -51,9 +51,10 @@ export const getProductTC = createAsyncThunk("/getProduct", async (productType: 
     }
 });
 
-export const createProductTC = createAsyncThunk('/createProductTC', async (arg, thunkAPI) => {
+export const createProductTC = createAsyncThunk('/createProductTC', async (productObj: ProductObjType, thunkAPI) => {
     try {
-
+        const {error} = await productAPI.createProduct(productObj)
+        if (error) throw error;
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
     }
@@ -68,10 +69,13 @@ const productSlice = createSlice({
             state.products = action.payload;
         });
         builder.addCase(getProductTC.fulfilled, (state, action) => {
-            if(action.payload) {
+            if (action.payload) {
                 state.products = action.payload;
             }
-        })
+        });
+        builder.addCase(createProductTC.fulfilled, (state) => {
+                state.isCreated = true;
+        });
     }
 })
 

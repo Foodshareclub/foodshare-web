@@ -8,6 +8,7 @@ import "react-alice-carousel/lib/scss/alice-carousel.scss";
 import {ValueType} from "../header/FilterProductComponent";
 import {ArrowBackIcon, ArrowForwardIcon} from "@chakra-ui/icons";
 import useMediaQuery from "../../utils/useMediaQuery";
+import {useAppSelector} from "../../hook/hooks";
 
 type PropsType = {
     selectChapterHandler: (name: string) => void
@@ -25,7 +26,7 @@ const Carousel: React.FC<PropsType> = ({
                                            isMainPage
                                        }) => {
     const isSmallerThan1024 = useMediaQuery('(min-width:1024px)');
-
+    const language = useAppSelector(state => state.user.language)
     const navigate = useNavigate();
 
     const navigateHandler = (name: string) => {
@@ -39,18 +40,18 @@ const Carousel: React.FC<PropsType> = ({
 
 
     const slideNext = () => {
-        if (mainIndex < navigationActionsSVG.length-1) {
+        if (mainIndex < navigationActionsSVG.length - 1) {
             setMainIndex(mainIndex + 1);
         }
-if(mainIndex === 10)return
+        if (mainIndex === 10) return
     };
 
     const slidePrev = () => {
         if (mainIndex > 0) {
             setMainIndex(mainIndex - 1)
-        }
-else return
+        } else return
     };
+
 
 
     return (
@@ -91,18 +92,18 @@ else return
                                 noOfLines={1}
                                 mb={0}
                                 pb={0}
-                                textAlign={"center"}
+                                textAlign="center"
                             >
-                                {item.name}
+                                {/*@ts-ignore*/}
+                                {item[language]}
                             </Text>
                         </Box>
                     )
                 )}/>
 
 
-                           
             {!isSmallerThan1024 && <IconButton
-                display={mainIndex === 10? "none": "block"}
+                display={mainIndex === 10 ? "none" : "block"}
                 onClick={slideNext}
                 alignSelf="center" size='xs'
                 variant="#7D7D7D"

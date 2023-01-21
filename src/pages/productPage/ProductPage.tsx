@@ -10,6 +10,7 @@ import PickUpRequestModal from "../../components/modals/PickUpRequestModal";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {getRandomProducts} from "../../utils/getRandomProduct";
 import {getProductTC} from "../../store/slices/foodReducer";
+import { Trans } from '@lingui/macro';
 
 type ProductPageType = {
     obj?: any
@@ -68,7 +69,7 @@ const ProductPage: React.FC<ProductPageType> = ({obj, buttonValue}) => {
                                     />
                                 ))}
                             <Box as='span' ml='2' color='gray.600' fontSize='sm'>
-                                999 reviews
+                                <Trans>999 reviews</Trans>
                             </Box>
                         </Flex>
 
@@ -76,21 +77,21 @@ const ProductPage: React.FC<ProductPageType> = ({obj, buttonValue}) => {
                             item.post_description}
                         </Text>
 
-                        <Heading alignSelf="center" size='md'>Pick Up Address</Heading>
+                        <Heading alignSelf="center" size='md'><Trans>Pick Up Address</Trans></Heading>
 
                         <Text>{item.post_address}</Text>
 
                         <Flex>
-                            <Heading alignSelf="center" size='md'>Available:</Heading>
+                            <Heading alignSelf="center" size='md'><Trans>Available:</Trans></Heading>
                             <Text px={2}>{item.pickup_time}</Text>
                         </Flex>
 
                         <Flex>
-                            <Heading alignSelf="center" size='md'>Quantity:</Heading>
+                            <Heading alignSelf="center" size='md'><Trans>Quantity:</Trans></Heading>
                             <Text px={2}>{item.post_description}</Text>
                         </Flex>
 
-                        <Heading alignSelf="center" size='md'>Food Type</Heading>
+                        <Heading alignSelf="center" size='md'><Trans>Food Type</Trans></Heading>
                         <Text>{item.post_type}</Text>
                     </Box>
 
@@ -103,7 +104,7 @@ const ProductPage: React.FC<ProductPageType> = ({obj, buttonValue}) => {
             <Flex pt={10} justify={"center"}>
                 <Box borderRadius={10} alignSelf={"start"} w={"50%"}>
                     <Box fontWeight={700} fontSize={20} pb={6}>
-                        Location:
+                        <Trans>Location:</Trans>
                     </Box>
 
                     <iframe
@@ -114,7 +115,7 @@ const ProductPage: React.FC<ProductPageType> = ({obj, buttonValue}) => {
 
                 <Box w={"40%"}>
                     <Box fontWeight={700} fontSize={20} pb={2}>
-                        You May Also Like:
+                        <Trans>Available:</Trans>You May Also Like:
                     </Box>
 
                     {products.length && getRandomProducts(products, item).map((product, id) => (//data - 3 random elem from array

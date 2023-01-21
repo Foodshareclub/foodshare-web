@@ -1,6 +1,7 @@
 import React from 'react';
 import ProductPage from "../productPage/ProductPage";
 import birthday from "../../assets/birthday.png"
+import {t} from "@lingui/macro";
 
 const BorrowPage = () => {
     const obj = {
@@ -22,7 +23,10 @@ const BorrowPage = () => {
         }
     }
     return (
-        <ProductPage obj={obj} buttonValue="Borrow"/>
+        <ProductPage obj={obj} buttonValue={t({
+            id: `Borrow`,
+            message: `Borrow`
+        })}/>
     );
 };
 

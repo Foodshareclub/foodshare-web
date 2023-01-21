@@ -9,6 +9,7 @@ import {getProductTC} from "../../store/slices/foodReducer";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import veget from "../../assets/veget.png"
 import {navigatePhotosObject} from "../../utils/navigatePhotosObject";
+import {Trans} from "@lingui/macro";
 
 type MainType = {
     productType: string
@@ -55,6 +56,9 @@ export const Main: React.FC<MainType> = ({productType}) => {
 
     return (
         <Box>
+            {/*<Trans>*/}
+            {/*    Last login on {i18n.date(new Date())}.*/}
+            {/*</Trans>*/}
             <SimpleGrid columns={gridSize()}
                         spacing={10}>
                 {products.map((item, id) => (
@@ -85,11 +89,9 @@ export const Main: React.FC<MainType> = ({productType}) => {
                                         src={navigatePhotosObject[item.post_type]}
                                         alt={soup}
                                     />
-
                                 </Box>
-
                                 <Box display='flex' alignItems='baseline'>
-                                    <div style={{fontWeight: "700", fontSize: "16px"}}>Distance:</div>
+                                    <div style={{fontWeight: "700", fontSize: "16px"}}><Trans>Distance:</Trans></div>
                                     <Box mt='1' ml="2" fontWeight='normal' as='h4' lineHeight='tight' noOfLines={1}
                                     >
                                         {item.post_address}
@@ -98,7 +100,7 @@ export const Main: React.FC<MainType> = ({productType}) => {
                                     />
                                 </Box>
                                 <Box display='flex' alignItems='baseline'>
-                                    <div style={{fontWeight: "700", fontSize: "16px"}}>Available:</div>
+                                    <div style={{fontWeight: "700", fontSize: "16px"}}><Trans>Available:</Trans></div>
                                     <Box mt='1' ml="2" fontWeight='normal' as='h4' lineHeight='tight' noOfLines={1}
                                     >
                                         {item.pickup_time}
@@ -119,7 +121,7 @@ export const Main: React.FC<MainType> = ({productType}) => {
             </SimpleGrid>
             <Box _hover={{bg: 'red.100'}} fontSize={25} textAlign="center" mt={5}>
                 <Link href='#'>
-                    See more... <ArrowForwardIcon mx={2}/>
+                    <Trans>See more...</Trans><ArrowForwardIcon mx={2}/>
                 </Link>
             </Box>
         </Box>

@@ -5,6 +5,7 @@ import {asideProdProperty, commentsArray} from "../../utils/mockArray";
 import AsideProducts from "../productPage/asideProducts/AsideProducts";
 import Comments from "../../components/comments/Comments";
 import {useAppSelector} from "../../hook/hooks";
+import {Trans} from "@lingui/macro";
 
 const MyListingsPage = () => {
     const user = useAppSelector(state => state.user);
@@ -25,7 +26,7 @@ const MyListingsPage = () => {
                     mt={8}
                     textAlign={"start"}
                 >
-                    Reviews Given
+                    <Trans>Reviews Given</Trans>
                 </Heading>
 
                 {commentsArray.map((item, id) => (
@@ -44,7 +45,7 @@ const MyListingsPage = () => {
                 <Heading
                     textAlign={"start"}
                 >
-                    Active Listings
+                    <Trans>Active Listings</Trans>
                 </Heading>
 
                 {asideProdProperty.map((item, id) => (

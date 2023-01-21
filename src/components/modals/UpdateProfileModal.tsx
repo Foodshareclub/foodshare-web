@@ -19,6 +19,7 @@ import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import Avatar from "../avatar/Avatar";
 import {updateProfileTC, uploadImgFromDBTC} from "../../store/slices/userReducer";
 import {AllValuesType} from "../../api/profileAPI";
+import {Trans} from "@lingui/macro";
 
 
 type ModalType = {
@@ -31,8 +32,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
 
     const {user} = useAppSelector(state => state.user.session);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
-    // console.log(user)
-    // console.log(value)
+
     useLayoutEffect(() => {
         setFirstName(value.first_name)
         setAddress(value.user_address)
@@ -109,7 +109,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
             >
                 <ModalOverlay/>
                 <ModalContent>
-                    <ModalHeader>Welcome to Foodshare</ModalHeader>
+                    <ModalHeader><Trans>Welcome to Foodshare</Trans></ModalHeader>
                     <ModalCloseButton/>
                     <ModalBody pb={6}>
                         <Avatar url={value && value.avatar_url} size={150}
@@ -118,7 +118,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
                                 }}/>
 
                         <FormControl mt={4}>
-                            <FormLabel>About me</FormLabel>
+                            <FormLabel><Trans>About me</Trans></FormLabel>
                             <Textarea
                                 onChange={(e) => {
                                     changeAbout(e)
@@ -127,7 +127,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
                             />
                         </FormControl>
                         <FormControl>
-                            <FormLabel>First name</FormLabel>
+                            <FormLabel><Trans>First name</Trans></FormLabel>
                             <Input mb={3}
                                    onChange={(e) => {
                                        changeFirstName(e)
@@ -137,7 +137,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
                             />
                         </FormControl>
                         <FormControl>
-                            <FormLabel>Second Name</FormLabel>
+                            <FormLabel><Trans>Second Name</Trans></FormLabel>
                             <Input mb={3}
                                    onChange={(e) => {
                                        changeSecondName(e)
@@ -147,7 +147,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
                             />
                         </FormControl>
                         <FormControl>
-                            <FormLabel>User Address</FormLabel>
+                            <FormLabel><Trans>User Address</Trans></FormLabel>
                             <Input mb={3}
                                    onChange={(e) => {
                                        changeUserAddress(e)

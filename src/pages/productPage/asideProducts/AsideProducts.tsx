@@ -1,7 +1,8 @@
 import React from 'react';
-import {Button, Card, CardBody, CardFooter, Flex, Heading, Image, Stack, Text} from "@chakra-ui/react";
+import {Card, CardBody, Flex, Heading, Image, Stack, Text} from "@chakra-ui/react";
 import rose from "../../../assets/map.svg";
 import {useNavigate} from "react-router-dom";
+import {Trans} from "@lingui/macro";
 
 type AsideProdType = {
     img: string
@@ -31,7 +32,6 @@ const AsideProducts: React.FC<AsideProdType> = ({product, height, img, name, abo
                 p={2}
                 objectFit='none'
                 width="30%" height={150}
-                // maxW={{base: '100%', sm: '200px'}}
                 src={img}
                 alt={img}
             />
@@ -42,14 +42,14 @@ const AsideProducts: React.FC<AsideProdType> = ({product, height, img, name, abo
                     <Heading mb={1} noOfLines={1} size='sm'>{about}</Heading>
 
                     <Flex mb={1}>
-                        <Heading size='sm'>Available:</Heading>
+                        <Heading size='sm'><Trans>Available:</Trans></Heading>
                         <Text pl='2'>
                             {available}
                         </Text>
                     </Flex>
 
                     <Flex>
-                        <Heading size='sm'>Distance:</Heading>
+                        <Heading size='sm'><Trans>Distance:</Trans></Heading>
                         <Text pl='2'>
                             {distance}
                         </Text>
