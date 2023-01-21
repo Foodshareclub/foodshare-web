@@ -1,6 +1,7 @@
 import React from 'react';
 import {Card, CardBody, Heading, Image, Skeleton, Stack, Text} from "@chakra-ui/react";
 import PublishListingModal from "../../components/modals/PublishListingModal";
+import {useLocation, useParams} from "react-router-dom";
 
 type PropsType = {
     name: string
@@ -21,6 +22,7 @@ const PersonCard: React.FC<PropsType> = ({
                                              aboutMe,
                                              userID
 }) => {
+    const url = useLocation();
 
     return (
         <Card
@@ -53,7 +55,7 @@ const PersonCard: React.FC<PropsType> = ({
                         {exp}
                     </Heading>
 
-                    {aboutMe
+                    {url.pathname === '/user-listings'
                         ? <>
                             <Text py='2'>
                                 {aboutMe}
