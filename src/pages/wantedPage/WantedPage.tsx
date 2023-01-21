@@ -1,6 +1,7 @@
 import React from 'react';
 import ProductPage from "../productPage/ProductPage";
 import battery from "../../assets/battery.png";
+import {t} from "@lingui/macro";
 
 const WantedPage = () => {
     const obj = {
@@ -21,7 +22,10 @@ const WantedPage = () => {
         }
     }
     return (
-        <ProductPage obj={obj} buttonValue="Offer Item(s)"/>
+        <ProductPage obj={obj} buttonValue={t({
+            id: `Offer Item(s)`,
+            message: `Offer Item(s)`
+        })}/>
     );
 };
 

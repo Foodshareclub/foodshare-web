@@ -10,7 +10,7 @@ type PropsType = {
     exp: string
     aboutExp?: string
     aboutMe?: string
-    userID?: string
+    userID: string
 }
 
 const PersonCard: React.FC<PropsType> = ({

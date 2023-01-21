@@ -3,6 +3,7 @@ import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {Box, Button, Flex, Image, Input, Text} from "@chakra-ui/react";
 import cloud from "../../assets/cloud.svg";
 import {createPhotoUrl} from "../../utils/createPhotoUrl";
+import {Trans} from "@lingui/macro";
 
 type PropsType = {
     url: string | null
@@ -53,8 +54,8 @@ const Avatar: React.FC<PropsType> = ({url, size, onUpload}) => {
                     </Box>
 
                     <Box>
-                        <Text>Select a file or drag and drop here</Text>
-                        <Text>JPG or PNG file size no more than 10MB</Text>
+                        <Text><Trans>Select a file or drag and drop here</Trans></Text>
+                        <Text><Trans>JPG or PNG file size no more than 10MB</Trans></Text>
                     </Box>
                 </>
             }
@@ -71,14 +72,13 @@ const Avatar: React.FC<PropsType> = ({url, size, onUpload}) => {
                     onChange={(e) => uploadAvatar(e)}
                 />
 
-
                 <Button
                     onClick={() => inputFileRef?.current?.click()}
                     background={"#ff2d55"}
                     _hover={{bg: '#c92040'}}
                     color="#ffffff"
                 >
-                    Download
+                    <Trans>Download</Trans>
                 </Button>
             </Box>
         </Flex>

@@ -7,6 +7,7 @@ import {ProfileSettingsProps} from "./NavComponent";
 import {loginTC, registerTC} from "../../store/slices/userReducer";
 import AuthenticationUserModal from "../modals/AuthenticationUser/AuthenticationUserModal";
 import LanguageSelector from "../languageSelector/LanguageSelector";
+import {t, Trans} from "@lingui/macro";
 
 
 const ProfileSettings: React.FC<ProfileSettingsProps> = ({
@@ -33,9 +34,12 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                         {
                             isRegister
                                 ? <>
-                                    <UpdateProfileModal fullScreen={true} buttonValue="Update Profile"/>
-                                    <MenuItem onClick={() => navigateToMyLists()}>My listing's</MenuItem>
-                                    <MenuItem onClick={() => navigateToLogout()}>Log Out</MenuItem>
+                                    <UpdateProfileModal fullScreen={true} buttonValue={t({
+                                        id:`Update Profile`,
+                                        message:`Update Profile`
+                                    })}/>
+                                    <MenuItem onClick={() => navigateToMyLists()}><Trans>My listing's</Trans></MenuItem>
+                                    <MenuItem onClick={() => navigateToLogout()}><Trans>Log Out</Trans></MenuItem>
                                 </>
                                 : <>
                                     <AuthenticationUserModal buttonValue="Login" thunk={loginTC} fullScreen/>
@@ -44,14 +48,14 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
 
                                 </>
                         }
-                        <MenuItem onClick={() => navigateToAccSettings()}>Account settings</MenuItem>
-                        <MenuItem onClick={() => navigateToHelp()}>Help</MenuItem>
-                        <MenuItem onClick={() => navigateToAboutUs()}>About Foodshare</MenuItem>
-
+                        <MenuItem onClick={() => navigateToAccSettings()}><Trans>Account settings</Trans></MenuItem>
+                        <MenuItem onClick={() => navigateToHelp()}><Trans>Help</Trans></MenuItem>
+                        <MenuItem onClick={() => navigateToAboutUs()}><Trans>About Foodshare</Trans></MenuItem>
                     </MenuList>
                 </Menu>
             </Box>
         </>
+
     )
 }
 export default ProfileSettings

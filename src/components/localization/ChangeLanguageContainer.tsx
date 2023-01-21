@@ -1,6 +1,6 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import {i18n} from "@lingui/core";
-import {defaultLocale, dynamicActivate} from "../../utils/i18n";
+import {dynamicActivate} from "../../utils/i18n";
 import {I18nProvider} from "@lingui/react";
 import {Card, CardBody} from "@chakra-ui/react";
 import Header from "../header/Header";
@@ -13,23 +13,23 @@ import VolunteerPage from "../../pages/volunteerPages/VolunteerPage";
 import MyListingsPage from "../../pages/prfilePages/MyListingsPage";
 import OpportunitiesPage from "../../pages/volunteerPages/OpportunitiesPage";
 import Footer from "../footer/Footer";
-import Inbox from "../exampleLingui/Inbox";
+
 import {useAppSelector} from "../../hook/hooks";
 
 type ContainerProps = {
-    productType:string
+    productType: string
     getRoute: (route: string) => void
     setProductType: (productType: string) => void
 }
-const ChangeLanguageContainer:React.FC<ContainerProps> = ({productType,getRoute, setProductType}) => {
-const language = useAppSelector(state => state.user.language)
+const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRoute, setProductType}) => {
+    const language = useAppSelector(state => state.user.language)
     // i18n.load(defaultLocale, {});
     // i18n.activate(defaultLocale);
 
 
-
     useEffect(() => {
-            dynamicActivate(language).then(()=>{})
+        dynamicActivate(language).then(() => {
+        })
     }, [language]);
 
     return (
@@ -40,7 +40,7 @@ const language = useAppSelector(state => state.user.language)
                     <Routes>
                         <Route path={"/"} element={<Main productType={productType}/>}/>
                         <Route path={"/*"} element={<Main productType={productType}/>}/>
-                        <Route path={"/oneProd"} element={<ProductPage/>}/>
+                        <Route path={"/oneProd"} element={<ProductPage />}/>
                         <Route path={"/aboutUs"} element={<AboutUsPage/>}/>
                         <Route path={"/contactUs"} element={<ContactUsPage/>}/>
                         <Route path={"/volunteer"} element={<VolunteerPage/>}/>
@@ -49,7 +49,6 @@ const language = useAppSelector(state => state.user.language)
                     </Routes>
                 </CardBody>
                 <Footer/>
-                {/*<Inbox/>*/}
             </Card>
         </I18nProvider>
     );

@@ -9,7 +9,8 @@ import centerBottom from "../../assets/centerBott.png";
 import rightImg from "../../assets/rightImg.png";
 import company from "../../assets/AvoAcademy.png";
 import {ArrowForwardIcon} from "@chakra-ui/icons";
-// colorScheme='teal'
+import { Trans } from '@lingui/macro';
+
 
 const AboutUsPage = () => {
     const [isLoaded, setIsLoaded] = useState(false)
@@ -62,7 +63,7 @@ const AboutUsPage = () => {
                         fontWeight={600}
                         fontSize={40} w="100%"
                         textAlign="center">
-                        About Us
+                        <Trans>About Us</Trans>
                     </Box>
 
                     {
@@ -75,29 +76,29 @@ const AboutUsPage = () => {
                 </GridItem>
 
                 <GridItem fontSize="24px" w='100%'>
-                    <Box>Foodshare was born in 2022 when with a small team three teammates. Tarlan decided to organise a
+                    <Box><Trans>Foodshare was born in 2022 when with a small team three teammates. Tarlan decided to organise a
                         foodsharing project with a simple and easy to use cross-platform mobile app.
-                    </Box>
+                    </Trans></Box>
 
-                    <Box pt={2}>The app allows everyone to post food items that may not be needed in your fridge for one
+                    <Box pt={2}><Trans>The app allows everyone to post food items that may not be needed in your fridge for one
                         reason
                         or another, and other participants, users can pick them up for free. This also includes the
                         use-by date on or before food from local shops, vegetables or bread from the bakery. Thus
                         benefactors get satisfaction from helping to needy with the reduction of waste from life and
                         deprived persons gratuitous receipt of food with the possibility to choose.
-                    </Box>
+                    </Trans> </Box>
 
-                    <Box pt={2}>Thus benefactors get satisfaction from helping to needy with the reduction of waste from
+                    <Box pt={2}><Trans>Thus benefactors get satisfaction from helping to needy with the reduction of waste from
                         life
                         and deprived persons gratuitous receipt of food with the possibility to choose.
-                    </Box>
+                    </Trans>  </Box>
                 </GridItem>
             </Grid>
 
             <Box
                 borderRadius={5} bgColor="red.100" mt={10} mb={10}
                 fontWeight={600} fontSize={40} textAlign="center">
-                Team
+                <Trans>Team</Trans>
             </Box>
 
             <SimpleGrid columns={2} spacing={3}>
@@ -109,11 +110,12 @@ const AboutUsPage = () => {
                         exp={el.exp}
                         img={el.img}
                         key={id}
-                    />
+                        // это заглушка для пропсов id т.к . нужно чтоб не был undefined
+                     userID={""}/>
                 ))}
             </SimpleGrid>
 
-            <Box fontWeight={600} fontSize={40} w="100%" textAlign="center">Design Tribute</Box>
+            <Box fontWeight={600} fontSize={40} w="100%" textAlign="center"><Trans>Design Tribute</Trans></Box>
 
             <Grid pt={6} pb={6} fontSize={24} fontWeight={400} templateColumns='repeat(2, 1fr)' gap={6}>
                 <GridItem w='100%'>
@@ -122,20 +124,20 @@ const AboutUsPage = () => {
 
                 <GridItem w='100%'>
                     <Box>
-                        An educational platform that helps people change careers into the UX/UI design field through an
-                        affordable and short curriculum. Website: https://www.Avocademy.com
+                        <Trans>An educational platform that helps people change careers into the UX/UI design field through an
+                            affordable and short curriculum. Website: https://www.Avocademy.com</Trans>
                     </Box>
 
                     <Box pt={6}>
-                        Thank you very much their awesome team that has helped Foodshare to build a beautiful UI/UX
-                        design :)
+                        <Trans>Thank you very much their awesome team that has helped Foodshare to build a beautiful UI/UX
+                            design :)</Trans>
                     </Box>
                 </GridItem>
             </Grid>
 
             <Box _hover={{bg: 'red.100'}} fontSize={25} textAlign="end" mt={5}>
                 <Link href='/contactUs'>
-                    Contact Us... <ArrowForwardIcon mx={2}/>
+                    <Trans>Contact Us...</Trans> <ArrowForwardIcon mx={2}/>
                 </Link>
             </Box>
         </>

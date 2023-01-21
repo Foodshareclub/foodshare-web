@@ -13,18 +13,321 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/components/exampleLingui/Inbox.tsx:34
-msgid "Last login on {0}."
-msgstr "Последняя авторизация в {0}."
+#: src/components/modals/PickUpRequestModal.tsx:32
+msgid "Request Pick Up"
+msgstr "Запросить доставку"
 
-#: src/components/exampleLingui/Inbox.tsx:12
-msgid "Message Inbox"
-msgstr "Входящие сообщения"
+#: src/pages/productPage/ProductPage.tsx:72
+msgid "999 reviews"
+msgstr "999 отзывов"
 
-#: src/components/exampleLingui/Inbox.tsx:14
-msgid "See all <0>unread messages</0> or <1>mark them</1> as read."
-msgstr "Просматривайте все <0>непрочитанные сообщения</0> или <1>отмечайте их</1> как прочитанные."
+#: src/components/modals/PublishListingModal.tsx:171
+msgid "A few words about..."
+msgstr "Пару слов о себе..."
 
-#: src/components/exampleLingui/Inbox.tsx:26
-msgid "{messagesCount, plural, one {There's # message in your inbox} other {There are # messages in your inbox}}"
-msgstr "{messagesCount, plural, one {У вас # сообщение} other {У вас # сообщения}}"
+#: src/components/footer/Footer.tsx:56
+msgid "About"
+msgstr "O нас"
+
+#: src/components/header/ProfileSettings.tsx:53
+msgid "About Foodshare"
+msgstr " О Foodshare"
+
+#: src/components/modals/NavDrawer.tsx:92
+#: src/pages/aboutUs/AboutUsPage.tsx:66
+msgid "About Us"
+msgstr "О нас"
+
+#: src/components/modals/UpdateProfileModal.tsx:121
+msgid "About me"
+msgstr "Обо мне"
+
+#: src/components/header/ProfileSettings.tsx:51
+#: src/components/modals/NavDrawer.tsx:80
+msgid "Account settings"
+msgstr "Настройки пользователя"
+
+#: src/pages/prfilePages/MyListingsPage.tsx:48
+msgid "Active Listings"
+msgstr "Активные списки"
+
+#: src/components/modals/PublishListingModal.tsx:87
+msgid "Add Listing"
+msgstr "Добавить список"
+
+#: src/components/modals/PublishListingModal.tsx:191
+msgid "Address"
+msgstr "Адрес"
+
+#: src/pages/aboutUs/AboutUsPage.tsx:127
+msgid "An educational platform that helps people change careers into the UX/UI design field through an affordable and short curriculum. Website: https://www.Avocademy.com"
+msgstr "Образовательная платформа, которая помогает людям сменить профессию в области дизайна UX / UI с помощью доступного и короткого учебного плана. Сайт: https://www.Avocademy.com"
+
+#: src/components/main/Main.tsx:103
+#: src/pages/productPage/asideProducts/AsideProducts.tsx:45
+#: src/pages/productPage/ProductPage.tsx:85
+#: src/pages/productPage/ProductPage.tsx:118
+msgid "Available:"
+msgstr "Доступен:"
+
+#: src/components/footer/Footer.tsx:60
+msgid "Blog"
+msgstr "Блог"
+
+#: src/components/modals/PublishListingModal.tsx:149
+#: src/pages/borrowPage/BorrowPage.tsx:26
+msgid "Borrow"
+msgstr "Одолжить"
+
+#: src/components/modals/PublishListingModal.tsx:139
+msgid "Category"
+msgstr "Категория"
+
+#: src/components/footer/Footer.tsx:61
+msgid "Contact"
+msgstr "Котакты"
+
+#: src/pages/aboutUs/AboutUsPage.tsx:140
+msgid "Contact Us..."
+msgstr "Связаться с нами..."
+
+#: src/components/modals/PublishListingModal.tsx:167
+msgid "Description"
+msgstr "Описание"
+
+#: src/pages/aboutUs/AboutUsPage.tsx:118
+msgid "Design Tribute"
+msgstr "Дизайн"
+
+#: src/components/main/Main.tsx:94
+#: src/pages/productPage/asideProducts/AsideProducts.tsx:52
+msgid "Distance:"
+msgstr "Расстояние"
+
+#: src/components/avatar/Avatar.tsx:81
+#: src/components/modals/PublishListingModal.tsx:132
+msgid "Download"
+msgstr "Загрузка"
+
+#: src/components/modals/PickUpRequestModal.tsx:62
+#: src/components/modals/PickUpRequestModal.tsx:64
+msgid "Email Address"
+msgstr "Емайл"
+
+#: src/components/modals/PickUpRequestModal.tsx:45
+msgid "Enter pick-up request info"
+msgstr "Введите информацию о запросе на получение"
+
+#: src/components/modals/UpdateProfileModal.tsx:130
+msgid "First name"
+msgstr "Имя"
+
+#: src/components/modals/PublishListingModal.tsx:147
+msgid "Food"
+msgstr "Еда"
+
+#: src/pages/productPage/ProductPage.tsx:94
+msgid "Food Type"
+msgstr "Тип еды"
+
+#: src/pages/aboutUs/AboutUsPage.tsx:79
+msgid "Foodshare was born in 2022 when with a small team three teammates. Tarlan decided to organise a foodsharing project with a simple and easy to use cross-platform mobile app."
+msgstr "Foodshare родился в 2022 году, когда в небольшой команде было трое товарищей по команде. Тарлан решил организовать фудшеринговый проект с помощью простого и удобного кроссплатформенного мобильного приложения."
+
+#: src/components/modals/PickUpRequestModal.tsx:90
+msgid "Friday"
+msgstr "Пятница"
+
+#: src/components/modals/PickUpRequestModal.tsx:54
+msgid "Full Name"
+msgstr "Полное имя"
+
+#: src/components/header/ProfileSettings.tsx:52
+#: src/components/modals/NavDrawer.tsx:94
+msgid "Help"
+msgstr "Помощь"
+
+#: src/components/modals/NavDrawer.tsx:62
+msgid "Hi {0}"
+msgstr "Привет {0}"
+
+#: src/components/footer/Footer.tsx:55
+msgid "Home"
+msgstr "На главную"
+
+#: src/components/avatar/Avatar.tsx:58
+#: src/components/modals/PublishListingModal.tsx:119
+msgid "JPG or PNG file size no more than 10MB"
+msgstr "JPG или PNG файлБ не более 10мб"
+
+#: src/pages/productPage/ProductPage.tsx:107
+msgid "Location:"
+msgstr "Расположение"
+
+#: src/components/header/ProfileSettings.tsx:42
+#: src/components/modals/NavDrawer.tsx:82
+msgid "Log Out"
+msgstr "Выйти"
+
+#: src/components/modals/PublishListingModal.tsx:203
+msgid "Metro Station"
+msgstr "Станция метро"
+
+#: src/components/modals/PickUpRequestModal.tsx:86
+msgid "Monday"
+msgstr "Понедельник"
+
+#: src/components/header/ProfileSettings.tsx:41
+#: src/components/modals/NavDrawer.tsx:78
+msgid "My listing's"
+msgstr "Мои объявления"
+
+#: src/components/modals/PickUpRequestModal.tsx:51
+msgid "Name"
+msgstr "Имя"
+
+#: src/components/modals/PublishListingModal.tsx:207
+msgid "Nearest station"
+msgstr "Ближайшая станция"
+
+#: src/pages/wantedPage/WantedPage.tsx:25
+msgid "Offer Item(s)"
+msgstr "Пункт(ы) предложения"
+
+#: src/components/modals/PickUpRequestModal.tsx:72
+#: src/components/modals/PickUpRequestModal.tsx:74
+msgid "Phone Number"
+msgstr "Телефон"
+
+#: src/pages/productPage/ProductPage.tsx:80
+msgid "Pick Up Address"
+msgstr "Адресс встречи"
+
+#: src/components/modals/PickUpRequestModal.tsx:83
+msgid "Pick-up Day"
+msgstr "День встречи"
+
+#: src/components/modals/PickUpRequestModal.tsx:97
+msgid "Pick-up Time"
+msgstr "Время забирать"
+
+#: src/components/modals/PublishListingModal.tsx:220
+msgid "Publish Listing"
+msgstr "Опубликовать список"
+
+#: src/pages/productPage/ProductPage.tsx:90
+msgid "Quantity:"
+msgstr "Количество:"
+
+#: src/pages/prfilePages/MyListingsPage.tsx:29
+msgid "Reviews Given"
+msgstr "Отзывы"
+
+#: src/components/modals/PickUpRequestModal.tsx:91
+msgid "Saturday"
+msgstr "Суббота"
+
+#: src/components/modals/UpdateProfileModal.tsx:140
+msgid "Second Name"
+msgstr "Фамилия"
+
+#: src/components/main/Main.tsx:124
+msgid "See more..."
+msgstr "Узнать больше..."
+
+#: src/components/avatar/Avatar.tsx:57
+#: src/components/modals/PublishListingModal.tsx:118
+msgid "Select a file or drag and drop here"
+msgstr "Выберите файл или перетащите сюда"
+
+#: src/components/modals/PublishListingModal.tsx:141
+msgid "Select category"
+msgstr "Выбрать категорию"
+
+#: src/components/modals/PickUpRequestModal.tsx:108
+msgid "Submit"
+msgstr "Выполнить"
+
+#: src/components/modals/PickUpRequestModal.tsx:92
+msgid "Sunday"
+msgstr "Воскресенье"
+
+#: src/pages/aboutUs/AboutUsPage.tsx:101
+msgid "Team"
+msgstr "Команда"
+
+#: src/pages/aboutUs/AboutUsPage.tsx:132
+msgid "Thank you very much their awesome team that has helped Foodshare to build a beautiful UI/UX design :)"
+msgstr "Большое спасибо их замечательной команде, которая помогла Foodshare создать красивый дизайн UI/UX :)"
+
+#: src/pages/aboutUs/AboutUsPage.tsx:83
+msgid "The app allows everyone to post food items that may not be needed in your fridge for one reason or another, and other participants, users can pick them up for free. This also includes the use-by date on or before food from local shops, vegetables or bread from the bakery. Thus benefactors get satisfaction from helping to needy with the reduction of waste from life and deprived persons gratuitous receipt of food with the possibility to choose."
+msgstr "Приложение позволяет всем размещать продукты, которые по тем или иным причинам могут не понадобиться в вашем холодильнике, а другие участники, пользователи могут забрать их бесплатно. Это также включает в себя срок годности до или до еды из местных магазинов, овощей или хлеба из пекарни. Таким образом, благотворители получают удовлетворение от помощи нуждающимся с уменьшением отходов жизнедеятельности, а обездоленные — безвозмездное получение пищи с возможностью выбора"
+
+#: src/components/modals/PublishListingModal.tsx:148
+msgid "Things"
+msgstr "Вещи"
+
+#: src/components/modals/PickUpRequestModal.tsx:89
+msgid "Thursday"
+msgstr "Четверг"
+
+#: src/pages/aboutUs/AboutUsPage.tsx:91
+msgid "Thus benefactors get satisfaction from helping to needy with the reduction of waste from life and deprived persons gratuitous receipt of food with the possibility to choose."
+msgstr "При этом благотворители получают удовлетворение от помощи нуждающимся с уменьшением отходов жизнедеятельности, а обездоленные – безвозмездное получение продуктов питания с возможностью выбора."
+
+#: src/components/modals/PublishListingModal.tsx:179
+msgid "Time"
+msgstr "Время"
+
+#: src/components/modals/PublishListingModal.tsx:155
+msgid "Title"
+msgstr "Название"
+
+#: src/components/modals/PickUpRequestModal.tsx:87
+msgid "Tuesday"
+msgstr "Вторник"
+
+#: src/components/header/ProfileSettings.tsx:37
+msgid "Update Profile"
+msgstr "Обновить профиль"
+
+#: src/components/modals/NavDrawer.tsx:76
+msgid "Update profile"
+msgstr "Обновить профиль"
+
+#: src/components/modals/UpdateProfileModal.tsx:150
+msgid "User Address"
+msgstr "Адресс пользователя"
+
+#: src/components/modals/PublishListingModal.tsx:150
+msgid "Wanted"
+msgstr "В поиске"
+
+#: src/components/modals/PickUpRequestModal.tsx:88
+msgid "Wednesday"
+msgstr "Среда"
+
+#: src/components/modals/UpdateProfileModal.tsx:112
+msgid "Welcome to Foodshare"
+msgstr "Добро пожаловать в Foodshare"
+
+#: src/components/modals/PublishListingModal.tsx:159
+msgid "What is it called"
+msgstr "Как это называется"
+
+#: src/components/modals/PublishListingModal.tsx:183
+msgid "When you will be ready to give"
+msgstr "Когда ты будешь готов отдать"
+
+#: src/components/modals/PublishListingModal.tsx:195
+msgid "Where you will be"
+msgstr "Где вы будете"
+
+#: src/components/header/NavComponent.tsx:95
+msgid "msg.Input"
+msgstr "Что мы ищем сегодня?"
+
+#: src/components/footer/Footer.tsx:76
+msgid "© 2022 Foodshare Club, Limited. All rights reserved"
+msgstr "© 2022 Фудшер Клуб, Лимитед. Все права защищены"
