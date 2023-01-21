@@ -53,8 +53,6 @@ export const Main: React.FC<MainType> = ({productType}) => {
         }
     };
 
-
-
     return (
         <Box>
             <SimpleGrid columns={gridSize()}
@@ -62,8 +60,8 @@ export const Main: React.FC<MainType> = ({productType}) => {
                 {products.map((item, id) => (
                     <GridItem mt='2' mb='2' key={id}>
                         <Skeleton isLoaded={isLoaded}>
-                            <Image width="100%" cursor="pointer" borderRadius="10px"
-                                   onClick={() => navigate(`/oneProd`, {state: item})} src={veget}
+                            <Image width="100%" height={250} cursor="pointer" borderRadius="10px"
+                                   onClick={() => navigate(`/oneProd`, {state: item})} src={item.gif_url}
                                    alt="soup"/>
                         </Skeleton>
                         {!isLoaded

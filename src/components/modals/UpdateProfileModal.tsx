@@ -31,7 +31,8 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
 
     const {user} = useAppSelector(state => state.user.session);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
-
+    // console.log(user)
+    // console.log(value)
     useLayoutEffect(() => {
         setFirstName(value.first_name)
         setAddress(value.user_address)
@@ -40,6 +41,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
     }, [value])
 
     const {isOpen, onOpen, onClose} = useDisclosure()
+
     const initialRef = React.useRef(null)
     const finalRef = React.useRef(null)
 
@@ -76,7 +78,6 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
         username: value && value.username,
         address_id: value && value.address_id || randomNumber.toString(),
         created_time: user.created_at || value && value.created_time,
-        password: null,
         email: user.email,
         id: user.id,
     }
@@ -122,7 +123,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
                                 onChange={(e) => {
                                     changeAbout(e)
                                 }}
-                                value={about}
+                                value={about || ''}
                             />
                         </FormControl>
                         <FormControl>

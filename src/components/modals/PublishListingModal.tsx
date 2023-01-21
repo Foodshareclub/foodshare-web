@@ -21,29 +21,48 @@ import {
 } from "@chakra-ui/react";
 import {createPhotoUrl} from "../../utils/createPhotoUrl";
 import cloud from "../../assets/cloud.svg"
+import {productAPI} from "../../api/productAPI";
 
-const PublishListingModal = () => {
+type PublishListingModalType = {
+    userID?: string
+}
+
+const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
     const toast = useToast()
     const {isOpen, onOpen, onClose} = useDisclosure()
+
     const initialRef = useRef(null)
     const finalRef = useRef(null)
 
     const inputFileRef = useRef<HTMLInputElement | null>(null)
 
-    const [value, setValue] = useState('')
-    const [value2, setValue2] = useState<string | undefined>('')
-
     const statuses = ['success', 'error', 'warning', 'info']
 
-    const handleInputChange = (value: React.SetStateAction<string>) => {
-        setValue(value)
-    }
+    const [imgUrl, setImgUrl] = useState<string | undefined>('')
+    const [category, setCategory] = useState('');
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+    const [time, setTime] = useState('');
+    const [address, setAddress] = useState('');
+    const [metroStation, setMetroStation] = useState('');
 
     const handleChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const data = await createPhotoUrl(event);
-
-        setValue2(data.url);//  get URL
+        const img = createPhotoUrl(event);
+        setImgUrl(img.url);//  get photo URL
     }
+
+    const productObj = {
+        gif_url: imgUrl,
+        post_type: category,
+        post_name: title,
+        post_description: description,
+        pickup_time: time,
+        post_address: address,
+        post_metro_station: metroStation,
+        user: userID
+    }
+
+
     const publishHandler = () => {
         onClose()
         toast({
@@ -52,13 +71,21 @@ const PublishListingModal = () => {
             status: 'success',
             isClosable: true,
         })
+        setImgUrl('')
+
+        productAPI.createProduct(productObj).then(res => console.log(res))
+
     }
     return (
         <>
             <Button onClick={onOpen} background={"#ff2d55"}
                     _hover={{bg: '#c92040'}}
                     color="#ffffff"
-                    variant={"solid"}>Add Listing</Button>
+                    variant={"solid"}
+            >
+                Add Listing
+            </Button>
+
             <Modal
                 initialFocusRef={initialRef}
                 finalFocusRef={finalRef}
@@ -76,10 +103,10 @@ const PublishListingModal = () => {
                             <Flex _hover={{bg: 'gray.50'}} justify={"space-between"} p={4} border="1px dashed #2D9CDB"
                                   borderRadius={10}>
                                 {
-                                    value2
+                                    imgUrl
                                         ? <img style={{maxWidth: "50%", borderRadius: "10px", margin: '0 auto'}}
-                                               src={value2}
-                                               alt={value2}
+                                               src={imgUrl}
+                                               alt={imgUrl}
                                         />
                                         : <>
                                             <Box alignSelf={"center"}>
@@ -108,71 +135,68 @@ const PublishListingModal = () => {
 
                         <FormControl mt={4}>
                             <FormLabel>Category</FormLabel>
-                            <Select variant='outline' placeholder="Select...">
-                                <option value='option1'>Some text</option>
+                            <Select variant='outline'
+                                    placeholder='Select category'
+                                    onChange={(e) => setCategory(e.currentTarget.value)}
+                            >
+                                <option value='food'>Food</option>
+                                <option value='things'>Things</option>
+                                <option value='borrow'>Borrow</option>
+                                <option value='wanted'>Wanted</option>
                             </Select>
                         </FormControl>
 
                         <FormControl mt={4}>
-                            <FormLabel>Item Description</FormLabel>
+                            <FormLabel>Title</FormLabel>
+                            <Input
+                                value={title}
+                                onChange={(e) => setTitle(e.currentTarget.value)}/// handler
+                                placeholder='What is it called'
+                            />
+                        </FormControl>
+
+                        <FormControl mt={4}>
+                            <FormLabel>Description</FormLabel>
                             <Textarea
-                                value={value}
-                                onChange={(e) => handleInputChange(e.currentTarget.value)}
-                                placeholder='Enter...'
+                                value={description}
+                                onChange={(e) => setDescription(e.currentTarget.value)}
+                                placeholder='A few words about...'
+                            />
+                        </FormControl>
+
+                        <FormControl mt={4}>
+                            <FormLabel>Time</FormLabel>
+                            <Input
+                                value={time}
+                                onChange={(e) => setTime(e.currentTarget.value)}
+                                placeholder='When you will be ready to give'
                             />
                         </FormControl>
 
                         <FormControl>
-                            <FormLabel>Pick Up Address</FormLabel>
-                            <Input ref={initialRef} placeholder='Enter...'/>
+                            <FormLabel>Address</FormLabel>
+                            <Input
+                                value={address}
+                                onChange={(e) => setAddress(e.currentTarget.value)}
+                                placeholder='Where you will be'
+                            />
                         </FormControl>
 
-                        <FormControl mt={4}>
-                            <FormLabel>Address 2</FormLabel>
-                            <Input placeholder='Enter...'/>
+                        <FormControl>
+                            <FormLabel>Metro Station</FormLabel>
+                            <Input
+                                value={metroStation}
+                                onChange={(e) => setMetroStation(e.currentTarget.value)}
+                                placeholder='Nearest station'/>
                         </FormControl>
-
-                        <FormControl mt={4}>
-                            <FormLabel>Phone Number</FormLabel>
-                            <Input placeholder='Enter...'/>
-                        </FormControl>
-
-                        <Flex>
-                            <FormControl mr={2} w="40%" mt={4}>
-                                <FormLabel>City</FormLabel>
-                                <Input placeholder='Enter...'/>
-                            </FormControl>
-
-                            <Flex w="60%">
-                                <FormControl mr={2} mt={4}>
-                                    <FormLabel>State</FormLabel>
-                                    <Select variant='outline' placeholder="Select...">
-                                        <option value='option1'>Some text</option>
-                                    </Select>
-                                </FormControl>
-
-                                <FormControl mt={4}>
-                                    <FormLabel>Zipcode</FormLabel>
-                                    <Input placeholder='Enter...'/>
-                                </FormControl>
-                            </Flex>
-                        </Flex>
-
-                        <Flex>
-                            <FormControl mr={2} w="40%" mt={4}>
-                                <FormLabel>Quantity</FormLabel>
-                                <Input placeholder='Enter...'/>
-                            </FormControl>
-
-                            <FormControl w="60%" mt={4}>
-                                <FormLabel>Availability</FormLabel>
-                                <Input placeholder='Enter...'/>
-                            </FormControl>
-                        </Flex>
                     </ModalBody>
 
                     <ModalFooter>
-                        <Button w="100%" onClick={() => publishHandler()} colorScheme='red'>
+                        <Button
+                            w="100%"
+                            onClick={() => publishHandler()}
+                            colorScheme='red'
+                        >
                             Publish Listing
                         </Button>
                     </ModalFooter>
