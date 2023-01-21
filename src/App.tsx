@@ -15,7 +15,7 @@ import {Session} from "@supabase/supabase-js";
 import {supabase} from "./supaBase.config";
 import {getAllProductsTC} from "./store/slices/foodReducer";
 import ChangeLanguageContainer from "./components/localization/ChangeLanguageContainer";
-=======
+
 import {Main} from "./components/main/Main";
 
 
@@ -45,7 +45,7 @@ function App() {
     }
 
 
-    return <ChangeLanguageContainer productType={productType} getRoute={getRoute}/>
+    return <ChangeLanguageContainer setProductType={setProductType} productType={productType} getRoute={getRoute}/>
 
 
 }

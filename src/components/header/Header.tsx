@@ -7,6 +7,7 @@ import {getValueFromDBTC} from "../../store/slices/userReducer";
 
 type HeaderType = {
     getRoute: (route: string) => void
+    productType:string
     setProductType: (type: string) => void
 }
 

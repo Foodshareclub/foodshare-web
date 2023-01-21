@@ -1,6 +1,6 @@
-import {ProductStateType} from "../store/slices/foodReducer";
+import {InitialProductStateType} from "../store/slices/foodReducer";
 
-export function getRandomProducts(products: Array<ProductStateType>, product: ProductStateType) {
+export function getRandomProducts(products: Array<InitialProductStateType>, product: InitialProductStateType) {
     const productsWithoutItem = products.filter(prod => prod.id !== product.id);
 
     const indexesArray = productsWithoutItem

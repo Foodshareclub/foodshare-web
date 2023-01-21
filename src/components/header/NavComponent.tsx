@@ -34,7 +34,8 @@ export type ProfileSettingsProps = {
 
 }
 
-const NavComponent: React.FC<PropsType> = ({isRegister, setIsMainPage, setProductType}) => {
+const NavComponent: React.FC<PropsLangType> = ({isRegister, setIsMainPage, setProductType
+}) => {
 
     const imgUrl = useAppSelector(state => state.user.imgUrl);
     const value = useAppSelector<AllValuesType>(state => state.user.value);

@@ -19,11 +19,14 @@ import {useAppSelector} from "../../hook/hooks";
 type ContainerProps = {
     productType:string
     getRoute: (route: string) => void
+    setProductType: (productType: string) => void
 }
-const ChangeLanguageContainer:React.FC<ContainerProps> = ({productType,getRoute}) => {
+const ChangeLanguageContainer:React.FC<ContainerProps> = ({productType,getRoute, setProductType}) => {
 const language = useAppSelector(state => state.user.language)
     // i18n.load(defaultLocale, {});
     // i18n.activate(defaultLocale);
+
+
 
     useEffect(() => {
             dynamicActivate(language).then(()=>{})
@@ -32,7 +35,7 @@ const language = useAppSelector(state => state.user.language)
     return (
         <I18nProvider i18n={i18n}>
             <Card size="lg" minH="100vh">
-                <Header getRoute={getRoute}/>
+                <Header getRoute={getRoute} productType={productType} setProductType={setProductType}/>
                 <CardBody>
                     <Routes>
                         <Route path={"/"} element={<Main productType={productType}/>}/>
