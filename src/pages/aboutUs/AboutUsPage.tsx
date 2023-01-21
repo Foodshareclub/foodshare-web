@@ -19,6 +19,7 @@ const AboutUsPage = () => {
             setIsLoaded(true)
         }, 1000)
     }, [])
+
     return (
         <>
             <Grid templateColumns='repeat(5, 1fr)' gap={6}>
@@ -36,6 +37,7 @@ const AboutUsPage = () => {
                             <Image src={centerTop} alt={centerTop}/>
                         </Skeleton>
                     </GridItem>
+
                     <GridItem borderRadius="10%" w='100%'>
                         <Skeleton isLoaded={isLoaded}>
                             <Image src={centerBottom} alt={centerBottom}/>
@@ -54,13 +56,21 @@ const AboutUsPage = () => {
 
             <Grid pt={6} templateColumns='repeat(2, 1fr)' gap={6}>
                 <GridItem w='100%'>
-                    <Box borderRadius={5} bgColor={"red.100"} fontWeight={600} fontSize={40} w="100%"
-                         textAlign="center">About Us</Box>
-                    {!isLoaded ?
-                        <Skeleton m={5} isLoaded={isLoaded}>
-                            <Image w="55%" m="0 auto" alignItems="center" src={kitchen} alt={kitchen}/>
-                        </Skeleton> :
-                        <Image w="55%" m="0 auto" alignItems="center" src={kitchen} alt={kitchen}/>
+                    <Box
+                        borderRadius={5}
+                        bgColor={"red.100"}
+                        fontWeight={600}
+                        fontSize={40} w="100%"
+                        textAlign="center">
+                        About Us
+                    </Box>
+
+                    {
+                        !isLoaded
+                            ? <Skeleton m={5} isLoaded={isLoaded}>
+                                <Image w="55%" m="0 auto" alignItems="center" src={kitchen} alt={kitchen}/>
+                            </Skeleton>
+                            : <Image w="55%" m="0 auto" alignItems="center" src={kitchen} alt={kitchen}/>
                     }
                 </GridItem>
 
@@ -91,14 +101,16 @@ const AboutUsPage = () => {
             </Box>
 
             <SimpleGrid columns={2} spacing={3}>
-                {teamMockArray.map((el, id) => <PersonCard
+                {teamMockArray.map((el, id) => (
+                    <PersonCard
                         aboutExp={el.about}
                         name={el.name}
+                        secondName={''}
                         exp={el.exp}
                         img={el.img}
                         key={id}
                     />
-                )}
+                ))}
             </SimpleGrid>
 
             <Box fontWeight={600} fontSize={40} w="100%" textAlign="center">Design Tribute</Box>

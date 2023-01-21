@@ -48,6 +48,14 @@ export const getProductTC = createAsyncThunk("/getProduct", async (productType: 
     }
 });
 
+export const createProductTC = createAsyncThunk('/createProductTC', async (arg, thunkAPI) => {
+    try {
+
+    } catch (e) {
+        return thunkAPI.rejectWithValue(e);
+    }
+})
+
 const productSlice = createSlice({
     name: "product",
     initialState,

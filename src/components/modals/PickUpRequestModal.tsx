@@ -38,25 +38,40 @@ const PickUpRequestModal:React.FC<ModalType>=({buttonValue="Request Pick Up"}) =
                 onClose={onClose}
             >
                 <ModalOverlay/>
+
                 <ModalContent>
-                    <ModalHeader>Enter pick-up request info </ModalHeader>
+                    <ModalHeader>
+                        Enter pick-up request info
+                    </ModalHeader>
                     <ModalCloseButton/>
+
                     <ModalBody pb={6}>
                         <FormControl>
                             <FormLabel>Full Name</FormLabel>
-                            <Input ref={initialRef} placeholder='Full Name'/>
+                            <Input
+                                ref={initialRef}
+                                placeholder='Full Name'
+                            />
                         </FormControl>
+
                         <FormControl mt={4}>
                             <FormLabel>Email Address</FormLabel>
-                            <Input placeholder='Email Address'/>
+                            <Input
+                                placeholder='Email Address'
+                            />
                         </FormControl>
+
                         <FormControl mt={4}>
                             <FormLabel>Phone Number</FormLabel>
-                            <Input placeholder='Phone Number'/>
+                            <Input
+                                placeholder='Phone Number'
+                            />
                         </FormControl>
+
                         <Flex>
                             <FormControl mt={4}>
                                 <FormLabel>Pick-up Day</FormLabel>
+
                                 <Select w={"95%"} variant='outline' >
                                     <option value='option1'>Monday</option>
                                     <option value='option2'>Tuesday</option>
@@ -67,9 +82,12 @@ const PickUpRequestModal:React.FC<ModalType>=({buttonValue="Request Pick Up"}) =
                                     <option value='option8'>Sunday</option>
                                 </Select>
                             </FormControl>
+
                             <FormControl mt={4}>
                                 <FormLabel>Pick-up Time</FormLabel>
-                                <Input type='time'/>
+                                <Input
+                                    type='time'
+                                />
                             </FormControl>
 
                         </Flex>

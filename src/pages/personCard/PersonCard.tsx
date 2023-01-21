@@ -1,16 +1,27 @@
 import React from 'react';
-import {Button, Card, CardBody, Heading, Image, Skeleton, Stack, Text} from "@chakra-ui/react";
+import {Card, CardBody, Heading, Image, Skeleton, Stack, Text} from "@chakra-ui/react";
 import PublishListingModal from "../../components/modals/PublishListingModal";
 
 type PropsType = {
     name: string
+    secondName: string
     img: string
     exp: string
     aboutExp?: string
     aboutMe?: string
+    userID?: string
 }
 
-const PersonCard: React.FC<PropsType> = ({name, img, exp, aboutExp, aboutMe}) => {
+const PersonCard: React.FC<PropsType> = ({
+                                             name,
+                                             secondName,
+                                             img,
+                                             exp,
+                                             aboutExp,
+                                             aboutMe,
+                                             userID
+}) => {
+
     return (
         <Card
             direction={{base: 'column', sm: 'row'}}
@@ -25,24 +36,34 @@ const PersonCard: React.FC<PropsType> = ({name, img, exp, aboutExp, aboutMe}) =>
                     alignSelf="center"
                     borderRadius="50%"
                     p={4}
-                    objectFit='none'
+                    // objectFit='none'
                     maxW={{base: '100%', sm: '200px'}}
                     src={img}
                     alt={img}
                 />
             </Skeleton>
+
             <Stack alignSelf={"center"}>
                 <CardBody>
-                    <Heading size='md'>{name}</Heading>
-                    <Heading size='md'>{exp}</Heading>
-                    {aboutMe ? <>
-                        <Text py='2'>
-                            {aboutMe}
+                    <Heading size='md'>
+                        {name} {secondName}
+                    </Heading>
+
+                    <Heading size='md'>
+                        {exp}
+                    </Heading>
+
+                    {aboutMe
+                        ? <>
+                            <Text py='2'>
+                                {aboutMe}
+                            </Text>
+                            <PublishListingModal userID={userID}/>
+                        </>
+                        : <Text py='2'>
+                            {aboutExp}
                         </Text>
-                        <PublishListingModal/>
-                    </> : <Text py='2'>
-                        {aboutExp}
-                    </Text>}
+                    }
 
                 </CardBody>
             </Stack>

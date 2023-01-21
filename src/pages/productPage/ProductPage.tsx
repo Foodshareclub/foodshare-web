@@ -34,8 +34,9 @@ const ProductPage: React.FC<ProductPageType> = ({obj, buttonValue}) => {
                         src={item.gif_url}
                         borderRadius={20}
                         alt={item.post_name}
-                        boxSize='90%'
+                        boxSize='50%'
                         objectFit='cover'
+
                     />
                 </Box>
 
@@ -43,7 +44,7 @@ const ProductPage: React.FC<ProductPageType> = ({obj, buttonValue}) => {
                     <Box lineHeight={2}>
                         <Flex>
                             <Heading alignSelf="center" size='md'>{item.post_name}</Heading>
-                            <Image pl={4} src={loc} alt={loc}/>
+                            <Image pl={4} src={loc} alt={loc} />
                             <Text px={2}>{item.post_address}</Text>
                         </Flex>
 
@@ -102,7 +103,7 @@ const ProductPage: React.FC<ProductPageType> = ({obj, buttonValue}) => {
 
                     <iframe
                         src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d2417628.5557509!2d27.986708999999998!3d53.718878999999994!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sru!2sby!4v1671868201476!5m2!1sru!2sby"
-                        width="90%" height="620" style={{border: "0", borderRadius: "10px"}} loading="lazy"
+                        width="90%" height="500" style={{border: "0", borderRadius: "10px"}} loading="lazy"
                         referrerPolicy="no-referrer-when-downgrade"></iframe>
                 </Box>
 
