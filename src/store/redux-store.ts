@@ -1,7 +1,7 @@
 import {combineReducers, configureStore} from "@reduxjs/toolkit";
 import thunk from "redux-thunk";
 import {userReducer} from "./slices/userReducer";
-import {productReducer} from "./slices/foodReducer";
+import {productReducer} from "./slices/productReducer";
 
 export type StateAppType = ReturnType<typeof reducersBox>
 const reducersBox = combineReducers({

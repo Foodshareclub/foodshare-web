@@ -1,5 +1,5 @@
 import React, {ChangeEvent, useRef, useState} from 'react'
-import {useAppDispatch, useAppSelector} from "../../hook/hooks";
+import {useAppSelector} from "../../hook/hooks";
 import {Box, Button, Flex, Image, Input, Text} from "@chakra-ui/react";
 import cloud from "../../assets/cloud.svg";
 import {createPhotoUrl} from "../../utils/createPhotoUrl";

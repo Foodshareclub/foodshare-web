@@ -1,8 +1,9 @@
 import React from 'react';
-import {Card, CardBody, Flex, Heading, Image, Stack, Text} from "@chakra-ui/react";
+import {Card, CardBody, Flex, Heading, Icon, Image, Stack, Text} from "@chakra-ui/react";
 import rose from "../../../assets/map.svg";
-import {useNavigate} from "react-router-dom";
+import {useLocation, useNavigate} from "react-router-dom";
 import {Trans} from "@lingui/macro";
+import {DeleteIcon, EditIcon} from "@chakra-ui/icons";
 
 type AsideProdType = {
     img: string
@@ -12,13 +13,29 @@ type AsideProdType = {
     distance: string
     height?: string
     product?: any
+    deleteProductHandler?: (productID: number) => void
 }
-const AsideProducts: React.FC<AsideProdType> = ({product, height, img, name, about, available, distance}) => {
-    const navigate = useNavigate();
-    const clicker = () => {
-        navigate('/oneProd', {state: product})
-    }
+const AsideProducts: React.FC<AsideProdType> = ({
+                                                    product,
+                                                    height,
+                                                    img,
+                                                    name,
+                                                    about,
+                                                    available,
+                                                    distance,
+    deleteProductHandler
+}) => {
+    const url = useLocation().pathname;
 
+    const navigate = useNavigate();
+
+    const goToProduct = () => {navigate('/oneProd', {state: product})}
+
+    const deleteHandler = () => {
+        if (deleteProductHandler) {
+            deleteProductHandler(product.id);
+        }
+    }
 
     return (
         <Card
@@ -26,7 +43,11 @@ const AsideProducts: React.FC<AsideProdType> = ({product, height, img, name, abo
             overflow='hidden'
             variant='outline'
             mt={4}
+
+            cursor="pointer"
+            border="none"
         >
+
             <Image
                 borderRadius="10%"
                 p={2}
@@ -34,9 +55,10 @@ const AsideProducts: React.FC<AsideProdType> = ({product, height, img, name, abo
                 width="30%" height={150}
                 src={img}
                 alt={img}
+                onClick={goToProduct}
             />
 
-            <Stack>
+            <Stack onClick={goToProduct}>
                 <CardBody>
                     <Heading size='sm'>{name}</Heading>
                     <Heading mb={1} noOfLines={1} size='sm'>{about}</Heading>
@@ -58,6 +80,18 @@ const AsideProducts: React.FC<AsideProdType> = ({product, height, img, name, abo
 
                 </CardBody>
             </Stack>
+
+            {
+                url === '/user-listings' && <>
+                    <Icon as={EditIcon}/>
+                    <Icon
+                        ml={2}
+                        as={DeleteIcon}
+                        onClick={deleteHandler}
+                    />
+                </>
+            }
+
         </Card>
     );
 };

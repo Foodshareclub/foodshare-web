@@ -3,7 +3,7 @@ import {useAppDispatch} from "./hook/hooks";
 import {getSession} from "./store/slices/userReducer";
 import {Session} from "@supabase/supabase-js";
 import {supabase} from "./supaBase.config";
-import {getAllProductsTC} from "./store/slices/foodReducer";
+import {getAllProductsTC} from "./store/slices/productReducer";
 import ChangeLanguageContainer from "./components/localization/ChangeLanguageContainer";
 
 
@@ -18,7 +18,6 @@ function App() {
 
     }, []);
 
-
     const [productType, setProductType] = useState('');
 
     useEffect(() => {
@@ -31,10 +30,16 @@ function App() {
         dispatch(getSession(session));
     }
 
+    const userID = session?.user.id ?? '';
 
-    return <ChangeLanguageContainer setProductType={setProductType} productType={productType} getRoute={getRoute}/>
-
-
+    return (
+        <ChangeLanguageContainer
+            setProductType={setProductType}
+            productType={productType}
+            getRoute={getRoute}
+            userID={userID}
+        />
+    )
 }
 
 export default App;

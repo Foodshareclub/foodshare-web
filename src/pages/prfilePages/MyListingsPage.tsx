@@ -1,14 +1,27 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {Box, Flex, Heading} from "@chakra-ui/react";
 import PersonCard from "../personCard/PersonCard";
-import {asideProdProperty, commentsArray} from "../../utils/mockArray";
+import {commentsArray} from "../../utils/mockArray";
 import AsideProducts from "../productPage/asideProducts/AsideProducts";
 import Comments from "../../components/comments/Comments";
-import {useAppSelector} from "../../hook/hooks";
+import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {Trans} from "@lingui/macro";
+import {deleteProductTC, getCurrentUserProductsTC} from "../../store/slices/productReducer";
 
-const MyListingsPage = () => {
+type MyListingsPageType = {
+    userID: string
+}
+
+const MyListingsPage: React.FC<MyListingsPageType> = ({userID}) => {
+    const dispatch = useAppDispatch();
+
     const user = useAppSelector(state => state.user);
+    const currentUserProducts = useAppSelector(state => state.product.currentUserProducts);
+    const update = useAppSelector(state => state.product.isUpdatedProductsList)
+
+    useEffect(() => {dispatch(getCurrentUserProductsTC(userID))}, [update]);
+
+    const deleteProductHandler = async (productID: number) => dispatch(deleteProductTC(productID));
 
     return (
         <Flex justify="space-between" mt={6}>
@@ -48,15 +61,17 @@ const MyListingsPage = () => {
                     <Trans>Active Listings</Trans>
                 </Heading>
 
-                {asideProdProperty.map((item, id) => (
+                {currentUserProducts.length > 0 && currentUserProducts.map((item, id) => (
                     <AsideProducts
                         key={id}
-                        img={item.img}
-                        name={item.name}
-                        about={item.about}
-                        available={item.available}
-                        distance={item.distance}
+                        img={item.gif_url}
+                        name={item.post_name}
+                        about={item.post_description}
+                        available={item.pickup_time}
+                        distance={item.post_address}
+                        product={item}
                         height="25%"
+                        deleteProductHandler={deleteProductHandler}
                     />
                 ))}
             </Box>

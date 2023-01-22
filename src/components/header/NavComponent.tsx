@@ -10,7 +10,7 @@ import {AllValuesType} from "../../api/profileAPI";
 import useMediaQuery from "../../utils/useMediaQuery";
 import NavDrawer from "../modals/NavDrawer";
 import ProfileSettings from "./ProfileSettings";
-import {getAllProductsTC} from "../../store/slices/foodReducer";
+import {getAllProductsTC} from "../../store/slices/productReducer";
 import { t } from "@lingui/macro";
 
 type PropsLangType = {
