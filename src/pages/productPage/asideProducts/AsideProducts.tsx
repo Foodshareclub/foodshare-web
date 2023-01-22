@@ -4,6 +4,7 @@ import rose from "../../../assets/map.svg";
 import {useLocation, useNavigate} from "react-router-dom";
 import {Trans} from "@lingui/macro";
 import {DeleteIcon, EditIcon} from "@chakra-ui/icons";
+import {useAppSelector} from "../../../hook/hooks";
 
 type AsideProdType = {
     img: string
@@ -14,6 +15,7 @@ type AsideProdType = {
     height?: string
     product?: any
     deleteProductHandler?: (productID: number) => void
+    setReversUrl?:(value:string)=>void
 }
 const AsideProducts: React.FC<AsideProdType> = ({
                                                     product,
@@ -23,10 +25,14 @@ const AsideProducts: React.FC<AsideProdType> = ({
                                                     about,
                                                     available,
                                                     distance,
+                                                    setReversUrl,
     deleteProductHandler
 }) => {
+    const postBlob  = useAppSelector(state => state.product.postImgUrl);
     const url = useLocation().pathname;
-
+    if (setReversUrl) {
+        setReversUrl(img)
+    }
     const navigate = useNavigate();
 
     const goToProduct = () => {navigate('/oneProd', {state: product})}
@@ -53,7 +59,7 @@ const AsideProducts: React.FC<AsideProdType> = ({
                 p={2}
                 objectFit='none'
                 width="30%" height={150}
-                src={img}
+                src={postBlob}
                 alt={img}
                 onClick={goToProduct}
             />

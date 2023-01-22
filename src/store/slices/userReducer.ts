@@ -117,7 +117,7 @@ export const downloadImgFromDBTC = createAsyncThunk("/auth/downloadImgFromDBTC",
     }
 })
 
-export const uploadImgFromDBTC = createAsyncThunk("/auth/uploadImgFromDBTC", async (imgValue: UploadImgUrlType, thunkAPI) => {
+export const uploadImgToDBTC = createAsyncThunk("/auth/uploadImgToDBTC", async (imgValue: UploadImgUrlType, thunkAPI) => {
     try {
 
         const {error} = await profileAPI.uploadImgFromDB(imgValue)
@@ -205,7 +205,7 @@ const userSlice = createSlice({
                 }
             }
         });
-        builder.addCase(uploadImgFromDBTC.fulfilled, (state) => {
+        builder.addCase(uploadImgToDBTC.fulfilled, (state) => {
             state.error = null
 
         });
