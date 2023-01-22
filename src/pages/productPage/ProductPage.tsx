@@ -9,7 +9,7 @@ import AsideProducts from "./asideProducts/AsideProducts";
 import PickUpRequestModal from "../../components/modals/PickUpRequestModal";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {getRandomProducts} from "../../utils/getRandomProduct";
-import {getProductTC} from "../../store/slices/foodReducer";
+import {getProductTC} from "../../store/slices/productReducer";
 import { Trans } from '@lingui/macro';
 
 type ProductPageType = {

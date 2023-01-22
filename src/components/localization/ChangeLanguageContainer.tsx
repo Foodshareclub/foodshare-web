@@ -20,8 +20,9 @@ type ContainerProps = {
     productType: string
     getRoute: (route: string) => void
     setProductType: (productType: string) => void
+    userID: string
 }
-const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRoute, setProductType}) => {
+const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRoute, setProductType, userID}) => {
     const language = useAppSelector(state => state.user.language)
     // i18n.load(defaultLocale, {});
     // i18n.activate(defaultLocale);
@@ -44,7 +45,7 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
                         <Route path={"/aboutUs"} element={<AboutUsPage/>}/>
                         <Route path={"/contactUs"} element={<ContactUsPage/>}/>
                         <Route path={"/volunteer"} element={<VolunteerPage/>}/>
-                        <Route path={"/user-listings"} element={<MyListingsPage/>}/>
+                        <Route path={"/user-listings"} element={<MyListingsPage userID={userID}/>}/>
                         <Route path={"/volunteer/opportunities"} element={<OpportunitiesPage/>}/>
                     </Routes>
                 </CardBody>

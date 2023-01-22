@@ -5,7 +5,7 @@ import navIcon from '../../assets/map.svg';
 import soup from '../../assets/soup.svg';
 import {ArrowForwardIcon} from "@chakra-ui/icons";
 import useMediaQuery from '../../utils/useMediaQuery';
-import {getProductTC} from "../../store/slices/foodReducer";
+import {getProductTC} from "../../store/slices/productReducer";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import veget from "../../assets/veget.png"
 import {navigatePhotosObject} from "../../utils/navigatePhotosObject";

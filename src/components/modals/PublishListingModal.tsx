@@ -21,27 +21,31 @@ import {
 } from "@chakra-ui/react";
 import {createPhotoUrl} from "../../utils/createPhotoUrl";
 import cloud from "../../assets/cloud.svg"
-import {createProductTC} from "../../store/slices/foodReducer";
-import {useAppDispatch} from "../../hook/hooks";
+import {createProductTC} from "../../store/slices/productReducer";
+import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {t, Trans} from '@lingui/macro';
+import {RequiredStar} from "../requiredStar/RequiredStar";
 
 type PublishListingModalType = {
     userID: string
 }
 
 const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
-    const dispatch = useAppDispatch()
-    const toast = useToast()
-    const {isOpen, onOpen, onClose} = useDisclosure()
+    const dispatch = useAppDispatch();
 
-    const initialRef = useRef(null)
-    const finalRef = useRef(null)
 
-    const inputFileRef = useRef<HTMLInputElement | null>(null)
+    const toast = useToast();
 
-    const statuses = ['success', 'error', 'warning', 'info']
+    const {isOpen, onOpen, onClose} = useDisclosure();
 
-    const [imgUrl, setImgUrl] = useState<string>('')
+    const initialRef = useRef(null);
+    const finalRef = useRef(null);
+
+    const inputFileRef = useRef<HTMLInputElement | null>(null);
+
+    const statuses = ['success', 'error', 'warning', 'info'];
+
+    const [imgUrl, setImgUrl] = useState<string>('');
     const [category, setCategory] = useState('');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
@@ -65,21 +69,34 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
         user: userID
     }
 
+    const onOpenModalHandler = () => onOpen();
 
     const publishHandler = () => {
-        dispatch(createProductTC(productObj))
-        onClose()
+        dispatch(createProductTC(productObj));
+
+        onClose();
         toast({
-            title: 'Listing created.',
+            title: 'Success.',
             description: "We've created your Listing for you.",
-            status: 'success',
+            status: "success",
             isClosable: true,
+            // title: isCreated ? 'Success.' : 'Error.',
+            // description: isCreated ? "We've created your Listing for you." : "Some error has occurred. Please try again",
+            // status: isCreated ? "success" : "error",
+            // isClosable: true,
         })
-        setImgUrl('')
+        setImgUrl('');
+        setCategory('');
+        setTitle('');
+        setDescription('');
+        setTime('');
+        setAddress('');
+        setMetroStation('');
     }
+
     return (
         <>
-            <Button onClick={onOpen} background={"#ff2d55"}
+            <Button onClick={onOpenModalHandler} background={"#ff2d55"}
                     _hover={{bg: '#c92040'}}
                     color="#ffffff"
                     variant="solid"
@@ -136,7 +153,10 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
                         </FormControl>
 
                         <FormControl mt={4}>
-                            <FormLabel><Trans>Category</Trans></FormLabel>
+                            <FormLabel>
+                                <Trans>Category</Trans>
+                                <RequiredStar/>
+                            </FormLabel>
                             <Select variant='outline'
                                     placeholder={t({
                                         id: `Select category`,
@@ -152,8 +172,12 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
                         </FormControl>
 
                         <FormControl mt={4}>
-                            <FormLabel><Trans>Title</Trans></FormLabel>
+                            <FormLabel>
+                                <Trans>Title</Trans>
+                                <RequiredStar/>
+                            </FormLabel>
                             <Input
+                                required={true}
                                 value={title}
                                 onChange={(e) => setTitle(e.currentTarget.value)}/// handler
                                 placeholder={t({
@@ -164,7 +188,10 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
                         </FormControl>
 
                         <FormControl mt={4}>
-                            <FormLabel><Trans>Description</Trans></FormLabel>
+                            <FormLabel>
+                                <Trans>Description</Trans>
+                                <RequiredStar/>
+                            </FormLabel>
                             <Textarea
                                 value={description}
                                 onChange={(e) => setDescription(e.currentTarget.value)}
@@ -216,6 +243,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
                             w="100%"
                             onClick={() => publishHandler()}
                             colorScheme='red'
+                            disabled={!category || !title || !description}
                         >
                             <Trans>Publish Listing</Trans>
                         </Button>

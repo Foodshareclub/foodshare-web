@@ -1,5 +1,6 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import {productAPI, ProductObjType} from "../../api/productAPI";
+import {supabase} from "../../supaBase.config";
 
 
 export type InitialProductStateType = {
@@ -26,9 +27,9 @@ export type InitialProductStateType = {
 }
 
 const initialState = {
-
     products: [] as Array<InitialProductStateType>,
-    isCreated: false
+    currentUserProducts: [] as Array<InitialProductStateType>,
+    isUpdatedProductsList: false
 };
 
 export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", async (arg, thunkAPI) => {
@@ -51,14 +52,40 @@ export const getProductTC = createAsyncThunk("/getProduct", async (productType: 
     }
 });
 
-export const createProductTC = createAsyncThunk('/createProductTC', async (productObj: ProductObjType, thunkAPI) => {
+export const getCurrentUserProductsTC = createAsyncThunk('/getCurrentUserProducts', async (userID: string, thunkAPI) => {
     try {
-        const {error} = await productAPI.createProduct(productObj)
+        const {data, error} = await productAPI.getCurrentUserProduct(userID);
+
         if (error) throw error;
+
+        return data;
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
     }
-})
+});
+
+export const createProductTC = createAsyncThunk('/createProductTC', async (productObj: ProductObjType, thunkAPI) => {
+    try {
+        const {error} = await productAPI.createProduct(productObj)
+
+        // if (error) {
+        //     throw error;
+        // }
+
+        return error;
+    } catch (e) {
+        return thunkAPI.rejectWithValue(e);
+    }
+});
+
+export const deleteProductTC = createAsyncThunk('/deleteProductTC', async (productID: number, thunkAPI) => {
+    try {
+        const {error} = await productAPI.deleteProduct(productID);
+        return error;
+    } catch (e) {
+        return thunkAPI.rejectWithValue(e);
+    }
+});
 
 const productSlice = createSlice({
     name: "product",
@@ -73,9 +100,30 @@ const productSlice = createSlice({
                 state.products = action.payload;
             }
         });
-        builder.addCase(createProductTC.fulfilled, (state) => {
-                state.isCreated = true;
+        builder.addCase(getCurrentUserProductsTC.fulfilled, (state, action) => {
+            if(action.payload) {
+                state.currentUserProducts = action.payload;
+            }
         });
+        builder.addCase(createProductTC.fulfilled, (state, action) => {
+            if (!action.payload?.message) {
+                state.isUpdatedProductsList = !state.isUpdatedProductsList;
+            }
+
+            // create error handler to show error  ////////////////////////////////
+
+            // state.isCreated = true;
+            // console.log('true')
+            // if (!action.payload?.message) {
+            //     state.isCreated = true;
+            //     console.log('true')
+            // }
+        });
+        builder.addCase(deleteProductTC.fulfilled, (state, action) => {
+            if (!action.payload?.message) {
+                    state.isUpdatedProductsList = !state.isUpdatedProductsList;
+            }
+        })
     }
 })
 

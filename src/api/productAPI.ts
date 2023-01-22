@@ -1,6 +1,6 @@
 import {supabase} from "../supaBase.config";
 import {AuthPayload} from "./profileAPI";
-import {InitialProductStateType} from "../store/slices/foodReducer";
+import {InitialProductStateType} from "../store/slices/productReducer";
 import {PostgrestResponse} from "@supabase/supabase-js";
 
 export type ProductObjType = {
@@ -25,9 +25,21 @@ export const productAPI = {
             .select('*')
             .eq('post_type', productType.toLowerCase())
     },
+    getCurrentUserProduct(currentUserID: string) {
+        return supabase
+            .from('posts')
+            .select('*')
+            .eq('user', currentUserID)
+    },
     createProduct(createdProduct: ProductObjType){
         return supabase
             .from('posts')
             .insert(createdProduct)
+    },
+    deleteProduct(productID: number) {
+        return supabase
+            .from('posts')
+            .delete()
+            .eq('id', productID);
     }
 }
