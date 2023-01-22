@@ -6,7 +6,7 @@ import {createPhotoUrl} from "../../utils/createPhotoUrl";
 import {Trans} from "@lingui/macro";
 
 type PropsType = {
-    url: string | null
+    url: string
     size: number
     onUpload: (filePath: string, file: File) => void
 }

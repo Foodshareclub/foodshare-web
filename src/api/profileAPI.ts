@@ -10,22 +10,22 @@ import {
 import {MobileOtpType} from "@supabase/gotrue-js/dist/module/lib/types";
 
 export type AllValuesType = {
-    address_id: string | null,
-    created_time: string | null,
+    address_id: string
+    created_time: string
     email?: string,
     id: string,
-    liked_post: string | null,
-    about_me: string,
-    avatar_url: string | null,
-    birth_date: string | null,
+    liked_post: string
+    about_me: string
+    avatar_url: string
+    birth_date: string
     first_name: string,
-    phone_number: string | null,
+    phone_number: string
     second_name: string,
     updated_at: Date,
     user_address: string,
-    user_location: string | null,
-    user_metro_station: string | null,
-    username: string | null
+    user_location: string
+    user_metro_station: string
+    username: string
 }
 export type ImgUrlType = {
     dir: string, imgUrl: string

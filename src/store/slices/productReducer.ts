@@ -1,6 +1,7 @@
-import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
+import {createAsyncThunk, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import {productAPI, ProductObjType} from "../../api/productAPI";
-import {supabase} from "../../supaBase.config";
+import {ImgUrlType, profileAPI, UploadImgUrlType} from "../../api/profileAPI";
+import {downloadImgFromDBTC, isUpdate, uploadImgToDBTC} from "./userReducer";
 
 
 export type InitialProductStateType = {
@@ -29,7 +30,9 @@ export type InitialProductStateType = {
 const initialState = {
     products: [] as Array<InitialProductStateType>,
     currentUserProducts: [] as Array<InitialProductStateType>,
-    isUpdatedProductsList: false
+    isUpdatedProductsList: false,
+    postImgUrl:'' ,//сюда прийдет массив а не строка
+    isPostImgUpload:false
 };
 
 export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", async (arg, thunkAPI) => {
@@ -86,7 +89,33 @@ export const deleteProductTC = createAsyncThunk('/deleteProductTC', async (produ
         return thunkAPI.rejectWithValue(e);
     }
 });
+export const downloadPostImgFromDBTC = createAsyncThunk("/auth/downloadPostImgFromDBTC", async (imgValue: ImgUrlType) => {
+    try {
+        const {data, error} = await profileAPI.downloadImgFromDB(imgValue)
+        if (error) {
+            throw error
+        }
+        console.log( URL.createObjectURL(data))
+        //return data //сюда прийдет массив а не строка
+          return URL.createObjectURL(data)
+    } catch (error: any) {
+        console.log('Error downloading image: ', error.message)
+    }
+})
 
+export const uploadPostImgToDBTC = createAsyncThunk("/auth/uploadPostImgToDBTC", async (imgValue: UploadImgUrlType, thunkAPI) => {
+    try {
+
+        const {error} = await profileAPI.uploadImgFromDB(imgValue)
+        if (error) {
+            throw error
+        }
+    } catch (error: any) {
+        thunkAPI.rejectWithValue(error.message)
+    } finally {
+        thunkAPI.dispatch(isUpdate())
+    }
+})
 const productSlice = createSlice({
     name: "product",
     initialState,
@@ -118,6 +147,15 @@ const productSlice = createSlice({
             //     state.isCreated = true;
             //     console.log('true')
             // }
+        });
+        builder.addCase(downloadPostImgFromDBTC.fulfilled, (state, action) => {
+                if (action.payload) {
+                   state.postImgUrl= action.payload
+                }
+        });
+        builder.addCase(uploadPostImgToDBTC.fulfilled, (state) => {
+            state.isPostImgUpload = true
+
         });
         builder.addCase(deleteProductTC.fulfilled, (state, action) => {
             if (!action.payload?.message) {

@@ -17,7 +17,7 @@ import {
 import React, {ChangeEvent, useLayoutEffect, useState} from "react";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import Avatar from "../avatar/Avatar";
-import {updateProfileTC, uploadImgFromDBTC} from "../../store/slices/userReducer";
+import {updateProfileTC, uploadImgToDBTC} from "../../store/slices/userReducer";
 import {AllValuesType} from "../../api/profileAPI";
 import {Trans} from "@lingui/macro";
 
@@ -64,30 +64,30 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
     const changeUserAddress = (e: ChangeEvent<HTMLInputElement>) => setAddress(e.currentTarget.value);
 
     const defaultValues = {
-        liked_post: value && value.liked_post,
+        liked_post: value.liked_post,
         about_me: about,
-        avatar_url: value && value.avatar_url,
-        birth_date: value && value.birth_date,
+        avatar_url: value.avatar_url,
+        birth_date: value.birth_date,
         first_name: firstName,
-        phone_number: value && value.phone_number,
+        phone_number: value.phone_number,
         second_name: secondName,
         updated_at: new Date(),
         user_address: address,
-        user_location: value && value.user_location,
-        user_metro_station: value && value.user_metro_station,
-        username: value && value.username,
-        address_id: value && value.address_id || randomNumber.toString(),
-        created_time: user.created_at || value && value.created_time,
+        user_location: value.user_location,
+        user_metro_station: value.user_metro_station,
+        username: value.username,
+        address_id: value.address_id || randomNumber.toString(),
+        created_time: user.created_at || value.created_time,
         email: user.email,
         id: user.id,
     }
 
     const onClick = async () => {
-        let update = {...defaultValues, avatar_url: filePath || value && value.avatar_url};
+        let update = {...defaultValues, avatar_url: filePath || value.avatar_url};
 
         await dispatch(updateProfileTC(update));
         if (filePath) {
-            await dispatch(uploadImgFromDBTC({dir: 'avatars', filePath, file}));
+            await dispatch(uploadImgToDBTC({dir: 'avatars', filePath, file}));
         }
         setFilePath('');
         setFile({} as File);
@@ -112,7 +112,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
                     <ModalHeader><Trans>Welcome to Foodshare</Trans></ModalHeader>
                     <ModalCloseButton/>
                     <ModalBody pb={6}>
-                        <Avatar url={value && value.avatar_url} size={150}
+                        <Avatar url={value.avatar_url} size={150}
                                 onUpload={(filePath, file) => {
                                     onUpload(filePath, file)
                                 }}/>

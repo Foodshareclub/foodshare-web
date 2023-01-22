@@ -1,4 +1,4 @@
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
     Box,
     Button,
@@ -16,13 +16,12 @@ import {
     Select,
     Text,
     Textarea,
-    useDisclosure,
-    useToast
+    useDisclosure
 } from "@chakra-ui/react";
 import {createPhotoUrl} from "../../utils/createPhotoUrl";
 import cloud from "../../assets/cloud.svg"
-import {createProductTC} from "../../store/slices/productReducer";
-import {useAppDispatch, useAppSelector} from "../../hook/hooks";
+import {createProductTC, downloadPostImgFromDBTC, uploadPostImgToDBTC} from "../../store/slices/productReducer";
+import {useAppDispatch} from "../../hook/hooks";
 import {t, Trans} from '@lingui/macro';
 import {RequiredStar} from "../requiredStar/RequiredStar";
 
@@ -32,18 +31,16 @@ type PublishListingModalType = {
 
 const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
     const dispatch = useAppDispatch();
-
-
-    const toast = useToast();
-
+    // useEffect(() => {
+    //     dispatch(downloadPostImgFromDBTC({dir: `avatars-posts/${userID}`, imgUrl: "*"}))
+    // }, []);
     const {isOpen, onOpen, onClose} = useDisclosure();
-
+    console.log(userID)
     const initialRef = useRef(null);
     const finalRef = useRef(null);
 
     const inputFileRef = useRef<HTMLInputElement | null>(null);
 
-    const statuses = ['success', 'error', 'warning', 'info'];
 
     const [imgUrl, setImgUrl] = useState<string>('');
     const [category, setCategory] = useState('');
@@ -52,14 +49,17 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
     const [time, setTime] = useState('');
     const [address, setAddress] = useState('');
     const [metroStation, setMetroStation] = useState('');
-
+    const [filePath, setFilePath] = useState('')
+    const [file, setFile] = useState<File>({} as File)
     const handleChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const img = createPhotoUrl(event);
         setImgUrl(img.url);//  get photo URL
+        setFile(img.file)
+        setFilePath(img.filePath)
     }
 
     const productObj = {
-        gif_url: imgUrl,
+        gif_url: filePath,
         post_type: category,
         post_name: title,
         post_description: description,
@@ -73,18 +73,9 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
 
     const publishHandler = () => {
         dispatch(createProductTC(productObj));
-
+dispatch(uploadPostImgToDBTC({dir:"avatars-posts",file,filePath}))
         onClose();
-        toast({
-            title: 'Success.',
-            description: "We've created your Listing for you.",
-            status: "success",
-            isClosable: true,
-            // title: isCreated ? 'Success.' : 'Error.',
-            // description: isCreated ? "We've created your Listing for you." : "Some error has occurred. Please try again",
-            // status: isCreated ? "success" : "error",
-            // isClosable: true,
-        })
+
         setImgUrl('');
         setCategory('');
         setTitle('');

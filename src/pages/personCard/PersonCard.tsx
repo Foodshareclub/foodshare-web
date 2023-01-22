@@ -2,6 +2,7 @@ import React from 'react';
 import {Card, CardBody, Heading, Image, Skeleton, Stack, Text} from "@chakra-ui/react";
 import PublishListingModal from "../../components/modals/PublishListingModal";
 import {useLocation, useParams} from "react-router-dom";
+import {useAppSelector} from "../../hook/hooks";
 
 type PropsType = {
     name: string
@@ -23,6 +24,7 @@ const PersonCard: React.FC<PropsType> = ({
                                              userID
 }) => {
     const url = useLocation();
+    const currentUserProducts = useAppSelector(state => state.product.currentUserProducts);
 
     return (
         <Card
