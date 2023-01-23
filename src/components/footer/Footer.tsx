@@ -2,9 +2,9 @@ import React, {ReactNode} from 'react';
 import twitter from "../../assets/twiter.svg";
 import insta from "../../assets/instagram.svg";
 import facebook from "../../assets/facebook.svg";
-import {Avatar, Box, chakra, Container, Link, Stack, Text, useColorModeValue, VisuallyHidden} from "@chakra-ui/react";
-import straw from "../../assets/straw.svg";
+import {Avatar, Box, chakra, Container, Stack, Text, useColorModeValue, VisuallyHidden} from "@chakra-ui/react";
 import {Trans} from "@lingui/macro";
+import LanguageSelector from "../languageSelector/LanguageSelector";
 
 const SocialButton = ({
                           children,
@@ -42,26 +42,6 @@ const Footer = () => {
         <Box
             bg={useColorModeValue('gray.50', 'gray.900')}
             color={useColorModeValue('gray.700', 'gray.200')}>
-
-            {/*<Container*/}
-            {/*    as={Stack}*/}
-            {/*    maxW={'6xl'}*/}
-            {/*    py={4}*/}
-            {/*    spacing={4}*/}
-            {/*    justify={'center'}*/}
-            {/*    align={'center'}>*/}
-
-            {/*    <Stack direction={'row'} spacing={6}>*/}
-            {/*        <Link alignSelf="end" href={'/'}><Trans>Home</Trans></Link>*/}
-            {/*        <Link alignSelf="end" href={'/aboutUs'}><Trans>About</Trans></Link>*/}
-            {/*        <Avatar*/}
-            {/*            size='sm' mr={3}*/}
-            {/*            src={straw}/>*/}
-            {/*        <Link alignSelf="end" href={'#'}><Trans>Blog</Trans></Link>*/}
-            {/*        <Link alignSelf="end" href={'#'}><Trans>Contact</Trans></Link>*/}
-            {/*    </Stack>*/}
-            {/*</Container>*/}
-
             <Box
                 borderTopWidth={1}
                 borderStyle={'solid'}
@@ -74,6 +54,7 @@ const Footer = () => {
                     justify={{base: 'center', md: 'space-between'}}
                     align={{base: 'center', md: 'center'}}>
                     <Text><Trans>© 2022 Foodshare Club, Limited. All rights reserved</Trans></Text>
+                    <LanguageSelector/>
                     <Stack direction={'row'} spacing={6}>
                         <SocialButton label={'Twitter'} href={'#'}>
                             <Avatar size='xs' src={twitter}/>

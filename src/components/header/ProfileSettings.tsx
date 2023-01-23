@@ -1,12 +1,10 @@
 import * as React from "react";
-import map from "../../assets/globus.svg"
-import {Avatar, Box, Image, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
+import {Avatar, Box, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
 import UpdateProfileModal from "../modals/UpdateProfileModal";
 
 import {ProfileSettingsProps} from "./NavComponent";
 import {loginTC, registerTC} from "../../store/slices/userReducer";
 import AuthenticationUserModal from "../modals/AuthenticationUser/AuthenticationUserModal";
-import LanguageSelector from "../languageSelector/LanguageSelector";
 import {t, Trans} from "@lingui/macro";
 
 
@@ -20,8 +18,6 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                                          }) => {
     return (
         <>
-            {/*<Image mr="5%" alignSelf="center" src={map} alt={map}/>*/}
-            <LanguageSelector />
             <Box alignSelf="center" p={0} color='#303030'>
                 <Menu>
                     <MenuButton
@@ -35,8 +31,8 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                             isRegister
                                 ? <>
                                     <UpdateProfileModal fullScreen={true} buttonValue={t({
-                                        id:`Update Profile`,
-                                        message:`Update Profile`
+                                        id: `Update Profile`,
+                                        message: `Update Profile`
                                     })}/>
                                     <MenuItem onClick={() => navigateToMyLists()}><Trans>My listing's</Trans></MenuItem>
                                     <MenuItem onClick={() => navigateToLogout()}><Trans>Log Out</Trans></MenuItem>

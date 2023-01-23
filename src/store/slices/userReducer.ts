@@ -20,7 +20,7 @@ const initialState = {
     value: {} as AllValuesType,
     imgUrl: '',
     isUpdate: false,
-    language:"en"
+    language: "en"
 };
 
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
@@ -162,7 +162,7 @@ const userSlice = createSlice({
         isUpdate: (state) => {
             state.isUpdate = !state.isUpdate
         },
-        changeLanguage:(state,action:PayloadAction<string>)=>{
+        changeLanguage: (state, action: PayloadAction<string>) => {
             state.language = action.payload
         }
     },
@@ -224,5 +224,5 @@ const userSlice = createSlice({
         });
     }
 });
-export const {getSession, isLoading, isUpdate,changeLanguage} = userSlice.actions
+export const {getSession, isLoading, isUpdate, changeLanguage} = userSlice.actions
 export const userReducer = userSlice.reducer;

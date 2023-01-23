@@ -1,7 +1,6 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import {productAPI, ProductObjType} from "../../api/productAPI";
 import {ImgUrlType, profileAPI, UploadImgUrlType} from "../../api/profileAPI";
-import {isUpdate} from "./userReducer";
 
 
 export type InitialProductStateType = {
@@ -31,8 +30,8 @@ const initialState = {
     products: [] as Array<InitialProductStateType>,
     currentUserProducts: [] as Array<InitialProductStateType>,
     isUpdatedProductsList: false,
-    postImgUrl:'' ,//сюда прийдет массив а не строка
-    isPostImgUpload:false
+    postImgUrl: '',//сюда прийдет массив а не строка
+    isPostImgUpload: false
 };
 
 export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", async (arg, thunkAPI) => {
@@ -70,11 +69,9 @@ export const getCurrentUserProductsTC = createAsyncThunk('/getCurrentUserProduct
 export const createProductTC = createAsyncThunk('/createProductTC', async (productObj: ProductObjType, thunkAPI) => {
     try {
         const {error} = await productAPI.createProduct(productObj)
-
         // if (error) {
         //     throw error;
         // }
-
         return error;
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
@@ -95,10 +92,8 @@ export const downloadPostImgFromDBTC = createAsyncThunk("/auth/downloadPostImgFr
         if (error) {
             throw error
         }
-        console.log( URL.createObjectURL(data))
-        console.log( data)
-        //return data //сюда прийдет массив а не строка
-          return URL.createObjectURL(data)
+        console.log(URL.createObjectURL(data))
+        return URL.createObjectURL(data)
     } catch (error: any) {
         console.log('Error downloading image: ', error.message)
     }
@@ -113,8 +108,14 @@ export const uploadPostImgToDBTC = createAsyncThunk("/auth/uploadPostImgToDBTC",
         }
     } catch (error: any) {
         thunkAPI.rejectWithValue(error.message)
-    } finally {
-        thunkAPI.dispatch(isUpdate())
+    }
+})
+export const updateProductTC = createAsyncThunk("/auth/updateProductTC", async (updates: ProductObjType, thunkAPI) => {
+    try {
+        let {error} = await productAPI.updateProduct(updates)
+        return error
+    } catch (error: any) {
+        thunkAPI.rejectWithValue(error.message)
     }
 })
 const productSlice = createSlice({
@@ -131,7 +132,7 @@ const productSlice = createSlice({
             }
         });
         builder.addCase(getCurrentUserProductsTC.fulfilled, (state, action) => {
-            if(action.payload) {
+            if (action.payload) {
                 state.currentUserProducts = action.payload;
             }
         });
@@ -150,9 +151,9 @@ const productSlice = createSlice({
             // }
         });
         builder.addCase(downloadPostImgFromDBTC.fulfilled, (state, action) => {
-                if (action.payload) {
-                   state.postImgUrl= action.payload
-                }
+            if (action.payload) {
+                state.postImgUrl = action.payload
+            }
         });
         builder.addCase(uploadPostImgToDBTC.fulfilled, (state) => {
             state.isPostImgUpload = true
@@ -160,9 +161,15 @@ const productSlice = createSlice({
         });
         builder.addCase(deleteProductTC.fulfilled, (state, action) => {
             if (!action.payload?.message) {
-                    state.isUpdatedProductsList = !state.isUpdatedProductsList;
+                state.isUpdatedProductsList = !state.isUpdatedProductsList;
             }
-        })
+        });
+        builder.addCase(updateProductTC.fulfilled, (state, action) => {
+            if (!action.payload?.message) {
+                state.isUpdatedProductsList = !state.isUpdatedProductsList;
+            }
+        });
+
     }
 })
 

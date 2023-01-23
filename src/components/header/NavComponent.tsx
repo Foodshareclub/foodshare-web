@@ -2,7 +2,7 @@ import straw from "../../assets/straw.svg";
 import * as React from 'react';
 import {useEffect} from 'react';
 import {useNavigate} from "react-router-dom";
-import {Avatar, Box, Input, InputGroup, InputLeftElement, Text} from "@chakra-ui/react";
+import {Avatar, Box, Flex, Input, InputGroup, InputLeftElement, Text} from "@chakra-ui/react";
 import {SearchIcon} from "@chakra-ui/icons";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {downloadImgFromDBTC, logoutTC} from "../../store/slices/userReducer";
@@ -85,17 +85,18 @@ const NavComponent: React.FC<PropsLangType> = ({
     }
 
     return (
-        <Box display='flex' justifyContent={"space-between"}>
-            <Avatar alignSelf="center"
-                    src={straw}/>
+        <Flex  justify={"space-between"}>
+            <Flex>
+                <Avatar alignSelf="center"
+                        src={straw}/>
 
-            <Box pl={3} alignSelf="center">
-                <Text onClick={() => navigateToMain()} cursor="pointer"
-                      fontSize="25px" fontWeight={900} textTransform="uppercase" color='#FF2D55'>
-                    foodShare
-                </Text>
-            </Box>
-
+                <Box pl={3} alignSelf="center">
+                    <Text onClick={() => navigateToMain()} cursor="pointer"
+                          fontSize="25px" fontWeight={900} textTransform="uppercase" color='#FF2D55'>
+                        foodShare
+                    </Text>
+                </Box>
+            </Flex>
             <InputGroup alignSelf="center" w={"50%"} ml={"6%"} alignItems="center">
                 <InputLeftElement
                     pointerEvents='none'
@@ -128,7 +129,7 @@ const NavComponent: React.FC<PropsLangType> = ({
                         isRegister={isRegister}
                     />
             }
-        </Box>
+        </Flex>
     );
 }
 export default NavComponent

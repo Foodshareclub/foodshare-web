@@ -2,7 +2,6 @@ import React, {useEffect, useState} from 'react';
 import {useNavigate} from "react-router-dom";
 import {Box, Flex, GridItem, Image, Link, SimpleGrid, Skeleton} from "@chakra-ui/react";
 import navIcon from '../../assets/map.svg';
-import soup from '../../assets/soup.svg';
 import {ArrowForwardIcon} from "@chakra-ui/icons";
 import useMediaQuery from '../../utils/useMediaQuery';
 import {getProductTC, InitialProductStateType} from "../../store/slices/productReducer";
@@ -51,7 +50,7 @@ export const Main: React.FC<MainType> = ({productType}) => {
             return 2;
         }
     };
-
+    console.log(products)
     return (
         <Box mt="22vh">
             {/*<Trans>*/}
@@ -64,9 +63,16 @@ export const Main: React.FC<MainType> = ({productType}) => {
 
                         <Skeleton isLoaded={isLoaded}>
 
-                            <Image width="100%" height={250} cursor="pointer" borderRadius="10px"
-                                   onClick={() => navigate(`/oneProd`, {state: item})} src={item.gif_url}
-                                   alt="soup"/>
+                            <Image
+                                rounded={'lg'}
+                                objectFit={'cover'}
+                                width="100%"
+                                height={250}
+                                cursor="pointer"
+                                borderRadius="10px"
+                                onClick={() => navigate(`/oneProd`, {state: item})} src={item.gif_url}
+                                alt="broken image"
+                            />
                         </Skeleton>
                         {!isLoaded
                             ? <div>
@@ -84,7 +90,7 @@ export const Main: React.FC<MainType> = ({productType}) => {
                                     <Image
                                         borderRadius='full'
                                         src={navigatePhotosObject[item.post_type]}
-                                        alt={soup}
+                                        alt={navigatePhotosObject[item.post_type]}
                                     />
                                 </Flex>
                                 <Flex justify="space-between" alignItems="center" alignSelf="center">

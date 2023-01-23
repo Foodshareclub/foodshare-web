@@ -7,7 +7,7 @@ export function getRandomProducts(products: Array<InitialProductStateType>, prod
         .map((el, i) => i)
         .sort(() => Math.random() - 0.5)
 
-    let randomElementsArray = [];
+    let randomElementsArray = [] as  Array<InitialProductStateType>;
 
     for (let i = 0; i <= productsWithoutItem.length - 1; i++) {
         if (i < 3) {

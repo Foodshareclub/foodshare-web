@@ -1,7 +1,4 @@
 import {supabase} from "../supaBase.config";
-import {AuthPayload} from "./profileAPI";
-import {InitialProductStateType} from "../store/slices/productReducer";
-import {PostgrestResponse} from "@supabase/supabase-js";
 
 export type ProductObjType = {
     gif_url: string,
@@ -12,9 +9,11 @@ export type ProductObjType = {
     post_address: string,
     post_metro_station: string,
     user: string
+    id?: number
+    post_unpublished?: boolean
 }
 export const productAPI = {
-    getAllProducts(){
+    getAllProducts() {
         return supabase
             .from('posts')
             .select('*')
@@ -31,10 +30,14 @@ export const productAPI = {
             .select('*')
             .eq('user', currentUserID)
     },
-    createProduct(createdProduct: ProductObjType){
+    //заменим insert на upsert
+    createProduct(createdProduct: ProductObjType) {
         return supabase
             .from('posts')
             .insert(createdProduct)
+    },
+    updateProduct(createdProduct: ProductObjType) {
+        return supabase.from("posts").upsert(createdProduct)
     },
     deleteProduct(productID: number) {
         return supabase
