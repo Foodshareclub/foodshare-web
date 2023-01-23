@@ -43,24 +43,24 @@ const Footer = () => {
             bg={useColorModeValue('gray.50', 'gray.900')}
             color={useColorModeValue('gray.700', 'gray.200')}>
 
-            <Container
-                as={Stack}
-                maxW={'6xl'}
-                py={4}
-                spacing={4}
-                justify={'center'}
-                align={'center'}>
+            {/*<Container*/}
+            {/*    as={Stack}*/}
+            {/*    maxW={'6xl'}*/}
+            {/*    py={4}*/}
+            {/*    spacing={4}*/}
+            {/*    justify={'center'}*/}
+            {/*    align={'center'}>*/}
 
-                <Stack direction={'row'} spacing={6}>
-                    <Link alignSelf="end" href={'/'}><Trans>Home</Trans></Link>
-                    <Link alignSelf="end" href={'/aboutUs'}><Trans>About</Trans></Link>
-                    <Avatar
-                        size='sm' mr={3}
-                        src={straw}/>
-                    <Link alignSelf="end" href={'#'}><Trans>Blog</Trans></Link>
-                    <Link alignSelf="end" href={'#'}><Trans>Contact</Trans></Link>
-                </Stack>
-            </Container>
+            {/*    <Stack direction={'row'} spacing={6}>*/}
+            {/*        <Link alignSelf="end" href={'/'}><Trans>Home</Trans></Link>*/}
+            {/*        <Link alignSelf="end" href={'/aboutUs'}><Trans>About</Trans></Link>*/}
+            {/*        <Avatar*/}
+            {/*            size='sm' mr={3}*/}
+            {/*            src={straw}/>*/}
+            {/*        <Link alignSelf="end" href={'#'}><Trans>Blog</Trans></Link>*/}
+            {/*        <Link alignSelf="end" href={'#'}><Trans>Contact</Trans></Link>*/}
+            {/*    </Stack>*/}
+            {/*</Container>*/}
 
             <Box
                 borderTopWidth={1}

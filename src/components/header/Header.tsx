@@ -35,10 +35,10 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType}) => {
 
     return (
 
-        <CardHeader pb={0} bg={useColorModeValue('gray.50', 'gray.900')}>
+        <CardHeader w="100vw" height="23vh" position="fixed" zIndex={2} pb={0}
+                    bg={useColorModeValue('white', 'gray.900')}>
             <NavComponent isRegister={isRegister} setPageType={setPageType} setProductType={setProductType}/>
             <FilterProductComponent getRoute={getRoute} setPageType={setPageType} pageType={pageType}/>
-
         </CardHeader>
     );
 };
