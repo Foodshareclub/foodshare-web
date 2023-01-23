@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useRef, useState} from 'react';
 import {
     Box,
     Button,
@@ -20,7 +20,7 @@ import {
 } from "@chakra-ui/react";
 import {createPhotoUrl} from "../../utils/createPhotoUrl";
 import cloud from "../../assets/cloud.svg"
-import {createProductTC, downloadPostImgFromDBTC, uploadPostImgToDBTC} from "../../store/slices/productReducer";
+import {createProductTC, uploadPostImgToDBTC} from "../../store/slices/productReducer";
 import {useAppDispatch} from "../../hook/hooks";
 import {t, Trans} from '@lingui/macro';
 import {RequiredStar} from "../requiredStar/RequiredStar";
@@ -31,11 +31,8 @@ type PublishListingModalType = {
 
 const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
     const dispatch = useAppDispatch();
-    // useEffect(() => {
-    //     dispatch(downloadPostImgFromDBTC({dir: `avatars-posts/${userID}`, imgUrl: "*"}))
-    // }, []);
     const {isOpen, onOpen, onClose} = useDisclosure();
-    console.log(userID)
+
     const initialRef = useRef(null);
     const finalRef = useRef(null);
 
@@ -57,9 +54,9 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
         setFile(img.file)
         setFilePath(img.filePath)
     }
-
+    const postImgUrl = `https://***REMOVED***.supabase.co/storage/v1/object/public/avatars-posts/${userID}/${filePath}`
     const productObj = {
-        gif_url: filePath,
+        gif_url: postImgUrl,
         post_type: category,
         post_name: title,
         post_description: description,
@@ -73,9 +70,8 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
 
     const publishHandler = () => {
         dispatch(createProductTC(productObj));
-dispatch(uploadPostImgToDBTC({dir:"avatars-posts",file,filePath}))
+        dispatch(uploadPostImgToDBTC({dir: `avatars-posts/${userID}`, file, filePath}))
         onClose();
-
         setImgUrl('');
         setCategory('');
         setTitle('');

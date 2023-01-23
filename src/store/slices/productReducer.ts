@@ -1,7 +1,7 @@
-import {createAsyncThunk, createSlice, PayloadAction} from "@reduxjs/toolkit";
+import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import {productAPI, ProductObjType} from "../../api/productAPI";
 import {ImgUrlType, profileAPI, UploadImgUrlType} from "../../api/profileAPI";
-import {downloadImgFromDBTC, isUpdate, uploadImgToDBTC} from "./userReducer";
+import {isUpdate} from "./userReducer";
 
 
 export type InitialProductStateType = {
@@ -96,6 +96,7 @@ export const downloadPostImgFromDBTC = createAsyncThunk("/auth/downloadPostImgFr
             throw error
         }
         console.log( URL.createObjectURL(data))
+        console.log( data)
         //return data //сюда прийдет массив а не строка
           return URL.createObjectURL(data)
     } catch (error: any) {
