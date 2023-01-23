@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import {Box, Flex, Heading} from "@chakra-ui/react";
 import PersonCard from "../personCard/PersonCard";
 import {commentsArray} from "../../utils/mockArray";
@@ -6,7 +6,7 @@ import AsideProducts from "../productPage/asideProducts/AsideProducts";
 import Comments from "../../components/comments/Comments";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {Trans} from "@lingui/macro";
-import {deleteProductTC, downloadPostImgFromDBTC, getCurrentUserProductsTC} from "../../store/slices/productReducer";
+import {deleteProductTC, getCurrentUserProductsTC} from "../../store/slices/productReducer";
 
 type MyListingsPageType = {
     userID: string
@@ -17,20 +17,11 @@ const MyListingsPage: React.FC<MyListingsPageType> = ({userID}) => {
 
     const user = useAppSelector(state => state.user);
     const currentUserProducts = useAppSelector(state => state.product.currentUserProducts);
-
     const update = useAppSelector(state => state.product.isUpdatedProductsList)
-const [reversUrl,setReversUrl]=useState('')
+
     useEffect(() => {
         dispatch(getCurrentUserProductsTC(userID))
-        //dispatch(downloadPostImgFromDBTC({dir:`avatars-posts/${userID}`,imgUrl:"*"}))
-
-        // dispatch(downloadPostImgFromDBTC({dir:"avatars-posts",imgUrl:"*"}))
     }, [update]);
-    useEffect(() => {
-      if(reversUrl)
-          //
-         dispatch(downloadPostImgFromDBTC({dir:"avatars-posts",imgUrl:reversUrl}))
-    }, [reversUrl]);
 
     const deleteProductHandler = async (productID: number) => dispatch(deleteProductTC(productID));
 
@@ -83,7 +74,6 @@ const [reversUrl,setReversUrl]=useState('')
                         product={item}
                         height="25%"
                         deleteProductHandler={deleteProductHandler}
-                        setReversUrl={setReversUrl}
                     />
                 ))}
             </Box>
