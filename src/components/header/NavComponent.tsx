@@ -12,11 +12,12 @@ import NavDrawer from "../modals/NavDrawer";
 import ProfileSettings from "./ProfileSettings";
 import {getAllProductsTC} from "../../store/slices/productReducer";
 import { t } from "@lingui/macro";
+import {PagesType} from "./Header";
 
 type PropsLangType = {
     isRegister: boolean
 
-    setIsMainPage: (isMainPage: boolean) => void
+    setPageType: (pageType: PagesType) => void
     setProductType: (type: string) => void
 
 }
@@ -35,7 +36,7 @@ export type ProfileSettingsProps = {
 }
 
 const NavComponent: React.FC<PropsLangType> = ({
-                                                   isRegister, setIsMainPage, setProductType
+                                                   isRegister, setPageType, setProductType
                                                }) => {
 
     const imgUrl = useAppSelector(state => state.user.imgUrl);
@@ -61,19 +62,27 @@ const NavComponent: React.FC<PropsLangType> = ({
     const navigateToMain = () => {
         dispatch(getAllProductsTC());
         navigate('/');
-        setIsMainPage(true);
+        setPageType('mainPage');
         setProductType('/');
     }
 
     const navigateToAboutUs = () => navigate('/aboutUs');
-    const navigateToMyLists = () => navigate('/user-listings');
+    const navigateToMyLists = () => {
+        navigate('/user-listings');
+        setPageType("profileSettings");
+    }
 
     const navigateToAccSettings = () => {
+        setPageType("profileSettings");
     }
     const navigateToHelp = () => {
+        setPageType("profileSettings");
     }
 
-    const navigateToLogout = () => dispatch(logoutTC());
+    const navigateToLogout = () => {
+        dispatch(logoutTC());
+        setPageType("profileSettings");
+    }
 
     return (
         <Box display='flex' justifyContent={"space-between"}>

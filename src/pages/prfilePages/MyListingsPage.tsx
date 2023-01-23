@@ -7,6 +7,7 @@ import Comments from "../../components/comments/Comments";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {Trans} from "@lingui/macro";
 import {deleteProductTC, getCurrentUserProductsTC} from "../../store/slices/productReducer";
+import {Navigate, redirect, useNavigate} from "react-router-dom";
 
 type MyListingsPageType = {
     userID: string
@@ -17,13 +18,18 @@ const MyListingsPage: React.FC<MyListingsPageType> = ({userID}) => {
 
     const user = useAppSelector(state => state.user);
     const currentUserProducts = useAppSelector(state => state.product.currentUserProducts);
-    const update = useAppSelector(state => state.product.isUpdatedProductsList)
+    const update = useAppSelector(state => state.product.isUpdatedProductsList);
+    const isAuth = useAppSelector(state => state.user.isAuth);
 
     useEffect(() => {
         dispatch(getCurrentUserProductsTC(userID))
     }, [update]);
 
     const deleteProductHandler = async (productID: number) => dispatch(deleteProductTC(productID));
+
+    if(!isAuth) {
+        return <Navigate to={'/'}/>
+    }
 
     return (
         <Flex justify="space-between" mt={6}>

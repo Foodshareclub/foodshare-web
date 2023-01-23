@@ -9,21 +9,22 @@ import {ValueType} from "../header/FilterProductComponent";
 import {ArrowBackIcon, ArrowForwardIcon} from "@chakra-ui/icons";
 import useMediaQuery from "../../utils/useMediaQuery";
 import {useAppSelector} from "../../hook/hooks";
+import {PagesType} from "../header/Header";
 
 type PropsType = {
     selectChapterHandler: (name: string) => void
     value?: ValueType
     getRoute: (route: string) => void
-    isMainPage: boolean
-    setIsMainPage: (isMainPage: boolean) => void
+    pageType: PagesType
+    setPageType: (isMainPage: PagesType) => void
 }
 
 const Carousel: React.FC<PropsType> = ({
                                            selectChapterHandler,
                                            value,
                                            getRoute,
-                                           setIsMainPage,
-                                           isMainPage
+                                           setPageType,
+                                           pageType
                                        }) => {
     const isSmallerThan1024 = useMediaQuery('(min-width:1024px)');
     const language = useAppSelector(state => state.user.language)
@@ -33,7 +34,7 @@ const Carousel: React.FC<PropsType> = ({
         selectChapterHandler(name);
         navigate(`${name.toLowerCase()}`);
         getRoute(name.toLowerCase());
-        setIsMainPage(false);
+        setPageType("productComponent");
     }
 
     const [mainIndex, setMainIndex] = useState(0);
@@ -85,7 +86,10 @@ const Carousel: React.FC<PropsType> = ({
                             cursor="pointer"
                         >
                             <Image m="0 auto" alignItems="center"
-                                   src={(value && value.name === item.name) && !isMainPage ? item.red : item.src}
+                                   src={(value && value.name === item.name) && pageType === 'productComponent'
+                                       ? item.red
+                                       : item.src
+                            }
                                    boxSize={6}
                             />
                             <Text

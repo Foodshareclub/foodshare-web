@@ -1,9 +1,10 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {Card, CardBody, Flex, Heading, Icon, Image, Stack, Text} from "@chakra-ui/react";
 import rose from "../../../assets/map.svg";
 import {useLocation, useNavigate} from "react-router-dom";
 import {Trans} from "@lingui/macro";
 import {DeleteIcon, EditIcon} from "@chakra-ui/icons";
+import PublishListingModal from "../../../components/modals/PublishListingModal";
 
 type AsideProdType = {
     img: string
@@ -86,7 +87,9 @@ const AsideProducts: React.FC<AsideProdType> = ({
 
             {
                 url === '/user-listings' && <>
-                    <Icon as={EditIcon}/>
+                    <PublishListingModal
+                        userID={product.user}
+                        product={product}/>
                     <Icon
                         ml={2}
                         as={DeleteIcon}
@@ -94,6 +97,7 @@ const AsideProducts: React.FC<AsideProdType> = ({
                     />
                 </>
             }
+
 
         </Card>
     );

@@ -4,6 +4,7 @@ import {navigationActionsSVG} from "../../utils/navigationActions";
 import {Box} from "@chakra-ui/react";
 import "../../index.scss";
 import Carousel from "../carousel/Carousel";
+import {PagesType} from "./Header";
 
 
 export type ValueType = {
@@ -13,12 +14,12 @@ export type ValueType = {
 }
 
 type SimpleBottomNavigationType = {
-    isMainPage: boolean
-    setIsMainPage: (isMainPage: boolean) => void
+    pageType: PagesType
+    setPageType: (pageType: PagesType) => void
     getRoute: (route: string) => void
 }
 
-const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({getRoute, isMainPage, setIsMainPage}) => {
+const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({getRoute, pageType, setPageType}) => {
 
     const [value, setValue] = useState<ValueType | undefined>({} as ValueType);
 
@@ -33,8 +34,8 @@ const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({getRoute,
             <Carousel
                 selectChapterHandler={selectChapterHandler}
                 value={value} getRoute={getRoute}
-                setIsMainPage={setIsMainPage}
-                isMainPage={isMainPage}
+                setPageType={setPageType}
+                pageType={pageType}
             />
 
         </Box>
