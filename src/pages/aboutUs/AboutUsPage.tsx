@@ -22,7 +22,7 @@ const AboutUsPage = () => {
     }, [])
 
     return (
-        <>
+        <Box mt="22vh">
             <Grid templateColumns='repeat(5, 1fr)' gap={6}>
                 <GridItem w='100%' h='50vh'/>
 
@@ -140,7 +140,7 @@ const AboutUsPage = () => {
                     <Trans>Contact Us...</Trans> <ArrowForwardIcon mx={2}/>
                 </Link>
             </Box>
-        </>
+        </Box>
 
     );
 };

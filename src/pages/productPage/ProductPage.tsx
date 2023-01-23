@@ -17,7 +17,7 @@ type ProductPageType = {
     buttonValue?: string
 }
 
-const ProductPage: React.FC<ProductPageType> = ({obj, buttonValue}) => {
+const ProductPage: React.FC<ProductPageType> = ({ buttonValue}) => {
     const dispatch = useAppDispatch();
 
     const item = useLocation().state;
@@ -30,7 +30,7 @@ const ProductPage: React.FC<ProductPageType> = ({obj, buttonValue}) => {
 
 
     return (
-        <div className={styles.root}>
+        <div style={{marginTop:"22vh"}} className={styles.root}>
             <Flex justify="center">
                 <Box w="50%" alignSelf="center">
                     <Image

@@ -8,7 +8,7 @@ import {useNavigate} from "react-router-dom";
 const VolunteerPage = () => {
     const navigate = useNavigate()
     return (
-        <Box w="90%" m="0 auto">
+        <Box mt="22vh" w="90%" mx="auto">
             <Flex justify="space-between">
                 <Box alignSelf="center" lineHeight={10} alignItems="start">
                     <Heading>Volunteer with Foodshare!</Heading>
