@@ -17,7 +17,7 @@ const ContactUsPage = () => {
     const {
         register,
         handleSubmit,
-        formState: {errors, isSubmitting, isValid}
+        formState: {errors, isValid}
     } = useForm({
         defaultValues: {
             email: "",
@@ -32,8 +32,10 @@ const ContactUsPage = () => {
 
     };
     return (
-        <Box w="50%" m="0 auto" textAlign="center" fontSize={25} fontWeight={600}>
-            <Box mb={5}>
+        <Box mt="21vh" w="50%" mx={"auto"}
+             // m="0 auto"
+             textAlign="center" fontSize={25} fontWeight={600}>
+            <Box mb={4}>
                 Contact Us
             </Box>
 
@@ -87,7 +89,7 @@ const ContactUsPage = () => {
                         {errors.phone && errors.phone.message}
                     </FormErrorMessage>
 
-                    <Button variant={variant} m={"5% 0"} w="100%" alignSelf="center" type="submit" disabled={!isValid}>
+                    <Button variant={variant} m={"5% 0 4% 0"} w="100%" alignSelf="center" type="submit" disabled={!isValid}>
                         Send message
                     </Button>
                 </FormControl>

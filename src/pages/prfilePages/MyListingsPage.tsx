@@ -7,7 +7,7 @@ import Comments from "../../components/comments/Comments";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {Trans} from "@lingui/macro";
 import {deleteProductTC, getCurrentUserProductsTC} from "../../store/slices/productReducer";
-import {Navigate, redirect, useNavigate} from "react-router-dom";
+import {Navigate} from "react-router-dom";
 
 type MyListingsPageType = {
     userID: string
@@ -32,7 +32,7 @@ const MyListingsPage: React.FC<MyListingsPageType> = ({userID}) => {
     }
 
     return (
-        <Flex justify="space-between" mt={6}>
+        <Flex justify="space-between" mt="25vh">
             <Box w="45%">
                 <PersonCard
                     aboutMe={user.value.about_me}
