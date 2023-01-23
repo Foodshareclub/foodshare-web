@@ -10,7 +10,7 @@ import {
 import {MobileOtpType} from "@supabase/gotrue-js/dist/module/lib/types";
 
 export type AllValuesType = {
-    address_id: string
+
     created_time: string
     email?: string,
     id: string,
@@ -111,7 +111,7 @@ export const profileAPI = {
         return supabase.storage.from(`${value.dir}`).download(`${value.imgUrl}`)
     },
     uploadImgFromDB(value: UploadImgUrlType): Promise<{ data: { path: string }; error: null } | { data: null; error: RangeError }> {
-        return supabase.storage.from(`${value.dir}`).upload(value.filePath, value.file)
+        return supabase.storage.from(`${value.dir}`).upload(value.filePath, value.file,{upsert:true})
     },
     updateProfile(updates: AllValuesType) {
         return supabase.from('profiles').upsert(updates)

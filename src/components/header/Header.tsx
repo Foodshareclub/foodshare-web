@@ -7,7 +7,7 @@ import {getValueFromDBTC} from "../../store/slices/userReducer";
 
 type HeaderType = {
     getRoute: (route: string) => void
-    productType:string
+    productType: string
     setProductType: (type: string) => void
 }
 
@@ -33,8 +33,10 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType}) => {
 
     return (
 
-        <CardHeader pb={0} bg={useColorModeValue('gray.50', 'gray.900')}>
-                    <NavComponent isRegister={isRegister} setIsMainPage={setIsMainPage} setProductType={setProductType}/>
+        <CardHeader w="100vw" height="23vh" position="fixed" zIndex={2} pb={0}
+                    bg={useColorModeValue('white', 'gray.900')}
+        >
+            <NavComponent isRegister={isRegister} setIsMainPage={setIsMainPage} setProductType={setProductType}/>
             <FilterProductComponent getRoute={getRoute} setIsMainPage={setIsMainPage} isMainPage={isMainPage}/>
 
         </CardHeader>

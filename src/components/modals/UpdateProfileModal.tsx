@@ -76,7 +76,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
         user_location: value.user_location,
         user_metro_station: value.user_metro_station,
         username: value.username,
-        address_id: value.address_id || randomNumber.toString(),
+
         created_time: user.created_at || value.created_time,
         email: user.email,
         id: user.id,
