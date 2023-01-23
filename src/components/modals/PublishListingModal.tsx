@@ -4,7 +4,7 @@ import {
     Button,
     Flex,
     FormControl,
-    FormLabel,
+    FormLabel, Icon,
     Image,
     Input,
     Modal,
@@ -24,12 +24,15 @@ import {createProductTC, uploadPostImgToDBTC} from "../../store/slices/productRe
 import {useAppDispatch} from "../../hook/hooks";
 import {t, Trans} from '@lingui/macro';
 import {RequiredStar} from "../requiredStar/RequiredStar";
+import {EditIcon} from "@chakra-ui/icons";
+import {ProductObjType} from "../../api/productAPI";
 
 type PublishListingModalType = {
     userID: string
+    product?: ProductObjType
 }
 
-const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
+const PublishListingModal: React.FC<PublishListingModalType> = ({userID, product}) => {
     const dispatch = useAppDispatch();
     const {isOpen, onOpen, onClose} = useDisclosure();
 
@@ -38,14 +41,13 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
 
     const inputFileRef = useRef<HTMLInputElement | null>(null);
 
-
-    const [imgUrl, setImgUrl] = useState<string>('');
-    const [category, setCategory] = useState('');
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [time, setTime] = useState('');
-    const [address, setAddress] = useState('');
-    const [metroStation, setMetroStation] = useState('');
+    const [imgUrl, setImgUrl] = useState<string>(product?.gif_url || '');
+    const [category, setCategory] = useState(product?.post_type || '');
+    const [title, setTitle] = useState(product?.post_name || '');
+    const [description, setDescription] = useState(product?.post_description || '');
+    const [time, setTime] = useState(product?.pickup_time || '');
+    const [address, setAddress] = useState(product?.post_address || '');
+    const [metroStation, setMetroStation] = useState(product?.post_metro_station || '');
     const [filePath, setFilePath] = useState('')
     const [file, setFile] = useState<File>({} as File)
     const handleChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,6 +57,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
         setFilePath(img.filePath)
     }
     const postImgUrl = `https://***REMOVED***.supabase.co/storage/v1/object/public/avatars-posts/${userID}/${filePath}`
+
     const productObj = {
         gif_url: postImgUrl,
         post_type: category,
@@ -83,13 +86,18 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID}) => {
 
     return (
         <>
-            <Button onClick={onOpenModalHandler} background={"#ff2d55"}
-                    _hover={{bg: '#c92040'}}
-                    color="#ffffff"
-                    variant="solid"
-            >
+            {product ? <Icon
+                as={EditIcon}
+                onClick={onOpenModalHandler}
+            />
+
+                : <Button onClick={onOpenModalHandler} background={"#ff2d55"}
+                _hover={{bg: '#c92040'}}
+                color="#ffffff"
+                variant="solid"
+                >
                 <Trans>Add Listing</Trans>
-            </Button>
+                </Button>}
 
             <Modal
                 initialFocusRef={initialRef}
