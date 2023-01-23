@@ -9,20 +9,18 @@ import AsideProducts from "./asideProducts/AsideProducts";
 import PickUpRequestModal from "../../components/modals/PickUpRequestModal";
 import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {getRandomProducts} from "../../utils/getRandomProduct";
-import {getProductTC} from "../../store/slices/productReducer";
-import { Trans } from '@lingui/macro';
+import {getProductTC, InitialProductStateType} from "../../store/slices/productReducer";
+import {Trans} from '@lingui/macro';
 
 type ProductPageType = {
     obj?: any
     buttonValue?: string
 }
 
-const ProductPage: React.FC<ProductPageType> = ({ buttonValue}) => {
+const ProductPage: React.FC<ProductPageType> = ({buttonValue}) => {
     const dispatch = useAppDispatch();
-
-    const item = useLocation().state;
-
-    const products = useAppSelector(state => state.product.products);
+    const item: InitialProductStateType = useLocation().state;
+     const products = useAppSelector<Array<InitialProductStateType>>(state => state.product.products);
 
     useEffect(() => {
         dispatch(getProductTC(item.post_type))
@@ -30,27 +28,24 @@ const ProductPage: React.FC<ProductPageType> = ({ buttonValue}) => {
 
 
     return (
-        <div style={{marginTop:"22vh"}} className={styles.root}>
+        <div style={{marginTop: "22vh"}} className={styles.root}>
             <Flex justify="center">
                 <Box w="50%" alignSelf="center">
                     <Image
                         src={item.gif_url}
                         borderRadius={20}
                         alt={item.post_name}
-
                         m={"0 auto"}
                         maxWidth={300}
-
                         objectFit='cover'
-
                     />
                 </Box>
 
                 <Box alignSelf="" w="40%">
                     <Box lineHeight={2}>
                         <Flex>
-                            <Heading alignSelf="center" size='md'>{item.post_name}</Heading>
-                            <Image pl={4} src={loc} alt={loc} />
+                            <Heading noOfLines={1} alignSelf="center" size='md'>{item.post_name}</Heading>
+                            <Image pl={4} src={loc} alt={loc}/>
                             <Text px={2}>{item.post_address}</Text>
                         </Flex>
 
@@ -69,30 +64,22 @@ const ProductPage: React.FC<ProductPageType> = ({ buttonValue}) => {
                                     />
                                 ))}
                             <Box as='span' ml='2' color='gray.600' fontSize='sm'>
-                                <Trans>999 reviews</Trans>
+                                <Trans>{item.post_views} views</Trans>
                             </Box>
                         </Flex>
-
-                        <Text lineHeight={1.5}>{
-                            item.post_description}
-                        </Text>
-
                         <Heading alignSelf="center" size='md'><Trans>Pick Up Address</Trans></Heading>
-
                         <Text>{item.post_address}</Text>
-
                         <Flex>
                             <Heading alignSelf="center" size='md'><Trans>Available:</Trans></Heading>
                             <Text px={2}>{item.pickup_time}</Text>
                         </Flex>
-
-                        <Flex>
                             <Heading alignSelf="center" size='md'><Trans>Quantity:</Trans></Heading>
                             <Text px={2}>{item.post_description}</Text>
+                        <Flex>
+                            <Heading alignSelf="center" size='md'><Trans>Food Type:</Trans></Heading>
+                            <Text px={2}>{item.post_type}</Text>
                         </Flex>
 
-                        <Heading alignSelf="center" size='md'><Trans>Food Type</Trans></Heading>
-                        <Text>{item.post_type}</Text>
                     </Box>
 
                     <Box mt={10}>
@@ -124,7 +111,7 @@ const ProductPage: React.FC<ProductPageType> = ({ buttonValue}) => {
                             product={product}
                             img={product.gif_url}
                             name={product.post_name}
-                            about={product.post_name}
+                            about={product.post_description}
                             available={product.pickup_time}
                             distance={product.post_address}
                         />

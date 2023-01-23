@@ -4,7 +4,8 @@ import {
     Button,
     Flex,
     FormControl,
-    FormLabel, Icon,
+    FormLabel,
+    IconButton,
     Image,
     Input,
     Modal,
@@ -20,7 +21,7 @@ import {
 } from "@chakra-ui/react";
 import {createPhotoUrl} from "../../utils/createPhotoUrl";
 import cloud from "../../assets/cloud.svg"
-import {createProductTC, uploadPostImgToDBTC} from "../../store/slices/productReducer";
+import {createProductTC, updateProductTC, uploadPostImgToDBTC} from "../../store/slices/productReducer";
 import {useAppDispatch} from "../../hook/hooks";
 import {t, Trans} from '@lingui/macro';
 import {RequiredStar} from "../requiredStar/RequiredStar";
@@ -48,6 +49,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID, product
     const [time, setTime] = useState(product?.pickup_time || '');
     const [address, setAddress] = useState(product?.post_address || '');
     const [metroStation, setMetroStation] = useState(product?.post_metro_station || '');
+    const [productId, setProductId] = useState(product?.id || 0);
     const [filePath, setFilePath] = useState('')
     const [file, setFile] = useState<File>({} as File)
     const handleChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,7 +60,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID, product
     }
     const postImgUrl = `https://***REMOVED***.supabase.co/storage/v1/object/public/avatars-posts/${userID}/${filePath}`
 
-    const productObj = {
+    let productObj = {
         gif_url: postImgUrl,
         post_type: category,
         post_name: title,
@@ -68,12 +70,18 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID, product
         post_metro_station: metroStation,
         user: userID
     }
-
+    if (product && !filePath) {
+        productObj = {...productObj, gif_url: product.gif_url}
+    }
     const onOpenModalHandler = () => onOpen();
 
     const publishHandler = () => {
-        dispatch(createProductTC(productObj));
-        dispatch(uploadPostImgToDBTC({dir: `avatars-posts/${userID}`, file, filePath}))
+        dispatch(uploadPostImgToDBTC({dir: `avatars-posts/${userID}`, file, filePath}))//если дубль фото то в сторадже не создаст новую
+        dispatch(product ? updateProductTC({
+            ...productObj,
+            id: productId,
+            post_unpublished: false
+        }) : createProductTC(productObj));
         onClose();
         setImgUrl('');
         setCategory('');
@@ -82,21 +90,24 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID, product
         setTime('');
         setAddress('');
         setMetroStation('');
+        setProductId(0)
     }
-
+    console.log(product)
     return (
         <>
-            {product ? <Icon
-                as={EditIcon}
-                onClick={onOpenModalHandler}
-            />
-
-                : <Button onClick={onOpenModalHandler} background={"#ff2d55"}
-                _hover={{bg: '#c92040'}}
-                color="#ffffff"
-                variant="solid"
+            {product ?
+                <IconButton onClick={onOpenModalHandler}
+                            variant='outline'
+                            icon={<EditIcon/>}
+                            aria-label="update">
+                </IconButton>
+                : <Button onClick={onOpenModalHandler}
+                          background={"#ff2d55"}
+                          _hover={{bg: '#c92040'}}
+                          color="#ffffff"
+                          variant="solid"
                 >
-                <Trans>Add Listing</Trans>
+                    <Trans>Add Listing</Trans>
                 </Button>}
 
             <Modal

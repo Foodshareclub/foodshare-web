@@ -1,9 +1,9 @@
-import React, {useState} from 'react';
-import {Card, CardBody, Flex, Heading, Icon, Image, Stack, Text} from "@chakra-ui/react";
+import React from 'react';
+import {Card, CardBody, Flex, Heading, IconButton, Image, Stack, Text} from "@chakra-ui/react";
 import rose from "../../../assets/map.svg";
 import {useLocation, useNavigate} from "react-router-dom";
 import {Trans} from "@lingui/macro";
-import {DeleteIcon, EditIcon} from "@chakra-ui/icons";
+import {DeleteIcon} from "@chakra-ui/icons";
 import PublishListingModal from "../../../components/modals/PublishListingModal";
 
 type AsideProdType = {
@@ -26,7 +26,6 @@ const AsideProducts: React.FC<AsideProdType> = ({
 
                                                     deleteProductHandler
                                                 }) => {
-
     const url = useLocation().pathname;
 
     const navigate = useNavigate();
@@ -47,9 +46,8 @@ const AsideProducts: React.FC<AsideProdType> = ({
             overflow='hidden'
             variant='outline'
             mt={4}
-
             cursor="pointer"
-            border="none"
+            border="1px solid teal.50"
         >
 
             <Image
@@ -62,10 +60,12 @@ const AsideProducts: React.FC<AsideProdType> = ({
                 onClick={goToProduct}
             />
 
-            <Stack onClick={goToProduct}>
+            <Stack
+                onClick={goToProduct}
+            >
                 <CardBody>
-                    <Heading size='sm'>{name}</Heading>
-                    <Heading mb={1} noOfLines={1} size='sm'>{about}</Heading>
+                    <Heading size='md'>{name}</Heading>
+                    <Text my={1} noOfLines={1} size='sm'>{about}</Text>
 
                     <Flex mb={1}>
                         <Heading size='sm'><Trans>Available:</Trans></Heading>
@@ -86,19 +86,18 @@ const AsideProducts: React.FC<AsideProdType> = ({
             </Stack>
 
             {
-                url === '/user-listings' && <>
+                url === '/user-listings' && <Flex alignSelf={"center"} m={"0 auto"} justify={"space-around"} w="30%">
                     <PublishListingModal
                         userID={product.user}
                         product={product}/>
-                    <Icon
-                        ml={2}
-                        as={DeleteIcon}
-                        onClick={deleteHandler}
-                    />
-                </>
+                    <IconButton onClick={deleteHandler}
+                                variant='outline'
+                                icon={<DeleteIcon/>}
+                                aria-label="delete">
+                        <Trans>Delete</Trans>
+                    </IconButton>
+                </Flex>
             }
-
-
         </Card>
     );
 };
