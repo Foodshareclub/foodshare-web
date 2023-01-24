@@ -17,6 +17,7 @@ type PropsType = {
     getRoute: (route: string) => void
     pageType: PagesType
     setPageType: (isMainPage: PagesType) => void
+    productType: string
 }
 
 const Carousel: React.FC<PropsType> = ({
@@ -24,16 +25,18 @@ const Carousel: React.FC<PropsType> = ({
                                            value,
                                            getRoute,
                                            setPageType,
-                                           pageType
+                                           pageType,
+                                           productType
                                        }) => {
     const isSmallerThan1024 = useMediaQuery('(min-width:1024px)');
     const language = useAppSelector(state => state.user.language)
     const navigate = useNavigate();
 
     const navigateHandler = (name: string) => {
+        const routeName = name.toLowerCase()
         selectChapterHandler(name);
-        navigate(`${name.toLowerCase()}`);
-        getRoute(name.toLowerCase());
+        navigate(`${routeName === 'food' ? '/' : routeName}`);
+        getRoute(routeName);
         setPageType("productComponent");
     }
 
@@ -52,8 +55,6 @@ const Carousel: React.FC<PropsType> = ({
             setMainIndex(mainIndex - 1)
         } else return
     };
-
-
 
     return (
         <>
@@ -86,10 +87,11 @@ const Carousel: React.FC<PropsType> = ({
                             cursor="pointer"
                         >
                             <Image m="0 auto" alignItems="center"
-                                   src={(value && value.name === item.name) && pageType === 'productComponent'
-                                       ? item.red
-                                       : item.src
-                            }
+                                   src={
+                                       (productType === item.name.toLowerCase()) && pageType === 'productComponent'
+                                           ? item.red
+                                           : item.src
+                                   }
                                    boxSize={6}
                             />
                             <Text
@@ -98,7 +100,6 @@ const Carousel: React.FC<PropsType> = ({
                                 pb={0}
                                 textAlign="center"
                             >
-                                {/*@ts-ignore*/}
                                 {item[language]}
                             </Text>
                         </Box>

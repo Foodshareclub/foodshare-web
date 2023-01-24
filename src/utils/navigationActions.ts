@@ -21,9 +21,14 @@ import communityRed from "../assets/communityRed.svg";
 import map from "../assets/mapGray.svg";
 import mapRed from "../assets/mapRed.svg";
 
+type NavigationActionsSVGType = {
+    name: string
+    [key: string]: string
+    src: string
+    red: string
+}
 
-
-export const navigationActionsSVG = [
+export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     {
         name: 'Food',
         "en": 'Food',
