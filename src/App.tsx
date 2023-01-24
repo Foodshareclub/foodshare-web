@@ -5,7 +5,7 @@ import {Session} from "@supabase/supabase-js";
 import {supabase} from "./supaBase.config";
 import {getProductTC} from "./store/slices/productReducer";
 import ChangeLanguageContainer from "./components/localization/ChangeLanguageContainer";
-
+import {PasswordRecoveryModal} from "./components/modals/AuthenticationUser/PasswordRecoveryModal";
 
 function App() {
     const dispatch = useAppDispatch();
@@ -31,12 +31,16 @@ function App() {
     const userID = session?.user.id ?? '';
 
     return (
-        <ChangeLanguageContainer
-            setProductType={setProductType}
-            productType={productType}
-            getRoute={getRoute}
-            userID={userID}
-        />
+        <>
+            <ChangeLanguageContainer
+                setProductType={setProductType}
+                productType={productType}
+                getRoute={getRoute}
+                userID={userID}
+            />
+            <PasswordRecoveryModal/>
+        </>
+
     )
 }
 

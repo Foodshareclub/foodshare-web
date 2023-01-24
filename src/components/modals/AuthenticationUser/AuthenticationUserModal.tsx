@@ -14,7 +14,7 @@ import {
 } from "@chakra-ui/react";
 import React, {useState} from "react";
 import {useAppDispatch, useAppSelector} from "../../../hook/hooks";
-import {NavLink, useNavigate} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import {useForm} from "react-hook-form";
 import facebook from "../../../assets/facebookblue.svg";
 import apple from "../../../assets/apple.svg";
@@ -32,7 +32,7 @@ type ModalType = {
     fullScreen: boolean
 }
 
-type StartWithType = 'Start' | 'Login' | 'Registration';
+export type StartWithType = 'Start' | 'Login' | 'Registration' | 'RecoveryPass';
 
 const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullScreen}) => {
     const {isAuth} = useAppSelector(state => state.user);
@@ -61,7 +61,9 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullS
     const [show, setShow] = useState(false);
     const [startWith, setStartWith] = useState<StartWithType>('Start');
 
-    const handleClick = () => setShow(!show)
+
+    const showPass = () => setShow(true);
+    const hidePass = () => setShow(false);
 
     const onSubmit = async (values: { email: string, password: string }) => {
         await dispatch(thunk(values));
@@ -74,6 +76,8 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullS
         onClose();
         setStartWith('Start');
     }
+
+    const forgotPasswordHandler = () => setStartWith('RecoveryPass');
 
     if (isAuth) {
         navigate("/");
@@ -106,18 +110,31 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullS
                                         isValid={isValid}
                                         buttonValue={buttonValue}
                                         register={register}
-                                        handleClick={handleClick}
+                                        showPass={showPass}
+                                        hidePass={hidePass}
                                     />
                                     : <>
-                                        {startWith === 'Login' && <EmailArea setStartWith={setStartWith}/>}
+                                        {startWith === 'Login' && <EmailArea
+                                            setStartWith={setStartWith}
+                                            operationType={'Login'}
+                                        />}
+                                        {startWith === 'RecoveryPass' && <EmailArea
+                                            setStartWith={setStartWith}
+                                            operationType={'Recovery'}
+                                        />}
                                         {startWith === 'Registration' && <PhoneArea setStartWith={setStartWith}/>}
                                     </>
                             }
 
                             {
-                                buttonValue === 'Login' &&
+                                buttonValue === 'Login' && (startWith !== 'RecoveryPass') &&
                                 <Flex align="center" justify="space-around" color={"red.500"} fontSize={15}>
-                                    <NavLink to={"#"}>Forgot password?</NavLink>
+                                    <Text
+                                        onClick={forgotPasswordHandler}
+                                        cursor='pointer'
+                                    >
+                                        Forgot password?
+                                    </Text>
 
                                 </Flex>
                             }

@@ -1,28 +1,46 @@
 import React, {useState} from "react";
 import {useAppDispatch} from "../../../hook/hooks";
-import {loginWithOtpTC} from "../../../store/slices/userReducer";
-import {Button, FormLabel, Input} from "@chakra-ui/react";
+import {loginWithOtpTC, recoveryPasswordTC} from "../../../store/slices/userReducer";
+import {Notification} from "./NotificationModal";
+import {Button, FormLabel, Input, useDisclosure} from "@chakra-ui/react";
 
 type EmailAreaType = {
-    setStartWith: (startWith: 'Start' ) => void
+    setStartWith: (startWith: 'Start') => void
+    operationType: 'Login' | 'Recovery'
 }
 
-export const EmailArea: React.FC<EmailAreaType> = ({setStartWith}) => {
+export const EmailArea: React.FC<EmailAreaType> = ({
+                                                       setStartWith,
+                                                       operationType,
+                                                   }) => {
     const dispatch = useAppDispatch();
+
+    const {isOpen, onOpen, onClose} = useDisclosure()
 
     const [invalid, setInvalid] = useState('');
     const [email, setEmail] = useState('');
 
+
     const sendEmail = () => {
-        if(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
-            dispatch(loginWithOtpTC(email));
-            setStartWith('Start');
-        }else {
+        if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+            if (operationType === "Login") {
+                dispatch(loginWithOtpTC(email));
+            }
+
+            if (operationType === "Recovery") {
+                dispatch(recoveryPasswordTC(email));
+            }
+            onOpen();
+            setEmail('');
+        } else {
             setInvalid('Invalid email');
         }
     }
+
     return (
         <>
+            <Notification isOpen={isOpen} onClose={onClose} setStartWith={setStartWith}/>
+
             <FormLabel>{invalid || 'Email'}</FormLabel>
             <Input
                 variant="filled"
@@ -39,9 +57,12 @@ export const EmailArea: React.FC<EmailAreaType> = ({setStartWith}) => {
                 w="100%"
                 alignSelf="center"
                 onClick={sendEmail}
+                title={'Insert an email address'}
+                disabled={!email}
             >
                 Continue
             </Button>
+
         </>
     )
 }
