@@ -4,19 +4,12 @@ import {Box, Flex, GridItem, Image, Link, SimpleGrid, Skeleton} from "@chakra-ui
 import navIcon from '../../assets/map.svg';
 import {ArrowForwardIcon} from "@chakra-ui/icons";
 import useMediaQuery from '../../utils/useMediaQuery';
-import {getProductTC, InitialProductStateType} from "../../store/slices/productReducer";
-import {useAppDispatch, useAppSelector} from "../../hook/hooks";
+import {InitialProductStateType} from "../../store/slices/productReducer";
+import {useAppSelector} from "../../hook/hooks";
 import {navigatePhotosObject} from "../../utils/navigatePhotosObject";
 import {Trans} from "@lingui/macro";
 
-type MainType = {
-    productType: string
-}
-
-export const Main: React.FC<MainType> = ({productType}) => {
-    const dispatch = useAppDispatch();
-
-
+export const Main = () => {
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
@@ -27,18 +20,13 @@ export const Main: React.FC<MainType> = ({productType}) => {
         return () => clearTimeout(time);
     }, []);
 
-    useEffect(() => {
-        if (productType && productType !== '/') {
-            dispatch(getProductTC(productType));
-        }
-    }, [productType]);
-
     const products = useAppSelector<Array<InitialProductStateType>>(state => state.product.products);
 
     const isSmallerThan500 = useMediaQuery('(min-width:500px)');
     const isSmallerThan700 = useMediaQuery('(min-width:700px)');
     const isSmallerThan1290 = useMediaQuery('(min-width:1290px)');
     const navigate = useNavigate();
+
     const gridSize = () => {
         if (isSmallerThan1290) {
             return 5;
@@ -50,7 +38,7 @@ export const Main: React.FC<MainType> = ({productType}) => {
             return 2;
         }
     };
-    console.log(products)
+
     return (
         <Box mt="22vh">
             {/*<Trans>*/}

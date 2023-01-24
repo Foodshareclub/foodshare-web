@@ -17,9 +17,10 @@ type SimpleBottomNavigationType = {
     pageType: PagesType
     setPageType: (pageType: PagesType) => void
     getRoute: (route: string) => void
+    productType: string
 }
 
-const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({getRoute, pageType, setPageType}) => {
+const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({getRoute, pageType, setPageType, productType}) => {
 
     const [value, setValue] = useState<ValueType | undefined>({} as ValueType);
 
@@ -36,6 +37,7 @@ const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({getRoute,
                 value={value} getRoute={getRoute}
                 setPageType={setPageType}
                 pageType={pageType}
+                productType={productType}
             />
 
         </Box>

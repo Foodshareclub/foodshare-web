@@ -10,13 +10,12 @@ import {AllValuesType} from "../../api/profileAPI";
 import useMediaQuery from "../../utils/useMediaQuery";
 import NavDrawer from "../modals/NavDrawer";
 import ProfileSettings from "./ProfileSettings";
-import {getAllProductsTC} from "../../store/slices/productReducer";
-import { t } from "@lingui/macro";
+import {t} from "@lingui/macro";
 import {PagesType} from "./Header";
 
 type PropsLangType = {
     isRegister: boolean
-
+    productType: string
     setPageType: (pageType: PagesType) => void
     setProductType: (type: string) => void
 
@@ -36,7 +35,7 @@ export type ProfileSettingsProps = {
 }
 
 const NavComponent: React.FC<PropsLangType> = ({
-                                                   isRegister, setPageType, setProductType
+                                                   isRegister, setPageType, setProductType, productType
                                                }) => {
 
     const imgUrl = useAppSelector(state => state.user.imgUrl);
@@ -60,10 +59,10 @@ const NavComponent: React.FC<PropsLangType> = ({
     const navigate = useNavigate();
 
     const navigateToMain = () => {
-        dispatch(getAllProductsTC());
+        setProductType('food');
         navigate('/');
-        setPageType('mainPage');
-        setProductType('/');
+        setPageType('productComponent');
+
     }
 
     const navigateToAboutUs = () => navigate('/aboutUs');

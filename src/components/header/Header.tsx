@@ -7,20 +7,20 @@ import {getValueFromDBTC} from "../../store/slices/userReducer";
 
 type HeaderType = {
     getRoute: (route: string) => void
-    productType: string
     setProductType: (type: string) => void
+    productType: string
 }
 
-export type PagesType = 'mainPage' | 'productComponent' | 'profileSettings';
+export type PagesType = 'productComponent' | 'profileSettings';
 
-const Header: React.FC<HeaderType> = ({getRoute, setProductType}) => {
+const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) => {
     const dispatch = useAppDispatch()
     const isRegister = useAppSelector(state => state.user.isRegister);
     const isUpdate = useAppSelector(state => state.user.isUpdate);
     const {user} = useAppSelector(state => state.user.session);
 
-    const [pageType, setPageType] = useState<PagesType>("mainPage");
-    console.log(pageType)
+    const [pageType, setPageType] = useState<PagesType>("productComponent");
+
     useEffect(() => {
         if (user.id) {
             const values = {
@@ -37,8 +37,18 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType}) => {
 
         <CardHeader w="100vw" height="23vh" position="fixed" zIndex={2} pb={0}
                     bg={useColorModeValue('white', 'gray.900')}>
-            <NavComponent isRegister={isRegister} setPageType={setPageType} setProductType={setProductType}/>
-            <FilterProductComponent getRoute={getRoute} setPageType={setPageType} pageType={pageType}/>
+            <NavComponent
+                isRegister={isRegister}
+                setPageType={setPageType}
+                setProductType={setProductType}
+                productType={productType}
+            />
+            <FilterProductComponent
+                getRoute={getRoute}
+                setPageType={setPageType}
+                pageType={pageType}
+                productType={productType}
+            />
         </CardHeader>
     );
 };
