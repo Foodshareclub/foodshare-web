@@ -1,8 +1,7 @@
 import React from 'react';
 import {Card, CardBody, Heading, Image, Skeleton, Stack, Text} from "@chakra-ui/react";
 import PublishListingModal from "../../components/modals/PublishListingModal";
-import {useLocation, useParams} from "react-router-dom";
-import {useAppSelector} from "../../hook/hooks";
+import {useLocation} from "react-router-dom";
 
 type PropsType = {
     name: string
@@ -22,13 +21,11 @@ const PersonCard: React.FC<PropsType> = ({
                                              aboutExp,
                                              aboutMe,
                                              userID
-}) => {
+                                         }) => {
     const url = useLocation();
-    const currentUserProducts = useAppSelector(state => state.product.currentUserProducts);
-
     return (
         <Card
-            direction={{base: 'column', sm: 'row'}}
+            direction={{base: 'column', lg: 'row'}}
             overflow='hidden'
             variant='filled'
             mt={4} mb={4}
@@ -36,30 +33,31 @@ const PersonCard: React.FC<PropsType> = ({
             <Skeleton borderRadius="50%"
                       m={2}
                       isLoaded={true}>
-                <Image
-                    alignSelf="center"
-                    borderRadius="50%"
-                    p={4}
-                    // objectFit='none'
-                    maxW={{base: '100%', sm: '200px'}}
-                    src={img}
-                    alt={img}
+                <Image m={"0 auto"}
+                       rounded={'md'}
+                       objectFit={'cover'}
+                       alignSelf="center"
+                       borderRadius="50%"
+                       p={4}
+                       maxW={{base: '100%', sm: '200px'}}
+                       src={img}
+                       alt={img}
                 />
             </Skeleton>
 
             <Stack alignSelf={"center"}>
                 <CardBody>
-                    <Heading size='md'>
+                    <Heading textAlign={"center"} size='md'>
                         {name} {secondName}
                     </Heading>
 
-                    <Heading size='md'>
+                    <Heading textAlign={"center"} size='md'>
                         {exp}
                     </Heading>
 
                     {url.pathname === '/user-listings'
                         ? <>
-                            <Text py='2'>
+                            <Text textAlign={"center"} py='2'>
                                 {aboutMe}
                             </Text>
                             <PublishListingModal userID={userID}/>

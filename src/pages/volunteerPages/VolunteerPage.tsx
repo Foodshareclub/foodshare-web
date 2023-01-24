@@ -1,32 +1,40 @@
 import React from 'react';
-import {Box, Button, Flex, Heading, Text, Image} from "@chakra-ui/react";
+import {Box, Button, Flex, Heading, Image, Text} from "@chakra-ui/react";
 import man from "../../assets/manAndCnife.png";
 import AsideProducts from "../productPage/asideProducts/AsideProducts";
 import {asideProdProperty} from "../../utils/mockArray";
 import {useNavigate} from "react-router-dom";
+import {Trans} from "@lingui/macro";
 
 const VolunteerPage = () => {
     const navigate = useNavigate()
+
     return (
-        <Box mt="22vh" w="90%" mx="auto">
-            <Flex justify="space-between">
-                <Box alignSelf="center" lineHeight={10} alignItems="start">
-                    <Heading>Volunteer with Foodshare!</Heading>
-                    <Text fontSize="24px">Find volunteer oppportunies and help out your local community!</Text>
-                    <Button mt={6} fontSize="22px"
-                            w="50%" color="#ffffff"
+        <Box mt={["55%","45%","35%", "30%", "25%", "20%"]} w="90%" mx="auto">
+            <Flex direction={{md: "row", base: "column"}} justify="space-between">
+                <Box alignSelf="center" lineHeight={10}>
+                    <Heading pt={{base:"15%","ss":"0"}} textAlign={{md: "start", base: "center"}}>
+                        <Trans>Volunteer with Foodshare!</Trans>
+                    </Heading>
+                    <Text fontSize="24px">
+                        <Trans>Find volunteer oppportunies and help out your local community!</Trans>
+                    </Text>
+                    <Button alignItems={"center"} mt={6} fontSize="22px"
+                            w={{md: "50%", base: "100%"}} color="#ffffff"
                             background={"#ff2d55"}
                             _hover={{bg: '#c92040'}}
                             onClick={() => navigate("/volunteer/opportunities")}
-                    >Get Started</Button>
+                    ><Trans>Get Started</Trans></Button>
                 </Box>
                 <Box>
-                    <Image src={man} alt={man}/>
+                    <Image
+                         m={{md:"0",base:"10% auto 0 auto"}}
+                           src={man} alt='man'/>
                 </Box>
             </Flex>
-            <Heading mt={10} mb={4}>Foodshare Locations Near You</Heading>
-            <Flex justify="space-around">
-                <Box w="40%">
+            <Heading textAlign={{md: "start", base: "center"}} mt={10} mb={4}><Trans> Locations Near You</Trans></Heading>
+            <Flex direction={{mm: "row", base: "column"}} justify="space-around">
+                <Box w={{md: "40%", base: "100%"}}>
                     {asideProdProperty.map((item, id) => (
                         <AsideProducts
                             height="25%"
@@ -36,7 +44,7 @@ const VolunteerPage = () => {
                             available={item.available}/>
                     ))}
                 </Box>
-                <Box w="40%">
+                <Box w={{md: "40%", base: "100%"}}>
                     {asideProdProperty.map((item, id) => (
                         <AsideProducts
                             height="25%"

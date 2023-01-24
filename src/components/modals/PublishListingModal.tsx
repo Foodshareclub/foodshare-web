@@ -92,7 +92,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID, product
         setMetroStation('');
         setProductId(0)
     }
-    console.log(product)
+
     return (
         <>
             {product ?
@@ -101,7 +101,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = ({userID, product
                             icon={<EditIcon/>}
                             aria-label="update">
                 </IconButton>
-                : <Button onClick={onOpenModalHandler}
+                : <Button w={"100%"} onClick={onOpenModalHandler}
                           background={"#ff2d55"}
                           _hover={{bg: '#c92040'}}
                           color="#ffffff"
