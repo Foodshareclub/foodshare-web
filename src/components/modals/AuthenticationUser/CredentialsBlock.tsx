@@ -8,19 +8,22 @@ type FieldErrorType = Partial<FieldErrorsImpl<{ email: string; password: string;
 type CredentialsBlockType = {
     errors: FieldErrorType
     register: any
-    handleClick: () => void
     show: boolean
     isValid: boolean
     buttonValue: string
+    showPass: () => void
+    hidePass: () => void
 }
 
 export const CredentialsBlock: React.FC<CredentialsBlockType> = ({
-                                                              errors,
-                                                              register, handleClick,
-                                                              show,
-                                                              isValid,
-                                                              buttonValue
-                                                          }) => {
+                                                                     errors,
+                                                                     register,
+                                                                     show,
+                                                                     isValid,
+                                                                     buttonValue,
+                                                                     showPass,
+                                                                     hidePass
+                                                                 }) => {
     return (
         <>
             <FormControl isInvalid={!!errors.email && !!errors.password}>
@@ -47,7 +50,10 @@ export const CredentialsBlock: React.FC<CredentialsBlockType> = ({
                         type={show ? "text" : "password"}
                     />
                     <InputRightElement width='4.5rem'>
-                        <Button h='1.75rem' size='sm' onClick={handleClick}>
+                        <Button h='1.75rem' size='sm'
+                                onMouseDown={showPass}
+                                onMouseUp={hidePass}
+                        >
                             {show ? <ViewOffIcon/> : <ViewIcon/>}
                         </Button>
                     </InputRightElement>

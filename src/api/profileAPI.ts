@@ -104,8 +104,9 @@ export const profileAPI = {
             .eq(`${value.columnValue}`, `${value.columnValueItem}`)
             .single()
     },
-    recoveryPassword(email: string): Promise<{ data: {}; error: null } | { data: null; error: AuthError }> {
-        return supabase.auth.resetPasswordForEmail(email)
+    recoveryPassword(email: string) {
+        return supabase.auth
+            .resetPasswordForEmail(email);
     },
     downloadImgFromDB(value: ImgUrlType): Promise<{ data: Blob; error: null } | { data: null; error: RangeError }> {
         return supabase.storage.from(`${value.dir}`).download(`${value.imgUrl}`)

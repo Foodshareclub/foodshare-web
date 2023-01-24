@@ -145,6 +145,19 @@ export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (
     }
 })
 
+export const recoveryPasswordTC = createAsyncThunk("/auth/recoveryPasswordTC", async (email: string, thunkAPI) => {
+    try {
+        const { data, error } = await profileAPI.recoveryPassword(email);
+        if (error) {
+            throw error
+        }
+
+        return data;
+    }catch (e: any) {
+        thunkAPI.rejectWithValue(e.message)
+    }
+})
+
 const userSlice = createSlice({
     name: "user",
     initialState: initialState,
@@ -222,6 +235,9 @@ const userSlice = createSlice({
             state.registration = {} as User
             state.imgUrl = ''
         });
+        builder.addCase(recoveryPasswordTC.fulfilled, (state, action) =>{
+            console.log(action.payload);
+        })
     }
 });
 export const {getSession, isLoading, isUpdate, changeLanguage} = userSlice.actions
