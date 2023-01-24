@@ -1,6 +1,5 @@
 import React from 'react';
-import {Card, CardBody, Flex, Heading, IconButton, Image, Stack, Text} from "@chakra-ui/react";
-import rose from "../../../assets/map.svg";
+import {Card, CardBody, CardFooter, Heading, IconButton, Image, Text} from "@chakra-ui/react";
 import {useLocation, useNavigate} from "react-router-dom";
 import {Trans} from "@lingui/macro";
 import {DeleteIcon} from "@chakra-ui/icons";
@@ -42,61 +41,65 @@ const AsideProducts: React.FC<AsideProdType> = ({
 
     return (
         <Card
-            direction={{base: 'column', sm: 'row'}}
+            direction={{base: 'column', lg: 'row'}}
             overflow='hidden'
             variant='outline'
             mt={4}
+            mx={2}
             cursor="pointer"
             border="1px solid teal.50"
         >
 
             <Image
-                borderRadius="10%"
+                rounded={'md'}
+                objectFit={'cover'}
+                borderRadius="5%"
                 p={2}
-                objectFit='none'
-                width="30%" height={150}
+                height={150}
                 src={img}
-                alt={img}
+                alt="profile img"
                 onClick={goToProduct}
             />
 
-            <Stack
-                onClick={goToProduct}
-            >
-                <CardBody>
-                    <Heading size='md'>{name}</Heading>
-                    <Text my={1} noOfLines={1} size='sm'>{about}</Text>
 
-                    <Flex mb={1}>
-                        <Heading size='sm'><Trans>Available:</Trans></Heading>
-                        <Text pl='2'>
-                            {available}
-                        </Text>
-                    </Flex>
+            <CardBody alignSelf={"center"} onClick={goToProduct}>
+                <Heading textAlign={"center"} noOfLines={1} fontSize={'2xl'} fontFamily={'body'}
+                         fontWeight={500}>{name}</Heading>
+                <Text textAlign={"center"} noOfLines={1} color={'gray.500'} fontSize={'sm'}
+                      textTransform={'uppercase'}>{about}</Text>
 
-                    <Flex>
-                        <Heading size='sm'><Trans>Distance:</Trans></Heading>
-                        <Text pl='2'>
-                            {distance}
-                        </Text>
-                        <Image width={30} pl={4} src={rose} alt={rose}/>
-                    </Flex>
+                {/*<Flex mb={1}>*/}
+                {/*    <Heading size='sm'><Trans>Available:</Trans></Heading>*/}
+                {/*    <Text pl='2'>*/}
+                {/*        {available}*/}
+                {/*    </Text>*/}
+                {/*</Flex>*/}
 
-                </CardBody>
-            </Stack>
-
+                {/*<Flex>*/}
+                {/*    <Heading size='sm'><Trans>Distance:</Trans></Heading>*/}
+                {/*    <Text pl='2'>*/}
+                {/*        {distance}*/}
+                {/*    </Text>*/}
+                {/*    <Image width={30} pl={4} src={rose} alt={rose}/>*/}
+                {/*</Flex>*/}
+            </CardBody>
             {
-                url === '/user-listings' && <Flex alignSelf={"center"} m={"0 auto"} justify={"space-around"} w="30%">
+                url === '/user-listings' && <CardFooter alignSelf={"center"}>
+                    {/*<Flex alignSelf={"center"} m={"0 auto"} justify={"space-around"} w="30%">*/}
                     <PublishListingModal
                         userID={product.user}
                         product={product}/>
-                    <IconButton onClick={deleteHandler}
-                                variant='outline'
-                                icon={<DeleteIcon/>}
-                                aria-label="delete">
+                    <IconButton
+                        ml={4}
+                        onClick={deleteHandler}
+                        variant='outline'
+                        icon={<DeleteIcon/>}
+                        aria-label="delete">
                         <Trans>Delete</Trans>
                     </IconButton>
-                </Flex>
+                    {/*</Flex>*/}
+                </CardFooter>
+
             }
         </Card>
     );

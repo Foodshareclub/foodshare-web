@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {useState} from 'react';
 import {navigationActionsSVG} from "../../utils/navigationActions";
-import {Box} from "@chakra-ui/react";
+import {Flex} from "@chakra-ui/react";
 import "../../index.scss";
 import Carousel from "../carousel/Carousel";
 import {PagesType} from "./Header";
@@ -20,7 +20,12 @@ type SimpleBottomNavigationType = {
     productType: string
 }
 
-const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({getRoute, pageType, setPageType, productType}) => {
+const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({
+                                                                          getRoute,
+                                                                          pageType,
+                                                                          setPageType,
+                                                                          productType
+                                                                      }) => {
 
     const [value, setValue] = useState<ValueType | undefined>({} as ValueType);
 
@@ -29,18 +34,14 @@ const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({getRoute,
         setValue(obj);
     }
 
-    return (
-
-        <Box  display='flex' p={8} justifyContent="space-around" >
-            <Carousel
-                selectChapterHandler={selectChapterHandler}
-                value={value} getRoute={getRoute}
-                setPageType={setPageType}
-                pageType={pageType}
-                productType={productType}
-            />
-
-        </Box>
-    )
+    return <Flex p={4} px={0} justify="space-around">
+        <Carousel
+            selectChapterHandler={selectChapterHandler}
+            value={value} getRoute={getRoute}
+            setPageType={setPageType}
+            pageType={pageType}
+            productType={productType}
+        />
+    </Flex>
 }
 export default SimpleBottomNavigation

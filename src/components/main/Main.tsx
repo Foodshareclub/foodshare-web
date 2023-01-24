@@ -40,7 +40,7 @@ export const Main = () => {
     };
 
     return (
-        <Box mt="22vh">
+        <Box mt="18vh">
             {/*<Trans>*/}
             {/*    Last login on {i18n.date(new Date())}.*/}
             {/*</Trans>*/}

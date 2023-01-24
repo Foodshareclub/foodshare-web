@@ -8,6 +8,7 @@ import {Provider} from "react-redux";
 import {BrowserRouter} from "react-router-dom";
 import store from "./store/redux-store";
 import {ChakraProvider} from '@chakra-ui/react';
+import {theme} from "./utils/themeBreakPoint";
 
 
 const root = ReactDOM.createRoot(
@@ -16,7 +17,7 @@ const root = ReactDOM.createRoot(
 root.render(
     <Provider store={store}>
         <BrowserRouter>
-            <ChakraProvider><App/></ChakraProvider>
+            <ChakraProvider theme={theme}><App/></ChakraProvider>
         </BrowserRouter>
     </Provider>
 );

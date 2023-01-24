@@ -35,7 +35,7 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
 
     return (
 
-        <CardHeader w="100vw" height="23vh" position="fixed" zIndex={2} pb={0}
+        <CardHeader w="100vw"  position="fixed" zIndex={2} pb={0}
                     bg={useColorModeValue('white', 'gray.900')}>
             <NavComponent
                 isRegister={isRegister}
