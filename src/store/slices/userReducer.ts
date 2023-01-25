@@ -10,6 +10,9 @@ import {
 } from "../../api/profileAPI";
 import {Session, User} from "@supabase/supabase-js";
 import {supabase} from "../../supaBase.config";
+import {FulfilledAction} from "@reduxjs/toolkit/dist/query/core/buildThunks";
+import {Simulate} from "react-dom/test-utils";
+import error = Simulate.error;
 
 
 const initialState = {
@@ -33,19 +36,19 @@ const initialState = {
 
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
     try {
-        const {data, error} = await profileAPI.loginWithPass(email, password)
-        if (error) throw error
+        const {data,error} = await profileAPI.loginWithPass(email, password)
+        if (error) console.error(error)
         return data.user
     } catch (e: any) {
-        return thunkAPI.rejectWithValue(e)
+        console.log(e)
+       return thunkAPI.rejectWithValue(e.message)
     }
 });
 
 export const loginWithOtpTC = createAsyncThunk("/auth/loginWithOtpTC", async (email: string, thunkAPI) => {
     try {
         const {data, error} = await supabase.auth.signInWithOtp({email});
-        console.log(data)
-        if (error) throw error
+        console.log(error)
         return data.user
     } catch (e: any) {
         return thunkAPI.rejectWithValue(e)
@@ -55,9 +58,7 @@ export const loginWithOtpTC = createAsyncThunk("/auth/loginWithOtpTC", async (em
 export const signInWithProviderTC = createAsyncThunk("/auth/signInWithGoogleTC", async (provider: ProviderType, thunkAPI) => {
     try {
         const {data, error} = await profileAPI.signInWithProvider(provider);
-        console.log(data)
         console.log(error)
-        if (error) throw error
         return data
     } catch (e: any) {
         return thunkAPI.rejectWithValue(e)
@@ -70,8 +71,7 @@ export const loginWithPhoneOtpTC = createAsyncThunk("/auth/loginWithPhoneOtpTC",
                                                                                         }: AuthPayload, thunkAPI) => {
     try {
         const {data, error} = await profileAPI.loginWithPhone(phone as string, password);
-        console.log(data)
-        if (error) throw error
+
         // return data.user
     } catch (e: any) {
         return thunkAPI.rejectWithValue(e)
@@ -86,8 +86,7 @@ export const registerTC = createAsyncThunk("/auth/registerTC", async ({
                                                                       }: AuthPayload) => {
     try {
         const {data, error} = await profileAPI.registration({email, password, firstName, lastName})
-        if (error) throw error
-        console.log(data.user)
+        console.log(error)
         return data.user
     } catch (e: any) {
         console.log(e)
@@ -96,9 +95,8 @@ export const registerTC = createAsyncThunk("/auth/registerTC", async ({
 
 export const logoutTC = createAsyncThunk("/auth/logoutTC", async () => {
     try {
-
         const {error} = await profileAPI.logOut()
-        if (error) throw error
+        console.error(error)
     } catch (e) {
         console.log(e)
     }
@@ -114,7 +112,7 @@ export const getValueFromDBTC = createAsyncThunk("/auth/getValueFromDBTC", async
         thunkAPI.dispatch(userActions.isLoading(true))
         let {data, error, status} = await profileAPI.getValue({fromTableName, columnValue, columnValueItem, selectRow})
         if (error && status !== 406) {
-            throw error
+            console.log(error)
         }
         if (data) {
             return data
@@ -130,9 +128,11 @@ export const downloadImgFromDBTC = createAsyncThunk("/auth/downloadImgFromDBTC",
     try {
         const {data, error} = await profileAPI.downloadImgFromDB(imgValue)
         if (error) {
-            throw error
+            console.log(error)
         }
-        return URL.createObjectURL(data)
+        if (data){
+            return URL.createObjectURL(data)
+        }
     } catch (error: any) {
         console.log('Error downloading image: ', error.message)
     }
@@ -143,7 +143,7 @@ export const uploadImgToDBTC = createAsyncThunk("/auth/uploadImgToDBTC", async (
 
         const {error} = await profileAPI.uploadImgFromDB(imgValue)
         if (error) {
-            throw error
+            console.log(error)
         }
     } catch (error: any) {
         thunkAPI.rejectWithValue(error.message)
@@ -157,7 +157,7 @@ export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (
         thunkAPI.dispatch(userActions.isLoading(true))
         let {error} = await profileAPI.updateProfile(updates)
         if (error) {
-            throw error
+            console.log(error)
         }
     } catch (error: any) {
         thunkAPI.rejectWithValue(error.message)
@@ -170,7 +170,7 @@ export const recoveryPasswordTC = createAsyncThunk("/auth/recoveryPasswordTC", a
     try {
         const { data, error } = await profileAPI.recoveryPassword(email);
         if (error) {
-            throw error
+            console.error(error)
         }
 
         return data;
@@ -201,7 +201,7 @@ const userSlice = createSlice({
         }
     },
     extraReducers: (builder) => {
-        builder.addCase(loginTC.fulfilled, (state, action: PayloadAction<User | null, string, { arg: AuthPayload; requestId: string; requestStatus: "fulfilled"; }, never>) => {
+        builder.addCase(loginTC.fulfilled, (state, action) => {
             if (action.payload) {
                 state.isAuth = true
                 state.isRegister = true
@@ -216,7 +216,7 @@ const userSlice = createSlice({
         builder.addCase(signInWithProviderTC.fulfilled, (state, action) => {
             console.log(action.payload)
         });
-        builder.addCase(loginWithOtpTC.fulfilled, (state, action: PayloadAction<User | null, string, { arg: string; requestId: string; requestStatus: "fulfilled"; }, never>) => {
+        builder.addCase(loginWithOtpTC.fulfilled, (state, action) => {
             if (action.payload) {
                 state.isAuth = true
                 state.isRegister = true
@@ -265,5 +265,3 @@ const userSlice = createSlice({
     }
 });
 export const {reducer:userReducer,actions:userActions} = userSlice
-// export const {getSession, isLoading, isUpdate, changeLanguage} = userSlice.actions
-// export const userReducer = userSlice.reducer;
