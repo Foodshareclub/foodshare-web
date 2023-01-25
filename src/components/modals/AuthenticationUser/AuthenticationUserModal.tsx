@@ -25,7 +25,7 @@ import {CredentialsBlock} from "./CredentialsBlock";
 import {EmailArea} from "./EmailArea";
 import {PhoneArea} from "./PhoneArea";
 import {AsyncThunk} from "@reduxjs/toolkit";
-import {supabase} from "../../../supaBase.config";
+import {signInWithGoogleTC} from "../../../store/slices/userReducer";
 
 type ModalType = {
     buttonValue: StartWithType
@@ -81,11 +81,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullS
     const forgotPasswordHandler = () => setStartWith('RecoveryPass');
 
     const onSignInWithGoogleHandler = async () => {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-        })
-        console.log(data)
-        console.log(error)
+        dispatch(signInWithGoogleTC());
     }
 
     if (isAuth) {

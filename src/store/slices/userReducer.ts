@@ -43,6 +43,18 @@ export const loginWithOtpTC = createAsyncThunk("/auth/loginWithOtpTC", async (em
         return thunkAPI.rejectWithValue(e)
     }
 });
+
+export const signInWithGoogleTC = createAsyncThunk("/auth/signInWithGoogleTC", async (arg, thunkAPI) => {
+    try {
+        const {data, error} = await profileAPI.signInWithGoogle();
+        console.log(data)
+        if (error) throw error
+        return data
+    } catch (e: any) {
+        return thunkAPI.rejectWithValue(e)
+    }
+});
+
 export const loginWithPhoneOtpTC = createAsyncThunk("/auth/loginWithPhoneOtpTC", async ({
                                                                                             phone,
                                                                                             password
@@ -191,6 +203,9 @@ const userSlice = createSlice({
         builder.addCase(loginTC.rejected, (state, action) => {
             // @ts-ignore
             state.error = action.payload.message
+        });
+        builder.addCase(signInWithGoogleTC.fulfilled, (state, action) => {
+            console.log(action.payload)
         });
         builder.addCase(loginWithOtpTC.fulfilled, (state, action: PayloadAction<User | null, string, { arg: string; requestId: string; requestStatus: "fulfilled"; }, never>) => {
             if (action.payload) {
