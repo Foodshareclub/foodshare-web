@@ -80,7 +80,11 @@ export const profileAPI = {
             }
         )
     },
-
+    signInWithGoogle() {
+        return supabase.auth.signInWithOAuth({
+            provider: 'google',
+        })
+    },
     verifyOtp(phone: string, token: string, type: MobileOtpType): Promise<AuthResponse> {
         return supabase.auth.verifyOtp({token, phone, type})
     },
