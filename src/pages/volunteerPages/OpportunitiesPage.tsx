@@ -1,8 +1,8 @@
 import React from 'react';
 import {Box, GridItem, Heading, Image, SimpleGrid, Text} from "@chakra-ui/react";
-import {opportunities} from "../../utils/mockArray";
-import useMediaQuery from "../../utils/useMediaQuery";
-import VolunteerInfoModal from "../../components/modals/VolunteerInfoModal";
+import {opportunities} from "@/utils/mockArray";
+import {useMediaQuery} from "@/utils";
+import {VolunteerInfoModal} from "@/components";
 
 
 const OpportunitiesPage = () => {

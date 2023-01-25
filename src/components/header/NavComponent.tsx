@@ -4,14 +4,13 @@ import {useEffect} from 'react';
 import {useNavigate} from "react-router-dom";
 import {Avatar, Box, Flex, Input, InputGroup, InputLeftElement, Text} from "@chakra-ui/react";
 import {SearchIcon} from "@chakra-ui/icons";
-import {useAppDispatch, useAppSelector} from "../../hook/hooks";
-import {downloadImgFromDBTC, logoutTC} from "../../store/slices/userReducer";
-import {AllValuesType} from "../../api/profileAPI";
-import useMediaQuery from "../../utils/useMediaQuery";
-import NavDrawer from "../modals/NavDrawer";
-import ProfileSettings from "./ProfileSettings";
 import {t} from "@lingui/macro";
 import {PagesType} from "./Header";
+import {downloadImgFromDBTC, logoutTC} from "@/store/slices/userReducer";
+import {useAppDispatch, useAppSelector} from "@/hook";
+import {AllValuesType} from "@/api/profileAPI";
+import {useMediaQuery} from "@/utils";
+import {NavDrawer, ProfileSettings} from "@/components";
 
 type PropsLangType = {
     isRegister: boolean

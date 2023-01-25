@@ -15,11 +15,11 @@ import {
     useDisclosure
 } from "@chakra-ui/react";
 import React, {ChangeEvent, useLayoutEffect, useState} from "react";
-import {useAppDispatch, useAppSelector} from "../../hook/hooks";
-import Avatar from "../avatar/Avatar";
-import {updateProfileTC, uploadImgToDBTC} from "../../store/slices/userReducer";
-import {AllValuesType} from "../../api/profileAPI";
 import {Trans} from "@lingui/macro";
+import {useAppDispatch, useAppSelector} from "@/hook";
+import {updateProfileTC, uploadImgToDBTC} from "@/store/slices/userReducer";
+import {AllValuesType} from "@/api/profileAPI";
+import {Avatar} from "@/components";
 
 
 type ModalType = {

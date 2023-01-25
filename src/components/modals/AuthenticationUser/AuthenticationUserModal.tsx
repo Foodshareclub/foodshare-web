@@ -13,20 +13,18 @@ import {
     useDisclosure
 } from "@chakra-ui/react";
 import React, {useState} from "react";
-import {useAppDispatch, useAppSelector} from "../../../hook/hooks";
 import {useNavigate} from "react-router-dom";
 import {useForm} from "react-hook-form";
+import {CredentialsBlock, EmailArea, PhoneArea} from "@/components";
+import {useAppDispatch, useAppSelector} from "@/hook";
+import {ProviderType} from "@/api/profileAPI";
+import {AsyncThunk} from "@reduxjs/toolkit";
+import {signInWithProviderTC} from "@/store/slices/userReducer";
 import facebook from "../../../assets/facebookblue.svg";
 import apple from "../../../assets/apple.svg";
 import google from "../../../assets/google.svg";
 import envelope from "../../../assets/envelope-small.png";
 import phone from "../../../assets/phone.png";
-import {CredentialsBlock} from "./CredentialsBlock";
-import {EmailArea} from "./EmailArea";
-import {PhoneArea} from "./PhoneArea";
-import {AsyncThunk} from "@reduxjs/toolkit";
-import {signInWithProviderTC} from "../../../store/slices/userReducer";
-import {ProviderType} from "../../../api/profileAPI";
 
 type ModalType = {
     buttonValue: StartWithType

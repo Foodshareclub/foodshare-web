@@ -1,20 +1,12 @@
 import React, {useEffect} from 'react';
 import {i18n} from "@lingui/core";
-import {dynamicActivate} from "../../utils/i18n";
 import {I18nProvider} from "@lingui/react";
 import {Card, CardBody} from "@chakra-ui/react";
-import Header from "../header/Header";
 import {Route, Routes} from "react-router-dom";
-import {Main} from "../main/Main";
-import ProductPage from "../../pages/productPage/ProductPage";
-import AboutUsPage from "../../pages/aboutUs/AboutUsPage";
-import ContactUsPage from "../../pages/contactUs/ContactUsPage";
-import VolunteerPage from "../../pages/volunteerPages/VolunteerPage";
-import MyListingsPage from "../../pages/prfilePages/MyListingsPage";
-import OpportunitiesPage from "../../pages/volunteerPages/OpportunitiesPage";
-import Footer from "../footer/Footer";
-
-import {useAppSelector} from "../../hook/hooks";
+import {dynamicActivate} from "@/utils/i18n";
+import {useAppSelector} from "@/hook/hooks";
+import {AboutUsPage, ContactUsPage, MyListingsPage, OpportunitiesPage, ProductPage, VolunteerPage} from "@/pages";
+import {Footer, Header, Main} from "@/components";
 
 type ContainerProps = {
     productType: string

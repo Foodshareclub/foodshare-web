@@ -2,10 +2,10 @@ import * as React from "react";
 import {Avatar, Box, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
 import UpdateProfileModal from "../modals/UpdateProfileModal";
 
-import {ProfileSettingsProps} from "./NavComponent";
-import {loginTC, registerTC} from "../../store/slices/userReducer";
-import AuthenticationUserModal from "../modals/AuthenticationUser/AuthenticationUserModal";
 import {t, Trans} from "@lingui/macro";
+import {loginTC, registerTC} from "@/store/slices/userReducer";
+import {ProfileSettingsProps} from "@/components/header/NavComponent";
+import {AuthenticationUserModal} from "@/components";
 
 
 const ProfileSettings: React.FC<ProfileSettingsProps> = ({

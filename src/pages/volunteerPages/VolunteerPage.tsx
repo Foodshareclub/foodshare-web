@@ -1,10 +1,10 @@
 import React from 'react';
 import {Box, Button, Flex, Heading, Image, Text} from "@chakra-ui/react";
 import man from "../../assets/manAndCnife.png";
-import AsideProducts from "../productPage/asideProducts/AsideProducts";
-import {asideProdProperty} from "../../utils/mockArray";
 import {useNavigate} from "react-router-dom";
 import {Trans} from "@lingui/macro";
+import {asideProdProperty} from "@/utils/mockArray";
+import {AsideProducts} from "@/pages";
 
 const VolunteerPage = () => {
     const navigate = useNavigate()

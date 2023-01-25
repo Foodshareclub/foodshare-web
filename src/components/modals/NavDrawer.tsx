@@ -16,12 +16,11 @@ import {
     useDisclosure
 } from "@chakra-ui/react";
 import {DragHandleIcon} from "@chakra-ui/icons";
-import UpdateProfileModal from "./UpdateProfileModal";
-
-import {ProfileSettingsProps} from "../header/NavComponent";
-import {loginTC, registerTC} from "../../store/slices/userReducer";
-import AuthenticationUserModal from "./AuthenticationUser/AuthenticationUserModal";
 import {t, Trans} from "@lingui/macro";
+import UpdateProfileModal from "./UpdateProfileModal";
+import {loginTC, registerTC} from "@/store/slices/userReducer";
+import {ProfileSettingsProps} from "@/components/header/NavComponent";
+import {AuthenticationUserModal} from "@/components";
 
 
 const NawDrawer: React.FC<ProfileSettingsProps> = ({

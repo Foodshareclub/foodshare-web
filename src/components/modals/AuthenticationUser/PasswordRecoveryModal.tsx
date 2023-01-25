@@ -14,7 +14,7 @@ import {
     ModalOverlay,
     useDisclosure
 } from "@chakra-ui/react";
-import {supabase} from "../../../supaBase.config";
+import {supabase} from "@/supaBase.config";
 import {ViewIcon, ViewOffIcon} from "@chakra-ui/icons";
 
 export const PasswordRecoveryModal = () => {

@@ -1,9 +1,8 @@
 import React, {useEffect, useState} from 'react';
-import NavComponent from "./NavComponent";
-import FilterProductComponent from "./FilterProductComponent";
 import {CardHeader, useColorModeValue} from "@chakra-ui/react";
-import {useAppDispatch, useAppSelector} from "../../hook/hooks";
-import {getValueFromDBTC} from "../../store/slices/userReducer";
+import {getValueFromDBTC} from "@/store/slices/userReducer";
+import {useAppDispatch, useAppSelector} from "@/hook";
+import {FilterProductComponent, NavComponent} from "@/components";
 
 type HeaderType = {
     getRoute: (route: string) => void

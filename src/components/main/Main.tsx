@@ -1,13 +1,12 @@
 import React, {useEffect, useState} from 'react';
 import {useNavigate} from "react-router-dom";
 import {Box, Flex, GridItem, Image, Link, SimpleGrid, Skeleton} from "@chakra-ui/react";
-import navIcon from '../../assets/map.svg';
 import {ArrowForwardIcon} from "@chakra-ui/icons";
-import useMediaQuery from '../../utils/useMediaQuery';
-import {InitialProductStateType} from "../../store/slices/productReducer";
-import {useAppSelector} from "../../hook/hooks";
-import {navigatePhotosObject} from "../../utils/navigatePhotosObject";
 import {Trans} from "@lingui/macro";
+import navIcon from "@/assets/map.svg"
+import {navigatePhotosObject, useMediaQuery} from "@/utils";
+import {InitialProductStateType} from "@/store/slices/productReducer";
+import {useAppSelector} from "@/hook";
 
 export const Main = () => {
     const [isLoaded, setIsLoaded] = useState(false);

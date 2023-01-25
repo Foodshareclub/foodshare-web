@@ -5,13 +5,12 @@ import loc from "../../assets/location-blue.svg";
 import {useLocation} from "react-router-dom";
 import {Box, Flex, Heading, Image, Text} from "@chakra-ui/react";
 import {StarIcon} from "@chakra-ui/icons";
-import AsideProducts from "./asideProducts/AsideProducts";
-import PickUpRequestModal from "../../components/modals/PickUpRequestModal";
-import {useActionCreators, useAppSelector} from "../../hook/hooks";
-import {getRandomProducts} from "../../utils/getRandomProduct";
-import {getProductTC, InitialProductStateType, productActions} from "../../store/slices/productReducer";
 import {Trans} from '@lingui/macro';
-import useMediaQuery from "../../utils/useMediaQuery";
+import {getRandomProducts, useMediaQuery} from "@/utils";
+import {getProductTC, InitialProductStateType, productActions} from "@/store/slices/productReducer";
+import {useActionCreators, useAppSelector} from "@/hook";
+import {PickUpRequestModal} from "@/components";
+import {AsideProducts} from "@/pages";
 
 type ProductPageType = {
     obj?: any

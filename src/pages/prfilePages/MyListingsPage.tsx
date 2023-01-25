@@ -1,12 +1,11 @@
 import React, {useEffect} from 'react';
 import {Box, Flex, Heading} from "@chakra-ui/react";
-import PersonCard from "../personCard/PersonCard";
-import AsideProducts from "../productPage/asideProducts/AsideProducts";
-import {useAppDispatch, useAppSelector} from "../../hook/hooks";
 import {Trans} from "@lingui/macro";
-import {deleteProductTC, getCurrentUserProductsTC} from "../../store/slices/productReducer";
 import {Navigate} from "react-router-dom";
-import useMediaQuery from "../../utils/useMediaQuery";
+import {useAppDispatch, useAppSelector} from "@/hook";
+import {deleteProductTC, getCurrentUserProductsTC} from "@/store/slices/productReducer";
+import {useMediaQuery} from "@/utils";
+import {AsideProducts, PersonCard} from "@/pages";
 
 type MyListingsPageType = {
     userID: string

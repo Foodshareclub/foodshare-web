@@ -1,12 +1,11 @@
 import React, {useEffect, useState} from 'react';
-import {useAppDispatch} from "./hook/hooks";
 
 import {Session} from "@supabase/supabase-js";
-import {supabase} from "./supaBase.config";
-import {getProductTC} from "./store/slices/productReducer";
-import ChangeLanguageContainer from "./components/localization/ChangeLanguageContainer";
-import {PasswordRecoveryModal} from "./components/modals/AuthenticationUser/PasswordRecoveryModal";
-import {userActions} from "./store/slices/userReducer";
+import {ChangeLanguageContainer, PasswordRecoveryModal} from "@/components";
+import {useAppDispatch} from "@/hook";
+import {supabase} from "@/supaBase.config";
+import {userActions} from "@/store/slices/userReducer";
+import {getProductTC} from "@/store/slices/productReducer";
 
 function App() {
     const dispatch = useAppDispatch();

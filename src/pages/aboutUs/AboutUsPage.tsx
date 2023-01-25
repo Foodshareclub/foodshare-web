@@ -1,8 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {Box, Grid, GridItem, Image, Link, SimpleGrid, Skeleton} from "@chakra-ui/react";
 import kitchen from "../../assets/Foodies Soup Kitchen.png";
-import PersonCard from "../personCard/PersonCard";
-import {teamMockArray} from "../../utils/mockArray";
 import leftImg from "../../assets/leftImg.png";
 import centerTop from "../../assets/centerTop.png";
 import centerBottom from "../../assets/centerBott.png";
@@ -10,7 +8,9 @@ import rightImg from "../../assets/rightImg.png";
 import company from "../../assets/AvoAcademy.png";
 import {ArrowForwardIcon} from "@chakra-ui/icons";
 import {Trans} from '@lingui/macro';
-import useMediaQuery from "../../utils/useMediaQuery";
+import {teamMockArray} from "@/utils/mockArray";
+import {useMediaQuery} from "@/utils";
+import {PersonCard} from "@/pages";
 
 
 const AboutUsPage = () => {
