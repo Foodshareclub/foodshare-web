@@ -111,7 +111,7 @@ export const getValueFromDBTC = createAsyncThunk("/auth/getValueFromDBTC", async
                                                                                       selectRow
                                                                                   }: GetValueType, thunkAPI) => {
     try {
-        thunkAPI.dispatch(isLoading(true))
+        thunkAPI.dispatch(userActions.isLoading(true))
         let {data, error, status} = await profileAPI.getValue({fromTableName, columnValue, columnValueItem, selectRow})
         if (error && status !== 406) {
             throw error
@@ -122,7 +122,7 @@ export const getValueFromDBTC = createAsyncThunk("/auth/getValueFromDBTC", async
     } catch (error: any) {
         alert(error.message)
     } finally {
-        thunkAPI.dispatch(isLoading(false))
+        thunkAPI.dispatch(userActions.isLoading(false))
     }
 });
 
@@ -148,13 +148,13 @@ export const uploadImgToDBTC = createAsyncThunk("/auth/uploadImgToDBTC", async (
     } catch (error: any) {
         thunkAPI.rejectWithValue(error.message)
     } finally {
-        thunkAPI.dispatch(isUpdate())
+        thunkAPI.dispatch(userActions.isUpdate())
     }
 })
 
 export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (updates: AllValuesType, thunkAPI) => {
     try {
-        thunkAPI.dispatch(isLoading(true))
+        thunkAPI.dispatch(userActions.isLoading(true))
         let {error} = await profileAPI.updateProfile(updates)
         if (error) {
             throw error
@@ -162,7 +162,7 @@ export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (
     } catch (error: any) {
         thunkAPI.rejectWithValue(error.message)
     } finally {
-        thunkAPI.dispatch(isLoading(false))
+        thunkAPI.dispatch(userActions.isLoading(false))
     }
 })
 
@@ -264,5 +264,6 @@ const userSlice = createSlice({
         })
     }
 });
-export const {getSession, isLoading, isUpdate, changeLanguage} = userSlice.actions
-export const userReducer = userSlice.reducer;
+export const {reducer:userReducer,actions:userActions} = userSlice
+// export const {getSession, isLoading, isUpdate, changeLanguage} = userSlice.actions
+// export const userReducer = userSlice.reducer;

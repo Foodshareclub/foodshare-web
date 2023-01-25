@@ -30,7 +30,7 @@ const initialState = {
     products: [] as Array<InitialProductStateType>,
     currentUserProducts: [] as Array<InitialProductStateType>,
     isUpdatedProductsList: false,
-    postImgUrl: '',//сюда прийдет массив а не строка
+    postImgUrl: '',
     isPostImgUpload: false
 };
 
@@ -173,4 +173,5 @@ const productSlice = createSlice({
     }
 })
 
-export const productReducer = productSlice.reducer;
+
+export const{reducer:productReducer,actions:productActions} = productSlice;

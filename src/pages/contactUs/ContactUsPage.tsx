@@ -12,8 +12,7 @@ const ContactUsPage = () => {
             fallback: 'md',
         },
     )
-    // console.log(variant)
-    // console.log(visualViewport?.width)
+
     const {
         register,
         handleSubmit,
@@ -32,7 +31,7 @@ const ContactUsPage = () => {
 
     };
     return (
-        <Box mt="21vh" w={{md:"50%",base:"100%"}} mx={"auto"}
+        <Box mt="21vh" w={{md: "50%", base: "100%"}} mx={"auto"}
              textAlign="center" fontSize={25} fontWeight={600}>
             <Box mb={4}>
                 Contact Us
@@ -88,7 +87,8 @@ const ContactUsPage = () => {
                         {errors.phone && errors.phone.message}
                     </FormErrorMessage>
 
-                    <Button variant={variant} m={"5% 0 4% 0"} w="100%" alignSelf="center" type="submit" disabled={!isValid}>
+                    <Button variant={variant} m={"5% 0 4% 0"} w="100%" alignSelf="center" type="submit"
+                            disabled={!isValid}>
                         Send message
                     </Button>
                 </FormControl>
