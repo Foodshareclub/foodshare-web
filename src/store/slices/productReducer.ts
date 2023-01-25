@@ -37,8 +37,8 @@ const initialState = {
 export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", async (arg, thunkAPI) => {
     try {
         const {data, error} = await productAPI.getAllProducts();
-        if (error) throw error;
-        return data;
+        if (error) console.log(error);
+        if(data)  return data;
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
     }
@@ -47,7 +47,7 @@ export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", asyn
 export const getProductTC = createAsyncThunk("/getProduct", async (productType: string, thunkAPI) => {
     try {
         const {data, error} = await productAPI.getProduct(productType);
-        if (error) throw error;
+        if (error) console.log(error);
         return data;
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
@@ -58,7 +58,7 @@ export const getCurrentUserProductsTC = createAsyncThunk('/getCurrentUserProduct
     try {
         const {data, error} = await productAPI.getCurrentUserProduct(userID);
 
-        if (error) throw error;
+        if (error) console.log(error) ;
 
         return data;
     } catch (e) {
@@ -69,9 +69,6 @@ export const getCurrentUserProductsTC = createAsyncThunk('/getCurrentUserProduct
 export const createProductTC = createAsyncThunk('/createProductTC', async (productObj: ProductObjType, thunkAPI) => {
     try {
         const {error} = await productAPI.createProduct(productObj)
-        // if (error) {
-        //     throw error;
-        // }
         return error;
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
@@ -90,10 +87,13 @@ export const downloadPostImgFromDBTC = createAsyncThunk("/auth/downloadPostImgFr
     try {
         const {data, error} = await profileAPI.downloadImgFromDB(imgValue)
         if (error) {
-            throw error
+            console.log(error)
         }
-        console.log(URL.createObjectURL(data))
-        return URL.createObjectURL(data)
+        if(data){
+            console.log(URL.createObjectURL(data))
+            return URL.createObjectURL(data)
+        }
+
     } catch (error: any) {
         console.log('Error downloading image: ', error.message)
     }
@@ -104,10 +104,10 @@ export const uploadPostImgToDBTC = createAsyncThunk("/auth/uploadPostImgToDBTC",
 
         const {error} = await profileAPI.uploadImgFromDB(imgValue)
         if (error) {
-            throw error
+            console.log(error)
         }
     } catch (error: any) {
-        thunkAPI.rejectWithValue(error.message)
+       return  thunkAPI.rejectWithValue(error.message)
     }
 })
 export const updateProductTC = createAsyncThunk("/auth/updateProductTC", async (updates: ProductObjType, thunkAPI) => {
@@ -115,7 +115,7 @@ export const updateProductTC = createAsyncThunk("/auth/updateProductTC", async (
         let {error} = await productAPI.updateProduct(updates)
         return error
     } catch (error: any) {
-        thunkAPI.rejectWithValue(error.message)
+       return  thunkAPI.rejectWithValue(error.message)
     }
 })
 const productSlice = createSlice({
@@ -124,6 +124,7 @@ const productSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder.addCase(getAllProductsTC.fulfilled, (state, action) => {
+            // @ts-ignore
             state.products = action.payload;
         });
         builder.addCase(getProductTC.fulfilled, (state, action) => {
