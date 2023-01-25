@@ -22,10 +22,10 @@ export const PhoneArea: React.FC<PhoneAreaType> = ({setStartWith}) => {
     const getCode = () => {
         //dispatch('') //first dispatch with phone number and pass
         setCodeField(true);
-        setTime(5);
+        setTime(5); // set start interval to 60
     }
 
-    const [time, setTime] = useState(5);
+    const [time, setTime] = useState(5); // set start interval to 60
 
     useEffect(() => {
             let timer = setInterval(() => {
@@ -95,7 +95,7 @@ export const PhoneArea: React.FC<PhoneAreaType> = ({setStartWith}) => {
                 w="100%"
                 alignSelf="center"
                 onClick={getCode}
-                disabled={time !== 5 && !!time}
+                disabled={time !== 5 && !!time} // set interval to 60
             >
                 Get Code
             </Button>

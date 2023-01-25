@@ -86,13 +86,6 @@ export const profileAPI = {
     verifyOtp(phone: string, token: string, type: MobileOtpType): Promise<AuthResponse> {
         return supabase.auth.verifyOtp({token, phone, type})
     },
-
-    loginWithOAuth(provider: ProviderType): Promise<OAuthResponse> {
-        return supabase.auth.signInWithOAuth({
-                provider
-            }
-        )
-    },
     logOut(): Promise<{ error: AuthError | null }> {
         return supabase.auth.signOut()
     },
