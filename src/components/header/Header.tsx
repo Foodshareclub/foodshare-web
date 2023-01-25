@@ -18,7 +18,7 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
     const isRegister = useAppSelector(state => state.user.isRegister);
     const isUpdate = useAppSelector(state => state.user.isUpdate);
     const {user} = useAppSelector(state => state.user.session);
-
+    console.log(isRegister)
     const [pageType, setPageType] = useState<PagesType>("productComponent");
 
     useEffect(() => {
