@@ -1,5 +1,13 @@
 import {createAsyncThunk, createSlice, PayloadAction} from "@reduxjs/toolkit";
-import {AllValuesType, AuthPayload, GetValueType, ImgUrlType, profileAPI, UploadImgUrlType} from "../../api/profileAPI";
+import {
+    AllValuesType,
+    AuthPayload,
+    GetValueType,
+    ImgUrlType,
+    profileAPI,
+    ProviderType,
+    UploadImgUrlType
+} from "../../api/profileAPI";
 import {Session, User} from "@supabase/supabase-js";
 import {supabase} from "../../supaBase.config";
 
@@ -44,10 +52,11 @@ export const loginWithOtpTC = createAsyncThunk("/auth/loginWithOtpTC", async (em
     }
 });
 
-export const signInWithGoogleTC = createAsyncThunk("/auth/signInWithGoogleTC", async (arg, thunkAPI) => {
+export const signInWithProviderTC = createAsyncThunk("/auth/signInWithGoogleTC", async (provider: ProviderType, thunkAPI) => {
     try {
-        const {data, error} = await profileAPI.signInWithGoogle();
+        const {data, error} = await profileAPI.signInWithProvider(provider);
         console.log(data)
+        console.log(error)
         if (error) throw error
         return data
     } catch (e: any) {
@@ -204,7 +213,7 @@ const userSlice = createSlice({
             // @ts-ignore
             state.error = action.payload.message
         });
-        builder.addCase(signInWithGoogleTC.fulfilled, (state, action) => {
+        builder.addCase(signInWithProviderTC.fulfilled, (state, action) => {
             console.log(action.payload)
         });
         builder.addCase(loginWithOtpTC.fulfilled, (state, action: PayloadAction<User | null, string, { arg: string; requestId: string; requestStatus: "fulfilled"; }, never>) => {

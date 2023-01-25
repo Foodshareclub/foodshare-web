@@ -4,7 +4,7 @@ import {
     AuthResponse,
     AuthSession,
     OAuthResponse,
-    PostgrestSingleResponse,
+    PostgrestSingleResponse, SignInWithOAuthCredentials,
     User,
 } from "@supabase/supabase-js";
 import {MobileOtpType} from "@supabase/gotrue-js/dist/module/lib/types";
@@ -80,9 +80,9 @@ export const profileAPI = {
             }
         )
     },
-    signInWithGoogle() {
-        return supabase.auth.signInWithOAuth({
-            provider: 'google',
+    signInWithProvider(provider: ProviderType) {
+        return supabase.auth.signInWithOAuth(<SignInWithOAuthCredentials>{
+            provider
         })
     },
     verifyOtp(phone: string, token: string, type: MobileOtpType): Promise<AuthResponse> {

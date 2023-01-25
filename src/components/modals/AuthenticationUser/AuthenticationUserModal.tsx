@@ -25,7 +25,8 @@ import {CredentialsBlock} from "./CredentialsBlock";
 import {EmailArea} from "./EmailArea";
 import {PhoneArea} from "./PhoneArea";
 import {AsyncThunk} from "@reduxjs/toolkit";
-import {signInWithGoogleTC} from "../../../store/slices/userReducer";
+import {signInWithProviderTC} from "../../../store/slices/userReducer";
+import {ProviderType} from "../../../api/profileAPI";
 
 type ModalType = {
     buttonValue: StartWithType
@@ -80,9 +81,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullS
 
     const forgotPasswordHandler = () => setStartWith('RecoveryPass');
 
-    const onSignInWithGoogleHandler = async () => {
-        dispatch(signInWithGoogleTC());
-    }
+    const onSignInWithProviderHandler = (provider: ProviderType) => dispatch(signInWithProviderTC(provider));
 
     if (isAuth) {
         navigate("/");
@@ -153,19 +152,25 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullS
                             <Button leftIcon={<Image src={facebook} alt={facebook}/>} _hover={{bg: 'red.100'}}
                                     fontSize={20}
                                     variant="outline" mb={3} w="100%"
-                                    alignSelf="center">
+                                    alignSelf="center"
+                                    onClick={()=>onSignInWithProviderHandler('facebook')}
+                            >
                                 Continue with Facebook
                             </Button>
 
                             <Button leftIcon={<Image src={apple} alt={facebook}/>} _hover={{bg: 'red.100'}}
                                     fontSize={20}
-                                    variant="outline" mb={3} w="100%" alignSelf="center">
+                                    variant="outline" mb={3} w="100%" alignSelf="center"
+                                    onClick={()=>onSignInWithProviderHandler('apple')}
+                            >
                                 Continue with Apple
                             </Button>
 
                             <Button leftIcon={<Image src={google} alt={google}/>} _hover={{bg: 'red.100'}}
                                     fontSize={20}
-                                    variant="outline" m={0} w="100%" alignSelf="center" onClick={onSignInWithGoogleHandler}>
+                                    variant="outline" m={0} w="100%" alignSelf="center"
+                                    onClick={()=>onSignInWithProviderHandler('facebook')}
+                            >
                                 Continue with Google
                             </Button>
 
