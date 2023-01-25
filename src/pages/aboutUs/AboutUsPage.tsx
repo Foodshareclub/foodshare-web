@@ -9,11 +9,13 @@ import centerBottom from "../../assets/centerBott.png";
 import rightImg from "../../assets/rightImg.png";
 import company from "../../assets/AvoAcademy.png";
 import {ArrowForwardIcon} from "@chakra-ui/icons";
-import { Trans } from '@lingui/macro';
+import {Trans} from '@lingui/macro';
+import useMediaQuery from "../../utils/useMediaQuery";
 
 
 const AboutUsPage = () => {
     const [isLoaded, setIsLoaded] = useState(false)
+    const isSmallerThan960 = useMediaQuery('(min-width:960px)');
     // пока фото загрузятся skeleton
     useEffect(() => {
         setTimeout(() => {
@@ -23,8 +25,8 @@ const AboutUsPage = () => {
 
     return (
         <Box mt="22vh">
-            <Grid templateColumns='repeat(5, 1fr)' gap={6}>
-                <GridItem w='100%' h='50vh'/>
+            <Grid templateColumns={{base: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)'}} gap={6}>
+                {isSmallerThan960 && <GridItem w='100%' h='50vh'/>}
 
                 <GridItem borderRadius="10%" w='100%'>
                     <Skeleton isLoaded={isLoaded}>
@@ -32,7 +34,7 @@ const AboutUsPage = () => {
                     </Skeleton>
                 </GridItem>
 
-                <Grid gap={6}>
+                <Grid>
                     <GridItem borderRadius="10%" w='100%'>
                         <Skeleton isLoaded={isLoaded}>
                             <Image src={centerTop} alt={centerTop}/>
@@ -52,10 +54,10 @@ const AboutUsPage = () => {
                     </Skeleton>
                 </GridItem>
 
-                <GridItem w='100%' h='50vh'/>
+                {isSmallerThan960 && <GridItem w='100%' h='50vh'/>}
             </Grid>
 
-            <Grid pt={6} templateColumns='repeat(2, 1fr)' gap={6}>
+            <Grid pt={6} templateColumns={{base: 'repeat(1, 1fr)', md: 'repeat(2, 1fr)'}} gap={6}>
                 <GridItem w='100%'>
                     <Box
                         borderRadius={5}
@@ -76,11 +78,13 @@ const AboutUsPage = () => {
                 </GridItem>
 
                 <GridItem fontSize="24px" w='100%'>
-                    <Box><Trans>Foodshare was born in 2022 when with a small team three teammates. Tarlan decided to organise a
+                    <Box><Trans>Foodshare was born in 2022 when with a small team three teammates. Tarlan decided to
+                        organise a
                         foodsharing project with a simple and easy to use cross-platform mobile app.
                     </Trans></Box>
 
-                    <Box pt={2}><Trans>The app allows everyone to post food items that may not be needed in your fridge for one
+                    <Box pt={2}><Trans>The app allows everyone to post food items that may not be needed in your fridge
+                        for one
                         reason
                         or another, and other participants, users can pick them up for free. This also includes the
                         use-by date on or before food from local shops, vegetables or bread from the bakery. Thus
@@ -88,10 +92,11 @@ const AboutUsPage = () => {
                         deprived persons gratuitous receipt of food with the possibility to choose.
                     </Trans> </Box>
 
-                    <Box pt={2}><Trans>Thus benefactors get satisfaction from helping to needy with the reduction of waste from
+                    <Box pt={2}><Trans>Thus benefactors get satisfaction from helping to needy with the reduction of
+                        waste from
                         life
                         and deprived persons gratuitous receipt of food with the possibility to choose.
-                    </Trans>  </Box>
+                    </Trans> </Box>
                 </GridItem>
             </Grid>
 
@@ -101,7 +106,7 @@ const AboutUsPage = () => {
                 <Trans>Team</Trans>
             </Box>
 
-            <SimpleGrid columns={2} spacing={3}>
+            <SimpleGrid columns={{md:2,base:1}} spacing={3}>
                 {teamMockArray.map((el, id) => (
                     <PersonCard
                         aboutExp={el.about}
@@ -111,7 +116,7 @@ const AboutUsPage = () => {
                         img={el.img}
                         key={id}
                         // это заглушка для пропсов id т.к . нужно чтоб не был undefined
-                     userID={""}/>
+                        userID={""}/>
                 ))}
             </SimpleGrid>
 
@@ -124,12 +129,14 @@ const AboutUsPage = () => {
 
                 <GridItem w='100%'>
                     <Box>
-                        <Trans>An educational platform that helps people change careers into the UX/UI design field through an
+                        <Trans>An educational platform that helps people change careers into the UX/UI design field
+                            through an
                             affordable and short curriculum. Website: https://www.Avocademy.com</Trans>
                     </Box>
 
                     <Box pt={6}>
-                        <Trans>Thank you very much their awesome team that has helped Foodshare to build a beautiful UI/UX
+                        <Trans>Thank you very much their awesome team that has helped Foodshare to build a beautiful
+                            UI/UX
                             design :)</Trans>
                     </Box>
                 </GridItem>

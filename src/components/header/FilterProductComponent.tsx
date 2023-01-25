@@ -27,17 +27,9 @@ const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({
                                                                           productType
                                                                       }) => {
 
-    const [value, setValue] = useState<ValueType | undefined>({} as ValueType);
-
-    const selectChapterHandler = (name: string) => {
-        const obj = navigationActionsSVG.find(item => item.name === name);
-        setValue(obj);
-    }
-
     return <Flex p={4} px={0} justify="space-around">
         <Carousel
-            selectChapterHandler={selectChapterHandler}
-            value={value} getRoute={getRoute}
+            getRoute={getRoute}
             setPageType={setPageType}
             pageType={pageType}
             productType={productType}

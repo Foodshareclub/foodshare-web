@@ -1,239 +1,68 @@
-import hello from '../assets/hello-i-m-nik-hehUfVxG8Xk-unsplash 1.png';
-import strawberry from '../assets/Rectangle 53.png';
 import pizza from '../assets/Rectangle 54.png';
-import sweets from '../assets/Rectangle 55.png';
 import tarlan from '../assets/Tarlan.png';
 import denis from '../assets/den.jpg';
+import stanislav from '../assets/stanislav.png';
+import telman from '../assets/telman.png';
+import pitman from '../assets/pitman.png';
+import pavel from '../assets/pavel.png';
+import nikita from '../assets/nikita.png';
 import vegetables from '../assets/vegetables.png';
 import kitchenSoup from '../assets/soupKitchen.png';
 import grill from '../assets/grilMeat.png';
 import veget from '../assets/veget.png';
 
-export type PropertyType = {
-    imageAlt: string
-    numbLikes: number
-    about: string
-    pickUpAddress: string
-    rating: number
-    type: string
-    reviews: string
-    quantity: number
-}
-export type MockElT = {
-    img: string
-    name: string
-    description: string
-    available_time: string
-    distance: string
-    property:PropertyType
-}
 export type MockTeamArr = {
     img: string
     name: string
     exp: string
     about: string
-}
+};
 
-export const mockArray: Array<MockElT> = [
-    {
-        img: hello,
-        name: 'Shelly1994',
-        description: 'Two bags of carrot',
-        available_time: '6 - 9pm',
-        distance: '3.2mi',
-        property : {
-            imageAlt: 'Rear view of modern home with pool',
-            numbLikes: 4,
-            about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
-            pickUpAddress: '555 North Star Ln\n' + 'Los Angeles, CA 90210',
-            rating: 4,
-            type: 'Canned Food',
-            reviews: "1,000",
-            quantity: 5
-        }
-    },
-    {
-        img: strawberry,
-        name: 'Juniper Cafe',
-        description: '10 pounds of strawberries',
-        available_time: '3/1 - 3-15',
-        distance: '5mi',
-        property : {
-            imageAlt: 'Rear view of modern home with pool',
-            numbLikes: 4,
-            about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
-            pickUpAddress: '555 North Star Ln\n' + 'Los Angeles, CA 90210',
-            rating: 4,
-            type: 'Canned Food',
-            reviews: "1,000",
-            quantity: 5
-        }
-    },
-    {
-        img: pizza,
-        name: "Paco's Pizzeria",
-        description: '5 boxes of pepperoni and sausage pizza',
-        available_time: '8pm - 12pm',
-        distance: '10mi',
-        property : {
-            imageAlt: 'Rear view of modern home with pool',
-            numbLikes: 4,
-            about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
-            pickUpAddress: '555 North Star Ln\n' + 'Los Angeles, CA 90210',
-            rating: 4,
-            type: 'Canned Food',
-            reviews: "1,000",
-            quantity: 5
-        }
-    },
-    {
-        img: sweets,
-        name: '@FoodShare55',
-        description: '20 assorted candy bars',
-        available_time: '6 - 9pm',
-        distance: '12mi',
-        property : {
-            imageAlt: 'Rear view of modern home with pool',
-            numbLikes: 4,
-            about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
-            pickUpAddress: '555 North Star Ln\n' + 'Los Angeles, CA 90210',
-            rating: 4,
-            type: 'Canned Food',
-            reviews: "1,000",
-            quantity: 5
-        }
-    },
-    {
-        img: hello,
-        name: 'Shelly1994',
-        description: 'Two bags of carrot',
-        available_time: '6 - 9pm',
-        distance: '3.2mi',
-        property : {
-            imageAlt: 'Rear view of modern home with pool',
-            numbLikes: 4,
-            about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
-            pickUpAddress: '555 North Star Ln\n' + 'Los Angeles, CA 90210',
-            rating: 4,
-            type: 'Canned Food',
-            reviews: "1,000",
-            quantity: 5
-        }
-    },
-    {
-        img: strawberry,
-        name: 'Juniper Cafe',
-        description: '10 pounds of strawberries',
-        available_time: '3/1 - 3-15',
-        distance: '5mi',
-        property : {
-            imageAlt: 'Rear view of modern home with pool',
-            numbLikes: 4,
-            about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
-            pickUpAddress: '555 North Star Ln\n' + 'Los Angeles, CA 90210',
-            rating: 4,
-            type: 'Canned Food',
-            reviews: "1,000",
-            quantity: 5
-        }
-    },
-    {
-        img: pizza,
-        name: "Paco's Pizzeria",
-        description: '5 boxes of pepperoni and sausage pizza',
-        available_time: '8pm - 12pm',
-        distance: '10mi',
-        property : {
-            imageAlt: 'Rear view of modern home with pool',
-            numbLikes: 4,
-            about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
-            pickUpAddress: '555 North Star Ln\n' + 'Los Angeles, CA 90210',
-            rating: 4,
-            type: 'Canned Food',
-            reviews: "1,000",
-            quantity: 5
-        }
-    },
-    {
-        img: sweets,
-        name: '@FoodShare55',
-        description: '20 assorted candy bars',
-        available_time: '6 - 9pm',
-        distance: '12mi',
-        property : {
-            imageAlt: 'Rear view of modern home with pool',
-            numbLikes: 4,
-            about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
-            pickUpAddress: '555 North Star Ln\n' + 'Los Angeles, CA 90210',
-            rating: 4,
-            type: 'Canned Food',
-            reviews: "1,000",
-            quantity: 5
-        }
-    },
-]
 export const teamMockArray: Array<MockTeamArr> = [
     {
-        name: 'Tarlan',
+        name: 'Tarlan Isaev',
         img: tarlan,
         exp: "Founder & CEO",
-        about: "Former founder of IT Computers, Dev Ops, webdev, mobile dev, 17+ years of experience in IT industry. BCS Auckland, New Zealand, BEc Rybinsk, Russia\n" +
-            "\n"
+        about: "Former founder of IT Computers, Dev Ops, webdev, mobile dev, 17+ years of experience in IT industry. BCS Auckland, New Zealand, BEc Rybinsk, Russia"
     },
     {
-        name: 'Denis',
+        name: 'Denis Yarmoshko',
         img: denis,
         exp: "Frontend Engineer",
         about: "React frontend engineer. 1 year in development. Belarusian State Agrarian University"
     },
     {
-        name: 'Stanislav',
-        img: denis,
+        name: 'Stanislav Lisovskii',
+        img: stanislav,
         exp: "Frontend Engineer",
         about: "React frontend engineer. 1 year in development. Belarusian State University of Physical culture and Sport in Minsk. "
     },
     {
-        name: 'Tarlan',
-        img: tarlan,
-        exp: "Founder & CEO",
-        about: "Former founder of IT Computers, Dev Ops, webdev, mobile dev, 17+ years of experience in IT industry. BCS Auckland, New Zealand, BEc Rybinsk, Russia\n" +
-            "\n"
+        name: 'Telman Isaev',
+        img: telman,
+        exp: "Software tester",
+        about: "CEO of IT Computers. Hardware repair,12+ years of experience in IT industry."
     },
     {
-        name: 'Tarlan',
-        img: tarlan,
-        exp: "Founder & CEO",
-        about: "Former founder of IT Computers, Dev Ops, webdev, mobile dev, 17+ years of experience in IT industry. BCS Auckland, New Zealand, BEc Rybinsk, Russia\n" +
-            "\n"
+        name: 'Pavel Maslov',
+        img: pavel,
+        exp: "UI/UX Designer",
+        about: "15+ years of experience in UI/UX design. Working with leading companies, has completed more than 500 projects in 12 years."
     },
     {
-        name: 'Tarlan',
-        img: tarlan,
-        exp: "Founder & CEO",
-        about: "Former founder of IT Computers, Dev Ops, webdev, mobile dev, 17+ years of experience in IT industry. BCS Auckland, New Zealand, BEc Rybinsk, Russia\n" +
-            "\n"
+        name: 'Daniel Pitman',
+        img: pitman,
+        exp: "Food & Bio Expert",
+        about: "Fascinated by microbiology and marine life since his youth. Studied a broad degree of biology with major in Marine Sciences and Ecology in Auckland, New Zealand."
     },
     {
-        name: 'Tarlan',
-        img: tarlan,
-        exp: "Founder & CEO",
-        about: "Former founder of IT Computers, Dev Ops, webdev, mobile dev, 17+ years of experience in IT industry. BCS Auckland, New Zealand, BEc Rybinsk, Russia\n" +
-            "\n"
-    },
-]
-// export const property = {
-//     imageUrl: 'https://bit.ly/2Z4KKcF',
-//     imageAlt: 'Rear view of modern home with pool',
-//     name: "@Localgiver123",
-//     numbLikes: 4,
-//     about: 'After going through my pantry I realized that I had extra’s that I’d like to giveaway. I currently have chicken noodle, veggie, and clam chowder available.',
-//     pickUpAddress: '555 North Star Ln\n' +
-//         'Los Angeles, CA 90210',
-//     available: "4-6pm",
-//     rating: 4,
-//     distance: "7 mi away",
-//     type: 'Canned Food', reviews: "1,000", quantity: 5
-// }
+        name: 'Nikita Pivovarchik ',
+        img: nikita,
+        exp: "Backend Engineer",
+        about: "Python Backend engineer, 1 year in development.Student at Belarusian State Technological University in Minsk, Belarus."
+    }
+];
+
 export const asideProdProperty = [
     {
         img: pizza,
@@ -256,7 +85,6 @@ export const asideProdProperty = [
         available: "9 - 11pm",
         distance: "10mi"
     },
-
 ];
 export const opportunities = [
     {
@@ -301,40 +129,5 @@ export const opportunities = [
     },
 
 ];
-export const commentsArray = [
-    {
-        img: tarlan,
-        name: "Tarlan",
-        rating: 5,
-        comment: "he is a great man!!! he is a great man!!! he is a great man!!! he is a great man!!!",
-        date: `${new Date().getFullYear()}/${new Date().getMonth() + 1}/${new Date().getDate()} `
-    },
-    {
-        img: denis,
-        name: "Denis",
-        rating: 3,
-        comment: "Yes, i know it)))!!! Yes, i know it)))!!! Yes, i know it)))!!! Yes, i know it)))!!!",
-        date: `${new Date().toLocaleDateString("en-US")} `
-    },
-    {
-        img: denis,
-        name: "Denis",
-        rating: 4,
-        comment: "Yes, i know it)))!!! Yes, i know it)))!!! Yes, i know it)))!!! Yes, i know it)))!!!",
-        date: `${new Date().toLocaleDateString("en-US")} `
-    },
-]
-export const toastOptions =[
-   {
-        title: 'Listing created.',
-        description: "We've created your Listing for you.",
-        status: 'success',
-        isClosable: true,
-    },
-    {
-        title: 'Listing error...',
-        description: "invalid login or password",
-        status: 'error',
-        isClosable: true,
-    },
-]
+
+

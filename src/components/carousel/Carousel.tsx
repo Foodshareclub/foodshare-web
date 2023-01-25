@@ -5,13 +5,11 @@ import {Box, Image, Text} from "@chakra-ui/react";
 import {navigationActionsSVG, responsive} from "../../utils/navigationActions";
 import {useNavigate} from "react-router-dom";
 import "react-alice-carousel/lib/scss/alice-carousel.scss";
-import {ValueType} from "../header/FilterProductComponent";
 import {useAppSelector} from "../../hook/hooks";
 import {PagesType} from "../header/Header";
 
 type PropsType = {
-    selectChapterHandler: (name: string) => void
-    value?: ValueType
+
     getRoute: (route: string) => void
     pageType: PagesType
     setPageType: (isMainPage: PagesType) => void
@@ -19,8 +17,6 @@ type PropsType = {
 }
 
 const Carousel: React.FC<PropsType> = ({
-                                           selectChapterHandler,
-                                           value,
                                            getRoute,
                                            setPageType,
                                            pageType,
@@ -31,12 +27,10 @@ const Carousel: React.FC<PropsType> = ({
 
     const navigateHandler = (name: string) => {
         const routeName = name.toLowerCase()
-        selectChapterHandler(name);
         navigate(`${routeName === 'food' ? '/' : routeName}`);
         getRoute(routeName);
         setPageType("productComponent");
     }
-
 
     return <AliceCarousel
         responsive={responsive}
