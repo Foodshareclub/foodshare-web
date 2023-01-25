@@ -13,7 +13,12 @@ function App() {
 
     useEffect(() => {
         supabase.auth.getSession().then(({data: {session}}) => setSession(session));
-        supabase.auth.onAuthStateChange((event, session) => setSession(session));
+        supabase.auth.onAuthStateChange((event, session) => {
+            setSession(session)
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+                setSession(session);
+            }
+        });
     }, []);
 
     const [productType, setProductType] = useState('food');
