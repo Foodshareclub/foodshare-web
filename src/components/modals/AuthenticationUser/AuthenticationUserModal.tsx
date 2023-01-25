@@ -169,7 +169,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullS
                             <Button leftIcon={<Image src={google} alt={google}/>} _hover={{bg: 'red.100'}}
                                     fontSize={20}
                                     variant="outline" m={0} w="100%" alignSelf="center"
-                                    onClick={()=>onSignInWithProviderHandler('facebook')}
+                                    onClick={()=>onSignInWithProviderHandler('google')}
                             >
                                 Continue with Google
                             </Button>
