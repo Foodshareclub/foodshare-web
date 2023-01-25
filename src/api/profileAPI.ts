@@ -82,7 +82,9 @@ export const profileAPI = {
     },
     signInWithProvider(provider: ProviderType) {
         return supabase.auth.signInWithOAuth(<SignInWithOAuthCredentials>{
-            provider
+            provider, options: {
+                redirectTo: 'https://foodshare.vercel.app/'
+            }
         })
     },
     verifyOtp(phone: string, token: string, type: MobileOtpType): Promise<AuthResponse> {
