@@ -7,9 +7,9 @@ import {Box, Flex, Heading, Image, Text} from "@chakra-ui/react";
 import {StarIcon} from "@chakra-ui/icons";
 import AsideProducts from "./asideProducts/AsideProducts";
 import PickUpRequestModal from "../../components/modals/PickUpRequestModal";
-import {useAppDispatch, useAppSelector} from "../../hook/hooks";
+import {useActionCreators, useAppSelector} from "../../hook/hooks";
 import {getRandomProducts} from "../../utils/getRandomProduct";
-import {getProductTC, InitialProductStateType} from "../../store/slices/productReducer";
+import {getProductTC, InitialProductStateType, productActions} from "../../store/slices/productReducer";
 import {Trans} from '@lingui/macro';
 import useMediaQuery from "../../utils/useMediaQuery";
 
@@ -19,13 +19,15 @@ type ProductPageType = {
 }
 
 const ProductPage: React.FC<ProductPageType> = ({buttonValue}) => {
-    const dispatch = useAppDispatch();
+
+    const allActions = {...productActions, getProductTC}
+
     const isSmallerThan768 = useMediaQuery('(min-width:768px)');
     const item: InitialProductStateType = useLocation().state;
-     const products = useAppSelector<Array<InitialProductStateType>>(state => state.product.products);
-
+    const products = useAppSelector<Array<InitialProductStateType>>(state => state.product.products);
+    const actions = useActionCreators(allActions)
     useEffect(() => {
-        dispatch(getProductTC(item.post_type))
+        actions.getProductTC(item.post_type)
     }, []);
 
 
@@ -41,25 +43,28 @@ const ProductPage: React.FC<ProductPageType> = ({buttonValue}) => {
                         alt={item.post_name}
                         m={"0 auto"}
                         maxWidth={300}
-height={{ss: "auto", base: "270px"}}
+                        height={{ss: "auto", base: "270px"}}
                     />
                 </Box>
 
-                <Box  w={{md: "40%", base: "100%"}}>
+                <Box w={{md: "40%", base: "100%"}}>
                     <Box lineHeight={2}>
-                        <Heading textAlign={"center"} noOfLines={1} fontSize={'2xl'} fontFamily={'body'} fontWeight={500}>{item.post_name}</Heading>
+                        <Heading textAlign={"center"} noOfLines={1} fontSize={'2xl'} fontFamily={'body'}
+                                 fontWeight={500}>{item.post_name}</Heading>
 
                         <Flex>
                             <Image src={loc} alt={loc}/>
-                            <Text px={2} textAlign={"center"} noOfLines={1} color={'gray.500'} fontSize={'sm'} textTransform={'uppercase'}>{item.post_address}</Text>
+                            <Text px={2} textAlign={"center"} noOfLines={1} color={'gray.500'} fontSize={'sm'}
+                                  textTransform={'uppercase'}>{item.post_address}</Text>
                         </Flex>
 
                         <Flex>
                             <Image src={likes} alt={likes}/>
-                            <Text px={2} textAlign={"center"} noOfLines={1} color={'gray.500'} fontSize={'sm'} textTransform={'uppercase'}>{item.post_like_counter}</Text>
+                            <Text px={2} textAlign={"center"} noOfLines={1} color={'gray.500'} fontSize={'sm'}
+                                  textTransform={'uppercase'}>{item.post_like_counter}</Text>
                         </Flex>
 
-                        <Flex  mt='2' alignItems='center'>
+                        <Flex mt='2' alignItems='center'>
                             {Array(5)
                                 .fill('')
                                 .map((_, i) => (
@@ -69,20 +74,25 @@ height={{ss: "auto", base: "270px"}}
                                     />
                                 ))}
                             <Box as='span' ml='2' color='gray.600' fontSize='sm'>
-                                <Text textAlign={"center"} noOfLines={1} color={'gray.500'} fontSize={'sm'} textTransform={'uppercase'}><Trans>{item.post_views} views</Trans></Text>
+                                <Text textAlign={"center"} noOfLines={1} color={'gray.500'} fontSize={'sm'}
+                                      textTransform={'uppercase'}><Trans>{item.post_views} views</Trans></Text>
                             </Box>
                         </Flex>
                         {/*<Heading alignSelf="center" size='md'><Trans>Pick Up Address</Trans></Heading>*/}
                         {/*<Text>{item.post_address}</Text>*/}
 
-                            <Heading  fontFamily={'body'} fontWeight={500} fontSize={'xl'} alignSelf="center" ><Trans>Available:</Trans></Heading>
-                            <Text  noOfLines={1} color={'gray.500'} fontSize={'sm'} textTransform={'uppercase'}>{item.pickup_time}</Text>
+                        <Heading fontFamily={'body'} fontWeight={500} fontSize={'xl'}
+                                 alignSelf="center"><Trans>Available:</Trans></Heading>
+                        <Text noOfLines={1} color={'gray.500'} fontSize={'sm'}
+                              textTransform={'uppercase'}>{item.pickup_time}</Text>
 
-                            <Heading  fontFamily={'body'} fontWeight={500} fontSize={'xl'} ><Trans>Quantity:</Trans></Heading>
-                            <Text   noOfLines={1} color={'gray.500'} fontSize={'sm'} textTransform={'uppercase'}>{item.post_description}</Text>
+                        <Heading fontFamily={'body'} fontWeight={500} fontSize={'xl'}><Trans>Quantity:</Trans></Heading>
+                        <Text noOfLines={1} color={'gray.500'} fontSize={'sm'}
+                              textTransform={'uppercase'}>{item.post_description}</Text>
 
-                            <Heading  fontFamily={'body'} fontWeight={500} fontSize={'xl'} alignSelf="center" size='md'><Trans>Food Type:</Trans></Heading>
-                            <Text  color={'gray.500'} fontSize={'sm'} textTransform={'uppercase'}>{item.post_type}</Text>
+                        <Heading fontFamily={'body'} fontWeight={500} fontSize={'xl'} alignSelf="center"
+                                 size='md'><Trans>Food Type:</Trans></Heading>
+                        <Text color={'gray.500'} fontSize={'sm'} textTransform={'uppercase'}>{item.post_type}</Text>
                     </Box>
 
                     <Box mt={10}>
@@ -103,12 +113,14 @@ height={{ss: "auto", base: "270px"}}
 
                     <iframe
                         src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d2417628.5557509!2d27.986708999999998!3d53.718878999999994!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sru!2sby!4v1671868201476!5m2!1sru!2sby"
-                        width={isSmallerThan768?"90%":"100%"} height="500" style={{border: "0", borderRadius: "10px"}} loading="lazy"
+                        width={isSmallerThan768 ? "90%" : "100%"} height="500"
+                        style={{border: "0", borderRadius: "10px"}} loading="lazy"
                         referrerPolicy="no-referrer-when-downgrade"></iframe>
                 </Box>
 
                 <Box w={{md: "40%", base: "100%"}}>
-                    <Box pt={{md: "0", base: "5px"}} textAlign={{md: "start", base: "center"}} fontWeight={700} fontSize={20} pb={2}>
+                    <Box pt={{md: "0", base: "5px"}} textAlign={{md: "start", base: "center"}} fontWeight={700}
+                         fontSize={20} pb={2}>
                         <Trans>You May Also Like:</Trans>
                     </Box>
 

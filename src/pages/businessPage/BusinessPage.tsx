@@ -1,7 +1,5 @@
-import React, {useEffect} from 'react';
-import Avatar from "../../components/avatar/Avatar";
-import {useAppDispatch, useAppSelector} from "../../hook/hooks";
-import {getSession, getValueFromDBTC} from "../../store/slices/userReducer";
+import React from 'react';
+
 
 const BusinessPage = () => {
 

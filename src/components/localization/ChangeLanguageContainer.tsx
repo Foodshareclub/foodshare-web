@@ -24,9 +24,6 @@ type ContainerProps = {
 }
 const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRoute, setProductType, userID}) => {
     const language = useAppSelector(state => state.user.language)
-    // i18n.load(defaultLocale, {});
-    // i18n.activate(defaultLocale);
-
 
     useEffect(() => {
         dynamicActivate(language).then(() => {

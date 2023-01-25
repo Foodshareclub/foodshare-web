@@ -1,11 +1,12 @@
 import React, {useEffect, useState} from 'react';
 import {useAppDispatch} from "./hook/hooks";
-import {getSession} from "./store/slices/userReducer";
+
 import {Session} from "@supabase/supabase-js";
 import {supabase} from "./supaBase.config";
 import {getProductTC} from "./store/slices/productReducer";
 import ChangeLanguageContainer from "./components/localization/ChangeLanguageContainer";
 import {PasswordRecoveryModal} from "./components/modals/AuthenticationUser/PasswordRecoveryModal";
+import {userActions} from "./store/slices/userReducer";
 
 function App() {
     const dispatch = useAppDispatch();
@@ -30,7 +31,7 @@ function App() {
     const getRoute = (route: string) => setProductType(route);
 
     if (session) {
-        dispatch(getSession(session));
+        dispatch(userActions.getSession(session));
     }
 
     const userID = session?.user.id ?? '';
