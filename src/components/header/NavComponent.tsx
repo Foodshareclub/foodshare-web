@@ -6,11 +6,11 @@ import {Avatar, Box, Flex, Input, InputGroup, InputLeftElement, Text} from "@cha
 import {SearchIcon} from "@chakra-ui/icons";
 import {t} from "@lingui/macro";
 import {PagesType} from "./Header";
-import {downloadImgFromDBTC, logoutTC} from "@/store/slices/userReducer";
 import {useAppDispatch, useAppSelector} from "@/hook";
 import {AllValuesType} from "@/api/profileAPI";
 import {useMediaQuery} from "@/utils";
 import {NavDrawer, ProfileSettings} from "@/components";
+import {downloadImgFromDBTC, logoutTC} from "@/store/slices/userReducer";
 
 type PropsLangType = {
     isRegister: boolean
