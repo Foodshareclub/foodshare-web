@@ -75,7 +75,10 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
                                     <Stack spacing={3}>
                                         <UpdateProfileModal fullScreen={false} buttonValue={t`Update profile`}/>
                                         <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
-                                              onClick={() => navigateToMyLists()}><Trans>My listing's</Trans></Text>
+                                              onClick={() => {
+                                                  onClose()
+                                                  navigateToMyLists()
+                                              }}><Trans>My listing's</Trans></Text>
                                         <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
                                               onClick={() => navigateToAccSettings()}><Trans>Account settings</Trans></Text>
                                         <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
@@ -89,7 +92,10 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
                                     </Stack>
                             }
                             <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
-                                  onClick={() => navigateToAboutUs()}><Trans>About Us</Trans></Text>
+                                  onClick={() => {
+                                      onClose()
+                                      navigateToAboutUs()
+                                  }}><Trans>About Us</Trans></Text>
                             <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
                                   onClick={() => navigateToHelp()}><Trans>Help</Trans></Text>
                         </Box>
