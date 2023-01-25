@@ -4,7 +4,7 @@ import {
     AuthResponse,
     AuthSession,
     OAuthResponse,
-    PostgrestSingleResponse, SignInWithOAuthCredentials,
+    PostgrestSingleResponse,
     User,
 } from "@supabase/supabase-js";
 import {MobileOtpType} from "@supabase/gotrue-js/dist/module/lib/types";
