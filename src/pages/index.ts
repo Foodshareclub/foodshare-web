@@ -2,7 +2,6 @@ import AboutUsPage from "@/pages/aboutUs/AboutUsPage";
 import BorrowPage from "@/pages/borrowPage/BorrowPage";
 import BusinessPage from "@/pages/businessPage/BusinessPage";
 import ContactUsPage from "@/pages/contactUs/ContactUsPage";
-import PersonCard from "@/pages/personCard/PersonCard";
 import MyListingsPage from "@/pages/prfilePages/MyListingsPage";
 import ProductPage from "@/pages/productPage/ProductPage";
 import AsideProducts from "@/pages/productPage/asideProducts/AsideProducts";
@@ -16,7 +15,6 @@ export {
     VolunteerPage,
     OpportunitiesPage,
     AsideProducts,
-    PersonCard,
     AboutUsPage,
     BorrowPage,
     BusinessPage,

@@ -6,7 +6,7 @@ import {useAppDispatch, useAppSelector} from "@/hook";
 import {deleteProductTC, getCurrentUserProductsTC} from "@/store/slices/productReducer";
 import {useMediaQuery} from "@/utils";
 import {AsideProducts} from "@/pages";
-import ListingPersonCard from "@/pages/prfilePages/ListingPersonCard";
+import ListingPersonCard from "@/components/listingPersonCard/ListingPersonCard";
 import {GridSize} from "@/utils/gridSize";
 import {ProductCard} from "@/components";
 
