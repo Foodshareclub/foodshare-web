@@ -7,7 +7,7 @@ import {Box, Flex, Heading, Image, Text} from "@chakra-ui/react";
 import {StarIcon} from "@chakra-ui/icons";
 import {Trans} from '@lingui/macro';
 import {getRandomProducts, useMediaQuery} from "@/utils";
-import {getProductTC, InitialProductStateType, productActions} from "@/store/slices/productReducer";
+import {getProductTC, InitialProductStateType} from "@/store/slices/productReducer";
 import {useActionCreators, useAppSelector} from "@/hook";
 import {PickUpRequestModal} from "@/components";
 import {AsideProducts} from "@/pages";
@@ -19,12 +19,15 @@ type ProductPageType = {
 
 const ProductPage: React.FC<ProductPageType> = ({buttonValue}) => {
 
-    const allActions = {...productActions, getProductTC}
+    // const allActions = {...productActions, getProductTC}
 
     const isSmallerThan768 = useMediaQuery('(min-width:768px)');
+
     const item: InitialProductStateType = useLocation().state;
+
     const products = useAppSelector<Array<InitialProductStateType>>(state => state.product.products);
-    const actions = useActionCreators(allActions)
+
+    const actions = useActionCreators({getProductTC})
     useEffect(() => {
         actions.getProductTC(item.post_type)
     }, []);

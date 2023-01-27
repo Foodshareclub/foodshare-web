@@ -1,6 +1,6 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import {productAPI, ProductObjType} from "../../api/productAPI";
-import {ImgUrlType, profileAPI, UploadImgUrlType} from "../../api/profileAPI";
+import {ImgUrlType, profileAPI, UploadImgUrlType} from "@/api/profileAPI";
 
 
 export type InitialProductStateType = {
@@ -46,7 +46,7 @@ export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", asyn
 
 export const getProductTC = createAsyncThunk("/getProduct", async (productType: string, thunkAPI) => {
     try {
-        const {data, error} = await productAPI.getProduct(productType);
+        let {data, error} = await productAPI.getProduct(productType);
         if (error) console.log(error);
         return data;
     } catch (e) {

@@ -7,7 +7,7 @@ import navIcon from "@/assets/map.svg"
 import {navigatePhotosObject, useMediaQuery} from "@/utils";
 import {InitialProductStateType} from "@/store/slices/productReducer";
 import {useAppSelector} from "@/hook";
-
+import avocado from "@/assets/cute-cat-avocado.webp";
 export const Main = () => {
     const [isLoaded, setIsLoaded] = useState(false);
 
@@ -57,8 +57,9 @@ export const Main = () => {
                                 height={250}
                                 cursor="pointer"
                                 borderRadius="10px"
-                                onClick={() => navigate(`/oneProd`, {state: item})} src={item.gif_url}
-                                alt="broken image"
+                                onClick={() => navigate(`/oneProd`, {state: item})}
+                                src={item.gif_url==="er"?avocado:item.gif_url}
+                                alt={"broken image"}
                             />
                         </Skeleton>
                         {!isLoaded

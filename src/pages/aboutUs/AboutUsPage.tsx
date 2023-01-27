@@ -112,11 +112,9 @@ const AboutUsPage = () => {
                         aboutExp={el.about}
                         name={el.name}
                         secondName={''}
-                        exp={el.exp}
                         img={el.img}
                         key={id}
-                        // это заглушка для пропсов id т.к . нужно чтоб не был undefined
-                        userID={""}/>
+                        />
                 ))}
             </SimpleGrid>
 
