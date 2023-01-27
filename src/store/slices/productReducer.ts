@@ -47,7 +47,7 @@ export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", asyn
 
 export const getProductTC = createAsyncThunk("/getProduct", async (productType: string, thunkAPI) => {
     try {
-        const {data, error} = await productAPI.getProduct(productType);
+        let {data, error} = await productAPI.getProduct(productType);
         if (error) console.log(error);
         return data;
     } catch (e) {

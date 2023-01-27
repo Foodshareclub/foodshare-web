@@ -5,7 +5,8 @@ import {Navigate} from "react-router-dom";
 import {useAppDispatch, useAppSelector} from "@/hook";
 import {deleteProductTC, getCurrentUserProductsTC} from "@/store/slices/productReducer";
 import {useMediaQuery} from "@/utils";
-import {AsideProducts, PersonCard} from "@/pages";
+import {AsideProducts} from "@/pages";
+import ListingPersonCard from "@/pages/prfilePages/ListingPersonCard";
 
 type MyListingsPageType = {
     userID: string
@@ -31,23 +32,21 @@ const MyListingsPage: React.FC<MyListingsPageType> = ({userID}) => {
     }
 
     return (
-        <Box mt="18vh">
-            <Heading
-                textAlign={"center"}
-            >
-                <Trans>Active Listings</Trans>
-            </Heading>
-            <Flex mt={5} direction={!isSmallerThan1000 ? "column" : "row"} justify="space-between">
-                <Box w={!isSmallerThan1000 ? "100%" : "45%"}>
-                    <PersonCard
-                        aboutMe={user.value.about_me}
-                        exp={"experience"}
+        <Box mt="23vh">
+            <Flex mt={5} direction={"column"} justify="space-between">
+                <Box>
+                    <ListingPersonCard
                         img={user.imgUrl}
                         name={user.session.user.user_metadata.firstName}
                         secondName={user.session.user.user_metadata.lastName}
                         userID={user.value.id}
                     />
                 </Box>
+                <Heading
+                    textAlign={"center"}
+                >
+                    <Trans>Active Listings</Trans>
+                </Heading>
                 <Box w={!isSmallerThan1000 ? "100%" : "45%"}>
                     {currentUserProducts.length > 0 && currentUserProducts.map((item, id) => (
                         <AsideProducts

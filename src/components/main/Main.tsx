@@ -4,8 +4,10 @@ import {ArrowForwardIcon} from "@chakra-ui/icons";
 import {Trans} from "@lingui/macro";
 import {InitialProductStateType} from "@/store/slices/productReducer";
 import {useAppSelector} from "@/hook";
+
 import {GridSize} from "@/utils/gridSize";
 import {ProductCard} from "@/components";
+
 
 export const Main = () => {
     const products = useAppSelector<Array<InitialProductStateType>>(state => state.product.products);
@@ -15,6 +17,7 @@ export const Main = () => {
             {/*<Trans>*/}
             {/*    Last login on {i18n.date(new Date())}.*/}
             {/*</Trans>*/}
+
             <SimpleGrid
                 columns={GridSize()}
                 spacing={10}
@@ -24,6 +27,7 @@ export const Main = () => {
                         product={product}
                         key={product.id}
                     />
+
                 ))}
 
             </SimpleGrid>
