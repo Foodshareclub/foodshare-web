@@ -15,11 +15,13 @@ export const SearchField = () => {
     const onSearchHandler = (e: ChangeEvent<HTMLInputElement>) => setSearchValue(e.currentTarget.value);
 
     const onFindResultsHandler = async () => {
-        navigate(`/s/${productType}/?key_word=${searchValue}`)
+        if(searchValue) {
+            navigate(`/s/${productType}?key_word=${searchValue}`)
 
-        setProductType('all');
-        setSearchValue('');
-        setShowSearchParams(false)
+            setProductType('all');
+            setSearchValue('');
+            setShowSearchParams(false);
+        }
     }
 
     return (

@@ -48,7 +48,9 @@ const MyListingsPage: React.FC<MyListingsPageType> = ({userID}) => {
                     <Trans>Active Listings</Trans>
                 </Heading>
                 <Box w={!isSmallerThan1000 ? "100%" : "45%"}>
-                    {currentUserProducts.length > 0 && currentUserProducts.map((item, id) => (
+                    {
+                        currentUserProducts.length > 0 &&
+                        currentUserProducts.map((item, id) => (
                         <AsideProducts
                             key={id}
                             img={item.gif_url}

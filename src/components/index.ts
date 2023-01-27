@@ -24,6 +24,8 @@ import {RequiredStar} from "@/components/requiredStar/RequiredStar";
 import VolunteerInfoModal from "@/components/modals/VolunteerInfoModal";
 import {SearchField} from "@/components/searchField/SearchField";
 import {ProductCard} from "@/components/productComponent/ProductCard";
+import {OneProduct} from "@/components/oneProduct/OneProduct";
+import {ProductsLocation} from "@/components/productsLocation/ProductLocation";
 
 export {
     Main,
@@ -51,5 +53,7 @@ export {
     RequiredStar,
     VolunteerInfoModal,
     SearchField,
-    ProductCard
+    ProductCard,
+    OneProduct,
+    ProductsLocation
 }

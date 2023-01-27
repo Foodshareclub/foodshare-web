@@ -19,7 +19,7 @@ export const productAPI = {
             .from('posts')
             .select('*')
     },
-    getProduct(productType: string) {
+    getProducts(productType: string) {
         return supabase
             .from('posts')
             .select('*')
@@ -30,6 +30,12 @@ export const productAPI = {
             .from('posts')
             .select('*')
             .eq('user', currentUserID)
+    },
+    getOneProduct(productId: number) {
+        return supabase
+            .from('posts')
+            .select('*')
+            .eq('id', productId)
     },
     //заменим insert на upsert
     createProduct(createdProduct: ProductObjType) {

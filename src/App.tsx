@@ -5,7 +5,8 @@ import {ChangeLanguageContainer, PasswordRecoveryModal} from "@/components";
 import {useAppDispatch} from "@/hook";
 import {supabase} from "@/supaBase.config";
 import {userActions} from "@/store/slices/userReducer";
-import {getProductTC} from "@/store/slices/productReducer";
+import {getProductsTC} from "@/store/slices/productReducer";
+import {useLocation} from "react-router-dom";
 
 function App() {
     const dispatch = useAppDispatch();
@@ -21,10 +22,13 @@ function App() {
         });
     }, []);
 
-    const [productType, setProductType] = useState('food');
+    const location = useLocation();
+    const type = location.pathname.split('/')[2];
+
+    const [productType, setProductType] = useState(type || 'food');
 
     useEffect(() => {
-        dispatch(getProductTC(productType));
+        dispatch(getProductsTC(productType));
     }, [productType]);
 
     const getRoute = (route: string) => setProductType(route);
