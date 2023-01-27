@@ -30,6 +30,7 @@ const initialState = {
     products: [] as Array<InitialProductStateType>,
     currentUserProducts: [] as Array<InitialProductStateType>,
     searchProducts: [] as Array<InitialProductStateType>,
+    oneProduct: [] as Array<InitialProductStateType>,
     isUpdatedProductsList: false,
     postImgUrl: '',
     isPostImgUpload: false
@@ -45,9 +46,9 @@ export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", asyn
     }
 });
 
-export const getProductTC = createAsyncThunk("/getProduct", async (productType: string, thunkAPI) => {
+export const getProductsTC = createAsyncThunk("/getProductsTC", async (productType: string, thunkAPI) => {
     try {
-        let {data, error} = await productAPI.getProduct(productType);
+        let {data, error} = await productAPI.getProducts(productType);
         if (error) console.log(error);
         return data;
     } catch (e) {
@@ -61,6 +62,16 @@ export const getCurrentUserProductsTC = createAsyncThunk('/getCurrentUserProduct
 
         if (error) console.log(error) ;
 
+        return data;
+    } catch (e) {
+        return thunkAPI.rejectWithValue(e);
+    }
+});
+
+export const getOneProductTC = createAsyncThunk('/getOneProductTC', async (productId: number, thunkAPI) => {
+    try {
+        let {data, error} = await productAPI.getOneProduct(productId);
+        if (error) console.log(error);
         return data;
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
@@ -142,7 +153,7 @@ const productSlice = createSlice({
             // @ts-ignore
             state.products = action.payload;
         });
-        builder.addCase(getProductTC.fulfilled, (state, action) => {
+        builder.addCase(getProductsTC.fulfilled, (state, action) => {
             if (action.payload) {
                 state.products = action.payload;
             }
@@ -150,6 +161,11 @@ const productSlice = createSlice({
         builder.addCase(getCurrentUserProductsTC.fulfilled, (state, action) => {
             if (action.payload) {
                 state.currentUserProducts = action.payload;
+            }
+        });
+        builder.addCase(getOneProductTC.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.oneProduct = action.payload;
             }
         });
         builder.addCase(createProductTC.fulfilled, (state, action) => {

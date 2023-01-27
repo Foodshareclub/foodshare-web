@@ -54,21 +54,8 @@ const MyListingsPage: React.FC<MyListingsPageType> = ({userID}) => {
                                  spacing={10} >
                         {currentUserProducts.length > 0 && currentUserProducts.map((item, id) => (
                             <ProductCard product={item} key={id}/>
-                            // <AsideProducts
-                            //     key={id}
-                            //     img={item.gif_url}
-                            //     name={item.post_name}
-                            //     about={item.post_description}
-                            //     available={item.pickup_time}
-                            //     distance={item.post_address}
-                            //     product={item}
-                            //     height="25%"
-                            //     deleteProductHandler={deleteProductHandler}
-                            // />
                         ))}
                     </SimpleGrid>
-
-
             </Flex>
         </Box>
 

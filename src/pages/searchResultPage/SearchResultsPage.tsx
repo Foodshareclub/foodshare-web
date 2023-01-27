@@ -14,6 +14,7 @@ export const SearchResultsPage = () => {
     const keyWord = searchParams.get('key_word');
 
     useEffect(() => {
+        console.log('search')
         dispatch(resultsSearchProductsTC({
             searchWord: keyWord as string,
             productSearchType: params.type as string

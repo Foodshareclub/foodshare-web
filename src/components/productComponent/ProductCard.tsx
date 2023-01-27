@@ -25,17 +25,21 @@ export const ProductCard: React.FC<ProductCardType> = ({product, deleteProductHa
 
         return () => clearTimeout(time);
     }, []);
-    const goToProduct = () => {
-        navigate('/oneProd', {state: product})
-    }
+
+  
 
     const deleteHandler = () => {
         if (deleteProductHandler) {
             deleteProductHandler(product.id);
         }
     }
-    return (
+
+
+    const onNavigateToOneProductHandler = () => navigate(`/one-product/${product.post_type}/${product.id}`);
+
+    return(
         <GridItem >
+
 
             <Skeleton isLoaded={isLoaded}>
 
@@ -46,7 +50,8 @@ export const ProductCard: React.FC<ProductCardType> = ({product, deleteProductHa
                     height={250}
                     cursor="pointer"
                     borderRadius="10px"
-                    onClick={() => navigate(`/one-product`, {state: product})} src={product.gif_url}
+                    onClick={onNavigateToOneProductHandler}
+                    src={product.gif_url}
                     alt="broken image"
                 />
             </Skeleton>

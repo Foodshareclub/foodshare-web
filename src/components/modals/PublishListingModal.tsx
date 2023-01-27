@@ -19,14 +19,14 @@ import {
     Textarea,
     useDisclosure
 } from "@chakra-ui/react";
-import {createPhotoUrl} from "../../utils/createPhotoUrl";
+import {createPhotoUrl} from "@/utils";
 import cloud from "../../assets/cloud.svg"
-import {createProductTC, updateProductTC, uploadPostImgToDBTC} from "../../store/slices/productReducer";
-import {useAppDispatch} from "../../hook/hooks";
+import {createProductTC, updateProductTC, uploadPostImgToDBTC} from "@/store/slices/productReducer";
+import {useAppDispatch} from "@/hook";
 import {t, Trans} from '@lingui/macro';
-import {RequiredStar} from "../requiredStar/RequiredStar";
+import {RequiredStar} from "@/components";
 import {EditIcon} from "@chakra-ui/icons";
-import {ProductObjType} from "../../api/productAPI";
+import {ProductObjType} from "@/api/productAPI";
 
 type PublishListingModalType = {
     userID: string
