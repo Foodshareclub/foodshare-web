@@ -1,4 +1,4 @@
-import {supabase} from "../supaBase.config";
+import {supabase} from "@/supaBase.config";
 
 export type ProductObjType = {
     gif_url: string,
@@ -12,6 +12,7 @@ export type ProductObjType = {
     id?: number
     post_unpublished?: boolean
 }
+
 export const productAPI = {
     getAllProducts() {
         return supabase
@@ -44,5 +45,23 @@ export const productAPI = {
             .from('posts')
             .delete()
             .eq('id', productID);
+    },
+    searchProducts(searchWord: string, productSearchType: string) {
+        if (productSearchType !== 'all') {
+            return supabase
+                .from('posts')
+                .select('*')
+                .eq('post_type', productSearchType)
+                .textSearch('post_name', searchWord, {
+                    type: 'websearch'
+                })
+        }else {
+            return supabase
+                .from('posts')
+                .select('*')
+                .textSearch('post_name', searchWord, {
+                    type: 'websearch'
+                })
+        }
     }
 }

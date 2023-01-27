@@ -7,6 +7,7 @@ import {dynamicActivate} from "@/utils/i18n";
 import {useAppSelector} from "@/hook/hooks";
 import {AboutUsPage, ContactUsPage, MyListingsPage, OpportunitiesPage, ProductPage, VolunteerPage} from "@/pages";
 import {Footer, Header, Main} from "@/components";
+import {SearchResultsPage} from "@/pages/searchResultPage/SearchResultsPage";
 
 type ContainerProps = {
     productType: string
@@ -30,12 +31,14 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
                     <Routes>
                         <Route path={"/"} element={<Main/>}/>
                         <Route path={"/*"} element={<Main/>}/>
-                        <Route path={"/oneProd"} element={<ProductPage />}/>
+                        <Route path={"/one-product"} element={<ProductPage />}/>
                         <Route path={"/aboutUs"} element={<AboutUsPage/>}/>
                         <Route path={"/contactUs"} element={<ContactUsPage/>}/>
                         <Route path={"/volunteer"} element={<VolunteerPage/>}/>
                         <Route path={"/user-listings"} element={<MyListingsPage userID={userID}/>}/>
                         <Route path={"/volunteer/opportunities"} element={<OpportunitiesPage/>}/>
+                        <Route path={"/s/:type?key_word="} element={<SearchResultsPage/>}/>
+                        <Route path={"/s/:type/"} element={<SearchResultsPage/>}/>
                     </Routes>
                 </CardBody>
                 <Footer/>
