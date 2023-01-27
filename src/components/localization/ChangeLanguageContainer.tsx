@@ -27,7 +27,7 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
         <I18nProvider i18n={i18n}>
             <Card size="lg" minH="100vh">
                 <Header getRoute={getRoute} setProductType={setProductType} productType={productType}/>
-                <CardBody>
+                <CardBody p={0}>
                     <Routes>
                         <Route path={"/"} element={<Main/>}/>
                         <Route path={"/*"} element={<Main/>}/>

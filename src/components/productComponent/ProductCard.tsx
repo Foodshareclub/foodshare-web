@@ -1,18 +1,21 @@
 import {InitialProductStateType} from "@/store/slices/productReducer";
 import React, {useEffect, useState} from "react";
-import {useNavigate} from "react-router-dom";
-import {Box, Flex, GridItem, Image, Skeleton} from "@chakra-ui/react";
+import {useLocation, useNavigate} from "react-router-dom";
+import {Box, Flex, GridItem, Heading, IconButton, Image, Skeleton, Text} from "@chakra-ui/react";
 import {navigatePhotosObject} from "@/utils";
 import {Trans} from "@lingui/macro";
 import navIcon from "@/assets/map.svg";
+import PublishListingModal from "../modals/PublishListingModal";
+import {DeleteIcon} from "@chakra-ui/icons";
 
 type ProductCardType = {
     product: InitialProductStateType
+    deleteProductHandler?: (productID: number) => void
 }
 
-export const ProductCard: React.FC<ProductCardType> = ({product}) => {
+export const ProductCard: React.FC<ProductCardType> = ({product, deleteProductHandler}) => {
     const navigate = useNavigate();
-
+    const url = useLocation().pathname;
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
@@ -23,10 +26,20 @@ export const ProductCard: React.FC<ProductCardType> = ({product}) => {
         return () => clearTimeout(time);
     }, []);
 
+  
+
+    const deleteHandler = () => {
+        if (deleteProductHandler) {
+            deleteProductHandler(product.id);
+        }
+    }
+
+
     const onNavigateToOneProductHandler = () => navigate(`/one-product/${product.post_type}/${product.id}`);
 
     return(
-        <GridItem mt='2' mb='2'>
+        <GridItem >
+
 
             <Skeleton isLoaded={isLoaded}>
 
@@ -43,48 +56,66 @@ export const ProductCard: React.FC<ProductCardType> = ({product}) => {
                 />
             </Skeleton>
             {!isLoaded
-                ? <div>
+                ? <Box>
                     <Skeleton mt={4} height='20px' isLoaded={isLoaded}/>
                     <Skeleton mt={2} height='20px' isLoaded={isLoaded}/>
                     <Skeleton mt={2} height='20px' isLoaded={isLoaded}/>
                     <Skeleton mt={2} height='20px' isLoaded={isLoaded}/>
-                </div>
+                </Box>
                 :
                 <Box mt={3}>
-                    <Flex justify="space-between" alignItems="center" alignSelf="center" fontSize={25}>
-                        <Box noOfLines={1} fontWeight={700}>
-                            {product.post_name}
-                        </Box>
+                    {
+                        url === '/user-listings' && <Flex justify={"center"}>
+                            <PublishListingModal
+                                userID={product.user}
+                                product={product}/>
+                            <IconButton
+                                ml={4}
+                                onClick={deleteHandler}
+                                variant='outline'
+                                icon={<DeleteIcon/>}
+                                aria-label="delete">
+                                <Trans>Delete</Trans>
+                            </IconButton>
+                        </Flex>
+
+                    }
+                    <Flex justify="space-between" align="center"  fontSize={25}>
+                        <Heading noOfLines={1} fontSize={'xl'} fontFamily={'body'}
+                                 fontWeight={500}>
+                            {product.post_name.toUpperCase()}
+                        </Heading>
                         <Image
                             borderRadius='full'
                             src={navigatePhotosObject[product.post_type]}
-                            alt={navigatePhotosObject[product.post_type]}
+                            alt={"img"}
                         />
                     </Flex>
-                    <Flex justify="space-between" alignItems="center" alignSelf="center">
-                        <div style={{fontWeight: "700", fontSize: "16px"}}><Trans>Distance:</Trans></div>
-                        <Box mt='1' ml="2" fontWeight='normal' as='h4' lineHeight='tight' noOfLines={1}
-                        >
+                    <Flex pt={3} justify="space-between" alignItems="center" alignSelf="center">
+                        <Text mt='1' color={'gray.500'} fontSize={'sm'}
+                              textTransform={'uppercase'}><Trans>Distance:</Trans></Text>
+                        <Text mt='1' ml="2" noOfLines={1} color={'black'} fontSize={'sm'} textTransform={'uppercase'}>
                             {product.post_address}
-                        </Box>
+                        </Text>
                         <Image borderRadius='full' src={navIcon} alt={navIcon}
                         />
                     </Flex>
-                    <Box display='flex' alignItems='baseline'>
-                        <div style={{fontWeight: "700", fontSize: "16px"}}><Trans>Available:</Trans></div>
-                        <Box mt='1' ml="2" fontWeight='normal' as='h4' lineHeight='tight' noOfLines={1}
-                        >
+                    <Flex >
+                        <Text mt='1' color={'gray.500'} fontSize={'sm'}
+                              textTransform={'uppercase'}><Trans>Available:</Trans></Text>
+                        <Text mt='1' ml="2" noOfLines={1} color={'black'} fontSize={'sm'} textTransform={'uppercase'}>
                             {product.pickup_time}
-                        </Box>
-                    </Box>
+                        </Text>
+                    </Flex>
 
-                    <Box display='flex' alignItems='baseline'>
-                        <div style={{fontWeight: "700", fontSize: "16px"}}><Trans>About:</Trans></div>
-                        <Box ml={2} mt='1' fontWeight='normal' as='h4' lineHeight='tight' noOfLines={1}
+                    <Flex>
+                        <Text mt='1' color={'gray.500'} fontSize={'sm'}
+                             textTransform={'uppercase'}><Trans>About:</Trans></Text>
+                        <Text mt='1' ml="2" noOfLines={1} color={'black'} fontSize={'sm'} textTransform={'uppercase'}
                         >
                             {product.post_description}
-                        </Box>
-                    </Box>
+                        </Text>
+                    </Flex>
                 </Box>
             }
         </GridItem>

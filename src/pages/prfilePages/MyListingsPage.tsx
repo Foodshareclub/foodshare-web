@@ -1,5 +1,5 @@
 import React, {useEffect} from 'react';
-import {Box, Flex, Heading} from "@chakra-ui/react";
+import {Box, Flex, Heading, SimpleGrid} from "@chakra-ui/react";
 import {Trans} from "@lingui/macro";
 import {Navigate} from "react-router-dom";
 import {useAppDispatch, useAppSelector} from "@/hook";
@@ -7,6 +7,8 @@ import {deleteProductTC, getCurrentUserProductsTC} from "@/store/slices/productR
 import {useMediaQuery} from "@/utils";
 import {AsideProducts} from "@/pages";
 import ListingPersonCard from "@/pages/prfilePages/ListingPersonCard";
+import {GridSize} from "@/utils/gridSize";
+import {ProductCard} from "@/components";
 
 type MyListingsPageType = {
     userID: string
@@ -42,28 +44,18 @@ const MyListingsPage: React.FC<MyListingsPageType> = ({userID}) => {
                         userID={user.value.id}
                     />
                 </Box>
-                <Heading
+                <Heading my={8}
                     textAlign={"center"}
                 >
                     <Trans>Active Listings</Trans>
                 </Heading>
-                <Box w={!isSmallerThan1000 ? "100%" : "45%"}>
-                    {
-                        currentUserProducts.length > 0 &&
-                        currentUserProducts.map((item, id) => (
-                        <AsideProducts
-                            key={id}
-                            img={item.gif_url}
-                            name={item.post_name}
-                            about={item.post_description}
-                            available={item.pickup_time}
-                            distance={item.post_address}
-                            product={item}
-                            height="25%"
-                            deleteProductHandler={deleteProductHandler}
-                        />
-                    ))}
-                </Box>
+
+                    <SimpleGrid p={8} columns={GridSize()}
+                                 spacing={10} >
+                        {currentUserProducts.length > 0 && currentUserProducts.map((item, id) => (
+                            <ProductCard product={item} key={id}/>
+                        ))}
+                    </SimpleGrid>
             </Flex>
         </Box>
 

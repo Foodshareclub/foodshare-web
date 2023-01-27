@@ -21,6 +21,7 @@ export const Main = () => {
             <SimpleGrid
                 columns={GridSize()}
                 spacing={10}
+                p={7}
             >
                 {products.map((product, id) => (
                     <ProductCard
