@@ -67,21 +67,6 @@ const AsideProducts: React.FC<AsideProdType> = ({
                          fontWeight={500}>{name}</Heading>
                 <Text textAlign={"center"} noOfLines={1} color={'gray.500'} fontSize={'sm'}
                       textTransform={'uppercase'}>{about}</Text>
-
-                {/*<Flex mb={1}>*/}
-                {/*    <Heading size='sm'><Trans>Available:</Trans></Heading>*/}
-                {/*    <Text pl='2'>*/}
-                {/*        {available}*/}
-                {/*    </Text>*/}
-                {/*</Flex>*/}
-
-                {/*<Flex>*/}
-                {/*    <Heading size='sm'><Trans>Distance:</Trans></Heading>*/}
-                {/*    <Text pl='2'>*/}
-                {/*        {distance}*/}
-                {/*    </Text>*/}
-                {/*    <Image width={30} pl={4} src={rose} alt={rose}/>*/}
-                {/*</Flex>*/}
             </CardBody>
             {
                 url === '/user-listings' && <CardFooter alignSelf={"center"}>
