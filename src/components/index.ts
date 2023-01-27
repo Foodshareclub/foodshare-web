@@ -26,8 +26,12 @@ import {SearchField} from "@/components/searchField/SearchField";
 import {ProductCard} from "@/components/productCard/ProductCard";
 import {OneProduct} from "@/components/oneProduct/OneProduct";
 import {ProductsLocation} from "@/components/productsLocation/ProductLocation";
+
+import PersonCard from "./personCard/PersonCard";
+
 import ListingPersonCard from "@/components/listingPersonCard/ListingPersonCard";
-import PersonCard from "@/components/personCard/PersonCard";
+
+
 
 export {
     Main,
@@ -58,6 +62,8 @@ export {
     ProductCard,
     OneProduct,
     ProductsLocation,
+
     ListingPersonCard,
+
     PersonCard
 }

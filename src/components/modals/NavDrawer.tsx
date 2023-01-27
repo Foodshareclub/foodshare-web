@@ -72,7 +72,7 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
                                 isRegister
                                     ?
                                     <Stack spacing={3}>
-                                        <UpdateProfileModal fullScreen={false} buttonValue={t`Update profile`}/>
+                                        <UpdateProfileModal fullScreen={false} buttonValue={t`Edit profile`}/>
                                         <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
                                               onClick={() => {
                                                   onClose()

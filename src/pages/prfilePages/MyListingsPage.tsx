@@ -4,27 +4,22 @@ import {Trans} from "@lingui/macro";
 import {Navigate} from "react-router-dom";
 import {useAppDispatch, useAppSelector} from "@/hook";
 import {deleteProductTC, getCurrentUserProductsTC} from "@/store/slices/productReducer";
-import {useMediaQuery} from "@/utils";
-import {AsideProducts} from "@/pages";
 import ListingPersonCard from "@/components/listingPersonCard/ListingPersonCard";
 import {GridSize} from "@/utils/gridSize";
 import {ProductCard} from "@/components";
 
-type MyListingsPageType = {
-    userID: string
-}
 
-const MyListingsPage: React.FC<MyListingsPageType> = ({userID}) => {
+const MyListingsPage = () => {
     const dispatch = useAppDispatch();
 
     const user = useAppSelector(state => state.user);
     const currentUserProducts = useAppSelector(state => state.product.currentUserProducts);
     const update = useAppSelector(state => state.product.isUpdatedProductsList);
     const isAuth = useAppSelector(state => state.user.isAuth);
-    const isSmallerThan1000 = useMediaQuery('(min-width:1000px)');
+
 
     useEffect(() => {
-        dispatch(getCurrentUserProductsTC(userID))
+        dispatch(getCurrentUserProductsTC(user.value.id))
     }, [update]);
 
     const deleteProductHandler = async (productID: number) => dispatch(deleteProductTC(productID));
@@ -45,17 +40,18 @@ const MyListingsPage: React.FC<MyListingsPageType> = ({userID}) => {
                     />
                 </Box>
                 <Heading my={8}
-                    textAlign={"center"}
+                         textAlign={"center"}
                 >
                     <Trans>Active Listings</Trans>
                 </Heading>
 
-                    <SimpleGrid p={8} columns={GridSize()}
-                                 spacing={10} >
-                        {currentUserProducts.length > 0 && currentUserProducts.map((item, id) => (
-                            <ProductCard product={item} key={id}/>
-                        ))}
-                    </SimpleGrid>
+                <SimpleGrid p={8} columns={GridSize()}
+                            spacing={10}>
+                    {currentUserProducts.length > 0 && currentUserProducts.map((item, id) => (
+                        <ProductCard deleteProductHandler={(productID) => deleteProductHandler(productID)}
+                                     product={item} key={id}/>
+                    ))}
+                </SimpleGrid>
             </Flex>
         </Box>
 

@@ -28,7 +28,7 @@ export const SearchResultsPage = () => {
                 columns={GridSize()}
                 spacing={10}
             >
-                {products.map((product, id) => (
+                {products.map((product) => (
                     <ProductCard
                         product={product}
                         key={product.id}

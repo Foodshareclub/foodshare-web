@@ -13,6 +13,7 @@ import {useMediaQuery} from "@/utils";
 import {PersonCard} from "@/components";
 
 
+
 const AboutUsPage = () => {
     const [isLoaded, setIsLoaded] = useState(false)
     const isSmallerThan960 = useMediaQuery('(min-width:960px)');
@@ -24,7 +25,7 @@ const AboutUsPage = () => {
     }, [])
 
     return (
-        <Box mt="22vh">
+        <Box p={7} mt="22vh">
             <Grid templateColumns={{base: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)'}} gap={6}>
                 {isSmallerThan960 && <GridItem w='100%' h='50vh'/>}
 
