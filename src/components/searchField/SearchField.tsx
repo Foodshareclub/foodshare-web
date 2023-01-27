@@ -11,11 +11,10 @@ export const SearchField = () => {
     const [searchValue, setSearchValue] = useState('');
     const [productType, setProductType] = useState('all');
     const [showSearchParams, setShowSearchParams] = useState(false);
-
     const onSearchHandler = (e: ChangeEvent<HTMLInputElement>) => setSearchValue(e.currentTarget.value);
 
     const onFindResultsHandler = async () => {
-        if(searchValue) {
+        if (searchValue) {
             navigate(`/s/${productType}?key_word=${searchValue}`)
 
             setProductType('all');
@@ -37,14 +36,13 @@ export const SearchField = () => {
                 />
                 <Input
                     // focusBorderColor='#FF2D55'
-                       value={searchValue}
-                       onChange={onSearchHandler}
-                       onFocus={() => setShowSearchParams(true)}
-
-                       placeholder={t({
-                           id: `msg.Input`,
-                           message: `What are we in search of today?`
-                       })}
+                    value={searchValue}
+                    onChange={onSearchHandler}
+                    onFocus={() => setShowSearchParams(true)}
+                    placeholder={t({
+                        id: `msg.Input`,
+                        message: `What are we in search of today?`
+                    })}
                 />
                 {
                     showSearchParams &&

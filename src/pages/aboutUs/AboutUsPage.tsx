@@ -10,7 +10,8 @@ import {ArrowForwardIcon} from "@chakra-ui/icons";
 import {Trans} from '@lingui/macro';
 import {teamMockArray} from "@/utils/mockArray";
 import {useMediaQuery} from "@/utils";
-import {PersonCard} from "@/pages";
+import { PersonCard } from '@/components';
+
 
 
 const AboutUsPage = () => {
@@ -24,7 +25,7 @@ const AboutUsPage = () => {
     }, [])
 
     return (
-        <Box mt="22vh">
+        <Box p={7} mt="22vh">
             <Grid templateColumns={{base: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)'}} gap={6}>
                 {isSmallerThan960 && <GridItem w='100%' h='50vh'/>}
 

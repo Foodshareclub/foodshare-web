@@ -14,7 +14,7 @@ export const SearchResultsPage = () => {
     const keyWord = searchParams.get('key_word');
 
     useEffect(() => {
-        console.log('search')
+
         dispatch(resultsSearchProductsTC({
             searchWord: keyWord as string,
             productSearchType: params.type as string
@@ -29,7 +29,7 @@ export const SearchResultsPage = () => {
                 columns={GridSize()}
                 spacing={10}
             >
-                {products.map((product, id) => (
+                {products.map((product) => (
                     <ProductCard
                         product={product}
                         key={product.id}

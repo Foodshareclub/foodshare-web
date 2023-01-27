@@ -31,8 +31,8 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                             isRegister
                                 ? <>
                                     <UpdateProfileModal fullScreen={true} buttonValue={t({
-                                        id: `Update Profile`,
-                                        message: `Update Profile`
+                                        id: `Edit Profile`,
+                                        message: `Edit Profile`
                                     })}/>
                                     <MenuItem onClick={() => navigateToMyLists()}><Trans>My listing's</Trans></MenuItem>
                                     <MenuItem onClick={() => navigateToLogout()}><Trans>Log Out</Trans></MenuItem>

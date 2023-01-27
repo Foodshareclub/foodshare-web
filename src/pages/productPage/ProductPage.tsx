@@ -26,7 +26,7 @@ const ProductPage: React.FC<ProductPageType> = ({buttonValue}) => {
     }, [params.id]);
 
     return (
-        <Box mt="22vh">
+        <Box  p={7} mt="22vh">
 
             {
                 oneProduct?.map((product, id) => {

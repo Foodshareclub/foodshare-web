@@ -37,15 +37,12 @@ function App() {
         dispatch(userActions.getSession(session));
     }
 
-    const userID = session?.user.id ?? '';
-
     return (
         <>
             <ChangeLanguageContainer
                 setProductType={setProductType}
                 productType={productType}
                 getRoute={getRoute}
-                userID={userID}
             />
             <PasswordRecoveryModal/>
         </>

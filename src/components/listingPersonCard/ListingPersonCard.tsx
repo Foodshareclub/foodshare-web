@@ -1,7 +1,6 @@
 import React from 'react';
 import {Avatar, Box, Card, CardBody, Flex, Heading, Image, Skeleton, Stack} from "@chakra-ui/react";
-import PublishListingModal from "../../components/modals/PublishListingModal";
-import {useLocation} from "react-router-dom";
+import PublishListingModal from "../modals/PublishListingModal";
 import peak from "@/assets/peakpx-min.jpg";
 type PropsType = {
     name: string
@@ -16,7 +15,6 @@ const ListingPersonCard: React.FC<PropsType> = ({
                                              img,
                                              userID,
                                          }) => {
-    const url = useLocation();
     return (
         <Card
             direction={"column"}

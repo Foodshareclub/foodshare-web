@@ -30,7 +30,7 @@ export const OneProduct: React.FC<OneProductType> = ({product, buttonValue}) => 
 
             <Box w={{md: "40%", base: "100%"}}>
                 <Box lineHeight={2}>
-                    <Heading textAlign={"center"} noOfLines={1} fontSize={'2xl'} fontFamily={'body'}
+                    <Heading textTransform={'uppercase'} textAlign={"center"} noOfLines={1} fontSize={'2xl'} fontFamily={'body'}
                              fontWeight={500}>{product.post_name}</Heading>
 
                     <Flex>

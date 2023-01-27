@@ -23,9 +23,10 @@ import {PhoneArea} from "@/components/modals/AuthenticationUser/PhoneArea";
 import {RequiredStar} from "@/components/requiredStar/RequiredStar";
 import VolunteerInfoModal from "@/components/modals/VolunteerInfoModal";
 import {SearchField} from "@/components/searchField/SearchField";
-import {ProductCard} from "@/components/productComponent/ProductCard";
+import {ProductCard} from "@/components/productCard/ProductCard";
 import {OneProduct} from "@/components/oneProduct/OneProduct";
 import {ProductsLocation} from "@/components/productsLocation/ProductLocation";
+import PersonCard from "./personCard/PersonCard";
 
 export {
     Main,
@@ -55,5 +56,6 @@ export {
     SearchField,
     ProductCard,
     OneProduct,
-    ProductsLocation
+    ProductsLocation,
+    PersonCard
 }
