@@ -4,6 +4,7 @@ import {useLocation, useNavigate} from "react-router-dom";
 import {Trans} from "@lingui/macro";
 import {DeleteIcon} from "@chakra-ui/icons";
 import PublishListingModal from "../../../components/modals/PublishListingModal";
+import {InitialProductStateType} from "@/store/slices/productReducer";
 
 type AsideProdType = {
     img: string
@@ -12,7 +13,7 @@ type AsideProdType = {
     available: string
     distance: string
     height?: string
-    product?: any
+    product?: InitialProductStateType
     deleteProductHandler?: (productID: number) => void
 }
 const AsideProducts: React.FC<AsideProdType> = ({
@@ -30,12 +31,12 @@ const AsideProducts: React.FC<AsideProdType> = ({
     const navigate = useNavigate();
 
     const goToProduct = () => {
-        navigate('/oneProd', {state: product})
+        navigate(`/one-product/${product?.post_type}/${product?.id}`)
     }
 
     const deleteHandler = () => {
         if (deleteProductHandler) {
-            deleteProductHandler(product.id);
+            deleteProductHandler(product?.id as number);
         }
     }
 
@@ -87,7 +88,7 @@ const AsideProducts: React.FC<AsideProdType> = ({
                 url === '/user-listings' && <CardFooter alignSelf={"center"}>
                     {/*<Flex alignSelf={"center"} m={"0 auto"} justify={"space-around"} w="30%">*/}
                     <PublishListingModal
-                        userID={product.user}
+                        userID={product?.user as string}
                         product={product}/>
                     <IconButton
                         ml={4}

@@ -31,14 +31,13 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
                     <Routes>
                         <Route path={"/"} element={<Main/>}/>
                         <Route path={"/*"} element={<Main/>}/>
-                        <Route path={"/one-product"} element={<ProductPage />}/>
+                        <Route path={"/one-product/:type/:id"} element={<ProductPage />}/>
                         <Route path={"/aboutUs"} element={<AboutUsPage/>}/>
                         <Route path={"/contactUs"} element={<ContactUsPage/>}/>
                         <Route path={"/volunteer"} element={<VolunteerPage/>}/>
                         <Route path={"/user-listings"} element={<MyListingsPage userID={userID}/>}/>
                         <Route path={"/volunteer/opportunities"} element={<OpportunitiesPage/>}/>
-                        <Route path={"/s/:type?key_word="} element={<SearchResultsPage/>}/>
-                        <Route path={"/s/:type/"} element={<SearchResultsPage/>}/>
+                        <Route path={"/s/:type"} element={<SearchResultsPage/>}/>
                     </Routes>
                 </CardBody>
                 <Footer/>
