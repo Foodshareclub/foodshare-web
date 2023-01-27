@@ -25,7 +25,7 @@ export const SearchField = () => {
 
     return (
         <>
-            <InputGroup alignSelf="center" w={"30%"} alignItems="center" flexDir="column">
+            <InputGroup alignSelf="center" w={"30%"} alignItems="center" flexDir="column" >
                 <InputLeftElement
                     pointerEvents={"stroke"}
                     children={<SearchIcon
@@ -36,13 +36,14 @@ export const SearchField = () => {
                 />
                 <Input
                     // focusBorderColor='#FF2D55'
-                    value={searchValue}
-                    onChange={onSearchHandler}
-                    onFocus={() => setShowSearchParams(true)}
-                    placeholder={t({
-                        id: `msg.Input`,
-                        message: `What are we in search of today?`
-                    })}
+                       value={searchValue}
+                       onChange={onSearchHandler}
+                       onFocus={() => setShowSearchParams(true)}
+                       placeholder={t({
+                           id: `msg.Input`,
+                           message: `What are we in search of today?`
+                       })}
+
                 />
                 {
                     showSearchParams &&
