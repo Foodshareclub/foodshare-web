@@ -10,7 +10,7 @@ import {ArrowForwardIcon} from "@chakra-ui/icons";
 import {Trans} from '@lingui/macro';
 import {teamMockArray} from "@/utils/mockArray";
 import {useMediaQuery} from "@/utils";
-import {PersonCard} from "@/pages";
+import {PersonCard} from "@/components";
 
 
 const AboutUsPage = () => {
