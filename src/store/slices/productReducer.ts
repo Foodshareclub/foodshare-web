@@ -1,6 +1,6 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import {productAPI, ProductObjType} from "../../api/productAPI";
-import {ImgUrlType, profileAPI, UploadImgUrlType} from "../../api/profileAPI";
+import {ImgUrlType, profileAPI, UploadImgUrlType} from "@/api/profileAPI";
 
 
 export type InitialProductStateType = {
@@ -29,6 +29,7 @@ export type InitialProductStateType = {
 const initialState = {
     products: [] as Array<InitialProductStateType>,
     currentUserProducts: [] as Array<InitialProductStateType>,
+    searchProducts: [] as Array<InitialProductStateType>,
     isUpdatedProductsList: false,
     postImgUrl: '',
     isPostImgUpload: false
@@ -83,6 +84,20 @@ export const deleteProductTC = createAsyncThunk('/deleteProductTC', async (produ
         return thunkAPI.rejectWithValue(e);
     }
 });
+
+export const resultsSearchProductsTC = createAsyncThunk('/resultsSearchProductsTC', async (args:{
+                                                                                               searchWord: string,
+                                                                                               productSearchType: string
+                                                                                           }, thunkAPI) => {
+    try {
+        const {data, error} = await productAPI.searchProducts(args.searchWord, args.productSearchType);
+        if (error) console.log(error);
+        return data;
+    } catch (e) {
+        return thunkAPI.rejectWithValue(e);
+    }
+});
+
 export const downloadPostImgFromDBTC = createAsyncThunk("/auth/downloadPostImgFromDBTC", async (imgValue: ImgUrlType) => {
     try {
         const {data, error} = await profileAPI.downloadImgFromDB(imgValue)
@@ -151,15 +166,6 @@ const productSlice = createSlice({
             //     console.log('true')
             // }
         });
-        builder.addCase(downloadPostImgFromDBTC.fulfilled, (state, action) => {
-            if (action.payload) {
-                state.postImgUrl = action.payload
-            }
-        });
-        builder.addCase(uploadPostImgToDBTC.fulfilled, (state) => {
-            state.isPostImgUpload = true
-
-        });
         builder.addCase(deleteProductTC.fulfilled, (state, action) => {
             if (!action.payload?.message) {
                 state.isUpdatedProductsList = !state.isUpdatedProductsList;
@@ -170,6 +176,21 @@ const productSlice = createSlice({
                 state.isUpdatedProductsList = !state.isUpdatedProductsList;
             }
         });
+        builder.addCase(resultsSearchProductsTC.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.searchProducts = action.payload;
+            }
+        });
+        builder.addCase(downloadPostImgFromDBTC.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.postImgUrl = action.payload
+            }
+        });
+        builder.addCase(uploadPostImgToDBTC.fulfilled, (state) => {
+            state.isPostImgUpload = true
+
+        });
+
 
     }
 })

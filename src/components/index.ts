@@ -22,6 +22,8 @@ import {PasswordRecoveryModal} from "@/components/modals/AuthenticationUser/Pass
 import {PhoneArea} from "@/components/modals/AuthenticationUser/PhoneArea";
 import {RequiredStar} from "@/components/requiredStar/RequiredStar";
 import VolunteerInfoModal from "@/components/modals/VolunteerInfoModal";
+import {SearchField} from "@/components/searchField/SearchField";
+import {ProductCard} from "@/components/productComponent/ProductCard";
 
 export {
     Main,
@@ -47,5 +49,7 @@ export {
     FilterProductComponent,
     PhoneArea,
     RequiredStar,
-    VolunteerInfoModal
+    VolunteerInfoModal,
+    SearchField,
+    ProductCard
 }

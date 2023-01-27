@@ -2,14 +2,12 @@ import straw from "../../assets/straw.svg";
 import * as React from 'react';
 import {useEffect} from 'react';
 import {useNavigate} from "react-router-dom";
-import {Avatar, Box, Flex, Input, InputGroup, InputLeftElement, Text} from "@chakra-ui/react";
-import {SearchIcon} from "@chakra-ui/icons";
-import {t} from "@lingui/macro";
+import {Avatar, Box, Flex, Text} from "@chakra-ui/react";
 import {PagesType} from "./Header";
 import {useAppDispatch, useAppSelector} from "@/hook";
 import {AllValuesType} from "@/api/profileAPI";
 import {useMediaQuery} from "@/utils";
-import {NavDrawer, ProfileSettings} from "@/components";
+import {NavDrawer, ProfileSettings, SearchField} from "@/components";
 import {downloadImgFromDBTC, logoutTC} from "@/store/slices/userReducer";
 
 type PropsLangType = {
@@ -83,7 +81,7 @@ const NavComponent: React.FC<PropsLangType> = ({
     }
 
     return (
-        <Flex  justify={"space-between"}>
+        <Flex justify={"space-between"}>
             <Flex>
                 <Avatar alignSelf="center"
                         src={straw}/>
@@ -95,16 +93,8 @@ const NavComponent: React.FC<PropsLangType> = ({
                     </Text>
                 </Box>
             </Flex>
-            <InputGroup alignSelf="center" w={"50%"} ml={"6%"} alignItems="center">
-                <InputLeftElement
-                    pointerEvents='none'
-                    children={<SearchIcon color='gray.300'/>}
-                />
-                <Input focusBorderColor='#FF2D55' type='search' placeholder={t({
-                    id:`msg.Input`,
-                    message:`What are we in search of today?`
-                })}/>
-            </InputGroup>
+
+            <SearchField/>
 
             {
                 !isSmallerThan800
