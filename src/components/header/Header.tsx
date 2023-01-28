@@ -3,12 +3,7 @@ import {CardHeader, useColorModeValue} from "@chakra-ui/react";
 import {getValueFromDBTC} from "@/store/slices/userReducer";
 import {useAppDispatch, useAppSelector} from "@/hook";
 import {FilterProductComponent, NavComponent} from "@/components";
-import {
-    isRegisterSelector,
-    isUpdateSelector,
-    userIdFromSessionSelector,
-    userIdSelector
-} from "@/store/slices/userSelectors";
+import {isAuthSelector, isRegisterSelector, userIdFromSessionSelector} from "@/store/slices/userSelectors";
 
 type HeaderType = {
     getRoute: (route: string) => void
@@ -22,13 +17,13 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
     const dispatch = useAppDispatch();
 
     const isRegister = useAppSelector(isRegisterSelector);
-    const isUpdate = useAppSelector(isUpdateSelector);
+    const isAuth = useAppSelector(isAuthSelector);
     const userId = useAppSelector(userIdFromSessionSelector);
 
     const [pageType, setPageType] = useState<PagesType>("productComponent");
 
     useEffect(() => {
-        if (userId) {
+        if (userId && isAuth) {
             const values = {
                 fromTableName: "profiles",
                 columnValue: 'id',
@@ -37,18 +32,18 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
             }
             dispatch(getValueFromDBTC(values));
         }
-    }, [userId, isUpdate])
+    }, [userId, isAuth])
 
     return (
 
-        <CardHeader w="100%"  position="fixed" zIndex={2} pb={0}
+        <CardHeader w="100%" position="fixed" zIndex={2} pb={0}
                     bg={useColorModeValue('white', 'gray.900')}
         >
             <NavComponent
                 isRegister={isRegister}
                 setPageType={setPageType}
                 setProductType={setProductType}
-                productType={productType}
+
             />
             <FilterProductComponent
                 getRoute={getRoute}

@@ -31,7 +31,6 @@ const initialState = {
     currentUserProducts: [] as Array<InitialProductStateType>,
     searchProducts: [] as Array<InitialProductStateType>,
     oneProduct: [] as Array<InitialProductStateType>,
-    isUpdatedProductsList: false,
     isUpdateProduct: "none",
     postImgUrl: '',
     isPostImgUpload: false
@@ -40,7 +39,10 @@ const initialState = {
 export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", async (arg, thunkAPI) => {
     try {
         const {data, error} = await productAPI.getAllProducts();
-        if (error) console.log(error);
+        if (error) {
+            console.log(error);
+            return thunkAPI.rejectWithValue(error);
+        }
         if (data) return data;
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
@@ -50,7 +52,10 @@ export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", asyn
 export const getProductsTC = createAsyncThunk("/getProductsTC", async (productType: string, thunkAPI) => {
     try {
         let {data, error} = await productAPI.getProducts(productType);
-        if (error) console.log(error);
+        if (error) {
+            console.log(error);
+            return thunkAPI.rejectWithValue(error);
+        }
         return data;
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
@@ -61,7 +66,10 @@ export const getCurrentUserProductsTC = createAsyncThunk('/getCurrentUserProduct
     try {
         const {data, error} = await productAPI.getCurrentUserProduct(userID);
 
-        if (error) console.log(error);
+        if (error) {
+            console.log(error);
+            return thunkAPI.rejectWithValue(error);
+        }
 
         return data;
     } catch (e) {
@@ -72,7 +80,10 @@ export const getCurrentUserProductsTC = createAsyncThunk('/getCurrentUserProduct
 export const getOneProductTC = createAsyncThunk('/getOneProductTC', async (productId: number, thunkAPI) => {
     try {
         let {data, error} = await productAPI.getOneProduct(productId);
-        if (error) console.log(error);
+        if (error) {
+            console.log(error);
+            return thunkAPI.rejectWithValue(error);
+        }
         return data;
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
@@ -83,9 +94,9 @@ export const createProductTC = createAsyncThunk('/createProductTC', async (produ
     try {
         const {error} = await productAPI.createProduct(productObj)
         if (error) {
-            thunkAPI.dispatch(productActions.isUpdateProduct("error"))
+            thunkAPI.dispatch(productActions.isUpdateProduct("error"));
             console.log(error)
-            return thunkAPI.rejectWithValue(error.message)
+            return thunkAPI.rejectWithValue(error);
         }
         return "successful"
     } catch (e) {
@@ -97,9 +108,9 @@ export const deleteProductTC = createAsyncThunk('/deleteProductTC', async (produ
     try {
         const {error} = await productAPI.deleteProduct(productID);
         if (error) {
-            thunkAPI.dispatch(productActions.isUpdateProduct("error"))
+            thunkAPI.dispatch(productActions.isUpdateProduct("error"));
             console.log(error)
-            return thunkAPI.rejectWithValue(error.message)
+            return thunkAPI.rejectWithValue(error);
         }
         return "successful"
     } catch (e) {
@@ -113,24 +124,27 @@ export const resultsSearchProductsTC = createAsyncThunk('/resultsSearchProductsT
 }, thunkAPI) => {
     try {
         const {data, error} = await productAPI.searchProducts(args.searchWord, args.productSearchType);
-        if (error) console.log(error);
+        if (error) {
+            console.log(error);
+            return thunkAPI.rejectWithValue(error);
+        }
         return data;
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
     }
 });
 
-export const downloadPostImgFromDBTC = createAsyncThunk("/auth/downloadPostImgFromDBTC", async (imgValue: ImgUrlType) => {
+export const downloadPostImgFromDBTC = createAsyncThunk("/auth/downloadPostImgFromDBTC", async (imgValue: ImgUrlType, thunkAPI) => {
     try {
         const {data, error} = await profileAPI.downloadImgFromDB(imgValue)
         if (error) {
             console.log(error)
+            return thunkAPI.rejectWithValue(error);
         }
         if (data) {
-            console.log(URL.createObjectURL(data))
-            return URL.createObjectURL(data)
+            console.log(URL.createObjectURL(data));
+            return URL.createObjectURL(data);
         }
-
     } catch (error: any) {
         console.log('Error downloading image: ', error.message)
     }
@@ -139,25 +153,26 @@ export const downloadPostImgFromDBTC = createAsyncThunk("/auth/downloadPostImgFr
 export const uploadPostImgToDBTC = createAsyncThunk("/auth/uploadPostImgToDBTC", async (imgValue: UploadImgUrlType, thunkAPI) => {
     try {
 
-        const {error} = await profileAPI.uploadImgFromDB(imgValue)
+        const {error} = await profileAPI.uploadImgFromDB(imgValue);
         if (error) {
             console.log(error)
+            return thunkAPI.rejectWithValue(error);
         }
     } catch (error: any) {
-        return thunkAPI.rejectWithValue(error.message)
+        return thunkAPI.rejectWithValue(error.message);
     }
 })
 export const updateProductTC = createAsyncThunk("/auth/updateProductTC", async (updates: ProductObjType, thunkAPI) => {
     try {
-        let {error} = await productAPI.updateProduct(updates)
+        let {error} = await productAPI.updateProduct(updates);
         if (error) {
-            thunkAPI.dispatch(productActions.isUpdateProduct("error"))
+            thunkAPI.dispatch(productActions.isUpdateProduct("error"));
             console.log(error)
-            return thunkAPI.rejectWithValue(error.message)
+            return thunkAPI.rejectWithValue(error);
         }
         return "successful"
     } catch (error: any) {
-        return thunkAPI.rejectWithValue(error.message)
+        return thunkAPI.rejectWithValue(error);
     }
 })
 const productSlice = createSlice({
@@ -165,7 +180,7 @@ const productSlice = createSlice({
     initialState,
     reducers: {
         isUpdateProduct: (state, action) => {
-            state.isUpdateProduct = action.payload
+            state.isUpdateProduct = action.payload;
         }
     },
     extraReducers: (builder) => {
@@ -181,7 +196,7 @@ const productSlice = createSlice({
         builder.addCase(getCurrentUserProductsTC.fulfilled, (state, action) => {
             if (action.payload) {
                 state.currentUserProducts = action.payload;
-                state.isUpdateProduct="none"
+                state.isUpdateProduct = "none"
             }
         });
         builder.addCase(getOneProductTC.fulfilled, (state, action) => {

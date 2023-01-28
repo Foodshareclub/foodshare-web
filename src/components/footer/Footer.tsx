@@ -55,6 +55,7 @@ const Footer = () => {
                     align={{base: 'center', md: 'center'}}>
                     <Text><Trans>© 2022 Foodshare Club, Limited. All rights reserved</Trans></Text>
                     <LanguageSelector/>
+
                     <Stack direction={'row'} spacing={6}>
                         <SocialButton label={'Twitter'} href={'#'}>
                             <Avatar size='xs' src={twitter}/>

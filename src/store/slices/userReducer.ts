@@ -22,20 +22,23 @@ const initialState = {
         user: {
             user_metadata: {}
         }
-    }as Session,
+    } as Session,
     isLoading: false,
     error: null,
     value: {} as AllValuesType,
     imgUrl: '',
     isUpdate: false,
-    isUpdateProfile:"none",
+    isUpdateProfile: "none",
     language: "en"
 };
 
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
     try {
         const {data, error} = await profileAPI.loginWithPass(email, password)
-        if (error) console.error(error)
+        if (error) {
+            console.error(error);
+            return thunkAPI.rejectWithValue(error);
+        }
         return data.user
     } catch (e: any) {
         console.log(e)
@@ -46,7 +49,11 @@ export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password
 export const loginWithOtpTC = createAsyncThunk("/auth/loginWithOtpTC", async (email: string, thunkAPI) => {
     try {
         const {data, error} = await supabase.auth.signInWithOtp({email});
-        console.log(error)
+        if (error) {
+            console.log(error)
+            return thunkAPI.rejectWithValue(error);
+        }
+
         return data.user
     } catch (e: any) {
         return thunkAPI.rejectWithValue(e)
@@ -56,7 +63,10 @@ export const loginWithOtpTC = createAsyncThunk("/auth/loginWithOtpTC", async (em
 export const signInWithProviderTC = createAsyncThunk("/auth/signInWithGoogleTC", async (provider: ProviderType, thunkAPI) => {
     try {
         const {data, error} = await profileAPI.signInWithProvider(provider);
-        console.log(error)
+        if (error) {
+            console.log(error)
+            return thunkAPI.rejectWithValue(error);
+        }
         return data
     } catch (e: any) {
         return thunkAPI.rejectWithValue(e)
@@ -69,7 +79,10 @@ export const loginWithPhoneOtpTC = createAsyncThunk("/auth/loginWithPhoneOtpTC",
                                                                                         }: AuthPayload, thunkAPI) => {
     try {
         const {data, error} = await profileAPI.loginWithPhone(phone as string, password);
-
+        if (error) {
+            console.log(error)
+            return thunkAPI.rejectWithValue(error);
+        }
         // return data.user
     } catch (e: any) {
         return thunkAPI.rejectWithValue(e)
@@ -81,20 +94,28 @@ export const registerTC = createAsyncThunk("/auth/registerTC", async ({
                                                                           password,
                                                                           firstName,
                                                                           lastName
-                                                                      }: AuthPayload) => {
+                                                                      }: AuthPayload, thunkAPI) => {
     try {
         const {data, error} = await profileAPI.registration({email, password, firstName, lastName})
-        console.log(error)
+
+        if (error) {
+            console.log(error)
+            return thunkAPI.rejectWithValue(error);
+        }
         return data.user
     } catch (e: any) {
         console.log(e)
     }
 });
 
-export const logoutTC = createAsyncThunk("/auth/logoutTC", async () => {
+export const logoutTC = createAsyncThunk("/auth/logoutTC", async (_, thunkAPI) => {
     try {
         const {error} = await profileAPI.logOut()
-        console.error(error)
+        if (error) {
+            console.log(error);
+            return thunkAPI.rejectWithValue(error);
+        }
+
     } catch (e) {
         console.log(e)
     }
@@ -122,11 +143,12 @@ export const getValueFromDBTC = createAsyncThunk("/auth/getValueFromDBTC", async
     }
 });
 
-export const downloadImgFromDBTC = createAsyncThunk("/auth/downloadImgFromDBTC", async (imgValue: ImgUrlType) => {
+export const downloadImgFromDBTC = createAsyncThunk("/auth/downloadImgFromDBTC", async (imgValue: ImgUrlType, thunkAPI) => {
     try {
         const {data, error} = await profileAPI.downloadImgFromDB(imgValue)
         if (error) {
             console.log(error)
+            return thunkAPI.rejectWithValue(error);
         }
         if (data) {
             return URL.createObjectURL(data)
@@ -142,6 +164,7 @@ export const uploadImgToDBTC = createAsyncThunk("/auth/uploadImgToDBTC", async (
         const {error} = await profileAPI.uploadImgFromDB(imgValue)
         if (error) {
             console.log(error)
+            return thunkAPI.rejectWithValue(error);
         }
     } catch (error: any) {
         thunkAPI.rejectWithValue(error.message)
@@ -155,14 +178,15 @@ export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (
         thunkAPI.dispatch(userActions.isLoading(true))
         let {error} = await profileAPI.updateProfile(updates)
         if (error) {
-            thunkAPI.dispatch(userActions.isUpdateProfile("error"))
+            thunkAPI.dispatch(userActions.isUpdateProfile("error"));
             console.log(error)
+            return thunkAPI.rejectWithValue(error);
         }
-if(error === null){
-   thunkAPI.dispatch(userActions.isUpdateProfile("successful"))
-}
+        if (error === null) {
+            thunkAPI.dispatch(userActions.isUpdateProfile("successful"))
+        }
     } catch (error: any) {
-       return  thunkAPI.rejectWithValue(error.message)
+        return thunkAPI.rejectWithValue(error.message)
     } finally {
         thunkAPI.dispatch(userActions.isLoading(false))
     }
@@ -173,6 +197,7 @@ export const recoveryPasswordTC = createAsyncThunk("/auth/recoveryPasswordTC", a
         const {data, error} = await profileAPI.recoveryPassword(email);
         if (error) {
             console.error(error)
+            return thunkAPI.rejectWithValue(error);
         }
 
         return data;
@@ -198,7 +223,7 @@ const userSlice = createSlice({
         isUpdate: (state) => {
             state.isUpdate = !state.isUpdate
         },
-        isUpdateProfile: (state,action) => {
+        isUpdateProfile: (state, action) => {
             state.isUpdateProfile = action.payload
         },
         changeLanguage: (state, action: PayloadAction<string>) => {
