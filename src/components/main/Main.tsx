@@ -11,7 +11,6 @@ import {ProductCard} from "@/components";
 
 export const Main = () => {
     const products = useAppSelector<Array<InitialProductStateType>>(state => state.product.products);
-
     return (
         <Box mt="18vh">
             {/*<Trans>*/}
@@ -23,7 +22,7 @@ export const Main = () => {
                 spacing={10}
                 p={7}
             >
-                {products.map((product, id) => (
+                {products.map((product) => (
                     <ProductCard
                         product={product}
                         key={product.id}

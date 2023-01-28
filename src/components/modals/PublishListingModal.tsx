@@ -17,13 +17,12 @@ import {
     Select,
     Text,
     Textarea,
-    useDisclosure,
-    useToast
+    useDisclosure
 } from "@chakra-ui/react";
 import {createPhotoUrl} from "@/utils";
 import cloud from "../../assets/cloud.svg"
 
-import {useActionCreators, useAppSelector} from "@/hook";
+import {useActionCreators} from "@/hook";
 import {t, Trans} from '@lingui/macro';
 import {RequiredStar} from "@/components";
 import {EditIcon} from "@chakra-ui/icons";
@@ -35,32 +34,14 @@ type PublishListingModalType = {
     product?: ProductObjType
 }
 
-const PublishListingModal: React.FC<PublishListingModalType> = React.memo (({
-                                                                    userID,
-                                                                    product
-                                                                }) => {
+const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
+                                                                               userID,
+                                                                               product
+                                                                           }) => {
     const actions = useActionCreators({...productActions, createProductTC, updateProductTC, uploadPostImgToDBTC})
-    const isUpdateProduct = useAppSelector<string>(state => state.product.isUpdateProduct);
+    //console.log("publishModal")
     const {isOpen, onOpen, onClose} = useDisclosure();
-    const toast = useToast()
-    if (isUpdateProduct === "successful") {
-        toast({
-            title: 'Account created.',
-            description: "We've created your account for you.",
-            status: 'success',
-            duration: 9000,
-            isClosable: true,
-        })
-    }
-    if (isUpdateProduct === "error") {
-        toast({
-            title: 'Account not created.',
-            description: "You have some problem.",
-            status: 'error',
-            duration: 9000,
-            isClosable: true,
-        })
-    }
+
     const initialRef = useRef(null);
     const finalRef = useRef(null);
 
@@ -99,13 +80,13 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo (({
         productObj = {...productObj, gif_url: product.gif_url}
     }
     const onOpenModalHandler = () => onOpen();
-    console.log(isUpdateProduct)
+
     const publishHandler = async () => {
         await actions.uploadPostImgToDBTC({dir: `avatars-posts/${userID}`, file, filePath})//если дубль фото то в сторадже не создаст новую
         if (product) {
             await actions.updateProductTC({...productObj, id: productId, post_published: true});
-            actions.isUpdateProduct("none")
         } else await actions.createProductTC(productObj);
+
         onClose();
     }
 
