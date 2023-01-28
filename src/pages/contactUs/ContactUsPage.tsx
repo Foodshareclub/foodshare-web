@@ -11,7 +11,7 @@ const ContactUsPage = () => {
         {
             fallback: 'md',
         },
-    )
+    );
 
     const {
         register,
@@ -26,10 +26,12 @@ const ContactUsPage = () => {
         },
         mode: "onChange"
     });
+
     const onSubmit = async (value: any) => {
         console.log(value)
 
     };
+
     return (
         <Box mt="21vh" w={{md: "50%", base: "100%"}} mx={"auto"}
              textAlign="center" fontSize={25} fontWeight={600}>

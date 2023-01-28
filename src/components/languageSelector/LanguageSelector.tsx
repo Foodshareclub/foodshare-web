@@ -1,14 +1,16 @@
 import React, {ChangeEvent} from 'react';
-import {useActionCreators, useAppSelector} from "../../hook/hooks";
-import {userActions} from "../../store/slices/userReducer";
+import {useActionCreators, useAppSelector} from "@/hook";
+import {userActions} from "@/store/slices/userReducer";
+import {languageSelector} from "@/store/slices/userSelectors";
 
 
 const LanguageSelector = () => {
-    const language = useAppSelector(state => state.user.language);
-    const actions = useActionCreators(userActions)
+    const language = useAppSelector(languageSelector);
+
+    const actions = useActionCreators(userActions);
 
     const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-        actions.changeLanguage(event.currentTarget.value)
+        actions.changeLanguage(event.currentTarget.value);
     };
 
     return (

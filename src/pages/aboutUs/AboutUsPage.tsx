@@ -15,14 +15,16 @@ import {PersonCard} from "@/components";
 
 
 const AboutUsPage = () => {
-    const [isLoaded, setIsLoaded] = useState(false)
+    const [isLoaded, setIsLoaded] = useState(false);
+
     const isSmallerThan960 = useMediaQuery('(min-width:960px)');
+
     // пока фото загрузятся skeleton
     useEffect(() => {
         setTimeout(() => {
-            setIsLoaded(true)
-        }, 1000)
-    }, [])
+            setIsLoaded(true);
+        }, 1000);
+    }, []);
 
     return (
         <Box p={7} mt="22vh">

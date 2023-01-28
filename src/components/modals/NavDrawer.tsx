@@ -38,9 +38,7 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
     const {isOpen, onOpen, onClose} = useDisclosure()
 
 
-    const handleClick = () => {
-        onOpen()
-    }
+    const handleClick = () => onOpen();
 
     // const size = ['xs', 'sm', 'md', 'lg', 'xl', 'full']
 

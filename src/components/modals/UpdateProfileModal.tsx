@@ -21,6 +21,7 @@ import {useActionCreators, useAppSelector} from "@/hook";
 import {updateProfileTC, uploadImgToDBTC, userActions} from "@/store/slices/userReducer";
 import {AllValuesType} from "@/api/profileAPI";
 import {Avatar} from "@/components";
+import {isLoadingSelector, isUpdateProfileSelector} from "@/store/slices/userSelectors";
 
 
 type ModalType = {
@@ -29,12 +30,14 @@ type ModalType = {
 }
 
 const UpdateProfileModal: React.FC<ModalType> = ({buttonValue, fullScreen}) => {
-    const {isOpen, onOpen, onClose} = useDisclosure()
-    const actions = useActionCreators({...userActions, updateProfileTC, uploadImgToDBTC})
+    const {isOpen, onOpen, onClose} = useDisclosure();
+
+    const actions = useActionCreators({...userActions, updateProfileTC, uploadImgToDBTC});
+
     const {user} = useAppSelector(state => state.user.session);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
-    const isLoading = useAppSelector<boolean>(state => state.user.isLoading);
-    const isUpdateProfile = useAppSelector<string>(state => state.user.isUpdateProfile);
+    const isLoading = useAppSelector<boolean>(isLoadingSelector);
+    const isUpdateProfile = useAppSelector<string>(isUpdateProfileSelector);
 
     const toast = useToast()
     if (isUpdateProfile === "successful") {
@@ -60,25 +63,25 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue, fullScreen}) => {
         setAddress(value.user_address)
         setSecondName(value.second_name)
         setAbout(value.about_me)
-    }, [value])
+    }, [value]);
 
 
 
-    const initialRef = React.useRef(null)
-    const finalRef = React.useRef(null)
+    const initialRef = React.useRef(null);
+    const finalRef = React.useRef(null);
 
-    const [filePath, setFilePath] = useState('')
-    const [file, setFile] = useState<File>({} as File)
+    const [filePath, setFilePath] = useState('');
+    const [file, setFile] = useState<File>({} as File);
 
-    const [firstName, setFirstName] = useState<string>("")
-    const [secondName, setSecondName] = useState<string>("")
-    const [about, setAbout] = useState<string>("")
-    const [address, setAddress] = useState<string>("")
+    const [firstName, setFirstName] = useState<string>("");
+    const [secondName, setSecondName] = useState<string>("");
+    const [about, setAbout] = useState<string>("");
+    const [address, setAddress] = useState<string>("");
     let randomNumber = Math.floor(Math.random() * new Date().getTime());
 
     const onUpload = (filePath: string, file: File) => {
-        setFilePath(filePath)
-        setFile(file)
+        setFilePath(filePath);
+        setFile(file);
     }
     const changeFirstName = (e: ChangeEvent<HTMLInputElement>) => setFirstName(e.currentTarget.value);
     const changeSecondName = (e: ChangeEvent<HTMLInputElement>) => setSecondName(e.currentTarget.value);

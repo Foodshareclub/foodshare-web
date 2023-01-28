@@ -5,11 +5,13 @@ import {resultsSearchProductsTC} from "@/store/slices/productReducer";
 import {useAppDispatch, useAppSelector} from "@/hook";
 import {Box, SimpleGrid} from "@chakra-ui/react";
 import {GridSize} from "@/utils/gridSize";
+import {searchProductsSelector} from "@/store/slices/productsSelectors";
 
 export const SearchResultsPage = () => {
     const dispatch = useAppDispatch();
 
     const params = useParams(); //get params from url
+
     const [searchParams, setSearchParams] = useSearchParams(); //get params from url
     const keyWord = searchParams.get('key_word');
 
@@ -20,7 +22,7 @@ export const SearchResultsPage = () => {
         }));
     }, [params.type, keyWord]);
 
-    const products = useAppSelector(state => state.product.searchProducts);
+    const products = useAppSelector(searchProductsSelector);
 
     return (
         <Box mt="18vh">

@@ -5,8 +5,7 @@ import {Trans} from '@lingui/macro';
 import {getRandomProducts} from "@/utils";
 import {getOneProductTC} from "@/store/slices/productReducer";
 import {useAppDispatch, useAppSelector} from "@/hook";
-import {AsideProducts} from "@/pages";
-import {OneProduct, ProductsLocation} from "@/components";
+import {AsideProducts, OneProduct, ProductsLocation} from "@/components";
 
 type ProductPageType = {
     obj?: any
@@ -14,7 +13,7 @@ type ProductPageType = {
 }
 
 const ProductPage: React.FC<ProductPageType> = ({buttonValue}) => {
-    const params = useParams()
+    const params = useParams();
 
     const dispatch = useAppDispatch();
 

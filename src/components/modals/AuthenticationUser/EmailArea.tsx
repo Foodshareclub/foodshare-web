@@ -1,7 +1,7 @@
 import React, {useState} from "react";
-import {useAppDispatch} from "../../../hook/hooks";
-import {loginWithOtpTC, recoveryPasswordTC} from "../../../store/slices/userReducer";
-import {Notification} from "./NotificationModal";
+import {useAppDispatch} from "@/hook";
+import {loginWithOtpTC, recoveryPasswordTC} from "@/store/slices/userReducer";
+import {Notification} from "@/components";
 import {Button, FormLabel, Input, useDisclosure} from "@chakra-ui/react";
 
 type EmailAreaType = {
@@ -15,7 +15,7 @@ export const EmailArea: React.FC<EmailAreaType> = ({
                                                    }) => {
     const dispatch = useAppDispatch();
 
-    const {isOpen, onOpen, onClose} = useDisclosure()
+    const {isOpen, onOpen, onClose} = useDisclosure();
 
     const [invalid, setInvalid] = useState('');
     const [email, setEmail] = useState('');

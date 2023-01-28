@@ -4,20 +4,20 @@ import BusinessPage from "@/pages/businessPage/BusinessPage";
 import ContactUsPage from "@/pages/contactUs/ContactUsPage";
 import MyListingsPage from "@/pages/prfilePages/MyListingsPage";
 import ProductPage from "@/pages/productPage/ProductPage";
-import AsideProducts from "@/pages/productPage/asideProducts/AsideProducts";
 import OpportunitiesPage from "@/pages/volunteerPages/OpportunitiesPage";
 import VolunteerPage from "@/pages/volunteerPages/VolunteerPage";
 import WantedPage from "@/pages/wantedPage/WantedPage";
+import {SearchResultsPage} from "@/pages/searchResultPage/SearchResultsPage";
 
 export {
     ProductPage,
     MyListingsPage,
     VolunteerPage,
     OpportunitiesPage,
-    AsideProducts,
     AboutUsPage,
     BorrowPage,
     BusinessPage,
     ContactUsPage,
-    WantedPage
+    WantedPage,
+    SearchResultsPage
 }

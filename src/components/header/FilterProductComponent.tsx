@@ -1,6 +1,4 @@
 import * as React from 'react';
-import {useState} from 'react';
-import {navigationActionsSVG} from "../../utils/navigationActions";
 import {Flex} from "@chakra-ui/react";
 import "../../index.scss";
 import Carousel from "../carousel/Carousel";
@@ -27,13 +25,15 @@ const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({
                                                                           productType
                                                                       }) => {
 
-    return <Flex p={4} px={0} justify="space-around">
-        <Carousel
-            getRoute={getRoute}
-            setPageType={setPageType}
-            pageType={pageType}
-            productType={productType}
-        />
-    </Flex>
+    return (
+        <Flex p={4} px={0} justify="space-around">
+            <Carousel
+                getRoute={getRoute}
+                setPageType={setPageType}
+                pageType={pageType}
+                productType={productType}
+            />
+        </Flex>
+    )
 }
 export default SimpleBottomNavigation

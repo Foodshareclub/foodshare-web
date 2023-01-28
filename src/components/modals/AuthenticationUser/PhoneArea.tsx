@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {Button, FormLabel, Input, InputGroup, InputLeftElement, InputRightElement} from "@chakra-ui/react";
-import {useAppDispatch} from "../../../hook/hooks";
+import {useAppDispatch} from "@/hook";
 import {PhoneIcon} from "@chakra-ui/icons";
 
 type PhoneAreaType = {
@@ -9,8 +9,6 @@ type PhoneAreaType = {
 
 
 export const PhoneArea: React.FC<PhoneAreaType> = ({setStartWith}) => {
-    const dispatch = useAppDispatch();
-
     const [phone, setPhone] = useState('');
     const [pass, setPass] = useState('');
     const [code, setCode] = useState('');

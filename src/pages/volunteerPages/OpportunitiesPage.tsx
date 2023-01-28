@@ -1,26 +1,11 @@
 import React from 'react';
 import {Box, GridItem, Heading, Image, SimpleGrid, Text} from "@chakra-ui/react";
 import {opportunities} from "@/utils/mockArray";
-import {useMediaQuery} from "@/utils";
 import {VolunteerInfoModal} from "@/components";
+import {GridSize} from "@/utils/gridSize";
 
 
 const OpportunitiesPage = () => {
-    const isSmallerThan500 = useMediaQuery('(min-width:500px)');
-    const isSmallerThan700 = useMediaQuery('(min-width:700px)');
-    const isSmallerThan1290 = useMediaQuery('(min-width:1290px)');
-
-    const gridSize = () => {
-        if (isSmallerThan1290) {
-            return 6;
-        }
-        if (isSmallerThan700) {
-            return 4;
-        }
-        if (isSmallerThan500) {
-            return 2;
-        }
-    };
     return (
         <Box mt="24vh" mx="auto">
             <Box>
@@ -31,7 +16,7 @@ const OpportunitiesPage = () => {
                     referrerPolicy="no-referrer-when-downgrade"></iframe>
             </Box>
             <Heading mt={10} mb={6} fontWeight={700} fontSize={"40px"}>Volunteer Opportunities</Heading>
-            <SimpleGrid columns={gridSize()}
+            <SimpleGrid columns={GridSize()}
                         spacing={10}>
                 {opportunities.map((item, id) => (
                     <GridItem mt='2' mb='2' key={id}>

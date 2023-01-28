@@ -1,6 +1,5 @@
 import React from 'react';
 import {Card, CardBody, Heading, Image, Stack, Text} from "@chakra-ui/react";
-import {useLocation} from "react-router-dom";
 
 type PropsType = {
     name: string
@@ -15,7 +14,6 @@ const PersonCard: React.FC<PropsType> = ({
                                              img,
                                              aboutExp,
                                          }) => {
-    const url = useLocation();
     return (
         <Card
             direction={{base: 'column', lg: "row"}}

@@ -3,6 +3,12 @@ import {CardHeader, useColorModeValue} from "@chakra-ui/react";
 import {getValueFromDBTC} from "@/store/slices/userReducer";
 import {useAppDispatch, useAppSelector} from "@/hook";
 import {FilterProductComponent, NavComponent} from "@/components";
+import {
+    isRegisterSelector,
+    isUpdateSelector,
+    userIdFromSessionSelector,
+    userIdSelector
+} from "@/store/slices/userSelectors";
 
 type HeaderType = {
     getRoute: (route: string) => void
@@ -13,24 +19,25 @@ type HeaderType = {
 export type PagesType = 'productComponent' | 'profileSettings';
 
 const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) => {
-    const dispatch = useAppDispatch()
-    const isRegister = useAppSelector(state => state.user.isRegister);
-    const isUpdate = useAppSelector(state => state.user.isUpdate);
-    const {user} = useAppSelector(state => state.user.session);
+    const dispatch = useAppDispatch();
+
+    const isRegister = useAppSelector(isRegisterSelector);
+    const isUpdate = useAppSelector(isUpdateSelector);
+    const userId = useAppSelector(userIdFromSessionSelector);
 
     const [pageType, setPageType] = useState<PagesType>("productComponent");
 
     useEffect(() => {
-        if (user.id) {
+        if (userId) {
             const values = {
                 fromTableName: "profiles",
                 columnValue: 'id',
-                columnValueItem: user.id,
+                columnValueItem: userId,
                 selectRow: "*"
             }
             dispatch(getValueFromDBTC(values));
         }
-    }, [user, isUpdate])
+    }, [userId, isUpdate])
 
     return (
 

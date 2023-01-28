@@ -16,6 +16,7 @@ type ProductCardType = {
 export const ProductCard: React.FC<ProductCardType> = React.memo(({product, deleteProductHandler}) => {
     const navigate = useNavigate();
     const url = useLocation().pathname;
+
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
@@ -25,7 +26,6 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product, dele
 
         return () => clearTimeout(time);
     }, []);
-
 
     const deleteHandler = () => {
         if (deleteProductHandler) {

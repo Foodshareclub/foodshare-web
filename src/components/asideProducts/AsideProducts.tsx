@@ -3,7 +3,7 @@ import {Card, CardBody, CardFooter, Heading, IconButton, Image, Text} from "@cha
 import {useLocation, useNavigate} from "react-router-dom";
 import {Trans} from "@lingui/macro";
 import {DeleteIcon} from "@chakra-ui/icons";
-import PublishListingModal from "../../../components/modals/PublishListingModal";
+import PublishListingModal from "../modals/PublishListingModal";
 import {InitialProductStateType} from "@/store/slices/productReducer";
 
 type AsideProdType = {
@@ -31,7 +31,7 @@ const AsideProducts: React.FC<AsideProdType> = ({
     const navigate = useNavigate();
 
     const goToProduct = () => {
-        navigate(`/one-product/${product?.post_type}/${product?.id}`)
+        navigate(`/one-product/${product?.post_type}/${product?.id}`);
     }
 
     const deleteHandler = () => {

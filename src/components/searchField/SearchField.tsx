@@ -11,11 +11,12 @@ export const SearchField = () => {
     const [searchValue, setSearchValue] = useState('');
     const [productType, setProductType] = useState('all');
     const [showSearchParams, setShowSearchParams] = useState(false);
+
     const onSearchHandler = (e: ChangeEvent<HTMLInputElement>) => setSearchValue(e.currentTarget.value);
 
     const onFindResultsHandler = async () => {
         if (searchValue) {
-            navigate(`/s/${productType}?key_word=${searchValue}`)
+            navigate(`/s/${productType}?key_word=${searchValue}`);
 
             setProductType('all');
             setSearchValue('');
