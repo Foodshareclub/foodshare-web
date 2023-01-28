@@ -4,13 +4,6 @@ import "../../index.scss";
 import Carousel from "../carousel/Carousel";
 import {PagesType} from "./Header";
 
-
-export type ValueType = {
-    name: string
-    src: string
-    red: string
-}
-
 type SimpleBottomNavigationType = {
     pageType: PagesType
     setPageType: (pageType: PagesType) => void

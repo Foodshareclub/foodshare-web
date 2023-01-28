@@ -5,10 +5,17 @@ import {Card, CardBody} from "@chakra-ui/react";
 import {Route, Routes} from "react-router-dom";
 import {dynamicActivate} from "@/utils/i18n";
 import {useAppSelector} from "@/hook/hooks";
-import {AboutUsPage, ContactUsPage, MyListingsPage, OpportunitiesPage, ProductPage, VolunteerPage} from "@/pages";
+import {
+    AboutUsPage,
+    ContactUsPage,
+    MyListingsPage,
+    OpportunitiesPage,
+    ProductPage,
+    SearchResultsPage,
+    VolunteerPage
+} from "@/pages";
 import {Footer, Header, Main} from "@/components";
 import {languageSelector} from "@/store/slices/userSelectors";
-import {SearchResultsPage} from "@/pages";
 
 type ContainerProps = {
     productType: string

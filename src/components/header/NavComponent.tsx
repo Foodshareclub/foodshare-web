@@ -10,10 +10,10 @@ import {useMediaQuery} from "@/utils";
 import {NavDrawer, ProfileSettings, SearchField} from "@/components";
 import {downloadImgFromDBTC, logoutTC} from "@/store/slices/userReducer";
 import {avatarURLSelector, imgURLSelector} from "@/store/slices/userSelectors";
+import PopoverForSearch from "@/pages/searchResultPage/PopoverForSearch";
 
 type PropsLangType = {
     isRegister: boolean
-    productType: string
     setPageType: (pageType: PagesType) => void
     setProductType: (type: string) => void
 
@@ -33,16 +33,13 @@ export type ProfileSettingsProps = {
 }
 
 const NavComponent: React.FC<PropsLangType> = ({
-                                                   isRegister, setPageType, setProductType, productType
+                                                   isRegister, setPageType, setProductType
                                                }) => {
-
     const imgUrl = useAppSelector(imgURLSelector);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
     const avatarURL = useAppSelector(avatarURLSelector);
 
     const dispatch = useAppDispatch();
-
-    // const size = ['xs', 'sm', 'md', 'lg', 'xl', 'full'];
 
     useEffect(() => {
         if (value && value.avatar_url) {
@@ -101,8 +98,8 @@ const NavComponent: React.FC<PropsLangType> = ({
                     </Text>
                 </Box>
             </Flex>
-
-            <SearchField/>
+            <PopoverForSearch/>
+            {/*<SearchField/>*/}
 
             {
                 !isSmallerThan800
