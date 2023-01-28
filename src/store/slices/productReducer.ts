@@ -32,6 +32,7 @@ const initialState = {
     searchProducts: [] as Array<InitialProductStateType>,
     oneProduct: [] as Array<InitialProductStateType>,
     isUpdatedProductsList: false,
+    isUpdateProduct: "none",
     postImgUrl: '',
     isPostImgUpload: false
 };
@@ -40,7 +41,7 @@ export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", asyn
     try {
         const {data, error} = await productAPI.getAllProducts();
         if (error) console.log(error);
-        if(data)  return data;
+        if (data) return data;
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
     }
@@ -60,7 +61,7 @@ export const getCurrentUserProductsTC = createAsyncThunk('/getCurrentUserProduct
     try {
         const {data, error} = await productAPI.getCurrentUserProduct(userID);
 
-        if (error) console.log(error) ;
+        if (error) console.log(error);
 
         return data;
     } catch (e) {
@@ -96,10 +97,10 @@ export const deleteProductTC = createAsyncThunk('/deleteProductTC', async (produ
     }
 });
 
-export const resultsSearchProductsTC = createAsyncThunk('/resultsSearchProductsTC', async (args:{
-                                                                                               searchWord: string,
-                                                                                               productSearchType: string
-                                                                                           }, thunkAPI) => {
+export const resultsSearchProductsTC = createAsyncThunk('/resultsSearchProductsTC', async (args: {
+    searchWord: string,
+    productSearchType: string
+}, thunkAPI) => {
     try {
         const {data, error} = await productAPI.searchProducts(args.searchWord, args.productSearchType);
         if (error) console.log(error);
@@ -115,7 +116,7 @@ export const downloadPostImgFromDBTC = createAsyncThunk("/auth/downloadPostImgFr
         if (error) {
             console.log(error)
         }
-        if(data){
+        if (data) {
             console.log(URL.createObjectURL(data))
             return URL.createObjectURL(data)
         }
@@ -133,21 +134,28 @@ export const uploadPostImgToDBTC = createAsyncThunk("/auth/uploadPostImgToDBTC",
             console.log(error)
         }
     } catch (error: any) {
-       return  thunkAPI.rejectWithValue(error.message)
+        return thunkAPI.rejectWithValue(error.message)
     }
 })
 export const updateProductTC = createAsyncThunk("/auth/updateProductTC", async (updates: ProductObjType, thunkAPI) => {
     try {
         let {error} = await productAPI.updateProduct(updates)
+        if (error === null) {
+            thunkAPI.dispatch(productActions.isUpdateProduct("successful"))
+        }
         return error
     } catch (error: any) {
-       return  thunkAPI.rejectWithValue(error.message)
+        return thunkAPI.rejectWithValue(error.message)
     }
 })
 const productSlice = createSlice({
     name: "product",
     initialState,
-    reducers: {},
+    reducers: {
+        isUpdateProduct: (state, action) => {
+            state.isUpdateProduct = action.payload
+        }
+    },
     extraReducers: (builder) => {
         builder.addCase(getAllProductsTC.fulfilled, (state, action) => {
             // @ts-ignore
@@ -212,4 +220,4 @@ const productSlice = createSlice({
 })
 
 
-export const{reducer:productReducer,actions:productActions} = productSlice;
+export const {reducer: productReducer, actions: productActions} = productSlice;

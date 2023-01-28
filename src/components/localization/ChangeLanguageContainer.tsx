@@ -17,7 +17,7 @@ type ContainerProps = {
 }
 const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRoute, setProductType}) => {
     const language = useAppSelector(state => state.user.language)
-
+    console.log("App->")
     useEffect(() => {
         dynamicActivate(language).then(() => {
         })

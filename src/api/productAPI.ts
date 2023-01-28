@@ -10,7 +10,7 @@ export type ProductObjType = {
     post_metro_station: string,
     user: string
     id?: number
-    post_unpublished?: boolean
+    post_published?: boolean
 }
 
 export const productAPI = {

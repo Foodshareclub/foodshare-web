@@ -5,34 +5,56 @@ import {
     Input,
     MenuItem,
     Modal,
-    Text,
     ModalBody,
     ModalCloseButton,
     ModalContent,
     ModalHeader,
     ModalOverlay,
+    Text,
     Textarea,
-    useDisclosure
+    useDisclosure,
+    useToast
 } from "@chakra-ui/react";
 import React, {ChangeEvent, useLayoutEffect, useState} from "react";
 import {Trans} from "@lingui/macro";
-import {useAppDispatch, useAppSelector} from "@/hook";
-import {updateProfileTC, uploadImgToDBTC} from "@/store/slices/userReducer";
+import {useActionCreators, useAppSelector} from "@/hook";
+import {updateProfileTC, uploadImgToDBTC, userActions} from "@/store/slices/userReducer";
 import {AllValuesType} from "@/api/profileAPI";
 import {Avatar} from "@/components";
 
 
 type ModalType = {
     buttonValue?: string
-    fullScreen:boolean
+    fullScreen: boolean
 }
 
-const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
-    const dispatch = useAppDispatch();
-
+const UpdateProfileModal: React.FC<ModalType> = ({buttonValue, fullScreen}) => {
+    const {isOpen, onOpen, onClose} = useDisclosure()
+    const actions = useActionCreators({...userActions, updateProfileTC, uploadImgToDBTC})
     const {user} = useAppSelector(state => state.user.session);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
+    const isLoading = useAppSelector<boolean>(state => state.user.isLoading);
+    const isUpdateProfile = useAppSelector<string>(state => state.user.isUpdateProfile);
 
+    const toast = useToast()
+    if (isUpdateProfile === "successful") {
+        toast({
+            title: 'Account created.',
+            description: "We've created your account for you.",
+            status: 'success',
+            duration: 9000,
+            isClosable: true,
+        })
+    }
+    if (isUpdateProfile === "error") {
+        toast({
+            title: 'Account not created.',
+            description: "You have some problem.",
+            status: 'error',
+            duration: 9000,
+            isClosable: true,
+        })
+    }
     useLayoutEffect(() => {
         setFirstName(value.first_name)
         setAddress(value.user_address)
@@ -40,7 +62,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
         setAbout(value.about_me)
     }, [value])
 
-    const {isOpen, onOpen, onClose} = useDisclosure()
+
 
     const initialRef = React.useRef(null)
     const finalRef = React.useRef(null)
@@ -83,20 +105,20 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
 
     const onClick = async () => {
         let update = {...defaultValues, avatar_url: filePath || value.avatar_url};
-
-        await dispatch(updateProfileTC(update));
+        await actions.updateProfileTC(update);
         if (filePath) {
-            await dispatch(uploadImgToDBTC({dir: 'avatars', filePath, file}));
+            await actions.uploadImgToDBTC({dir: 'avatars', filePath, file});
         }
         setFilePath('');
         setFile({} as File);
+        actions.isUpdateProfile("none")
         onClose();
     };
 
     return (
         <>
-            {fullScreen?<MenuItem onClick={onOpen}>{buttonValue}</MenuItem>:
-                <Text cursor={"pointer"} _hover={{color:"red" }} fontSize='3xl' onClick={onOpen}>{buttonValue}</Text>
+            {fullScreen ? <MenuItem onClick={onOpen}>{buttonValue}</MenuItem> :
+                <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl' onClick={onOpen}>{buttonValue}</Text>
             }
 
             <Modal
@@ -158,7 +180,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue,fullScreen}) => {
 
                         <Button onClick={onClick} fontSize={25} variant="solid" m="10% 0"
                                 w="100%" alignSelf="center"
-                                disabled={false}>
+                                disabled={isLoading}>
                             Update
                         </Button>
                     </ModalBody>

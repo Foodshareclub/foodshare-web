@@ -7,12 +7,9 @@ import {
     profileAPI,
     ProviderType,
     UploadImgUrlType
-} from "../../api/profileAPI";
+} from "@/api/profileAPI";
 import {Session, User} from "@supabase/supabase-js";
-import {supabase} from "../../supaBase.config";
-import {FulfilledAction} from "@reduxjs/toolkit/dist/query/core/buildThunks";
-import {Simulate} from "react-dom/test-utils";
-import error = Simulate.error;
+import {supabase} from "@/supaBase.config";
 
 
 const initialState = {
@@ -25,23 +22,24 @@ const initialState = {
         user: {
             user_metadata: {}
         }
-    } as Session,
+    }as Session,
     isLoading: false,
     error: null,
     value: {} as AllValuesType,
     imgUrl: '',
     isUpdate: false,
+    isUpdateProfile:"none",
     language: "en"
 };
 
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
     try {
-        const {data,error} = await profileAPI.loginWithPass(email, password)
+        const {data, error} = await profileAPI.loginWithPass(email, password)
         if (error) console.error(error)
         return data.user
     } catch (e: any) {
         console.log(e)
-       return thunkAPI.rejectWithValue(e.message)
+        return thunkAPI.rejectWithValue(e.message)
     }
 });
 
@@ -130,7 +128,7 @@ export const downloadImgFromDBTC = createAsyncThunk("/auth/downloadImgFromDBTC",
         if (error) {
             console.log(error)
         }
-        if (data){
+        if (data) {
             return URL.createObjectURL(data)
         }
     } catch (error: any) {
@@ -157,10 +155,14 @@ export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (
         thunkAPI.dispatch(userActions.isLoading(true))
         let {error} = await profileAPI.updateProfile(updates)
         if (error) {
+            thunkAPI.dispatch(userActions.isUpdateProfile("error"))
             console.log(error)
         }
+if(error === null){
+   thunkAPI.dispatch(userActions.isUpdateProfile("successful"))
+}
     } catch (error: any) {
-        thunkAPI.rejectWithValue(error.message)
+       return  thunkAPI.rejectWithValue(error.message)
     } finally {
         thunkAPI.dispatch(userActions.isLoading(false))
     }
@@ -168,13 +170,13 @@ export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (
 
 export const recoveryPasswordTC = createAsyncThunk("/auth/recoveryPasswordTC", async (email: string, thunkAPI) => {
     try {
-        const { data, error } = await profileAPI.recoveryPassword(email);
+        const {data, error} = await profileAPI.recoveryPassword(email);
         if (error) {
             console.error(error)
         }
 
         return data;
-    }catch (e: any) {
+    } catch (e: any) {
         thunkAPI.rejectWithValue(e.message)
     }
 })
@@ -195,6 +197,9 @@ const userSlice = createSlice({
         },
         isUpdate: (state) => {
             state.isUpdate = !state.isUpdate
+        },
+        isUpdateProfile: (state,action) => {
+            state.isUpdateProfile = action.payload
         },
         changeLanguage: (state, action: PayloadAction<string>) => {
             state.language = action.payload
@@ -259,9 +264,9 @@ const userSlice = createSlice({
             state.registration = {} as User
             state.imgUrl = ''
         });
-        builder.addCase(recoveryPasswordTC.fulfilled, (state, action) =>{
+        builder.addCase(recoveryPasswordTC.fulfilled, (state, action) => {
             console.log(action.payload);
         })
     }
 });
-export const {reducer:userReducer,actions:userActions} = userSlice
+export const {reducer: userReducer, actions: userActions} = userSlice
