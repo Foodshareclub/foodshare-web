@@ -4,6 +4,7 @@ import {Box, Button, Flex, Image, Input, Text} from "@chakra-ui/react";
 import cloud from "../../assets/cloud.svg";
 import {createPhotoUrl} from "../../utils/createPhotoUrl";
 import {Trans} from "@lingui/macro";
+import {imgURLSelector} from "@/store/slices/userSelectors";
 
 type PropsType = {
     url: string
@@ -13,7 +14,7 @@ type PropsType = {
 
 const Avatar: React.FC<PropsType> = ({url, size, onUpload}) => {
 
-    const imgUrl = useAppSelector(state => state.user.imgUrl);
+    const imgUrl = useAppSelector(imgURLSelector);
 
     const [pastUrl, setPastUrl] = useState<string | undefined>(imgUrl)
     const inputFileRef = useRef<HTMLInputElement | null>(null)

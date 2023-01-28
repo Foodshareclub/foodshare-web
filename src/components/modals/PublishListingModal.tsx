@@ -39,7 +39,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
                                                                                product
                                                                            }) => {
     const actions = useActionCreators({...productActions, createProductTC, updateProductTC, uploadPostImgToDBTC})
-    //console.log("publishModal")
+
     const {isOpen, onOpen, onClose} = useDisclosure();
 
     const initialRef = useRef(null);
@@ -76,13 +76,18 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
         post_metro_station: metroStation,
         user: userID
     }
+
     if (product && !filePath) {
         productObj = {...productObj, gif_url: product.gif_url}
     }
+
     const onOpenModalHandler = () => onOpen();
 
     const publishHandler = async () => {
-        await actions.uploadPostImgToDBTC({dir: `avatars-posts/${userID}`, file, filePath})//если дубль фото то в сторадже не создаст новую
+        await actions.uploadPostImgToDBTC({
+            dir: `avatars-posts/${userID}`, file, filePath
+        });//если дубль фото то в сторадже не создаст новую
+
         if (product) {
             await actions.updateProductTC({...productObj, id: productId, post_published: true});
         } else await actions.createProductTC(productObj);

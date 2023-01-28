@@ -7,7 +7,8 @@ import {dynamicActivate} from "@/utils/i18n";
 import {useAppSelector} from "@/hook/hooks";
 import {AboutUsPage, ContactUsPage, MyListingsPage, OpportunitiesPage, ProductPage, VolunteerPage} from "@/pages";
 import {Footer, Header, Main} from "@/components";
-import {SearchResultsPage} from "@/pages/searchResultPage/SearchResultsPage";
+import {languageSelector} from "@/store/slices/userSelectors";
+import {SearchResultsPage} from "@/pages";
 
 type ContainerProps = {
     productType: string
@@ -16,8 +17,8 @@ type ContainerProps = {
 
 }
 const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRoute, setProductType}) => {
-    const language = useAppSelector(state => state.user.language)
-    console.log("App->")
+    const language = useAppSelector(languageSelector);
+
     useEffect(() => {
         dynamicActivate(language).then(() => {
         })

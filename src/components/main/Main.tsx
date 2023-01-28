@@ -7,10 +7,12 @@ import {useAppSelector} from "@/hook";
 
 import {GridSize} from "@/utils/gridSize";
 import {ProductCard} from "@/components";
+import {productsSelector} from "@/store/slices/productsSelectors";
 
 
 export const Main = () => {
-    const products = useAppSelector<Array<InitialProductStateType>>(state => state.product.products);
+    const products = useAppSelector<Array<InitialProductStateType>>(productsSelector);
+
     return (
         <Box mt="18vh">
             {/*<Trans>*/}

@@ -7,11 +7,16 @@ type NotificationType = {
     setStartWith: (startWith: "Start") => void
 }
 
-export const Notification: React.FC<NotificationType> = ({isOpen, onClose, setStartWith}) => {
+export const Notification: React.FC<NotificationType> = ({
+                                                             isOpen,
+                                                             onClose,
+                                                             setStartWith
+}) => {
     const onCloseHandler = () => {
         onClose();
         setStartWith('Start');
     }
+
     return (
         <>
             <Modal isOpen={isOpen} onClose={onCloseHandler}>

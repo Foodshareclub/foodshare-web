@@ -9,6 +9,7 @@ import {AllValuesType} from "@/api/profileAPI";
 import {useMediaQuery} from "@/utils";
 import {NavDrawer, ProfileSettings, SearchField} from "@/components";
 import {downloadImgFromDBTC, logoutTC} from "@/store/slices/userReducer";
+import {avatarURLSelector, imgURLSelector} from "@/store/slices/userSelectors";
 
 type PropsLangType = {
     isRegister: boolean
@@ -35,8 +36,9 @@ const NavComponent: React.FC<PropsLangType> = ({
                                                    isRegister, setPageType, setProductType, productType
                                                }) => {
 
-    const imgUrl = useAppSelector(state => state.user.imgUrl);
+    const imgUrl = useAppSelector(imgURLSelector);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
+    const avatarURL = useAppSelector(avatarURLSelector);
 
     const dispatch = useAppDispatch();
 
@@ -46,10 +48,10 @@ const NavComponent: React.FC<PropsLangType> = ({
         if (value && value.avatar_url) {
             dispatch(downloadImgFromDBTC({
                 dir: "avatars",
-                imgUrl: value && value.avatar_url
+                imgUrl: avatarURL
             }))
         }
-    }, [value])
+    }, [value]); ////// НЕПРАВИЛЬНАЯ РАБОТА
 
     const isSmallerThan800 = useMediaQuery('(min-width:800px)');
 
@@ -84,11 +86,17 @@ const NavComponent: React.FC<PropsLangType> = ({
         <Flex justify={"space-between"}>
             <Flex>
                 <Avatar alignSelf="center"
-                        src={straw}/>
+                        src={straw}
+                />
 
                 <Box pl={3} alignSelf="center">
-                    <Text onClick={() => navigateToMain()} cursor="pointer"
-                          fontSize="25px" fontWeight={900} textTransform="uppercase" color='#FF2D55'>
+                    <Text onClick={() => navigateToMain()}
+                          cursor="pointer"
+                          fontSize="25px"
+                          fontWeight={900}
+                          textTransform="uppercase"
+                          color='#FF2D55'
+                    >
                         foodShare
                     </Text>
                 </Box>

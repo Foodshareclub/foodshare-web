@@ -25,6 +25,7 @@ import apple from "../../../assets/apple.svg";
 import google from "../../../assets/google.svg";
 import envelope from "../../../assets/envelope-small.png";
 import phone from "../../../assets/phone.png";
+import {isAuthSelector} from "@/store/slices/userSelectors";
 
 type ModalType = {
     buttonValue: StartWithType
@@ -35,16 +36,16 @@ type ModalType = {
 export type StartWithType = 'Start' | 'Login' | 'Registration' | 'RecoveryPass';
 
 const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullScreen}) => {
-    const {isAuth} = useAppSelector(state => state.user);
+    const isAuth = useAppSelector(isAuthSelector);
 
     const navigate = useNavigate();
 
     const dispatch = useAppDispatch();
 
-    const {isOpen, onOpen, onClose} = useDisclosure()
+    const {isOpen, onOpen, onClose} = useDisclosure();
 
-    const initialRef = React.useRef(null)
-    const finalRef = React.useRef(null)
+    const initialRef = React.useRef(null);
+    const finalRef = React.useRef(null);
 
     const {
         register,

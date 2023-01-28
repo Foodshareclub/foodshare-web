@@ -7,6 +7,7 @@ import {useNavigate} from "react-router-dom";
 import "react-alice-carousel/lib/scss/alice-carousel.scss";
 import {useAppSelector} from "../../hook/hooks";
 import {PagesType} from "../header/Header";
+import {languageSelector} from "@/store/slices/userSelectors";
 
 type PropsType = {
 
@@ -22,12 +23,15 @@ const Carousel: React.FC<PropsType> = ({
                                            pageType,
                                            productType
                                        }) => {
-    const language = useAppSelector(state => state.user.language)
+    const language = useAppSelector(languageSelector);
+
     const navigate = useNavigate();
 
     const navigateHandler = (name: string) => {
-        const routeName = name.toLowerCase()
+        const routeName = name.toLowerCase();
+
         navigate(`${routeName === 'food' ? '/' : routeName}`);
+
         getRoute(routeName);
         setPageType("productComponent");
     }

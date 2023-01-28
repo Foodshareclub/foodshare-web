@@ -18,10 +18,10 @@ import {supabase} from "@/supaBase.config";
 import {ViewIcon, ViewOffIcon} from "@chakra-ui/icons";
 
 export const PasswordRecoveryModal = () => {
-    const {isOpen, onOpen, onClose} = useDisclosure()
+    const {isOpen, onOpen, onClose} = useDisclosure();
 
-    const initialRef = React.useRef(null)
-    const finalRef = React.useRef(null)
+    const initialRef = React.useRef(null);
+    const finalRef = React.useRef(null);
 
     const [show, setShow] = useState(false);
 

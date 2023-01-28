@@ -4,10 +4,10 @@ import man from "../../assets/manAndCnife.png";
 import {useNavigate} from "react-router-dom";
 import {Trans} from "@lingui/macro";
 import {asideProdProperty} from "@/utils/mockArray";
-import {AsideProducts} from "@/pages";
+import {AsideProducts} from "@/components";
 
 const VolunteerPage = () => {
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
     return (
         <Box p={7} mt={["55%","45%","35%", "30%", "25%", "20%"]} w="100%" mx="auto">
