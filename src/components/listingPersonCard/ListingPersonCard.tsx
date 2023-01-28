@@ -1,7 +1,6 @@
 import React from 'react';
 import {Avatar, Box, Card, CardBody, Flex, Heading, Image, Skeleton, Stack} from "@chakra-ui/react";
 import PublishListingModal from "../modals/PublishListingModal";
-
 import peak from "@/assets/peakpx-min.jpg";
 
 type PropsType = {
@@ -11,12 +10,13 @@ type PropsType = {
     userID: string
 }
 
-const ListingPersonCard: React.FC<PropsType> = ({
+const ListingPersonCard: React.FC<PropsType> = React.memo(({
                                              name,
                                              secondName,
                                              img,
                                              userID,
                                          }) => {
+
 
     return (
         <Card
@@ -49,11 +49,13 @@ const ListingPersonCard: React.FC<PropsType> = ({
                     <Heading textAlign={"center"} size='md'>
                         {name} {secondName}
                     </Heading>
-                        <Box pt={5}><PublishListingModal userID={userID}/></Box>
+                        <Box pt={5}><PublishListingModal
+                            userID={userID}
+                        /></Box>
                 </CardBody>
             </Stack>
         </Card>
     );
-};
+})
 
 export default ListingPersonCard;

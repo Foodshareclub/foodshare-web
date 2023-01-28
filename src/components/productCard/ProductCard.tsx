@@ -13,7 +13,7 @@ type ProductCardType = {
     deleteProductHandler?: (productID: number) => void
 }
 
-export const ProductCard: React.FC<ProductCardType> = ({product, deleteProductHandler}) => {
+export const ProductCard: React.FC<ProductCardType> = React.memo(({product, deleteProductHandler}) => {
     const navigate = useNavigate();
     const url = useLocation().pathname;
     const [isLoaded, setIsLoaded] = useState(false);
@@ -120,4 +120,4 @@ export const ProductCard: React.FC<ProductCardType> = ({product, deleteProductHa
             }
         </GridItem>
     )
-}
+})

@@ -2,27 +2,30 @@ import React, {useEffect} from 'react';
 import {Box, Flex, Heading, SimpleGrid} from "@chakra-ui/react";
 import {Trans} from "@lingui/macro";
 import {Navigate} from "react-router-dom";
-import {useAppDispatch, useAppSelector} from "@/hook";
+import {useActionCreators, useAppSelector} from "@/hook";
 import {deleteProductTC, getCurrentUserProductsTC} from "@/store/slices/productReducer";
 import ListingPersonCard from "@/components/listingPersonCard/ListingPersonCard";
 import {GridSize} from "@/utils/gridSize";
 import {ProductCard} from "@/components";
 
 
-const MyListingsPage = () => {
-    const dispatch = useAppDispatch();
+const MyListingsPage =() => {
 
-    const user = useAppSelector(state => state.user);
+    const session = useAppSelector(state => state.user.session.user);
+    const user = useAppSelector(state => state.user.value);
+    const img = useAppSelector(state => state.user.imgUrl);
     const currentUserProducts = useAppSelector(state => state.product.currentUserProducts);
     const update = useAppSelector(state => state.product.isUpdatedProductsList);
     const isAuth = useAppSelector(state => state.user.isAuth);
+    const actions = useActionCreators({getCurrentUserProductsTC,deleteProductTC})
 
-
+    console.log(update)
+    console.log("MyListingsPage->")
     useEffect(() => {
-        dispatch(getCurrentUserProductsTC(user.value.id))
+        actions.getCurrentUserProductsTC(session.id)
     }, [update]);
 
-    const deleteProductHandler = async (productID: number) => dispatch(deleteProductTC(productID));
+    const deleteProductHandler = async (productID: number) => actions.deleteProductTC(productID);
 
     if (!isAuth) {
         return <Navigate to={'/'}/>
@@ -33,10 +36,10 @@ const MyListingsPage = () => {
             <Flex mt={5} direction={"column"} justify="space-between">
                 <Box>
                     <ListingPersonCard
-                        img={user.imgUrl}
-                        name={user.session.user.user_metadata.firstName}
-                        secondName={user.session.user.user_metadata.lastName}
-                        userID={user.value.id}
+                        img={img}
+                        name={user.first_name}
+                        secondName={user.second_name}
+                        userID={user.id}
                     />
                 </Box>
                 <Heading my={8}
