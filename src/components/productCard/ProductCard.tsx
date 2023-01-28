@@ -26,7 +26,6 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product, dele
         return () => clearTimeout(time);
     }, []);
 
-  
 
     const deleteHandler = () => {
         if (deleteProductHandler) {
@@ -34,11 +33,10 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product, dele
         }
     }
 
-
     const onNavigateToOneProductHandler = () => navigate(`/one-product/${product.post_type}/${product.id}`);
 
-    return(
-        <GridItem >
+    return (
+        <GridItem>
 
 
             <Skeleton isLoaded={isLoaded}>
@@ -80,7 +78,7 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product, dele
                         </Flex>
 
                     }
-                    <Flex justify="space-between" align="center"  fontSize={25}>
+                    <Flex justify="space-between" align="center" fontSize={25}>
                         <Heading noOfLines={1} fontSize={'xl'} fontFamily={'body'}
                                  fontWeight={500}>
                             {product.post_name.toUpperCase()}
@@ -100,7 +98,7 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product, dele
                         <Image borderRadius='full' src={navIcon} alt={navIcon}
                         />
                     </Flex>
-                    <Flex >
+                    <Flex>
                         <Text mt='1' color={'gray.500'} fontSize={'sm'}
                               textTransform={'uppercase'}><Trans>Available:</Trans></Text>
                         <Text mt='1' ml="2" noOfLines={1} color={'black'} fontSize={'sm'} textTransform={'uppercase'}>
@@ -110,7 +108,7 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product, dele
 
                     <Flex>
                         <Text mt='1' color={'gray.500'} fontSize={'sm'}
-                             textTransform={'uppercase'}><Trans>About:</Trans></Text>
+                              textTransform={'uppercase'}><Trans>About:</Trans></Text>
                         <Text mt='1' ml="2" noOfLines={1} color={'black'} fontSize={'sm'} textTransform={'uppercase'}
                         >
                             {product.post_description}

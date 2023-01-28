@@ -82,7 +82,12 @@ export const getOneProductTC = createAsyncThunk('/getOneProductTC', async (produ
 export const createProductTC = createAsyncThunk('/createProductTC', async (productObj: ProductObjType, thunkAPI) => {
     try {
         const {error} = await productAPI.createProduct(productObj)
-        return error;
+        if (error) {
+            thunkAPI.dispatch(productActions.isUpdateProduct("error"))
+            console.log(error)
+            return thunkAPI.rejectWithValue(error.message)
+        }
+        return "successful"
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
     }
@@ -91,7 +96,12 @@ export const createProductTC = createAsyncThunk('/createProductTC', async (produ
 export const deleteProductTC = createAsyncThunk('/deleteProductTC', async (productID: number, thunkAPI) => {
     try {
         const {error} = await productAPI.deleteProduct(productID);
-        return error;
+        if (error) {
+            thunkAPI.dispatch(productActions.isUpdateProduct("error"))
+            console.log(error)
+            return thunkAPI.rejectWithValue(error.message)
+        }
+        return "successful"
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
     }
@@ -140,10 +150,12 @@ export const uploadPostImgToDBTC = createAsyncThunk("/auth/uploadPostImgToDBTC",
 export const updateProductTC = createAsyncThunk("/auth/updateProductTC", async (updates: ProductObjType, thunkAPI) => {
     try {
         let {error} = await productAPI.updateProduct(updates)
-        if (error === null) {
-            thunkAPI.dispatch(productActions.isUpdateProduct("successful"))
+        if (error) {
+            thunkAPI.dispatch(productActions.isUpdateProduct("error"))
+            console.log(error)
+            return thunkAPI.rejectWithValue(error.message)
         }
-        return error
+        return "successful"
     } catch (error: any) {
         return thunkAPI.rejectWithValue(error.message)
     }
@@ -169,6 +181,7 @@ const productSlice = createSlice({
         builder.addCase(getCurrentUserProductsTC.fulfilled, (state, action) => {
             if (action.payload) {
                 state.currentUserProducts = action.payload;
+                state.isUpdateProduct="none"
             }
         });
         builder.addCase(getOneProductTC.fulfilled, (state, action) => {
@@ -177,28 +190,14 @@ const productSlice = createSlice({
             }
         });
         builder.addCase(createProductTC.fulfilled, (state, action) => {
-            if (!action.payload?.message) {
-                state.isUpdatedProductsList = !state.isUpdatedProductsList;
-            }
+            state.isUpdateProduct = action.payload
 
-            // create error handler to show error  ////////////////////////////////
-
-            // state.isCreated = true;
-            // console.log('true')
-            // if (!action.payload?.message) {
-            //     state.isCreated = true;
-            //     console.log('true')
-            // }
         });
         builder.addCase(deleteProductTC.fulfilled, (state, action) => {
-            if (!action.payload?.message) {
-                state.isUpdatedProductsList = !state.isUpdatedProductsList;
-            }
+            state.isUpdateProduct = action.payload
         });
         builder.addCase(updateProductTC.fulfilled, (state, action) => {
-            if (!action.payload?.message) {
-                state.isUpdatedProductsList = !state.isUpdatedProductsList;
-            }
+            state.isUpdateProduct = action.payload
         });
         builder.addCase(resultsSearchProductsTC.fulfilled, (state, action) => {
             if (action.payload) {

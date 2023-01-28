@@ -2,23 +2,15 @@ import React from 'react';
 import {Avatar, Box, Card, CardBody, Flex, Heading, Image, Skeleton, Stack} from "@chakra-ui/react";
 import PublishListingModal from "../modals/PublishListingModal";
 import peak from "@/assets/peakpx-min.jpg";
+import {useAppSelector} from "@/hook";
 
-type PropsType = {
-    name: string
-    secondName: string
-    img: string
-    userID: string
-}
 
-const ListingPersonCard: React.FC<PropsType> = React.memo(({
-                                             name,
-                                             secondName,
-                                             img,
-                                             userID,
-                                         }) => {
-
+const ListingPersonCard =() => {
+    const img = useAppSelector(state => state.user.imgUrl);
+const user = useAppSelector(state => state.user.value);
 
     return (
+
         <Card
             direction={"column"}
             overflow='hidden'
@@ -47,15 +39,15 @@ const ListingPersonCard: React.FC<PropsType> = React.memo(({
             <Stack alignSelf={"center"}>
                 <CardBody>
                     <Heading textAlign={"center"} size='md'>
-                        {name} {secondName}
+                        {user.first_name} {user.second_name}
                     </Heading>
                         <Box pt={5}><PublishListingModal
-                            userID={userID}
+                            userID={user.id}
                         /></Box>
                 </CardBody>
             </Stack>
         </Card>
     );
-})
+};
 
 export default ListingPersonCard;

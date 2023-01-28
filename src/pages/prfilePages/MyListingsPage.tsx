@@ -1,31 +1,52 @@
 import React, {useEffect} from 'react';
-import {Box, Flex, Heading, SimpleGrid} from "@chakra-ui/react";
+import {Box, Flex, Heading, SimpleGrid, useToast} from "@chakra-ui/react";
 import {Trans} from "@lingui/macro";
 import {Navigate} from "react-router-dom";
 import {useActionCreators, useAppSelector} from "@/hook";
-import {deleteProductTC, getCurrentUserProductsTC} from "@/store/slices/productReducer";
+import {deleteProductTC, getCurrentUserProductsTC, productActions} from "@/store/slices/productReducer";
 import ListingPersonCard from "@/components/listingPersonCard/ListingPersonCard";
 import {GridSize} from "@/utils/gridSize";
 import {ProductCard} from "@/components";
 
 
-const MyListingsPage =() => {
+const MyListingsPage = () => {
+    const toast = useToast()
+    const id = useAppSelector<string>(state => state.user.session.user.id);
+    const isUpdateProduct = useAppSelector(state => state.product.isUpdateProduct);
 
-    const session = useAppSelector(state => state.user.session.user);
-    const user = useAppSelector(state => state.user.value);
-    const img = useAppSelector(state => state.user.imgUrl);
-    const currentUserProducts = useAppSelector(state => state.product.currentUserProducts);
-    const update = useAppSelector(state => state.product.isUpdatedProductsList);
-    const isAuth = useAppSelector(state => state.user.isAuth);
-    const actions = useActionCreators({getCurrentUserProductsTC,deleteProductTC})
-
-    console.log(update)
-    console.log("MyListingsPage->")
+    const actions = useActionCreators({getCurrentUserProductsTC, deleteProductTC,...productActions})
     useEffect(() => {
-        actions.getCurrentUserProductsTC(session.id)
-    }, [update]);
+        actions.getCurrentUserProductsTC(id)
+    }, [isUpdateProduct]);
 
-    const deleteProductHandler = async (productID: number) => actions.deleteProductTC(productID);
+    const currentUserProducts = useAppSelector(state => state.product.currentUserProducts);
+    const isAuth = useAppSelector(state => state.user.isAuth);
+
+
+    if (isUpdateProduct === "successful") {
+        toast({
+            title: 'Account created.',
+            description: "We've created your account for you.",
+            status: 'success',
+            duration: 9000,
+            isClosable: true,
+        })
+    }
+    if (isUpdateProduct === "error") {
+        toast({
+            title: 'Account not created.',
+            description: "You have some problem.",
+            status: 'error',
+            duration: 9000,
+            isClosable: true,
+        })
+    }
+    console.log("MyListingsPage->" )
+    console.log(isUpdateProduct)
+
+    const deleteProductHandler = (productID: number) => {
+        actions.deleteProductTC(productID);
+    }
 
     if (!isAuth) {
         return <Navigate to={'/'}/>
@@ -36,10 +57,7 @@ const MyListingsPage =() => {
             <Flex mt={5} direction={"column"} justify="space-between">
                 <Box>
                     <ListingPersonCard
-                        img={img}
-                        name={user.first_name}
-                        secondName={user.second_name}
-                        userID={user.id}
+
                     />
                 </Box>
                 <Heading my={8}
