@@ -2,20 +2,14 @@ import React from 'react';
 import {Avatar, Box, Card, CardBody, Flex, Heading, Image, Stack} from "@chakra-ui/react";
 import PublishListingModal from "../modals/PublishListingModal";
 import peak from "@/assets/peakpx-min.jpg";
-import {useAppSelector} from "@/hook";
-import {
-    imgURLSelector,
-    userFirstNameSelector,
-    userIdSelector,
-    userSecondNameSelector
-} from "@/store/slices/userSelectors";
 
-
-const ListingPersonCard = () => {
-    const imgUrl = useAppSelector(imgURLSelector);
-    const userId = useAppSelector(userIdSelector);
-    const userFirstName = useAppSelector(userFirstNameSelector);
-    const userSecondName = useAppSelector(userSecondNameSelector);
+type PropsType = {
+    userSecondName: string
+    userFirstName: string
+    imgUrl: string
+    userId: string
+}
+const ListingPersonCard: React.FC<PropsType> = ({userSecondName, userFirstName, imgUrl, userId}) => {
 
     return (
 
