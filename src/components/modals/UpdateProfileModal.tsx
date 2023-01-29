@@ -12,8 +12,7 @@ import {
     ModalOverlay,
     Text,
     Textarea,
-    useDisclosure,
-    useToast
+    useDisclosure
 } from "@chakra-ui/react";
 import React, {ChangeEvent, useLayoutEffect, useState} from "react";
 import {Trans} from "@lingui/macro";
@@ -21,7 +20,7 @@ import {useActionCreators, useAppSelector} from "@/hook";
 import {updateProfileTC, uploadImgToDBTC, userActions} from "@/store/slices/userReducer";
 import {AllValuesType} from "@/api/profileAPI";
 import {Avatar} from "@/components";
-import {isLoadingSelector, isUpdateProfileSelector} from "@/store/slices/userSelectors";
+import {isLoadingSelector} from "@/store/slices/userSelectors";
 
 
 type ModalType = {
@@ -37,34 +36,13 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue, fullScreen}) => {
     const {user} = useAppSelector(state => state.user.session);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
     const isLoading = useAppSelector<boolean>(isLoadingSelector);
-    const isUpdateProfile = useAppSelector<string>(isUpdateProfileSelector);
 
-    const toast = useToast()
-    if (isUpdateProfile === "successful") {
-        toast({
-            title: 'Account created.',
-            description: "We've created your account for you.",
-            status: 'success',
-            duration: 9000,
-            isClosable: true,
-        })
-    }
-    if (isUpdateProfile === "error") {
-        toast({
-            title: 'Account not created.',
-            description: "You have some problem.",
-            status: 'error',
-            duration: 9000,
-            isClosable: true,
-        })
-    }
     useLayoutEffect(() => {
         setFirstName(value.first_name)
         setAddress(value.user_address)
         setSecondName(value.second_name)
         setAbout(value.about_me)
     }, [value]);
-
 
 
     const initialRef = React.useRef(null);

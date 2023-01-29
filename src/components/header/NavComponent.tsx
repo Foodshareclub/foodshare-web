@@ -7,13 +7,13 @@ import {PagesType} from "./Header";
 import {useAppDispatch, useAppSelector} from "@/hook";
 import {AllValuesType} from "@/api/profileAPI";
 import {useMediaQuery} from "@/utils";
-import {NavDrawer, ProfileSettings, SearchField} from "@/components";
+import {NavDrawer, ProfileSettings} from "@/components";
 import {downloadImgFromDBTC, logoutTC} from "@/store/slices/userReducer";
 import {avatarURLSelector, imgURLSelector} from "@/store/slices/userSelectors";
 import PopoverForSearch from "@/pages/searchResultPage/PopoverForSearch";
 
 type PropsLangType = {
-    isRegister: boolean
+    isAuth: boolean
     setPageType: (pageType: PagesType) => void
     setProductType: (type: string) => void
 
@@ -26,14 +26,14 @@ export type ProfileSettingsProps = {
     navigateToHelp: () => void
     imgUrl: string
     value?: AllValuesType
-    isRegister: boolean
+    isAuth: boolean
     size?: string
     giveLanguage?: (value: string) => void
 
 }
 
 const NavComponent: React.FC<PropsLangType> = ({
-                                                   isRegister, setPageType, setProductType
+                                                   isAuth, setPageType, setProductType
                                                }) => {
     const imgUrl = useAppSelector(imgURLSelector);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
@@ -105,7 +105,7 @@ const NavComponent: React.FC<PropsLangType> = ({
                 !isSmallerThan800
                     ? <NavDrawer
                         value={value}
-                        size={'md'} isRegister={isRegister}
+                        size={'md'} isAuth={isAuth}
                         imgUrl={imgUrl}
                         navigateToMyLists={navigateToMyLists}
                         navigateToLogout={navigateToLogout}
@@ -119,7 +119,7 @@ const NavComponent: React.FC<PropsLangType> = ({
                         navigateToLogout={navigateToLogout}
                         navigateToHelp={navigateToHelp}
                         imgUrl={imgUrl}
-                        isRegister={isRegister}
+                        isAuth={isAuth}
                     />
             }
         </Flex>

@@ -14,8 +14,9 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                                              navigateToLogout,
                                                              navigateToAccSettings,
                                                              navigateToAboutUs,
-                                                             imgUrl, isRegister
+                                                             imgUrl, isAuth
                                                          }) => {
+
     return (
         <>
             <Box alignSelf="center" p={0} color='#303030'>
@@ -28,9 +29,9 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                     </MenuButton>
                     <MenuList>
                         {
-                            isRegister
+                            isAuth
                                 ? <>
-                                    <UpdateProfileModal fullScreen={true} buttonValue={t({
+                                    <UpdateProfileModal  fullScreen={true} buttonValue={t({
                                         id: `Edit Profile`,
                                         message: `Edit Profile`
                                     })}/>

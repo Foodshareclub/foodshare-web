@@ -32,7 +32,7 @@ const MyListingsPage = () => {
 
     useEffect(() => {
         if(userId)actions.getCurrentUserProductsTC(userId);
-    }, [isUpdateProduct,userId]);
+    }, [isUpdateProduct]);
 
     if (isUpdateProduct === "successful") {
         toast({
