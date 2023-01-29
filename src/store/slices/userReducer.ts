@@ -24,7 +24,6 @@ const initialState = {
         }
     } as Session,
     isLoading: false,
-    error: null,
     value: {} as AllValuesType,
     imgUrl: '',
     isUpdate: false,
@@ -182,9 +181,7 @@ export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (
             console.log(error)
             return thunkAPI.rejectWithValue(error);
         }
-        if (error === null) {
-            thunkAPI.dispatch(userActions.isUpdateProfile("successful"))
-        }
+        return "successful"
     } catch (error: any) {
         return thunkAPI.rejectWithValue(error.message)
     } finally {
@@ -236,12 +233,11 @@ const userSlice = createSlice({
                 state.isAuth = true
                 state.isRegister = true
                 state.login = action.payload
-                state.error = null
             }
         });
         builder.addCase(loginTC.rejected, (state, action) => {
             // @ts-ignore
-            state.error = action.payload.message
+
         });
         builder.addCase(signInWithProviderTC.fulfilled, (state, action) => {
             console.log(action.payload)
@@ -251,7 +247,7 @@ const userSlice = createSlice({
                 state.isAuth = true
                 state.isRegister = true
                 state.login = action.payload
-                state.error = null
+
             }
         });
         builder.addCase(registerTC.fulfilled, (state, action) => {
@@ -263,6 +259,7 @@ const userSlice = createSlice({
         builder.addCase(getValueFromDBTC.fulfilled, (state, action: PayloadAction<any, string, { arg: GetValueType; requestId: string; requestStatus: "fulfilled"; }, never>) => {
             if (action.payload) {
                 state.value = action.payload
+                state.isUpdateProfile="none"
             }
         });
         builder.addCase(downloadImgFromDBTC.fulfilled, (state, action: PayloadAction<string | undefined, string, { arg: ImgUrlType; requestId: string; requestStatus: "fulfilled"; }, never>) => {
@@ -273,17 +270,15 @@ const userSlice = createSlice({
             }
         });
         builder.addCase(uploadImgToDBTC.fulfilled, (state) => {
-            state.error = null
 
         });
-        builder.addCase(updateProfileTC.fulfilled, (state) => {
-            state.error = null
+        builder.addCase(updateProfileTC.fulfilled, (state,action) => {
+            state.isUpdateProfile = action.payload
         });
 
         builder.addCase(logoutTC.fulfilled, (state) => {
             state.isAuth = false;
             state.isRegister = false;
-            state.error = null
             state.value = {} as AllValuesType
             state.login = {} as User
             state.registration = {} as User

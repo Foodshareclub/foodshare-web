@@ -7,23 +7,32 @@ import {deleteProductTC, getCurrentUserProductsTC, productActions} from "@/store
 import ListingPersonCard from "@/components/listingPersonCard/ListingPersonCard";
 import {GridSize} from "@/utils/gridSize";
 import {ProductCard} from "@/components";
-import {isAuthSelector, userIdSelector} from "@/store/slices/userSelectors";
+import {
+    imgURLSelector,
+    isAuthSelector,
+    userFirstNameSelector,
+    userIdSelector,
+    userSecondNameSelector
+} from "@/store/slices/userSelectors";
 import {currentUserProductsSelector, isUpdateProductSelector} from "@/store/slices/productsSelectors";
 
 
 const MyListingsPage = () => {
     const toast = useToast();
-
     const userId = useAppSelector(userIdSelector);
     const isUpdateProduct = useAppSelector(isUpdateProductSelector);
     const currentUserProducts = useAppSelector(currentUserProductsSelector);
     const isAuth = useAppSelector(isAuthSelector);
+    const userFirstName = useAppSelector(userFirstNameSelector);
+    const userSecondName = useAppSelector(userSecondNameSelector);
+    const imgUrl = useAppSelector(imgURLSelector);
 
+    console.log(userFirstName)
     const actions = useActionCreators({getCurrentUserProductsTC, deleteProductTC,...productActions});
 
     useEffect(() => {
-        actions.getCurrentUserProductsTC(userId);
-    }, [isUpdateProduct]);
+        if(userId)actions.getCurrentUserProductsTC(userId);
+    }, [isUpdateProduct,userId]);
 
     if (isUpdateProduct === "successful") {
         toast({
@@ -58,7 +67,10 @@ const MyListingsPage = () => {
             <Flex mt={5} direction={"column"} justify="space-between">
                 <Box>
                     <ListingPersonCard
-
+                        userFirstName={userFirstName}
+                        userSecondName={userSecondName}
+                        imgUrl={imgUrl}
+                        userId={userId}
                     />
                 </Box>
                 <Heading my={8}
