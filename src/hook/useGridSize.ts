@@ -1,6 +1,6 @@
-import {useMediaQuery} from "@/utils/index";
+import {useMediaQuery} from "@/hook/index";
 
-export const GridSize = (): number | undefined => {
+export const useGridSize = (): number | undefined => {
     const isSmallerThan500 = useMediaQuery('(min-width:500px)');
     const isSmallerThan700 = useMediaQuery('(min-width:700px)');
     const isSmallerThan1290 = useMediaQuery('(min-width:1290px)');

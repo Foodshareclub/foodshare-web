@@ -9,8 +9,8 @@ import company from "../../assets/AvoAcademy.png";
 import {ArrowForwardIcon} from "@chakra-ui/icons";
 import {Trans} from '@lingui/macro';
 import {teamMockArray} from "@/utils/mockArray";
-import {useMediaQuery} from "@/utils";
 import {PersonCard} from "@/components";
+import {useMediaQuery} from "@/hook";
 
 
 

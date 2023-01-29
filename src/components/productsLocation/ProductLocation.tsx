@@ -1,7 +1,7 @@
-import {useMediaQuery} from "@/utils";
 import {Box} from "@chakra-ui/react";
 import {Trans} from "@lingui/macro";
 import React from "react";
+import {useMediaQuery} from "@/hook";
 
 export const ProductsLocation = () => {
     const isSmallerThan768 = useMediaQuery('(min-width:768px)');
