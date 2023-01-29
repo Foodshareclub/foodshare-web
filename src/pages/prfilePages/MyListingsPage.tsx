@@ -2,10 +2,9 @@ import React, {useEffect} from 'react';
 import {Box, Flex, Heading, SimpleGrid, useToast} from "@chakra-ui/react";
 import {Trans} from "@lingui/macro";
 import {Navigate} from "react-router-dom";
-import {useActionCreators, useAppSelector} from "@/hook";
+import {useActionCreators, useAppSelector, useGridSize} from "@/hook";
 import {deleteProductTC, getCurrentUserProductsTC, productActions} from "@/store/slices/productReducer";
 import ListingPersonCard from "@/components/listingPersonCard/ListingPersonCard";
-import {GridSize} from "@/utils/gridSize";
 import {ProductCard} from "@/components";
 import {
     imgURLSelector,
@@ -19,6 +18,9 @@ import {currentUserProductsSelector, isUpdateProductSelector} from "@/store/slic
 
 const MyListingsPage = () => {
     const toast = useToast();
+
+    const gridSize = useGridSize();
+
     const userId = useAppSelector(userIdSelector);
     const isUpdateProduct = useAppSelector(isUpdateProductSelector);
     const currentUserProducts = useAppSelector(currentUserProductsSelector);
@@ -58,8 +60,10 @@ const MyListingsPage = () => {
         actions.deleteProductTC(productID);
     }
 
+
+
     if (!isAuth) {
-        return <Navigate to={'/'}/>
+        return <Navigate to='/'/>
     }
 
     return (
@@ -79,7 +83,8 @@ const MyListingsPage = () => {
                     <Trans>Active Listings</Trans>
                 </Heading>
 
-                <SimpleGrid p={8} columns={GridSize()}
+                <SimpleGrid p={8}
+                            columns={gridSize}
                             spacing={10}>
                     {currentUserProducts.length > 0 && currentUserProducts.map((item, id) => (
                         <ProductCard deleteProductHandler={(productID) => deleteProductHandler(productID)}

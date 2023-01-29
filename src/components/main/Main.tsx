@@ -5,13 +5,15 @@ import {Trans} from "@lingui/macro";
 import {InitialProductStateType} from "@/store/slices/productReducer";
 import {useAppSelector} from "@/hook";
 
-import {GridSize} from "@/utils/gridSize";
+import {useGridSize} from "@/hook/useGridSize";
 import {ProductCard} from "@/components";
 import {productsSelector} from "@/store/slices/productsSelectors";
 
 
 export const Main = () => {
     const products = useAppSelector<Array<InitialProductStateType>>(productsSelector);
+
+    const gridSize = useGridSize();
 
     return (
         <Box mt="20vh">
@@ -20,7 +22,7 @@ export const Main = () => {
             {/*</Trans>*/}
 
             <SimpleGrid
-                columns={GridSize()}
+                columns={gridSize}
                 spacing={10}
                 p={7}
             >

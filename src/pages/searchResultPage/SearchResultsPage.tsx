@@ -4,11 +4,13 @@ import {useParams, useSearchParams} from "react-router-dom";
 import {resultsSearchProductsTC} from "@/store/slices/productReducer";
 import {useAppDispatch, useAppSelector} from "@/hook";
 import {Box, SimpleGrid} from "@chakra-ui/react";
-import {GridSize} from "@/utils/gridSize";
+import {useGridSize} from "@/hook/useGridSize";
 import {searchProductsSelector} from "@/store/slices/productsSelectors";
 
 export const SearchResultsPage = () => {
     const dispatch = useAppDispatch();
+
+    const gridSize = useGridSize();
 
     const params = useParams(); //get params from url
 
@@ -27,7 +29,7 @@ export const SearchResultsPage = () => {
     return (
         <Box p={7} mt="18vh">
             <SimpleGrid
-                columns={GridSize()}
+                columns={gridSize}
                 spacing={10}
             >
                 {products.map((product) => (
