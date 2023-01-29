@@ -1,10 +1,8 @@
 import {
-    color,
-    HStack, IconButton,
+    Flex,
+    IconButton,
     Input,
-    InputGroup,
-    InputLeftElement,
-    Popover, PopoverAnchor,
+    Popover,
     PopoverArrow,
     PopoverBody,
     PopoverCloseButton,
@@ -13,7 +11,8 @@ import {
     PopoverTrigger,
     Radio,
     RadioGroup,
-    Stack, useBoolean
+    Stack,
+    useBoolean
 } from "@chakra-ui/react";
 import * as React from "react";
 import {ChangeEvent, useState} from "react";
@@ -26,67 +25,46 @@ const PopoverForSearch = () => {
     const [isEditing, setIsEditing] = useBoolean()
     const [searchValue, setSearchValue] = useState('');
     const [productType, setProductType] = useState('all');
-    const [showSearchParams, setShowSearchParams] = useState(false);
 
     const onSearchHandler = (e: ChangeEvent<HTMLInputElement>) => setSearchValue(e.currentTarget.value);
 
     const onFindResultsHandler = async () => {
         if (searchValue) {
             navigate(`/s/${productType}?key_word=${searchValue}`);
-
             setProductType('all');
             setSearchValue('');
-            setShowSearchParams(false);
         }
     }
     return (
         <Popover
-
             isOpen={isEditing}
             onOpen={setIsEditing.on}
             onClose={setIsEditing.off}
-            closeOnBlur={false}
+            closeOnBlur={true}
             isLazy
             lazyBehavior='keepMounted'
             placement='bottom'
         >
-                <InputGroup alignSelf="center" w={"30%"} alignItems="center" flexDir="column">
-                    <PopoverAnchor>
-                        <Input
-
-                            // focusBorderColor='#FF2D55'
-                            isDisabled={!isEditing}
-                            value={searchValue}
-                            onChange={onSearchHandler}
-                            placeholder={t({
-                                id: `msg.Input`,
-                                message: `What are we in search of today?`
-                            })}
-                        />
-                    </PopoverAnchor>
-                    <PopoverTrigger>
-                        {/*<IconButton*/}
-                        {/*   variant={"unstyled"}*/}
-                        {/*    aria-label='Search database'*/}
-                        {/*    icon={<SearchIcon />}*/}
-                        {/*    pointerEvents={"stroke"}*/}
-                        {/*    children={<SearchIcon*/}
-                        {/*        cursor={"pointer"}*/}
-                        {/*        color={'red.500'}*/}
-                        {/*        onClick={onFindResultsHandler}*/}
-                        {/*    />}*/}
-                        {/*/>*/}
-                    <InputLeftElement
-                        pointerEvents={"stroke"}
-                        children={<SearchIcon
-                            cursor={"pointer"}
-                            color={'red.500'}
-                            onClick={onFindResultsHandler}
-                        />}
+            <Flex align="center" w={"30%"}>
+                <IconButton
+                    variant={"ghost"}
+                    onClick={onFindResultsHandler}
+                    cursor={"pointer"}
+                    aria-label={""}
+                    children={
+                    <SearchIcon color={'red.500'}/>}/>
+                <PopoverTrigger>
+                    <Input
+                        // focusBorderColor='#FF2D55'
+                        value={searchValue}
+                        onChange={onSearchHandler}
+                        placeholder={t({
+                            id: `msg.Input`,
+                            message: `What are we in search of today?`
+                        })}
                     />
-
-                    </PopoverTrigger>
-                </InputGroup>
+                </PopoverTrigger>
+            </Flex>
 
             <PopoverContent color='white' bg='blue.800' borderColor='blue.800'>
                 <PopoverHeader pt={4} fontWeight='bold' border='0'>
@@ -98,7 +76,7 @@ const PopoverForSearch = () => {
                     <RadioGroup
                         onChange={setProductType} value={productType}
                     >
-                        <Stack direction='row'>
+                        <Stack direction='column'>
                             <Radio value='all'>All</Radio>
                             <Radio value='food'>Food</Radio>
                             <Radio value='things'>Things</Radio>
