@@ -92,7 +92,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue, fullScreen}) => {
         }
         setFilePath('');
         setFile({} as File);
-        actions.isUpdateProfile("none")
+        //actions.isUpdateProfile("none")
         onClose();
     };
 

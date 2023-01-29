@@ -10,6 +10,7 @@ import {
 } from "@/api/profileAPI";
 import {Session, User} from "@supabase/supabase-js";
 import {supabase} from "@/supaBase.config";
+import {StatusType} from "@/components/alert/AlertComponent";
 
 
 const initialState = {
@@ -27,8 +28,9 @@ const initialState = {
     value: {} as AllValuesType,
     imgUrl: '',
     isUpdate: false,
-    isUpdateProfile: "none",
-    language: "en"
+    isUpdateProfile: "info" as StatusType,
+    language: "en",
+    message:""
 };
 
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
@@ -181,7 +183,7 @@ export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (
             console.log(error)
             return thunkAPI.rejectWithValue(error);
         }
-        return "successful"
+        return "success"//{isUpdateProfile:"success",message:"Profile is updated successful"}
     } catch (error: any) {
         return thunkAPI.rejectWithValue(error.message)
     } finally {
@@ -258,7 +260,6 @@ const userSlice = createSlice({
         builder.addCase(getValueFromDBTC.fulfilled, (state, action: PayloadAction<any, string, { arg: GetValueType; requestId: string; requestStatus: "fulfilled"; }, never>) => {
             if (action.payload) {
                 state.value = action.payload
-                state.isUpdateProfile="none"
             }
         });
         builder.addCase(downloadImgFromDBTC.fulfilled, (state, action: PayloadAction<string | undefined, string, { arg: ImgUrlType; requestId: string; requestStatus: "fulfilled"; }, never>) => {
@@ -271,7 +272,7 @@ const userSlice = createSlice({
         builder.addCase(uploadImgToDBTC.fulfilled, (state) => {
 
         });
-        builder.addCase(updateProfileTC.fulfilled, (state,action) => {
+        builder.addCase(updateProfileTC.fulfilled, (state, action) => {
             state.isUpdateProfile = action.payload
         });
 

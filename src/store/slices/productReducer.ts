@@ -98,7 +98,7 @@ export const createProductTC = createAsyncThunk('/createProductTC', async (produ
             console.log(error)
             return thunkAPI.rejectWithValue(error);
         }
-        return "successful"
+        return "success"
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
     }
@@ -112,7 +112,7 @@ export const deleteProductTC = createAsyncThunk('/deleteProductTC', async (produ
             console.log(error)
             return thunkAPI.rejectWithValue(error);
         }
-        return "successful"
+        return "success"
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
     }
@@ -170,7 +170,7 @@ export const updateProductTC = createAsyncThunk("/auth/updateProductTC", async (
             console.log(error)
             return thunkAPI.rejectWithValue(error);
         }
-        return "successful"
+        return "success"
     } catch (error: any) {
         return thunkAPI.rejectWithValue(error);
     }

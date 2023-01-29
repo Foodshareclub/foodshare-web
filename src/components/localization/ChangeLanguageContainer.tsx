@@ -25,7 +25,6 @@ type ContainerProps = {
 }
 const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRoute, setProductType}) => {
     const language = useAppSelector(languageSelector);
-
     useEffect(() => {
         dynamicActivate(language).then(() => {
         })
@@ -39,7 +38,7 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
                     <Routes>
                         <Route path={"/"} element={<Main/>}/>
                         <Route path={"/*"} element={<Main/>}/>
-                        <Route path={"/one-product/:type/:id"} element={<ProductPage />}/>
+                        <Route path={"/one-product/:type/:id"} element={<ProductPage/>}/>
                         <Route path={"/aboutUs"} element={<AboutUsPage/>}/>
                         <Route path={"/contactUs"} element={<ContactUsPage/>}/>
                         <Route path={"/volunteer"} element={<VolunteerPage/>}/>
@@ -48,6 +47,7 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
                         <Route path={"/s/:type"} element={<SearchResultsPage/>}/>
                     </Routes>
                 </CardBody>
+
                 <Footer/>
             </Card>
         </I18nProvider>
