@@ -14,7 +14,7 @@ export const Main = () => {
     const products = useAppSelector<Array<InitialProductStateType>>(productsSelector);
 
     return (
-        <Box mt="18vh">
+        <Box mt="20vh">
             {/*<Trans>*/}
             {/*    Last login on {i18n.date(new Date())}.*/}
             {/*</Trans>*/}

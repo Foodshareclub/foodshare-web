@@ -196,7 +196,6 @@ export const recoveryPasswordTC = createAsyncThunk("/auth/recoveryPasswordTC", a
             console.error(error)
             return thunkAPI.rejectWithValue(error);
         }
-
         return data;
     } catch (e: any) {
         thunkAPI.rejectWithValue(e.message)

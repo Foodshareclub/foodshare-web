@@ -1,14 +1,9 @@
 import React, {useEffect, useState} from 'react';
-import {CardHeader, useColorModeValue} from "@chakra-ui/react";
+import {CardHeader, useColorModeValue, useToast} from "@chakra-ui/react";
 import {getValueFromDBTC} from "@/store/slices/userReducer";
 import {useActionCreators, useAppSelector} from "@/hook";
 import {FilterProductComponent, NavComponent} from "@/components";
-import {
-    isAuthSelector,
-    isRegisterSelector,
-    isUpdateProfileSelector,
-    userIdFromSessionSelector
-} from "@/store/slices/userSelectors";
+import {isAuthSelector, isUpdateProfileSelector, userIdFromSessionSelector} from "@/store/slices/userSelectors";
 
 type HeaderType = {
     getRoute: (route: string) => void
@@ -21,7 +16,6 @@ export type PagesType = 'productComponent' | 'profileSettings';
 const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) => {
 
     const [pageType, setPageType] = useState<PagesType>("productComponent");
-    const isRegister = useAppSelector(isRegisterSelector);
     const isAuth = useAppSelector(isAuthSelector);
     const userId = useAppSelector(userIdFromSessionSelector);
     const isUpdateProfile = useAppSelector(isUpdateProfileSelector)
@@ -38,6 +32,25 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
         }
     }, [userId, isAuth, isUpdateProfile])
 
+    const toast = useToast()
+    if (isUpdateProfile === "successful") {
+        toast({
+            title: 'Account created.',
+            description: "We've created your account for you.",
+            status: 'success',
+            duration: 9000,
+            isClosable: true,
+        })
+    }
+    if (isUpdateProfile === "error") {
+        toast({
+            title: 'Account not created.',
+            description: "You have some problem.",
+            status: 'error',
+            duration: 9000,
+            isClosable: true,
+        })
+    }
     return (
         <CardHeader
             //borderBottom={"1px solid 'gray.200"}
@@ -48,7 +61,7 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
             bg={useColorModeValue('white', 'gray.900')}
         >
             <NavComponent
-                isRegister={isRegister}
+                isAuth={isAuth}
                 setPageType={setPageType}
                 setProductType={setProductType}
 

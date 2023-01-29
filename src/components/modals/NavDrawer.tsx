@@ -25,7 +25,7 @@ import {AuthenticationUserModal} from "@/components";
 
 const NawDrawer: React.FC<ProfileSettingsProps> = ({
                                                        size,
-                                                       isRegister,
+                                                       isAuth,
                                                        imgUrl,
                                                        navigateToHelp,
                                                        navigateToLogout,
@@ -67,7 +67,7 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
                         </Flex>
                         <Box mt={10}>
                             {
-                                isRegister
+                                isAuth
                                     ?
                                     <Stack spacing={3}>
                                         <UpdateProfileModal fullScreen={false} buttonValue={t`Edit profile`}/>

@@ -10,7 +10,7 @@ const VolunteerPage = () => {
     const navigate = useNavigate();
 
     return (
-        <Box p={7} mt={["55%","45%","35%", "30%", "25%", "20%"]} w="100%" mx="auto">
+        <Box p={7} mt={["55%","41%","35%", "30%", "25%", "20%"]} w="100%" mx="auto">
             <Flex direction={{md: "row", base: "column"}} justify="space-between">
                 <Box alignSelf="center" lineHeight={10}>
                     <Heading pt={{base:"15%","ss":"0"}} textAlign={{md: "start", base: "center"}}>
