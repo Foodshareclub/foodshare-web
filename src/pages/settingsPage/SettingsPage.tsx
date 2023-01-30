@@ -1,12 +1,11 @@
 import React, {useEffect, useState} from 'react';
 import {
-    Accordion, AccordionButton, AccordionIcon,
-    AccordionItem, AccordionPanel,
     Avatar,
     Box,
     Button,
     Container,
     Flex,
+    Heading,
     Input,
     InputGroup,
     InputLeftElement,
@@ -34,7 +33,7 @@ export const SettingsPage = () => {
     const imgUrl = useAppSelector(imgURLSelector);
 
     return (
-        <Box mt="23vh">
+        <Box mt="20vh">
             <Box>
                 <ListingPersonCard
                     userFirstName={userFirstName}
@@ -42,12 +41,10 @@ export const SettingsPage = () => {
                     imgUrl={imgUrl}
                 />
             </Box>
-
             <SimpleGrid p={8}
                         columns={gridSize}
                         spacing={10}
             >
-
                 {settingsInfoArray.map((card, i) => {
                     return <SettingsCard
                         settingTitle={card.settingTitle}
@@ -116,7 +113,7 @@ export const PersonalInfoPage = () => {
         setEmail(userEmail as string);
         if (!phoneNumber) {
             setPhone('');
-        }else {
+        } else {
             setPhone(phoneNumber);
         }
 
@@ -127,100 +124,57 @@ export const PersonalInfoPage = () => {
     const [email, setEmail] = useState("");
     const [phone, setPhone] = useState("");
 
+    const [a, setA] = useState(false)
+    const [b, setB] = useState(false)
+    const [c, setC] = useState(false)
+    const [d, setD] = useState(false)
     const onSaveHandler = () => {
         console.log(firstName)
         console.log(secondName)
     }
     return (
         <Container maxW={"container.md"}>
-            <Box mt="23vh" mb={5}>
+            <Heading color={a ? "gray.100" : "gray.500"} mt="23vh" mb={5}>
                 Personal Info
-            </Box>
+            </Heading>
+            <LegalNameBlock
+                firstName={firstName}
+                setFirstName={setFirstName}
+                secondName={secondName}
+                setSecondName={setSecondName}
+                onSaveHandler={onSaveHandler}
+                a={a} b={b} c={c} d={d}
+                setB={setB} setC={setC} setD={setD}
+            />
+            <Heading color={b ? "gray.100" : "gray.500"} textAlign='left'>
+                Email address
+            </Heading>
 
+            <EmailBlock
+                setC={setC} setD={setD}
+                a={a} b={b} c={c} d={d}
+                email={email}
+                onSaveHandler={onSaveHandler}
+                setEmail={setEmail}
+                setA={setA}/>
 
-            <Accordion
-                // allowMultiple
-                allowToggle
-            >
-                <AccordionItem>
-                    <h2>
-                        <AccordionButton>
-                            <Box as="span" flex='1' textAlign='left'>
-                                Legal name
-                            </Box>
-                            <AccordionIcon />
-                        </AccordionButton>
-                    </h2>
-                    <AccordionPanel pb={4}>
-                        <LegalNameBlock
-                            firstName={firstName}
-                            setFirstName={setFirstName}
-                            secondName={secondName}
-                            setSecondName={setSecondName}
-                            onSaveHandler={onSaveHandler}
-                        />
-                    </AccordionPanel>
-                </AccordionItem>
+            <Heading color={c ? "gray.100" : "gray.500"} textAlign='left'>
+                Phone number
+            </Heading>
 
-                <AccordionItem>
-                    <h2>
-                        <AccordionButton>
-                            <Box as="span" flex='1' textAlign='left'>
-                                Email address
-                            </Box>
-                            <AccordionIcon />
-                        </AccordionButton>
-                    </h2>
-                    <AccordionPanel pb={4}>
-                        <EmailBlock
-                            email={email}
-                            onSaveHandler={onSaveHandler}
-                            setEmail={setEmail}
-                        />
-                    </AccordionPanel>
-                </AccordionItem>
-                <AccordionItem>
-                    <h2>
-                        <AccordionButton>
-                            <Box as="span" flex='1' textAlign='left'>
-                                Phone number
-                            </Box>
-                            <AccordionIcon />
-                        </AccordionButton>
-                    </h2>
-                    <AccordionPanel pb={4}>
-                        <PhoneNumberBlock
-                            phoneNumber={phone}
-                            setPhone={setPhone}
-                            onSaveHandler={onSaveHandler}
-                        />
-                    </AccordionPanel>
-                </AccordionItem
-                ><AccordionItem>
-                    <h2>
-                        <AccordionButton>
-                            <Box as="span" flex='1' textAlign='left'>
-                                Address
-                            </Box>
-                            <AccordionIcon />
-                        </AccordionButton>
-                    </h2>
-                    <AccordionPanel pb={4}>
-                        <AddressBlock
-                            onSaveHandler={onSaveHandler}
-                        />
-                    </AccordionPanel>
-                </AccordionItem>
-            </Accordion>
+            <PhoneNumberBlock
+                a={a} b={b} c={c} d={d}
+                phone={phone}
+                setPhone={setPhone}
+                onSaveHandler={onSaveHandler}
+                setA={setA} setB={setB} setD={setD}/>
 
-
-
-
-
-
-
-
-
+            <Heading color={d ? "gray.100" : "gray.500"} textAlign='left'>
+                Address
+            </Heading>
+            <AddressBlock
+                onSaveHandler={onSaveHandler}
+                a={a} b={b} c={c} d={d} setA={setA} setB={setB} setC={setC}/>
         </Container>
 
     );
@@ -232,24 +186,28 @@ type LegalNameBlockType = {
     secondName: string
     setSecondName: (secondName: string) => void
     onSaveHandler: () => void
+    b: boolean
+    c: boolean
+    d: boolean
+    a: boolean
+    setB: (value: boolean) => void
+    setC: (value: boolean) => void
+    setD: (value: boolean) => void
 }
 
 export const LegalNameBlock: React.FC<LegalNameBlockType> = ({
+                                                                 setB, setC, setD, a, b, c, d,
                                                                  firstName,
                                                                  setFirstName,
                                                                  secondName,
                                                                  setSecondName,
                                                                  onSaveHandler
                                                              }) => {
-    const [edit, setEdit] = useState(true);
+    const [edit, setEdit] = useState(false);
 
     return (
         <Flex>
             <Box width={"container.lg"}>
-                {/*<Text mb={3} as={'b'}>*/}
-                {/*    Legal name*/}
-                {/*</Text>*/}
-
                 {
                     edit
                         ? <>
@@ -275,22 +233,24 @@ export const LegalNameBlock: React.FC<LegalNameBlockType> = ({
                             >Save
                             </Button>
                         </>
-                        : <Text>
+                        : <Text color={a ? "gray.100" : "gray.500"}>
                             {firstName} {secondName}
                         </Text>
                 }
             </Box>
-
-            <Text
-                onClick={() => setEdit(!edit)}
+            <Button
+                disabled={a}
+                onClick={() => {
+                    setB(!b);
+                    setC(!c);
+                    setD(!d);
+                    setEdit(!edit)
+                }}
                 cursor={"pointer"}
             >
                 {edit ? 'Cancel' : 'Edit'}
-            </Text>
-
-
+            </Button>
         </Flex>
-
     );
 };
 
@@ -298,18 +258,32 @@ type EmailBlockType = {
     email: string
     setEmail: (newEmail: string) => void
     onSaveHandler: () => void
+    a: boolean
+    c: boolean
+    d: boolean
+    b: boolean
+    setA: (value: boolean) => void
+    setC: (value: boolean) => void
+    setD: (value: boolean) => void
 }
 
-export const EmailBlock: React.FC<EmailBlockType> = ({email, onSaveHandler, setEmail}) => {
-    const [edit, setEdit] = useState(true);
+export const EmailBlock: React.FC<EmailBlockType> = ({
+                                                         email,
+                                                         onSaveHandler,
+                                                         a,
+                                                         c,
+                                                         d,
+                                                         b,
+                                                         setD,
+                                                         setC,
+                                                         setA,
+                                                         setEmail
+                                                     }) => {
+    const [edit, setEdit] = useState(false);
 
     return (
         <Flex>
             <Box width={"container.lg"}>
-                {/*<Text mb={3} as={'b'}>*/}
-                {/*    Email address*/}
-                {/*</Text>*/}
-
                 {
                     edit
                         ? <>
@@ -330,18 +304,23 @@ export const EmailBlock: React.FC<EmailBlockType> = ({email, onSaveHandler, setE
                             >Save
                             </Button>
                         </>
-                        : <Text>
+                        : <Text color={b ? "gray.100" : "gray.500"}>
                             {email}
                         </Text>
                 }
             </Box>
-
-            <Text
-                onClick={() => setEdit(!edit)}
+            <Button
+                disabled={b}
+                onClick={() => {
+                    setA(!a)
+                    setD(!d)
+                    setC(!c)
+                    setEdit(!edit)
+                }}
                 cursor={"pointer"}
             >
                 {edit ? 'Cancel' : 'Edit'}
-            </Text>
+            </Button>
         </Flex>
 
     );
@@ -349,21 +328,34 @@ export const EmailBlock: React.FC<EmailBlockType> = ({email, onSaveHandler, setE
 
 
 type PhoneNumberBlockType = {
-    phoneNumber: string
+    phone: string
     setPhone: (newNumber: string) => void
     onSaveHandler: () => void
+    a: boolean
+    b: boolean
+    d: boolean
+    c: boolean
+    setA: (value: boolean) => void
+    setB: (value: boolean) => void
+    setD: (value: boolean) => void
 }
 
-export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({phoneNumber, onSaveHandler, setPhone}) => {
-    const [edit, setEdit] = useState(true);
+export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({
+                                                                     a,
+                                                                     b,
+                                                                     d,
+                                                                     c,
+                                                                     setD,
+                                                                     setB,
+                                                                     setA,
+                                                                     onSaveHandler,
+                                                                     setPhone, phone
+                                                                 }) => {
+    const [edit, setEdit] = useState(false);
 
     return (
         <Flex>
             <Box width={"container.lg"}>
-                {/*<Text mb={3} as={'b'}>*/}
-                {/*    Phone number*/}
-                {/*</Text>*/}
-
                 {
                     edit
                         ? <>
@@ -376,11 +368,10 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({phoneNumber, o
                                     <Input
                                         type='tel'
                                         placeholder='Phone number'
-                                        value={phoneNumber}
+                                        value={phone}
                                         onChange={(e) => setPhone(e.currentTarget.value)}
                                     />
                                 </InputGroup>
-
                             </Flex>
                             <Button
                                 onClick={onSaveHandler}
@@ -390,18 +381,23 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({phoneNumber, o
                             >Save
                             </Button>
                         </>
-                        : <Text>
+                        : <Text color={c ? "gray.100" : "gray.500"}>
                             Add a number so confirmed users can get your products.
                         </Text>
                 }
             </Box>
-
-            <Text
-                onClick={() => setEdit(!edit)}
+            <Button
+                disabled={c}
+                onClick={() => {
+                    setA(!a)
+                    setD(!d)
+                    setB(!b)
+                    setEdit(!edit)
+                }}
                 cursor={"pointer"}
             >
                 {edit ? 'Cancel' : 'Edit'}
-            </Text>
+            </Button>
         </Flex>
 
     );
@@ -410,10 +406,17 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({phoneNumber, o
 
 type AddressBlockType = {
     onSaveHandler: () => void
+    a: boolean
+    b: boolean
+    c: boolean
+    d: boolean
+    setA: (value: boolean) => void
+    setB: (value: boolean) => void
+    setC: (value: boolean) => void
 }
 
-export const AddressBlock: React.FC<AddressBlockType> = ({onSaveHandler}) => {
-    const [edit, setEdit] = useState(true);
+export const AddressBlock: React.FC<AddressBlockType> = ({onSaveHandler, a, b, c, d, setC, setA, setB}) => {
+    const [edit, setEdit] = useState(false);
 
     const [uCountry, setCountry] = useState('');
     const [uStreet, setStreet] = useState('');
@@ -435,10 +438,6 @@ export const AddressBlock: React.FC<AddressBlockType> = ({onSaveHandler}) => {
     return (
         <Flex>
             <Box width={"container.lg"}>
-                {/*<Text mb={3} as={'b'}>*/}
-                {/*    Address*/}
-                {/*</Text>*/}
-
                 {
                     edit
                         ? <>
@@ -457,7 +456,6 @@ export const AddressBlock: React.FC<AddressBlockType> = ({onSaveHandler}) => {
                                 value={uFlat}
                                 onChange={(e) => setFlat(e.currentTarget.value)}
                             />
-
                             <Flex justifyContent={"space-between"}>
                                 <Input
                                     placeholder={'City'}
@@ -469,15 +467,12 @@ export const AddressBlock: React.FC<AddressBlockType> = ({onSaveHandler}) => {
                                     value={uRegion}
                                     onChange={(e) => setRegion(e.currentTarget.value)}
                                 />
-
                             </Flex>
-
                             <Input
                                 placeholder={'Postcode'}
                                 value={uPostcode}
                                 onChange={(e) => setPostcode(e.currentTarget.value)}
                             />
-
                             <Button
                                 onClick={onSaveHandler}
                                 colorScheme={"blackAlpha"}
@@ -486,18 +481,23 @@ export const AddressBlock: React.FC<AddressBlockType> = ({onSaveHandler}) => {
                             >Save
                             </Button>
                         </>
-                        : <Text>
+                        : <Text color={d ? "gray.100" : "gray.500"}>
                             Use a permanent address where you can receive mail.
                         </Text>
                 }
             </Box>
-
-            <Text
-                onClick={() => setEdit(!edit)}
+            <Button
+                disabled={d}
+                onClick={() => {
+                    setA(!a)
+                    setB(!b)
+                    setC(!c)
+                    setEdit(!edit)
+                }}
                 cursor={"pointer"}
             >
                 {edit ? 'Cancel' : 'Edit'}
-            </Text>
+            </Button>
         </Flex>
 
     );

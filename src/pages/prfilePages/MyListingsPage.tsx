@@ -43,9 +43,6 @@ const MyListingsPage = () => {
         if (userId) actions.getCurrentUserProductsTC(userId);
     }, [isUpdateProduct, userId]);
 
-
-
-    console.log(isUpdateProduct)
     const deleteProductHandler = (productID: number) => {
         actions.deleteProductTC(productID);
     }
