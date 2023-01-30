@@ -32,7 +32,7 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
             actions.getValueFromDBTC(values);
         }
     }, [userId, isAuth, isUpdateProfile])
-    console.log(isUpdateProfile)
+
     return (
         <CardHeader
             //borderBottom={"1px solid 'gray.200"}

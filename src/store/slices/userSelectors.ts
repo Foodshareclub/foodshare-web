@@ -5,6 +5,8 @@ export const userFirstNameSelector = (state: StateAppType) => state.user.value.f
 export const userSecondNameSelector = (state: StateAppType) => state.user.value.second_name;
 export const userIdSelector = (state: StateAppType) => state.user.value.id;
 export const avatarURLSelector = (state: StateAppType) => state.user.value.avatar_url;
+export const emailSelector = (state: StateAppType) => state.user.value.email;
+export const phoneNumberSelector = (state: StateAppType) => state.user.value.phone_number;
 
 //data from session
 export const userIdFromSessionSelector = (state: StateAppType) => state.user.session.user.id;

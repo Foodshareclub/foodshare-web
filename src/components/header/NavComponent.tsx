@@ -66,8 +66,9 @@ const NavComponent: React.FC<PropsLangType> = ({
         setPageType("profileSettings");
     }
 
-    const navigateToAccSettings = () => {
+    const navigateToAccountSettings = () => {
         setPageType("profileSettings");
+        navigate('/settings');
     }
     const navigateToHelp = () => {
         setPageType("profileSettings");
@@ -110,9 +111,9 @@ const NavComponent: React.FC<PropsLangType> = ({
                         navigateToLogout={navigateToLogout}
                         navigateToHelp={navigateToHelp}
                         navigateToAboutUs={navigateToAboutUs}
-                        navigateToAccSettings={navigateToAccSettings}/>
+                        navigateToAccSettings={navigateToAccountSettings}/>
                     : <ProfileSettings
-                        navigateToAccSettings={navigateToAccSettings}
+                        navigateToAccSettings={navigateToAccountSettings}
                         navigateToAboutUs={navigateToAboutUs}
                         navigateToMyLists={navigateToMyLists}
                         navigateToLogout={navigateToLogout}

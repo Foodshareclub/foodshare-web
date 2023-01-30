@@ -11,11 +11,12 @@ import {
     MyListingsPage,
     OpportunitiesPage,
     ProductPage,
-    SearchResultsPage,
+    SearchResultsPage, SettingsPage,
     VolunteerPage
 } from "@/pages";
 import {Footer, Header, Main} from "@/components";
 import {languageSelector} from "@/store/slices/userSelectors";
+import {PersonalInfoPage} from "@/pages/settingsPage/SettingsPage";
 
 type ContainerProps = {
     productType: string
@@ -45,6 +46,8 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
                         <Route path={"/user-listings"} element={<MyListingsPage/>}/>
                         <Route path={"/volunteer/opportunities"} element={<OpportunitiesPage/>}/>
                         <Route path={"/s/:type"} element={<SearchResultsPage/>}/>
+                        <Route path={"/settings"} element={<SettingsPage/>}/>
+                        <Route path={"/settings/personal-info"} element={<PersonalInfoPage/>}/>
                     </Routes>
                 </CardBody>
 
