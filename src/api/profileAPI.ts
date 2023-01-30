@@ -110,6 +110,6 @@ export const profileAPI = {
         return supabase.storage.from(`${value.dir}`).upload(value.filePath, value.file,{upsert:true})
     },
     updateProfile(updates: AllValuesType) {
-        return supabase.from('profiles').upsert(updates)
+        return supabase.from('profiles').upsert(updates)///
     }
 };

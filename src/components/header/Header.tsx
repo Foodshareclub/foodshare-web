@@ -3,8 +3,14 @@ import {CardHeader, useColorModeValue} from "@chakra-ui/react";
 import {getValueFromDBTC} from "@/store/slices/userReducer";
 import {useActionCreators, useAppSelector} from "@/hook";
 import {FilterProductComponent, NavComponent} from "@/components";
-import {isAuthSelector, isUpdateProfileSelector, userIdFromSessionSelector} from "@/store/slices/userSelectors";
+import {
+    isAuthSelector,
+    isUpdateProfileSelector,
+    messageProfileSelector,
+    userIdFromSessionSelector
+} from "@/store/slices/userSelectors";
 import AlertComponent from "@/components/alert/AlertComponent";
+import {isUpdateProductSelector, messageProductSelector} from "@/store/slices/productsSelectors";
 
 type HeaderType = {
     getRoute: (route: string) => void
@@ -19,8 +25,12 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
     const [pageType, setPageType] = useState<PagesType>("productComponent");
     const isAuth = useAppSelector(isAuthSelector);
     const userId = useAppSelector(userIdFromSessionSelector);
-    const isUpdateProfile = useAppSelector(isUpdateProfileSelector)
-    const actions = useActionCreators({getValueFromDBTC})
+    const isUpdateProfile = useAppSelector(isUpdateProfileSelector);
+    const profileMessage = useAppSelector(messageProfileSelector);
+
+
+    const actions = useActionCreators({getValueFromDBTC});
+
     useEffect(() => {
         if (userId && isAuth) {
             const values = {
@@ -54,7 +64,7 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
                 pageType={pageType}
                 productType={productType}
             />
-            <AlertComponent status={isUpdateProfile} title={"something"}/>
+            <AlertComponent status={isUpdateProfile} title={profileMessage} top={"94%"}/>
         </CardHeader>
     );
 };
