@@ -29,6 +29,7 @@ import {ProductsLocation} from "@/components/productsLocation/ProductLocation";
 import AsideProducts from "@/components/asideProducts/AsideProducts";
 import PersonCard from "./personCard/PersonCard";
 import ListingPersonCard from "@/components/listingPersonCard/ListingPersonCard";
+import AlertComponent from "@/components/alert/AlertComponent";
 
 
 export {
@@ -62,5 +63,6 @@ export {
     ProductsLocation,
     AsideProducts,
     ListingPersonCard,
-    PersonCard
+    PersonCard,
+    AlertComponent
 }
