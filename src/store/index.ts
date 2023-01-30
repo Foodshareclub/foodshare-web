@@ -6,6 +6,7 @@ import {productsSelector} from "@/store/slices/productsSelectors";
 import {searchProductsSelector} from "@/store/slices/productsSelectors";
 import {currentUserProductsSelector} from "@/store/slices/productsSelectors";
 import {isUpdateProductSelector} from "@/store/slices/productsSelectors";
+import {messageProductSelector} from "@/store/slices/productsSelectors";
 
 import {userFirstNameSelector} from "@/store/slices/userSelectors";
 import {userSecondNameSelector} from "@/store/slices/userSelectors";
@@ -32,6 +33,7 @@ export {
     isUpdateProductSelector,
     searchProductsSelector,
     currentUserProductsSelector,
+    messageProductSelector,
 
     userFirstNameSelector,
     userSecondNameSelector,
