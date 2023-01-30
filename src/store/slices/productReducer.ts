@@ -1,6 +1,7 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import {productAPI, ProductObjType} from "../../api/productAPI";
 import {ImgUrlType, profileAPI, UploadImgUrlType} from "@/api/profileAPI";
+import {StatusType} from "@/components/alert/AlertComponent";
 
 
 export type InitialProductStateType = {
@@ -31,9 +32,10 @@ const initialState = {
     currentUserProducts: [] as Array<InitialProductStateType>,
     searchProducts: [] as Array<InitialProductStateType>,
     oneProduct: [] as Array<InitialProductStateType>,
-    isUpdateProduct: "none",
+    isUpdateProduct: "info" as StatusType,
     postImgUrl: '',
-    isPostImgUpload: false
+    isPostImgUpload: false,
+    message: ''
 };
 
 export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", async (arg, thunkAPI) => {
@@ -98,7 +100,7 @@ export const createProductTC = createAsyncThunk('/createProductTC', async (produ
             console.log(error)
             return thunkAPI.rejectWithValue(error);
         }
-        return "success"
+        return {isUpdateProduct: "success" as StatusType, message: "Product is created successful"}
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
     }
@@ -112,7 +114,7 @@ export const deleteProductTC = createAsyncThunk('/deleteProductTC', async (produ
             console.log(error)
             return thunkAPI.rejectWithValue(error);
         }
-        return "success"
+        return {isUpdateProduct: "success" as StatusType, message: "Product is deleted successful"}
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
     }
@@ -170,7 +172,7 @@ export const updateProductTC = createAsyncThunk("/auth/updateProductTC", async (
             console.log(error)
             return thunkAPI.rejectWithValue(error);
         }
-        return "success"
+        return {isUpdateProduct: "success" as StatusType, message: "Product is updated successful"}
     } catch (error: any) {
         return thunkAPI.rejectWithValue(error);
     }
@@ -196,7 +198,7 @@ const productSlice = createSlice({
         builder.addCase(getCurrentUserProductsTC.fulfilled, (state, action) => {
             if (action.payload) {
                 state.currentUserProducts = action.payload;
-                state.isUpdateProduct = "none"
+                // state.isUpdateProduct = "info"
             }
         });
         builder.addCase(getOneProductTC.fulfilled, (state, action) => {
@@ -205,14 +207,25 @@ const productSlice = createSlice({
             }
         });
         builder.addCase(createProductTC.fulfilled, (state, action) => {
-            state.isUpdateProduct = action.payload
-
+            state.isUpdateProduct = action.payload.isUpdateProduct;
+            state.message = action.payload.message;
+        });
+        builder.addCase(createProductTC.rejected, (state, action) => {
+            state.message = "Something was wrong!"
         });
         builder.addCase(deleteProductTC.fulfilled, (state, action) => {
-            state.isUpdateProduct = action.payload
+            state.isUpdateProduct = action.payload.isUpdateProduct;
+            state.message = action.payload.message;
+        });
+        builder.addCase(deleteProductTC.rejected, (state, action) => {
+            state.message = "Something was wrong!"
         });
         builder.addCase(updateProductTC.fulfilled, (state, action) => {
-            state.isUpdateProduct = action.payload
+            state.isUpdateProduct = action.payload.isUpdateProduct;
+            state.message = action.payload.message;
+        });
+        builder.addCase(updateProductTC.rejected, (state, action) => {
+            state.message = "Something was wrong!"
         });
         builder.addCase(resultsSearchProductsTC.fulfilled, (state, action) => {
             if (action.payload) {

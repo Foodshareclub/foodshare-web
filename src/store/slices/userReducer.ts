@@ -180,10 +180,10 @@ export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (
         let {error} = await profileAPI.updateProfile(updates)
         if (error) {
             thunkAPI.dispatch(userActions.isUpdateProfile("error"));
-            console.log(error)
             return thunkAPI.rejectWithValue(error);
         }
-        return "success"//{isUpdateProfile:"success",message:"Profile is updated successful"}
+        // return "success"//
+        return {isUpdateProfile: "success" as StatusType, message: "Profile is updated successful"}
     } catch (error: any) {
         return thunkAPI.rejectWithValue(error.message)
     } finally {
@@ -273,7 +273,11 @@ const userSlice = createSlice({
 
         });
         builder.addCase(updateProfileTC.fulfilled, (state, action) => {
-            state.isUpdateProfile = action.payload
+            state.isUpdateProfile = action.payload.isUpdateProfile;
+            state.message=action.payload.message
+        });
+        builder.addCase(updateProfileTC.rejected, (state, action) => {
+            state.message="Something was wrong!"
         });
 
         builder.addCase(logoutTC.fulfilled, (state) => {

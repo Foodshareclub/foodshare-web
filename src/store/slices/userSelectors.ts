@@ -17,3 +17,4 @@ export const isRegisterSelector = (state: StateAppType) => state.user.isRegister
 export const isUpdateSelector = (state: StateAppType) => state.user.isUpdate;
 export const isLoadingSelector = (state: StateAppType) => state.user.isLoading;
 export const isUpdateProfileSelector = (state: StateAppType) => state.user.isUpdateProfile;
+export const messageProfileSelector=(state:StateAppType)=>state.user.message;
