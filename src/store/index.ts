@@ -11,6 +11,8 @@ import {userFirstNameSelector} from "@/store/slices/userSelectors";
 import {userSecondNameSelector} from "@/store/slices/userSelectors";
 import {userIdSelector} from "@/store/slices/userSelectors";
 import {avatarURLSelector} from "@/store/slices/userSelectors";
+import {emailSelector} from "@/store/slices/userSelectors";
+import {phoneNumberSelector} from "@/store/slices/userSelectors";
 
 import {userIdFromSessionSelector} from "@/store/slices/userSelectors";
 
@@ -35,6 +37,8 @@ export {
     userSecondNameSelector,
     userIdSelector,
     avatarURLSelector,
+    emailSelector,
+    phoneNumberSelector,
 
     userIdFromSessionSelector,
 

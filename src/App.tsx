@@ -2,11 +2,12 @@ import React, {useEffect, useState} from 'react';
 
 import {Session} from "@supabase/supabase-js";
 import {ChangeLanguageContainer, PasswordRecoveryModal} from "@/components";
-import {useAppDispatch} from "@/hook";
+import {useActionCreators, useAppDispatch, useAppSelector} from "@/hook";
 import {supabase} from "@/supaBase.config";
-import {userActions} from "@/store/slices/userReducer";
+import {getValueFromDBTC, userActions} from "@/store/slices/userReducer";
 import {getProductsTC} from "@/store/slices/productReducer";
 import {useLocation} from "react-router-dom";
+import {isAuthSelector, isUpdateProfileSelector, userIdFromSessionSelector} from "@/store";
 
 function App() {
     const dispatch = useAppDispatch();
