@@ -1,4 +1,4 @@
-import {supabase} from "../supaBase.config";
+import {supabase} from "@/supaBase.config";
 import {
     AuthError,
     AuthResponse,

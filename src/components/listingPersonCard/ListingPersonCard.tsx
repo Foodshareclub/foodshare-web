@@ -1,15 +1,14 @@
-import React from 'react';
-import {Avatar, Box, Card, CardBody, Flex, Heading, Image, Stack} from "@chakra-ui/react";
-import PublishListingModal from "../modals/PublishListingModal";
+import React, {ReactNode} from 'react';
+import {Avatar, Card, CardBody, Flex, Heading, Image, Stack} from "@chakra-ui/react";
 import peak from "@/assets/peakpx-min.jpg";
 
 type PropsType = {
     userSecondName: string
     userFirstName: string
     imgUrl: string
-    userId: string
+    children?: ReactNode
 }
-const ListingPersonCard: React.FC<PropsType> = ({userSecondName, userFirstName, imgUrl, userId}) => {
+const ListingPersonCard: React.FC<PropsType> = ({userSecondName, userFirstName, imgUrl, children}) => {
 
     return (
 
@@ -39,13 +38,13 @@ const ListingPersonCard: React.FC<PropsType> = ({userSecondName, userFirstName, 
             </Flex>
 
             <Stack alignSelf={"center"}>
+
                 <CardBody>
                     <Heading textAlign={"center"} size='md'>
                         {userFirstName} {userSecondName}
                     </Heading>
-                    <Box pt={5}><PublishListingModal
-                        userID={userId}
-                    /></Box>
+
+                    {children}
                 </CardBody>
             </Stack>
         </Card>

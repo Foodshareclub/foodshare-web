@@ -8,6 +8,7 @@ import OpportunitiesPage from "@/pages/volunteerPages/OpportunitiesPage";
 import VolunteerPage from "@/pages/volunteerPages/VolunteerPage";
 import WantedPage from "@/pages/wantedPage/WantedPage";
 import {SearchResultsPage} from "@/pages/searchResultPage/SearchResultsPage";
+import {SettingsPage} from "@/pages/settingsPage/SettingsPage";
 
 export {
     ProductPage,
@@ -19,5 +20,6 @@ export {
     BusinessPage,
     ContactUsPage,
     WantedPage,
-    SearchResultsPage
+    SearchResultsPage,
+    SettingsPage
 }

@@ -46,7 +46,6 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
     const finalRef = useRef(null);
 
     const inputFileRef = useRef<HTMLInputElement | null>(null);
-
     const [imgUrl, setImgUrl] = useState<string>(product?.gif_url || '');
     const [category, setCategory] = useState(product?.post_type || '');
     const [title, setTitle] = useState(product?.post_name || '');
