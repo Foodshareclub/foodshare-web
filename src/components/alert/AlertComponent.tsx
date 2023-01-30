@@ -1,8 +1,9 @@
 import React, {useEffect, useState} from 'react';
-import {Alert, AlertDescription, AlertIcon, AlertTitle} from "@chakra-ui/react";
+import {Alert, AlertIcon, AlertTitle} from "@chakra-ui/react";
 import {useActionCreators} from "@/hook";
 import {userActions} from "@/store/slices/userReducer";
 import {productActions} from "@/store/slices/productReducer";
+
 export type StatusType = "info" | "warning" | "success" | "error" | "loading" | undefined
 type PropsType ={
     status:StatusType

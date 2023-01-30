@@ -10,7 +10,6 @@ import {
     userIdFromSessionSelector
 } from "@/store/slices/userSelectors";
 import AlertComponent from "@/components/alert/AlertComponent";
-import {isUpdateProductSelector, messageProductSelector} from "@/store/slices/productsSelectors";
 
 type HeaderType = {
     getRoute: (route: string) => void

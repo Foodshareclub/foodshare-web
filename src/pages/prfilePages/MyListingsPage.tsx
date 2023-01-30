@@ -49,11 +49,13 @@ const MyListingsPage = () => {
     }, [isUpdateProduct, userId]);
 
 
+
     const [deleteProduct, setDeleteProduct] = useState<{id: number, productName: string }>({id: 0, productName: ""});
 
     const onConfirmDeleteModalHandler = (productID: number, productName: string) => {
         setDeleteProduct({id: productID, productName });
         onOpen();
+
     }
 
     const deleteProductHandler = () => {
