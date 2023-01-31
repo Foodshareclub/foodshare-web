@@ -9,6 +9,7 @@ import VolunteerPage from "@/pages/volunteerPages/VolunteerPage";
 import WantedPage from "@/pages/wantedPage/WantedPage";
 import {SearchResultsPage} from "@/pages/searchResultPage/SearchResultsPage";
 import {SettingsPage} from "@/pages/settingsPage/SettingsPage";
+import {PersonalInfoPage} from "@/pages/personalInfoPage/PersonalInfoPage";
 
 export {
     ProductPage,
@@ -21,5 +22,6 @@ export {
     ContactUsPage,
     WantedPage,
     SearchResultsPage,
-    SettingsPage
+    SettingsPage,
+    PersonalInfoPage
 }
