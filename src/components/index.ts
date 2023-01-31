@@ -30,6 +30,11 @@ import AsideProducts from "@/components/asideProducts/AsideProducts";
 import PersonCard from "./personCard/PersonCard";
 import ListingPersonCard from "@/components/listingPersonCard/ListingPersonCard";
 import AlertComponent from "@/components/alert/AlertComponent";
+import {NameBlock} from "@/components/personalInfoComponents/NameBlock";
+import {PhoneNumberBlock} from "@/components/personalInfoComponents/PhoneNumberBlock";
+import {EmailBlock} from "@/components/personalInfoComponents/EmailBlock";
+import {AddressBlock} from "@/components/personalInfoComponents/AddressBlock";
+import {SettingsCard} from "@/components/settingsCard/SettingsCard";
 
 
 export {
@@ -64,5 +69,10 @@ export {
     AsideProducts,
     ListingPersonCard,
     PersonCard,
-    AlertComponent
+    AlertComponent,
+    NameBlock,
+    EmailBlock,
+    PhoneNumberBlock,
+    AddressBlock,
+    SettingsCard
 }

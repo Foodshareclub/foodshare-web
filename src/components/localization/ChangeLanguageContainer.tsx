@@ -9,14 +9,13 @@ import {
     AboutUsPage,
     ContactUsPage,
     MyListingsPage,
-    OpportunitiesPage,
+    OpportunitiesPage, PersonalInfoPage,
     ProductPage,
     SearchResultsPage, SettingsPage,
     VolunteerPage
 } from "@/pages";
 import {Footer, Header, Main} from "@/components";
 import {languageSelector} from "@/store/slices/userSelectors";
-import {PersonalInfoPage} from "@/pages/settingsPage/SettingsPage";
 
 type ContainerProps = {
     productType: string
