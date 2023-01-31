@@ -1,5 +1,6 @@
 import personalInfo from "@/assets/personal_info.png";
 import userShield from "@/assets/user_shield.png";
+import {PATH} from "@/utils/ROUTES";
 
 type SettingsInfoArrayType = {
     img: string
@@ -13,12 +14,12 @@ export const settingsInfoArray: Array<SettingsInfoArrayType> = [
         img: personalInfo,
         settingTitle: 'Personal info',
         description: 'Provide personal details and how we can reach you',
-        route: '/settings/personal-info'
+        route: PATH.personalInfoPage
     },
     {
         img: userShield,
         settingTitle: 'Login & security',
         description: 'Update your password and secure your account',
-        route: 'login-and-security'
+        route: PATH.loginSecurityPage
     }
 ]

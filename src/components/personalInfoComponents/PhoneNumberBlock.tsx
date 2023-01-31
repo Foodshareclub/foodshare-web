@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {Box, Button, Flex, Input, InputGroup, InputLeftElement, Text} from "@chakra-ui/react";
+import {Box, Button, Flex, Heading, Input, InputGroup, InputLeftElement, Text} from "@chakra-ui/react";
 import {PhoneIcon} from "@chakra-ui/icons";
 
 type PhoneNumberBlockType = {
@@ -31,6 +31,9 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({
     return (
         <Flex>
             <Box width={"container.lg"}>
+                <Heading color={c ? "gray.100" : "gray.500"} textAlign='left'>
+                    Phone number
+                </Heading>
                 {
                     edit
                         ? <>

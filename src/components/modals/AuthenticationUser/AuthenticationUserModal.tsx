@@ -26,6 +26,7 @@ import google from "../../../assets/google.svg";
 import envelope from "../../../assets/envelope-small.png";
 import phone from "../../../assets/phone.png";
 import {isAuthSelector} from "@/store/slices/userSelectors";
+import {PATH} from "@/utils";
 
 type ModalType = {
     buttonValue: StartWithType
@@ -83,7 +84,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullS
     const onSignInWithProviderHandler = (provider: ProviderType) => dispatch(signInWithProviderTC(provider));
 
     if (isAuth) {
-        navigate("/");
+        navigate(PATH.main);
     }
     return (
         <>

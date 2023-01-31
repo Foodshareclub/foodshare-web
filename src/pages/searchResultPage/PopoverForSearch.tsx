@@ -5,9 +5,7 @@ import {
     Popover,
     PopoverArrow,
     PopoverBody,
-    PopoverCloseButton,
     PopoverContent,
-    PopoverHeader,
     PopoverTrigger,
     Radio,
     RadioGroup,
@@ -66,17 +64,23 @@ const PopoverForSearch = () => {
                 </PopoverTrigger>
             </Flex>
 
-            <PopoverContent color='white' bg='blue.800' borderColor='blue.800'>
-                <PopoverHeader pt={4} fontWeight='bold' border='0'>
-                    Choose something
-                </PopoverHeader>
+            <PopoverContent
+                // color='white'
+                bg='red.100'
+                // borderColor='blue.800'
+                width={'100%'}
+                height={'50px'}
+            >
+                {/*<PopoverHeader pt={4} fontWeight='bold' border='0'>*/}
+                {/*    Choose something*/}
+                {/*</PopoverHeader>*/}
                 <PopoverArrow/>
-                <PopoverCloseButton/>
+                {/*<PopoverCloseButton/>*/}
                 <PopoverBody>
                     <RadioGroup
                         onChange={setProductType} value={productType}
                     >
-                        <Stack direction='column'>
+                        <Stack direction='row'>
                             <Radio value='all'>All</Radio>
                             <Radio value='food'>Food</Radio>
                             <Radio value='things'>Things</Radio>

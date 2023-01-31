@@ -35,6 +35,7 @@ import {PhoneNumberBlock} from "@/components/personalInfoComponents/PhoneNumberB
 import {EmailBlock} from "@/components/personalInfoComponents/EmailBlock";
 import {AddressBlock} from "@/components/personalInfoComponents/AddressBlock";
 import {SettingsCard} from "@/components/settingsCard/SettingsCard";
+import {BecomeSharerBlock} from "@/components/becomeSharerBlock/BecomeSharerBlock";
 
 
 export {
@@ -74,5 +75,6 @@ export {
     EmailBlock,
     PhoneNumberBlock,
     AddressBlock,
-    SettingsCard
+    SettingsCard,
+    BecomeSharerBlock
 }

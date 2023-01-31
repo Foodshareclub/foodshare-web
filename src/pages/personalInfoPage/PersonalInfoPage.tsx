@@ -1,10 +1,15 @@
 import {useAppSelector} from "@/hook";
 import {emailSelector, phoneNumberSelector, userFirstNameSelector, userSecondNameSelector} from "@/store";
 import React, {useEffect, useState} from "react";
-import {Container, Heading} from "@chakra-ui/react";
+import {Box, Breadcrumb, BreadcrumbItem, BreadcrumbLink, Container, Text} from "@chakra-ui/react";
 import {AddressBlock, EmailBlock, NameBlock, PhoneNumberBlock} from "@/components";
+import {ChevronRightIcon} from "@chakra-ui/icons";
+import {useNavigate} from "react-router-dom";
+import {PATH} from "@/utils";
 
 export const PersonalInfoPage = () => {
+    const navigate = useNavigate();
+
     const fName = useAppSelector(userFirstNameSelector);
     const sName = useAppSelector(userSecondNameSelector);
     const userEmail = useAppSelector(emailSelector);
@@ -36,49 +41,71 @@ export const PersonalInfoPage = () => {
         console.log(secondName)
     }
     return (
-        <Container maxW={"container.md"}>
-            <Heading color={a ? "gray.100" : "gray.500"} mt="23vh" mb={5}>
-                Personal Info
-            </Heading>
-            <NameBlock
-                firstName={firstName}
-                setFirstName={setFirstName}
-                secondName={secondName}
-                setSecondName={setSecondName}
-                onSaveHandler={onSaveHandler}
-                a={a} b={b} c={c} d={d}
-                setB={setB} setC={setC} setD={setD}
-            />
-            <Heading color={b ? "gray.100" : "gray.500"} textAlign='left'>
-                Email address
-            </Heading>
+        <Box mt="23vh">
 
-            <EmailBlock
-                setC={setC} setD={setD}
-                a={a} b={b} c={c} d={d}
-                email={email}
-                onSaveHandler={onSaveHandler}
-                setEmail={setEmail}
-                setA={setA}/>
+            <Container maxW={"container.md"}>
+                <Breadcrumb spacing='8px' separator={<ChevronRightIcon color='gray.800'/>}>
+                    <BreadcrumbItem
+                        fontWeight='medium'
+                        onClick={() => navigate(PATH.settingsPage)}
+                    >
+                        <BreadcrumbLink>Account settings</BreadcrumbLink>
+                    </BreadcrumbItem>
 
-            <Heading color={c ? "gray.100" : "gray.500"} textAlign='left'>
-                Phone number
-            </Heading>
+                    <BreadcrumbItem isCurrentPage fontWeight='medium'>
+                        <span>Personal info</span>
+                    </BreadcrumbItem>
+                </Breadcrumb>
 
-            <PhoneNumberBlock
-                a={a} b={b} c={c} d={d}
-                phone={phone}
-                setPhone={setPhone}
-                onSaveHandler={onSaveHandler}
-                setA={setA} setB={setB} setD={setD}/>
+                <Text fontSize='4xl' fontWeight={"bold"}>
+                    Personal info
+                </Text>
 
-            <Heading color={d ? "gray.100" : "gray.500"} textAlign='left'>
-                Address
-            </Heading>
-            <AddressBlock
-                onSaveHandler={onSaveHandler}
-                a={a} b={b} c={c} d={d} setA={setA} setB={setB} setC={setC}/>
-        </Container>
+                    <Box mt={5}>
+                        <NameBlock
+                            firstName={firstName}
+                            setFirstName={setFirstName}
+                            secondName={secondName}
+                            setSecondName={setSecondName}
+                            onSaveHandler={onSaveHandler}
+                            a={a} b={b} c={c} d={d}
+                            setB={setB} setC={setC} setD={setD}
+                        />
+                    </Box>
 
+
+                    <Box mt={5}>
+                        <EmailBlock
+                            setC={setC} setD={setD}
+                            a={a} b={b} c={c} d={d}
+                            email={email}
+                            onSaveHandler={onSaveHandler}
+                            setEmail={setEmail}
+                            setA={setA}
+                        />
+                    </Box>
+
+
+                    <Box mt={5}>
+                        <PhoneNumberBlock
+                            a={a} b={b} c={c} d={d}
+                            phone={phone}
+                            setPhone={setPhone}
+                            onSaveHandler={onSaveHandler}
+                            setA={setA} setB={setB} setD={setD}
+                        />
+                    </Box>
+
+
+                    <Box mt={5}>
+                        <AddressBlock
+                            onSaveHandler={onSaveHandler}
+                            a={a} b={b} c={c} d={d}
+                            setA={setA} setB={setB} setC={setC}
+                        />
+                    </Box>
+
+            </Container>
+        </Box>
     );
 };

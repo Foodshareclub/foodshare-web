@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {Box, Button, Flex, Input, Text} from "@chakra-ui/react";
+import {Box, Button, Flex, Heading, Input, Text} from "@chakra-ui/react";
 
 type EmailBlockType = {
     email: string
@@ -31,6 +31,9 @@ export const EmailBlock: React.FC<EmailBlockType> = ({
     return (
         <Flex>
             <Box width={"container.lg"}>
+                <Heading color={b ? "gray.100" : "gray.500"} textAlign='left'>
+                    Email address
+                </Heading>
                 {
                     edit
                         ? <>
