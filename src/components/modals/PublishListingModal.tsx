@@ -22,22 +22,26 @@ import {
 import {createPhotoUrl} from "@/utils";
 import cloud from "../../assets/cloud.svg"
 
-import {useActionCreators} from "@/hook";
+import {useActionCreators, useAppSelector} from "@/hook";
 import {t, Trans} from '@lingui/macro';
 import {RequiredStar} from "@/components";
 import {EditIcon} from "@chakra-ui/icons";
 import {ProductObjType} from "@/api/productAPI";
 import {createProductTC, productActions, updateProductTC, uploadPostImgToDBTC} from "@/store/slices/productReducer";
+import {userIdFromSessionSelector} from "@/store";
 
 type PublishListingModalType = {
-    userID: string
+    userID?: string
     product?: ProductObjType
 }
 
 const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
-                                                                               userID,
+                                                                               // userID,
                                                                                product
                                                                            }) => {
+
+    const id = useAppSelector(userIdFromSessionSelector);
+
     const actions = useActionCreators({...productActions, createProductTC, updateProductTC, uploadPostImgToDBTC})
 
     const {isOpen, onOpen, onClose} = useDisclosure();
@@ -63,7 +67,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
         setFile(img.file)
         setFilePath(img.filePath)
     }
-    const postImgUrl = `https://***REMOVED***.supabase.co/storage/v1/object/public/avatars-posts/${userID}/${filePath}`
+    const postImgUrl = `https://***REMOVED***.supabase.co/storage/v1/object/public/avatars-posts/${id}/${filePath}`
 
     let productObj = {
         gif_url: postImgUrl,
@@ -73,7 +77,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
         pickup_time: time,
         post_address: address,
         post_metro_station: metroStation,
-        user: userID
+        user: id
     }
 
     if (product && !filePath) {
@@ -84,7 +88,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
 
     const publishHandler = async () => {
         await actions.uploadPostImgToDBTC({
-            dir: `avatars-posts/${userID}`, file, filePath
+            dir: `avatars-posts/${id}`, file, filePath
         });//если дубль фото то в сторадже не создаст новую
 
         if (product) {

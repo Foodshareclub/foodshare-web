@@ -9,13 +9,16 @@ import {
     AboutUsPage,
     ContactUsPage,
     MyListingsPage,
-    OpportunitiesPage, PersonalInfoPage,
+    OpportunitiesPage,
+    PersonalInfoPage,
     ProductPage,
-    SearchResultsPage, SettingsPage,
+    SearchResultsPage,
+    SettingsPage,
     VolunteerPage
 } from "@/pages";
 import {Footer, Header, Main} from "@/components";
 import {languageSelector} from "@/store/slices/userSelectors";
+import {PATH} from "@/utils";
 
 type ContainerProps = {
     productType: string
@@ -31,28 +34,29 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
     }, [language]);
 
     return (
-        <I18nProvider i18n={i18n}>
-            <Card size="lg" minH="100vh">
-                <Header getRoute={getRoute} setProductType={setProductType} productType={productType}/>
-                <CardBody p={0}>
-                    <Routes>
-                        <Route path={"/"} element={<Main/>}/>
-                        <Route path={"/*"} element={<Main/>}/>
-                        <Route path={"/one-product/:type/:id"} element={<ProductPage/>}/>
-                        <Route path={"/aboutUs"} element={<AboutUsPage/>}/>
-                        <Route path={"/contactUs"} element={<ContactUsPage/>}/>
-                        <Route path={"/volunteer"} element={<VolunteerPage/>}/>
-                        <Route path={"/user-listings"} element={<MyListingsPage/>}/>
-                        <Route path={"/volunteer/opportunities"} element={<OpportunitiesPage/>}/>
-                        <Route path={"/s/:type"} element={<SearchResultsPage/>}/>
-                        <Route path={"/settings"} element={<SettingsPage/>}/>
-                        <Route path={"/settings/personal-info"} element={<PersonalInfoPage/>}/>
-                    </Routes>
-                </CardBody>
 
-                <Footer/>
-            </Card>
-        </I18nProvider>
+            <I18nProvider i18n={i18n}>
+                <Card size="lg" minH="100vh">
+                    <Header getRoute={getRoute} setProductType={setProductType} productType={productType}/>
+                    <CardBody p={0}>
+                        <Routes>
+                            <Route path={PATH.main} element={<Main/>}/>
+                            <Route path={"/*"} element={<Main/>}/>
+                            <Route path={PATH.productPage} element={<ProductPage/>}/>
+                            <Route path={PATH.aboutUsPage} element={<AboutUsPage/>}/>
+                            <Route path={PATH.contactUsPage} element={<ContactUsPage/>}/>
+                            <Route path={PATH.volunteerPage} element={<VolunteerPage/>}/>
+                            <Route path={PATH.myListingsPage} element={<MyListingsPage/>}/>
+                            <Route path={PATH.opportunitiesPage} element={<OpportunitiesPage/>}/>
+                            <Route path={PATH.searchResultsPage} element={<SearchResultsPage/>}/>
+                            <Route path={PATH.settingsPage} element={<SettingsPage/>}/>
+                            <Route path={PATH.personalInfoPage} element={<PersonalInfoPage/>}/>
+                        </Routes>
+                    </CardBody>
+
+                    <Footer/>
+                </Card>
+            </I18nProvider>
     );
 };
 

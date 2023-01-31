@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {Box, Button, Flex, Input, Text} from "@chakra-ui/react";
+import {Box, Button, Flex, Heading, Input, Text} from "@chakra-ui/react";
 
 type AddressBlockType = {
     onSaveHandler: () => void
@@ -35,6 +35,9 @@ export const AddressBlock: React.FC<AddressBlockType> = ({onSaveHandler, a, b, c
     return (
         <Flex>
             <Box width={"container.lg"}>
+                <Heading color={d ? "gray.100" : "gray.500"} textAlign='left'>
+                    Address
+                </Heading>
                 {
                     edit
                         ? <>

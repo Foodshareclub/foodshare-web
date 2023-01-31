@@ -6,10 +6,11 @@ import {Avatar, Box, Flex, Text} from "@chakra-ui/react";
 import {PagesType} from "./Header";
 import {useAppDispatch, useAppSelector, useMediaQuery} from "@/hook";
 import {AllValuesType} from "@/api/profileAPI";
-import {NavDrawer, ProfileSettings} from "@/components";
+import {BecomeSharerBlock, NavDrawer, ProfileSettings} from "@/components";
 import {downloadImgFromDBTC, logoutTC} from "@/store/slices/userReducer";
 import {avatarURLSelector, imgURLSelector} from "@/store/slices/userSelectors";
 import PopoverForSearch from "@/pages/searchResultPage/PopoverForSearch";
+import {PATH} from "@/utils";
 
 type PropsLangType = {
     isAuth: boolean
@@ -55,20 +56,20 @@ const NavComponent: React.FC<PropsLangType> = ({
 
     const navigateToMain = () => {
         setProductType('food');
-        navigate('/');
+        navigate(PATH.main);
         setPageType('productComponent');
 
     }
 
     const navigateToAboutUs = () => navigate('/aboutUs');
     const navigateToMyLists = () => {
-        navigate('/user-listings');
+        navigate(PATH.myListingsPage);
         setPageType("profileSettings");
     }
 
     const navigateToAccountSettings = () => {
         setPageType("profileSettings");
-        navigate('/settings');
+        navigate(PATH.settingsPage);
     }
     const navigateToHelp = () => {
         setPageType("profileSettings");
@@ -101,6 +102,8 @@ const NavComponent: React.FC<PropsLangType> = ({
             <PopoverForSearch/>
             {/*<SearchField/>*/}
 
+            <BecomeSharerBlock/>
+
             {
                 !isSmallerThan800
                     ? <NavDrawer
@@ -126,5 +129,3 @@ const NavComponent: React.FC<PropsLangType> = ({
     );
 }
 export default NavComponent
-
-

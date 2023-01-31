@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {Box, Button, Flex, Input, Text} from "@chakra-ui/react";
+import {Box, Button, Flex, Heading, Input, Text} from "@chakra-ui/react";
 
 type NameBlockType = {
     firstName: string
@@ -29,6 +29,9 @@ export const NameBlock: React.FC<NameBlockType> = ({
     return (
         <Flex>
             <Box width={"container.lg"}>
+                <Heading color={a ? "gray.100" : "gray.500"}>
+                    Name
+                </Heading>
                 {
                     edit
                         ? <>
