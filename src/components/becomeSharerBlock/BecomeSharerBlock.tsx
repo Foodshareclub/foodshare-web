@@ -1,10 +1,10 @@
-import {Box, Button, Flex, Menu, MenuButton, MenuItem, MenuList, Text} from "@chakra-ui/react";
+import {border, Box, Button, Flex, Menu, MenuButton, MenuItem, MenuList, Text} from "@chakra-ui/react";
 import * as React from "react";
 
 export const BecomeSharerBlock = () => {
     return (
         <Menu>
-            <MenuButton as={Button}>
+            <MenuButton display={{md: "block", base: "none"}}  color={"#7D7D7D"} fontSize={{md: "18px", base: "14px"}} bg={"none"} alignSelf={"center"} as={Button} >
                 Become a Sharer
             </MenuButton>
             <Flex justifyContent={"center"} alignItems={"center"}>
@@ -13,12 +13,9 @@ export const BecomeSharerBlock = () => {
                 marginLeft={'20px'}
                 p={5}
 
-                width={'800px'}
-                // width={'100%'}
-
                 boxShadow={'0px 5px 10px 2px rgba(34, 60, 80, 0.2)'}
             >
-                <Flex justifyContent={"space-around"}>
+                <Flex justify={"space-around"}>
                     <Box textAlign={"center"}>
                         <Text fontSize="18px" fontWeight={600} mb={3}>
                             Sharers

@@ -43,14 +43,14 @@ const PopoverForSearch = () => {
             lazyBehavior='keepMounted'
             placement='bottom'
         >
-            <Flex align="center" w={"30%"}>
+            <Flex align="center" w={{md: "30%", base: "100%"}}>
                 <IconButton
                     variant={"ghost"}
                     onClick={onFindResultsHandler}
                     cursor={"pointer"}
                     aria-label={""}
                     children={
-                    <SearchIcon color={'red.500'}/>}/>
+                        <SearchIcon color={!isEditing ? "gray.500" : 'red.500'}/>}/>
                 <PopoverTrigger>
                     <Input
                         // focusBorderColor='#FF2D55'
@@ -66,7 +66,7 @@ const PopoverForSearch = () => {
 
             <PopoverContent
                 // color='white'
-                bg='red.100'
+                bg='#FF2D71'
                 // borderColor='blue.800'
                 width={'100%'}
                 height={'50px'}
@@ -80,7 +80,7 @@ const PopoverForSearch = () => {
                     <RadioGroup
                         onChange={setProductType} value={productType}
                     >
-                        <Stack direction='row'>
+                        <Stack color={"white"} direction='row'>
                             <Radio value='all'>All</Radio>
                             <Radio value='food'>Food</Radio>
                             <Radio value='things'>Things</Radio>

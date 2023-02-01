@@ -1,5 +1,5 @@
 import React from 'react';
-import {Card, CardBody, CardFooter, Heading, IconButton, Image, Text} from "@chakra-ui/react";
+import {Card, CardBody, CardFooter, Heading, IconButton, Image, Text, useDisclosure} from "@chakra-ui/react";
 import {useLocation, useNavigate} from "react-router-dom";
 import {Trans} from "@lingui/macro";
 import {DeleteIcon} from "@chakra-ui/icons";
@@ -27,7 +27,7 @@ const AsideProducts: React.FC<AsideProdType> = ({
                                                     deleteProductHandler
                                                 }) => {
     const url = useLocation().pathname;
-
+    const {isOpen, onOpen, onClose} = useDisclosure();
     const navigate = useNavigate();
 
     const goToProduct = () => {
@@ -72,9 +72,9 @@ const AsideProducts: React.FC<AsideProdType> = ({
             {
                 url === '/user-listings' && <CardFooter alignSelf={"center"}>
                     {/*<Flex alignSelf={"center"} m={"0 auto"} justify={"space-around"} w="30%">*/}
-                    <PublishListingModal
-                        userID={product?.user as string}
-                        product={product}/>
+                    <PublishListingModal isOpen={isOpen} onClose={onClose}
+
+                                         product={product}/>
                     <IconButton
                         ml={4}
                         onClick={deleteHandler}
