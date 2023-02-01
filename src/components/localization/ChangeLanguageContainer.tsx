@@ -7,7 +7,7 @@ import {dynamicActivate} from "@/utils/i18n";
 import {useAppSelector} from "@/hook/hooks";
 import {
     AboutUsPage,
-    ContactUsPage,
+    ContactUsPage, LoginSecurityPage,
     MyListingsPage,
     OpportunitiesPage,
     PersonalInfoPage,
@@ -35,28 +35,29 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
 
     return (
 
-            <I18nProvider i18n={i18n}>
-                <Card size="lg" minH="100vh">
-                    <Header getRoute={getRoute} setProductType={setProductType} productType={productType}/>
-                    <CardBody p={0}>
-                        <Routes>
-                            <Route path={PATH.main} element={<Main/>}/>
-                            <Route path={"/*"} element={<Main/>}/>
-                            <Route path={PATH.productPage} element={<ProductPage/>}/>
-                            <Route path={PATH.aboutUsPage} element={<AboutUsPage/>}/>
-                            <Route path={PATH.contactUsPage} element={<ContactUsPage/>}/>
-                            <Route path={PATH.volunteerPage} element={<VolunteerPage/>}/>
-                            <Route path={PATH.myListingsPage} element={<MyListingsPage/>}/>
-                            <Route path={PATH.opportunitiesPage} element={<OpportunitiesPage/>}/>
-                            <Route path={PATH.searchResultsPage} element={<SearchResultsPage/>}/>
-                            <Route path={PATH.settingsPage} element={<SettingsPage/>}/>
-                            <Route path={PATH.personalInfoPage} element={<PersonalInfoPage/>}/>
-                        </Routes>
-                    </CardBody>
+        <I18nProvider i18n={i18n}>
+            <Card size="lg" minH="100vh">
+                <Header getRoute={getRoute} setProductType={setProductType} productType={productType}/>
+                <CardBody p={0}>
+                    <Routes>
+                        <Route path={PATH.main} element={<Main/>}/>
+                        <Route path={"/*"} element={<Main/>}/>
+                        <Route path={PATH.productPage} element={<ProductPage/>}/>
+                        <Route path={PATH.aboutUsPage} element={<AboutUsPage/>}/>
+                        <Route path={PATH.contactUsPage} element={<ContactUsPage/>}/>
+                        <Route path={PATH.volunteerPage} element={<VolunteerPage/>}/>
+                        <Route path={PATH.myListingsPage} element={<MyListingsPage/>}/>
+                        <Route path={PATH.opportunitiesPage} element={<OpportunitiesPage/>}/>
+                        <Route path={PATH.searchResultsPage} element={<SearchResultsPage/>}/>
+                        <Route path={PATH.settingsPage} element={<SettingsPage/>}/>
+                        <Route path={PATH.personalInfoPage} element={<PersonalInfoPage/>}/>
+                        <Route path={PATH.loginSecurityPage} element={<LoginSecurityPage/>}/>
+                    </Routes>
+                </CardBody>
 
-                    <Footer/>
-                </Card>
-            </I18nProvider>
+                <Footer/>
+            </Card>
+        </I18nProvider>
     );
 };
 

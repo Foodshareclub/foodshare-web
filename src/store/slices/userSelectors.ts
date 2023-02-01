@@ -10,6 +10,7 @@ export const phoneNumberSelector = (state: StateAppType) => state.user.value.pho
 
 //data from session
 export const userIdFromSessionSelector = (state: StateAppType) => state.user.session.user.id;
+export const userEmailFromSessionSelector = (state: StateAppType) => state.user.session.user.email;
 
 //data from initial state
 export const imgURLSelector = (state: StateAppType) => state.user.imgUrl;
