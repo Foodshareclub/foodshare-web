@@ -1,22 +1,23 @@
 import {InitialProductStateType} from "@/store/slices/productReducer";
 import React, {useEffect, useState} from "react";
 import {useLocation, useNavigate} from "react-router-dom";
-import {Box, Flex, GridItem, Heading, IconButton, Image, Skeleton, Text} from "@chakra-ui/react";
+import {Box, Flex, GridItem, Heading, IconButton, Image, Skeleton, Text, useDisclosure} from "@chakra-ui/react";
 import {navigatePhotosObject} from "@/utils";
 import {Trans} from "@lingui/macro";
 import navIcon from "@/assets/map.svg";
+import {DeleteIcon, EditIcon} from "@chakra-ui/icons";
+import DeleteCardModal from "@/components/modals/DeleteCardModal";
 import PublishListingModal from "../modals/PublishListingModal";
-import {DeleteIcon} from "@chakra-ui/icons";
 
 type ProductCardType = {
     product: InitialProductStateType
-    deleteProductHandler?: (productID: number) => void
 }
 
-export const ProductCard: React.FC<ProductCardType> = React.memo(({product, deleteProductHandler}) => {
+export const ProductCard: React.FC<ProductCardType> = React.memo(({product}) => {
     const navigate = useNavigate();
     const url = useLocation().pathname;
-
+    const {isOpen, onOpen, onClose} = useDisclosure();
+    const [openEdit, setOpenEdit] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
@@ -27,11 +28,6 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product, dele
         return () => clearTimeout(time);
     }, []);
 
-    const deleteHandler = () => {
-        if (deleteProductHandler) {
-            deleteProductHandler(product.id);
-        }
-    }
 
     const onNavigateToOneProductHandler = () => navigate(`/one-product/${product.post_type}/${product.id}`);
 
@@ -64,17 +60,22 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product, dele
                 <Box mt={3}>
                     {
                         url === '/user-listings' && <Flex justify={"center"}>
+                            <IconButton onClick={() => setOpenEdit(true)}
+                                        variant='outline'
+                                        icon={<EditIcon/>}
+                                        aria-label="update">
+                            </IconButton>
                             <PublishListingModal
-                                userID={product.user}
-                                product={product}/>
+                                product={product} isOpen={openEdit} onClose={onClose} setOpenEdit={setOpenEdit}/>
                             <IconButton
                                 ml={4}
-                                onClick={deleteHandler}
+                                onClick={onOpen}
                                 variant='outline'
                                 icon={<DeleteIcon/>}
                                 aria-label="delete">
                                 <Trans>Delete</Trans>
                             </IconButton>
+                            <DeleteCardModal product={product} onClose={onClose} isOpen={isOpen}/>
                         </Flex>
 
                     }
@@ -114,6 +115,7 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product, dele
                             {product.post_description}
                         </Text>
                     </Flex>
+
                 </Box>
             }
         </GridItem>

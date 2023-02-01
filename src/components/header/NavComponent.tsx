@@ -88,7 +88,7 @@ const NavComponent: React.FC<PropsLangType> = ({
                 />
 
                 <Box pl={3} alignSelf="center">
-                    <Text onClick={() => navigateToMain()}
+                    <Text display={{"mm": "block", base: "none"}} onClick={() => navigateToMain()}
                           cursor="pointer"
                           fontSize="25px"
                           fontWeight={900}
@@ -100,8 +100,6 @@ const NavComponent: React.FC<PropsLangType> = ({
                 </Box>
             </Flex>
             <PopoverForSearch/>
-            {/*<SearchField/>*/}
-
             <BecomeSharerBlock/>
 
             {

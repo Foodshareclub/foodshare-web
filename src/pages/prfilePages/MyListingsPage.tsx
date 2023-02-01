@@ -1,35 +1,24 @@
-import React, {useEffect, useState} from 'react';
-
-import {
-    Badge,
-    Box,
-    Button,
-    Flex,
-    Heading, Modal,
-    ModalBody, ModalCloseButton,
-    ModalContent, ModalFooter,
-    ModalHeader,
-    ModalOverlay,
-    SimpleGrid, useDisclosure
-} from "@chakra-ui/react";
-
+import React, {useEffect} from 'react';
+import {Box, Button, Flex, Heading, SimpleGrid, useDisclosure} from "@chakra-ui/react";
 import {Trans} from "@lingui/macro";
 import {Navigate} from "react-router-dom";
 import {useActionCreators, useAppSelector, useGridSize} from "@/hook";
 import {deleteProductTC, getCurrentUserProductsTC, productActions} from "@/store/slices/productReducer";
 import {AlertComponent, ListingPersonCard, ProductCard, PublishListingModal} from "@/components";
 import {
+    currentUserProductsSelector,
     imgURLSelector,
     isAuthSelector,
+    isUpdateProductSelector,
+    messageProductSelector,
     userFirstNameSelector,
     userIdSelector,
-    userSecondNameSelector,currentUserProductsSelector,
-    isUpdateProductSelector, messageProductSelector,
+    userSecondNameSelector,
 } from "@/store";
 
 
 const MyListingsPage = () => {
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const {isOpen, onOpen, onClose} = useDisclosure();
 
     const gridSize = useGridSize();
 
@@ -49,24 +38,10 @@ const MyListingsPage = () => {
     }, [isUpdateProduct, userId]);
 
 
-
-    const [deleteProduct, setDeleteProduct] = useState<{id: number, productName: string }>({id: 0, productName: ""});
-
-    const onConfirmDeleteModalHandler = (productID: number, productName: string) => {
-        setDeleteProduct({id: productID, productName });
-        onOpen();
-
-    }
-
-    const deleteProductHandler = () => {
-        actions.deleteProductTC(deleteProduct.id);
-
-        onClose();
-    }
-
     if (!isAuth) {
         return <Navigate to='/'/>
     }
+
 
     return (
         <Box mt="20vh">
@@ -76,7 +51,7 @@ const MyListingsPage = () => {
                 top={"94%"}
             />
 
-            <Flex  direction={"column"} justify="space-between">
+            <Flex direction={"column"} justify="space-between">
                 <Box>
                     <ListingPersonCard
                         userFirstName={userFirstName}
@@ -84,7 +59,15 @@ const MyListingsPage = () => {
                         imgUrl={imgUrl}
                     >
                         <Box pt={5}>
-                            <PublishListingModal userID={userId}/>
+                            <Button w={"100%"} onClick={() => onOpen()}
+                                    background={"#ff2d55"}
+                                    _hover={{bg: '#c92040'}}
+                                    color="#ffffff"
+                                    variant="solid"
+                            >
+                                <Trans>Add Listing</Trans>
+                            </Button>
+                            <PublishListingModal onClose={onClose} isOpen={isOpen}/>
                         </Box>
 
                     </ListingPersonCard>
@@ -100,47 +83,13 @@ const MyListingsPage = () => {
                     {
                         currentUserProducts.length > 0
                         && currentUserProducts.map((item, id) => (
-                        <ProductCard
-                            deleteProductHandler={(productID) => onConfirmDeleteModalHandler(productID, item.post_name)}
-                            product={item}
-                            key={id}
-                        />
-                    ))}
+                            <ProductCard
+                                product={item}
+                                key={id}
+                            />
+                        ))}
                 </SimpleGrid>
             </Flex>
-
-            <Modal closeOnOverlayClick={false} isOpen={isOpen} onClose={onClose} isCentered size={"xs"}>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>
-                        Delete
-                    </ModalHeader>
-
-                    <ModalCloseButton />
-
-                    <ModalBody pb={6} >
-                        You are going to delete the product
-                        <Badge colorScheme='red'>{deleteProduct.productName}</Badge>.
-                        Are you sure?
-                    </ModalBody>
-
-                    <ModalFooter justifyContent={"space-between"}>
-                        <Button
-                            colorScheme='blue'
-                            mr={3}
-                            onClick={deleteProductHandler}
-                        >
-                            Yes
-                        </Button>
-
-                        <Button
-                            onClick={onClose}
-                        >
-                            Cancel
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </Modal>
         </Box>
 
     );
