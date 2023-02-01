@@ -16,8 +16,12 @@ import {
 } from "@chakra-ui/react";
 import {supabase} from "@/supaBase.config";
 import {ViewIcon, ViewOffIcon} from "@chakra-ui/icons";
+import {useAppDispatch} from "@/hook";
+import {senNewPasswordTC} from "@/store/slices/userReducer";
 
 export const PasswordRecoveryModal = () => {
+    const dispatch = useAppDispatch();
+
     const {isOpen, onOpen, onClose} = useDisclosure();
 
     const initialRef = React.useRef(null);
@@ -39,12 +43,8 @@ export const PasswordRecoveryModal = () => {
     const [password, setPassword] = useState('');
 
     const createPasswordHandler = async () => {
-        const { data, error } = await supabase.auth.updateUser({ password });
-        if(data.user?.id) {
+        dispatch(senNewPasswordTC(password))
             onClose();
-        }else {
-            console.log(error);
-        }
     }
 
     return (
@@ -56,6 +56,7 @@ export const PasswordRecoveryModal = () => {
                 finalFocusRef={finalRef}
                 isOpen={isOpen}
                 onClose={onClose}
+                isCentered={true}
             >
                 <ModalOverlay/>
                 <ModalContent>

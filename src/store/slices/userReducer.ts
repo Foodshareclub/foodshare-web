@@ -204,6 +204,22 @@ export const recoveryPasswordTC = createAsyncThunk("/auth/recoveryPasswordTC", a
     }
 })
 
+export const senNewPasswordTC = createAsyncThunk("/senNewPasswordTC", async (password: string, thunkAPI) => {
+    /// не вносил в extraReducers
+
+    try {
+        const {data, error} = await profileAPI.setNewPassword(password);
+        if (error) {
+            console.error(error)
+            return thunkAPI.rejectWithValue(error);
+        }
+        return data;
+    } catch (e: any) {
+        thunkAPI.rejectWithValue(e.message)
+    }
+
+})
+
 const userSlice = createSlice({
     name: "user",
     initialState: initialState,

@@ -103,6 +103,9 @@ export const profileAPI = {
         return supabase.auth
             .resetPasswordForEmail(email);
     },
+    setNewPassword(password: string) {
+        return supabase.auth.updateUser({ password });
+    },
     downloadImgFromDB(value: ImgUrlType): Promise<{ data: Blob; error: null } | { data: null; error: RangeError }> {
         return supabase.storage.from(`${value.dir}`).download(`${value.imgUrl}`)
     },
