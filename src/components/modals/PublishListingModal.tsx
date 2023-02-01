@@ -32,12 +32,13 @@ type PublishListingModalType = {
     onClose: () => void
     isOpen: boolean
     setOpenEdit?: (value: boolean) => void
+    value?:string
 }
 
 const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
                                                                                product,
                                                                                isOpen,
-                                                                               onClose, setOpenEdit
+                                                                               onClose, setOpenEdit,value
                                                                            }) => {
     const id = useAppSelector(userIdFromSessionSelector);
 
@@ -160,7 +161,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
                             <Trans>Category</Trans>
                             <RequiredStar/>
                         </FormLabel>
-                        <Select variant='outline'
+                        <Select variant='outline' defaultValue={value}
                                 placeholder={t({
                                     id: `Select category`,
                                     message: `Select category`
