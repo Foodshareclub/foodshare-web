@@ -14,22 +14,21 @@ import {
     PopoverBody,
     PopoverContent,
     PopoverTrigger,
-    Text
+    Text,
+    useColorModeValue
 } from "@chakra-ui/react";
 import {ChevronRightIcon} from "@chakra-ui/icons";
 import {PATH} from "@/utils";
 import {useNavigate} from "react-router-dom";
-import {useAppDispatch, useAppSelector} from "@/hook";
+import {useActionCreators, useAppSelector} from "@/hook";
 import {userEmailFromSessionSelector} from "@/store/slices/userSelectors";
 import {recoveryPasswordTC} from "@/store/slices/userReducer";
 
 export const LoginSecurityPage = () => {
-    const dispatch = useAppDispatch();
-
+    const actions = useActionCreators({recoveryPasswordTC})
     const navigate = useNavigate();
-
     const userEmail = useAppSelector(userEmailFromSessionSelector);
-
+    const [edit, setEdit] = useState(false);
     const [isPushed, setIsPushed] = useState(false);
     const [email, setEmail] = useState(userEmail || '');
 
@@ -40,7 +39,7 @@ export const LoginSecurityPage = () => {
 
 
     const sendEmailHandler = () => {
-        dispatch(recoveryPasswordTC(email));
+        actions.recoveryPasswordTC(email);
         setIsPushed(true);
 
         timerID = setTimeout(() => {
@@ -50,7 +49,6 @@ export const LoginSecurityPage = () => {
 
     return (
         <Box mt="23vh">
-
             <Container maxW={"container.md"}>
                 <Breadcrumb spacing='8px' separator={<ChevronRightIcon color='gray.800'/>}>
                     <BreadcrumbItem
@@ -64,48 +62,60 @@ export const LoginSecurityPage = () => {
                         <span>Login & security</span>
                     </BreadcrumbItem>
                 </Breadcrumb>
-
-                <Text fontSize='4xl' fontWeight={"bold"}>
-                    Login & security
-                </Text>
-
-                <Box mt={5}>
-                    <Flex>
+                <Box mt={"8vh"}>
+                    <Text fontSize='4xl' fontWeight={"bold"}>
+                        Login & security
+                    </Text>
+                    <Flex borderBottomWidth={1}
+                          borderStyle={'solid'}
+                          borderColor={useColorModeValue('gray.200', 'gray.700')}>
                         <Box width={"container.lg"}>
-                            <Heading color={"gray.500"} textAlign='left' mb={2}>
+                            <Heading fontSize={'2xl'} fontFamily={'body'}
+                                     fontWeight={500} pb={2} color={"black.500"} textAlign='left' mb={2}>
                                 Change password
                             </Heading>
-                            <Text mb={5}>Insert your email and you'll receive a link to change the password</Text>
+                            {edit ? <>
+                                <Text mb={5}>Insert your email and you'll receive a link to change the password</Text>
+                                <Flex justifyContent={"space-between"}>
+                                    <Input
+                                        value={email}
+                                        onChange={(e) => setEmail(e.currentTarget.value)}
+                                        variant="filled"
+                                    />
+                                </Flex>
+                                <Popover placement='bottom-start'>
+                                    <PopoverTrigger>
+                                        <Button
+                                            onClick={sendEmailHandler}
+                                            variant={"ghost"}
+                                            my={3}
+                                            disabled={isPushed}
+                                        >
+                                            Send
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent w={'100%'}>
+                                        <PopoverArrow/>
+                                        <PopoverBody>
+                                            Please check your e-mail.
+                                        </PopoverBody>
+                                    </PopoverContent>
+                                </Popover>
+                            </> : <></>
+                            }
 
-                            <Flex justifyContent={"space-between"}>
-                                <Input
-                                    value={email}
-                                    onChange={(e) => setEmail(e.currentTarget.value)}
-                                    variant="filled"
-                                />
-                            </Flex>
 
-
-                            <Popover placement='bottom-start'>
-                                <PopoverTrigger>
-                                    <Button
-                                        onClick={sendEmailHandler}
-                                        colorScheme={"blackAlpha"}
-                                        variant={"solid"}
-                                        mt={3}
-                                        disabled={isPushed}
-                                    >
-                                        Send
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent w={'100%'}>
-                                    <PopoverArrow/>
-                                    <PopoverBody>
-                                        Please check your e-mail.
-                                    </PopoverBody>
-                                </PopoverContent>
-                            </Popover>
                         </Box>
+                        <Button
+                            alignSelf={"top"}
+                            onClick={() => {
+                                setEdit(!edit)
+                            }}
+                            cursor={"pointer"}
+                            variant={"ghost"}
+                        >
+                            {edit ? 'Cancel' : 'Edit'}
+                        </Button>
                     </Flex>
 
                 </Box>

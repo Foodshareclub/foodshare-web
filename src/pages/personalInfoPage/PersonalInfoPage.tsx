@@ -42,7 +42,6 @@ export const PersonalInfoPage = () => {
     }
     return (
         <Box mt="23vh">
-
             <Container maxW={"container.md"}>
                 <Breadcrumb spacing='8px' separator={<ChevronRightIcon color='gray.800'/>}>
                     <BreadcrumbItem
@@ -57,11 +56,10 @@ export const PersonalInfoPage = () => {
                     </BreadcrumbItem>
                 </Breadcrumb>
 
-                <Text fontSize='4xl' fontWeight={"bold"}>
-                    Personal info
-                </Text>
-
-                    <Box mt={5}>
+                    <Box mt={'8vh'}>
+                        <Text fontSize='4xl' fontWeight={"bold"}>
+                            Personal info
+                        </Text>
                         <NameBlock
                             firstName={firstName}
                             setFirstName={setFirstName}
