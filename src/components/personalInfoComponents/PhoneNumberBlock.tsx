@@ -1,5 +1,15 @@
 import React, {useState} from "react";
-import {Box, Button, Flex, Heading, Input, InputGroup, InputLeftElement, Text} from "@chakra-ui/react";
+import {
+    Box,
+    Button,
+    Flex,
+    Heading,
+    Input,
+    InputGroup,
+    InputLeftElement,
+    Text,
+    useColorModeValue
+} from "@chakra-ui/react";
 import {PhoneIcon} from "@chakra-ui/icons";
 
 type PhoneNumberBlockType = {
@@ -29,19 +39,22 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({
     const [edit, setEdit] = useState(false);
 
     return (
-        <Flex>
+        <Flex  borderBottomWidth={1}
+               borderStyle={'solid'}
+               borderColor={useColorModeValue('gray.200', 'gray.700')} >
             <Box width={"container.lg"}>
-                <Heading color={c ? "gray.100" : "gray.500"} textAlign='left'>
+                <Heading fontSize={'2xl'} fontFamily={'body'}
+                         fontWeight={500} color={c ? "gray.100" : "black.500"} textAlign='left' pb={2}>
                     Phone number
                 </Heading>
                 {
                     edit
                         ? <>
                             <Flex justifyContent={"space-between"}>
-                                <InputGroup>
+                                <InputGroup >
                                     <InputLeftElement
                                         pointerEvents='none'
-                                        children={<PhoneIcon color='gray.300'/>}
+                                        children={<PhoneIcon   color='gray.300'/>}
                                     />
                                     <Input
                                         type='tel'
@@ -53,18 +66,18 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({
                             </Flex>
                             <Button
                                 onClick={onSaveHandler}
-                                colorScheme={"blackAlpha"}
-                                variant={"solid"}
-                                mt={3}
+                                variant={"ghost"}
+                                my={3}
                             >Save
                             </Button>
                         </>
-                        : <Text color={c ? "gray.100" : "gray.500"}>
+                        : <Text color={c ? "gray.100" : "black.500"}>
                             Add a number so confirmed users can get your products.
                         </Text>
                 }
             </Box>
             <Button
+                alignSelf={"top"}
                 disabled={c}
                 onClick={() => {
                     setA(!a)
@@ -73,6 +86,7 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({
                     setEdit(!edit)
                 }}
                 cursor={"pointer"}
+                variant={"ghost"}
             >
                 {edit ? 'Cancel' : 'Edit'}
             </Button>

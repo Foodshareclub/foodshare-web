@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {Box, Button, Flex, Heading, Input, Text} from "@chakra-ui/react";
+import {Box, Button, Flex, Heading, Input, Text, useColorModeValue} from "@chakra-ui/react";
 
 type EmailBlockType = {
     email: string
@@ -29,9 +29,12 @@ export const EmailBlock: React.FC<EmailBlockType> = ({
     const [edit, setEdit] = useState(false);
 
     return (
-        <Flex>
+        <Flex  borderBottomWidth={1}
+               borderStyle={'solid'}
+               borderColor={useColorModeValue('gray.200', 'gray.700')} >
             <Box width={"container.lg"}>
-                <Heading color={b ? "gray.100" : "gray.500"} textAlign='left'>
+                <Heading fontSize={'2xl'} fontFamily={'body'}
+                         fontWeight={500} pb={2} color={b ? "gray.100" : "black.500"} textAlign='left'>
                     Email address
                 </Heading>
                 {
@@ -48,18 +51,18 @@ export const EmailBlock: React.FC<EmailBlockType> = ({
                             </Flex>
                             <Button
                                 onClick={onSaveHandler}
-                                colorScheme={"blackAlpha"}
-                                variant={"solid"}
-                                mt={3}
+                                variant={"ghost"}
+                                my={3}
                             >Save
                             </Button>
                         </>
-                        : <Text color={b ? "gray.100" : "gray.500"}>
+                        : <Text color={b ? "gray.100" : "black.500"}>
                             {email}
                         </Text>
                 }
             </Box>
             <Button
+                alignSelf={"top"}
                 disabled={b}
                 onClick={() => {
                     setA(!a)
@@ -68,6 +71,7 @@ export const EmailBlock: React.FC<EmailBlockType> = ({
                     setEdit(!edit)
                 }}
                 cursor={"pointer"}
+                variant={"ghost"}
             >
                 {edit ? 'Cancel' : 'Edit'}
             </Button>

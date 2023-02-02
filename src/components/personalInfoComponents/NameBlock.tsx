@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {Box, Button, Flex, Heading, Input, Text} from "@chakra-ui/react";
+import {Box, Button, Flex, Heading, Input, Text, useColorModeValue} from "@chakra-ui/react";
 
 type NameBlockType = {
     firstName: string
@@ -27,9 +27,12 @@ export const NameBlock: React.FC<NameBlockType> = ({
     const [edit, setEdit] = useState(false);
 
     return (
-        <Flex>
+        <Flex  borderBottomWidth={1}
+               borderStyle={'solid'}
+               borderColor={useColorModeValue('gray.200', 'gray.700')} >
             <Box width={"container.lg"}>
-                <Heading color={a ? "gray.100" : "gray.500"}>
+                <Heading fontSize={'2xl'} fontFamily={'body'}
+                         fontWeight={500} pb={2} color={a ? "gray.100" : "black.500"}>
                     Name
                 </Heading>
                 {
@@ -51,18 +54,18 @@ export const NameBlock: React.FC<NameBlockType> = ({
                             </Flex>
                             <Button
                                 onClick={onSaveHandler}
-                                colorScheme={"blackAlpha"}
-                                variant={"solid"}
-                                mt={3}
+                                variant={"ghost"}
+                                my={3}
                             >Save
                             </Button>
                         </>
-                        : <Text color={a ? "gray.100" : "gray.500"}>
+                        : <Text color={a ? "gray.100" : "black.500"}>
                             {firstName} {secondName}
                         </Text>
                 }
             </Box>
             <Button
+                alignSelf={"top"}
                 disabled={a}
                 onClick={() => {
                     setB(!b);
@@ -71,6 +74,7 @@ export const NameBlock: React.FC<NameBlockType> = ({
                     setEdit(!edit)
                 }}
                 cursor={"pointer"}
+                variant={"ghost"}
             >
                 {edit ? 'Cancel' : 'Edit'}
             </Button>

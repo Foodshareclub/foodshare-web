@@ -20,6 +20,9 @@ import community from "../assets/community.svg";
 import communityRed from "../assets/communityRed.svg";
 import map from "../assets/mapGray.svg";
 import mapRed from "../assets/mapRed.svg";
+import veganFood from "../assets/Group.svg";
+import socFoodB from "../assets/socFoodb.svg";
+import merchandise from "../assets/Vector.svg";
 
 type NavigationActionsSVGType = {
     name: string
@@ -27,7 +30,21 @@ type NavigationActionsSVGType = {
     src: string
     red: string
 }
-
+export const photoObj ={
+    "food":food,
+    "things":things,
+    "borrow":borrow,
+    "wanted":wanted,
+    "foodBanks":foodBanks,
+    "fridges":fridges,
+    "business":business,
+    "volunteer":volunteer,
+    "challenges":challenges,
+    "community":community,
+    "merchandise":merchandise,
+    "veganFood":veganFood,
+    "socFoodB":socFoodB
+}
 export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     {
         name: 'Food',

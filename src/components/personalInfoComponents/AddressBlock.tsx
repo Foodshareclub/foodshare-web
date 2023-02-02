@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {Box, Button, Flex, Heading, Input, Text} from "@chakra-ui/react";
+import {Box, Button, Flex, Heading, Input, Text, useColorModeValue} from "@chakra-ui/react";
 
 type AddressBlockType = {
     onSaveHandler: () => void
@@ -33,60 +33,63 @@ export const AddressBlock: React.FC<AddressBlockType> = ({onSaveHandler, a, b, c
 
 
     return (
-        <Flex>
+        <Flex  borderBottomWidth={1}
+               borderStyle={'solid'}
+               borderColor={useColorModeValue('gray.200', 'gray.700')} >
             <Box width={"container.lg"}>
-                <Heading color={d ? "gray.100" : "gray.500"} textAlign='left'>
+                <Heading fontSize={'2xl'} fontFamily={'body'}
+                         fontWeight={500} pb={2} color={d ? "gray.100" : "black.500"} textAlign='left'>
                     Address
                 </Heading>
                 {
                     edit
                         ? <>
-                            <Input
+                            <Input mb={2}
                                 placeholder={'Country/region'}
                                 value={uCountry}
                                 onChange={(e) => setCountry(e.currentTarget.value)}
                             />
-                            <Input
+                            <Input mb={2}
                                 placeholder={'Street address'}
                                 value={uStreet}
                                 onChange={(e) => setStreet(e.currentTarget.value)}
                             />
-                            <Input
+                            <Input mb={2}
                                 placeholder={'Flat, suit'}
                                 value={uFlat}
                                 onChange={(e) => setFlat(e.currentTarget.value)}
                             />
                             <Flex justifyContent={"space-between"}>
-                                <Input
+                                <Input w={"45%"} mb={2}
                                     placeholder={'City'}
                                     value={uCity}
                                     onChange={(e) => setCity(e.currentTarget.value)}
                                 />
-                                <Input
+                                <Input w={"45%"} mb={2}
                                     placeholder={'State/ Province/ Country/ Region'}
                                     value={uRegion}
                                     onChange={(e) => setRegion(e.currentTarget.value)}
                                 />
                             </Flex>
-                            <Input
+                            <Input mb={2}
                                 placeholder={'Postcode'}
                                 value={uPostcode}
                                 onChange={(e) => setPostcode(e.currentTarget.value)}
                             />
                             <Button
                                 onClick={onSaveHandler}
-                                colorScheme={"blackAlpha"}
-                                variant={"solid"}
-                                mt={3}
+                                variant={"ghost"}
+                                my={3}
                             >Save
                             </Button>
                         </>
-                        : <Text color={d ? "gray.100" : "gray.500"}>
+                        : <Text color={d ? "gray.100" : "black.500"}>
                             Use a permanent address where you can receive mail.
                         </Text>
                 }
             </Box>
             <Button
+                alignSelf={"top"}
                 disabled={d}
                 onClick={() => {
                     setA(!a)
@@ -95,6 +98,7 @@ export const AddressBlock: React.FC<AddressBlockType> = ({onSaveHandler, a, b, c
                     setEdit(!edit)
                 }}
                 cursor={"pointer"}
+                variant={"ghost"}
             >
                 {edit ? 'Cancel' : 'Edit'}
             </Button>
