@@ -1,6 +1,6 @@
 import {InitialProductStateType} from "@/store/slices/productReducer";
 import React, {useEffect, useState} from "react";
-import {useLocation, useNavigate} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import {Box, Flex, GridItem, Heading, IconButton, Image, Skeleton, Text, useDisclosure} from "@chakra-ui/react";
 import {navigatePhotosObject} from "@/utils";
 import {Trans} from "@lingui/macro";
@@ -8,14 +8,17 @@ import navIcon from "@/assets/map.svg";
 import {DeleteIcon, EditIcon} from "@chakra-ui/icons";
 import DeleteCardModal from "@/components/modals/DeleteCardModal";
 import PublishListingModal from "../modals/PublishListingModal";
+import {useAppSelector} from "@/hook";
+import {userIdFromSessionSelector} from "@/store";
 
 type ProductCardType = {
     product: InitialProductStateType
+
 }
 
 export const ProductCard: React.FC<ProductCardType> = React.memo(({product}) => {
     const navigate = useNavigate();
-    const url = useLocation().pathname;
+    const urlFromSession = useAppSelector(userIdFromSessionSelector)
     const {isOpen, onOpen, onClose} = useDisclosure();
     const [openEdit, setOpenEdit] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
@@ -33,10 +36,7 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product}) => 
 
     return (
         <GridItem>
-
-
             <Skeleton isLoaded={isLoaded}>
-
                 <Image
                     rounded={'lg'}
                     objectFit={'cover'}
@@ -59,7 +59,7 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product}) => 
                 :
                 <Box mt={3}>
                     {
-                        url === '/user-listings' && <Flex justify={"center"}>
+                        urlFromSession === product.user && <Flex justify={"center"}>
                             <IconButton onClick={() => setOpenEdit(true)}
                                         variant='outline'
                                         icon={<EditIcon/>}

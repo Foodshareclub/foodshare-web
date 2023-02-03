@@ -1,61 +1,49 @@
-import React from 'react';
-import {Box, Button, Flex, Heading, Image, Text} from "@chakra-ui/react";
-import man from "../../assets/manAndCnife.png";
-import {useNavigate} from "react-router-dom";
-import {Trans} from "@lingui/macro";
-import {asideProdProperty} from "@/utils/mockArray";
-import {AsideProducts} from "@/components";
+import React, {useEffect, useState} from 'react';
+import {Box, Button, SimpleGrid} from "@chakra-ui/react";
+import {supabase} from "@/supaBase.config";
+import {AllValuesType} from "@/api/profileAPI";
+import {VolunteerCards} from "@/components/volonteerCard/VolonterCards";
+import {useActionCreators} from "@/hook";
+import {downloadImgFromDBTC} from "@/store/slices/userReducer";
 
 const VolunteerPage = () => {
-    const navigate = useNavigate();
+    const [obj, setObj] = useState<Array<AllValuesType>>([])
+  const actions = useActionCreators({downloadImgFromDBTC})
+    console.log(obj)
+    useEffect(() => {
+        supabase
+            .from('profiles').select("*").eq('roles', "{subscriber,volunteer,admin}")//а как только волонтера достать из массива
+            .limit(10)
+            .then((res) => {
+                if (res.data) {
+                    setObj(res.data)
+                    actions.downloadImgFromDBTC({dir:"avatars",imgUrl:res.data[1].avatar_url})
+                }
+            })
+        //здесь будет запрос на волонтеров
+    }, [])
 
     return (
-        <Box p={7} mt={["55%","41%","35%", "30%", "25%", "20%"]} w="100%" mx="auto">
-            <Flex direction={{md: "row", base: "column"}} justify="space-between">
-                <Box alignSelf="center" lineHeight={10}>
-                    <Heading pt={{base:"15%","ss":"0"}} textAlign={{md: "start", base: "center"}}>
-                        <Trans>Volunteer with Foodshare!</Trans>
-                    </Heading>
-                    <Text fontSize="24px">
-                        <Trans>Find volunteer oppportunies and help out your local community!</Trans>
-                    </Text>
-                    <Button alignItems={"center"} mt={6} fontSize="22px"
-                            w={{md: "50%", base: "100%"}} color="#ffffff"
-                            background={"#ff2d55"}
-                            _hover={{bg: '#c92040'}}
-                            onClick={() => navigate("/volunteer/opportunities")}
-                    ><Trans>Get Started</Trans></Button>
-                </Box>
-                <Box>
-                    <Image
-                         m={{md:"0",base:"10% auto 0 auto"}}
-                           src={man} alt='man'/>
-                </Box>
-            </Flex>
-            <Heading textAlign={{md: "start", base: "center"}} mt={10} mb={4}><Trans> Locations Near You</Trans></Heading>
-            <Flex direction={{mm: "row", base: "column"}} justify="space-around">
-                <Box w={{md: "40%", base: "100%"}}>
-                    {asideProdProperty.map((item, id) => (
-                        <AsideProducts
-                            height="25%"
-                            key={id} img={item.img}
-                            name={item.name} distance={item.distance}
-                            about={item.about}
-                            available={item.available}/>
-                    ))}
-                </Box>
-                <Box w={{md: "40%", base: "100%"}}>
-                    {asideProdProperty.map((item, id) => (
-                        <AsideProducts
-                            height="25%"
-                            key={id} img={item.img}
-                            name={item.name} distance={item.distance}
-                            about={item.about}
-                            available={item.available}/>
-                    ))}
-                </Box>
-            </Flex>
+        <Box pb={["55%", "41%", "35%", "30%", "25%", "12%"]} px={7} mt={["55%", "41%", "35%", "30%", "25%", "12%"]}
+             w="100%" mx="auto">
+            <Box left={0} top={"80%"} textAlign={"center"} zIndex={1} position={"fixed"} w={"100%"}>
+                <Button
+                    alignItems={"center"}
+                    alignSelf={"center"}
+                    onClick={() => {
+                    }}
+                    borderRadius={20}
+                    variant={"solid"}>
+                    Show map
+                </Button>
+            </Box>
+            <SimpleGrid columns={{xl: 4, lg: 3, md: 2}}
+                        spacing={10}>
+                {obj.map((item, id) => (
+                    <VolunteerCards key={id} volunteer={item}/>
+                ))}
 
+            </SimpleGrid>
 
         </Box>
     );

@@ -15,6 +15,7 @@ import {
     useDisclosure
 } from "@chakra-ui/react";
 import React, {useState} from "react";
+import {Trans} from "@lingui/macro";
 
 function VolunteerInfoModal() {
     const {isOpen, onOpen, onClose} = useDisclosure();
@@ -28,14 +29,12 @@ function VolunteerInfoModal() {
 
     return (
         <>
-            <Button onClick={onOpen}
-                    mt={6}
-                    borderColor={"#55BCB2"}
-                    borderRadius={20}
-                    variant={"outline"}>
-                Volunteer
-            </Button>
-
+            <Button alignItems={"center"} mt={6} fontSize="22px"
+                    w={{md: "50%", base: "100%"}} color="#ffffff"
+                    background={"#ff2d55"}
+                    _hover={{bg: '#c92040'}}
+                    onClick={onOpen}
+            ><Trans>Get Started</Trans></Button>
             <Modal
                 initialFocusRef={initialRef}
                 finalFocusRef={finalRef}

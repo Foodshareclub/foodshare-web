@@ -77,9 +77,15 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
                                                   navigateToMyLists()
                                               }}><Trans>My listing's</Trans></Text>
                                         <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
-                                              onClick={() => navigateToAccSettings()}><Trans>Account settings</Trans></Text>
+                                              onClick={() => {
+                                                  onClose()
+                                                  navigateToAccSettings()
+                                              }}><Trans>Account settings</Trans></Text>
                                         <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
-                                              onClick={() => navigateToLogout()}><Trans>Log Out</Trans></Text>
+                                              onClick={() => {
+                                                  onClose()
+                                                  navigateToLogout()
+                                              }}><Trans>Log Out</Trans></Text>
 
                                     </Stack>
                                     : <Stack>

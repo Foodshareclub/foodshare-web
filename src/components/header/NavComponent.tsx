@@ -4,7 +4,7 @@ import {useEffect} from 'react';
 import {useNavigate} from "react-router-dom";
 import {Avatar, Box, Flex, Text} from "@chakra-ui/react";
 import {PagesType} from "./Header";
-import {useAppDispatch, useAppSelector, useMediaQuery} from "@/hook";
+import {useActionCreators, useAppSelector, useMediaQuery} from "@/hook";
 import {AllValuesType} from "@/api/profileAPI";
 import {BecomeSharerBlock, NavDrawer, ProfileSettings} from "@/components";
 import {downloadImgFromDBTC, logoutTC} from "@/store/slices/userReducer";
@@ -38,15 +38,14 @@ const NavComponent: React.FC<PropsLangType> = ({
     const imgUrl = useAppSelector(imgURLSelector);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
     const avatarURL = useAppSelector(avatarURLSelector);
-
-    const dispatch = useAppDispatch();
+    const actions = useActionCreators({downloadImgFromDBTC,logoutTC})
 
     useEffect(() => {
         if (value && value.avatar_url) {
-            dispatch(downloadImgFromDBTC({
+            actions.downloadImgFromDBTC({
                 dir: "avatars",
                 imgUrl: avatarURL
-            }))
+            });
         }
     }, [value]); ////// НЕПРАВИЛЬНАЯ РАБОТА
 
@@ -76,8 +75,8 @@ const NavComponent: React.FC<PropsLangType> = ({
     }
 
     const navigateToLogout = () => {
-        dispatch(logoutTC());
-        setPageType("profileSettings");
+        actions.logoutTC();
+        navigate(PATH.main);
     }
 
     return (

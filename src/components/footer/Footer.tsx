@@ -2,7 +2,7 @@ import React, {ReactNode} from 'react';
 import twitter from "../../assets/twiter.svg";
 import insta from "../../assets/instagram.svg";
 import facebook from "../../assets/facebook.svg";
-import {Avatar, Box, chakra, Container, Stack, Text, useColorModeValue, VisuallyHidden} from "@chakra-ui/react";
+import {Avatar, chakra, Container, Stack, Text, useColorModeValue, VisuallyHidden} from "@chakra-ui/react";
 import {Trans} from "@lingui/macro";
 import LanguageSelector from "../languageSelector/LanguageSelector";
 
@@ -19,8 +19,8 @@ const SocialButton = ({
         <chakra.button
             bg={useColorModeValue('blackAlpha.100', 'whiteAlpha.100')}
             rounded={'full'}
-            w={12}
-            h={12}
+            w={8}
+            h={8}
             cursor={'pointer'}
             as={'a'}
             href={href}
@@ -39,26 +39,34 @@ const SocialButton = ({
 const Footer = () => {
 
     return (
-        <Box
-            bg={useColorModeValue('gray.50', 'gray.900')}
-            color={useColorModeValue('gray.700', 'gray.200')}>
-            <Box
-                borderTopWidth={1}
-                borderStyle={'solid'}
-                borderColor={useColorModeValue('gray.200', 'gray.700')}>
+            // <Box
+            //     bg={useColorModeValue('gray.50', 'gray.900')}
+            //     borderTopWidth={1}
+            //     borderStyle={'solid'}
+            //     borderColor={useColorModeValue('gray.200', 'gray.700')}
+            //     color={useColorModeValue('gray.700', 'gray.200')}
+            // >
+
                 <Container
+                    zIndex={1}
+                    bottom={0}
+                    position={"fixed"}
+                    bg={useColorModeValue('gray.50', 'gray.900')}
+                    borderTopWidth={1}
+                    borderStyle={'solid'}
+                    borderColor={useColorModeValue('gray.200', 'gray.700')}
+                    color={useColorModeValue('gray.700', 'gray.200')}
                     as={Stack}
-                    maxW={'6xl'}
+                    maxW={'8xl'}
                     py={4}
                     direction={{base: 'column', md: 'row'}}
                     justify={{base: 'center', md: 'space-between'}}
                     align={{base: 'center', md: 'center'}}>
-                    <Text><Trans>© 2022 Foodshare Club, Limited. All rights reserved</Trans></Text>
+                    <Text fontSize={{sm:"20px",base:"12px"}}><Trans>© 2022 Foodshare Club, Limited. All rights reserved</Trans></Text>
                     <LanguageSelector/>
-
                     <Stack direction={'row'} spacing={6}>
                         <SocialButton label={'Twitter'} href={'#'}>
-                            <Avatar size='xs' src={twitter}/>
+                            <Avatar  size='xs' src={twitter}/>
                         </SocialButton>
                         <SocialButton label={'facebook'} href={'#'}>
                             <Avatar size='xs' src={facebook}/>
@@ -69,8 +77,7 @@ const Footer = () => {
                         </SocialButton>
                     </Stack>
                 </Container>
-            </Box>
-        </Box>
+            // </Box>
     );
 };
 

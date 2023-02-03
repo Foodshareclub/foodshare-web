@@ -4,7 +4,6 @@ import {ArrowForwardIcon} from "@chakra-ui/icons";
 import {Trans} from "@lingui/macro";
 import {InitialProductStateType} from "@/store/slices/productReducer";
 import {useAppSelector} from "@/hook";
-
 import {useGridSize} from "@/hook/useGridSize";
 import {ProductCard} from "@/components";
 import {productsSelector} from "@/store/slices/productsSelectors";
@@ -12,9 +11,7 @@ import {productsSelector} from "@/store/slices/productsSelectors";
 
 export const Main = () => {
     const products = useAppSelector<Array<InitialProductStateType>>(productsSelector);
-
     const gridSize = useGridSize();
-
     return (
         <Box mt="20vh">
             {/*<Trans>*/}
@@ -35,7 +32,8 @@ export const Main = () => {
                 ))}
 
             </SimpleGrid>
-            <Box _hover={{bg: 'red.100'}} fontSize={25} textAlign="center" mt={5}>
+
+            <Box  _hover={{bg: 'red.100'}} fontSize={25} textAlign="center" mt={5}>
                 <Link href='#'>
                     <Trans>See more...</Trans><ArrowForwardIcon mx={2}/>
                 </Link>

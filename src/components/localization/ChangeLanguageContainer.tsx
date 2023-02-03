@@ -7,9 +7,9 @@ import {dynamicActivate} from "@/utils/i18n";
 import {useAppSelector} from "@/hook/hooks";
 import {
     AboutUsPage,
-    ContactUsPage, LoginSecurityPage,
+    ContactUsPage,
+    LoginSecurityPage,
     MyListingsPage,
-    OpportunitiesPage,
     PersonalInfoPage,
     ProductPage,
     SearchResultsPage,
@@ -19,6 +19,7 @@ import {
 import {Footer, Header, Main} from "@/components";
 import {languageSelector} from "@/store/slices/userSelectors";
 import {PATH} from "@/utils";
+import OneVolunteer from "@/components/volonteerCard/OneVolunteer";
 
 type ContainerProps = {
     productType: string
@@ -27,34 +28,47 @@ type ContainerProps = {
 
 }
 const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRoute, setProductType}) => {
+    // const [newRoute,setNewRoute]=useState("")
+    // console.log(newRoute)
     const language = useAppSelector(languageSelector);
     useEffect(() => {
         dynamicActivate(language).then(() => {
         })
+        return () => {
+            console.log('return ChangeLanguageContainer')
+        };
     }, [language]);
-
+const insertRouteHandler = (route:string)=>{
+    getRoute(route)
+    //setNewRoute(route)
+}
     return (
 
         <I18nProvider i18n={i18n}>
             <Card size="lg" minH="100vh">
-                <Header getRoute={getRoute} setProductType={setProductType} productType={productType}/>
+                <Header getRoute={(route)=>insertRouteHandler(route)} setProductType={setProductType} productType={productType}/>
                 <CardBody p={0}>
                     <Routes>
-                        <Route path={PATH.main} element={<Main/>}/>
-                        <Route path={"/*"} element={<Main/>}/>
+                        <Route path={PATH.main} element={<Main/>}>
+                            <Route path={"*"} element={<Main/>}/>
+                            {/*<Route path={`${newRoute}`} element={<Main/>}/>*/}
+                        </Route>
+
                         <Route path={PATH.productPage} element={<ProductPage/>}/>
                         <Route path={PATH.aboutUsPage} element={<AboutUsPage/>}/>
                         <Route path={PATH.contactUsPage} element={<ContactUsPage/>}/>
-                        <Route path={PATH.volunteerPage} element={<VolunteerPage/>}/>
+                        <Route path={PATH.volunteerPage} element={<VolunteerPage/>}>
+                            {/*<Route path={"id"} element={<OneVolunteer/>}/>*/}
+                        </Route>
+                        <Route path={"/volunteer/:id"} element={<OneVolunteer/>}/>
+
                         <Route path={PATH.myListingsPage} element={<MyListingsPage/>}/>
-                        <Route path={PATH.opportunitiesPage} element={<OpportunitiesPage/>}/>
                         <Route path={PATH.searchResultsPage} element={<SearchResultsPage/>}/>
                         <Route path={PATH.settingsPage} element={<SettingsPage/>}/>
                         <Route path={PATH.personalInfoPage} element={<PersonalInfoPage/>}/>
                         <Route path={PATH.loginSecurityPage} element={<LoginSecurityPage/>}/>
                     </Routes>
                 </CardBody>
-
                 <Footer/>
             </Card>
         </I18nProvider>
