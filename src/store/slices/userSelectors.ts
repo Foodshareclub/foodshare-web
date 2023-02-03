@@ -1,7 +1,7 @@
 import {StateAppType} from "@/store/redux-store";
 
 //data from value
-export const userFirstNameSelector = (state: StateAppType) => state.user.value.first_name;
+export const userFirstNameSelector = (state: StateAppType) => state.user.value.first_name ;
 export const userSecondNameSelector = (state: StateAppType) => state.user.value.second_name;
 export const userIdSelector = (state: StateAppType) => state.user.value.id;
 export const avatarURLSelector = (state: StateAppType) => state.user.value.avatar_url;

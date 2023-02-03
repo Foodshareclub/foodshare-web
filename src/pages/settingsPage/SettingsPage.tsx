@@ -1,6 +1,6 @@
 import React from 'react';
 import {Box, SimpleGrid} from "@chakra-ui/react";
-import {ListingPersonCard, SettingsCard} from "@/components";
+import {ListingPersonCards, SettingsCard} from "@/components";
 import {useAppSelector, useGridSize} from "@/hook";
 import {imgURLSelector, userFirstNameSelector, userSecondNameSelector} from "@/store";
 import {settingsInfoArray} from "@/utils";
@@ -15,7 +15,7 @@ export const SettingsPage = () => {
     return (
         <Box mt="20vh">
             <Box>
-                <ListingPersonCard
+                <ListingPersonCards
                     userFirstName={userFirstName}
                     userSecondName={userSecondName}
                     imgUrl={imgUrl}

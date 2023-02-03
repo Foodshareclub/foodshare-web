@@ -14,6 +14,7 @@ const PersonCard: React.FC<PropsType> = ({
                                              img,
                                              aboutExp,
                                          }) => {
+
     return (
         <Card
             direction={{base: 'column', lg: "row"}}

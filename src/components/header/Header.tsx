@@ -17,7 +17,7 @@ type HeaderType = {
     productType: string
 }
 
-export type PagesType = 'productComponent' | 'profileSettings';
+export type PagesType = 'productComponent' | 'profileSettings'|"/";
 
 const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) => {
 

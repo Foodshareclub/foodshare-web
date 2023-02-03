@@ -2,7 +2,7 @@ import React, {ChangeEvent} from 'react';
 import {useActionCreators, useAppSelector} from "@/hook";
 import {userActions} from "@/store/slices/userReducer";
 import {languageSelector} from "@/store/slices/userSelectors";
-
+import {Select} from "@chakra-ui/react";
 
 const LanguageSelector = () => {
     const language = useAppSelector(languageSelector);
@@ -14,12 +14,12 @@ const LanguageSelector = () => {
     };
 
     return (
-        <select value={language} onChange={handleChange}>
-            <option value="en">English</option>
+        <Select w={20} variant='unstyled' size={"xs"} value={language} onChange={handleChange}>
+            <option  value="en">English</option>
             <option value="ru">Russian</option>
             <option value="cs">Czech</option>
             <option value="fr">France</option>
-        </select>
+        </Select>
     );
 }
 

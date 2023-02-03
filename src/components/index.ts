@@ -28,7 +28,7 @@ import {OneProduct} from "@/components/oneProduct/OneProduct";
 import {ProductsLocation} from "@/components/productsLocation/ProductLocation";
 import AsideProducts from "@/components/asideProducts/AsideProducts";
 import PersonCard from "./personCard/PersonCard";
-import ListingPersonCard from "@/components/listingPersonCard/ListingPersonCard";
+import ListingPersonCards from "@/components/listingPersonCard/ListingPersonCards";
 import AlertComponent from "@/components/alert/AlertComponent";
 import {NameBlock} from "@/components/personalInfoComponents/NameBlock";
 import {PhoneNumberBlock} from "@/components/personalInfoComponents/PhoneNumberBlock";
@@ -68,7 +68,7 @@ export {
     OneProduct,
     ProductsLocation,
     AsideProducts,
-    ListingPersonCard,
+    ListingPersonCards,
     PersonCard,
     AlertComponent,
     NameBlock,

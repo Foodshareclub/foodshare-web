@@ -5,7 +5,7 @@ import {Box, Image, Text} from "@chakra-ui/react";
 import {navigationActionsSVG, responsive} from "../../utils/navigationActions";
 import {useNavigate} from "react-router-dom";
 import "react-alice-carousel/lib/scss/alice-carousel.scss";
-import {useAppSelector} from "../../hook/hooks";
+import {useAppSelector} from "@/hook";
 import {PagesType} from "../header/Header";
 import {languageSelector} from "@/store/slices/userSelectors";
 

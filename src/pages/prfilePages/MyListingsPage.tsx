@@ -4,7 +4,7 @@ import {Trans} from "@lingui/macro";
 import {Navigate} from "react-router-dom";
 import {useActionCreators, useAppSelector, useGridSize} from "@/hook";
 import {deleteProductTC, getCurrentUserProductsTC, productActions} from "@/store/slices/productReducer";
-import {AlertComponent, ListingPersonCard, ProductCard, PublishListingModal} from "@/components";
+import {AlertComponent, ListingPersonCards, ProductCard, PublishListingModal} from "@/components";
 import {
     currentUserProductsSelector,
     imgURLSelector,
@@ -19,7 +19,6 @@ import {
 
 const MyListingsPage = () => {
     const {isOpen, onOpen, onClose} = useDisclosure();
-
     const gridSize = useGridSize();
 
     const userId = useAppSelector(userIdSelector);
@@ -53,7 +52,7 @@ const MyListingsPage = () => {
 
             <Flex direction={"column"} justify="space-between">
                 <Box>
-                    <ListingPersonCard
+                    <ListingPersonCards
                         userFirstName={userFirstName}
                         userSecondName={userSecondName}
                         imgUrl={imgUrl}
@@ -70,7 +69,7 @@ const MyListingsPage = () => {
                             <PublishListingModal onClose={onClose} isOpen={isOpen}/>
                         </Box>
 
-                    </ListingPersonCard>
+                    </ListingPersonCards>
                 </Box>
 
                 <Heading my={8} textAlign={"center"}>
