@@ -2,7 +2,7 @@ import React from 'react';
 import {Box, SimpleGrid} from "@chakra-ui/react";
 import {ListingPersonCards, SettingsCard} from "@/components";
 import {useAppSelector, useGridSize} from "@/hook";
-import {imgURLSelector, userFirstNameSelector, userSecondNameSelector} from "@/store";
+import {avatarURLSelector, userFirstNameSelector, userSecondNameSelector} from "@/store";
 import {settingsInfoArray} from "@/utils";
 
 export const SettingsPage = () => {
@@ -10,7 +10,7 @@ export const SettingsPage = () => {
 
     const userFirstName = useAppSelector(userFirstNameSelector);
     const userSecondName = useAppSelector(userSecondNameSelector);
-    const imgUrl = useAppSelector(imgURLSelector);
+    const imgUrl = useAppSelector(avatarURLSelector);
 
     return (
         <Box mt="20vh">
