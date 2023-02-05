@@ -1,6 +1,5 @@
 import straw from "../../assets/straw.svg";
 import * as React from 'react';
-import {useEffect} from 'react';
 import {useNavigate} from "react-router-dom";
 import {Avatar, Box, Flex, Text} from "@chakra-ui/react";
 import {PagesType} from "./Header";
@@ -8,7 +7,7 @@ import {useActionCreators, useAppSelector, useMediaQuery} from "@/hook";
 import {AllValuesType} from "@/api/profileAPI";
 import {BecomeSharerBlock, NavDrawer, ProfileSettings} from "@/components";
 import {downloadImgFromDBTC, logoutTC} from "@/store/slices/userReducer";
-import {avatarURLSelector, imgURLSelector} from "@/store/slices/userSelectors";
+import {avatarURLSelector} from "@/store/slices/userSelectors";
 import PopoverForSearch from "@/pages/searchResultPage/PopoverForSearch";
 import {PATH} from "@/utils";
 
@@ -35,19 +34,9 @@ export type ProfileSettingsProps = {
 const NavComponent: React.FC<PropsLangType> = ({
                                                    isAuth, setPageType, setProductType
                                                }) => {
-    const imgUrl = useAppSelector(imgURLSelector);
+    const imgUrl = useAppSelector(avatarURLSelector);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
-    const avatarURL = useAppSelector(avatarURLSelector);
-    const actions = useActionCreators({downloadImgFromDBTC,logoutTC})
-
-    useEffect(() => {
-        if (value && value.avatar_url) {
-            actions.downloadImgFromDBTC({
-                dir: "avatars",
-                imgUrl: avatarURL
-            });
-        }
-    }, [value]); ////// НЕПРАВИЛЬНАЯ РАБОТА
+    const actions = useActionCreators({downloadImgFromDBTC, logoutTC})
 
     const isSmallerThan800 = useMediaQuery('(min-width:800px)');
 
