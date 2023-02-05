@@ -42,20 +42,22 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue, fullScreen}) => {
         setAddress(value.user_address)
         setSecondName(value.second_name)
         setAbout(value.about_me)
+        setAvatarUrl(value.avatar_url)
     }, [value]);
-
 
     const initialRef = React.useRef(null);
     const finalRef = React.useRef(null);
 
     const [filePath, setFilePath] = useState('');
     const [file, setFile] = useState<File>({} as File);
-
+const [avatarUrl,setAvatarUrl]=useState<string>('')
     const [firstName, setFirstName] = useState<string>("");
     const [secondName, setSecondName] = useState<string>("");
     const [about, setAbout] = useState<string>("");
     const [address, setAddress] = useState<string>("");
-    let randomNumber = Math.floor(Math.random() * new Date().getTime());
+
+    // let randomNumber = Math.floor(Math.random() * new Date().getTime());
+    const profileImgUrl = `https://***REMOVED***.supabase.co/storage/v1/object/public/avatars/${user.id}/${filePath}`
 
     const onUpload = (filePath: string, file: File) => {
         setFilePath(filePath);
@@ -66,10 +68,10 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue, fullScreen}) => {
     const changeAbout = (e: ChangeEvent<HTMLTextAreaElement>) => setAbout(e.currentTarget.value);
     const changeUserAddress = (e: ChangeEvent<HTMLInputElement>) => setAddress(e.currentTarget.value);
 
-    const defaultValues = {
+    let defaultValues = {
         liked_post: value.liked_post,
         about_me: about,
-        avatar_url: value.avatar_url,
+        avatar_url: profileImgUrl,
         birth_date: value.birth_date,
         first_name: firstName,
         phone_number: value.phone_number,
@@ -83,16 +85,17 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue, fullScreen}) => {
         email: user.email,
         id: user.id,
     }
-
+    if (value && !filePath) {
+        defaultValues = {...defaultValues, avatar_url: avatarUrl}
+    }
     const onClick = async () => {
-        let update = {...defaultValues, avatar_url: filePath || value.avatar_url};
-        await actions.updateProfileTC(update);
+             await actions.updateProfileTC(defaultValues);
         if (filePath) {
-            await actions.uploadImgToDBTC({dir: 'avatars', filePath, file});
+            await actions.uploadImgToDBTC({dir: `avatars/${user.id}`, filePath, file});
         }
         setFilePath('');
         setFile({} as File);
-        //actions.isUpdateProfile("none")
+
         onClose();
     };
 

@@ -4,8 +4,6 @@ import {Box, Flex, GridItem, Heading, IconButton, Image, Skeleton, Text} from "@
 import {Trans} from "@lingui/macro";
 import navIcon from "@/assets/map.svg";
 import {AllValuesType} from "@/api/profileAPI";
-import {useAppSelector} from "@/hook";
-import {imgURLSelector} from "@/store";
 import {StarIcon} from "@chakra-ui/icons";
 import {ReactComponent as HeartGray} from "@/assets/likesGray.svg";
 
@@ -16,8 +14,7 @@ type ProductCardType = {
 export const VolunteerCards: React.FC<ProductCardType> = React.memo(({volunteer}) => {
     const navigate = useNavigate();
     const [isLoaded, setIsLoaded] = useState(false);
-    //решить вопрос с доставанием фото из профилей... нужно делать так же как и  из постов,наверное,а может просто пушить в массив,но тогда много запросов будет
-    const userImg = useAppSelector(imgURLSelector)
+
     useEffect(() => {
         const time = setTimeout(() => {// пока фото загрузятся skeleton
             setIsLoaded(true)
@@ -25,30 +22,28 @@ export const VolunteerCards: React.FC<ProductCardType> = React.memo(({volunteer}
 
         return () => clearTimeout(time);
     }, []);
-
     const id = volunteer.id
-    console.log(isLoaded)
     const onNavigateToOneProductHandler = () => navigate(`${id}`);
 
     return (
         <GridItem>
             <Skeleton isLoaded={isLoaded}>
-                <Box textAlign={"center"} zIndex={1} position={"absolute"} >
+                <Box textAlign={"center"} zIndex={1} position={"absolute"}>
                     <IconButton ml={10} cursor={"pointer"} borderRadius={"50%"}
                                 size={"xs"} icon={<HeartGray fill={"red"}/>} aria-label={"volunteer"}/>
                 </Box>
-                    <Image
-                        m={"0 auto"}
-                        sizes={"full"}
-                        position={"relative"}
-                        borderRadius='full'
-                        boxSize={{sm:'250px',base:"200px"}}
-                        objectFit={'cover'}
-                        cursor="pointer"
-                        onClick={onNavigateToOneProductHandler}
-                        src={userImg}
-                        alt="broken image"
-                    />
+                <Image
+                    m={"0 auto"}
+                    sizes={"full"}
+                    position={"relative"}
+                    borderRadius='full'
+                    boxSize={{sm: '250px', base: "200px"}}
+                    objectFit={'cover'}
+                    cursor="pointer"
+                    onClick={onNavigateToOneProductHandler}
+                    src={volunteer.avatar_url}
+                    alt="broken image"
+                />
 
             </Skeleton>
             {!isLoaded

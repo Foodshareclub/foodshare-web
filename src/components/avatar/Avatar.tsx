@@ -4,7 +4,7 @@ import {Box, Button, Flex, Image, Input, Text} from "@chakra-ui/react";
 import cloud from "../../assets/cloud.svg";
 import {createPhotoUrl} from "@/utils";
 import {Trans} from "@lingui/macro";
-import {imgURLSelector} from "@/store/slices/userSelectors";
+import {avatarURLSelector} from "@/store/slices/userSelectors";
 
 type PropsType = {
     url: string
@@ -12,9 +12,9 @@ type PropsType = {
     onUpload: (filePath: string, file: File) => void
 }
 
-const Avatar: React.FC<PropsType> = ({url, size, onUpload}) => {
+const Avatar: React.FC<PropsType> = ({ size, onUpload}) => {
 
-    const imgUrl = useAppSelector(imgURLSelector);
+    const imgUrl = useAppSelector(avatarURLSelector);
 
     const [pastUrl, setPastUrl] = useState<string | undefined>(imgUrl)
     const inputFileRef = useRef<HTMLInputElement | null>(null)
