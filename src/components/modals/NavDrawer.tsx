@@ -1,6 +1,5 @@
 import * as React from "react";
 import {
-    Avatar,
     Box,
     Drawer,
     DrawerBody,
@@ -8,8 +7,6 @@ import {
     DrawerContent,
     DrawerHeader,
     DrawerOverlay,
-    Flex,
-    Heading,
     IconButton,
     Stack,
     Text,
@@ -20,7 +17,7 @@ import {t, Trans} from "@lingui/macro";
 import UpdateProfileModal from "./UpdateProfileModal";
 import {loginTC, registerTC} from "@/store/slices/userReducer";
 import {ProfileSettingsProps} from "@/components/header/NavComponent";
-import {AuthenticationUserModal} from "@/components";
+import {AuthenticationUserModal, MinifiedUserInfo} from "@/components";
 
 
 const NawDrawer: React.FC<ProfileSettingsProps> = ({
@@ -58,18 +55,16 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
                     <DrawerCloseButton/>
                     <DrawerHeader><Trans>{`Hi ${value && value.first_name}`}</Trans></DrawerHeader>
                     <DrawerBody>
-                        <Flex flex='1' gap='4' alignItems='center' flexWrap='wrap'>
-                            <Avatar name={value && value.first_name} src={imgUrl}/>
-                            <Box>
-                                <Heading size='sm'>{value && value.first_name} {value && value.second_name}</Heading>
-                                <Text>{value && value.about_me}</Text>
-                            </Box>
-                        </Flex>
+                        <MinifiedUserInfo
+                            src={imgUrl}
+                            firstName={value?.first_name}
+                            secondName={value?.second_name}
+                            description={value?.about_me}
+                        />
                         <Box mt={10}>
                             {
                                 isAuth
-                                    ?
-                                    <Stack spacing={3}>
+                                    ? <Stack spacing={3}>
                                         <UpdateProfileModal fullScreen={false} buttonValue={t`Edit profile`}/>
                                         <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
                                               onClick={() => {
@@ -110,3 +105,7 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
     )
 }
 export default NawDrawer
+
+
+
+
