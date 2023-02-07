@@ -10,7 +10,8 @@ type MinifiedUserInfoType = {
 
 export const MinifiedUserInfo: React.FC<MinifiedUserInfoType> = ({src, firstName, secondName, description}) => {
     return (
-        <Flex flex='1' gap='4' alignItems='center' flexWrap='wrap'>
+        <Flex cursor={"pointer"} borderRadius={"5%"} _hover={{bg: "white"}} py={2} flex='1' gap='4' px={2}
+              alignItems='center' flexWrap='wrap'>
             <Avatar
                 name={firstName}
                 src={src}/>
