@@ -2,7 +2,7 @@ import {Box} from "@chakra-ui/react";
 import React from "react";
 
 export const ProductsLocation = () => {
-  
+
     return (
         <Box w={{md: "70%", base: "100%"}} py={{md: 0, base: 10}}>
             <iframe
