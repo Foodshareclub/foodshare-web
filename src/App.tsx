@@ -1,18 +1,27 @@
 import React, {useEffect, useState} from 'react';
 import {Session} from "@supabase/supabase-js";
 import {ChangeLanguageContainer, PasswordRecoveryModal} from "@/components";
-import {useActionCreators} from "@/hook";
+import {useActionCreators, useAppSelector} from "@/hook";
 import {supabase} from "@/supaBase.config";
 import {userActions} from "@/store/slices/userReducer";
 import {getProductsTC} from "@/store/slices/productReducer";
 import {useLocation} from "react-router-dom";
+import {isAuthSelector} from "@/store";
 
 function App() {
-    const [session, setSession] = useState<Session | null>(null);
+    const isAuth = useAppSelector(isAuthSelector);
+
     const location = useLocation();
-    const actions = useActionCreators({getProductsTC, ...userActions});
-    const type = location.pathname.split('/')[1];
+    let type = location.pathname.split('/')[1];
+    if (!isAuth) {
+        type = 'food'
+    }
+
     const [productType, setProductType] = useState(type || "food");
+    const [session, setSession] = useState<Session | null>(null);
+
+    const actions = useActionCreators({getProductsTC, ...userActions});
+
     useEffect(() => {
         supabase.auth.getSession().then(({data: {session}}) => setSession(session));
         supabase.auth.onAuthStateChange((event, session) => {
