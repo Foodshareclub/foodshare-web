@@ -10,7 +10,7 @@ import LanguageSelector from "@/components/languageSelector/LanguageSelector";
 import ChangeLanguageContainer from "@/components/localization/ChangeLanguageContainer";
 import {Main} from "@/components/main/Main";
 import NavDrawer from "@/components/modals/NavDrawer";
-import PickUpRequestModal from "@/components/modals/PickUpRequestModal";
+import PopupNotificationModal from "@/components/modals/PopupNotificationModal";
 import PublishListingModal from "@/components/modals/PublishListingModal";
 import UpdateProfileModal from "@/components/modals/UpdateProfileModal";
 import VolunteerPage from "@/pages/volunteerPages/VolunteerPage";
@@ -49,7 +49,7 @@ export {
     NavDrawer,
     ChangeLanguageContainer,
     PublishListingModal,
-    PickUpRequestModal,
+    PopupNotificationModal,
     Carousel,
     Comments,
     LanguageSelector,
