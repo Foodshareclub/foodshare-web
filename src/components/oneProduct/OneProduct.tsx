@@ -11,37 +11,38 @@ import {useNavigate} from "react-router-dom";
 type OneProductType = {
     product: InitialProductStateType
     buttonValue?: string
-    chat?:string
+    chat?: string
 }
 
-export const OneProduct: React.FC<OneProductType> = ({chat,product, buttonValue = "Request"}) => {
-  const navigate = useNavigate()
+export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue = "Request"}) => {
+    const navigate = useNavigate()
 
     const navigateHandler = () => {
-navigate(`/chat-main/${product.id}`)
+        navigate(`/chat-main/${product.id}`)
     }
     return (
-        <Box w={{md: "25%", base: "100%"}}>
+        <Box w={{md: chat?"25%":"45%", base: "100%"}}>
             <Box alignSelf="center">
                 <Image
                     src={product.gif_url}
-                    borderRadius={chat?"50%":20}
+                    borderRadius={chat ? "50%" : 20}
                     alt={product.post_name}
                     m={"0 auto"}
-                    maxWidth={chat?150:300}
-                    height={{ss: "auto", base: "270px"}}
+                    width={chat ? "100px" : 300}
+                    height={{ss:chat?"100px":"auto", base: "270px"}}
                 />
             </Box>
             <Box>
                 <Box lineHeight={2}>
                     <Heading textTransform={'uppercase'} pt={1}
-                             textAlign={"center"} noOfLines={1} fontSize={'2xl'} fontFamily={'body'}
+                             textAlign={"center"} noOfLines={1} fontSize={'xl'} fontFamily={'body'}
                              fontWeight={500}>{product.post_name}</Heading>
 
-                    <Flex>
+                    <Flex >
                         <Image src={loc} alt={loc}/>
                         <Text px={2} textAlign={"center"} noOfLines={1} color={'gray.500'}
-                              textTransform={'uppercase'}>{product.post_address}</Text>
+                              textTransform={'uppercase'}
+                        >{product.post_address}</Text>
                     </Flex>
                     <Flex>
                         <Image src={likes} alt={likes}/>
@@ -61,27 +62,33 @@ navigate(`/chat-main/${product.id}`)
                     </Flex>
                     <Text textAlign={"center"} noOfLines={1} color={'gray.500'} fontSize={'sm'}
                           textTransform={'uppercase'}><Trans>{product.post_views} views</Trans></Text>
-                    <Heading fontFamily={'body'} fontWeight={500} fontSize={'xl'}
-                             alignSelf="center"><Trans>Available:</Trans></Heading>
-                    <Text noOfLines={1} color={'gray.500'} fontSize={'sm'}
-                          textTransform={'uppercase'}>{product.pickup_time}</Text>
-
-                    <Heading fontFamily={'body'} fontWeight={500} fontSize={'xl'}><Trans>Quantity:</Trans></Heading>
-                    <Text noOfLines={1} color={'gray.500'} fontSize={'sm'}
-                          textTransform={'uppercase'}>{product.post_description}</Text>
-
-                    <Heading fontFamily={'body'} fontWeight={500} fontSize={'xl'} alignSelf="center"
-                             size='md'><Trans>Food Type:</Trans></Heading>
-                    <Text color={'gray.500'} fontSize={'sm'} textTransform={'uppercase'}>{product.post_type}</Text>
+                    <Flex justify={"space-between"}>
+                        <Heading fontFamily={'body'} fontWeight={500} fontSize={'xl'}
+                                 alignSelf="center"><Trans>Available:</Trans></Heading>
+                        <Text pl={1}
+                            noOfLines={1}
+                            color={'gray.500'} fontSize={'sm'}
+                              textTransform={'uppercase'}>{product.pickup_time}</Text>
+                    </Flex>
+                    <Flex justify={"space-between"}>
+                        <Heading fontFamily={'body'} fontWeight={500} fontSize={'xl'}><Trans>Quantity:</Trans></Heading>
+                        <Text pl={1} noOfLines={1} color={'gray.500'} fontSize={'sm'}
+                              textTransform={'uppercase'}>{product.post_description}</Text>
+                    </Flex>
+                    <Flex justify={"space-between"}>
+                        <Heading fontFamily={'body'} fontWeight={500} fontSize={'xl'} alignSelf="center"
+                                 size='md'><Trans>Food Type:</Trans></Heading>
+                        <Text color={'gray.500'} fontSize={'sm'} textTransform={'uppercase'}>{product.post_type}</Text>
+                    </Flex>
                 </Box>
                 {chat && <TopTips/>}
-                <Box>
+                <Box mt={2}>
                     <Button
                         onClick={navigateHandler}
-                            backgroundColor='#FF2D55'
-                            textTransform={"uppercase"}
-                            width="100%" variant='solid'
-                            colorScheme='blue'>
+                        backgroundColor='#FF2D55'
+                        textTransform={"uppercase"}
+                        width="100%" variant='solid'
+                        colorScheme='blue'>
                         {buttonValue}
                     </Button>
 
