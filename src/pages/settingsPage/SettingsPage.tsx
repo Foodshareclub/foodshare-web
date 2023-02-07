@@ -1,13 +1,16 @@
-import React from 'react';
-import {Box, SimpleGrid} from "@chakra-ui/react";
+import React, {useEffect, useState} from 'react';
+import {Box, Button, Input, SimpleGrid} from "@chakra-ui/react";
 import {ListingPersonCards, SettingsCard} from "@/components";
 import {useAppSelector, useGridSize} from "@/hook";
 import {avatarURLSelector, userFirstNameSelector, userSecondNameSelector} from "@/store";
 import {settingsInfoArray} from "@/utils";
+import {supabase} from "@/supaBase.config";
+import {RealtimeChannel} from '@supabase/supabase-js';
+
+
 
 export const SettingsPage = () => {
     const gridSize = useGridSize();
-
     const userFirstName = useAppSelector(userFirstNameSelector);
     const userSecondName = useAppSelector(userSecondNameSelector);
     const imgUrl = useAppSelector(avatarURLSelector);
@@ -25,6 +28,7 @@ export const SettingsPage = () => {
                         columns={gridSize}
                         spacing={10}
             >
+
                 {settingsInfoArray.map((card, i) => {
                     return <SettingsCard
                         settingTitle={card.settingTitle}
