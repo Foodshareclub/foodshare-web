@@ -1,5 +1,5 @@
 import React, {ReactNode} from 'react';
-import {Card, CardBody, Flex, Heading, Image, Stack} from "@chakra-ui/react";
+import {Box, Card, CardBody, Flex, Heading, Image, Stack} from "@chakra-ui/react";
 import peak from "@/assets/peakpx-min.jpg";
 import AvatarWithRipple from "@/components/listingPersonCard/AvatarWithRipple";
 
@@ -11,11 +11,7 @@ type PropsType = {
 }
 const ListingPersonCards: React.FC<PropsType> = ({userSecondName, userFirstName, imgUrl, children}) => {
     return (
-        <Card
-            direction={"column"}
-            overflow='hidden'
-            variant="unstyled"
-        >
+        <Box>
             <Image
                 h={'200px'}
                 w={'full'}
@@ -25,24 +21,16 @@ const ListingPersonCards: React.FC<PropsType> = ({userSecondName, userFirstName,
 
             <Flex justify={'center'} mt={-12}>
                 <AvatarWithRipple img={imgUrl}/>
-                {/*<Avatar*/}
-                {/*    size={'xl'}*/}
-                {/*    src={imgUrl}*/}
-                {/*    boxShadow={'2xl'}*/}
-                {/*    css={{*/}
-                {/*        border: '2px solid white',*/}
-                {/*    }}*/}
-                {/*/>*/}
             </Flex>
             <Stack alignSelf={"center"}>
-                <CardBody>
-                    <Heading textAlign={"center"} size='md'>
+                <Box>
+                    <Heading  textAlign={"center"} size='md'>
                         {userFirstName} {userSecondName}
                     </Heading>
                     {children}
-                </CardBody>
+                </Box>
             </Stack>
-        </Card>
+        </Box>
     );
 };
 

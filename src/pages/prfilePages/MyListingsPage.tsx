@@ -6,8 +6,8 @@ import {useActionCreators, useAppSelector, useGridSize} from "@/hook";
 import {deleteProductTC, getCurrentUserProductsTC, productActions} from "@/store/slices/productReducer";
 import {AlertComponent, ListingPersonCards, ProductCard, PublishListingModal} from "@/components";
 import {
+    avatarURLSelector,
     currentUserProductsSelector,
-    imgURLSelector,
     isAuthSelector,
     isUpdateProductSelector,
     messageProductSelector,
@@ -27,7 +27,7 @@ const MyListingsPage = () => {
     const isAuth = useAppSelector(isAuthSelector);
     const userFirstName = useAppSelector(userFirstNameSelector);
     const userSecondName = useAppSelector(userSecondNameSelector);
-    const imgUrl = useAppSelector(imgURLSelector);
+    const imgUrl = useAppSelector(avatarURLSelector);
     const productMessage = useAppSelector(messageProductSelector);
 
     const actions = useActionCreators({getCurrentUserProductsTC, deleteProductTC, ...productActions});
@@ -57,8 +57,8 @@ const MyListingsPage = () => {
                         userSecondName={userSecondName}
                         imgUrl={imgUrl}
                     >
-                        <Box pt={5}>
-                            <Button w={"100%"} onClick={() => onOpen()}
+                        <Flex justify={"center"} pt={5}>
+                            <Button  w={"30%"} onClick={() => onOpen()}
                                     background={"#ff2d55"}
                                     _hover={{bg: '#c92040'}}
                                     color="#ffffff"
@@ -67,7 +67,7 @@ const MyListingsPage = () => {
                                 <Trans>Add Listing</Trans>
                             </Button>
                             <PublishListingModal onClose={onClose} isOpen={isOpen}/>
-                        </Box>
+                        </Flex>
 
                     </ListingPersonCards>
                 </Box>
