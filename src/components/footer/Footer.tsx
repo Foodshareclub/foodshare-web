@@ -63,7 +63,7 @@ const Footer = () => {
                     justify={{base: 'center', md: 'space-between'}}
                     align={{base: 'center', md: 'center'}}>
                     <Text fontSize={{sm:"20px",base:"12px"}}><Trans>© 2022 Foodshare Club, Limited. All rights reserved</Trans></Text>
-                    <LanguageSelector/>
+                    {/*<LanguageSelector/>*/}
                     <Stack direction={'row'} spacing={6}>
                         <SocialButton label={'Twitter'} href={'#'}>
                             <Avatar  size='xs' src={twitter}/>

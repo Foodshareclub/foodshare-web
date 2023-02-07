@@ -6,7 +6,7 @@ import {VolunteerCards} from "@/components/volonteerCard/VolonterCards";
 
 const VolunteerPage = () => {
     const [obj, setObj] = useState<Array<AllValuesType>>([])
-    console.log(obj)
+
     useEffect(() => {
         supabase
             .from('profiles').select("*")

@@ -28,8 +28,7 @@ type ContainerProps = {
 
 }
 const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRoute, setProductType}) => {
-    // const [newRoute,setNewRoute]=useState("")
-    // console.log(newRoute)
+
     const language = useAppSelector(languageSelector);
     useEffect(() => {
         dynamicActivate(language).then(() => {
@@ -40,7 +39,6 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
     }, [language]);
 const insertRouteHandler = (route:string)=>{
     getRoute(route)
-    //setNewRoute(route)
 }
     return (
 
@@ -51,15 +49,13 @@ const insertRouteHandler = (route:string)=>{
                     <Routes>
                         <Route path={PATH.main} element={<Main/>}>
                             <Route path={"*"} element={<Main/>}/>
-                            {/*<Route path={`${newRoute}`} element={<Main/>}/>*/}
                         </Route>
 
                         <Route path={PATH.productPage} element={<ProductPage/>}/>
                         <Route path={PATH.aboutUsPage} element={<AboutUsPage/>}/>
                         <Route path={PATH.contactUsPage} element={<ContactUsPage/>}/>
-                        <Route path={PATH.volunteerPage} element={<VolunteerPage/>}>
-                            {/*<Route path={"id"} element={<OneVolunteer/>}/>*/}
-                        </Route>
+                        <Route path={PATH.volunteerPage} element={<VolunteerPage/>}/>
+
                         <Route path={"/volunteer/:id"} element={<OneVolunteer/>}/>
 
                         <Route path={PATH.myListingsPage} element={<MyListingsPage/>}/>
