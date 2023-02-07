@@ -25,10 +25,10 @@ navigate(`/chat-main/${product.id}`)
             <Box alignSelf="center">
                 <Image
                     src={product.gif_url}
-                    borderRadius={20}
+                    borderRadius={chat?"50%":20}
                     alt={product.post_name}
                     m={"0 auto"}
-                    maxWidth={300}
+                    maxWidth={chat?150:300}
                     height={{ss: "auto", base: "270px"}}
                 />
             </Box>
