@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {Box, Button, Flex, Input, Text, useDisclosure} from "@chakra-ui/react";
 import {OneProduct, PopupNotificationModal} from "@/components";
 import {useActionCreators, useAppSelector} from "@/hook";
@@ -90,6 +90,12 @@ const ChatMainPage = () => {
     const userID = useAppSelector(userIdFromSessionSelector);
     console.log(userID)
 
+    useEffect(() => {
+        messagesAnchorRef.current?.scrollIntoView({behavior: 'smooth'})
+    }, [messages])
+
+    const messagesAnchorRef = useRef<HTMLDivElement>(null);
+
     return (
         <Flex justify={"space-between"} px={7} mt="24vh" mb={"12vh"}>
             <ContactsBlock/>
@@ -110,6 +116,7 @@ const ChatMainPage = () => {
                             </Box>
                         </Flex>
                     })}
+                    <Box ref={messagesAnchorRef}></Box>
                 </Box>
                 <Flex borderRadius={20} h={"6%"} bg={"gray.200"}>
                     <Input _hover={{bg: "white"}} variant={"filled"} borderRadius={20}
