@@ -22,7 +22,7 @@ const ContactsBlock = () => {
                     </Heading>
                 </Box>
 
-                <InputGroup alignSelf="center" alignItems="center" flexDir="column">
+                <InputGroup alignSelf="center" alignItems="center">
                     <InputLeftElement
                         pointerEvents={"stroke"}
                         children={<SearchIcon
