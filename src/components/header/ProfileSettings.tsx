@@ -25,7 +25,19 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                         cursor="pointer"
                         borderRadius="50%"
                         icon={<Avatar src={imgUrl}/>}
-                        as={Avatar}>
+                        as={Avatar}
+                        _after={{
+                            content: '""',
+                            w: 4,
+                            h: 4,
+                            bg: 'green.300',
+                            border: '2px solid white',
+                            rounded: 'full',
+                            pos: 'absolute',
+                            bottom: 0,
+                            right: 0,
+                        }}
+                    >
                     </MenuButton>
                     <MenuList>
                         {

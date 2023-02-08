@@ -23,6 +23,7 @@ const ChatMainPage = () => {
     const {isOpen, onOpen, onClose} = useDisclosure();
     const actions = useActionCreators({getOneProductTC})
     const oneProduct = useAppSelector(state => state.product.oneProduct);
+    const userID = useAppSelector(userIdFromSessionSelector);
 
     useEffect(() => {
         actions.getOneProductTC(Number(id));
@@ -40,7 +41,6 @@ const ChatMainPage = () => {
             .select()
             .then(res => setMessages(res.data))
     }, [])
-
     console.log(messages, "from table")
 
     useEffect(() => {
@@ -50,10 +50,14 @@ const ChatMainPage = () => {
                 "postgres_changes",
                 {event: "INSERT", schema: "public", table: "messages"},
                 (payload: { new: MessagesType; }) => {
+
                     const newMessage = payload.new as MessagesType;
 
                     if (!messages.find((message: { id: string; }) => message.id === newMessage.id)) {
                         setMessages([...messages, newMessage]);
+//сверка по айди(нам сообщение или нет)
+                        //.1 делает запрос на пользователей , которые нам написали
+                        //2. делает запрос на сообщения от одного, по клику на него)
                     }
                 }
             )
@@ -77,18 +81,21 @@ const ChatMainPage = () => {
     const click = async () => {
         await supabase.from("messages").insert(sendObj)
         //мой id
-        supabase.channel('fe1be510-f308-44c1-b1bb-8050e1c2cf31').subscribe((status) => console.log(status)).send({
-            type: 'broadcast',
-            event: 'supa',
-            payload: {org: val},
-        }).then((res) => console.log(res))
+        supabase
+            .channel(userID)
+            .subscribe((status) => console.log(status))
+            .send({
+                type: 'broadcast',
+                event: 'supa',
+                payload: {org: val},
+            }).then((res) => console.log(res))
 
         setVal('');
     }
     /////////////////////////////////////////////
 
-    const userID = useAppSelector(userIdFromSessionSelector);
-    console.log(userID)
+
+    //console.log(userID)
 
     useEffect(() => {
         messagesAnchorRef.current?.scrollIntoView({behavior: 'smooth'})
@@ -99,26 +106,31 @@ const ChatMainPage = () => {
     return (
         <Flex justify={"space-between"} px={7} mt="24vh" mb={"12vh"}>
             <ContactsBlock/>
-            <Flex justify={"space-between"} direction={"column"} p={3} bg={"gray.200"} borderRadius={20} w={"50%"} height={'500px'}>
+            <Flex justify={"space-between"} direction={"column"} p={3} bg={"gray.200"} borderRadius={20} w={"50%"}
+                  height={'500px'}>
                 <Box p={3} borderRadius={20} bg={"gray.100"} h={"90%"} overflow={"auto"}>
                     {messages && messages.map((m: MessagesType) => {
+                        let time = new Date(m.created_at).toLocaleTimeString()
+                        console.log(m.user_id)
+                        console.log(m.user_id_addressee)
+                        console.log(userID)
                         return userID === m.user_id
-                            ?<Flex justify={"end"}>
-                                <Box bg={"red.100"} borderRadius={"25px"}
-                                     maxWidth={"255px"}>
-                                    <Text px={4} py={2}>{m.content}</Text>
-                                </Box>
+                            ? <Flex justify={"end"}>
+                                <Text color={"gray.400"}>{time}</Text><Box my={2} bg={"red.100"} borderRadius={"25px"}
+                                                                           maxWidth={"255px"}>
+                                <Text px={4} py={2}>{m.content} {m.user_id}</Text>
+                            </Box>
                             </Flex>
                             : <Flex justify={"start"}>
-                            <Box bg={"white"} borderRadius={"25px"}
-                                 maxWidth={"100px"}>
-                                <Text py={2} px={4}>{m.content}</Text>
-                            </Box>
-                        </Flex>
+                                <Box my={2} bg={"white"} borderRadius={"25px"}
+                                     maxWidth={"255px"}>
+                                    <Text py={2} px={4}>{m.content} {m.user_id_addressee}</Text>
+                                </Box><Text color={"gray.400"}>{time}</Text>
+                            </Flex>
                     })}
                     <Box ref={messagesAnchorRef}></Box>
                 </Box>
-                <Flex borderRadius={20} h={"6%"} bg={"gray.200"}>
+                <Flex borderRadius={20} h={"7%"} bg={"gray.200"}>
                     <Input _hover={{bg: "white"}} variant={"filled"} borderRadius={20}
                            type={'text'}
                            placeholder='Enter...'
