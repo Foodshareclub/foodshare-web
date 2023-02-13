@@ -1,8 +1,7 @@
 import * as React from "react";
 import {Avatar, Box, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
-import UpdateProfileModal from "../modals/UpdateProfileModal";
 
-import {t, Trans} from "@lingui/macro";
+import {Trans} from "@lingui/macro";
 import {loginTC, registerTC} from "@/store/slices/userReducer";
 import {ProfileSettingsProps} from "@/components/header/NavComponent";
 import {AuthenticationUserModal} from "@/components";
@@ -14,6 +13,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                                                              navigateToLogout,
                                                              navigateToAccSettings,
                                                              navigateToAboutUs,
+                                                             navigateToMyMessages,
                                                              imgUrl, isAuth
                                                          }) => {
 
@@ -43,11 +43,9 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                         {
                             isAuth
                                 ? <>
-                                    <UpdateProfileModal  fullScreen={true} buttonValue={t({
-                                        id: `Edit Profile`,
-                                        message: `Edit Profile`
-                                    })}/>
+                                    {/*<UpdateProfileModal  fullScreen={true} buttonValue={t({id: `Edit Profile`, message: `Edit Profile`})}/>*/}
                                     <MenuItem onClick={() => navigateToMyLists()}><Trans>My listing's</Trans></MenuItem>
+                                    <MenuItem onClick={() => navigateToMyMessages()}><Trans>My messages</Trans></MenuItem>
                                     <MenuItem onClick={() => navigateToLogout()}><Trans>Log Out</Trans></MenuItem>
                                 </>
                                 : <>

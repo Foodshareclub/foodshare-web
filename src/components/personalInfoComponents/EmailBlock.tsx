@@ -61,20 +61,20 @@ export const EmailBlock: React.FC<EmailBlockType> = ({
                         </Text>
                 }
             </Box>
-            <Button
-                alignSelf={"top"}
-                disabled={b}
-                onClick={() => {
-                    setA(!a)
-                    setD(!d)
-                    setC(!c)
-                    setEdit(!edit)
-                }}
-                cursor={"pointer"}
-                variant={"ghost"}
-            >
-                {edit ? 'Cancel' : 'Edit'}
-            </Button>
+            {/*<Button*/}
+            {/*    alignSelf={"top"}*/}
+            {/*    disabled={b}*/}
+            {/*    onClick={() => {*/}
+            {/*        setA(!a)*/}
+            {/*        setD(!d)*/}
+            {/*        setC(!c)*/}
+            {/*        setEdit(!edit)*/}
+            {/*    }}*/}
+            {/*    cursor={"pointer"}*/}
+            {/*    variant={"ghost"}*/}
+            {/*>*/}
+            {/*    {edit ? 'Cancel' : 'Edit'}*/}
+            {/*</Button>*/}
         </Flex>
 
     );

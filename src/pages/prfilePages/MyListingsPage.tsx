@@ -25,9 +25,6 @@ const MyListingsPage = () => {
     const isUpdateProduct = useAppSelector(isUpdateProductSelector);
     const currentUserProducts = useAppSelector(currentUserProductsSelector);
     const isAuth = useAppSelector(isAuthSelector);
-    const userFirstName = useAppSelector(userFirstNameSelector);
-    const userSecondName = useAppSelector(userSecondNameSelector);
-    const imgUrl = useAppSelector(avatarURLSelector);
     const productMessage = useAppSelector(messageProductSelector);
 
     const actions = useActionCreators({getCurrentUserProductsTC, deleteProductTC, ...productActions});
@@ -52,11 +49,7 @@ const MyListingsPage = () => {
 
             <Flex direction={"column"} justify="space-between">
                 <Box>
-                    <ListingPersonCards
-                        userFirstName={userFirstName}
-                        userSecondName={userSecondName}
-                        imgUrl={imgUrl}
-                    >
+                    <ListingPersonCards>
                         <Flex justify={"center"} pt={5}>
                             <Button  w={"30%"} onClick={() => onOpen()}
                                     background={"#ff2d55"}

@@ -7,7 +7,8 @@ export const userIdSelector = (state: StateAppType) => state.user.value.id;
 export const avatarURLSelector = (state: StateAppType) => state.user.value.avatar_url;
 export const emailSelector = (state: StateAppType) => state.user.value.email;
 export const phoneNumberSelector = (state: StateAppType) => state.user.value.phone_number;
-
+export const userAddressSelector =(state:StateAppType)=>state.user.userAddress;
+export const userCountrySelector =(state:StateAppType,userCountryId:number)=>state.user.userCountries.find((item: { id: number; })=>item.id ===userCountryId);
 //data from session
 export const userIdFromSessionSelector = (state: StateAppType) => state.user.session.user.id;
 export const userEmailFromSessionSelector = (state: StateAppType) => state.user.session.user.email;

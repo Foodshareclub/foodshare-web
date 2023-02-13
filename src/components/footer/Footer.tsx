@@ -39,14 +39,6 @@ const SocialButton = ({
 const Footer = () => {
 
     return (
-            // <Box
-            //     bg={useColorModeValue('gray.50', 'gray.900')}
-            //     borderTopWidth={1}
-            //     borderStyle={'solid'}
-            //     borderColor={useColorModeValue('gray.200', 'gray.700')}
-            //     color={useColorModeValue('gray.700', 'gray.200')}
-            // >
-
                 <Container
                     zIndex={1}
                     bottom={0}
@@ -77,7 +69,6 @@ const Footer = () => {
                         </SocialButton>
                     </Stack>
                 </Container>
-            // </Box>
     );
 };
 

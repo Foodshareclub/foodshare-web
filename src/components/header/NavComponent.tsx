@@ -23,6 +23,7 @@ export type ProfileSettingsProps = {
     navigateToLogout: () => void
     navigateToAccSettings: () => void
     navigateToHelp: () => void
+    navigateToMyMessages:()=>void
     imgUrl: string
     value?: AllValuesType
     isAuth: boolean
@@ -62,6 +63,10 @@ const NavComponent: React.FC<PropsLangType> = ({
     const navigateToHelp = () => {
         setPageType("profileSettings");
     }
+    const navigateToMyMessages = () => {
+       // setPageType("profileSettings");
+        navigate(`/chat-main`);
+    }
 
     const navigateToLogout = () => {
         actions.logoutTC();
@@ -100,6 +105,7 @@ const NavComponent: React.FC<PropsLangType> = ({
                         navigateToLogout={navigateToLogout}
                         navigateToHelp={navigateToHelp}
                         navigateToAboutUs={navigateToAboutUs}
+                        navigateToMyMessages={navigateToMyMessages}
                         navigateToAccSettings={navigateToAccountSettings}/>
                     : <ProfileSettings
                         navigateToAccSettings={navigateToAccountSettings}
@@ -107,6 +113,7 @@ const NavComponent: React.FC<PropsLangType> = ({
                         navigateToMyLists={navigateToMyLists}
                         navigateToLogout={navigateToLogout}
                         navigateToHelp={navigateToHelp}
+                        navigateToMyMessages={navigateToMyMessages}
                         imgUrl={imgUrl}
                         isAuth={isAuth}
                     />

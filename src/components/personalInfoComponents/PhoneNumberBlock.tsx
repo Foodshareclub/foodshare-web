@@ -65,9 +65,16 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({
                                 </InputGroup>
                             </Flex>
                             <Button
-                                onClick={onSaveHandler}
+                                onClick={()=>{
+                                    onSaveHandler()
+                                    setA(!a)
+                                    setD(!d)
+                                    setB(!b)
+                                    setEdit(!edit)
+                                }}
                                 variant={"ghost"}
                                 my={3}
+
                             >Save
                             </Button>
                         </>
