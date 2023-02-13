@@ -14,7 +14,7 @@ const ProductPage: React.FC<ProductPageType> = ({buttonValue}) => {
     const params = useParams();
     const dispatch = useAppDispatch();
     const oneProduct = useAppSelector(state => state.product.oneProduct);
-    console.log(params)
+
     useEffect(() => {
         dispatch(getOneProductTC(Number(params.id)));
     }, [params.id]);

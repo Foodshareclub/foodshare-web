@@ -37,7 +37,7 @@ export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue
                 .select('*')
                 .match({requester: userID, post_id: product.id});
             setIsRoomExist(!!data?.length)
-            console.log(data)
+            // console.log(data)
         })()
     }, []);
 
