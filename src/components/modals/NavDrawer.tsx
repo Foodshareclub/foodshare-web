@@ -13,8 +13,7 @@ import {
     useDisclosure
 } from "@chakra-ui/react";
 import {DragHandleIcon} from "@chakra-ui/icons";
-import {t, Trans} from "@lingui/macro";
-import UpdateProfileModal from "./UpdateProfileModal";
+import {Trans} from "@lingui/macro";
 import {loginTC, registerTC} from "@/store/slices/userReducer";
 import {ProfileSettingsProps} from "@/components/header/NavComponent";
 import {AuthenticationUserModal, MinifiedUserInfo} from "@/components";
@@ -29,6 +28,7 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
                                                        navigateToMyLists,
                                                        navigateToAboutUs,
                                                        navigateToAccSettings,
+                                                       navigateToMyMessages,
                                                        value
                                                    }) => {
 
@@ -65,7 +65,7 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
                             {
                                 isAuth
                                     ? <Stack spacing={3}>
-                                        <UpdateProfileModal fullScreen={false} buttonValue={t`Edit profile`}/>
+                                        {/*<UpdateProfileModal fullScreen={false} buttonValue={t`Edit profile`}/>*/}
                                         <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
                                               onClick={() => {
                                                   onClose()
@@ -76,6 +76,11 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
                                                   onClose()
                                                   navigateToAccSettings()
                                               }}><Trans>Account settings</Trans></Text>
+                                        <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
+                                              onClick={() => {
+                                                  onClose()
+                                                  navigateToMyMessages()
+                                              }}><Trans>My messages</Trans></Text>
                                         <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
                                               onClick={() => {
                                                   onClose()

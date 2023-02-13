@@ -50,7 +50,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue, fullScreen}) => {
 
     const [filePath, setFilePath] = useState('');
     const [file, setFile] = useState<File>({} as File);
-const [avatarUrl,setAvatarUrl]=useState<string>('')
+    const [avatarUrl, setAvatarUrl] = useState<string>('');
     const [firstName, setFirstName] = useState<string>("");
     const [secondName, setSecondName] = useState<string>("");
     const [about, setAbout] = useState<string>("");
@@ -89,13 +89,12 @@ const [avatarUrl,setAvatarUrl]=useState<string>('')
         defaultValues = {...defaultValues, avatar_url: avatarUrl}
     }
     const onClick = async () => {
-             await actions.updateProfileTC(defaultValues);
+        await actions.updateProfileTC(defaultValues);
         if (filePath) {
             await actions.uploadImgToDBTC({dir: `avatars/${user.id}`, filePath, file});
         }
         setFilePath('');
         setFile({} as File);
-
         onClose();
     };
 
@@ -117,7 +116,9 @@ const [avatarUrl,setAvatarUrl]=useState<string>('')
                     <ModalHeader><Trans>Welcome to Foodshare</Trans></ModalHeader>
                     <ModalCloseButton/>
                     <ModalBody pb={6}>
-                        <Avatar url={value.avatar_url} size={150}
+                        <Avatar
+                            //url={value.avatar_url}
+                            size={150}
                                 onUpload={(filePath, file) => {
                                     onUpload(filePath, file)
                                 }}/>

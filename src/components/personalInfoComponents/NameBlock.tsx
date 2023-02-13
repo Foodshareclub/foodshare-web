@@ -53,7 +53,13 @@ export const NameBlock: React.FC<NameBlockType> = ({
                                 />
                             </Flex>
                             <Button
-                                onClick={onSaveHandler}
+                                onClick={()=> {
+                                    onSaveHandler()
+                                    setEdit(!edit)
+                                    setB(!b);
+                                    setC(!c);
+                                    setD(!d);
+                                }}
                                 variant={"ghost"}
                                 my={3}
                             >Save

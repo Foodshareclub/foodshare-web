@@ -19,7 +19,8 @@ type MessagesType = {
 
 
 const ChatMainPage = () => {
-    const {id} = useParams();
+    const id = useParams()["*"];
+    console.log(id)
     const {isOpen, onOpen, onClose} = useDisclosure();
     const actions = useActionCreators({getOneProductTC})
     const oneProduct = useAppSelector(state => state.product.oneProduct);
@@ -35,60 +36,71 @@ const ChatMainPage = () => {
 
 //////////////////////////////////////////////////////////////////
     const [messages, setMessages] = useState<any>()
-    useEffect(() => {
-        supabase
-            .from("messages")
-            .select()
-            .then(res => setMessages(res.data))
-    }, [])
-    console.log(messages, "from table")
-
-    useEffect(() => {
-        const channel = supabase
-            .channel("*")
-            .on(
-                "postgres_changes",
-                {event: "INSERT", schema: "public", table: "messages"},
-                (payload: { new: MessagesType; }) => {
-
-                    const newMessage = payload.new as MessagesType;
-
-                    if (!messages.find((message: { id: string; }) => message.id === newMessage.id)) {
-                        setMessages([...messages, newMessage]);
-//сверка по айди(нам сообщение или нет)
-                        //.1 делает запрос на пользователей , которые нам написали
-                        //2. делает запрос на сообщения от одного, по клику на него)
-                    }
-                }
-            )
-            .subscribe();
-        return () => {
-            supabase.removeChannel(channel).then(res => console.log(res));
-        };
-    }, [supabase, messages, setMessages]);
+//     useEffect(() => {
+//         Promise.all([
+//             supabase
+//                 .from("messages")
+//                 .select("*")
+//                 .eq("user_id",userID)
+//                 .then(res => res.data),
+//             supabase
+//                 .from("messages")
+//                 .select('*')
+//                 .eq("user_id_addressee",userID)
+//                 .then(res =>res.data)
+//         ]).then(([a,b])=>setMessages([...a as Array<MessagesType>,...b as Array<MessagesType>]))
+//
+//     }, [])
+//     console.log(messages, "from table")
+//
+//     useEffect(() => {
+//         const channel = supabase
+//             .channel("*")
+//             .on(
+//                 "postgres_changes",
+//                 {event: "INSERT", schema: "public", table: "messages"},
+//                 (payload: { new: MessagesType; }) => {
+//
+//                     const newMessage = payload.new as MessagesType;
+//
+//                     // if (!messages.find((message: { id: string; }) => message.id === newMessage.id))
+//                     if (newMessage.user_id === userID || newMessage.user_id_addressee === userID ) {
+//                         setMessages([...messages, newMessage]);
+// //сверка по айди(нам сообщение или нет)
+//                         //.1 делает запрос на пользователей , которые нам написали
+//                         //2. делает запрос на сообщения от одного, по клику на него)
+//                         // 3. делает запрос на товар по которому сообщение пришло
+//                     }
+//                 }
+//             )
+//             .subscribe();
+//         return () => {
+//             supabase.removeChannel(channel).then(res => console.log(res));
+//         };
+//     }, [supabase, messages, setMessages]);
 
     const [val, setVal] = useState('');
-    supabase
-        .channel("a4803e99-0fb6-4592-9e54-943d1fb644b0",).subscribe()
-        .on('broadcast', {event: 'supa'}, payload => {
-            console.log(payload.payload, "from webSocket")
-        })
+    // supabase
+    //     .channel("a4803e99-0fb6-4592-9e54-943d1fb644b0",).subscribe()
+    //     .on('broadcast', {event: 'supa'}, payload => {
+    //         console.log(payload.payload, "from webSocket")
+    //     })
     const sendObj = {
         post_id: 2,
         content: val,
-        user_id_addressee: "a4803e99-0fb6-4592-9e54-943d1fb644b0"
+        user_id_addressee: messages && messages[0].user_id_addressee
     }
     const click = async () => {
         await supabase.from("messages").insert(sendObj)
         //мой id
-        supabase
-            .channel(userID)
-            .subscribe((status) => console.log(status))
-            .send({
-                type: 'broadcast',
-                event: 'supa',
-                payload: {org: val},
-            }).then((res) => console.log(res))
+        // supabase
+        //     .channel(userID)
+        //     .subscribe((status) => console.log(status))
+        //     .send({
+        //         type: 'broadcast',
+        //         event: 'supa',
+        //         payload: {org: val},
+        //     }).then((res) => console.log(res))
 
         setVal('');
     }
@@ -151,7 +163,7 @@ const ChatMainPage = () => {
                                        key={id}
                     />
                 })}
-            <PopupNotificationModal isOpen={isOpen} onClose={onClose}/>
+            {/*<PopupNotificationModal isOpen={isOpen} onClose={onClose}/>*/}
         </Flex>
     );
 };
