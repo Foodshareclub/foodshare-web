@@ -17,10 +17,17 @@ type MessagesType = {
     user_id_addressee: string
 }
 
+type RoomType = {
+    id: number
+    profile_id: string
+    room_id: string
+    text: string
+}
+
 
 const ChatMainPage = () => {
     const id = useParams()["*"];
-    console.log(id)
+
     const {isOpen, onOpen, onClose} = useDisclosure();
     const actions = useActionCreators({getOneProductTC})
     const oneProduct = useAppSelector(state => state.product.oneProduct);
@@ -29,36 +36,47 @@ const ChatMainPage = () => {
     useEffect(() => {
         actions.getOneProductTC(Number(id));
         onOpen()
-        return () => {
-            console.log("dead chat main page")
-        }
     }, [id]);
 
 //////////////////////////////////////////////////////////////////
-    const [messages, setMessages] = useState<any>()
-
-    // useEffect(() => {
-    //     supabase
-    //         .from("rooms")
-    //         .select()
-    //         .then(res => setMessages(res.data))
-    // }, [])
-    // console.log(messages, "from table")
+    const [messages, setMessages] = useState<Array<RoomType>>([]);
 
     useEffect(() => {
+        supabase
+            .from("rooms") ///need to know roomID
+            .select()
+            .match({requester: userID, post_id: id})
+            .then(res => {
+                // setMessages(res.data)
+                res.data?.forEach(el => {
+                    supabase
+                        .from("room_participants") ///need to know roomID
+                        .select()
+                        .eq('room_id', el.id)
+                        .then(res => setMessages([...messages, ...res.data as Array<RoomType>]))
+                })
+
+            })
+    }, [])
+    console.log(messages, "from table")
+
+    useEffect(() => {  //incoming message listener
         const channel = supabase
             .channel("*")
             .on(
                 "postgres_changes",
-                {event: "INSERT", schema: "public", table: "rooms"},
-                (payload: { new: MessagesType; }) => {
+                {event: "INSERT", schema: "public", table: "room_participants"},
+                (payload: { new: RoomType; }) => {
 
-                    const newMessage = payload.new as MessagesType;
+                    const newMessage = payload.new;
 
-                    if (!messages.find((message: { id: string; }) => message.id === newMessage.id)) {
-                        if ('roomID' === messages.room_id ) {
-                            setMessages([...messages, newMessage]);
-                        }
+                    if (!messages.find((message) => message.id == newMessage.id)) {
+
+                        setMessages([...messages, newMessage]);
+
+                        // if ('roomID' === messages.room_id ) {
+                        //     setMessages([...messages, newMessage]);
+                        // }
                     }
                 }
             )
@@ -70,8 +88,17 @@ const ChatMainPage = () => {
 
     const [val, setVal] = useState('');
 
+
     const click = async () => {
-        await supabase.from("rooms").insert('');
+        const messageObject = {} as RoomType;
+        messages.forEach(m => {
+            messageObject.room_id = m.room_id;
+            messageObject.profile_id = userID;
+        })
+        console.log(messageObject)
+        await supabase.from("room_participants").insert({...messageObject, text: val});
+
+        //await supabase.from("rooms").insert({id: messageObject.room_id, last_message: val}); ///update last_message in rooms, add sharerID, requesterID
 
 
         setVal('');
@@ -86,11 +113,12 @@ const ChatMainPage = () => {
     return (
         <Flex justify={"space-between"} px={7} mt="24vh" mb={"12vh"}>
             <ContactsBlock/>
-            <Flex justify={"space-between"} direction={"column"} p={3} bg={"gray.200"} borderRadius={20} w={"50%"} height={'500px'}>
+            <Flex justify={"space-between"} direction={"column"} p={3} bg={"gray.200"} borderRadius={20} w={"50%"}
+                  height={'500px'}>
                 <Box p={3} borderRadius={20} bg={"gray.100"} h={"90%"} overflow={"auto"}>
                     {messages && messages.map((m: any) => {
                         let time = new Date(m.created_at).toLocaleTimeString()
-                        return userID === m.user_id
+                        return userID === m.profile_id
                             ? <Flex justify={"end"} key={m.id}>
                                 <Text color={"gray.400"}>
                                     {time}
