@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {CardHeader, useColorModeValue} from "@chakra-ui/react";
-import {getValueFromDBTC} from "@/store/slices/userReducer";
+import {getUserFromDBTC} from "@/store/slices/userReducer";
 import {useActionCreators, useAppSelector} from "@/hook";
 import {FilterProductComponent, NavComponent} from "@/components";
 import {
@@ -27,8 +27,8 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
     const isUpdateProfile = useAppSelector(isUpdateProfileSelector);
     const profileMessage = useAppSelector(messageProfileSelector);
 
-
-    const actions = useActionCreators({getValueFromDBTC});
+    //console.log(isUpdateProfile)
+    const actions = useActionCreators({getUserFromDBTC});
 
     useEffect(() => {
         if (userId && isAuth) {
@@ -38,13 +38,12 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
                 columnValueItem: userId,
                 selectRow: "*"
             }
-            actions.getValueFromDBTC(values);
+            actions.getUserFromDBTC(values);
         }
     }, [userId, isAuth, isUpdateProfile])
 
     return (
         <CardHeader
-            //borderBottom={"1px solid 'gray.200"}
             borderBottomWidth={1}
             borderStyle={'solid'}
             borderColor={useColorModeValue('gray.200', 'gray.700')}

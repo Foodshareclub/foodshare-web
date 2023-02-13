@@ -19,7 +19,8 @@ type MessagesType = {
 
 
 const ChatMainPage = () => {
-    const {id} = useParams();
+    const id = useParams()["*"];
+    console.log(id)
     const {isOpen, onOpen, onClose} = useDisclosure();
     const actions = useActionCreators({getOneProductTC})
     const oneProduct = useAppSelector(state => state.product.oneProduct);
@@ -35,6 +36,7 @@ const ChatMainPage = () => {
 
 //////////////////////////////////////////////////////////////////
     const [messages, setMessages] = useState<any>()
+
     // useEffect(() => {
     //     supabase
     //         .from("rooms")
@@ -70,6 +72,7 @@ const ChatMainPage = () => {
 
     const click = async () => {
         await supabase.from("rooms").insert('');
+
 
         setVal('');
     }
@@ -144,7 +147,7 @@ const ChatMainPage = () => {
                                        key={id}
                     />
                 })}
-            <PopupNotificationModal isOpen={isOpen} onClose={onClose}/>
+            {/*<PopupNotificationModal isOpen={isOpen} onClose={onClose}/>*/}
         </Flex>
     );
 };

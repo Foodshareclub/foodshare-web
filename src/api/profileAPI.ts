@@ -9,8 +9,18 @@ import {
 } from "@supabase/supabase-js";
 import {MobileOtpType} from "@supabase/gotrue-js/dist/module/lib/types";
 
+export type AddressType={
+    address_line_1:string
+    address_line_2:string
+    address_line_3?:string
+    city:string
+    country:number
+    county:string
+    postal_code:string
+    profile_id:string
+    state_province:string
+}
 export type AllValuesType = {
-
     created_time: string
     email?: string,
     id: string,
@@ -114,5 +124,14 @@ export const profileAPI = {
     },
     updateProfile(updates: AllValuesType) {
         return supabase.from('profiles').upsert(updates)///
-    }
+    },
+    updateAddress(updates:AddressType) {
+        return supabase.from('address').upsert(updates)///
+    },
+    getUserAddress(userId: string) {
+        return supabase.from('address').select("*").eq("profile_id",userId)
+    },
+    getCountriesIndex(countryId: number) {
+        return supabase.from('countries').select("*").eq("id",countryId)
+    },
 };

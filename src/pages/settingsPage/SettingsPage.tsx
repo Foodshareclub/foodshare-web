@@ -1,34 +1,22 @@
-import React, {useEffect, useState} from 'react';
-import {Box, Button, Input, SimpleGrid} from "@chakra-ui/react";
+import React from 'react';
+import {Box, SimpleGrid} from "@chakra-ui/react";
 import {ListingPersonCards, SettingsCard} from "@/components";
-import {useAppSelector, useGridSize} from "@/hook";
-import {avatarURLSelector, userFirstNameSelector, userSecondNameSelector} from "@/store";
+import {useGridSize} from "@/hook";
 import {settingsInfoArray} from "@/utils";
-import {supabase} from "@/supaBase.config";
-import {RealtimeChannel} from '@supabase/supabase-js';
-
 
 
 export const SettingsPage = () => {
     const gridSize = useGridSize();
-    const userFirstName = useAppSelector(userFirstNameSelector);
-    const userSecondName = useAppSelector(userSecondNameSelector);
-    const imgUrl = useAppSelector(avatarURLSelector);
-
     return (
         <Box mt="20vh">
             <Box>
-                <ListingPersonCards
-                    userFirstName={userFirstName}
-                    userSecondName={userSecondName}
-                    imgUrl={imgUrl}
+                <ListingPersonCards settings={"settings"}
                 />
             </Box>
             <SimpleGrid p={8}
                         columns={gridSize}
                         spacing={10}
             >
-
                 {settingsInfoArray.map((card, i) => {
                     return <SettingsCard
                         settingTitle={card.settingTitle}

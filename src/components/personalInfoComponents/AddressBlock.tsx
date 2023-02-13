@@ -1,8 +1,15 @@
-import React, {useState} from "react";
-import {Box, Button, Flex, Heading, Input, Text, useColorModeValue} from "@chakra-ui/react";
+import React, {useEffect, useState} from "react";
+import {Box, Button, Flex, FormControl, FormLabel, Heading, Input, Select, Text} from "@chakra-ui/react";
+import {profileAPI} from "@/api";
+import {userIdFromSessionSelector} from "@/store";
+import {useActionCreators, useAppSelector} from "@/hook";
+import {Trans} from "@lingui/macro";
+import {getAddressProfileTC} from "@/store/slices/userReducer";
+import {userAddressSelector, userCountrySelector} from "@/store/slices/userSelectors";
+import {supabase} from "@/supaBase.config";
+import {AddressType} from "@/api/profileAPI";
 
 type AddressBlockType = {
-    onSaveHandler: () => void
     a: boolean
     b: boolean
     c: boolean
@@ -12,30 +19,58 @@ type AddressBlockType = {
     setC: (value: boolean) => void
 }
 
-export const AddressBlock: React.FC<AddressBlockType> = ({onSaveHandler, a, b, c, d, setC, setA, setB}) => {
-    const [edit, setEdit] = useState(false);
+export const AddressBlock: React.FC<AddressBlockType> = ({a, b, c, d, setC, setA, setB}) => {
+    const userId = useAppSelector(userIdFromSessionSelector);
+    const address = useAppSelector(userAddressSelector);
+    const actions = useActionCreators({getAddressProfileTC})
+    const userCountry = useAppSelector((state) => userCountrySelector(state, address.country));
+    useEffect(() => {
+        actions.getAddressProfileTC(userId).unwrap().then((res: AddressType) => {
+            profileAPI.getCountriesIndex(res.country).then(res => {
+                    console.log(res.data && res.data[0].name)
+                }
+            )
+        })
+    }, [])
 
-    const [uCountry, setCountry] = useState('');
-    const [uStreet, setStreet] = useState('');
-    const [uFlat, setFlat] = useState('');
-    const [uCity, setCity] = useState('');
-    const [uRegion, setRegion] = useState('');
-    const [uPostcode, setPostcode] = useState('');
+    // useEffect(() => {
+    //     (async () => {
+    //         const {data, error} = await supabase
+    //             .from('profiles')
+    //             .select(`
+    //                     "*",
+    //                     address!address_profile_id_fkey ("*")
+    //                   `)
+    //             .eq('id', userId);
+    //         console.log(data)
+    //     })()
+    // }, [])
+
+    const [edit, setEdit] = useState(false);
+    const [lineOne, setLineOne] = useState(address.address_line_1);
+    const [lineTwo, setLineTwo] = useState(address.address_line_2);
+    const [province, setProvince] = useState(address.state_province);
+    const [country, setCountry] = useState(address.country);
+    const [postalCode, setPostalCode] = useState(address.postal_code);
+    const [city, setCity] = useState(address.city)
+    const [county, setCounty] = useState(address.county)
 
     const addressObject = {
-        country: uCountry,
-        street: uStreet,
-        flat: uFlat,
-        city: uCity,
-        region: uRegion,
-        postcode: uPostcode
+        ...address,
+        address_line_1: lineOne,
+        county: address.county,
+        city: city,
+        state_province: province,
+        postal_code: postalCode,
+        profile_id: userId
     };
-
-
+    const onSaveHandler = async () => {
+        await profileAPI.updateAddress(addressObject)
+    }
     return (
-        <Flex  borderBottomWidth={1}
-               borderStyle={'solid'}
-               borderColor={useColorModeValue('gray.200', 'gray.700')} >
+        <Flex borderBottomWidth={1}
+              borderStyle={'solid'}
+              borderColor={edit ? "white" : 'gray.200'}>
             <Box width={"container.lg"}>
                 <Heading fontSize={'2xl'} fontFamily={'body'}
                          fontWeight={500} pb={2} color={d ? "gray.100" : "black.500"} textAlign='left'>
@@ -44,40 +79,77 @@ export const AddressBlock: React.FC<AddressBlockType> = ({onSaveHandler, a, b, c
                 {
                     edit
                         ? <>
-                            <Input mb={2}
-                                placeholder={'Country/region'}
-                                value={uCountry}
-                                onChange={(e) => setCountry(e.currentTarget.value)}
-                            />
-                            <Input mb={2}
-                                placeholder={'Street address'}
-                                value={uStreet}
-                                onChange={(e) => setStreet(e.currentTarget.value)}
-                            />
-                            <Input mb={2}
-                                placeholder={'Flat, suit'}
-                                value={uFlat}
-                                onChange={(e) => setFlat(e.currentTarget.value)}
-                            />
-                            <Flex justifyContent={"space-between"}>
-                                <Input w={"45%"} mb={2}
+                            <FormControl>
+                                <FormLabel pt={2}><Trans>Address Line 1 *</Trans></FormLabel>
+                                <Input
+                                    placeholder={'Address Line 1'}
+                                    value={lineOne}
+                                    onChange={(e) => setLineOne(e.currentTarget.value)}
+                                />
+                            </FormControl>
+
+                            <FormControl>
+                                <FormLabel pt={2}><Trans>Address Line 2</Trans></FormLabel>
+                                <Input
+                                    placeholder={'Address Line 2'}
+                                    value={lineTwo}
+                                    onChange={(e) => setLineTwo(e.currentTarget.value)}
+                                />
+                            </FormControl>
+                            <FormControl>
+                                <FormLabel pt={2}><Trans>City *</Trans></FormLabel>
+                                <Input
                                     placeholder={'City'}
-                                    value={uCity}
+                                    value={city}
                                     onChange={(e) => setCity(e.currentTarget.value)}
                                 />
-                                <Input w={"45%"} mb={2}
-                                    placeholder={'State/ Province/ Country/ Region'}
-                                    value={uRegion}
-                                    onChange={(e) => setRegion(e.currentTarget.value)}
-                                />
+                            </FormControl>
+                            <Flex justifyContent={"space-between"}>
+                                <FormControl w={"45%"}>
+                                    <FormLabel pt={2}><Trans>State/Province *</Trans></FormLabel>
+                                    <Input
+                                        placeholder={'State/Province'}
+                                        value={province}
+                                        onChange={(e) => setProvince(e.currentTarget.value)}
+                                    />
+                                </FormControl>
+                                <FormControl w={"45%"}>
+                                    <FormLabel pt={2}><Trans>County *</Trans></FormLabel>
+                                    <Input
+                                        placeholder={'County'}
+                                        value={county}
+                                        onChange={(e) => setCounty(e.currentTarget.value)}
+                                    />
+                                </FormControl>
                             </Flex>
-                            <Input mb={2}
-                                placeholder={'Postcode'}
-                                value={uPostcode}
-                                onChange={(e) => setPostcode(e.currentTarget.value)}
-                            />
+                            <Flex justifyContent={"space-between"}>
+                                <FormControl w={"45%"}>
+                                    <FormLabel pt={2}><Trans>Zip/Postal Code *</Trans></FormLabel>
+                                    <Input
+                                        placeholder={'Zip/Postal Code'}
+                                        value={postalCode}
+                                        onChange={(e) => setPostalCode(e.currentTarget.value)}
+                                    />
+                                </FormControl>
+                                <FormControl w={"45%"}>
+                                    <FormLabel pt={2}><Trans>Country</Trans></FormLabel>
+                                    <Select>
+                                        <option value="1">dfdfdfd</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                    </Select>
+                                </FormControl>
+                            </Flex>
+
                             <Button
-                                onClick={onSaveHandler}
+                                onClick={() => {
+                                    onSaveHandler()
+                                    setA(!a)
+                                    setB(!b)
+                                    setC(!c)
+                                    setEdit(!edit)
+                                }}
                                 variant={"ghost"}
                                 my={3}
                             >Save

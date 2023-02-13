@@ -21,8 +21,8 @@ const VolunteerPage = () => {
     }, [])
 
     return (
-        <Box pb={["55%", "41%", "35%", "30%", "25%", "12%"]} px={7} mt={["55%", "41%", "35%", "30%", "25%", "12%"]}
-             w="100%" mx="auto">
+        <Box mt="24vh" px={7} mb={"24vh"}
+        >
             <Box left={0} top={"80%"} textAlign={"center"} zIndex={1} position={"fixed"} w={"100%"}>
                 <Button
                     alignItems={"center"}

@@ -7,7 +7,7 @@ import {Trans} from "@lingui/macro";
 import {avatarURLSelector} from "@/store/slices/userSelectors";
 
 type PropsType = {
-    url: string
+    //url: string
     size: number
     onUpload: (filePath: string, file: File) => void
 }

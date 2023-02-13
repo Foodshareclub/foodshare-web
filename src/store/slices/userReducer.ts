@@ -1,5 +1,6 @@
 import {createAsyncThunk, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import {
+    AddressType,
     AllValuesType,
     AuthPayload,
     GetValueType,
@@ -17,6 +18,8 @@ const initialState = {
     login: {} as User,
     registration: {} as User,
     user: {} as User,
+    userAddress:{} as AddressType,
+    userCountries:[] as any,
     isRegister: false,
     isAuth: false,
     session: {
@@ -122,7 +125,7 @@ export const logoutTC = createAsyncThunk("/auth/logoutTC", async (_, thunkAPI) =
     }
 });
 
-export const getValueFromDBTC = createAsyncThunk("/auth/getValueFromDBTC", async ({
+export const getUserFromDBTC = createAsyncThunk("/auth/getUserFromDBTC", async ({
                                                                                       fromTableName,
                                                                                       columnValue,
                                                                                       columnValueItem,
@@ -143,7 +146,22 @@ export const getValueFromDBTC = createAsyncThunk("/auth/getValueFromDBTC", async
         thunkAPI.dispatch(userActions.isLoading(false))
     }
 });
-
+export const getAddressProfileTC = createAsyncThunk("/auth/getAddressProfileTC",async (userId:string,thunkAPI)=>{
+try {
+    const {data,error,status}= await profileAPI.getUserAddress(userId)
+    if (error) {
+        console.log(error);
+        console.log(status);
+        return thunkAPI.rejectWithValue(error);
+    }
+    if (data) {
+        //console.log(data)
+        return data[0]
+    }
+}catch (e:any) {
+    thunkAPI.rejectWithValue(e.message)
+}
+})
 export const downloadImgFromDBTC = createAsyncThunk("/auth/downloadImgFromDBTC", async (imgValue: ImgUrlType, thunkAPI) => {
     try {
         const {data, error} = await profileAPI.downloadImgFromDB(imgValue)
@@ -161,7 +179,6 @@ export const downloadImgFromDBTC = createAsyncThunk("/auth/downloadImgFromDBTC",
 
 export const uploadImgToDBTC = createAsyncThunk("/auth/uploadImgToDBTC", async (imgValue: UploadImgUrlType, thunkAPI) => {
     try {
-
         const {error} = await profileAPI.uploadImgFromDB(imgValue)
         if (error) {
             console.log(error)
@@ -273,10 +290,13 @@ const userSlice = createSlice({
                 state.registration = action.payload
             }
         });
-        builder.addCase(getValueFromDBTC.fulfilled, (state, action: PayloadAction<any, string, { arg: GetValueType; requestId: string; requestStatus: "fulfilled"; }, never>) => {
+        builder.addCase(getUserFromDBTC.fulfilled, (state, action: PayloadAction<any, string, { arg: GetValueType; requestId: string; requestStatus: "fulfilled"; }, never>) => {
             if (action.payload) {
                 state.value = action.payload
             }
+        });
+        builder.addCase(getAddressProfileTC.fulfilled, (state, action) => {
+                state.userAddress = action.payload
         });
         builder.addCase(downloadImgFromDBTC.fulfilled, (state, action: PayloadAction<string | undefined, string, { arg: ImgUrlType; requestId: string; requestStatus: "fulfilled"; }, never>) => {
             if (action.payload) {
