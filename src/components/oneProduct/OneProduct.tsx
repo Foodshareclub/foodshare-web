@@ -2,11 +2,14 @@ import loc from "@/assets/location-blue.svg";
 import likes from "@/assets/likes.svg";
 import {InitialProductStateType} from "@/store/slices/productReducer";
 import {Box, Button, Flex, Heading, Image, Text} from "@chakra-ui/react";
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {StarIcon} from "@chakra-ui/icons";
 import TopTips from "@/components/topTips/TopTips";
 import {Trans} from "@lingui/macro";
 import {useNavigate} from "react-router-dom";
+import {useAppSelector} from "@/hook";
+import {userIdFromSessionSelector} from "@/store";
+import {supabase} from "@/supaBase.config";
 
 type OneProductType = {
     product: InitialProductStateType
@@ -14,11 +17,51 @@ type OneProductType = {
     chat?: string
 }
 
+type RoomType = {
+    requester: string
+    sharer: string
+    post_id: number
+    last_message: string
+    last_message_sent_by: string
+}
+
 export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue = "Request"}) => {
-    const navigate = useNavigate()
+    const userID = useAppSelector(userIdFromSessionSelector);
+
+    const [isRoomExist, setIsRoomExist] = useState<boolean>();
+
+    useEffect(() => {  //to find out if a room exists or not
+        (async () => {
+            const { data, error } = await supabase
+                .from('rooms')
+                .select('*')
+                .match({requester: userID, post_id: product.id});
+            setIsRoomExist(!!data?.length)
+            console.log(data)
+        })()
+    }, []);
+
+    const navigate = useNavigate();
 
     const navigateHandler = () => {
-        navigate(`/chat-main/${product.id}`)
+        navigate(`/chat-main/${product.id}`);
+
+        if (isRoomExist) { //forbidden to creat a new room if it already exists
+            return;
+        }
+        onCreateRoomHandler();
+    }
+
+    const onCreateRoomHandler = async () => {
+        const room = {
+            requester: userID,
+            sharer: product.user,
+            post_id: product.id,
+            last_message_sent_by: userID,
+            last_message: 'Initial message'
+        } as RoomType;
+
+        await supabase.from("rooms").insert(room);
     }
     return (
         <Box w={{md: chat?"25%":"45%", base: "100%"}}>
@@ -89,7 +132,7 @@ export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue
                         textTransform={"uppercase"}
                         width="100%" variant='solid'
                         colorScheme='blue'>
-                        {buttonValue}
+                        {buttonValue}     {/*change button name if room exist*/}
                     </Button>
 
                 </Box>

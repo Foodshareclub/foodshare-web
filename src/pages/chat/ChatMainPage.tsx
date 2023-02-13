@@ -36,121 +36,105 @@ const ChatMainPage = () => {
 
 //////////////////////////////////////////////////////////////////
     const [messages, setMessages] = useState<any>()
-//     useEffect(() => {
-//         Promise.all([
-//             supabase
-//                 .from("messages")
-//                 .select("*")
-//                 .eq("user_id",userID)
-//                 .then(res => res.data),
-//             supabase
-//                 .from("messages")
-//                 .select('*')
-//                 .eq("user_id_addressee",userID)
-//                 .then(res =>res.data)
-//         ]).then(([a,b])=>setMessages([...a as Array<MessagesType>,...b as Array<MessagesType>]))
-//
-//     }, [])
-//     console.log(messages, "from table")
-//
-//     useEffect(() => {
-//         const channel = supabase
-//             .channel("*")
-//             .on(
-//                 "postgres_changes",
-//                 {event: "INSERT", schema: "public", table: "messages"},
-//                 (payload: { new: MessagesType; }) => {
-//
-//                     const newMessage = payload.new as MessagesType;
-//
-//                     // if (!messages.find((message: { id: string; }) => message.id === newMessage.id))
-//                     if (newMessage.user_id === userID || newMessage.user_id_addressee === userID ) {
-//                         setMessages([...messages, newMessage]);
-// //сверка по айди(нам сообщение или нет)
-//                         //.1 делает запрос на пользователей , которые нам написали
-//                         //2. делает запрос на сообщения от одного, по клику на него)
-//                         // 3. делает запрос на товар по которому сообщение пришло
-//                     }
-//                 }
-//             )
-//             .subscribe();
-//         return () => {
-//             supabase.removeChannel(channel).then(res => console.log(res));
-//         };
-//     }, [supabase, messages, setMessages]);
+
+    // useEffect(() => {
+    //     supabase
+    //         .from("rooms")
+    //         .select()
+    //         .then(res => setMessages(res.data))
+    // }, [])
+    // console.log(messages, "from table")
+
+    useEffect(() => {
+        const channel = supabase
+            .channel("*")
+            .on(
+                "postgres_changes",
+                {event: "INSERT", schema: "public", table: "rooms"},
+                (payload: { new: MessagesType; }) => {
+
+                    const newMessage = payload.new as MessagesType;
+
+                    if (!messages.find((message: { id: string; }) => message.id === newMessage.id)) {
+                        if ('roomID' === messages.room_id ) {
+                            setMessages([...messages, newMessage]);
+                        }
+                    }
+                }
+            )
+            .subscribe();
+        return () => {
+            supabase.removeChannel(channel).then(res => console.log(res));
+        };
+    }, [supabase, messages, setMessages]);
 
     const [val, setVal] = useState('');
-    // supabase
-    //     .channel("a4803e99-0fb6-4592-9e54-943d1fb644b0",).subscribe()
-    //     .on('broadcast', {event: 'supa'}, payload => {
-    //         console.log(payload.payload, "from webSocket")
-    //     })
-    const sendObj = {
-        post_id: 2,
-        content: val,
-        user_id_addressee: messages && messages[0].user_id_addressee
-    }
+
     const click = async () => {
-        await supabase.from("messages").insert(sendObj)
-        //мой id
-        // supabase
-        //     .channel(userID)
-        //     .subscribe((status) => console.log(status))
-        //     .send({
-        //         type: 'broadcast',
-        //         event: 'supa',
-        //         payload: {org: val},
-        //     }).then((res) => console.log(res))
+        await supabase.from("rooms").insert('');
+
 
         setVal('');
     }
-    /////////////////////////////////////////////
-
-
-    //console.log(userID)
 
     useEffect(() => {
-        messagesAnchorRef.current?.scrollIntoView({behavior: 'smooth'})
-    }, [messages])
+        messagesAnchorRef.current?.scrollIntoView({behavior: 'smooth'}); //scroll down to show last message
+    }, [messages]);
 
     const messagesAnchorRef = useRef<HTMLDivElement>(null);
 
     return (
         <Flex justify={"space-between"} px={7} mt="24vh" mb={"12vh"}>
             <ContactsBlock/>
-            <Flex justify={"space-between"} direction={"column"} p={3} bg={"gray.200"} borderRadius={20} w={"50%"}
-                  height={'500px'}>
+            <Flex justify={"space-between"} direction={"column"} p={3} bg={"gray.200"} borderRadius={20} w={"50%"} height={'500px'}>
                 <Box p={3} borderRadius={20} bg={"gray.100"} h={"90%"} overflow={"auto"}>
-                    {messages && messages.map((m: MessagesType) => {
+                    {messages && messages.map((m: any) => {
                         let time = new Date(m.created_at).toLocaleTimeString()
-                        console.log(m.user_id)
-                        console.log(m.user_id_addressee)
-                        console.log(userID)
                         return userID === m.user_id
-                            ? <Flex justify={"end"}>
-                                <Text color={"gray.400"}>{time}</Text><Box my={2} bg={"red.100"} borderRadius={"25px"}
-                                                                           maxWidth={"255px"}>
-                                <Text px={4} py={2}>{m.content} {m.user_id}</Text>
-                            </Box>
+                            ? <Flex justify={"end"} key={m.id}>
+                                <Text color={"gray.400"}>
+                                    {time}
+                                </Text>
+                                <Box my={2} bg={"red.100"} borderRadius={"25px"} maxWidth={"255px"}>
+                                    <Text px={4} py={2}>
+                                        {m.text}
+                                    </Text>
+                                </Box>
                             </Flex>
-                            : <Flex justify={"start"}>
-                                <Box my={2} bg={"white"} borderRadius={"25px"}
-                                     maxWidth={"255px"}>
-                                    <Text py={2} px={4}>{m.content} {m.user_id_addressee}</Text>
-                                </Box><Text color={"gray.400"}>{time}</Text>
+
+                            : <Flex justify={"start"} key={m.id}>
+                                <Box my={2} bg={"white"} borderRadius={"25px"} maxWidth={"255px"}>
+                                    <Text py={2} px={4}>
+                                        {m.text}
+                                    </Text>
+                                </Box>
+                                <Text color={"gray.400"}>
+                                    {time}
+                                </Text>
                             </Flex>
                     })}
                     <Box ref={messagesAnchorRef}></Box>
                 </Box>
                 <Flex borderRadius={20} h={"7%"} bg={"gray.200"}>
-                    <Input _hover={{bg: "white"}} variant={"filled"} borderRadius={20}
-                           type={'text'}
-                           placeholder='Enter...'
-                           value={val} onChange={(e) => setVal(e.currentTarget.value)}
-                           mr={2}
+                    <Input
+                        _hover={{bg: "white"}}
+                        variant={"filled"}
+                        borderRadius={20}
+                        type={'text'}
+                        placeholder='Enter...'
+                        value={val}
+                        onChange={(e) => setVal(e.currentTarget.value)}
+                        mr={2}
                     />
-                    <Button onClick={click} as={AddIcon} borderRadius={20} colorScheme={"green"} p={2}
-                            backgroundColor='#FF2D55' color={"white"} variant={"solid"}>
+                    <Button
+                        onClick={click}
+                        as={AddIcon}
+                        borderRadius={20}
+                        colorScheme={"green"}
+                        p={2}
+                        backgroundColor='#FF2D55'
+                        color={"white"}
+                        variant={"solid"}>
                     </Button>
                 </Flex>
 

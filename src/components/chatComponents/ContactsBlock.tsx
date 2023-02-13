@@ -13,7 +13,7 @@ const ContactsBlock = () => {
     const userSecondName = useAppSelector(userSecondNameSelector);
 
     return (
-        <Flex direction={"column"} justify={"space-between"}>
+        <Flex direction={"column"} >
             <Flex direction={"column"} alignSelf={"center"}>
                 <AvatarWithRipple img={imgUrl}/>
                 <Box py={2}>
@@ -22,7 +22,7 @@ const ContactsBlock = () => {
                     </Heading>
                 </Box>
 
-                <InputGroup alignSelf="center" alignItems="center">
+                <InputGroup alignSelf="center" alignItems="center" mb={5}>
                     <InputLeftElement
                         pointerEvents={"stroke"}
                         children={<SearchIcon
@@ -55,27 +55,31 @@ const ContactsBlock = () => {
                         description={'SOME PRODUCT NAME'}
                         firstName={'fNAME'}
                         secondName={'sName'}
-                    /><MinifiedUserInfo
-                    src={imgUrl}
-                    description={'SOME PRODUCT NAME'}
-                    firstName={'fNAME'}
-                    secondName={'sName'}
-                /><MinifiedUserInfo
-                    src={imgUrl}
-                    description={'SOME PRODUCT NAME'}
-                    firstName={'fNAME'}
-                    secondName={'sName'}
-                /><MinifiedUserInfo
-                    src={imgUrl}
-                    description={'SOME PRODUCT NAME'}
-                    firstName={'fNAME'}
-                    secondName={'sName'}
-                /><MinifiedUserInfo
-                    src={imgUrl}
-                    description={'SOME PRODUCT NAME'}
-                    firstName={'fNAME'}
-                    secondName={'sName'}
-                />
+                    />
+                    <MinifiedUserInfo
+                        src={imgUrl}
+                        description={'SOME PRODUCT NAME'}
+                        firstName={'fNAME'}
+                        secondName={'sName'}
+                    />
+                    <MinifiedUserInfo
+                        src={imgUrl}
+                        description={'SOME PRODUCT NAME'}
+                        firstName={'fNAME'}
+                        secondName={'sName'}
+                    />
+                    <MinifiedUserInfo
+                        src={imgUrl}
+                        description={'SOME PRODUCT NAME'}
+                        firstName={'fNAME'}
+                        secondName={'sName'}
+                    />
+                    <MinifiedUserInfo
+                        src={imgUrl}
+                        description={'SOME PRODUCT NAME'}
+                        firstName={'fNAME'}
+                        secondName={'sName'}
+                    />
                 </Box>
 
             </Flex>
