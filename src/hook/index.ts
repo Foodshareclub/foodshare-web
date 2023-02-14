@@ -4,6 +4,7 @@ import {useAppSelector} from "@/hook/hooks";
 import {useDebounce} from "@/hook/useDebounce";
 import {useGridSize} from "@/hook/useGridSize";
 import useMediaQuery from "@/hook/useMediaQuery";
+import {useEvent} from "@/hook/useEvent";
 
 export {
     useAppDispatch,
@@ -11,5 +12,6 @@ export {
     useAppSelector,
     useDebounce,
     useGridSize,
-    useMediaQuery
+    useMediaQuery,
+    useEvent
 }
