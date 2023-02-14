@@ -44,9 +44,11 @@ export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue
     const navigate = useNavigate();
 
     const navigateHandler = () => {
-        navigate(`/chat-main/${product.id}`);
+        navigate(`/chat-main/${product.id}?s=${product.user}&r=${userID}`);
 
-        if (isRoomExist) { //forbidden to creat a new room if it already exists
+
+        //change button name if product.user === userID
+        if (isRoomExist || product.user === userID) { //forbidden to creat a new room if it already exists
             return;
         }
         onCreateRoomHandler();
