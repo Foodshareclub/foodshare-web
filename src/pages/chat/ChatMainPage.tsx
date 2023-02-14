@@ -44,6 +44,7 @@ const ChatMainPage = () => {
     }, [id]);
 
 //////////////////////////////////////////////////////////////////
+
     const [messages, setMessages] = useState<Array<RoomType>>([]);
     const [room, setRoom] = useState<any>();
     useEffect(() => {
@@ -76,6 +77,7 @@ const ChatMainPage = () => {
                 })
         }
     }, [id, sharerId])
+
     console.log(messages, "from table")
 
     useEffect(() => {  //incoming message listener
@@ -88,9 +90,11 @@ const ChatMainPage = () => {
 
                     const newMessage = payload.new;
 
+
                     if (!messages.find((message) => message.id === newMessage.id)) {
 
                         setMessages([...messages, newMessage]);
+
 
                         // if ('roomID' === messages.room_id ) {
                         //     setMessages([...messages, newMessage]);
@@ -104,6 +108,9 @@ const ChatMainPage = () => {
         };
     }, [supabase, messages, setMessages]);
 
+
+
+
     useEffect(() => {
         supabase  ///get all rooms for current user to show all his conversations
             .from("rooms")
@@ -115,6 +122,7 @@ const ChatMainPage = () => {
             })
         }, [])
     console.log(room)
+
 
     useEffect(() => {
         messagesAnchorRef.current?.scrollIntoView({behavior: 'smooth'}); //scroll down to show last message

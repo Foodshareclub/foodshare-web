@@ -32,13 +32,7 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
 
     useEffect(() => {
         if (userId && isAuth) {
-            const values = {
-                fromTableName: "profiles",
-                columnValue: 'id',
-                columnValueItem: userId,
-                selectRow: "*"
-            }
-            actions.getUserFromDBTC(values);
+            actions.getUserFromDBTC(userId);
         }
     }, [userId, isAuth, isUpdateProfile])
 
