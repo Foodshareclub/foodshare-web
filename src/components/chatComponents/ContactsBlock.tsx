@@ -7,9 +7,10 @@ import {t} from "@lingui/macro";
 import {MinifiedUserInfo} from "@/components";
 import React, {Fragment} from "react";
 import {useNavigate} from "react-router-dom";
+import {CustomRoomType} from "@/pages/chat/ChatMainPage";
 
 type ContactsBlockType = {
-    room: any
+    room: Array<CustomRoomType>
 }
 
 const ContactsBlock: React.FC<ContactsBlockType> = ({room}) => {
@@ -22,7 +23,6 @@ const ContactsBlock: React.FC<ContactsBlockType> = ({room}) => {
     const click = (post_id: number, sharerId: string, requesterId: string) => {
         navigate(`/chat-main/${post_id}?s=${sharerId}&r=${requesterId}`)
     }
-    console.log(room)
     return (
         <Flex direction={"column"}>
             <Flex direction={"column"} alignSelf={"center"}>

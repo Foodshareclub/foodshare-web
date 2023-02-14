@@ -16,25 +16,33 @@ import {
 import {userAddressSelector} from "@/store/slices/userSelectors";
 
 export const PersonalInfoPage = () => {
+    const actions = useActionCreators({
+        ...userActions,
+        updateProfileTC,
+        getAllCountriesTC,
+        getAddressProfileTC,
+        uploadImgToDBTC
+    });
+
     const navigate = useNavigate();
     const address = useAppSelector(userAddressSelector);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
     const {user} = useAppSelector(state => state.user.session);
-    const actions = useActionCreators({...userActions, updateProfileTC,getAllCountriesTC,getAddressProfileTC, uploadImgToDBTC});
     const [firstName, setFirstName] = useState(value.first_name);
     const [secondName, setSecondName] = useState(value.second_name);
     const [email, setEmail] = useState(user.email as string);
     const [phone, setPhone] = useState(value.phone_number);
 
     useEffect(() => {
-            actions.getAddressProfileTC(user.id)
-            actions.getAllCountriesTC()
-        return ()=>{
+        actions.getAddressProfileTC(user.id)
+        actions.getAllCountriesTC()
+        return () => {
             console.log("dead personalInfoPage")
         }
     }, [])
 
-    let defaultValues = {...value,
+    let defaultValues = {
+        ...value,
         first_name: firstName,
         phone_number: phone,
         second_name: secondName,
@@ -50,54 +58,65 @@ export const PersonalInfoPage = () => {
     const [c, setC] = useState(false)
     const [d, setD] = useState(false)
 
-// if(!Object.keys(address).length) return (
-//     <Skeleton mt={"24vh"} height='40px' isLoaded={false}/>
-// )
     return (
-        <Box mt="23vh" mb={"12vh"}>
-            <Container maxW={"container.md"}>
-                <Breadcrumb spacing='8px' separator={<ChevronRightIcon color='gray.800'/>}>
-                    <BreadcrumbItem
-                        fontWeight='medium'
-                        onClick={() => navigate(PATH.settingsPage)}
-                    >
-                        <BreadcrumbLink>Account settings</BreadcrumbLink>
-                    </BreadcrumbItem>
+        <Container mt="23vh" mb={"12vh"} maxW={"container.md"}>
+            <Breadcrumb spacing='8px' separator={<ChevronRightIcon color='gray.800'/>}>
+                <BreadcrumbItem
+                    fontWeight='medium'
+                    onClick={() => navigate(PATH.settingsPage)}
+                >
+                    <BreadcrumbLink>Account settings</BreadcrumbLink>
+                </BreadcrumbItem>
 
-                    <BreadcrumbItem isCurrentPage fontWeight='medium'>
-                        <span>Personal info</span>
-                    </BreadcrumbItem>
-                </Breadcrumb>
-
-                <Box mt={'8vh'}>
-                    <Text fontSize='4xl' fontWeight={"bold"}>
-                        Personal info
-                    </Text>
-                    <NameBlock
-                        firstName={firstName || value.first_name}
-                        secondName={secondName || value.second_name}
-                        setFirstName={setFirstName}
-                        setSecondName={setSecondName}
-                        onSaveHandler={onSaveHandler}
-                        a={a} b={b} c={c} d={d}
-                        setB={setB} setC={setC} setD={setD}
-                    />
-                </Box>
-
-
-                <Box mt={5}>
-                    <EmailBlock
-                        setC={setC} setD={setD}
-                        a={a} b={b} c={c} d={d}
-                        email={email}
-                        onSaveHandler={onSaveHandler}
-                        setEmail={setEmail}
-                        setA={setA}
-                    />
-                </Box>
-
-
-                <Box mt={5}>
+                <BreadcrumbItem isCurrentPage fontWeight='medium'>
+                    <span>Personal info</span>
+                </BreadcrumbItem>
+            </Breadcrumb>
+            {!Object.keys(address).length ?
+                <>
+                    <Box mt={'8vh'}>
+                        <Text fontSize='4xl' fontWeight={"bold"}>
+                            Personal info
+                        </Text>
+                        <Skeleton height='50px' isLoaded={false}/>
+                    </Box>
+                    <Box mt={5}>
+                        <Skeleton height='50px' isLoaded={false}/>
+                    </Box>
+                    <Box mt={5}>
+                        <Skeleton height='50px' isLoaded={false}/>
+                    </Box>
+                    <Box mt={5}>
+                        <Skeleton height='50px' isLoaded={false}/>
+                    </Box>
+                </>
+                :
+                <>
+                    <Box mt={'8vh'}>
+                        <Text fontSize='4xl' fontWeight={"bold"}>
+                            Personal info
+                        </Text>
+                        <NameBlock
+                            firstName={firstName || value.first_name}
+                            secondName={secondName || value.second_name}
+                            setFirstName={setFirstName}
+                            setSecondName={setSecondName}
+                            onSaveHandler={onSaveHandler}
+                            a={a} b={b} c={c} d={d}
+                            setB={setB} setC={setC} setD={setD}
+                        />
+                    </Box>
+                    <Box mt={5}>
+                        <EmailBlock
+                            setC={setC} setD={setD}
+                            a={a} b={b} c={c} d={d}
+                            email={email}
+                            onSaveHandler={onSaveHandler}
+                            setEmail={setEmail}
+                            setA={setA}
+                        />
+                    </Box>
+                    <Box mt={5}>
                         <PhoneNumberBlock
                             a={a} b={b} c={c} d={d}
                             phone={phone || value.phone_number}
@@ -105,18 +124,19 @@ export const PersonalInfoPage = () => {
                             onSaveHandler={onSaveHandler}
                             setA={setA} setB={setB} setD={setD}
                         />
-                </Box>
+                    </Box>
+                    <Box mt={5}>
+                        <AddressBlock
+                            address={address}
+                            a={a} b={b} c={c} d={d}
+                            setA={setA} setB={setB} setC={setC}
+                        />
+                    </Box>
+                </>
 
+            }
 
-                <Box mt={5}>
-                    <AddressBlock
-                        address={address}
-                        a={a} b={b} c={c} d={d}
-                        setA={setA} setB={setB} setC={setC}
-                    />
-                </Box>
+        </Container>
 
-            </Container>
-        </Box>
     );
 };

@@ -22,21 +22,6 @@ export const AddressBlock: React.FC<AddressBlockType> = ({a, b, c, d,address, se
     const allCountries = useAppSelector(allCountriesSelector);
     const userCountry = useAppSelector((state) => userCountrySelector(state, address.country));
 
-    // console.log(allCountries)
-    //console.log(userCountry && userCountry.name)
-    // useEffect(() => {
-    //     (async () => {
-    //         const {data, error} = await supabase
-    //             .from('profiles')
-    //             .select(`
-    //                     "*",
-    //                     address!address_profile_id_fkey ("*")
-    //                   `)
-    //             .eq('id', userId);
-    //         console.log(data)
-    //     })()
-    // }, [])
-
     const [edit, setEdit] = useState(false);
     const [lineOne, setLineOne] = useState(address.address_line_1);
     const [lineTwo, setLineTwo] = useState(address.address_line_2);
@@ -49,6 +34,7 @@ export const AddressBlock: React.FC<AddressBlockType> = ({a, b, c, d,address, se
     const addressObject = {
         ...address,
         address_line_1: lineOne,
+        address_line_2: lineTwo,
         county: address.county,
         country: Number(country) || address.country,
         city: city,
@@ -59,7 +45,7 @@ export const AddressBlock: React.FC<AddressBlockType> = ({a, b, c, d,address, se
     const onSaveHandler = async () => {
         await profileAPI.updateAddress(addressObject)
     }
-
+    console.log(address)
     return (
         <Flex borderBottomWidth={1}
               borderStyle={'solid'}
@@ -76,7 +62,7 @@ export const AddressBlock: React.FC<AddressBlockType> = ({a, b, c, d,address, se
                                 <FormLabel pt={2}><Trans>Address Line 1 *</Trans></FormLabel>
                                 <Input
                                     placeholder={'Address Line 1'}
-                                    value={lineOne || address.address_line_1}
+                                    value={lineOne}
                                     onChange={(e) => setLineOne(e.currentTarget.value)}
                                 />
                             </FormControl>
@@ -85,7 +71,7 @@ export const AddressBlock: React.FC<AddressBlockType> = ({a, b, c, d,address, se
                                 <FormLabel pt={2}><Trans>Address Line 2</Trans></FormLabel>
                                 <Input
                                     placeholder={'Address Line 2'}
-                                    value={lineTwo || address.address_line_2}
+                                    value={lineTwo}
                                     onChange={(e) => setLineTwo(e.currentTarget.value)}
                                 />
                             </FormControl>
@@ -93,7 +79,7 @@ export const AddressBlock: React.FC<AddressBlockType> = ({a, b, c, d,address, se
                                 <FormLabel pt={2}><Trans>City *</Trans></FormLabel>
                                 <Input
                                     placeholder={'City'}
-                                    value={city || address.city}
+                                    value={city}
                                     onChange={(e) => setCity(e.currentTarget.value)}
                                 />
                             </FormControl>
@@ -102,7 +88,7 @@ export const AddressBlock: React.FC<AddressBlockType> = ({a, b, c, d,address, se
                                     <FormLabel pt={2}><Trans>State/Province *</Trans></FormLabel>
                                     <Input
                                         placeholder={'State/Province'}
-                                        value={province || address.state_province}
+                                        value={province}
                                         onChange={(e) => setProvince(e.currentTarget.value)}
                                     />
                                 </FormControl>
@@ -110,7 +96,7 @@ export const AddressBlock: React.FC<AddressBlockType> = ({a, b, c, d,address, se
                                     <FormLabel pt={2}><Trans>County *</Trans></FormLabel>
                                     <Input
                                         placeholder={'County'}
-                                        value={county || address.county}
+                                        value={county}
                                         onChange={(e) => setCounty(e.currentTarget.value)}
                                     />
                                 </FormControl>
@@ -120,7 +106,7 @@ export const AddressBlock: React.FC<AddressBlockType> = ({a, b, c, d,address, se
                                     <FormLabel pt={2}><Trans>Zip/Postal Code *</Trans></FormLabel>
                                     <Input
                                         placeholder={'Zip/Postal Code'}
-                                        value={postalCode || address.postal_code}
+                                        value={postalCode}
                                         onChange={(e) => setPostalCode(e.currentTarget.value)}
                                     />
                                 </FormControl>
