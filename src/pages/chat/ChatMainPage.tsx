@@ -39,22 +39,22 @@ const ChatMainPage = () => {
     }, [id]);
 
 //////////////////////////////////////////////////////////////////
-    const [messages, setMessages] = useState<Array<RoomType>>([]);
+    const [messages, setMessages] = useState<any>([] as Array<RoomType>);
 
     useEffect(() => {
         supabase
             .from("rooms") ///need to know roomID
-            .select()
-            .match({requester: userID, post_id: id})
-            .then(res => {
-                // setMessages(res.data)
-                res.data?.forEach(el => {
-                    supabase
-                        .from("room_participants") ///need to know roomID
-                        .select()
-                        .eq('room_id', el.id)
-                        .then(res => setMessages([...messages, ...res.data as Array<RoomType>]))
-                })
+            .select("*")
+            .match({sharer: userID})
+            .then((res) => {
+                    setMessages(res.data);
+                // res.data?.forEach(el => {
+                //     supabase
+                //         .from("room_participants") ///need to know roomID
+                //         .select()
+                //         .eq('room_id', el.id)
+                //         .then(res => setMessages([...messages, ...res.data as Array<RoomType>]))
+                // })
 
             })
     }, [])
@@ -70,9 +70,9 @@ const ChatMainPage = () => {
 
                     const newMessage = payload.new;
 
-                    if (!messages.find((message) => message.id == newMessage.id)) {
-
-                        setMessages([...messages, newMessage]);
+                    if (!messages.find((message: { id: number; }) => message.id === newMessage.id)) {
+// if(newMessage.room_id === ){}
+                        //setMessages([...messages, newMessage]);
 
                         // if ('roomID' === messages.room_id ) {
                         //     setMessages([...messages, newMessage]);
@@ -91,7 +91,7 @@ const ChatMainPage = () => {
 
     const click = async () => {
         const messageObject = {} as RoomType;
-        messages.forEach(m => {
+        messages.forEach((m: { room_id: string; }) => {
             messageObject.room_id = m.room_id;
             messageObject.profile_id = userID;
         })

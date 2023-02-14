@@ -3,7 +3,7 @@ import {
     AddressType,
     AllValuesType,
     AuthPayload,
-    GetValueType,
+    CountryType,
     ImgUrlType,
     profileAPI,
     ProviderType,
@@ -18,8 +18,8 @@ const initialState = {
     login: {} as User,
     registration: {} as User,
     user: {} as User,
-    userAddress:{} as AddressType,
-    userCountries:[] as any,
+    userAddress: {} as AddressType,
+    userCountries: [] as Array<CountryType>,
     isRegister: false,
     isAuth: false,
     session: {
@@ -30,10 +30,9 @@ const initialState = {
     isLoading: false,
     value: {} as AllValuesType,
     imgUrl: '',
-    isUpdate: false,
     isUpdateProfile: "info" as StatusType,
     language: "en",
-    message:""
+    message: ""
 };
 
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
@@ -125,15 +124,10 @@ export const logoutTC = createAsyncThunk("/auth/logoutTC", async (_, thunkAPI) =
     }
 });
 
-export const getUserFromDBTC = createAsyncThunk("/auth/getUserFromDBTC", async ({
-                                                                                      fromTableName,
-                                                                                      columnValue,
-                                                                                      columnValueItem,
-                                                                                      selectRow
-                                                                                  }: GetValueType, thunkAPI) => {
+export const getUserFromDBTC = createAsyncThunk("/auth/getUserFromDBTC", async (userId:string, thunkAPI) => {
     try {
         thunkAPI.dispatch(userActions.isLoading(true))
-        let {data, error, status} = await profileAPI.getValue({fromTableName, columnValue, columnValueItem, selectRow})
+        let {data, error, status} = await profileAPI.getValue(userId)
         if (error && status !== 406) {
             console.log(error)
         }
@@ -146,21 +140,39 @@ export const getUserFromDBTC = createAsyncThunk("/auth/getUserFromDBTC", async (
         thunkAPI.dispatch(userActions.isLoading(false))
     }
 });
-export const getAddressProfileTC = createAsyncThunk("/auth/getAddressProfileTC",async (userId:string,thunkAPI)=>{
-try {
-    const {data,error,status}= await profileAPI.getUserAddress(userId)
-    if (error) {
-        console.log(error);
-        console.log(status);
-        return thunkAPI.rejectWithValue(error);
+export const getAddressProfileTC = createAsyncThunk("/auth/getAddressProfileTC", async (userId: string, thunkAPI) => {
+    try {
+        thunkAPI.dispatch(userActions.isLoading(true))
+        const {data, error, status} = await profileAPI.getUserAddress(userId)
+        if (error) {
+            console.log(error);
+            console.log(status);
+            return thunkAPI.rejectWithValue(error);
+        }
+        if (data) {
+            //console.log(data)
+            return data[0]
+        }
+    } catch (e: any) {
+        thunkAPI.rejectWithValue(e.message)
+    }finally {
+        thunkAPI.dispatch(userActions.isLoading(false))
     }
-    if (data) {
-        //console.log(data)
-        return data[0]
+})
+export const getAllCountriesTC = createAsyncThunk("/auth/getAllCountriesTC", async (_, thunkAPI) => {
+    try {
+        const {data, error} = await profileAPI.getAllCountries();
+        if (error) {
+            console.log(error)
+            return thunkAPI.rejectWithValue(error);
+        }
+        if (data) {
+            //console.log(data)
+            return data
+        }
+    } catch (e: any) {
+        thunkAPI.rejectWithValue(e.message)
     }
-}catch (e:any) {
-    thunkAPI.rejectWithValue(e.message)
-}
 })
 export const downloadImgFromDBTC = createAsyncThunk("/auth/downloadImgFromDBTC", async (imgValue: ImgUrlType, thunkAPI) => {
     try {
@@ -186,8 +198,6 @@ export const uploadImgToDBTC = createAsyncThunk("/auth/uploadImgToDBTC", async (
         }
     } catch (error: any) {
         thunkAPI.rejectWithValue(error.message)
-    } finally {
-        thunkAPI.dispatch(userActions.isUpdate())
     }
 })
 
@@ -201,6 +211,22 @@ export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (
         }
         // return "success"//
         return {isUpdateProfile: "success" as StatusType, message: "Profile is updated successful"}
+    } catch (error: any) {
+        return thunkAPI.rejectWithValue(error.message)
+    } finally {
+        thunkAPI.dispatch(userActions.isLoading(false))
+    }
+})
+export const updateAddressTC = createAsyncThunk("/auth/updateAddressTC", async (addressObject:AddressType, thunkAPI) => {
+    try {
+        thunkAPI.dispatch(userActions.isLoading(true))
+        let {error} = await profileAPI.updateAddress(addressObject)
+        if (error) {
+            thunkAPI.dispatch(userActions.isUpdateProfile("error"));
+            return thunkAPI.rejectWithValue(error);
+        }
+        // return "success"//
+        return {isUpdateProfile: "success" as StatusType, message: "Address is updated successful"}
     } catch (error: any) {
         return thunkAPI.rejectWithValue(error.message)
     } finally {
@@ -251,9 +277,6 @@ const userSlice = createSlice({
         isLoading: (state, action) => {
             state.isLoading = action.payload
         },
-        isUpdate: (state) => {
-            state.isUpdate = !state.isUpdate
-        },
         isUpdateProfile: (state, action) => {
             state.isUpdateProfile = action.payload
         },
@@ -290,13 +313,17 @@ const userSlice = createSlice({
                 state.registration = action.payload
             }
         });
-        builder.addCase(getUserFromDBTC.fulfilled, (state, action: PayloadAction<any, string, { arg: GetValueType; requestId: string; requestStatus: "fulfilled"; }, never>) => {
+        builder.addCase(getUserFromDBTC.fulfilled, (state, action) => {
             if (action.payload) {
                 state.value = action.payload
             }
         });
         builder.addCase(getAddressProfileTC.fulfilled, (state, action) => {
-                state.userAddress = action.payload
+            state.userAddress = action.payload
+        });
+        builder.addCase(getAllCountriesTC.fulfilled, (state, action) => {
+            // @ts-ignore
+            state.userCountries = action.payload
         });
         builder.addCase(downloadImgFromDBTC.fulfilled, (state, action: PayloadAction<string | undefined, string, { arg: ImgUrlType; requestId: string; requestStatus: "fulfilled"; }, never>) => {
             if (action.payload) {
@@ -310,10 +337,17 @@ const userSlice = createSlice({
         });
         builder.addCase(updateProfileTC.fulfilled, (state, action) => {
             state.isUpdateProfile = action.payload.isUpdateProfile;
-            state.message=action.payload.message
+            state.message = action.payload.message
         });
         builder.addCase(updateProfileTC.rejected, (state, action) => {
-            state.message="Something was wrong!"
+            state.message = "Something was wrong!"
+        });
+        builder.addCase(updateAddressTC.fulfilled, (state, action) => {
+            state.isUpdateProfile = action.payload.isUpdateProfile;
+            state.message = action.payload.message
+        });
+        builder.addCase(updateAddressTC.rejected, (state, action) => {
+            state.message = "Something was wrong!"
         });
 
         builder.addCase(logoutTC.fulfilled, (state) => {

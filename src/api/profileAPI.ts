@@ -8,7 +8,14 @@ import {
     User,
 } from "@supabase/supabase-js";
 import {MobileOtpType} from "@supabase/gotrue-js/dist/module/lib/types";
-
+export type CountryType={
+    continent:any
+    id: number
+    iso2: string
+    iso3:string
+    local_name:any
+    name:string
+}
 export type AddressType={
     address_line_1:string
     address_line_2:string
@@ -99,14 +106,11 @@ export const profileAPI = {
     logOut(): Promise<{ error: AuthError | null }> {
         return supabase.auth.signOut()
     },
-    getValue(value: GetValueType): PromiseLike<PostgrestSingleResponse<any>> {
-        if (typeof value.selectRow !== "string") {
-            value.selectRow = value.selectRow.join()
-        }
+    getValue(userId:string): PromiseLike<PostgrestSingleResponse<AllValuesType>> {
         return supabase
-            .from(value.fromTableName)
-            .select(`${value.selectRow}`)
-            .eq(`${value.columnValue}`, `${value.columnValueItem}`)
+            .from("profiles")
+            .select("*")
+            .eq('id', userId)
             .single()
     },
     recoveryPassword(email: string) {
@@ -123,15 +127,15 @@ export const profileAPI = {
         return supabase.storage.from(`${value.dir}`).upload(value.filePath, value.file,{upsert:true})
     },
     updateProfile(updates: AllValuesType) {
-        return supabase.from('profiles').upsert(updates)///
+        return supabase.from('profiles').upsert(updates)
     },
     updateAddress(updates:AddressType) {
-        return supabase.from('address').upsert(updates)///
+        return supabase.from('address').upsert(updates)
     },
     getUserAddress(userId: string) {
         return supabase.from('address').select("*").eq("profile_id",userId)
     },
-    getCountriesIndex(countryId: number) {
-        return supabase.from('countries').select("*").eq("id",countryId)
+    getAllCountries() {
+        return supabase.from('countries').select("*")
     },
 };

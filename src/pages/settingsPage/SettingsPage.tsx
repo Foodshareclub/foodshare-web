@@ -7,6 +7,7 @@ import {settingsInfoArray} from "@/utils";
 
 export const SettingsPage = () => {
     const gridSize = useGridSize();
+
     return (
         <Box mt="20vh">
             <Box>

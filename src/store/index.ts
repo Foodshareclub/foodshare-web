@@ -20,7 +20,7 @@ import {userIdFromSessionSelector} from "@/store/slices/userSelectors";
 import {imgURLSelector} from "@/store/slices/userSelectors";
 import {isAuthSelector} from "@/store/slices/userSelectors";
 import {languageSelector} from "@/store/slices/userSelectors";
-import {isUpdateSelector} from "@/store/slices/userSelectors";
+
 import {isRegisterSelector} from "@/store/slices/userSelectors";
 import {isLoadingSelector} from "@/store/slices/userSelectors";
 import {isUpdateProfileSelector} from "@/store/slices/userSelectors";
@@ -28,27 +28,22 @@ import {isUpdateProfileSelector} from "@/store/slices/userSelectors";
 export {
     productReducer,
     userReducer,
-
     productsSelector,
     isUpdateProductSelector,
     searchProductsSelector,
     currentUserProductsSelector,
     messageProductSelector,
-
     userFirstNameSelector,
     userSecondNameSelector,
     userIdSelector,
     avatarURLSelector,
     emailSelector,
     phoneNumberSelector,
-
     userIdFromSessionSelector,
-
     isUpdateProfileSelector,
     languageSelector,
     isRegisterSelector,
     imgURLSelector,
-    isUpdateSelector,
     isAuthSelector,
     isLoadingSelector
 }
