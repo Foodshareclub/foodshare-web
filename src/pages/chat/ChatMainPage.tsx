@@ -3,28 +3,44 @@ import {Box, Button, Flex, Input, Text, useDisclosure} from "@chakra-ui/react";
 import {OneProduct, PopupNotificationModal} from "@/components";
 import {useActionCreators, useAppSelector, useEvent} from "@/hook";
 import {useParams, useSearchParams} from "react-router-dom";
-import {getOneProductTC} from "@/store/slices/productReducer";
-import ContactsBlock from "@/components/chatComponents/ContactsBlock";
+import {getOneProductTC, InitialProductStateType} from "@/store/slices/productReducer";
+
 import {AddIcon} from "@chakra-ui/icons";
 import {supabase} from "@/supaBase.config";
 import {userIdFromSessionSelector} from "@/store";
+import ContactsBlock from "@/components/chatComponents/ContactsBlock";
 
-type MessagesType = {
-    id: string
-    created_at: Date
-    content: string
-    user_id: string
-    user_id_addressee: string
-}
 
-type RoomType = {
+type RoomParticipantsType = {
     id: number
-    profile_id: string
-    room_id: string
-    text: string
+    image: string | null
+    profile_id: string | null
+    room_id: number
+    text: string | null
+    timestamp: string
 }
-
-
+export type CustomRoomType = {
+    id: string
+    last_message: string
+    last_message_seen_by: null
+    last_message_sent_by: string
+    last_message_time: string
+    post_id: number
+    posts: InitialProductStateType
+    requester: string
+    room_participants: Array<RoomParticipantsType>
+    sharer: string
+}
+export type RoomType={
+    id: number
+    last_message: string | null
+    last_message_seen_by: string
+    last_message_sent_by: string
+    last_message_time: string
+    post_id: number
+    user_a: string
+    user_b: string
+}
 const ChatMainPage = () => {
     const {id} = useParams();
     const [searchParams, setSearchParams] = useSearchParams(); //get params from url
@@ -37,7 +53,7 @@ const ChatMainPage = () => {
     const userID = useAppSelector(userIdFromSessionSelector);
 
     useEffect(() => {
-        if(id){
+        if (id) {
             actions.getOneProductTC(Number(id));
             onOpen()
         }
@@ -45,10 +61,10 @@ const ChatMainPage = () => {
 
 //////////////////////////////////////////////////////////////////
 
-    const [messages, setMessages] = useState<Array<RoomType>>([]);
-    const [room, setRoom] = useState<any>();
+    const [messages, setMessages] = useState<Array<RoomParticipantsType>>([]);
+    const [room, setRoom] = useState<Array<CustomRoomType>>([]as Array<CustomRoomType>);
     useEffect(() => {
-       if(id && sharerId) {
+        if (id && sharerId) {
             supabase
                 .from("rooms") ///need to know roomID
                 .select()
@@ -59,9 +75,7 @@ const ChatMainPage = () => {
                 }) // go throw oneProduct page you are a requester
                 //.or(`sharer.eq.${sharerId}, requester.eq.${userID}, post_id.eq.${id}`)
                 .then(res => {
-                    // console.log(res.data)
-                    // console.log('data1 ')
-                    console.log(res.data)
+                    console.log(res.data,"from rooms")
                     res.data?.forEach(el => {
 
                         supabase
@@ -69,7 +83,7 @@ const ChatMainPage = () => {
                             .select()
                             .eq('room_id', el.id)
                             .then(res => {
-                                setMessages([...res.data as Array<RoomType>])
+                                setMessages([...res.data as Array<RoomParticipantsType>])
                                 // console.log(res.data)
                                 // console.log('data2: ')
                             })
@@ -86,11 +100,8 @@ const ChatMainPage = () => {
             .on(
                 "postgres_changes",
                 {event: "INSERT", schema: "public", table: "room_participants"},
-                (payload: { new: RoomType; }) => {
-
+                (payload: { new: RoomParticipantsType; }) => {
                     const newMessage = payload.new;
-
-
                     if (!messages.find((message) => message.id === newMessage.id)) {
 
                         setMessages([...messages, newMessage]);
@@ -109,19 +120,17 @@ const ChatMainPage = () => {
     }, [supabase, messages, setMessages]);
 
 
-
-
     useEffect(() => {
         supabase  ///get all rooms for current user to show all his conversations
             .from("rooms")
             .select('"*", posts("*"), room_participants("*")')
             .or(`sharer.eq.${userID}, requester.eq.${userID}`)
-            .then(res => {
-                // console.log(res.data)
-                setRoom(res.data)
+            .then(({data}:any) => {
+                console.log(data)
+                setRoom(data)
             })
-        }, [])
-    console.log(room)
+    }, [])
+   // console.log(room)
 
 
     useEffect(() => {
@@ -136,7 +145,7 @@ const ChatMainPage = () => {
             <Flex justify={"space-between"} direction={"column"} p={3} bg={"gray.200"} borderRadius={20} w={"50%"}
                   height={'500px'}>
                 <Box p={3} borderRadius={20} bg={"gray.100"} h={"90%"} overflow={"auto"}>
-                    {messages && messages.map((m: any) => {
+                    {messages && messages.map((m) => {
                         let time = new Date(m.timestamp).toLocaleTimeString()
                         return userID === m.profile_id
                             ? <Flex justify={"end"} key={m.id}>
@@ -186,7 +195,7 @@ export default ChatMainPage;
 
 
 type InputSectionType = {
-    messages: Array<RoomType>
+    messages: Array<RoomParticipantsType>
 }
 
 export const InputSection: React.FC<InputSectionType> = ({messages}) => {
@@ -194,19 +203,15 @@ export const InputSection: React.FC<InputSectionType> = ({messages}) => {
 
     const [val, setVal] = useState('');
 
-    const click = useEvent( async () => {
-
-        const messageObject = {} as RoomType;
+    const click = useEvent(async () => {
+        const messageObject = {} as RoomParticipantsType;
         messages.forEach(m => {
             messageObject.room_id = m.room_id;
             messageObject.profile_id = userID;
         })
         console.log(messageObject)
         await supabase.from("room_participants").insert({...messageObject, text: val});
-
         //await supabase.from("rooms").insert({id: messageObject.room_id, last_message: val}); ///update last_message in rooms, add sharerID, requesterID
-
-
         setVal('');
 
     })
@@ -230,7 +235,6 @@ export const InputSection: React.FC<InputSectionType> = ({messages}) => {
                 mr={2}
             />
             <Button
-
                 onClick={click}
                 as={AddIcon}
                 borderRadius={20}

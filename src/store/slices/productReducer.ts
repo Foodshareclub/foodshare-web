@@ -5,7 +5,6 @@ import {StatusType} from "@/components/alert/AlertComponent";
 
 
 export type InitialProductStateType = {
-
     created_att: string
     five_star: null
     four_star: null

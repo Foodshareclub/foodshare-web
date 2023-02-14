@@ -48,8 +48,7 @@ export const LoginSecurityPage = () => {
     }
 
     return (
-        <Box mt="23vh">
-            <Container maxW={"container.md"}>
+            <Container mt="23vh" maxW={"container.md"}>
                 <Breadcrumb spacing='8px' separator={<ChevronRightIcon color='gray.800'/>}>
                     <BreadcrumbItem
                         fontWeight='medium'
@@ -119,9 +118,7 @@ export const LoginSecurityPage = () => {
                     </Flex>
 
                 </Box>
-
             </Container>
-        </Box>
     );
 };
 

@@ -2,8 +2,8 @@
 
 import {useCallback, useLayoutEffect, useRef} from "react";
 
-export function useEvent(handler: any) {
-    const handlerRef = useRef(null);
+export function useEvent(handler: (() => Promise<void>| void)) {
+    const handlerRef = useRef<typeof handler>();
 
     // In a real implementation, this would run before layout effects
     useLayoutEffect(() => {
