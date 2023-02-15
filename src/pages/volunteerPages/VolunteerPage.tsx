@@ -1,23 +1,22 @@
 import React, {useEffect, useState} from 'react';
 import {Box, Button, SimpleGrid} from "@chakra-ui/react";
 import {supabase} from "@/supaBase.config";
-import {AllValuesType} from "@/api/profileAPI";
+import {AllValuesType, profileAPI} from "@/api/profileAPI";
 import {VolunteerCards} from "@/components/volonteerCard/VolonterCards";
+import {useActionCreators, useAppSelector} from "@/hook";
+import {getVolunteersTC} from "@/store/slices/userReducer";
+import {volunteersSelector} from "@/store/slices/userSelectors";
+import {useParams} from "react-router-dom";
 
 const VolunteerPage = () => {
-    const [obj, setObj] = useState<Array<AllValuesType>>([])
-
+    const actions=useActionCreators({getVolunteersTC})
+  const volunteers = useAppSelector(volunteersSelector)
+    const {id} = useParams();
     useEffect(() => {
-        supabase
-            .from('profiles').select("*")
-            .eq('roles', "{subscriber,volunteer,admin}")//а как только волонтера достать из массива
-            .limit(50)
-            .then((res) => {
-                if (res.data) {
-                    setObj(res.data)
-                }
-            })
-        //здесь будет запрос на волонтеров
+        actions.getVolunteersTC()
+        return ()=>{
+            console.log("dead volunteer page")
+        }
     }, [])
 
     return (
@@ -36,7 +35,7 @@ const VolunteerPage = () => {
             </Box>
             <SimpleGrid columns={{xl: 4, lg: 3, md: 2}}
                         spacing={10}>
-                {obj.map((item, id) => (
+                {volunteers.map((item, id) => (
                     <VolunteerCards key={id} volunteer={item}/>
                 ))}
 

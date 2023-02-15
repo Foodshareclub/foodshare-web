@@ -138,4 +138,17 @@ export const profileAPI = {
     getAllCountries() {
         return supabase.from('countries').select("*")
     },
+    getVolunteer(): PromiseLike<PostgrestSingleResponse<Array<AllValuesType>>> {
+        return supabase
+            .from('profiles').select("*")
+            .eq('roles', "{subscriber,volunteer,admin}")//а как только волонтера достать из массива
+            .limit(50)
+    },
+    getAnotherUser(userId:string): PromiseLike<PostgrestSingleResponse<AllValuesType>> {
+        return supabase
+            .from("profiles")
+            .select("*")
+            .eq('id', userId)
+            .single()
+    },
 };

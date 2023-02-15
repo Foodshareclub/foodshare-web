@@ -32,6 +32,7 @@ const initialState = {
     searchProducts: [] as Array<InitialProductStateType>,
     oneProduct: [] as Array<InitialProductStateType>,
     isUpdateProduct: "info" as StatusType,
+    updateProductEffect:false,
     postImgUrl: '',
     isPostImgUpload: false,
     message: ''
@@ -197,7 +198,6 @@ const productSlice = createSlice({
         builder.addCase(getCurrentUserProductsTC.fulfilled, (state, action) => {
             if (action.payload) {
                 state.currentUserProducts = action.payload;
-                // state.isUpdateProduct = "info"
             }
         });
         builder.addCase(getOneProductTC.fulfilled, (state, action) => {
@@ -208,6 +208,7 @@ const productSlice = createSlice({
         builder.addCase(createProductTC.fulfilled, (state, action) => {
             state.isUpdateProduct = action.payload.isUpdateProduct;
             state.message = action.payload.message;
+            state.updateProductEffect = !state.updateProductEffect;
         });
         builder.addCase(createProductTC.rejected, (state, action) => {
             state.message = "Something was wrong!"
@@ -215,6 +216,7 @@ const productSlice = createSlice({
         builder.addCase(deleteProductTC.fulfilled, (state, action) => {
             state.isUpdateProduct = action.payload.isUpdateProduct;
             state.message = action.payload.message;
+            state.updateProductEffect = !state.updateProductEffect;
         });
         builder.addCase(deleteProductTC.rejected, (state, action) => {
             state.message = "Something was wrong!"
@@ -222,6 +224,7 @@ const productSlice = createSlice({
         builder.addCase(updateProductTC.fulfilled, (state, action) => {
             state.isUpdateProduct = action.payload.isUpdateProduct;
             state.message = action.payload.message;
+            state.updateProductEffect = !state.updateProductEffect;
         });
         builder.addCase(updateProductTC.rejected, (state, action) => {
             state.message = "Something was wrong!"
@@ -238,10 +241,10 @@ const productSlice = createSlice({
         });
         builder.addCase(uploadPostImgToDBTC.fulfilled, (state) => {
             state.isPostImgUpload = true
-
         });
-
-
+        builder.addCase(uploadPostImgToDBTC.rejected, (state) => {
+            state.message = "Something was wrong!"
+        });
     }
 })
 

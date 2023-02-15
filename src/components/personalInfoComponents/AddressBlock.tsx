@@ -1,14 +1,13 @@
 import React, {useState} from "react";
 import {Box, Button, Flex, FormControl, FormLabel, Heading, Input, Select, Text} from "@chakra-ui/react";
 import {profileAPI} from "@/api";
-import {userIdFromSessionSelector} from "@/store";
 import {useAppSelector} from "@/hook";
 import {Trans} from "@lingui/macro";
-import {allCountriesSelector, userAddressSelector, userCountrySelector} from "@/store/slices/userSelectors";
+import {allCountriesSelector, userCountrySelector} from "@/store/slices/userSelectors";
 import {AddressType} from "@/api/profileAPI";
 
 type AddressBlockType = {
-    address:AddressType
+    address: AddressType
     a: boolean
     b: boolean
     c: boolean
@@ -18,7 +17,7 @@ type AddressBlockType = {
     setC: (value: boolean) => void
 }
 
-export const AddressBlock: React.FC<AddressBlockType> = ({a, b, c, d,address, setC, setA, setB}) => {
+export const AddressBlock: React.FC<AddressBlockType> = ({a, b, c, d, address, setC, setA, setB}) => {
     const allCountries = useAppSelector(allCountriesSelector);
     const userCountry = useAppSelector((state) => userCountrySelector(state, address.country));
 
@@ -45,7 +44,6 @@ export const AddressBlock: React.FC<AddressBlockType> = ({a, b, c, d,address, se
     const onSaveHandler = async () => {
         await profileAPI.updateAddress(addressObject)
     }
-    console.log(address)
     return (
         <Flex borderBottomWidth={1}
               borderStyle={'solid'}

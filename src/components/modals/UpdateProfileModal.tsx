@@ -20,7 +20,7 @@ import {useActionCreators, useAppSelector} from "@/hook";
 import {updateProfileTC, uploadImgToDBTC, userActions} from "@/store/slices/userReducer";
 import {AllValuesType} from "@/api/profileAPI";
 import {Avatar} from "@/components";
-import {isLoadingSelector} from "@/store/slices/userSelectors";
+
 
 
 type ModalType = {
@@ -35,7 +35,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue, fullScreen}) => {
 
     const {user} = useAppSelector(state => state.user.session);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
-    const isLoading = useAppSelector<boolean>(isLoadingSelector);
+
 
     useLayoutEffect(() => {
         setFirstName(value.first_name)
@@ -165,7 +165,7 @@ const UpdateProfileModal: React.FC<ModalType> = ({buttonValue, fullScreen}) => {
 
                         <Button onClick={onClick} fontSize={25} variant="solid" m="10% 0"
                                 w="100%" alignSelf="center"
-                                disabled={isLoading}>
+                               >
                             Update
                         </Button>
                     </ModalBody>

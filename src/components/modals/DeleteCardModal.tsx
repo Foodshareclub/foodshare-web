@@ -11,12 +11,7 @@ import {
     ModalOverlay
 } from "@chakra-ui/react";
 import {useActionCreators} from "@/hook";
-import {
-    deleteProductTC,
-    getCurrentUserProductsTC,
-    InitialProductStateType,
-    productActions
-} from "@/store/slices/productReducer";
+import {deleteProductTC, InitialProductStateType, productActions} from "@/store/slices/productReducer";
 
 type PropsType = {
     onClose: () => void
@@ -25,7 +20,7 @@ type PropsType = {
 }
 const DeleteCardModal: React.FC<PropsType> = ({isOpen, onClose, product}) => {
 
-    const actions = useActionCreators({getCurrentUserProductsTC, deleteProductTC, ...productActions});
+    const actions = useActionCreators({deleteProductTC, ...productActions});
 
     const deleteProductHandler = () => {
         actions.deleteProductTC(product.id);

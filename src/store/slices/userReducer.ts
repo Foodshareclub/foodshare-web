@@ -17,7 +17,8 @@ import {StatusType} from "@/components/alert/AlertComponent";
 const initialState = {
     login: {} as User,
     registration: {} as User,
-    user: {} as User,
+    volunteers: [] as Array<AllValuesType>,
+    anotherUser: {} as AllValuesType,
     userAddress: {} as AddressType,
     userCountries: [] as Array<CountryType>,
     isRegister: false,
@@ -27,12 +28,12 @@ const initialState = {
             user_metadata: {}
         }
     } as Session,
-    isLoading: false,
     value: {} as AllValuesType,
     imgUrl: '',
     isUpdateProfile: "info" as StatusType,
+    updateUserEffect: false,
     language: "en",
-    message: ""
+    message: "" as string
 };
 
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
@@ -124,12 +125,12 @@ export const logoutTC = createAsyncThunk("/auth/logoutTC", async (_, thunkAPI) =
     }
 });
 
-export const getUserFromDBTC = createAsyncThunk("/auth/getUserFromDBTC", async (userId:string, thunkAPI) => {
+export const getUserFromDBTC = createAsyncThunk("/auth/getUserFromDBTC", async (userId: string, thunkAPI) => {
     try {
-        thunkAPI.dispatch(userActions.isLoading(true))
         let {data, error, status} = await profileAPI.getValue(userId)
-        if (error && status !== 406) {
+        if (error) {
             console.log(error)
+            return thunkAPI.rejectWithValue(error);
         }
         if (data) {
             return data
@@ -137,12 +138,45 @@ export const getUserFromDBTC = createAsyncThunk("/auth/getUserFromDBTC", async (
     } catch (error: any) {
         alert(error.message)
     } finally {
-        thunkAPI.dispatch(userActions.isLoading(false))
+
+    }
+});
+export const getAnotherUserTC = createAsyncThunk("/auth/getAnotherUserTC", async (userId: string, thunkAPI) => {
+    try {
+        let {data, error, status} = await profileAPI.getAnotherUser(userId)
+        if (error) {
+            console.log(error)
+            return thunkAPI.rejectWithValue(error);
+        }
+        if (data) {
+            return data
+        }
+    } catch (error: any) {
+        alert(error.message)
+    } finally {
+
+    }
+});
+export const getVolunteersTC = createAsyncThunk("/auth/getVolunteersTC", async (_, thunkAPI) => {
+    try {
+
+        let {data, error, status} = await profileAPI.getVolunteer()
+        if (error) {
+            console.log(error)
+            return thunkAPI.rejectWithValue(error);
+        }
+        if (data) {
+            return data
+        }
+    } catch (error: any) {
+        alert(error.message)
+    } finally {
+
     }
 });
 export const getAddressProfileTC = createAsyncThunk("/auth/getAddressProfileTC", async (userId: string, thunkAPI) => {
     try {
-        thunkAPI.dispatch(userActions.isLoading(true))
+
         const {data, error, status} = await profileAPI.getUserAddress(userId)
         if (error) {
             console.log(error);
@@ -155,8 +189,8 @@ export const getAddressProfileTC = createAsyncThunk("/auth/getAddressProfileTC",
         }
     } catch (e: any) {
         thunkAPI.rejectWithValue(e.message)
-    }finally {
-        thunkAPI.dispatch(userActions.isLoading(false))
+    } finally {
+
     }
 })
 export const getAllCountriesTC = createAsyncThunk("/auth/getAllCountriesTC", async (_, thunkAPI) => {
@@ -193,9 +227,11 @@ export const uploadImgToDBTC = createAsyncThunk("/auth/uploadImgToDBTC", async (
     try {
         const {error} = await profileAPI.uploadImgFromDB(imgValue)
         if (error) {
+            thunkAPI.dispatch(userActions.isUpdateProfile("error"));
             console.log(error)
             return thunkAPI.rejectWithValue(error);
         }
+        return {isUpdateProfile: "success" as StatusType, message: "Avatar is updated successful"}
     } catch (error: any) {
         thunkAPI.rejectWithValue(error.message)
     }
@@ -203,7 +239,7 @@ export const uploadImgToDBTC = createAsyncThunk("/auth/uploadImgToDBTC", async (
 
 export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (updates: AllValuesType, thunkAPI) => {
     try {
-        thunkAPI.dispatch(userActions.isLoading(true))
+
         let {error} = await profileAPI.updateProfile(updates)
         if (error) {
             thunkAPI.dispatch(userActions.isUpdateProfile("error"));
@@ -214,12 +250,12 @@ export const updateProfileTC = createAsyncThunk("/auth/updateProfileTC", async (
     } catch (error: any) {
         return thunkAPI.rejectWithValue(error.message)
     } finally {
-        thunkAPI.dispatch(userActions.isLoading(false))
+
     }
 })
-export const updateAddressTC = createAsyncThunk("/auth/updateAddressTC", async (addressObject:AddressType, thunkAPI) => {
+export const updateAddressTC = createAsyncThunk("/auth/updateAddressTC", async (addressObject: AddressType, thunkAPI) => {
     try {
-        thunkAPI.dispatch(userActions.isLoading(true))
+
         let {error} = await profileAPI.updateAddress(addressObject)
         if (error) {
             thunkAPI.dispatch(userActions.isUpdateProfile("error"));
@@ -230,7 +266,7 @@ export const updateAddressTC = createAsyncThunk("/auth/updateAddressTC", async (
     } catch (error: any) {
         return thunkAPI.rejectWithValue(error.message)
     } finally {
-        thunkAPI.dispatch(userActions.isLoading(false))
+
     }
 })
 
@@ -274,9 +310,6 @@ const userSlice = createSlice({
                 state.session = action.payload
             }
         },
-        isLoading: (state, action) => {
-            state.isLoading = action.payload
-        },
         isUpdateProfile: (state, action) => {
             state.isUpdateProfile = action.payload
         },
@@ -318,6 +351,16 @@ const userSlice = createSlice({
                 state.value = action.payload
             }
         });
+        builder.addCase(getVolunteersTC.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.volunteers = action.payload
+            }
+        });
+        builder.addCase(getAnotherUserTC.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.anotherUser = action.payload
+            }
+        });
         builder.addCase(getAddressProfileTC.fulfilled, (state, action) => {
             state.userAddress = action.payload
         });
@@ -332,19 +375,28 @@ const userSlice = createSlice({
                 }
             }
         });
-        builder.addCase(uploadImgToDBTC.fulfilled, (state) => {
-
+        builder.addCase(uploadImgToDBTC.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.isUpdateProfile = action.payload.isUpdateProfile;
+                state.message = action.payload.message;
+                state.updateUserEffect = !state.updateUserEffect;
+            }
+        });
+        builder.addCase(uploadImgToDBTC.rejected, (state) => {
+            state.message = "Something was wrong!"
         });
         builder.addCase(updateProfileTC.fulfilled, (state, action) => {
             state.isUpdateProfile = action.payload.isUpdateProfile;
-            state.message = action.payload.message
+            state.message = action.payload.message;
+            state.updateUserEffect = !state.updateUserEffect;
         });
         builder.addCase(updateProfileTC.rejected, (state, action) => {
             state.message = "Something was wrong!"
         });
         builder.addCase(updateAddressTC.fulfilled, (state, action) => {
             state.isUpdateProfile = action.payload.isUpdateProfile;
-            state.message = action.payload.message
+            state.message = action.payload.message;
+            state.updateUserEffect = !state.updateUserEffect;
         });
         builder.addCase(updateAddressTC.rejected, (state, action) => {
             state.message = "Something was wrong!"

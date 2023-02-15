@@ -1,5 +1,6 @@
 import {StateAppType} from "@/store/redux-store";
 
+
 //data from value
 export const userFirstNameSelector = (state: StateAppType) => state.user.value.first_name ;
 export const userSecondNameSelector = (state: StateAppType) => state.user.value.second_name;
@@ -20,6 +21,10 @@ export const isAuthSelector = (state: StateAppType) => state.user.isAuth;
 export const languageSelector = (state: StateAppType) => state.user.language;
 export const isRegisterSelector = (state: StateAppType) => state.user.isRegister;
 
-export const isLoadingSelector = (state: StateAppType) => state.user.isLoading;
 export const isUpdateProfileSelector = (state: StateAppType) => state.user.isUpdateProfile;
 export const messageProfileSelector=(state:StateAppType)=>state.user.message;
+export const updateUserEffectSelector = (state:StateAppType) => state.user.updateUserEffect;
+
+export const volunteersSelector = (state:StateAppType) => state.user.volunteers;
+export const anotherUserSelector = (state:StateAppType) => state.user.anotherUser;
+
