@@ -26,7 +26,7 @@ const ContactsBlock: React.FC<ContactsBlockType> = ({room, anotherRoomMessage}) 
 
     }
     return (
-        <Flex direction={"column"}>
+        <Flex direction={"column"} >
             <Flex direction={"column"} alignSelf={"center"}>
                 <AvatarWithRipple img={imgUrl}/>
                 <Box py={2}>
@@ -50,7 +50,7 @@ const ContactsBlock: React.FC<ContactsBlockType> = ({room, anotherRoomMessage}) 
                 </InputGroup>
             </Flex>
             <Flex direction={"column"} alignSelf={"center"}>
-                <Box bg={"gray.100"} borderRadius={"10%"} px={2} height={"300px"} overflow={"auto"}>
+                <Box bg={"gray.100"} borderRadius={"10%"} px={2} height={"350px"} overflow={"auto"}>
                     {room && room.map((data: any) => {
                             return <Fragment key={data.id}>
                                 <MinifiedUserInfo

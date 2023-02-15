@@ -73,7 +73,6 @@ const ChatMainPage = () => {
                     requester: requesterId,
                     post_id: id
                 }) // go throw oneProduct page you are a requester
-                //.or(`sharer.eq.${sharerId}, requester.eq.${userID}, post_id.eq.${id}`)
                 .then(res => {
                     console.log(res.data, "from rooms")
                     res.data?.forEach(el => {
@@ -84,10 +83,7 @@ const ChatMainPage = () => {
                             .eq('room_id', el.id)
                             .then(res => {
 
-                                console.log(res.data)
                                 setMessages([...res.data as Array<RoomParticipantsType>])
-                                // console.log(res.data)
-                                // console.log('data2: ')
                             })
                     })
                 })
@@ -121,10 +117,9 @@ const ChatMainPage = () => {
             )
             .subscribe();
         return () => {
-            supabase.removeChannel(channel).then(res => console.log(res));
+            supabase.removeChannel(channel).then(res => res);
         };
     }, [supabase, messages, setMessages]);
-
 
     useEffect(() => {
         supabase  ///get all rooms for current user to show all his conversations
@@ -152,8 +147,8 @@ const ChatMainPage = () => {
                 anotherRoomMessage={anotherRoomMessage}
             />
 
-            <Flex justify={"space-between"} direction={"column"} p={3} bg={"gray.200"} borderRadius={20} w={"50%"}
-                  height={'500px'}>
+            <Flex justify={"space-between"} flex={1} direction={"column"} p={3} bg={"gray.200"} borderRadius={20} ml={3} mr={3}
+                  height={'550px'}>
                 <Box p={3} borderRadius={20} bg={"gray.100"} h={"90%"} overflow={"auto"}>
                     {messages && messages
                         .map((m) => {
