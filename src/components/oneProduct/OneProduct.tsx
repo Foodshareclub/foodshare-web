@@ -45,7 +45,7 @@ export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue
         }
 
         return () => setIsRoomExist(false)
-    }, [id]);
+    }, []);
 
     const navigate = useNavigate();
 
@@ -55,17 +55,15 @@ export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue
             return;
         }
 
+        !isRoomExist && onCreateRoomHandler() //if room already exist, it isn't created
+            .then(() => {
+                navigate(`/chat-main/${product.id}?s=${product.user}&r=${userID}`);
+            });
+
         navigate(`/chat-main/${product.id}?s=${product.user}&r=${userID}`);
-
-
-        //change button name if product.user === userID
-        if (isRoomExist) { //forbidden to creat a new room if it already exists
-            return;
-        }
-        onCreateRoomHandler();
     }
 
-    const onCreateRoomHandler = async () => {
+    const onCreateRoomHandler = () => {
         const room = {
             requester: userID,
             sharer: product.user,
@@ -74,7 +72,7 @@ export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue
             last_message: 'Initial message'
         } as RoomType;
 
-        await supabase.from("rooms").insert(room);
+        return supabase.from("rooms").insert(room);
     }
 
     return (
@@ -148,7 +146,7 @@ export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue
                         colorScheme='blue'>
                         {
                             (product.user === userID && 'go to my listings') ||
-                            ((isRoomExist && buttonValue !== 'approval pending') && 'continue the conversation' ) ||
+                            ((isRoomExist && buttonValue !== 'approval pending') && 'continue the conversation') ||
                             buttonValue
                         }
 
