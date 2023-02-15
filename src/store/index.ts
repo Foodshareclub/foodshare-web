@@ -22,7 +22,7 @@ import {isAuthSelector} from "@/store/slices/userSelectors";
 import {languageSelector} from "@/store/slices/userSelectors";
 
 import {isRegisterSelector} from "@/store/slices/userSelectors";
-import {isLoadingSelector} from "@/store/slices/userSelectors";
+
 import {isUpdateProfileSelector} from "@/store/slices/userSelectors";
 
 export {
@@ -45,5 +45,4 @@ export {
     isRegisterSelector,
     imgURLSelector,
     isAuthSelector,
-    isLoadingSelector
 }

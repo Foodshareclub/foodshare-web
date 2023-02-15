@@ -6,4 +6,5 @@ export const searchProductsSelector = (state: StateAppType) => state.product.sea
 
 export const currentUserProductsSelector = (state: StateAppType) => state.product.currentUserProducts;
 export const isUpdateProductSelector = (state: StateAppType) => state.product.isUpdateProduct;
+export const updateProductEffectSelector = (state: StateAppType) => state.product.updateProductEffect;
 export const messageProductSelector = (state: StateAppType) => state.product.message;

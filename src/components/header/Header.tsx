@@ -6,7 +6,7 @@ import {FilterProductComponent, NavComponent} from "@/components";
 import {
     isAuthSelector,
     isUpdateProfileSelector,
-    messageProfileSelector,
+    messageProfileSelector, updateUserEffectSelector,
     userIdFromSessionSelector
 } from "@/store/slices/userSelectors";
 import AlertComponent from "@/components/alert/AlertComponent";
@@ -25,16 +25,16 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
     const isAuth = useAppSelector(isAuthSelector);
     const userId = useAppSelector(userIdFromSessionSelector);
     const isUpdateProfile = useAppSelector(isUpdateProfileSelector);
+    const updateUserEffect = useAppSelector(updateUserEffectSelector);
     const profileMessage = useAppSelector(messageProfileSelector);
 
-    //console.log(isUpdateProfile)
     const actions = useActionCreators({getUserFromDBTC});
 
     useEffect(() => {
         if (userId && isAuth) {
             actions.getUserFromDBTC(userId);
         }
-    }, [userId, isAuth, isUpdateProfile])
+    }, [userId, isAuth, updateUserEffect])
 
     return (
         <CardHeader

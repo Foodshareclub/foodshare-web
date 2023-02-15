@@ -9,9 +9,10 @@ import {ReactComponent as HeartGray} from "@/assets/likesGray.svg";
 
 type ProductCardType = {
     volunteer: AllValuesType
+    indicator?:string
 }
 
-export const VolunteerCards: React.FC<ProductCardType> = React.memo(({volunteer}) => {
+export const VolunteerCards: React.FC<ProductCardType> = React.memo(({volunteer,indicator}) => {
     const navigate = useNavigate();
     const [isLoaded, setIsLoaded] = useState(false);
 
@@ -26,7 +27,7 @@ export const VolunteerCards: React.FC<ProductCardType> = React.memo(({volunteer}
     const onNavigateToOneProductHandler = () => navigate(`${id}`);
 
     return (
-        <GridItem>
+        <GridItem w={"auto"}>
             <Skeleton isLoaded={isLoaded}>
                 <Box textAlign={"center"} zIndex={1} position={"absolute"}>
                     <IconButton ml={10} cursor={"pointer"} borderRadius={"50%"}
@@ -40,11 +41,10 @@ export const VolunteerCards: React.FC<ProductCardType> = React.memo(({volunteer}
                     boxSize={{sm: '250px', base: "200px"}}
                     objectFit={'cover'}
                     cursor="pointer"
-                    onClick={onNavigateToOneProductHandler}
+                    onClick={indicator?()=>{}:onNavigateToOneProductHandler}
                     src={volunteer.avatar_url}
                     alt="broken image"
                 />
-
             </Skeleton>
             {!isLoaded
                 ? <Box>
@@ -68,8 +68,6 @@ export const VolunteerCards: React.FC<ProductCardType> = React.memo(({volunteer}
                         <Image cursor={"pointer"} borderRadius='full' src={navIcon} alt={navIcon}
                         />
                     </Flex>
-
-
                 </Box>
             }
         </GridItem>

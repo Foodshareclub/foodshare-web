@@ -15,14 +15,15 @@ import {
     userIdSelector,
     userSecondNameSelector,
 } from "@/store";
+import {updateProductEffectSelector} from "@/store/slices/productsSelectors";
 
 
 const MyListingsPage = () => {
     const {isOpen, onOpen, onClose} = useDisclosure();
-    const gridSize = useGridSize();
 
     const userId = useAppSelector(userIdSelector);
     const isUpdateProduct = useAppSelector(isUpdateProductSelector);
+    const updateProductEffect = useAppSelector(updateProductEffectSelector);
     const currentUserProducts = useAppSelector(currentUserProductsSelector);
     const isAuth = useAppSelector(isAuthSelector);
     const productMessage = useAppSelector(messageProductSelector);
@@ -31,7 +32,7 @@ const MyListingsPage = () => {
 
     useEffect(() => {
         if (userId) actions.getCurrentUserProductsTC(userId);
-    }, [isUpdateProduct, userId]);
+    }, [updateProductEffect, userId]);
 
 
     if (!isAuth) {
@@ -70,7 +71,7 @@ const MyListingsPage = () => {
                 </Heading>
 
                 <SimpleGrid p={8}
-                            columns={gridSize}
+                            columns={{lg:4,md:3,"ss":2,base:1}}
                             spacing={10}>
                     {
                         currentUserProducts.length > 0
