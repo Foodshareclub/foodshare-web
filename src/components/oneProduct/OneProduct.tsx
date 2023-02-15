@@ -2,78 +2,21 @@ import loc from "@/assets/location-blue.svg";
 import likes from "@/assets/likes.svg";
 import {InitialProductStateType} from "@/store/slices/productReducer";
 import {Box, Button, Flex, Heading, Image, Text} from "@chakra-ui/react";
-import React, {useEffect, useState} from "react";
+import React from "react";
 import {StarIcon} from "@chakra-ui/icons";
 import TopTips from "@/components/topTips/TopTips";
 import {Trans} from "@lingui/macro";
-import {useNavigate, useParams} from "react-router-dom";
-import {useAppSelector} from "@/hook";
-import {userIdFromSessionSelector} from "@/store";
-import {supabase} from "@/supaBase.config";
-import {PATH} from "@/utils";
 
 type OneProductType = {
     product: InitialProductStateType
     buttonValue?: string
     chat?: string
+    navigateHandler?: () => void
 }
 
-type RoomType = {
-    requester: string
-    sharer: string
-    post_id: number
-    last_message: string
-    last_message_sent_by: string
-}
 
-export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue = 'Request'}) => {
-    const {id} = useParams();
 
-    const userID = useAppSelector(userIdFromSessionSelector);
-
-    const [isRoomExist, setIsRoomExist] = useState<boolean>();
-
-    useEffect(() => {  //to find out if a room exists or not
-        if (id && userID) {
-            (async () => {
-                const {data, error} = await supabase
-                    .from('rooms')
-                    .select('*')
-                    .match({requester: userID, post_id: id});
-                setIsRoomExist(!!data?.length)
-            })()
-        }
-
-        return () => setIsRoomExist(false)
-    }, []);
-
-    const navigate = useNavigate();
-
-    const navigateHandler = () => {
-        if (product.user === userID) {
-            navigate(PATH.myListingsPage);
-            return;
-        }
-
-        !isRoomExist && onCreateRoomHandler() //if room already exist, it isn't created
-            .then(() => {
-                navigate(`/chat-main/${product.id}?s=${product.user}&r=${userID}`);
-            });
-
-        navigate(`/chat-main/${product.id}?s=${product.user}&r=${userID}`);
-    }
-
-    const onCreateRoomHandler = () => {
-        const room = {
-            requester: userID,
-            sharer: product.user,
-            post_id: product.id,
-            last_message_sent_by: userID,
-            last_message: 'Initial message'
-        } as RoomType;
-
-        return supabase.from("rooms").insert(room);
-    }
+export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue = 'Request', navigateHandler}) => {
 
     return (
         <Box w={{md: chat ? "25%" : "45%", base: "100%"}}>
@@ -145,8 +88,8 @@ export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue
                         width="100%" variant='solid'
                         colorScheme='blue'>
                         {
-                            (product.user === userID && 'go to my listings') ||
-                            ((isRoomExist && buttonValue !== 'approval pending') && 'continue the conversation') ||
+                            // (product.user === userID && 'go to my listings') ||
+                            // ((isRoomExist && buttonValue !== 'approval pending') && 'continue the conversation') ||
                             buttonValue
                         }
 
@@ -158,3 +101,4 @@ export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue
         </Box>
     )
 }
+

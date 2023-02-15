@@ -3,7 +3,7 @@ import {useParams} from "react-router-dom";
 import {Flex} from "@chakra-ui/react";
 import {getOneProductTC} from "@/store/slices/productReducer";
 import {useAppDispatch, useAppSelector} from "@/hook";
-import {OneProduct, ProductsLocation} from "@/components";
+import {OneProductContainer, ProductsLocation} from "@/components";
 
 type ProductPageType = {
     obj?: any
@@ -22,7 +22,7 @@ const ProductPage: React.FC<ProductPageType> = () => {
         <Flex direction={{md: "row", base: "column"}} justify={"space-between"}  px={7} mt="24vh" mb={"12vh"}>
             {
                 oneProduct?.map((product, id) => {
-                    return <OneProduct
+                    return <OneProductContainer
                         product={product}
                         key={id}
                     />

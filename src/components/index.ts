@@ -37,6 +37,7 @@ import {AddressBlock} from "@/components/personalInfoComponents/AddressBlock";
 import {SettingsCard} from "@/components/settingsCard/SettingsCard";
 import {BecomeSharerBlock} from "@/components/becomeSharerBlock/BecomeSharerBlock";
 import {MinifiedUserInfo} from "@/components/minifiedUserInfo/MinifiedUserInfo";
+import {OneProductContainer} from "@/components/oneProduct/OneProductContainer";
 
 
 export {
@@ -78,5 +79,6 @@ export {
     AddressBlock,
     SettingsCard,
     BecomeSharerBlock,
-    MinifiedUserInfo
+    MinifiedUserInfo,
+    OneProductContainer
 }
