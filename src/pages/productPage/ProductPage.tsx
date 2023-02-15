@@ -7,10 +7,9 @@ import {OneProduct, ProductsLocation} from "@/components";
 
 type ProductPageType = {
     obj?: any
-    buttonValue?: string
 }
 
-const ProductPage: React.FC<ProductPageType> = ({buttonValue}) => {
+const ProductPage: React.FC<ProductPageType> = () => {
     const params = useParams();
     const dispatch = useAppDispatch();
     const oneProduct = useAppSelector(state => state.product.oneProduct);
@@ -25,7 +24,6 @@ const ProductPage: React.FC<ProductPageType> = ({buttonValue}) => {
                 oneProduct?.map((product, id) => {
                     return <OneProduct
                         product={product}
-                        buttonValue={buttonValue}
                         key={id}
                     />
                 })}

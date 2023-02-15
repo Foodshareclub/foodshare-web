@@ -11,7 +11,7 @@ import {userIdFromSessionSelector} from "@/store";
 import ContactsBlock from "@/components/chatComponents/ContactsBlock";
 
 
-type RoomParticipantsType = {
+export type RoomParticipantsType = {
     id: number
     image: string | null
     profile_id: string | null
@@ -31,7 +31,7 @@ export type CustomRoomType = {
     room_participants: Array<RoomParticipantsType>
     sharer: string
 }
-export type RoomType={
+export type RoomType = {
     id: number
     last_message: string | null
     last_message_seen_by: string
@@ -62,9 +62,9 @@ const ChatMainPage = () => {
 //////////////////////////////////////////////////////////////////
 
     const [messages, setMessages] = useState<Array<RoomParticipantsType>>([]);
-    const [room, setRoom] = useState<Array<CustomRoomType>>([]as Array<CustomRoomType>);
+    const [room, setRoom] = useState<Array<CustomRoomType>>([] as Array<CustomRoomType>);
     useEffect(() => {
-        if (id && sharerId) {
+        if (id && sharerId && requesterId) {
             supabase
                 .from("rooms") ///need to know roomID
                 .select()
@@ -75,7 +75,7 @@ const ChatMainPage = () => {
                 }) // go throw oneProduct page you are a requester
                 //.or(`sharer.eq.${sharerId}, requester.eq.${userID}, post_id.eq.${id}`)
                 .then(res => {
-                    console.log(res.data,"from rooms")
+                    console.log(res.data, "from rooms")
                     res.data?.forEach(el => {
 
                         supabase
@@ -83,6 +83,8 @@ const ChatMainPage = () => {
                             .select()
                             .eq('room_id', el.id)
                             .then(res => {
+
+                                console.log(res.data)
                                 setMessages([...res.data as Array<RoomParticipantsType>])
                                 // console.log(res.data)
                                 // console.log('data2: ')
@@ -90,9 +92,11 @@ const ChatMainPage = () => {
                     })
                 })
         }
-    }, [id, sharerId])
+    }, [id, sharerId, requesterId])
 
     console.log(messages, "from table")
+
+    const [anotherRoomMessage, setAnotherRoomMessage] = useState<Array<RoomParticipantsType>>([]);
 
     useEffect(() => {  //incoming message listener
         const channel = supabase
@@ -102,14 +106,16 @@ const ChatMainPage = () => {
                 {event: "INSERT", schema: "public", table: "room_participants"},
                 (payload: { new: RoomParticipantsType; }) => {
                     const newMessage = payload.new;
-                    if (!messages.find((message) => message.id === newMessage.id)) {
 
+                    const isMessageNew = messages.some((message) => {
+                        return message.room_id === newMessage.room_id;
+                    });
+                    console.log(newMessage)
+
+                    if (isMessageNew) {
                         setMessages([...messages, newMessage]);
-
-
-                        // if ('roomID' === messages.room_id ) {
-                        //     setMessages([...messages, newMessage]);
-                        // }
+                    } else {
+                        setAnotherRoomMessage([...anotherRoomMessage, newMessage]);
                     }
                 }
             )
@@ -125,12 +131,11 @@ const ChatMainPage = () => {
             .from("rooms")
             .select('"*", posts("*"), room_participants("*")')
             .or(`sharer.eq.${userID}, requester.eq.${userID}`)
-            .then(({data}:any) => {
+            .then(({data}: any) => {
                 console.log(data)
                 setRoom(data)
             })
     }, [])
-   // console.log(room)
 
 
     useEffect(() => {
@@ -141,35 +146,41 @@ const ChatMainPage = () => {
 
     return (
         <Flex justify={"space-between"} px={7} mt="24vh" mb={"12vh"}>
-            <ContactsBlock room={room}/>
+
+            <ContactsBlock
+                room={room}
+                anotherRoomMessage={anotherRoomMessage}
+            />
+
             <Flex justify={"space-between"} direction={"column"} p={3} bg={"gray.200"} borderRadius={20} w={"50%"}
                   height={'500px'}>
                 <Box p={3} borderRadius={20} bg={"gray.100"} h={"90%"} overflow={"auto"}>
-                    {messages && messages.map((m) => {
-                        let time = new Date(m.timestamp).toLocaleTimeString()
-                        return userID === m.profile_id
-                            ? <Flex justify={"end"} key={m.id}>
-                                <Text color={"gray.400"}>
-                                    {time}
-                                </Text>
-                                <Box my={2} bg={"red.100"} borderRadius={"25px"} maxWidth={"255px"}>
-                                    <Text px={4} py={2}>
-                                        {m.text}
+                    {messages && messages
+                        .map((m) => {
+                            let time = new Date(m.timestamp).toLocaleTimeString()
+                            return userID === m.profile_id
+                                ? <Flex justify={"end"} key={m.id}>
+                                    <Text color={"gray.400"}>
+                                        {time}
                                     </Text>
-                                </Box>
-                            </Flex>
+                                    <Box my={2} bg={"red.100"} borderRadius={"25px"} maxWidth={"255px"}>
+                                        <Text px={4} py={2}>
+                                            {m.text}
+                                        </Text>
+                                    </Box>
+                                </Flex>
 
-                            : <Flex justify={"start"} key={m.id}>
-                                <Box my={2} bg={"white"} borderRadius={"25px"} maxWidth={"255px"}>
-                                    <Text py={2} px={4}>
-                                        {m.text}
+                                : <Flex justify={"start"} key={m.id}>
+                                    <Box my={2} bg={"white"} borderRadius={"25px"} maxWidth={"255px"}>
+                                        <Text py={2} px={4}>
+                                            {m.text}
+                                        </Text>
+                                    </Box>
+                                    <Text color={"gray.400"}>
+                                        {time}
                                     </Text>
-                                </Box>
-                                <Text color={"gray.400"}>
-                                    {time}
-                                </Text>
-                            </Flex>
-                    })}
+                                </Flex>
+                        })}
                     <Box ref={messagesAnchorRef}></Box>
                 </Box>
 
@@ -209,8 +220,11 @@ export const InputSection: React.FC<InputSectionType> = ({messages}) => {
             messageObject.room_id = m.room_id;
             messageObject.profile_id = userID;
         })
-        console.log(messageObject)
-        await supabase.from("room_participants").insert({...messageObject, text: val});
+
+        if (val.trim()) {
+            await supabase.from("room_participants").insert({...messageObject, text: val});
+        }
+
         //await supabase.from("rooms").insert({id: messageObject.room_id, last_message: val}); ///update last_message in rooms, add sharerID, requesterID
         setVal('');
 
