@@ -7,13 +7,14 @@ import {t} from "@lingui/macro";
 import {MinifiedUserInfo} from "@/components";
 import React, {Fragment} from "react";
 import {useNavigate} from "react-router-dom";
-import {CustomRoomType} from "@/pages/chat/ChatMainPage";
+import {CustomRoomType, RoomParticipantsType} from "@/pages/chat/ChatMainPage";
 
 type ContactsBlockType = {
     room: Array<CustomRoomType>
+    anotherRoomMessage: Array<RoomParticipantsType>
 }
 
-const ContactsBlock: React.FC<ContactsBlockType> = ({room}) => {
+const ContactsBlock: React.FC<ContactsBlockType> = ({room, anotherRoomMessage}) => {
     const imgUrl = useAppSelector(avatarURLSelector);
     const userFirstName = useAppSelector(userFirstNameSelector);
     const userSecondName = useAppSelector(userSecondNameSelector);
@@ -21,7 +22,8 @@ const ContactsBlock: React.FC<ContactsBlockType> = ({room}) => {
     const navigate = useNavigate();
 
     const click = (post_id: number, sharerId: string, requesterId: string) => {
-        navigate(`/chat-main/${post_id}?s=${sharerId}&r=${requesterId}`)
+        navigate(`/chat-main/${post_id}?s=${sharerId}&r=${requesterId}`);
+
     }
     return (
         <Flex direction={"column"}>
@@ -57,7 +59,16 @@ const ContactsBlock: React.FC<ContactsBlockType> = ({room}) => {
                                     firstName={'fNAME'}
                                     secondName={'sName'}
                                 />
-                                <Button onClick={() => click(data.posts.id, data.sharer, data.requester)}>Tap</Button>
+                                <Button
+                                    onClick={() => click(data.posts.id, data.sharer, data.requester)}
+                                    color={anotherRoomMessage.map(room => room.room_id === data.id ? "red" : "")
+                                    // anotherRoomMessage?.room_id === data.id ? "red" : ""
+                                }
+                                    bg={"gray.400"}
+                                    variant={"outline"}
+                                >
+                                    Tap
+                                </Button>
                             </Fragment>
                         }
                     )}

@@ -6,10 +6,11 @@ import React, {useEffect, useState} from "react";
 import {StarIcon} from "@chakra-ui/icons";
 import TopTips from "@/components/topTips/TopTips";
 import {Trans} from "@lingui/macro";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {useAppSelector} from "@/hook";
 import {userIdFromSessionSelector} from "@/store";
 import {supabase} from "@/supaBase.config";
+import {PATH} from "@/utils";
 
 type OneProductType = {
     product: InitialProductStateType
@@ -25,30 +26,40 @@ type RoomType = {
     last_message_sent_by: string
 }
 
-export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue = "Request"}) => {
+export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue = 'Request'}) => {
+    const {id} = useParams();
+
     const userID = useAppSelector(userIdFromSessionSelector);
 
     const [isRoomExist, setIsRoomExist] = useState<boolean>();
 
     useEffect(() => {  //to find out if a room exists or not
-        (async () => {
-            const { data, error } = await supabase
-                .from('rooms')
-                .select('*')
-                .match({requester: userID, post_id: product.id});
-            setIsRoomExist(!!data?.length)
-            // console.log(data)
-        })()
-    }, []);
+        if (id && userID) {
+            (async () => {
+                const {data, error} = await supabase
+                    .from('rooms')
+                    .select('*')
+                    .match({requester: userID, post_id: id});
+                setIsRoomExist(!!data?.length)
+            })()
+        }
+
+        return () => setIsRoomExist(false)
+    }, [id]);
 
     const navigate = useNavigate();
 
     const navigateHandler = () => {
+        if (product.user === userID) {
+            navigate(PATH.myListingsPage);
+            return;
+        }
+
         navigate(`/chat-main/${product.id}?s=${product.user}&r=${userID}`);
 
 
         //change button name if product.user === userID
-        if (isRoomExist || product.user === userID) { //forbidden to creat a new room if it already exists
+        if (isRoomExist) { //forbidden to creat a new room if it already exists
             return;
         }
         onCreateRoomHandler();
@@ -65,8 +76,9 @@ export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue
 
         await supabase.from("rooms").insert(room);
     }
+
     return (
-        <Box w={{md: chat?"25%":"45%", base: "100%"}}>
+        <Box w={{md: chat ? "25%" : "45%", base: "100%"}}>
             <Box alignSelf="center">
                 <Image
                     src={product.gif_url}
@@ -74,7 +86,7 @@ export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue
                     alt={product.post_name}
                     m={"0 auto"}
                     width={chat ? "100px" : 300}
-                    height={{ss:chat?"100px":"auto", base: "270px"}}
+                    height={{ss: chat ? "100px" : "auto", base: "270px"}}
                 />
             </Box>
             <Box>
@@ -83,7 +95,7 @@ export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue
                              textAlign={"center"} noOfLines={1} fontSize={'xl'} fontFamily={'body'}
                              fontWeight={500}>{product.post_name}</Heading>
 
-                    <Flex >
+                    <Flex>
                         <Image src={loc} alt={loc}/>
                         <Text px={2} textAlign={"center"} noOfLines={1} color={'gray.500'}
                               textTransform={'uppercase'}
@@ -111,8 +123,8 @@ export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue
                         <Heading fontFamily={'body'} fontWeight={500} fontSize={'xl'}
                                  alignSelf="center"><Trans>Available:</Trans></Heading>
                         <Text pl={1}
-                            noOfLines={1}
-                            color={'gray.500'} fontSize={'sm'}
+                              noOfLines={1}
+                              color={'gray.500'} fontSize={'sm'}
                               textTransform={'uppercase'}>{product.pickup_time}</Text>
                     </Flex>
                     <Flex justify={"space-between"}>
@@ -134,8 +146,14 @@ export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue
                         textTransform={"uppercase"}
                         width="100%" variant='solid'
                         colorScheme='blue'>
-                        {buttonValue}     {/*change button name if room exist*/}
+                        {
+                            (product.user === userID && 'go to my listings') ||
+                            ((isRoomExist && buttonValue !== 'approval pending') && 'continue the conversation' ) ||
+                            buttonValue
+                        }
+
                     </Button>
+
 
                 </Box>
             </Box>
