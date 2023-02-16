@@ -38,6 +38,7 @@ import {SettingsCard} from "@/components/settingsCard/SettingsCard";
 import {BecomeSharerBlock} from "@/components/becomeSharerBlock/BecomeSharerBlock";
 import {MinifiedUserInfo} from "@/components/minifiedUserInfo/MinifiedUserInfo";
 import {OneProductContainer} from "@/components/oneProduct/OneProductContainer";
+import ContactsBlock from "@/components/chatComponents/ContactsBlock";
 
 
 export {
@@ -80,5 +81,6 @@ export {
     SettingsCard,
     BecomeSharerBlock,
     MinifiedUserInfo,
-    OneProductContainer
+    OneProductContainer,
+    ContactsBlock
 }

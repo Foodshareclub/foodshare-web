@@ -1,7 +1,7 @@
 import {useAppSelector} from "@/hook";
 import {avatarURLSelector, userFirstNameSelector, userSecondNameSelector} from "@/store";
 import AvatarWithRipple from "@/components/listingPersonCard/AvatarWithRipple";
-import {Box, Button, Flex, Heading, Input, InputGroup, InputLeftElement} from "@chakra-ui/react";
+import {Box, Flex, Heading, Input, InputGroup, InputLeftElement} from "@chakra-ui/react";
 import {SearchIcon} from "@chakra-ui/icons";
 import {t} from "@lingui/macro";
 import {MinifiedUserInfo} from "@/components";
@@ -21,12 +21,12 @@ const ContactsBlock: React.FC<ContactsBlockType> = ({room, anotherRoomMessage}) 
 
     const navigate = useNavigate();
 
-    const click = (post_id: number, sharerId: string, requesterId: string) => {
+    const onGetCurrentUserMessages = (post_id: number, sharerId: string, requesterId: string) => {
         navigate(`/chat-main/${post_id}?s=${sharerId}&r=${requesterId}`);
-
     }
+
     return (
-        <Flex direction={"column"} >
+        <Flex direction={"column"}>
             <Flex direction={"column"} alignSelf={"center"}>
                 <AvatarWithRipple img={imgUrl}/>
                 <Box py={2}>
@@ -49,30 +49,23 @@ const ContactsBlock: React.FC<ContactsBlockType> = ({room, anotherRoomMessage}) 
                     />
                 </InputGroup>
             </Flex>
-            <Flex direction={"column"} alignSelf={"center"}>
+            <Flex direction={"column"} alignSelf={"center"} w={'100%'}>
                 <Box bg={"gray.100"} borderRadius={"10%"} px={2} height={"350px"} overflow={"auto"}>
                     {room && room.map((data: any) => {
-                            return <Fragment key={data.id}>
-                                <MinifiedUserInfo
-                                    src={data.posts.gif_url}
-                                    description={data.posts.post_name}
-                                    firstName={'fNAME'}
-                                    secondName={'sName'}
-                                />
-                                <Button
-                                    onClick={() => click(data.posts.id, data.sharer, data.requester)}
-                                    color={anotherRoomMessage.map(room => room.room_id === data.id ? "red" : "")
-                                    // anotherRoomMessage?.room_id === data.id ? "red" : ""
-                                }
-                                    bg={"gray.400"}
-                                    variant={"outline"}
-                                >
-                                    Tap
-                                </Button>
-                            </Fragment>
-                        }
-                    )}
-
+                            return (
+                                <Fragment key={data.id}>
+                                    <MinifiedUserInfo
+                                        onGetCurrentUserMessages={() => onGetCurrentUserMessages(data.posts.id, data.sharer, data.requester)}
+                                        src={data.posts.gif_url}
+                                        description={data.posts.post_name}
+                                        firstName={data.profiles.first_name}
+                                        secondName={data.profiles.second_name}
+                                        anotherRoomMessage={anotherRoomMessage}
+                                        roomId={data.id}
+                                    />
+                                </Fragment>
+                            )
+                    })}
                 </Box>
 
             </Flex>
