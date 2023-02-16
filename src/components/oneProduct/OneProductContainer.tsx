@@ -36,7 +36,7 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
     useEffect(() => {  //to find out if a room exists or not
         if (id && userID) {
             (async () => {
-                const {data, error} = await supabase
+                const {data} = await supabase
                     .from('rooms')
                     .select('*')
                     .match({requester: userID, post_id: id});
@@ -71,6 +71,7 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
             sharer: product.user,
             post_id: product.id,
             last_message_sent_by: userID,
+            last_message_seen_by: product.user,
             last_message: 'Initial message'
         } as RoomType;
 
