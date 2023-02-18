@@ -6,6 +6,9 @@ import React from "react";
 import {StarIcon} from "@chakra-ui/icons";
 import TopTips from "@/components/topTips/TopTips";
 import {Trans} from "@lingui/macro";
+import {useAppSelector} from "@/hook";
+import {isAuthSelector} from "@/store";
+import { useNavigate } from "react-router-dom";
 
 type OneProductType = {
     product: InitialProductStateType
@@ -17,11 +20,16 @@ type OneProductType = {
 
 
 export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue = 'Request', navigateHandler}) => {
-
+    const isAuth = useAppSelector(isAuthSelector);
+    const navigate = useNavigate();
+    if(!isAuth){
+        navigate("/")
+    }
     return (
         <Box w={{md: chat ? "25%" : "45%", base: "100%"}}>
             <Box alignSelf="center">
                 <Image
+                    objectFit={'cover'}
                     src={product.gif_url}
                     borderRadius={chat ? "50%" : 20}
                     alt={product.post_name}

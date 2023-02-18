@@ -65,7 +65,6 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
                             {
                                 isAuth
                                     ? <Stack spacing={3}>
-                                        {/*<UpdateProfileModal fullScreen={false} buttonValue={t`Edit profile`}/>*/}
                                         <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
                                               onClick={() => {
                                                   onClose()

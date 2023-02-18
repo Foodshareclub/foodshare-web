@@ -13,7 +13,7 @@ import {Session, User} from "@supabase/supabase-js";
 import {supabase} from "@/supaBase.config";
 import {StatusType} from "@/components/alert/AlertComponent";
 
-
+type UserStateType = typeof initialState
 const initialState = {
     login: {} as User,
     registration: {} as User,
@@ -23,11 +23,7 @@ const initialState = {
     userCountries: [] as Array<CountryType>,
     isRegister: false,
     isAuth: false,
-    session: {
-        user: {
-            user_metadata: {}
-        }
-    } as Session,
+    session: {} as Session,
     value: {} as AllValuesType,
     imgUrl: '',
     isUpdateProfile: "info" as StatusType,
@@ -36,6 +32,22 @@ const initialState = {
     message: "" as string
 };
 
+export const getSessionTC = createAsyncThunk("/auth/getSessionTC", async (_, thunkAPI) => {
+    try {
+        const {data: {session}} = await supabase.auth.getSession();
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+                return session
+            }
+            return session
+        });
+
+        return session;
+    } catch (e: any) {
+        console.log(e)
+        return thunkAPI.rejectWithValue(e.message)
+    }
+});
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
     try {
         const {data, error} = await profileAPI.loginWithPass(email, password)
@@ -127,7 +139,7 @@ export const logoutTC = createAsyncThunk("/auth/logoutTC", async (_, thunkAPI) =
 
 export const getUserFromDBTC = createAsyncThunk("/auth/getUserFromDBTC", async (userId: string, thunkAPI) => {
     try {
-        let {data, error, status} = await profileAPI.getValue(userId)
+        let {data, error} = await profileAPI.getValue(userId)
         if (error) {
             console.log(error)
             return thunkAPI.rejectWithValue(error);
@@ -143,7 +155,7 @@ export const getUserFromDBTC = createAsyncThunk("/auth/getUserFromDBTC", async (
 });
 export const getAnotherUserTC = createAsyncThunk("/auth/getAnotherUserTC", async (userId: string, thunkAPI) => {
     try {
-        let {data, error, status} = await profileAPI.getAnotherUser(userId)
+        let {data, error} = await profileAPI.getAnotherUser(userId)
         if (error) {
             console.log(error)
             return thunkAPI.rejectWithValue(error);
@@ -160,7 +172,7 @@ export const getAnotherUserTC = createAsyncThunk("/auth/getAnotherUserTC", async
 export const getVolunteersTC = createAsyncThunk("/auth/getVolunteersTC", async (_, thunkAPI) => {
     try {
 
-        let {data, error, status} = await profileAPI.getVolunteer()
+        let {data, error} = await profileAPI.getVolunteer()
         if (error) {
             console.log(error)
             return thunkAPI.rejectWithValue(error);
@@ -303,13 +315,6 @@ const userSlice = createSlice({
     name: "user",
     initialState: initialState,
     reducers: {
-        getSession: (state, action) => {
-            if (action.payload) {
-                state.isRegister = true
-                state.isAuth = true
-                state.session = action.payload
-            }
-        },
         isUpdateProfile: (state, action) => {
             state.isUpdateProfile = action.payload
         },
@@ -325,7 +330,7 @@ const userSlice = createSlice({
                 state.login = action.payload
             }
         });
-        builder.addCase(loginTC.rejected, (state, action) => {
+        builder.addCase(loginTC.rejected, (state) => {
             // @ts-ignore
 
         });
@@ -338,6 +343,13 @@ const userSlice = createSlice({
                 state.isRegister = true
                 state.login = action.payload
 
+            }
+        });
+        builder.addCase(getSessionTC.fulfilled, (state, action) => {
+            if (action.payload !== null) {
+                state.isAuth = true;
+                state.isRegister = true;
+                state.session = action.payload;
             }
         });
         builder.addCase(registerTC.fulfilled, (state, action) => {
@@ -390,7 +402,7 @@ const userSlice = createSlice({
             state.message = action.payload.message;
             state.updateUserEffect = !state.updateUserEffect;
         });
-        builder.addCase(updateProfileTC.rejected, (state, action) => {
+        builder.addCase(updateProfileTC.rejected, (state) => {
             state.message = "Something was wrong!"
         });
         builder.addCase(updateAddressTC.fulfilled, (state, action) => {
@@ -398,7 +410,7 @@ const userSlice = createSlice({
             state.message = action.payload.message;
             state.updateUserEffect = !state.updateUserEffect;
         });
-        builder.addCase(updateAddressTC.rejected, (state, action) => {
+        builder.addCase(updateAddressTC.rejected, (state) => {
             state.message = "Something was wrong!"
         });
 
@@ -409,6 +421,8 @@ const userSlice = createSlice({
             state.login = {} as User
             state.registration = {} as User
             state.imgUrl = ''
+            state.session = {} as Session
+
         });
         builder.addCase(recoveryPasswordTC.fulfilled, (state, action) => {
             console.log(action.payload);
