@@ -2,7 +2,7 @@ import {InitialProductStateType} from "@/store/slices/productReducer";
 import React, {useEffect, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {useAppSelector} from "@/hook";
-import {userIdFromSessionSelector} from "@/store";
+import {userIdSelector} from "@/store";
 import {supabase} from "@/supaBase.config";
 import {PATH} from "@/utils";
 import {OneProduct} from "@/components";
@@ -10,7 +10,7 @@ import {OneProduct} from "@/components";
 type OneProductContainerType = {
     product: InitialProductStateType
     buttonValue?: string
-    chat?: string
+
 }
 
 type RoomType = {
@@ -22,13 +22,13 @@ type RoomType = {
 }
 
 export const OneProductContainer: React.FC<OneProductContainerType> = ({
-                                                                           chat = 'chat',
+
                                                                            product,
                                                                            buttonValue = 'Request'
                                                                        }) => {
     const {id} = useParams();
 
-    const userID = useAppSelector(userIdFromSessionSelector);
+    const userID = useAppSelector(userIdSelector);
 
     const [isRoomExist, setIsRoomExist] = useState<boolean>();
 
@@ -81,7 +81,6 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
     return (
         <OneProduct
             navigateHandler={navigateHandler}
-            chat={chat}
             product={product}
             buttonValue={buttonValue}
             key={id}

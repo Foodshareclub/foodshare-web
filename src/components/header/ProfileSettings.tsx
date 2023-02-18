@@ -43,9 +43,9 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
                         {
                             isAuth
                                 ? <>
-                                    {/*<UpdateProfileModal  fullScreen={true} buttonValue={t({id: `Edit Profile`, message: `Edit Profile`})}/>*/}
                                     <MenuItem onClick={() => navigateToMyLists()}><Trans>My listing's</Trans></MenuItem>
                                     <MenuItem onClick={() => navigateToMyMessages()}><Trans>My messages</Trans></MenuItem>
+                                    <MenuItem onClick={() => navigateToAccSettings()}><Trans>Account settings</Trans></MenuItem>
                                     <MenuItem onClick={() => navigateToLogout()}><Trans>Log Out</Trans></MenuItem>
                                 </>
                                 : <>
@@ -55,7 +55,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
 
                                 </>
                         }
-                        <MenuItem onClick={() => navigateToAccSettings()}><Trans>Account settings</Trans></MenuItem>
+
                         <MenuItem onClick={() => navigateToHelp()}><Trans>Help</Trans></MenuItem>
                         <MenuItem onClick={() => navigateToAboutUs()}><Trans>About Foodshare</Trans></MenuItem>
                     </MenuList>

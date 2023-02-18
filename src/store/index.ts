@@ -15,8 +15,6 @@ import {avatarURLSelector} from "@/store/slices/userSelectors";
 import {emailSelector} from "@/store/slices/userSelectors";
 import {phoneNumberSelector} from "@/store/slices/userSelectors";
 
-import {userIdFromSessionSelector} from "@/store/slices/userSelectors";
-
 import {imgURLSelector} from "@/store/slices/userSelectors";
 import {isAuthSelector} from "@/store/slices/userSelectors";
 import {languageSelector} from "@/store/slices/userSelectors";
@@ -39,7 +37,6 @@ export {
     avatarURLSelector,
     emailSelector,
     phoneNumberSelector,
-    userIdFromSessionSelector,
     isUpdateProfileSelector,
     languageSelector,
     isRegisterSelector,

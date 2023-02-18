@@ -30,12 +30,14 @@ export const PersonalInfoPage = () => {
     const {user} = useAppSelector(state => state.user.session);
     const [firstName, setFirstName] = useState(value.first_name);
     const [secondName, setSecondName] = useState(value.second_name);
-    const [email, setEmail] = useState(user.email as string);
+    const [email, setEmail] = useState(user?.email as string);
     const [phone, setPhone] = useState(value.phone_number);
 
     useEffect(() => {
-        actions.getAddressProfileTC(user.id)
-        actions.getAllCountriesTC()
+        if(user){
+            actions.getAddressProfileTC(user.id)
+            actions.getAllCountriesTC()
+        }
         return () => {
             console.log("dead personalInfoPage")
         }
@@ -47,8 +49,8 @@ export const PersonalInfoPage = () => {
         phone_number: phone,
         second_name: secondName,
         updated_at: new Date(),
-        created_time: user.created_at || value.created_time,
-        email: user.email,
+        created_time: user?.created_at || value.created_time,
+        email: user?.email,
     }
     const onSaveHandler = async () => {
         await actions.updateProfileTC(defaultValues);
@@ -72,7 +74,9 @@ export const PersonalInfoPage = () => {
                     <span>Personal info</span>
                 </BreadcrumbItem>
             </Breadcrumb>
-            {!Object.keys(address).length ?
+            {
+                 !Object.keys(address).length
+                    ?
                 <>
                     <Box mt={'8vh'}>
                         <Text fontSize='4xl' fontWeight={"bold"}>

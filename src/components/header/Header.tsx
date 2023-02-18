@@ -7,7 +7,6 @@ import {
     isAuthSelector,
     isUpdateProfileSelector,
     messageProfileSelector, updateUserEffectSelector,
-    userIdFromSessionSelector
 } from "@/store/slices/userSelectors";
 import AlertComponent from "@/components/alert/AlertComponent";
 
@@ -23,7 +22,7 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
 
     const [pageType, setPageType] = useState<PagesType>("productComponent");
     const isAuth = useAppSelector(isAuthSelector);
-    const userId = useAppSelector(userIdFromSessionSelector);
+    const session = useAppSelector(state => state.user.session);
     const isUpdateProfile = useAppSelector(isUpdateProfileSelector);
     const updateUserEffect = useAppSelector(updateUserEffectSelector);
     const profileMessage = useAppSelector(messageProfileSelector);
@@ -31,10 +30,10 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
     const actions = useActionCreators({getUserFromDBTC});
 
     useEffect(() => {
-        if (userId && isAuth) {
-            actions.getUserFromDBTC(userId);
+        if (session?.user?.id && isAuth) {
+            actions.getUserFromDBTC(session?.user?.id);
         }
-    }, [userId, isAuth, updateUserEffect])
+    }, [session?.user?.id, isAuth, updateUserEffect])
 
     return (
         <CardHeader
