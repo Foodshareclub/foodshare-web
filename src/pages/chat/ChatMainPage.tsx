@@ -3,84 +3,51 @@ import {Center, Flex, Text} from "@chakra-ui/react";
 import {ContactsBlock, OneProduct} from "@/components";
 import {useActionCreators, useAppSelector} from "@/hook";
 import {useParams, useSearchParams} from "react-router-dom";
-import {getOneProductTC, InitialProductStateType} from "@/store/slices/productReducer";
+import {getOneProductTC} from "@/store/slices/productReducer";
 import {supabase} from "@/supaBase.config";
 import {MessagesWindow} from "@/components/chatComponents/MassagesWindow";
+import {
+    getAllMessagesInRoomParticipantsFromOneRoomTC,
+    getAllRoomsForCurrentUserTC,
+    getRoomTC
+} from "@/store/slices/chatReducer";
+import {RoomParticipantsType} from "@/api/chatAPI";
+import {oneProductSelector, userIdFromSessionSelector} from "@/store";
 
-
-export type RoomParticipantsType = {
-    id: string
-    image: string | null
-    profile_id: string | null
-    room_id: string
-    text: string | null
-    timestamp: string
-}
-export type CustomRoomType = {
-    id: string
-    last_message: string
-    last_message_seen_by: null
-    last_message_sent_by: string
-    last_message_time: string
-    post_id: number
-    posts: InitialProductStateType
-    requester: string
-    room_participants: Array<RoomParticipantsType>
-    sharer: string
-}
-export type RoomType = {
-    id: number
-    last_message: string | null
-    last_message_seen_by: string
-    last_message_sent_by: string
-    last_message_time: string
-    post_id: number
-    user_a: string
-    user_b: string
-}
 const ChatMainPage = () => {
     const {id} = useParams();
     const [searchParams, setSearchParams] = useSearchParams(); //get params from url
     const sharerId = searchParams.get('s');
     const requesterId = searchParams.get('r');
 
-    const actions = useActionCreators({getOneProductTC})
-    const oneProduct = useAppSelector(state => state.product.oneProduct);
-    const userID = useAppSelector(state => state.user.session?.user.id);
-    console.log(123123123)
+    const actions = useActionCreators({
+        getOneProductTC,
+        getRoomTC,
+        getAllRoomsForCurrentUserTC,
+        getAllMessagesInRoomParticipantsFromOneRoomTC
+    })
+    const oneProduct = useAppSelector(oneProductSelector);
+    const userID = useAppSelector(userIdFromSessionSelector);
+
     useEffect(() => {
         if (id) {
             actions.getOneProductTC(Number(id));
         }
-    }, [id]);
-
-//////////////////////////////////////////////////////////////////
+    }, [id])
+    useEffect(() => {
+        actions.getAllRoomsForCurrentUserTC(userID)
+    }, [])
 
     const [currentConversationMessages, setCurrentConversationMessages] = useState<Array<RoomParticipantsType>>([]);
-    //console.log(currentConversationMessages)
-    const [room, setRoom] = useState<Array<CustomRoomType>>([] as Array<CustomRoomType>);
+
     useEffect(() => {
         if (id && sharerId && requesterId) {
-            supabase
-                .from("rooms") ///need to know roomID
-                .select()
-                .match({
-                    sharer: sharerId,
-                    requester: requesterId,
-                    post_id: id
-                }) // go throw oneProduct page you are a requester
-                .then(res => {
-
-                    res.data?.forEach(el => {
-                        console.log(el.id)
-                        supabase
-                            .from("room_participants") ///need to know roomID
-                            .select()
-                            .eq('room_id', el.id)
-                            .order('timestamp', {ascending: true})
-                            .then(res => {
-                                console.log(res)
-                                setCurrentConversationMessages([...res.data as Array<RoomParticipantsType>])
+            actions.getRoomTC({sharerId, requesterId, postId: id}).unwrap()
+                .then((res) => {
+                    res?.forEach((el: { id: string; }) => {
+                        actions.getAllMessagesInRoomParticipantsFromOneRoomTC(el.id).unwrap()
+                            .then((res) => {
+                                setCurrentConversationMessages([...res as Array<RoomParticipantsType>])
                             })
                     })
                 })
@@ -115,23 +82,12 @@ const ChatMainPage = () => {
         };
     }, [supabase, currentConversationMessages, anotherConversationsMessages]);
 
-    useEffect(() => {
-        supabase  ///get all rooms for current user to show all his conversations
-            .from("rooms")
-            .select(`"*", posts("*"), room_participants("*"), profiles!rooms_requester_fkey("*")`)
-            .or(`sharer.eq.${userID}, requester.eq.${userID}`)
-            .then(({data}: any) => {
-
-                setRoom(data)
-            })
-    }, [])
-
 
     return (
         <Flex justify={"space-between"} px={7} mt="22vh" mb={"12vh"}>
 
             <ContactsBlock
-                room={room}
+
                 anotherRoomMessage={anotherConversationsMessages}
             />
 

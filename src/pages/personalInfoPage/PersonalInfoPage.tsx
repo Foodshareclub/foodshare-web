@@ -27,15 +27,16 @@ export const PersonalInfoPage = () => {
     const navigate = useNavigate();
     const address = useAppSelector(userAddressSelector);
     const value = useAppSelector<AllValuesType>(state => state.user.value);
-    const {user} = useAppSelector(state => state.user.session);
+    const id = useAppSelector(state => state.user.session?.user?.id);
+    const user = useAppSelector(state => state.user.session?.user);
     const [firstName, setFirstName] = useState(value.first_name);
     const [secondName, setSecondName] = useState(value.second_name);
     const [email, setEmail] = useState(user?.email as string);
     const [phone, setPhone] = useState(value.phone_number);
-
+    console.log(address)
     useEffect(() => {
-        if(user){
-            actions.getAddressProfileTC(user.id)
+        if(id){
+            actions.getAddressProfileTC(id)
             actions.getAllCountriesTC()
         }
         return () => {
@@ -75,8 +76,8 @@ export const PersonalInfoPage = () => {
                 </BreadcrumbItem>
             </Breadcrumb>
             {
-                 !Object.keys(address).length
-                    ?
+                 (address === undefined) || !Object.keys(address).length
+                     ?
                 <>
                     <Box mt={'8vh'}>
                         <Text fontSize='4xl' fontWeight={"bold"}>

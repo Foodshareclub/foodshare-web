@@ -13,7 +13,6 @@ import {Session, User} from "@supabase/supabase-js";
 import {supabase} from "@/supaBase.config";
 import {StatusType} from "@/components/alert/AlertComponent";
 
-type UserStateType = typeof initialState
 const initialState = {
     login: {} as User,
     registration: {} as User,
@@ -188,11 +187,10 @@ export const getVolunteersTC = createAsyncThunk("/auth/getVolunteersTC", async (
 });
 export const getAddressProfileTC = createAsyncThunk("/auth/getAddressProfileTC", async (userId: string, thunkAPI) => {
     try {
-
-        const {data, error, status} = await profileAPI.getUserAddress(userId)
+        const {data, error} = await profileAPI.getUserAddress(userId)
         if (error) {
             console.log(error);
-            console.log(status);
+
             return thunkAPI.rejectWithValue(error);
         }
         if (data) {

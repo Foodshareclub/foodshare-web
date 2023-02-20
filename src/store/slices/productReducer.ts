@@ -5,6 +5,7 @@ import {StatusType} from "@/components/alert/AlertComponent";
 
 
 export type InitialProductStateType = {
+    available_hours: string
     created_att: string
     five_star: null
     four_star: null
@@ -21,9 +22,10 @@ export type InitialProductStateType = {
     post_metro_station: string
     post_name: string
     post_type: string
-    post_unpublished: boolean
+    post_published: boolean
     post_views: number
-    user: string
+    profile_id:string
+     user: string
 }
 
 const initialState = {
@@ -35,21 +37,9 @@ const initialState = {
     updateProductEffect:false,
     postImgUrl: '',
     isPostImgUpload: false,
-    message: ''
+    message: '',
+    status:"loading"
 };
-
-export const getAllProductsTC = createAsyncThunk("/product/getAllProducts", async (arg, thunkAPI) => {
-    try {
-        const {data, error} = await productAPI.getAllProducts();
-        if (error) {
-            console.log(error);
-            return thunkAPI.rejectWithValue(error);
-        }
-        if (data) return data;
-    } catch (e) {
-        return thunkAPI.rejectWithValue(e);
-    }
-});
 
 export const getProductsTC = createAsyncThunk("/getProductsTC", async (productType: string, thunkAPI) => {
     try {
@@ -186,13 +176,13 @@ const productSlice = createSlice({
         }
     },
     extraReducers: (builder) => {
-        builder.addCase(getAllProductsTC.fulfilled, (state, action) => {
-            // @ts-ignore
-            state.products = action.payload;
+        builder.addCase(getProductsTC.pending, (state) => {
+         state.status="loading"
         });
         builder.addCase(getProductsTC.fulfilled, (state, action) => {
             if (action.payload) {
                 state.products = action.payload;
+                state.status="loaded"
             }
         });
         builder.addCase(getCurrentUserProductsTC.fulfilled, (state, action) => {
@@ -210,7 +200,7 @@ const productSlice = createSlice({
             state.message = action.payload.message;
             state.updateProductEffect = !state.updateProductEffect;
         });
-        builder.addCase(createProductTC.rejected, (state, action) => {
+        builder.addCase(createProductTC.rejected, (state) => {
             state.message = "Something was wrong!"
         });
         builder.addCase(deleteProductTC.fulfilled, (state, action) => {
@@ -218,7 +208,7 @@ const productSlice = createSlice({
             state.message = action.payload.message;
             state.updateProductEffect = !state.updateProductEffect;
         });
-        builder.addCase(deleteProductTC.rejected, (state, action) => {
+        builder.addCase(deleteProductTC.rejected, (state) => {
             state.message = "Something was wrong!"
         });
         builder.addCase(updateProductTC.fulfilled, (state, action) => {
@@ -226,12 +216,16 @@ const productSlice = createSlice({
             state.message = action.payload.message;
             state.updateProductEffect = !state.updateProductEffect;
         });
-        builder.addCase(updateProductTC.rejected, (state, action) => {
+        builder.addCase(updateProductTC.rejected, (state) => {
             state.message = "Something was wrong!"
+        });
+        builder.addCase(resultsSearchProductsTC.pending, (state) => {
+         state.status = "loading"
         });
         builder.addCase(resultsSearchProductsTC.fulfilled, (state, action) => {
             if (action.payload) {
                 state.searchProducts = action.payload;
+                state.status = "loaded"
             }
         });
         builder.addCase(downloadPostImgFromDBTC.fulfilled, (state, action) => {

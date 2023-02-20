@@ -1,7 +1,8 @@
 import * as React from "react";
 import {Avatar, Box, Flex, Heading, Text} from "@chakra-ui/react";
-import {RoomParticipantsType} from "@/pages/chat/ChatMainPage";
+
 import {useEffect, useState} from "react";
+import {RoomParticipantsType} from "@/api/chatAPI";
 
 type MinifiedUserInfoType = {
     src: string
@@ -57,8 +58,8 @@ export const MinifiedUserInfo: React.FC<MinifiedUserInfoType> = ({
                 name={firstName}
                 src={src}/>
             <Box>
-                <Heading size='sm'>{firstName} {secondName}</Heading>
-                <Text>{description}</Text>
+                <Heading size='sm'>{description}</Heading>
+                <Text>{firstName}</Text>
             </Box>
         </Flex>
     )
