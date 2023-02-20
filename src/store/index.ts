@@ -2,38 +2,51 @@ import {productReducer} from "@/store/slices/productReducer";
 import {userReducer} from "@/store/slices/userReducer";
 
 //Selectors
-import {productsSelector} from "@/store/slices/productsSelectors";
-import {searchProductsSelector} from "@/store/slices/productsSelectors";
-import {currentUserProductsSelector} from "@/store/slices/productsSelectors";
-import {isUpdateProductSelector} from "@/store/slices/productsSelectors";
-import {messageProductSelector} from "@/store/slices/productsSelectors";
+import {
+    oneProductSelector,
+    currentUserProductsSelector,
+    isUpdateProductSelector,
+    messageProductSelector,
+    productsSelector,
+    productStatusSelector,
+    searchProductsSelector
+} from "@/store/slices/productsSelectors";
 
-import {userFirstNameSelector} from "@/store/slices/userSelectors";
-import {userSecondNameSelector} from "@/store/slices/userSelectors";
-import {userIdSelector} from "@/store/slices/userSelectors";
-import {avatarURLSelector} from "@/store/slices/userSelectors";
-import {emailSelector} from "@/store/slices/userSelectors";
-import {phoneNumberSelector} from "@/store/slices/userSelectors";
-
-import {imgURLSelector} from "@/store/slices/userSelectors";
-import {isAuthSelector} from "@/store/slices/userSelectors";
-import {languageSelector} from "@/store/slices/userSelectors";
-
-import {isRegisterSelector} from "@/store/slices/userSelectors";
-
-import {isUpdateProfileSelector} from "@/store/slices/userSelectors";
+import {
+    userIdFromSessionSelector,
+    avatarURLSelector,
+    emailSelector,
+    imgURLSelector,
+    isAuthSelector,
+    isRegisterSelector,
+    isUpdateProfileSelector,
+    languageSelector,
+    phoneNumberSelector,
+    userFirstNameSelector,
+    userIdSelector,
+    userSecondNameSelector
+} from "@/store/slices/userSelectors";
+import {
+    allRoomsSelector,
+    messagesFromOneRoomSelector,
+    roomSelector,
+    statusSelector,
+    createdSelector
+} from "@/store/slices/chatSelectors";
 
 export {
     productReducer,
     userReducer,
     productsSelector,
     isUpdateProductSelector,
+    oneProductSelector,
     searchProductsSelector,
     currentUserProductsSelector,
     messageProductSelector,
     userFirstNameSelector,
     userSecondNameSelector,
     userIdSelector,
+    userIdFromSessionSelector,
     avatarURLSelector,
     emailSelector,
     phoneNumberSelector,
@@ -42,4 +55,10 @@ export {
     isRegisterSelector,
     imgURLSelector,
     isAuthSelector,
+    productStatusSelector,
+    statusSelector,
+    messagesFromOneRoomSelector,
+    allRoomsSelector,
+    createdSelector,
+    roomSelector
 }

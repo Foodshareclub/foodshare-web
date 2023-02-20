@@ -7,8 +7,8 @@ import {StarIcon} from "@chakra-ui/icons";
 import TopTips from "@/components/topTips/TopTips";
 import {Trans} from "@lingui/macro";
 import {useAppSelector} from "@/hook";
-import {isAuthSelector} from "@/store";
-import { useNavigate } from "react-router-dom";
+import {isAuthSelector, userIdFromSessionSelector} from "@/store";
+import {useNavigate} from "react-router-dom";
 
 type OneProductType = {
     product: InitialProductStateType
@@ -17,12 +17,11 @@ type OneProductType = {
     navigateHandler?: () => void
 }
 
-
-
 export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue = 'Request', navigateHandler}) => {
     const isAuth = useAppSelector(isAuthSelector);
+    const userID = useAppSelector(userIdFromSessionSelector);
     const navigate = useNavigate();
-    if(!isAuth){
+    if (!isAuth) {
         navigate("/")
     }
     return (
@@ -95,12 +94,7 @@ export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue
                         textTransform={"uppercase"}
                         width="100%" variant='solid'
                         colorScheme='blue'>
-                        {
-                            // (product.user === userID && 'go to my listings') ||
-                            // ((isRoomExist && buttonValue !== 'approval pending') && 'continue the conversation') ||
-                            buttonValue
-                        }
-
+                        {product.user === userID ? 'go to my listings' : chat ? "confirm pick up" : buttonValue}
                     </Button>
 
 

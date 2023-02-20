@@ -3,7 +3,8 @@ import {useAppSelector} from "@/hook";
 import {supabase} from "@/supaBase.config";
 import {Button, Input} from "@chakra-ui/react";
 import {AddIcon} from "@chakra-ui/icons";
-import {RoomParticipantsType} from "@/pages/chat/ChatMainPage";
+import {RoomParticipantsType} from "@/api/chatAPI";
+
 
 type InputSectionType = {
     messages: Array<RoomParticipantsType>

@@ -38,14 +38,11 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
             console.log('return ChangeLanguageContainer')
         };
     }, [language]);
-    const insertRouteHandler = (route: string) => {
-        getRoute(route)
-    }
     return (
 
         <I18nProvider i18n={i18n}>
             <Card size="lg" minH="100vh">
-                <Header getRoute={(route) => insertRouteHandler(route)} setProductType={setProductType}
+                <Header getRoute={getRoute} setProductType={setProductType}
                         productType={productType}/>
                 <CardBody p={0}>
                     <Routes>
@@ -57,10 +54,12 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
                         <Route path={PATH.aboutUsPage} element={<AboutUsPage/>}/>
                         <Route path={PATH.contactUsPage} element={<ContactUsPage/>}/>
                         <Route path={PATH.volunteerPage} element={<VolunteerPage/>}/>
+                        <Route path={"/volunteer/:id"} element={<OneVolunteer/>}/>
 
-                        <Route path={"/chat-main"} element={<ChatMainPage/>}/>
-                        <Route path={"/chat-main/:id"} element={<ChatMainPage/>}>
-                            {/*<Route path={"id/sharerId"} element={<ChatMainPage/>}/>*/}
+
+                        <Route path={"/chat-main"} element={<ChatMainPage/>}>
+                        {/*<Route path={"/chat-main/:id"} element={<ChatMainPage/>}>*/}
+                            <Route path={":id"} element={<ChatMainPage/>}/>
                         </Route>
 
                         <Route path={"/volunteer/:id"} element={<OneVolunteer/>}/>

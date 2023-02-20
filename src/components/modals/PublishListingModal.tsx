@@ -83,8 +83,6 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
         productObj = {...productObj, gif_url: product.gif_url}
     }
 
-    // const onOpenModalHandler = () => onOpen();
-
     const publishHandler = async () => {
         await actions.uploadPostImgToDBTC({
             dir: `avatars-posts/${id}`, file, filePath

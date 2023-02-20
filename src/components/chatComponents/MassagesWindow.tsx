@@ -1,7 +1,7 @@
 import React, {useEffect, useRef} from "react";
 import {Box, Flex, Text} from "@chakra-ui/react";
 import {InputSection} from "@/components/chatComponents/InputSection";
-import {RoomParticipantsType} from "@/pages/chat/ChatMainPage";
+import {RoomParticipantsType} from "@/api/chatAPI";
 type MessagesWindowType = {
     messages: Array<RoomParticipantsType>
     requester: string
