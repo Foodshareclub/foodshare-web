@@ -9,10 +9,10 @@ import {ReactComponent as HeartGray} from "@/assets/likesGray.svg";
 
 type ProductCardType = {
     volunteer: AllValuesType
-    indicator?:string
+    indicator?: string
 }
 
-export const VolunteerCards: React.FC<ProductCardType> = React.memo(({volunteer,indicator}) => {
+export const VolunteerCards: React.FC<ProductCardType> = React.memo(({volunteer, indicator}) => {
     const navigate = useNavigate();
     const [isLoaded, setIsLoaded] = useState(false);
 
@@ -41,7 +41,8 @@ export const VolunteerCards: React.FC<ProductCardType> = React.memo(({volunteer,
                     boxSize={{sm: '250px', base: "200px"}}
                     objectFit={'cover'}
                     cursor="pointer"
-                    onClick={indicator?()=>{}:onNavigateToOneProductHandler}
+                    onClick={indicator ? () => {
+                    } : onNavigateToOneProductHandler}
                     src={volunteer.avatar_url}
                     alt="broken image"
                 />

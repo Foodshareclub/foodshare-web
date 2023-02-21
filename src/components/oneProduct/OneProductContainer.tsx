@@ -2,7 +2,7 @@ import {InitialProductStateType} from "@/store/slices/productReducer";
 import React, {useEffect} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {useActionCreators, useAppSelector} from "@/hook";
-import {createdSelector, userIdSelector} from "@/store";
+import {createdSelector, userIdFromSessionSelector, userIdSelector} from "@/store";
 import {PATH} from "@/utils";
 import {OneProduct} from "@/components";
 import {RoomType} from "@/api/chatAPI";
@@ -18,11 +18,16 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
                                                                            buttonValue = 'Request'
                                                                        }) => {
     const {id} = useParams();
+    console.log(id)
     const navigate = useNavigate();
     const actions = useActionCreators({createRoomTC, checkRoomAvailabilityTC})
-    const userID = useAppSelector(userIdSelector);
+    const createdRoom = useAppSelector(state => state.chat.createdRoom[0]);
+    console.log(createdRoom)
+    const userID = useAppSelector(userIdFromSessionSelector);
     const isExist = useAppSelector(createdSelector)
     const isRoomExist = isExist === "created";
+    console.log(isRoomExist)
+
     useEffect(() => {  //to find out if a room exists or not
         if (id && userID) {
             const arg = {
@@ -31,7 +36,7 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
             actions.checkRoomAvailabilityTC(arg)
         }
         return console.log('dead oneProdContainer')
-    }, []);
+    }, [id]);
     const createRoom = async () => {
         const room = {
             requester: userID,
@@ -49,17 +54,18 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
             navigate(PATH.myListingsPage);
             return;
         }
-        if (isRoomExist) {
-            navigate(`/chat-main/${product.id}?s=${product.user}&r=${userID}`);
+        if (isRoomExist && createdRoom?.id ) {
+            navigate(`/chat-main/${product.id}?s=${product.user}&r=${userID}&room=${createdRoom.id}`);
         }
         !isRoomExist && createRoom() //if room already exist, it isn't created
             .then(() => {
-                navigate(`/chat-main/${product.id}?s=${product.user}&r=${userID}`);
+               navigate(`/chat-main/${product.id}?s=${product.user}&r=${userID}&room=${createdRoom.id}`);
             });
     }
 
     return (
         <OneProduct
+            isRoomExist={isRoomExist}
             navigateHandler={navigateHandler}
             product={product}
             buttonValue={buttonValue}

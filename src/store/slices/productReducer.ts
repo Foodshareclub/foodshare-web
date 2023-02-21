@@ -173,6 +173,9 @@ const productSlice = createSlice({
     reducers: {
         isUpdateProduct: (state, action) => {
             state.isUpdateProduct = action.payload;
+        },
+        clearOneProductState:(state)=>{
+            state.oneProduct = []
         }
     },
     extraReducers: (builder) => {

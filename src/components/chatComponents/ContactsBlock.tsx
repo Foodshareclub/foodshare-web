@@ -21,8 +21,8 @@ const ContactsBlock: React.FC<ContactsBlockType> = ({anotherRoomMessage}) => {
     const allRooms = useAppSelector(allRoomsSelector)
     const navigate = useNavigate();
 
-    const onGetCurrentUserMessages = (post_id: number, sharerId: string, requesterId: string) => {
-        navigate(`/chat-main/${post_id}?s=${sharerId}&r=${requesterId}`);
+    const onGetCurrentUserMessages = (post_id: number, sharerId: string, requesterId: string,roomId:string) => {
+        navigate(`/chat-main/${post_id}?s=${sharerId}&r=${requesterId}&room=${roomId}`);
     }
 
     return (
@@ -55,7 +55,7 @@ const ContactsBlock: React.FC<ContactsBlockType> = ({anotherRoomMessage}) => {
                         return (
                             <MinifiedUserInfo
                                 key={data.id}
-                                onGetCurrentUserMessages={() => onGetCurrentUserMessages(data.posts.id, data.sharer, data.requester)}
+                                onGetCurrentUserMessages={() => onGetCurrentUserMessages(data.posts.id, data.sharer, data.requester,data.id)}
                                 src={data.posts.gif_url}
                                 description={data.posts.post_name}
                                 firstName={data.profiles.first_name}

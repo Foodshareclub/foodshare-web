@@ -3,7 +3,8 @@ import {chatAPI, CustomRoomType, PayloadForGEtRoom, RoomParticipantsType, RoomTy
 
 
 const initialState = {
-    room: {} as RoomType,
+    room: [] as Array<RoomType>,
+    createdRoom: [] as Array<RoomType>,
     allRooms: [] as Array<CustomRoomType>,
     messagesFromOneRoom: [] as Array<RoomParticipantsType>,
     status: "loading",
@@ -17,14 +18,15 @@ export const createRoomTC = createAsyncThunk("/createRoomTC", async (payload: Ro
         if (error) {
             console.log(error);
             return thunkAPI.rejectWithValue(error);
-        }if(data === null){
-            res="notCreated"
-        }else if(!data.length){
-            res="notCreated"
-        }else {
+        }
+        if (data === null) {
+            res = "notCreated"
+        } else if (!data.length) {
+            res = "notCreated"
+        } else {
             res = "created"
         }
-        return res;
+        return {res, data};
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
     }
@@ -37,12 +39,13 @@ export const checkRoomAvailabilityTC = createAsyncThunk("/checkRoomAvailabilityT
             console.log(error);
             return thunkAPI.rejectWithValue(error);
         }
-        if(!data.length){
-            res="notCreated"
+        if (!data.length) {
+            res = "notCreated"
         }else {
             res = "created"
         }
-        return res;
+        //console.log(data)
+        return {res,data};
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
     }
@@ -95,7 +98,8 @@ const chatSlice = createSlice({
         });
         builder.addCase(createRoomTC.fulfilled, (state, action) => {
             if (action.payload) {
-                state.isCreated = action.payload
+                state.isCreated = action.payload.res;
+                state.createdRoom = action.payload.data;
             }
         });
         builder.addCase(getRoomTC.pending, (state) => {
@@ -108,11 +112,12 @@ const chatSlice = createSlice({
             }
         });
         builder.addCase(checkRoomAvailabilityTC.pending, (state) => {
-                state.isCreated = "creation"
+            state.isCreated = "creation"
         });
         builder.addCase(checkRoomAvailabilityTC.fulfilled, (state, action) => {
             if (action.payload) {
-                state.isCreated = action.payload
+                state.isCreated = action.payload.res;
+                state.createdRoom=action.payload.data;
             }
         });
         builder.addCase(getAllRoomsForCurrentUserTC.fulfilled, (state, action) => {
