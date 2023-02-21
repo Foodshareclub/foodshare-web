@@ -24,6 +24,7 @@ const ProductPage: React.FC<ProductPageType> = () => {
             {
                 oneProduct?.map((product, id) => {
                     return <OneProductContainer
+                        buttonValue={"request"}
                         product={product}
                         key={id}
                     />

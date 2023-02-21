@@ -12,16 +12,17 @@ import {RoomParticipantsType} from "@/api/chatAPI";
 
 type ContactsBlockType = {
     anotherRoomMessage: Array<RoomParticipantsType>
+    postID: string
 }
 
-const ContactsBlock: React.FC<ContactsBlockType> = ({anotherRoomMessage}) => {
+const ContactsBlock: React.FC<ContactsBlockType> = ({postID, anotherRoomMessage}) => {
     const imgUrl = useAppSelector(avatarURLSelector);
     const userFirstName = useAppSelector(userFirstNameSelector);
     const userSecondName = useAppSelector(userSecondNameSelector);
     const allRooms = useAppSelector(allRoomsSelector)
     const navigate = useNavigate();
 
-    const onGetCurrentUserMessages = (post_id: number, sharerId: string, requesterId: string,roomId:string) => {
+    const onGetCurrentUserMessages = (post_id: number, sharerId: string, requesterId: string, roomId: string) => {
         navigate(`/chat-main/${post_id}?s=${sharerId}&r=${requesterId}&room=${roomId}`);
     }
 
@@ -54,8 +55,10 @@ const ContactsBlock: React.FC<ContactsBlockType> = ({anotherRoomMessage}) => {
                     {allRooms.length && allRooms.map((data) => {
                         return (
                             <MinifiedUserInfo
+                                postIDFromUrl={postID}
+                                postIDFromData={data.posts.id.toString()}
                                 key={data.id}
-                                onGetCurrentUserMessages={() => onGetCurrentUserMessages(data.posts.id, data.sharer, data.requester,data.id)}
+                                onGetCurrentUserMessages={() => onGetCurrentUserMessages(data.posts.id, data.sharer, data.requester, data.id)}
                                 src={data.posts.gif_url}
                                 description={data.posts.post_name}
                                 firstName={data.profiles.first_name}

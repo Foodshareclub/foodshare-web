@@ -42,7 +42,7 @@ export const MessagesWindow: React.FC<MessagesWindowType> = ({
                         let time = new Date(m.timestamp).toLocaleTimeString()
                         return userID === m.profile_id
                             ? <Flex justify={"end"} key={m.id}>
-                                <Text color={"gray.400"}>
+                                <Text fontSize={"10px"} color={"gray.400"}>
                                     {time}
                                 </Text>
                                 <Box my={2} bg={"red.100"} borderRadius={"25px"} maxWidth={"255px"}>
@@ -63,7 +63,7 @@ export const MessagesWindow: React.FC<MessagesWindowType> = ({
                                         {m.text}
                                     </Text>
                                 </Flex>
-                                <Text color={"gray.400"}>
+                                <Text fontSize={"10px"} color={"gray.400"}>
                                     {time}
                                 </Text>
                             </Flex>

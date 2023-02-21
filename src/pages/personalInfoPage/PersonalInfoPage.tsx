@@ -33,7 +33,7 @@ export const PersonalInfoPage = () => {
     const [secondName, setSecondName] = useState(value.second_name);
     const [email, setEmail] = useState(user?.email as string);
     const [phone, setPhone] = useState(value.phone_number);
-    console.log(address)
+
     useEffect(() => {
         if(id){
             actions.getAddressProfileTC(id)
