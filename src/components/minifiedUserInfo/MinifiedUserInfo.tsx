@@ -59,7 +59,7 @@ export const MinifiedUserInfo: React.FC<MinifiedUserInfoType> = ({
                 src={src}/>
             <Box>
                 <Heading size='sm'>{description}</Heading>
-                <Text>{firstName}</Text>
+                <Text>{firstName} {secondName}</Text>
             </Box>
         </Flex>
     )

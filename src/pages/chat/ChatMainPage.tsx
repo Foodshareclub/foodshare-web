@@ -3,7 +3,7 @@ import {Center, Flex, Text} from "@chakra-ui/react";
 import {ContactsBlock, OneProduct} from "@/components";
 import {useActionCreators, useAppSelector} from "@/hook";
 import {useParams, useSearchParams} from "react-router-dom";
-import {getOneProductTC} from "@/store/slices/productReducer";
+import {getOneProductTC, productActions} from "@/store/slices/productReducer";
 import {supabase} from "@/supaBase.config";
 import {MessagesWindow} from "@/components/chatComponents/MassagesWindow";
 import {
@@ -19,12 +19,12 @@ const ChatMainPage = () => {
     const [searchParams, setSearchParams] = useSearchParams(); //get params from url
     const sharerId = searchParams.get('s');
     const requesterId = searchParams.get('r');
-
+    const roomId = searchParams.get('room');
     const actions = useActionCreators({
         getOneProductTC,
         getRoomTC,
         getAllRoomsForCurrentUserTC,
-        getAllMessagesInRoomParticipantsFromOneRoomTC
+        getAllMessagesInRoomParticipantsFromOneRoomTC, ...productActions
     })
     const oneProduct = useAppSelector(oneProductSelector);
     const userID = useAppSelector(userIdFromSessionSelector);
@@ -32,6 +32,9 @@ const ChatMainPage = () => {
     useEffect(() => {
         if (id) {
             actions.getOneProductTC(Number(id));
+        }
+        return ()=>{
+            actions.clearOneProductState()
         }
     }, [id])
     useEffect(() => {
@@ -92,6 +95,7 @@ const ChatMainPage = () => {
             />
 
             {id ? <MessagesWindow
+                    roomId={roomId as string}
                     requester={requesterId as string}
                     sharer={sharerId as string}
                     postID={id as string}

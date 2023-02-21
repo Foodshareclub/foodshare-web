@@ -30,11 +30,13 @@ export type CustomRoomType = {
     sharer: string
 }
 export type RoomType = {
+    id?:string
     requester: string
     sharer: string
     post_id: number
     last_message: string
     last_message_sent_by: string
+    profiles?:AllValuesType
 }
 
 export const chatAPI = {
@@ -45,12 +47,12 @@ export const chatAPI = {
             .match({requester: userID, post_id: postID});
     },
     createRoom(room:RoomType){
-        return supabase.from("rooms").insert(room).select()
+        return supabase.from("rooms").insert(room).select().single()
     },
     getRoom({sharerId,requesterId,postId}:PayloadForGEtRoom):any{
         return supabase
             .from("rooms") ///need to know roomID
-            .select()
+            .select(`"*",profiles!rooms_requester_fkey("*")`)
             .match({
                 sharer: sharerId,
                 requester: requesterId,
@@ -67,9 +69,8 @@ export const chatAPI = {
     getAllRoomsForCurrentUser(userID:string):any {
         return supabase  ///get all rooms for current user to show all his conversations
             .from("rooms")
-            .select(`"*", posts("*"), room_participants("*"), profiles!rooms_requester_fkey("*")`)
+            .select(`"*", posts("*"), room_participants("*"),profiles!rooms_sharer_fkey("*")`)
             .or(`sharer.eq.${userID}, requester.eq.${userID}`)
-
     },
 
 }

@@ -8,19 +8,23 @@ import TopTips from "@/components/topTips/TopTips";
 import {Trans} from "@lingui/macro";
 import {useAppSelector} from "@/hook";
 import {isAuthSelector, userIdFromSessionSelector} from "@/store";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useSearchParams} from "react-router-dom";
 
 type OneProductType = {
     product: InitialProductStateType
     buttonValue?: string
     chat?: string
     navigateHandler?: () => void
+    isRoomExist?:boolean
 }
 
-export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue = 'Request', navigateHandler}) => {
+export const OneProduct: React.FC<OneProductType> = ({isRoomExist,chat, product, buttonValue = 'Request', navigateHandler}) => {
     const isAuth = useAppSelector(isAuthSelector);
     const userID = useAppSelector(userIdFromSessionSelector);
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams(); //get params from url
+    const sharerId = searchParams.get('s');
+    const requesterId = searchParams.get('r');
     if (!isAuth) {
         navigate("/")
     }
@@ -94,7 +98,13 @@ export const OneProduct: React.FC<OneProductType> = ({chat, product, buttonValue
                         textTransform={"uppercase"}
                         width="100%" variant='solid'
                         colorScheme='blue'>
-                        {product.user === userID ? 'go to my listings' : chat ? "confirm pick up" : buttonValue}
+                        {(!sharerId && product.user === userID) ?
+                            'go to my listings' :
+                            isRoomExist?"go to chat":
+                                chat ? "confirm pick up" :
+                                    (product.user === userID  && sharerId === userID) ?
+                                        "approval pending":
+                                    buttonValue}
                     </Button>
 
 

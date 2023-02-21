@@ -1,23 +1,32 @@
 import React, {useEffect, useRef} from "react";
-import {Box, Flex, Text} from "@chakra-ui/react";
+import {Avatar, Box, Flex, Text} from "@chakra-ui/react";
 import {InputSection} from "@/components/chatComponents/InputSection";
 import {RoomParticipantsType} from "@/api/chatAPI";
+import {useAppSelector} from "@/hook";
+import {allRoomsSelector, requesterSelector} from "@/store/slices/chatSelectors";
+import {avatarURLSelector} from "@/store";
+
 type MessagesWindowType = {
     messages: Array<RoomParticipantsType>
     requester: string
     sharer: string
     postID: string
     userID: string
+    roomId: string
 }
 export const MessagesWindow: React.FC<MessagesWindowType> = ({
                                                                  messages,
                                                                  requester, sharer,
                                                                  postID,
-                                                                 userID
+                                                                 userID, roomId
                                                              }) => {
     useEffect(() => {
         messagesAnchorRef.current?.scrollIntoView({behavior: 'smooth'}); //scroll down to show last message
     }, [messages]);
+    const requesterImg = useAppSelector(requesterSelector);
+    const userImg = useAppSelector(avatarURLSelector)
+    const allRooms = useAppSelector(allRoomsSelector)
+    const currentRoom = allRooms.find(room => room.id === roomId)
 
     const messagesAnchorRef = useRef<HTMLDivElement>(null);
     return (
@@ -44,11 +53,16 @@ export const MessagesWindow: React.FC<MessagesWindowType> = ({
                             </Flex>
 
                             : <Flex justify={"start"} key={m.id}>
-                                <Box my={2} bg={"white"} borderRadius={"25px"} maxWidth={"255px"}>
+
+                                <Flex my={2} bg={"white"} borderRadius={"25px"} maxWidth={"255px"}>
+                                    <Avatar alignSelf={"center"} size={"xs"}
+                                            src={userImg === requesterImg ?
+                                                currentRoom?.profiles.avatar_url :
+                                                requesterImg}/>
                                     <Text py={2} px={4}>
                                         {m.text}
                                     </Text>
-                                </Box>
+                                </Flex>
                                 <Text color={"gray.400"}>
                                     {time}
                                 </Text>
