@@ -2,18 +2,15 @@ import React, {useEffect} from 'react';
 import {Box, Button, Flex, Heading, SimpleGrid, useDisclosure} from "@chakra-ui/react";
 import {Trans} from "@lingui/macro";
 import {Navigate} from "react-router-dom";
-import {useActionCreators, useAppSelector, useGridSize} from "@/hook";
+import {useActionCreators, useAppSelector} from "@/hook";
 import {deleteProductTC, getCurrentUserProductsTC, productActions} from "@/store/slices/productReducer";
 import {AlertComponent, ListingPersonCards, ProductCard, PublishListingModal} from "@/components";
 import {
-    avatarURLSelector,
     currentUserProductsSelector,
     isAuthSelector,
     isUpdateProductSelector,
     messageProductSelector,
-    userFirstNameSelector,
-    userIdSelector,
-    userSecondNameSelector,
+    userIdFromSessionSelector,
 } from "@/store";
 import {updateProductEffectSelector} from "@/store/slices/productsSelectors";
 
@@ -21,7 +18,7 @@ import {updateProductEffectSelector} from "@/store/slices/productsSelectors";
 const MyListingsPage = () => {
     const {isOpen, onOpen, onClose} = useDisclosure();
 
-    const userId = useAppSelector(userIdSelector);
+    const userId = useAppSelector(userIdFromSessionSelector);
     const isUpdateProduct = useAppSelector(isUpdateProductSelector);
     const updateProductEffect = useAppSelector(updateProductEffectSelector);
     const currentUserProducts = useAppSelector(currentUserProductsSelector);
@@ -52,7 +49,7 @@ const MyListingsPage = () => {
                 <Box>
                     <ListingPersonCards>
                         <Flex justify={"center"} pt={5}>
-                            <Button  w={"30%"} onClick={() => onOpen()}
+                            <Button w={"30%"} onClick={() => onOpen()}
                                     background={"#ff2d55"}
                                     _hover={{bg: '#c92040'}}
                                     color="#ffffff"
@@ -71,7 +68,7 @@ const MyListingsPage = () => {
                 </Heading>
 
                 <SimpleGrid p={8}
-                            columns={{lg:4,md:3,"ss":2,base:1}}
+                            columns={{lg: 4, md: 3, "ss": 2, base: 1}}
                             spacing={10}>
                     {
                         currentUserProducts.length > 0

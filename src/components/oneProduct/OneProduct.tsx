@@ -12,19 +12,32 @@ import {useNavigate, useSearchParams} from "react-router-dom";
 
 type OneProductType = {
     product: InitialProductStateType
-    buttonValue?: string
+    buttonValue: string
     chat?: string
     navigateHandler?: () => void
-    isRoomExist?:boolean
+    isRoomExist?: boolean
 }
 
-export const OneProduct: React.FC<OneProductType> = ({isRoomExist,chat, product, buttonValue = 'Request', navigateHandler}) => {
+export const OneProduct: React.FC<OneProductType> = ({
+                                                         isRoomExist,
+                                                         chat,
+                                                         product,
+                                                         buttonValue,
+                                                         navigateHandler
+                                                     }) => {
     const isAuth = useAppSelector(isAuthSelector);
     const userID = useAppSelector(userIdFromSessionSelector);
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams(); //get params from url
     const sharerId = searchParams.get('s');
     const requesterId = searchParams.get('r');
+    const onClick = () => {
+        if (navigateHandler) {
+            navigateHandler()
+        } else {
+            console.log("click")
+        }
+    }
     if (!isAuth) {
         navigate("/")
     }
@@ -93,18 +106,16 @@ export const OneProduct: React.FC<OneProductType> = ({isRoomExist,chat, product,
                 {chat && <TopTips/>}
                 <Box mt={2}>
                     <Button
-                        onClick={navigateHandler}
+                        onClick={onClick}
                         backgroundColor='#FF2D55'
                         textTransform={"uppercase"}
                         width="100%" variant='solid'
                         colorScheme='blue'>
-                        {(!sharerId && product.user === userID) ?
-                            'go to my listings' :
-                            isRoomExist?"go to chat":
-                                chat ? "confirm pick up" :
-                                    (product.user === userID  && sharerId === userID) ?
-                                        "approval pending":
-                                    buttonValue}
+                        {
+                            (!sharerId && product.user === userID) ?
+                                'go to my listings' :
+                                isRoomExist ? "go to chat" : buttonValue
+                        }
                     </Button>
 
 

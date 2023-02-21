@@ -12,6 +12,8 @@ type MinifiedUserInfoType = {
     onGetCurrentUserMessages?: () => void
     anotherRoomMessage?: Array<RoomParticipantsType>
     roomId?: string
+    postIDFromUrl?: string
+    postIDFromData?: string
 }
 
 export const MinifiedUserInfo: React.FC<MinifiedUserInfoType> = ({
@@ -21,11 +23,11 @@ export const MinifiedUserInfo: React.FC<MinifiedUserInfoType> = ({
                                                                      description,
                                                                      onGetCurrentUserMessages,
                                                                      anotherRoomMessage,
-                                                                     roomId
-}) => {
+                                                                     roomId,
+                                                                     postIDFromUrl,
+                                                                     postIDFromData
+                                                                 }) => {
     const [tag, setTag] = useState(false);
-
-
 
     useEffect(() => {
         const point = anotherRoomMessage?.some(r => r.room_id === roomId) as boolean; //choose room with new message
@@ -34,9 +36,6 @@ export const MinifiedUserInfo: React.FC<MinifiedUserInfoType> = ({
             setTag(true); //show conversation with new message
         }
     }, [anotherRoomMessage]); //check every new message
-
-
-
 
     const onClick = () => {
         if (onGetCurrentUserMessages) {
@@ -49,15 +48,24 @@ export const MinifiedUserInfo: React.FC<MinifiedUserInfoType> = ({
     return (
         <Flex
             cursor={"pointer"} borderRadius={"5%"} _hover={{bg: "white"}}
-            py={2} flex='1' gap='4'
-            px={2} alignItems='center' flexWrap='wrap'
+            py={2}
+            gap='4'
+            px={2} alignItems='center'
             onClick={onClick}
-            bg={(tag) ? "red.500" : ""}
         >
-            <Avatar
+            {tag? <Avatar
+                    name={firstName}
+                    src={src}
+                    _after={{content: '""', w: 4, h: 4, bg: 'green.300', border: '2px solid white',
+                        rounded: 'full', pos: 'absolute', bottom: 0, right: 0,}}
+                />:
+                <Avatar
                 name={firstName}
-                src={src}/>
-            <Box>
+                src={src}
+                />
+            }
+
+            <Box opacity={postIDFromUrl === postIDFromData ? "100%" : "40%"}>
                 <Heading size='sm'>{description}</Heading>
                 <Text>{firstName} {secondName}</Text>
             </Box>

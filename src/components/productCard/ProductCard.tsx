@@ -9,7 +9,7 @@ import {DeleteIcon, EditIcon} from "@chakra-ui/icons";
 import DeleteCardModal from "@/components/modals/DeleteCardModal";
 import PublishListingModal from "../modals/PublishListingModal";
 import {useAppSelector} from "@/hook";
-import {userIdSelector} from "@/store";
+import {userIdFromSessionSelector} from "@/store";
 
 type ProductCardType = {
     product: InitialProductStateType
@@ -18,7 +18,7 @@ type ProductCardType = {
 
 export const ProductCard: React.FC<ProductCardType> = React.memo(({product}) => {
     const navigate = useNavigate();
-    const userId = useAppSelector(userIdSelector)
+    const userId = useAppSelector(userIdFromSessionSelector)
     const {isOpen, onOpen, onClose} = useDisclosure();
     const [openEdit, setOpenEdit] = useState(false);
 

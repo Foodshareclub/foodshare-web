@@ -25,7 +25,7 @@ import {t, Trans} from '@lingui/macro';
 import {RequiredStar} from "@/components";
 import {ProductObjType} from "@/api/productAPI";
 import {createProductTC, productActions, updateProductTC, uploadPostImgToDBTC} from "@/store/slices/productReducer";
-import {userIdSelector} from "@/store";
+import {userIdFromSessionSelector} from "@/store";
 
 type PublishListingModalType = {
     product?: ProductObjType
@@ -40,7 +40,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
                                                                                isOpen,
                                                                                onClose, setOpenEdit,value
                                                                            }) => {
-    const id = useAppSelector(userIdSelector);
+    const id = useAppSelector(userIdFromSessionSelector);
 
     const actions = useActionCreators({...productActions, createProductTC, updateProductTC, uploadPostImgToDBTC})
 

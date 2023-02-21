@@ -90,8 +90,8 @@ const ChatMainPage = () => {
         <Flex justify={"space-between"} px={7} mt="22vh" mb={"12vh"}>
 
             <ContactsBlock
-
                 anotherRoomMessage={anotherConversationsMessages}
+                postID={id as string}
             />
 
             {id ? <MessagesWindow
