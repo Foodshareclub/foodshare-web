@@ -14,8 +14,9 @@ export const userAddressSelector =(state:StateAppType)=>state.user.userAddress;
 export const allCountriesSelector=(state:StateAppType)=>state.user.userCountries;
 export const userCountrySelector =(state:StateAppType,userCountryId:number)=>state.user.userCountries.find((item: { id: number; })=>item.id ===userCountryId);
 //data from session
-export const userIdFromSessionSelector = (state: StateAppType) => state.user.session?.user.id;
-export const userEmailFromSessionSelector = (state: StateAppType) => state.user.session.user?.email;
+export const sessionSelector = (state: StateAppType) => state.user.session;
+export const userIdFromSessionSelector = (state: StateAppType) => state.user.session?.user?.id;
+export const userEmailFromSessionSelector = (state: StateAppType) => state.user.session?.user?.email;
 
 //data from initial state
 export const imgURLSelector = (state: StateAppType) => state.user.imgUrl;
