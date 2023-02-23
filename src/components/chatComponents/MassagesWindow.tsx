@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from "react";
+import React, {memo, useEffect, useRef} from "react";
 import {Avatar, Box, Flex, Text} from "@chakra-ui/react";
 import {InputSection} from "@/components/chatComponents/InputSection";
 import {RoomParticipantsType} from "@/api/chatAPI";
@@ -14,7 +14,7 @@ type MessagesWindowType = {
     userID: string
     roomId: string
 }
-export const MessagesWindow: React.FC<MessagesWindowType> = ({
+export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
                                                                  messages,
                                                                  requester, sharer,
                                                                  postID,
@@ -81,4 +81,4 @@ export const MessagesWindow: React.FC<MessagesWindowType> = ({
             </Flex>
         </Flex>
     )
-}
+})

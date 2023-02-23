@@ -2,6 +2,7 @@ import {supabase} from "@/supaBase.config";
 
 import {InitialProductStateType} from "@/store/slices/productReducer";
 import {AllValuesType} from "@/api/profileAPI";
+import {PostgrestSingleResponse, RealtimeChannel} from "@supabase/supabase-js";
 
 export type PayloadForGEtRoom={
     sharerId:string
@@ -19,7 +20,7 @@ export type RoomParticipantsType = {
 export type CustomRoomType = {
     id: string
     last_message: string
-    last_message_seen_by: null
+    last_message_seen_by: string
     last_message_sent_by: string
     last_message_time: string
     post_id: number
@@ -40,13 +41,30 @@ export type RoomType = {
 }
 
 export const chatAPI = {
+    listenChannel(payloadFunc: ((newMessage: RoomParticipantsType) => void)):RealtimeChannel{
+        return supabase
+            .channel("*")
+            .on(
+                "postgres_changes",
+                {event: "INSERT", schema: "public", table: "room_participants"},
+                (payload: { new: RoomParticipantsType; }) => {
+                     const newMessage = payload.new
+                     if (payloadFunc) {
+                         payloadFunc(newMessage)
+                     }
+                 })
+            .subscribe();
+    },
+    removeChannel(channel:RealtimeChannel): Promise<"error" | "ok" | "timed out">{
+       return supabase.removeChannel(channel);
+    },
     checkRoomAvailability(userID:string,postID:string):any{
         return supabase
             .from('rooms')
             .select('*')
             .match({requester: userID, post_id: postID});
     },
-    createRoom(room:RoomType){
+    createRoom(room:RoomType):PromiseLike<PostgrestSingleResponse<Array<RoomType>>>{
         return supabase.from("rooms").insert(room).select().single()
     },
     getRoom({sharerId,requesterId,postId}:PayloadForGEtRoom):any{

@@ -6,11 +6,7 @@ import {useActionCreators, useAppSelector} from "@/hook";
 import {OneProductContainer, ProductsLocation} from "@/components";
 import {oneProductSelector} from "@/store";
 
-type ProductPageType = {
-    obj?: any
-}
-
-const ProductPage: React.FC<ProductPageType> = () => {
+const ProductPage = () => {
     const params = useParams();
     const actions = useActionCreators({getOneProductTC})
     const oneProduct = useAppSelector(oneProductSelector);

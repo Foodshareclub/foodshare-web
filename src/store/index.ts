@@ -31,7 +31,9 @@ import {
     messagesFromOneRoomSelector,
     roomSelector,
     statusSelector,
-    createdSelector
+    createdSelector,
+    newMessageSelector,
+    newMessageRoomIdSelector
 } from "@/store/slices/chatSelectors";
 
 export {
@@ -60,5 +62,7 @@ export {
     messagesFromOneRoomSelector,
     allRoomsSelector,
     createdSelector,
-    roomSelector
+    roomSelector,
+    newMessageSelector,
+    newMessageRoomIdSelector
 }

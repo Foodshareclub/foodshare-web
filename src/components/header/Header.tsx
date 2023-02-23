@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {memo, useEffect, useState} from 'react';
 import {CardHeader, useColorModeValue} from "@chakra-ui/react";
 import {getUserFromDBTC} from "@/store/slices/userReducer";
 import {useActionCreators, useAppSelector} from "@/hook";
@@ -6,9 +6,13 @@ import {FilterProductComponent, NavComponent} from "@/components";
 import {
     isAuthSelector,
     isUpdateProfileSelector,
-    messageProfileSelector, sessionSelector, updateUserEffectSelector, userIdFromSessionSelector,
+    messageProfileSelector,
+    sessionSelector,
+    updateUserEffectSelector,
 } from "@/store/slices/userSelectors";
 import AlertComponent from "@/components/alert/AlertComponent";
+import {getAllRoomsForCurrentUserTC} from "@/store/slices/chatReducer";
+import {createdSelector} from "@/store";
 
 type HeaderType = {
     getRoute: (route: string) => void
@@ -16,9 +20,9 @@ type HeaderType = {
     productType: string
 }
 
-export type PagesType = 'productComponent' | 'profileSettings'|"/";
+export type PagesType = 'productComponent' | 'profileSettings' | "/";
 
-const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) => {
+const Header: React.FC<HeaderType> = memo(({getRoute, setProductType, productType}) => {
 
     const [pageType, setPageType] = useState<PagesType>("productComponent");
     const isAuth = useAppSelector(isAuthSelector);
@@ -28,13 +32,22 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
     const updateUserEffect = useAppSelector(updateUserEffectSelector);
     const profileMessage = useAppSelector(messageProfileSelector);
 
-    const actions = useActionCreators({getUserFromDBTC});
+    const isExist = useAppSelector(createdSelector)
+    const isRoomExist = isExist === "created";
+
+    const actions = useActionCreators({getUserFromDBTC, getAllRoomsForCurrentUserTC});
 
     useEffect(() => {
-        if ( isAuth && userId) {
-           actions.getUserFromDBTC(userId);
+        if (isAuth && userId) {
+            actions.getUserFromDBTC(userId);
         }
     }, [userId, isAuth, updateUserEffect])
+
+    useEffect(() => {
+        if (userId) {
+            actions.getAllRoomsForCurrentUserTC(userId)
+        }
+    }, [userId, isRoomExist])
 
     return (
         <CardHeader
@@ -45,6 +58,7 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
             bg={useColorModeValue('white', 'gray.900')}
         >
             <NavComponent
+                userId={userId}
                 isAuth={isAuth}
                 setPageType={setPageType}
                 setProductType={setProductType}
@@ -59,6 +73,6 @@ const Header: React.FC<HeaderType> = ({getRoute, setProductType, productType}) =
             <AlertComponent status={isUpdateProfile} title={profileMessage} top={"94%"}/>
         </CardHeader>
     );
-};
+});
 
 export default Header;

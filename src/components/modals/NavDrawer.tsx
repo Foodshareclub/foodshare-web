@@ -17,9 +17,13 @@ import {Trans} from "@lingui/macro";
 import {loginTC, registerTC} from "@/store/slices/userReducer";
 import {ProfileSettingsProps} from "@/components/header/NavComponent";
 import {AuthenticationUserModal, MinifiedUserInfo} from "@/components";
+import {memo} from "react";
 
 
-const NawDrawer: React.FC<ProfileSettingsProps> = ({
+const NawDrawer: React.FC<ProfileSettingsProps> = memo(({
+                                                       firstName,
+                                                       secondName,
+                                                       email,
                                                        size,
                                                        isAuth,
                                                        imgUrl,
@@ -29,15 +33,10 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
                                                        navigateToAboutUs,
                                                        navigateToAccSettings,
                                                        navigateToMyMessages,
-                                                       value
                                                    }) => {
 
     const {isOpen, onOpen, onClose} = useDisclosure()
-
-
     const handleClick = () => onOpen();
-
-    // const size = ['xs', 'sm', 'md', 'lg', 'xl', 'full']
 
     return (
         <Box alignSelf={"center"}>
@@ -53,13 +52,13 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
                 <DrawerOverlay/>
                 <DrawerContent>
                     <DrawerCloseButton/>
-                    <DrawerHeader><Trans>{`Hi ${value && value.first_name}`}</Trans></DrawerHeader>
+                    <DrawerHeader><Trans>{`Hi ${firstName}`}</Trans></DrawerHeader>
                     <DrawerBody>
                         <MinifiedUserInfo
                             src={imgUrl}
-                            firstName={value?.first_name}
-                            secondName={value?.second_name}
-                            description={value?.about_me}
+                            firstName={firstName}
+                            secondName={secondName}
+                            description={email}
                         />
                         <Box mt={10}>
                             {
@@ -107,7 +106,7 @@ const NawDrawer: React.FC<ProfileSettingsProps> = ({
             </Drawer>
         </Box>
     )
-}
+})
 export default NawDrawer
 
 

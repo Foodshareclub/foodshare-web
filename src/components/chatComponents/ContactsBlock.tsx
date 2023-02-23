@@ -5,26 +5,34 @@ import {Box, Flex, Heading, Input, InputGroup, InputLeftElement} from "@chakra-u
 import {SearchIcon} from "@chakra-ui/icons";
 import {t} from "@lingui/macro";
 import {MinifiedUserInfo} from "@/components";
-import React from "react";
+import React, {memo} from "react";
 import {useNavigate} from "react-router-dom";
-import {RoomParticipantsType} from "@/api/chatAPI";
-
+import {sessionSelector} from "@/store/slices/userSelectors";
 
 type ContactsBlockType = {
-    anotherRoomMessage: Array<RoomParticipantsType>
-    postID: string
+    roomIDFromUrl: string
+    newMessageRoomId: string
 }
 
-const ContactsBlock: React.FC<ContactsBlockType> = ({postID, anotherRoomMessage}) => {
+const ContactsBlock: React.FC<ContactsBlockType> = memo(({roomIDFromUrl, newMessageRoomId}) => {
+
     const imgUrl = useAppSelector(avatarURLSelector);
     const userFirstName = useAppSelector(userFirstNameSelector);
     const userSecondName = useAppSelector(userSecondNameSelector);
+
+    const session = useAppSelector(sessionSelector);
+    const userId = session?.user?.id;
+
     const allRooms = useAppSelector(allRoomsSelector)
     const navigate = useNavigate();
 
     const onGetCurrentUserMessages = (post_id: number, sharerId: string, requesterId: string, roomId: string) => {
-        navigate(`/chat-main/${post_id}?s=${sharerId}&r=${requesterId}&room=${roomId}`);
-    }
+        if (roomId === roomIDFromUrl) {
+            return
+        } else {
+            navigate(`/chat-main/${post_id}?s=${sharerId}&r=${requesterId}&room=${roomId}`);
+        }
+    };
 
     return (
         <Flex direction={"column"}>
@@ -53,17 +61,19 @@ const ContactsBlock: React.FC<ContactsBlockType> = ({postID, anotherRoomMessage}
             <Flex direction={"column"} alignSelf={"center"} w={'100%'}>
                 <Box bg={"gray.100"} borderRadius={"10%"} px={2} height={"350px"} overflow={"auto"}>
                     {allRooms.length && allRooms.map((data) => {
+
                         return (
                             <MinifiedUserInfo
-                                postIDFromUrl={postID}
-                                postIDFromData={data.posts.id.toString()}
+                                lastUserSeen={data.last_message_seen_by}
+                                userId={userId}
+                                newMessageRoomId={newMessageRoomId}
+                                roomIDFromUrl={roomIDFromUrl}
                                 key={data.id}
                                 onGetCurrentUserMessages={() => onGetCurrentUserMessages(data.posts.id, data.sharer, data.requester, data.id)}
                                 src={data.posts.gif_url}
                                 description={data.posts.post_name}
                                 firstName={data.profiles.first_name}
                                 secondName={data.profiles.second_name}
-                                anotherRoomMessage={anotherRoomMessage}
                                 roomId={data.id}
                             />
                         )
@@ -73,5 +83,5 @@ const ContactsBlock: React.FC<ContactsBlockType> = ({postID, anotherRoomMessage}
             </Flex>
         </Flex>
     )
-}
+})
 export default ContactsBlock;

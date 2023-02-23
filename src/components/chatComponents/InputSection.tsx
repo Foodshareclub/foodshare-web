@@ -1,4 +1,4 @@
-import React, {KeyboardEvent, useState} from "react";
+import React, {KeyboardEvent, memo, useState} from "react";
 import {useAppSelector} from "@/hook";
 import {supabase} from "@/supaBase.config";
 import {Button, Input} from "@chakra-ui/react";
@@ -12,9 +12,8 @@ type InputSectionType = {
     sharer: string
     postID: string
 }
-export const InputSection: React.FC<InputSectionType> = ({messages, sharer, requester, postID}) => {
+export const InputSection: React.FC<InputSectionType> = memo(({messages, sharer, requester, postID}) => {
     const userID = useAppSelector(state => state.user.session?.user.id);
-
     const [val, setVal] = useState('');
 
     const click = async () => {
@@ -28,6 +27,8 @@ export const InputSection: React.FC<InputSectionType> = ({messages, sharer, requ
             .update({
                 id: oneMessage.room_id,
                 last_message: val,
+                last_message_sent_by:userID,
+                last_message_seen_by:userID,
                 post_id: Number(postID),
                 sharer,
                 requester
@@ -66,4 +67,4 @@ export const InputSection: React.FC<InputSectionType> = ({messages, sharer, requ
             </Button>
         </>
     )
-}
+})

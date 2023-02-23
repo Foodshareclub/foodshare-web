@@ -30,7 +30,7 @@ export const OneProduct: React.FC<OneProductType> = ({
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams(); //get params from url
     const sharerId = searchParams.get('s');
-    const requesterId = searchParams.get('r');
+
     const onClick = () => {
         if (navigateHandler) {
             navigateHandler()

@@ -1,18 +1,22 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import {Center, Flex, Text} from "@chakra-ui/react";
 import {ContactsBlock, OneProduct} from "@/components";
 import {useActionCreators, useAppSelector} from "@/hook";
 import {useParams, useSearchParams} from "react-router-dom";
 import {getOneProductTC, productActions} from "@/store/slices/productReducer";
-import {supabase} from "@/supaBase.config";
 import {MessagesWindow} from "@/components/chatComponents/MassagesWindow";
 import {
     getAllMessagesInRoomParticipantsFromOneRoomTC,
     getAllRoomsForCurrentUserTC,
     getRoomTC
 } from "@/store/slices/chatReducer";
-import {RoomParticipantsType} from "@/api/chatAPI";
-import {oneProductSelector, userIdFromSessionSelector} from "@/store";
+import {
+    messagesFromOneRoomSelector,
+    newMessageRoomIdSelector,
+    newMessageSelector,
+    oneProductSelector,
+    userIdFromSessionSelector
+} from "@/store";
 
 const ChatMainPage = () => {
     const {id} = useParams();
@@ -29,69 +33,37 @@ const ChatMainPage = () => {
     const oneProduct = useAppSelector(oneProductSelector);
     const userID = useAppSelector(userIdFromSessionSelector);
 
+    const messagesFromOneRoom = useAppSelector(messagesFromOneRoomSelector);
+    const newMessage = useAppSelector(newMessageSelector);
+    const newMessageRoomId = useAppSelector(newMessageRoomIdSelector);
+    console.log(newMessage)
     useEffect(() => {
         if (id) {
             actions.getOneProductTC(Number(id));
         }
-        return ()=>{
+        return () => {
             actions.clearOneProductState()
         }
     }, [id])
-    useEffect(() => {
-        actions.getAllRoomsForCurrentUserTC(userID)
-    }, [])
-
-    const [currentConversationMessages, setCurrentConversationMessages] = useState<Array<RoomParticipantsType>>([]);
 
     useEffect(() => {
         if (id && sharerId && requesterId) {
-            actions.getRoomTC({sharerId, requesterId, postId: id}).unwrap()
-                .then((res) => {
-                    res?.forEach((el: { id: string; }) => {
-                        actions.getAllMessagesInRoomParticipantsFromOneRoomTC(el.id).unwrap()
-                            .then((res) => {
-                                setCurrentConversationMessages([...res as Array<RoomParticipantsType>])
-                            })
-                    })
-                })
+            actions.getRoomTC({sharerId, requesterId, postId: id})
         }
     }, [id, sharerId, requesterId])
 
-    const [anotherConversationsMessages, setAnotherConversationsMessages] = useState<Array<RoomParticipantsType>>([]);
-
-    useEffect(() => {  //incoming message listener
-        const channel = supabase
-            .channel("*")
-            .on(
-                "postgres_changes",
-                {event: "INSERT", schema: "public", table: "room_participants"},
-                (payload: { new: RoomParticipantsType; }) => {
-                    const newMessage = payload.new;
-
-                    const isCurrentMessageRefersCurrentConversation = currentConversationMessages.some((message) => {
-                        return message.room_id === newMessage.room_id;
-                    });
-
-                    if (isCurrentMessageRefersCurrentConversation) {
-                        console.log(newMessage)
-                        setCurrentConversationMessages([...currentConversationMessages, newMessage]);
-                    } else {
-                        setAnotherConversationsMessages([...anotherConversationsMessages, newMessage]);
-                    }
-                })
-            .subscribe();
-        return () => {
-            supabase.removeChannel(channel).then(res => res);
-        };
-    }, [supabase, currentConversationMessages, anotherConversationsMessages]);
-
+    useEffect(() => {
+        if (roomId) {
+            actions.getAllMessagesInRoomParticipantsFromOneRoomTC(roomId)
+        }
+    }, [roomId, newMessage])
 
     return (
         <Flex justify={"space-between"} px={7} mt="22vh" mb={"12vh"}>
 
             <ContactsBlock
-                anotherRoomMessage={anotherConversationsMessages}
-                postID={id as string}
+                newMessageRoomId={newMessageRoomId}
+                roomIDFromUrl={roomId as string}
             />
 
             {id ? <MessagesWindow
@@ -99,7 +71,7 @@ const ChatMainPage = () => {
                     requester={requesterId as string}
                     sharer={sharerId as string}
                     postID={id as string}
-                    messages={currentConversationMessages}
+                    messages={messagesFromOneRoom}
                     userID={userID}
                 />
                 :
