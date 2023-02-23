@@ -1,53 +1,68 @@
 import straw from "../../assets/straw.svg";
 import * as React from 'react';
+import {memo} from 'react';
 import {useNavigate} from "react-router-dom";
 import {Avatar, Box, Flex, Text} from "@chakra-ui/react";
 import {PagesType} from "./Header";
 import {useActionCreators, useAppSelector, useMediaQuery} from "@/hook";
-import {AllValuesType} from "@/api/profileAPI";
 import {BecomeSharerBlock, NavDrawer, ProfileSettings} from "@/components";
 import {downloadImgFromDBTC, logoutTC} from "@/store/slices/userReducer";
-import {avatarURLSelector} from "@/store/slices/userSelectors";
+import {
+    avatarURLSelector,
+    userEmailSelector,
+    userFirstNameSelector,
+    userSecondNameSelector
+} from "@/store/slices/userSelectors";
 import PopoverForSearch from "@/pages/searchResultPage/PopoverForSearch";
 import {PATH} from "@/utils";
+import {allRoomsSelector} from "@/store";
 
 type PropsLangType = {
     isAuth: boolean
     setPageType: (pageType: PagesType) => void
     setProductType: (type: string) => void
-
+    userId: string
 }
 export type ProfileSettingsProps = {
+    signalOfNewMessage: boolean
     navigateToAboutUs: () => void
     navigateToMyLists: () => void
     navigateToLogout: () => void
     navigateToAccSettings: () => void
     navigateToHelp: () => void
-    navigateToMyMessages:()=>void
+    navigateToMyMessages: () => void
     imgUrl: string
-    value?: AllValuesType
     isAuth: boolean
     size?: string
-    giveLanguage?: (value: string) => void
+    firstName?: string
+    secondName?: string
+    email?: string
 
 }
 
-const NavComponent: React.FC<PropsLangType> = ({
-                                                   isAuth, setPageType, setProductType
-                                               }) => {
+const NavComponent: React.FC<PropsLangType> = memo(({
+                                                        userId,
+                                                        isAuth, setPageType,
+                                                        setProductType
+                                                    }) => {
+
     const imgUrl = useAppSelector(avatarURLSelector);
-    const value = useAppSelector<AllValuesType>(state => state.user.value);
-    const actions = useActionCreators({downloadImgFromDBTC, logoutTC})
+    const firstName = useAppSelector(userFirstNameSelector);
+    const secondName = useAppSelector(userSecondNameSelector);
+    const allUserRooms = useAppSelector(allRoomsSelector);
 
+    const signalOfNewMessage = allUserRooms.some(room => room.last_message_seen_by === userId);
+    console.log(signalOfNewMessage)
+
+    const email = useAppSelector(userEmailSelector);
+    const actions = useActionCreators({downloadImgFromDBTC, logoutTC});
     const isSmallerThan800 = useMediaQuery('(min-width:800px)');
-
     const navigate = useNavigate();
 
     const navigateToMain = () => {
         setProductType('food');
         navigate(PATH.main);
         setPageType('productComponent');
-
     }
 
     const navigateToAboutUs = () => navigate('/aboutUs');
@@ -64,7 +79,6 @@ const NavComponent: React.FC<PropsLangType> = ({
         setPageType("profileSettings");
     }
     const navigateToMyMessages = () => {
-       // setPageType("profileSettings");
         navigate(`/chat-main`);
     }
 
@@ -98,7 +112,10 @@ const NavComponent: React.FC<PropsLangType> = ({
             {
                 !isSmallerThan800
                     ? <NavDrawer
-                        value={value}
+                        signalOfNewMessage={signalOfNewMessage}
+                        firstName={firstName}
+                        secondName={secondName}
+                        email={email}
                         size={'md'} isAuth={isAuth}
                         imgUrl={imgUrl}
                         navigateToMyLists={navigateToMyLists}
@@ -108,6 +125,7 @@ const NavComponent: React.FC<PropsLangType> = ({
                         navigateToMyMessages={navigateToMyMessages}
                         navigateToAccSettings={navigateToAccountSettings}/>
                     : <ProfileSettings
+                        signalOfNewMessage={signalOfNewMessage}
                         navigateToAccSettings={navigateToAccountSettings}
                         navigateToAboutUs={navigateToAboutUs}
                         navigateToMyLists={navigateToMyLists}
@@ -120,5 +138,5 @@ const NavComponent: React.FC<PropsLangType> = ({
             }
         </Flex>
     );
-}
+})
 export default NavComponent

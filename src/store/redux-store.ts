@@ -12,7 +12,9 @@ const reducersBox = combineReducers({
 })
 const store = configureStore({
     reducer: reducersBox,
-    middleware: getDefaultMiddleware => getDefaultMiddleware().prepend(thunk)
+     middleware: getDefaultMiddleware => getDefaultMiddleware({
+         serializableCheck: false
+     }).prepend(thunk)
 })
 
 export default store

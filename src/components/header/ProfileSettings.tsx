@@ -5,47 +5,59 @@ import {Trans} from "@lingui/macro";
 import {loginTC, registerTC} from "@/store/slices/userReducer";
 import {ProfileSettingsProps} from "@/components/header/NavComponent";
 import {AuthenticationUserModal} from "@/components";
+import {memo} from "react";
 
 
-const ProfileSettings: React.FC<ProfileSettingsProps> = ({
-                                                             navigateToMyLists,
-                                                             navigateToHelp,
-                                                             navigateToLogout,
-                                                             navigateToAccSettings,
-                                                             navigateToAboutUs,
-                                                             navigateToMyMessages,
-                                                             imgUrl, isAuth
-                                                         }) => {
+const ProfileSettings: React.FC<ProfileSettingsProps> = memo(({
+                                                                  signalOfNewMessage,
+                                                                  navigateToMyLists,
+                                                                  navigateToHelp,
+                                                                  navigateToLogout,
+                                                                  navigateToAccSettings,
+                                                                  navigateToAboutUs,
+                                                                  navigateToMyMessages,
+                                                                  imgUrl,
+                                                                  isAuth
+                                                              }) => {
+
 
     return (
         <>
             <Box alignSelf="center" p={0} color='#303030'>
                 <Menu>
-                    <MenuButton
-                        cursor="pointer"
-                        borderRadius="50%"
-                        icon={<Avatar src={imgUrl}/>}
-                        as={Avatar}
-                        _after={{
-                            content: '""',
-                            w: 4,
-                            h: 4,
-                            bg: 'green.300',
-                            border: '2px solid white',
-                            rounded: 'full',
-                            pos: 'absolute',
-                            bottom: 0,
-                            right: 0,
-                        }}
-                    >
-                    </MenuButton>
+                    {!signalOfNewMessage ? <MenuButton
+                            cursor="pointer"
+                            borderRadius="50%"
+                            icon={<Avatar src={imgUrl}/>}
+                            as={Avatar}
+                            _after={{
+                                content: '""',
+                                w: 4,
+                                h: 4,
+                                bg: 'green.300',
+                                border: '2px solid white',
+                                rounded: 'full',
+                                pos: 'absolute',
+                                bottom: 0,
+                                right: 0,
+                            }}
+                        >
+                        </MenuButton> :
+                        <MenuButton
+                            cursor="pointer"
+                            borderRadius="50%"
+                            icon={<Avatar src={imgUrl}/>}
+                            as={Avatar}
+                        >
+                        </MenuButton>}
                     <MenuList>
                         {
                             isAuth
                                 ? <>
                                     <MenuItem onClick={() => navigateToMyLists()}><Trans>My listing's</Trans></MenuItem>
                                     <MenuItem onClick={() => navigateToMyMessages()}><Trans>My messages</Trans></MenuItem>
-                                    <MenuItem onClick={() => navigateToAccSettings()}><Trans>Account settings</Trans></MenuItem>
+                                    <MenuItem onClick={() => navigateToAccSettings()}><Trans>Account
+                                        settings</Trans></MenuItem>
                                     <MenuItem onClick={() => navigateToLogout()}><Trans>Log Out</Trans></MenuItem>
                                 </>
                                 : <>
@@ -64,5 +76,5 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
         </>
 
     )
-}
+})
 export default ProfileSettings

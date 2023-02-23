@@ -5,13 +5,14 @@ import {getSessionTC, userActions} from "@/store/slices/userReducer";
 import {getProductsTC} from "@/store/slices/productReducer";
 import {useLocation} from "react-router-dom";
 import {isAuthSelector} from "@/store";
+import {listenChannelTC} from "@/store/slices/chatReducer";
 
 function App() {
     const location = useLocation();
     let type = location.pathname.split('/')[1];
     const isAuth = useAppSelector(isAuthSelector);
     const [productType, setProductType] = useState(type || "food");
-    const actions = useActionCreators({getProductsTC, getSessionTC, ...userActions});
+    const actions = useActionCreators({getProductsTC, getSessionTC, listenChannelTC, ...userActions});
 
     useEffect(() => {
         actions.getSessionTC()
@@ -49,14 +50,13 @@ function App() {
             actions.getProductsTC(productType);
         }
 
-            console.log('return app')
+        console.log('return app')
 
     }, [productType]);
 
     const getRoute = (route: string) => {
         setProductType(route);
     }
-
     return (
         <>
             <ChangeLanguageContainer

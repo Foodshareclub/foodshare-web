@@ -1,4 +1,4 @@
-import {InitialProductStateType} from "@/store/slices/productReducer";
+import {InitialProductStateType, productActions} from "@/store/slices/productReducer";
 import React, {useEffect} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {useActionCreators, useAppSelector} from "@/hook";
@@ -10,21 +10,23 @@ import {checkRoomAvailabilityTC, createRoomTC} from "@/store/slices/chatReducer"
 
 type OneProductContainerType = {
     product: InitialProductStateType
-    buttonValue?: string
+    buttonValue: string
 }
 
 export const OneProductContainer: React.FC<OneProductContainerType> = ({
                                                                            product,
-                                                                           buttonValue = 'Request'
+                                                                           buttonValue
                                                                        }) => {
     const {id} = useParams();
     const navigate = useNavigate();
-    const actions = useActionCreators({createRoomTC, checkRoomAvailabilityTC})
-    const createdRoom = useAppSelector(state => state.chat.createdRoom[0]);
+    const actions = useActionCreators({createRoomTC, checkRoomAvailabilityTC,...productActions})
+    const createdRoom = useAppSelector(state => state.chat.createdRoom);
     const userID = useAppSelector(userIdFromSessionSelector);
     const isExist = useAppSelector(createdSelector)
     const isRoomExist = isExist === "created";
+
     console.log(isRoomExist)
+    console.log(createdRoom[0]?.id)
 
     useEffect(() => {  //to find out if a room exists or not
         if (id && userID) {
@@ -35,30 +37,30 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
         }
         return console.log('dead oneProdContainer')
     }, [id]);
+
     const createRoom = async () => {
         const room = {
             requester: userID,
             sharer: product.user,
             post_id: product.id,
             last_message_sent_by: userID,
-            last_message_seen_by: product.user,
+            last_message_seen_by: userID,
             last_message: 'Initial message'
         } as RoomType;
         await actions.createRoomTC(room);
     }
 
-    const navigateHandler = () => {
+    const navigateHandler = async () => {
         if (product.user === userID) {
             navigate(PATH.myListingsPage);
             return;
         }
-        if (isRoomExist && createdRoom?.id) {
-            navigate(`/chat-main/${product.id}?s=${product.user}&r=${userID}&room=${createdRoom.id}`);
+        if (isRoomExist) {
+            navigate(`/chat-main/${product.id}?s=${product.user}&r=${userID}&room=${createdRoom[0]?.id}`);
         }
-        !isRoomExist && createRoom() //if room already exist, it isn't created
-            .then(() => {
-                navigate(`/chat-main/${product.id}?s=${product.user}&r=${userID}&room=${createdRoom.id}`);
-            });
+        if (!isRoomExist) {
+            await createRoom()
+        } //if room already exist, it isn't created
     }
 
     return (

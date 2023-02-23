@@ -50,11 +50,11 @@ const Footer = () => {
                     color={useColorModeValue('gray.700', 'gray.200')}
                     as={Stack}
                     maxW={'8xl'}
-                    py={4}
+                    py={1}
                     direction={{base: 'column', md: 'row'}}
                     justify={{base: 'center', md: 'space-between'}}
                     align={{base: 'center', md: 'center'}}>
-                    <Text fontSize={{sm:"20px",base:"12px"}}><Trans>© 2022 Foodshare Club, Limited. All rights reserved</Trans></Text>
+                    <Text fontSize={{sm:"16px",base:"12px"}}><Trans>© 2022 Foodshare Club, Limited. All rights reserved</Trans></Text>
                     {/*<LanguageSelector/>*/}
                     <Stack direction={'row'} spacing={6}>
                         <SocialButton label={'Twitter'} href={'#'}>
