@@ -52,7 +52,7 @@ const NavComponent: React.FC<PropsLangType> = memo(({
     const allUserRooms = useAppSelector(allRoomsSelector);
 
     const signalOfNewMessage = allUserRooms.some(room => room.last_message_seen_by === userId);
-    console.log(signalOfNewMessage)
+    // console.log(signalOfNewMessage)
 
     const email = useAppSelector(userEmailSelector);
     const actions = useActionCreators({downloadImgFromDBTC, logoutTC});

@@ -11,8 +11,37 @@ const initialState = {
     allRooms: [] as Array<CustomRoomType>,
     messagesFromOneRoom: [] as Array<RoomParticipantsType>,
     status: "loading",
-    isCreated: "creation"
+    isCreated: "creation",
+    updateRoomStatus:"loading"
 };
+export const updateRoomTC = createAsyncThunk("/updateRoomTC", async (room:RoomType, thunkAPI) => {
+   let res;
+    try {
+        const {data,error} = await chatAPI.updateRoom(room)
+        if (error) {
+            console.log(error);
+            return thunkAPI.rejectWithValue(error);
+        }
+        res = "updated"
+        console.log("updateRoomTC")
+        return {res, data};
+    } catch (e) {
+        return thunkAPI.rejectWithValue(e);
+    }
+});
+export const createPostInRoomTC = createAsyncThunk("/creatPostInRoomTC", async (message:RoomParticipantsType, thunkAPI) => {
+    try {
+        const {data,error} = await chatAPI.creatPostInRoom(message)
+        if (error) {
+            console.log(error);
+            return thunkAPI.rejectWithValue(error);
+        }
+        console.log("creatPostInRoomTC")
+        return data;
+    } catch (e) {
+        return thunkAPI.rejectWithValue(e);
+    }
+});
 export const listenChannelTC = createAsyncThunk("/listenChannel", async (_, thunkAPI) => {
     const messageHandler = (message: RoomParticipantsType) => {
         thunkAPI.dispatch( chatActions.addNewMessage(message))
@@ -103,9 +132,19 @@ const chatSlice = createSlice({
     initialState,
     reducers: {
         addNewMessage:(state, action)=>{
-        state.newMessage = action.payload
+        state.newMessage = action.payload;
         }},
     extraReducers: (builder) => {
+        builder.addCase(createPostInRoomTC.fulfilled, (state,action) => {
+
+        });
+        builder.addCase(updateRoomTC.pending, (state) => {
+           state.updateRoomStatus = "loading"
+        });
+        builder.addCase(updateRoomTC.fulfilled, (state,action) => {
+           state.updateRoomStatus = action.payload.res;
+
+        });
         builder.addCase(createRoomTC.pending, (state) => {
             state.isCreated = "creation"
         });

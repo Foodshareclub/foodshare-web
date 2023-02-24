@@ -1,7 +1,8 @@
 import * as React from "react";
 import {memo} from "react";
 import {Avatar, Box, Flex, Heading, Text} from "@chakra-ui/react";
-import {supabase} from "@/supaBase.config";
+import {useActionCreators} from "@/hook";
+import {updateRoomTC} from "@/store/slices/chatReducer";
 
 type MinifiedUserInfoType = {
     userId?: string
@@ -14,6 +15,7 @@ type MinifiedUserInfoType = {
     newMessageRoomId?: string
     description?: string
     lastUserSeen?: string
+
 }
 
 export const MinifiedUserInfo: React.FC<MinifiedUserInfoType> = memo(({
@@ -27,19 +29,18 @@ export const MinifiedUserInfo: React.FC<MinifiedUserInfoType> = memo(({
                                                                           userId, lastUserSeen
                                                                       }) => {
 
+
+    const actions = useActionCreators({updateRoomTC})
+
     const onClick = async () => {
         if (onGetCurrentUserMessages) {
             onGetCurrentUserMessages();
+            await actions
+                .updateRoomTC({last_message_seen_by: userId as string, id: roomId as string})
+            ///update last_message in rooms
         }
         console.log("clickInMinifiedUserInfo")
-        await supabase
-            .from("rooms")
-            .update({
-                last_message_seen_by: userId,
-            })
-            .eq('id', roomId); ///update last_message in rooms
     }
-
 
     return (
         <Flex
@@ -62,7 +63,6 @@ export const MinifiedUserInfo: React.FC<MinifiedUserInfoType> = memo(({
                         rounded: 'full', pos: 'absolute', bottom: 0, right: 0,
                     }}
                 />
-
             }
 
             <Box opacity={roomIDFromUrl === roomId ? "100%" : "40%"}>

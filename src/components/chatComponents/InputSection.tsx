@@ -1,9 +1,9 @@
 import React, {KeyboardEvent, memo, useState} from "react";
-import {useAppSelector} from "@/hook";
-import {supabase} from "@/supaBase.config";
+import {useActionCreators, useAppSelector} from "@/hook";
 import {Button, Input} from "@chakra-ui/react";
 import {AddIcon} from "@chakra-ui/icons";
 import {RoomParticipantsType} from "@/api/chatAPI";
+import {createPostInRoomTC, updateRoomTC} from "@/store/slices/chatReducer";
 
 
 type InputSectionType = {
@@ -14,26 +14,25 @@ type InputSectionType = {
 }
 export const InputSection: React.FC<InputSectionType> = memo(({messages, sharer, requester, postID}) => {
     const userID = useAppSelector(state => state.user.session?.user.id);
+    const actions = useActionCreators({createPostInRoomTC, updateRoomTC})
     const [val, setVal] = useState('');
 
-    const click = async () => {
-        const oneMessage = {room_id: messages[0].room_id, profile_id: userID};
 
-        if (val.trim()) {
-            await supabase.from("room_participants").insert({...oneMessage, text: val});
+    const click = async () => {
+        const oneNewMessage = {room_id: messages[0].room_id, profile_id: userID};
+        const roomForUpdate = {
+            id: oneNewMessage.room_id,
+            last_message: val,
+            last_message_sent_by: userID,
+            last_message_seen_by: userID,
+            post_id: Number(postID),
+            sharer,
+            requester
         }
-        await supabase
-            .from("rooms")
-            .update({
-                id: oneMessage.room_id,
-                last_message: val,
-                last_message_sent_by:userID,
-                last_message_seen_by:userID,
-                post_id: Number(postID),
-                sharer,
-                requester
-            })
-            .eq('id', oneMessage.room_id); ///update last_message in rooms
+        if (val.trim()) {
+            await actions.createPostInRoomTC({...oneNewMessage, text: val})
+        }
+        await actions.updateRoomTC(roomForUpdate)
         setVal('');
     }
 

@@ -33,7 +33,8 @@ import {
     statusSelector,
     createdSelector,
     newMessageSelector,
-    newMessageRoomIdSelector
+    newMessageRoomIdSelector,
+    updateRoomStatusSelector
 } from "@/store/slices/chatSelectors";
 
 export {
@@ -64,5 +65,6 @@ export {
     createdSelector,
     roomSelector,
     newMessageSelector,
-    newMessageRoomIdSelector
+    newMessageRoomIdSelector,
+    updateRoomStatusSelector
 }

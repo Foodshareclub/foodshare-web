@@ -11,10 +11,12 @@ import {
     getRoomTC
 } from "@/store/slices/chatReducer";
 import {
+    allRoomsSelector,
     messagesFromOneRoomSelector,
     newMessageRoomIdSelector,
     newMessageSelector,
     oneProductSelector,
+    roomSelector,
     userIdFromSessionSelector
 } from "@/store";
 
@@ -32,11 +34,17 @@ const ChatMainPage = () => {
     })
     const oneProduct = useAppSelector(oneProductSelector);
     const userID = useAppSelector(userIdFromSessionSelector);
-
+    const room = useAppSelector(roomSelector);
     const messagesFromOneRoom = useAppSelector(messagesFromOneRoomSelector);
     const newMessage = useAppSelector(newMessageSelector);
     const newMessageRoomId = useAppSelector(newMessageRoomIdSelector);
-    console.log(newMessage)
+
+    const allRooms = useAppSelector(allRoomsSelector)
+
+    // const updateRoomStatus = useAppSelector(updateRoomStatusSelector);
+    // const isRoomUpdated = updateRoomStatus === "updated";
+
+
     useEffect(() => {
         if (id) {
             actions.getOneProductTC(Number(id));
@@ -53,15 +61,16 @@ const ChatMainPage = () => {
     }, [id, sharerId, requesterId])
 
     useEffect(() => {
-        if (roomId) {
-            actions.getAllMessagesInRoomParticipantsFromOneRoomTC(roomId)
+        if (room?.id) {
+            actions.getAllMessagesInRoomParticipantsFromOneRoomTC(room.id)
         }
-    }, [roomId, newMessage])
+    }, [room?.id, newMessage])
 
     return (
         <Flex justify={"space-between"} px={7} mt="22vh" mb={"12vh"}>
 
             <ContactsBlock
+                allRooms={allRooms}
                 newMessageRoomId={newMessageRoomId}
                 roomIDFromUrl={roomId as string}
             />

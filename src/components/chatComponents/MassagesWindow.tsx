@@ -39,7 +39,7 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
                 {messages && messages
                     .filter(m => m.text !== '') //remove initial message
                     .map((m) => {
-                        let time = new Date(m.timestamp).toLocaleTimeString()
+                        let time = new Date(m.timestamp as string).toLocaleTimeString() as string
                         return userID === m.profile_id
                             ? <Flex justify={"end"} key={m.id}>
                                 <Text fontSize={"10px"} color={"gray.400"}>

@@ -20,7 +20,6 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = memo(({
                                                                   isAuth
                                                               }) => {
 
-
     return (
         <>
             <Box alignSelf="center" p={0} color='#303030'>
