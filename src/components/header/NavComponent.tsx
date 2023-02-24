@@ -16,6 +16,7 @@ import {
 import PopoverForSearch from "@/pages/searchResultPage/PopoverForSearch";
 import {PATH} from "@/utils";
 import {allRoomsSelector} from "@/store";
+import {CustomRoomType} from "@/api/chatAPI";
 
 type PropsLangType = {
     isAuth: boolean
@@ -24,7 +25,7 @@ type PropsLangType = {
     userId: string
 }
 export type ProfileSettingsProps = {
-    signalOfNewMessage: boolean
+    signalOfNewMessage: Array<CustomRoomType>
     navigateToAboutUs: () => void
     navigateToMyLists: () => void
     navigateToLogout: () => void
@@ -51,8 +52,7 @@ const NavComponent: React.FC<PropsLangType> = memo(({
     const secondName = useAppSelector(userSecondNameSelector);
     const allUserRooms = useAppSelector(allRoomsSelector);
 
-    const signalOfNewMessage = allUserRooms.some(room => room.last_message_seen_by === userId);
-    // console.log(signalOfNewMessage)
+    const signalOfNewMessage = allUserRooms.filter(room => room.last_message_seen_by !== userId);
 
     const email = useAppSelector(userEmailSelector);
     const actions = useActionCreators({downloadImgFromDBTC, logoutTC});

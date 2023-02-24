@@ -10,4 +10,4 @@ export const createdSelector = (state: StateAppType) => state.chat.isCreated;
 export const updateRoomStatusSelector = (state: StateAppType) => state.chat.updateRoomStatus;
 export const newMessageSelector = (state: StateAppType) => state.chat.newMessage;
 export const newMessageIdSelector = (state: StateAppType) => state.chat.newMessage?.id;
-export const newMessageRoomIdSelector = (state: StateAppType) => state.chat.newMessage.room_id;
+export const newMessageRoomIdSelector = (state: StateAppType) => state.chat.newMessage?.room_id;
