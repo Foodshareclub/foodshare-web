@@ -40,19 +40,17 @@ const Header: React.FC<HeaderType> = memo(({getRoute, setProductType, productTyp
     const isRoomUpdated = updateRoomStatus === "updated";
 
     const newMessageId = useAppSelector(newMessageIdSelector);
-    console.log(newMessageId,"newMessageId")
 
     useEffect(() => {
         if (isAuth && userId) {
             actions.getUserFromDBTC(userId);
         }
-    }, [userId, isAuth, updateUserEffect,newMessageId])
+    }, [userId, isAuth, updateUserEffect, newMessageId])
 
     useEffect(() => {
         if (userId) {
             actions.getAllRoomsForCurrentUserTC(userId)
         }
-        console.log(isRoomCreated, "isRoomCreated useEffect")
     }, [userId, isRoomCreated, isRoomUpdated])
 
     return (
@@ -68,7 +66,6 @@ const Header: React.FC<HeaderType> = memo(({getRoute, setProductType, productTyp
                 isAuth={isAuth}
                 setPageType={setPageType}
                 setProductType={setProductType}
-
             />
             <FilterProductComponent
                 getRoute={getRoute}

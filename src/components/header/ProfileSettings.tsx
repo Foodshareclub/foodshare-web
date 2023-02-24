@@ -24,7 +24,7 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = memo(({
         <>
             <Box alignSelf="center" p={0} color='#303030'>
                 <Menu>
-                    {!signalOfNewMessage ? <MenuButton
+                    {signalOfNewMessage.length ? <MenuButton
                             cursor="pointer"
                             borderRadius="50%"
                             icon={<Avatar src={imgUrl}/>}
