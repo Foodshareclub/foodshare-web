@@ -76,6 +76,7 @@ const ContactsBlock: React.FC<ContactsBlockType> = memo(({allRooms, roomIDFromUr
                                 description={data.posts.post_name}
                                 firstName={data.profiles.first_name}
                                 secondName={data.profiles.second_name}
+
                                 roomId={data.id}
                             />
                         )
