@@ -10,12 +10,12 @@ export type PayloadForGEtRoom={
     postId:string
 }
 export type RoomParticipantsType = {
-    id: string
-    image: string | null
-    profile_id: string | null
+    id?: string
+    image?: string
+    profile_id: string
     room_id: string
-    text: string | null
-    timestamp: string
+    text: string
+    timestamp?: string
 }
 export type CustomRoomType = {
     id: string
@@ -31,12 +31,13 @@ export type CustomRoomType = {
     sharer: string
 }
 export type RoomType = {
-    id?:string
-    requester: string
-    sharer: string
-    post_id: number
-    last_message: string
-    last_message_sent_by: string
+    id:string
+    requester?: string
+    sharer?: string
+    post_id?: number
+    last_message?: string
+    last_message_sent_by?: string
+    last_message_seen_by?: string
     profiles?:AllValuesType
 }
 
@@ -90,5 +91,14 @@ export const chatAPI = {
             .select(`"*", posts("*"), room_participants("*"),profiles!rooms_sharer_fkey("*")`)
             .or(`sharer.eq.${userID}, requester.eq.${userID}`)
     },
+    updateRoom(room:RoomType){
+        return supabase
+            .from("rooms")
+            .update(room)
+            .eq('id', room.id); ///update last_message in rooms
+    },
+    creatPostInRoom(message:RoomParticipantsType){
+        return supabase.from("room_participants").insert(message);
+    }
 
 }

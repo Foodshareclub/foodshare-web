@@ -50,8 +50,6 @@ function App() {
             actions.getProductsTC(productType);
         }
 
-        console.log('return app')
-
     }, [productType]);
 
     const getRoute = (route: string) => {

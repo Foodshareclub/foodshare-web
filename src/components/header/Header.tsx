@@ -12,7 +12,8 @@ import {
 } from "@/store/slices/userSelectors";
 import AlertComponent from "@/components/alert/AlertComponent";
 import {getAllRoomsForCurrentUserTC} from "@/store/slices/chatReducer";
-import {createdSelector} from "@/store";
+import {createdSelector, updateRoomStatusSelector} from "@/store";
+import {newMessageIdSelector} from "@/store/slices/chatSelectors";
 
 type HeaderType = {
     getRoute: (route: string) => void
@@ -23,31 +24,36 @@ type HeaderType = {
 export type PagesType = 'productComponent' | 'profileSettings' | "/";
 
 const Header: React.FC<HeaderType> = memo(({getRoute, setProductType, productType}) => {
-
+    const actions = useActionCreators({getUserFromDBTC, getAllRoomsForCurrentUserTC});
     const [pageType, setPageType] = useState<PagesType>("productComponent");
     const isAuth = useAppSelector(isAuthSelector);
     const session = useAppSelector(sessionSelector);
     const userId = session?.user?.id;
     const isUpdateProfile = useAppSelector(isUpdateProfileSelector);
     const updateUserEffect = useAppSelector(updateUserEffectSelector);
-    const profileMessage = useAppSelector(messageProfileSelector);
+    const profileMessageFromAlertComponent = useAppSelector(messageProfileSelector);
 
-    const isExist = useAppSelector(createdSelector)
-    const isRoomExist = isExist === "created";
+    const roomExist = useAppSelector(createdSelector)
+    const isRoomCreated = roomExist === "created";
 
-    const actions = useActionCreators({getUserFromDBTC, getAllRoomsForCurrentUserTC});
+    const updateRoomStatus = useAppSelector(updateRoomStatusSelector);
+    const isRoomUpdated = updateRoomStatus === "updated";
+
+    const newMessageId = useAppSelector(newMessageIdSelector);
+    console.log(newMessageId,"newMessageId")
 
     useEffect(() => {
         if (isAuth && userId) {
             actions.getUserFromDBTC(userId);
         }
-    }, [userId, isAuth, updateUserEffect])
+    }, [userId, isAuth, updateUserEffect,newMessageId])
 
     useEffect(() => {
         if (userId) {
             actions.getAllRoomsForCurrentUserTC(userId)
         }
-    }, [userId, isRoomExist])
+        console.log(isRoomCreated, "isRoomCreated useEffect")
+    }, [userId, isRoomCreated, isRoomUpdated])
 
     return (
         <CardHeader
@@ -70,7 +76,7 @@ const Header: React.FC<HeaderType> = memo(({getRoute, setProductType, productTyp
                 pageType={pageType}
                 productType={productType}
             />
-            <AlertComponent status={isUpdateProfile} title={profileMessage} top={"94%"}/>
+            <AlertComponent status={isUpdateProfile} title={profileMessageFromAlertComponent} top={"94%"}/>
         </CardHeader>
     );
 });

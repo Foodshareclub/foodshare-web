@@ -19,14 +19,12 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
                                                                        }) => {
     const {id} = useParams();
     const navigate = useNavigate();
-    const actions = useActionCreators({createRoomTC, checkRoomAvailabilityTC,...productActions})
+    const actions = useActionCreators({createRoomTC, checkRoomAvailabilityTC,...productActions});
     const createdRoom = useAppSelector(state => state.chat.createdRoom);
     const userID = useAppSelector(userIdFromSessionSelector);
     const isExist = useAppSelector(createdSelector)
     const isRoomExist = isExist === "created";
-
-    console.log(isRoomExist)
-    console.log(createdRoom[0]?.id)
+    //console.log(isRoomExist)
 
     useEffect(() => {  //to find out if a room exists or not
         if (id && userID) {
@@ -36,7 +34,7 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
             actions.checkRoomAvailabilityTC(arg)
         }
         return console.log('dead oneProdContainer')
-    }, [id]);
+    }, []);
 
     const createRoom = async () => {
         const room = {
@@ -47,7 +45,7 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
             last_message_seen_by: userID,
             last_message: 'Initial message'
         } as RoomType;
-        await actions.createRoomTC(room);
+     await actions.createRoomTC(room)
     }
 
     const navigateHandler = async () => {
@@ -55,12 +53,13 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
             navigate(PATH.myListingsPage);
             return;
         }
+        if (!isRoomExist) {
+        await createRoom()
+        }
         if (isRoomExist) {
             navigate(`/chat-main/${product.id}?s=${product.user}&r=${userID}&room=${createdRoom[0]?.id}`);
         }
-        if (!isRoomExist) {
-            await createRoom()
-        } //if room already exist, it isn't created
+         //if room already exist, it isn't created
     }
 
     return (

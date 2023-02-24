@@ -1,5 +1,5 @@
 import {useAppSelector} from "@/hook";
-import {allRoomsSelector, avatarURLSelector, userFirstNameSelector, userSecondNameSelector} from "@/store";
+import {avatarURLSelector, userFirstNameSelector, userSecondNameSelector} from "@/store";
 import AvatarWithRipple from "@/components/listingPersonCard/AvatarWithRipple";
 import {Box, Flex, Heading, Input, InputGroup, InputLeftElement} from "@chakra-ui/react";
 import {SearchIcon} from "@chakra-ui/icons";
@@ -8,13 +8,15 @@ import {MinifiedUserInfo} from "@/components";
 import React, {memo} from "react";
 import {useNavigate} from "react-router-dom";
 import {sessionSelector} from "@/store/slices/userSelectors";
+import {CustomRoomType} from "@/api/chatAPI";
 
 type ContactsBlockType = {
     roomIDFromUrl: string
     newMessageRoomId: string
+    allRooms: Array<CustomRoomType>
 }
 
-const ContactsBlock: React.FC<ContactsBlockType> = memo(({roomIDFromUrl, newMessageRoomId}) => {
+const ContactsBlock: React.FC<ContactsBlockType> = memo(({allRooms, roomIDFromUrl, newMessageRoomId}) => {
 
     const imgUrl = useAppSelector(avatarURLSelector);
     const userFirstName = useAppSelector(userFirstNameSelector);
@@ -23,7 +25,7 @@ const ContactsBlock: React.FC<ContactsBlockType> = memo(({roomIDFromUrl, newMess
     const session = useAppSelector(sessionSelector);
     const userId = session?.user?.id;
 
-    const allRooms = useAppSelector(allRoomsSelector)
+
     const navigate = useNavigate();
 
     const onGetCurrentUserMessages = (post_id: number, sharerId: string, requesterId: string, roomId: string) => {
@@ -60,7 +62,7 @@ const ContactsBlock: React.FC<ContactsBlockType> = memo(({roomIDFromUrl, newMess
             </Flex>
             <Flex direction={"column"} alignSelf={"center"} w={'100%'}>
                 <Box bg={"gray.100"} borderRadius={"10%"} px={2} height={"350px"} overflow={"auto"}>
-                    {allRooms.length && allRooms.map((data) => {
+                    {allRooms.map((data) => {
 
                         return (
                             <MinifiedUserInfo
