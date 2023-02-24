@@ -1,11 +1,11 @@
 import * as React from "react";
+import {memo} from "react";
 import {Avatar, Box, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
 
 import {Trans} from "@lingui/macro";
 import {loginTC, registerTC} from "@/store/slices/userReducer";
 import {ProfileSettingsProps} from "@/components/header/NavComponent";
 import {AuthenticationUserModal} from "@/components";
-import {memo} from "react";
 
 
 const ProfileSettings: React.FC<ProfileSettingsProps> = memo(({
@@ -54,7 +54,11 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = memo(({
                             isAuth
                                 ? <>
                                     <MenuItem onClick={() => navigateToMyLists()}><Trans>My listing's</Trans></MenuItem>
-                                    <MenuItem onClick={() => navigateToMyMessages()}><Trans>My messages</Trans></MenuItem>
+                                    <MenuItem onClick={() => navigateToMyMessages()}>
+                                        {signalOfNewMessage.length ?
+                                            <Trans>You have {signalOfNewMessage.length} unanswered messages</Trans> :
+                                            <Trans>My messages</Trans>}
+                                    </MenuItem>
                                     <MenuItem onClick={() => navigateToAccSettings()}><Trans>Account
                                         settings</Trans></MenuItem>
                                     <MenuItem onClick={() => navigateToLogout()}><Trans>Log Out</Trans></MenuItem>

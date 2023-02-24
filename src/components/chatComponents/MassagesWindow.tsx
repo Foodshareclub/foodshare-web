@@ -1,10 +1,16 @@
 import React, {memo, useEffect, useRef} from "react";
-import {Avatar, Box, Flex, Text} from "@chakra-ui/react";
+import {Avatar, Box, Flex, Text, Tooltip} from "@chakra-ui/react";
 import {InputSection} from "@/components/chatComponents/InputSection";
 import {RoomParticipantsType} from "@/api/chatAPI";
 import {useAppSelector} from "@/hook";
-import {allRoomsSelector, requesterSelector} from "@/store/slices/chatSelectors";
+import {
+    allRoomsSelector,
+    requesterIdSelector,
+    requesterNameSelector,
+    requesterSelector
+} from "@/store/slices/chatSelectors";
 import {avatarURLSelector} from "@/store";
+import {useNavigate} from "react-router-dom";
 
 type MessagesWindowType = {
     messages: Array<RoomParticipantsType>
@@ -15,20 +21,27 @@ type MessagesWindowType = {
     roomId: string
 }
 export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
-                                                                 messages,
-                                                                 requester, sharer,
-                                                                 postID,
-                                                                 userID, roomId
-                                                             }) => {
+                                                                      messages,
+                                                                      requester, sharer,
+                                                                      postID,
+                                                                      userID, roomId
+                                                                  }) => {
     useEffect(() => {
         messagesAnchorRef.current?.scrollIntoView({behavior: 'smooth'}); //scroll down to show last message
     }, [messages]);
+    const navigate = useNavigate()
+
     const requesterImg = useAppSelector(requesterSelector);
+    const requesterId = useAppSelector(requesterIdSelector);
+    const requesterName = useAppSelector(requesterNameSelector);
+
     const userImg = useAppSelector(avatarURLSelector)
     const allRooms = useAppSelector(allRoomsSelector)
     const currentRoom = allRooms.find(room => room.id === roomId)
 
     const messagesAnchorRef = useRef<HTMLDivElement>(null);
+
+    const goToUser = (id: string | undefined) => navigate(`/volunteer/${id}`)
     return (
         <Flex
             justify={"space-between"} flex={1} direction={"column"}
@@ -55,10 +68,22 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
                             : <Flex justify={"start"} key={m.id}>
 
                                 <Flex my={2} bg={"white"} borderRadius={"25px"} maxWidth={"255px"}>
-                                    <Avatar alignSelf={"center"} size={"xs"}
+                                    <Tooltip hasArrow label={userImg === requesterImg ?
+                                        currentRoom?.profiles.first_name :
+                                        requesterName} bg='gray.300' color='black'>
+                                        <Avatar
+                                            cursor={"pointer"}
+                                            onClick={() => {
+                                                if (userImg === requesterImg) {
+                                                    goToUser(currentRoom?.profiles.id)
+                                                } else {
+                                                    goToUser(requesterId)
+                                                }
+                                            }}
+                                            alignSelf={"center"} size={"xs"}
                                             src={userImg === requesterImg ?
                                                 currentRoom?.profiles.avatar_url :
-                                                requesterImg}/>
+                                                requesterImg}/></Tooltip>
                                     <Text py={2} px={4}>
                                         {m.text}
                                     </Text>

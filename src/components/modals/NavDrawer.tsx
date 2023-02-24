@@ -99,7 +99,7 @@ const NawDrawer: React.FC<ProfileSettingsProps> = memo(({
                                                   onClose()
                                                   navigateToMyMessages()
                                               }}>{signalOfNewMessage.length ?
-                                            <Trans>You have {signalOfNewMessage.length} messages</Trans> :
+                                            <Trans>You have {signalOfNewMessage.length} unanswered messages</Trans> :
                                             <Trans>My messages</Trans>}
                                         </Text>
 
