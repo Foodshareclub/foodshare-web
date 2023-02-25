@@ -1,21 +1,21 @@
 import React, {useEffect} from 'react';
 import {Center, Flex, Text} from "@chakra-ui/react";
-import {ContactsBlock, OneProduct} from "@/components";
+import {ContactsBlock, MessagesWindow, OneProduct} from "@/components";
 import {useActionCreators, useAppSelector} from "@/hook";
 import {useParams, useSearchParams} from "react-router-dom";
-import {getOneProductTC, productActions} from "@/store/slices/productReducer";
-import {MessagesWindow} from "@/components/chatComponents/MassagesWindow";
+
+
 import {
     getAllMessagesInRoomParticipantsFromOneRoomTC,
     getAllRoomsForCurrentUserTC,
     getRoomTC
 } from "@/store/slices/chatReducer";
 import {
-    allRoomsSelector,
+    allRoomsSelector, getOneProductTC,
     messagesFromOneRoomSelector,
     newMessageRoomIdSelector,
     newMessageSelector,
-    oneProductSelector,
+    oneProductSelector, productActions,
     roomSelector,
     userIdFromSessionSelector
 } from "@/store";
@@ -40,10 +40,6 @@ const ChatMainPage = () => {
     const newMessageRoomId = useAppSelector(newMessageRoomIdSelector);
 
     const allRooms = useAppSelector(allRoomsSelector)
-
-    // const updateRoomStatus = useAppSelector(updateRoomStatusSelector);
-    // const isRoomUpdated = updateRoomStatus === "updated";
-
 
     useEffect(() => {
         if (id) {
@@ -96,9 +92,7 @@ const ChatMainPage = () => {
                     </Center>
                 </Flex>
             }
-
-            {
-                oneProduct?.map((product, id) => {
+            {oneProduct?.map((product, id) => {
                     return (
                         <OneProduct chat="chat"
                                     product={product}
