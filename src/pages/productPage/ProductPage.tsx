@@ -16,7 +16,9 @@ const ProductPage = () => {
     }, [params.id]);
 
     return (
-        <Flex direction={{md: "row", base: "column"}} justify={"space-between"} px={7} mt="24vh" mb={"12vh"}>
+        <Flex direction={{md: "row", base: "column"}} justify={"space-between"} px={7} mt="24vh"
+              mb={"12vh"}
+        >
             {
                 oneProduct?.map((product, id) => {
                     return <OneProductContainer

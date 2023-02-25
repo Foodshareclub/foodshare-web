@@ -37,9 +37,6 @@ function App() {
         } else if (productType === "business") {
             console.log("business on app")
             setProductType("food")
-        } else if (productType === "fridges") {
-            console.log("fridges on app")
-            setProductType("food")
         } else if (productType === "community") {
             console.log("community on app")
             setProductType("food")

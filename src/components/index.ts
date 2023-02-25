@@ -41,9 +41,14 @@ import {OneProductContainer} from "@/components/oneProduct/OneProductContainer";
 import ContactsBlock from "@/components/chatComponents/ContactsBlock";
 import {MessagesWindow} from "@/components/chatComponents/MassagesWindow";
 import {InputSection} from "@/components/chatComponents/InputSection";
-
+import UniversalDrawer from "@/components/universalDrawer/UniversalDrawer";
+import {OneProductDrawerContainer} from "@/components/drawerContainers/OneProductDrawerContainer";
+import {ContactsBlockDrawerContainer} from "@/components/drawerContainers/ContactsBlockDrawerContainer";
 
 export {
+    OneProductDrawerContainer,
+    ContactsBlockDrawerContainer,
+    UniversalDrawer,
     InputSection,
     MessagesWindow,
     Main,

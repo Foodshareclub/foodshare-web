@@ -44,9 +44,12 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
     const goToUser = (id: string | undefined) => navigate(`/volunteer/${id}`)
     return (
         <Flex
-            justify={"space-between"} flex={1} direction={"column"}
+            justify={"space-between"}
+            flex={1}
+            direction={"column"}
             p={3} bg={"gray.200"} borderRadius={20}
-            ml={3} mr={3} height={'550px'}
+            ml={3} mr={3}
+            height={'550px'}
         >
             <Box p={3} borderRadius={20} bg={"gray.100"} h={"90%"} overflow={"auto"}>
                 {messages && messages
