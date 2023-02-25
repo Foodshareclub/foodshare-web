@@ -1,14 +1,12 @@
-import * as React from "react";
-import {memo} from "react";
+import {FC, memo} from "react";
 import {Avatar, Box, Menu, MenuButton, MenuItem, MenuList} from "@chakra-ui/react";
-
 import {Trans} from "@lingui/macro";
-import {loginTC, registerTC} from "@/store/slices/userReducer";
 import {ProfileSettingsProps} from "@/components/header/NavComponent";
 import {AuthenticationUserModal} from "@/components";
+import {loginTC, registerTC} from "@/store";
 
 
-const ProfileSettings: React.FC<ProfileSettingsProps> = memo(({
+const ProfileSettings: FC<ProfileSettingsProps> = memo(({
                                                                   signalOfNewMessage,
                                                                   navigateToMyLists,
                                                                   navigateToHelp,

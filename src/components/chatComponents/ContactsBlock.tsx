@@ -1,5 +1,5 @@
 import {useAppSelector} from "@/hook";
-import {avatarURLSelector, userFirstNameSelector, userSecondNameSelector} from "@/store";
+import {avatarURLSelector, sessionSelector, userFirstNameSelector, userSecondNameSelector} from "@/store";
 import AvatarWithRipple from "@/components/listingPersonCard/AvatarWithRipple";
 import {Box, Flex, Heading, Input, InputGroup, InputLeftElement} from "@chakra-ui/react";
 import {SearchIcon} from "@chakra-ui/icons";
@@ -7,7 +7,7 @@ import {t} from "@lingui/macro";
 import {MinifiedUserInfo} from "@/components";
 import React, {memo} from "react";
 import {useNavigate} from "react-router-dom";
-import {sessionSelector} from "@/store/slices/userSelectors";
+
 import {CustomRoomType} from "@/api/chatAPI";
 
 type ContactsBlockType = {

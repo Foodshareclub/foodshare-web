@@ -2,18 +2,15 @@ import React, {memo, useEffect, useState} from 'react';
 import {CardHeader, useColorModeValue} from "@chakra-ui/react";
 import {getUserFromDBTC} from "@/store/slices/userReducer";
 import {useActionCreators, useAppSelector} from "@/hook";
-import {FilterProductComponent, NavComponent} from "@/components";
+import {AlertComponent, FilterProductComponent, NavComponent} from "@/components";
 import {
-    isAuthSelector,
-    isUpdateProfileSelector,
-    messageProfileSelector,
-    sessionSelector,
-    updateUserEffectSelector,
-} from "@/store/slices/userSelectors";
-import AlertComponent from "@/components/alert/AlertComponent";
-import {getAllRoomsForCurrentUserTC} from "@/store/slices/chatReducer";
-import {createdSelector, updateRoomStatusSelector} from "@/store";
-import {newMessageIdSelector} from "@/store/slices/chatSelectors";
+    createdSelector,
+    getAllRoomsForCurrentUserTC, isAuthSelector,
+    isUpdateProfileSelector, messageProfileSelector, newMessageIdSelector,
+    sessionSelector, updateRoomStatusSelector,
+    updateUserEffectSelector
+} from "@/store";
+
 
 type HeaderType = {
     getRoute: (route: string) => void
