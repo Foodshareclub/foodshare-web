@@ -39,9 +39,13 @@ import {BecomeSharerBlock} from "@/components/becomeSharerBlock/BecomeSharerBloc
 import {MinifiedUserInfo} from "@/components/minifiedUserInfo/MinifiedUserInfo";
 import {OneProductContainer} from "@/components/oneProduct/OneProductContainer";
 import ContactsBlock from "@/components/chatComponents/ContactsBlock";
+import {MessagesWindow} from "@/components/chatComponents/MassagesWindow";
+import {InputSection} from "@/components/chatComponents/InputSection";
 
 
 export {
+    InputSection,
+    MessagesWindow,
     Main,
     VolunteerPage,
     CredentialsBlock,

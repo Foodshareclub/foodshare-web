@@ -1,16 +1,16 @@
 import React, {memo, useEffect, useRef} from "react";
 import {Avatar, Box, Flex, Text, Tooltip} from "@chakra-ui/react";
-import {InputSection} from "@/components/chatComponents/InputSection";
 import {RoomParticipantsType} from "@/api/chatAPI";
 import {useAppSelector} from "@/hook";
 import {
     allRoomsSelector,
+    avatarURLSelector,
     requesterIdSelector,
     requesterNameSelector,
     requesterSelector
-} from "@/store/slices/chatSelectors";
-import {avatarURLSelector} from "@/store";
+} from "@/store";
 import {useNavigate} from "react-router-dom";
+import {InputSection} from "@/components";
 
 type MessagesWindowType = {
     messages: Array<RoomParticipantsType>
@@ -68,9 +68,14 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
                             : <Flex justify={"start"} key={m.id}>
 
                                 <Flex my={2} bg={"white"} borderRadius={"25px"} maxWidth={"255px"}>
-                                    <Tooltip hasArrow label={userImg === requesterImg ?
-                                        currentRoom?.profiles.first_name :
-                                        requesterName} bg='gray.300' color='black'>
+                                    <Tooltip
+                                        bg='gray.300'
+                                        color='black'
+                                        hasArrow
+                                        label={userImg === requesterImg ?
+                                            currentRoom?.profiles.first_name :
+                                            requesterName}
+                                    >
                                         <Avatar
                                             cursor={"pointer"}
                                             onClick={() => {
@@ -80,7 +85,8 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
                                                     goToUser(requesterId)
                                                 }
                                             }}
-                                            alignSelf={"center"} size={"xs"}
+                                            alignSelf={"center"}
+                                            size={"xs"}
                                             src={userImg === requesterImg ?
                                                 currentRoom?.profiles.avatar_url :
                                                 requesterImg}/></Tooltip>

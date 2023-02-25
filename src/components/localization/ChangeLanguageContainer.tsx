@@ -4,9 +4,9 @@ import {I18nProvider} from "@lingui/react";
 import {Card, CardBody} from "@chakra-ui/react";
 import {Route, Routes} from "react-router-dom";
 import {dynamicActivate} from "@/utils/i18n";
-import {useAppSelector} from "@/hook/hooks";
 import {
     AboutUsPage,
+    ChatMainPage,
     ContactUsPage,
     LoginSecurityPage,
     MyListingsPage,
@@ -17,10 +17,11 @@ import {
     VolunteerPage
 } from "@/pages";
 import {Footer, Header, Main} from "@/components";
-import {languageSelector} from "@/store/slices/userSelectors";
 import {PATH} from "@/utils";
 import OneVolunteer from "@/components/volonteerCard/OneVolunteer";
-import ChatMainPage from "@/pages/chat/ChatMainPage";
+import {languageSelector} from "@/store";
+import {useAppSelector} from "@/hook";
+
 
 type ContainerProps = {
     productType: string
