@@ -10,7 +10,7 @@ import {useNavigate} from "react-router-dom";
 
 import {CustomRoomType} from "@/api/chatAPI";
 
-type ContactsBlockType = {
+export type ContactsBlockType = {
     roomIDFromUrl: string
     newMessageRoomId: string
     allRooms: Array<CustomRoomType>
@@ -24,7 +24,6 @@ const ContactsBlock: React.FC<ContactsBlockType> = memo(({allRooms, roomIDFromUr
 
     const session = useAppSelector(sessionSelector);
     const userId = session?.user?.id;
-
 
     const navigate = useNavigate();
 
@@ -45,7 +44,6 @@ const ContactsBlock: React.FC<ContactsBlockType> = memo(({allRooms, roomIDFromUr
                         {userFirstName} {userSecondName}
                     </Heading>
                 </Box>
-
                 <InputGroup alignSelf="center" alignItems="center" mb={5}>
                     <InputLeftElement
                         pointerEvents={"stroke"}
@@ -63,7 +61,6 @@ const ContactsBlock: React.FC<ContactsBlockType> = memo(({allRooms, roomIDFromUr
             <Flex direction={"column"} alignSelf={"center"} w={'100%'}>
                 <Box bg={"gray.100"} borderRadius={"10%"} px={2} height={"350px"} overflow={"auto"}>
                     {allRooms.map((data) => {
-
                         return (
                             <MinifiedUserInfo
                                 lastUserSeen={data.last_message_seen_by}
@@ -76,13 +73,11 @@ const ContactsBlock: React.FC<ContactsBlockType> = memo(({allRooms, roomIDFromUr
                                 description={data.posts.post_name}
                                 firstName={data.profiles.first_name}
                                 secondName={data.profiles.second_name}
-
                                 roomId={data.id}
                             />
                         )
                     })}
                 </Box>
-
             </Flex>
         </Flex>
     )

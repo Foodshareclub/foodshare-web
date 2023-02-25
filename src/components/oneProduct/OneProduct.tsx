@@ -10,12 +10,13 @@ import {useAppSelector} from "@/hook";
 import {isAuthSelector, userIdFromSessionSelector} from "@/store";
 import {useNavigate, useSearchParams} from "react-router-dom";
 
-type OneProductType = {
+export type OneProductType = {
     product: InitialProductStateType
     buttonValue: string
     chat?: string
     navigateHandler?: () => void
     isRoomExist?: boolean
+    size?: string
 }
 
 export const OneProduct: React.FC<OneProductType> = ({
@@ -23,7 +24,7 @@ export const OneProduct: React.FC<OneProductType> = ({
                                                          chat,
                                                          product,
                                                          buttonValue,
-                                                         navigateHandler
+                                                         navigateHandler, size
                                                      }) => {
     const isAuth = useAppSelector(isAuthSelector);
     const userID = useAppSelector(userIdFromSessionSelector);
@@ -42,7 +43,7 @@ export const OneProduct: React.FC<OneProductType> = ({
         navigate("/")
     }
     return (
-        <Box w={{md: chat ? "25%" : "45%", base: "100%"}}>
+        <Box w={{md: chat ? size : "45%", base: "100%"}}>
             <Box alignSelf="center">
                 <Image
                     objectFit={'cover'}
@@ -104,7 +105,7 @@ export const OneProduct: React.FC<OneProductType> = ({
                     </Flex>
                 </Box>
                 {chat && <TopTips/>}
-                <Box mt={2}>
+                <Box mt={4}>
                     <Button
                         onClick={onClick}
                         backgroundColor='#FF2D55'
@@ -117,8 +118,6 @@ export const OneProduct: React.FC<OneProductType> = ({
                                 isRoomExist ? "go to chat" : buttonValue
                         }
                     </Button>
-
-
                 </Box>
             </Box>
         </Box>

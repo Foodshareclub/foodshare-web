@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react';
 import {Center, Flex, Text} from "@chakra-ui/react";
-import {ContactsBlock, MessagesWindow, OneProduct} from "@/components";
+import {ContactsBlockDrawerContainer, MessagesWindow, OneProductDrawerContainer} from "@/components";
 import {useActionCreators, useAppSelector} from "@/hook";
 import {useParams, useSearchParams} from "react-router-dom";
 import {
@@ -18,8 +18,10 @@ import {
     userIdFromSessionSelector
 } from "@/store";
 
+
 const ChatMainPage = () => {
     const {id} = useParams();
+
     const [searchParams, setSearchParams] = useSearchParams(); //get params from url
     const sharerId = searchParams.get('s');
     const requesterId = searchParams.get('r');
@@ -61,9 +63,9 @@ const ChatMainPage = () => {
     }, [room?.id, newMessage])
 
     return (
-        <Flex justify={"space-between"} px={7} mt="22vh" mb={"12vh"}>
+        <Flex justify={"space-between"} px={7} mt="22vh" >
 
-            <ContactsBlock
+            <ContactsBlockDrawerContainer
                 allRooms={allRooms}
                 newMessageRoomId={newMessageRoomId}
                 roomIDFromUrl={roomId as string}
@@ -91,14 +93,14 @@ const ChatMainPage = () => {
                 </Flex>
             }
             {oneProduct?.map((product, id) => {
-                    return (
-                        <OneProduct chat="chat"
-                                    product={product}
-                                    buttonValue={"approval pending"}
-                                    key={id}
-                        />
-                    )
-                })
+                return (
+                    <OneProductDrawerContainer chat="chat"
+                                               product={product}
+                                               buttonValue={"approval pending"}
+                                               key={id}
+                    />
+                )
+            })
             }
             {/*<PopupNotificationModal isOpen={isOpen} onClose={onClose}/>*/}
         </Flex>
