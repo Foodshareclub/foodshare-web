@@ -3,19 +3,17 @@ import {Center, Flex, Text} from "@chakra-ui/react";
 import {ContactsBlock, MessagesWindow, OneProduct} from "@/components";
 import {useActionCreators, useAppSelector} from "@/hook";
 import {useParams, useSearchParams} from "react-router-dom";
-
-
 import {
+    allRoomsSelector,
     getAllMessagesInRoomParticipantsFromOneRoomTC,
     getAllRoomsForCurrentUserTC,
-    getRoomTC
-} from "@/store/slices/chatReducer";
-import {
-    allRoomsSelector, getOneProductTC,
+    getOneProductTC,
+    getRoomTC,
     messagesFromOneRoomSelector,
     newMessageRoomIdSelector,
     newMessageSelector,
-    oneProductSelector, productActions,
+    oneProductSelector,
+    productActions,
     roomSelector,
     userIdFromSessionSelector
 } from "@/store";

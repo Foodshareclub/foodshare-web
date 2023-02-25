@@ -6,16 +6,16 @@ import {Avatar, Box, Flex, Text} from "@chakra-ui/react";
 import {PagesType} from "./Header";
 import {useActionCreators, useAppSelector, useMediaQuery} from "@/hook";
 import {BecomeSharerBlock, NavDrawer, ProfileSettings} from "@/components";
-import {downloadImgFromDBTC, logoutTC} from "@/store/slices/userReducer";
+import PopoverForSearch from "@/pages/searchResultPage/PopoverForSearch";
+import {PATH} from "@/utils";
 import {
-    avatarURLSelector,
+    allRoomsSelector,
+    avatarURLSelector, downloadImgFromDBTC,
+    logoutTC,
     userEmailSelector,
     userFirstNameSelector,
     userSecondNameSelector
-} from "@/store/slices/userSelectors";
-import PopoverForSearch from "@/pages/searchResultPage/PopoverForSearch";
-import {PATH} from "@/utils";
-import {allRoomsSelector} from "@/store";
+} from "@/store";
 import {CustomRoomType} from "@/api/chatAPI";
 
 type PropsLangType = {
