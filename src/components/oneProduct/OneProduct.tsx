@@ -17,9 +17,9 @@ export type OneProductType = {
     navigateHandler?: () => void
     isRoomExist?: boolean
     size?: string
-    sharerId?:string
-    requesterId?:string
-    roomId?:string
+    sharerId?: string
+    requesterId?: string
+    roomId?: string
 }
 
 export const OneProduct: React.FC<OneProductType> = ({
@@ -35,22 +35,26 @@ export const OneProduct: React.FC<OneProductType> = ({
                                                      }) => {
     const isAuth = useAppSelector(isAuthSelector);
     const userID = useAppSelector(userIdFromSessionSelector);
-    const navigate = useNavigate();
-const actions = useActionCreators({updateProductTC,updateRoomTC})
 
-    const onClick =async () => {
+    const navigate = useNavigate();
+    const actions = useActionCreators({updateProductTC, updateRoomTC})
+    console.log(buttonValue)
+    const onClick = async () => {
+
         if (navigateHandler) {
             navigateHandler()
         }
-        if(userID === sharerId){
+        if (buttonValue === "approval pending") {
             console.log("approval pending")
-            // await actions.updateProductTC();
-            await actions.updateRoomTC({post_arranged_to:requesterId,id:roomId as string});
+            await actions.updateProductTC({...product, post_published: false});
+            await actions.updateRoomTC({post_arranged_to: requesterId, id: roomId as string});
         }
-        if(userID !== sharerId){
+        if (buttonValue === "leave a feedBack") {
             console.log("leave a feedback")
         }
-
+        if (buttonValue === "confirm pick up") {
+            console.log("confirm pick up")
+        }
     }
     if (!isAuth) {
         navigate("/")
@@ -119,18 +123,28 @@ const actions = useActionCreators({updateProductTC,updateRoomTC})
                 </Box>
                 {chat && <TopTips/>}
                 <Box mt={2}>
-                    <Button
-                        onClick={onClick}
-                        backgroundColor='#FF2D55'
-                        textTransform={"uppercase"}
-                        width="100%" variant='solid'
-                        colorScheme='blue'>
-                        {
-                            (!sharerId && product.user === userID) ?
-                                'go to my listings' :
-                                isRoomExist ? "go to chat" : buttonValue
-                        }
-                    </Button>
+                    {buttonValue === "leave a feedBack" ?
+                        <Button
+                            isDisabled={product.post_published}
+                            //_hover={{ backgroundColor:'#FF2D55'}}
+                            onClick={onClick}
+                            //backgroundColor='#FF2D55'
+                            textTransform={"uppercase"}
+                            colorScheme='red'
+                            width="100%" variant='solid'>
+                            {buttonValue}
+                        </Button>
+                        :
+                        <Button
+                            onClick={onClick}
+                            backgroundColor='#FF2D55'
+                            textTransform={"uppercase"}
+                            width="100%" variant='solid'
+                            colorScheme='blue'>
+                            {buttonValue}
+                        </Button>
+                    }
+
                 </Box>
             </Box>
         </Box>

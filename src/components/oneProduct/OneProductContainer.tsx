@@ -10,12 +10,10 @@ import {checkRoomAvailabilityTC, createRoomTC} from "@/store/slices/chatReducer"
 
 type OneProductContainerType = {
     product: InitialProductStateType
-    buttonValue: string
 }
 
 export const OneProductContainer: React.FC<OneProductContainerType> = ({
-                                                                           product,
-                                                                           buttonValue
+                                                                           product
                                                                        }) => {
     const {id} = useParams();
     const navigate = useNavigate();
@@ -58,7 +56,6 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
         if (isRoomExist) {
             navigate(`/chat-main/${product.id}?s=${product.user}&r=${userID}&room=${createdRoom[0]?.id}`);
         }
-         //if room already exist, it isn't created
     }
 
     return (
@@ -66,7 +63,7 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
             isRoomExist={isRoomExist}
             navigateHandler={navigateHandler}
             product={product}
-            buttonValue={buttonValue}
+            buttonValue={product.user === userID? 'go to my listings':isRoomExist ? "go to chat" : "request"}
             key={id}
         />
     )
