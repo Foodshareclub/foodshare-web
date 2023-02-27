@@ -19,7 +19,7 @@ const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({
                                                                       }) => {
 
     return (
-        <Flex p={4} px={0} justify="space-around">
+        <Flex py={3} px={0} justify="space-around">
             <Carousel
                 getRoute={getRoute}
                 setPageType={setPageType}

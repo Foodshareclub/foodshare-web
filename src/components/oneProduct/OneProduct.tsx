@@ -63,13 +63,13 @@ export const OneProduct: React.FC<OneProductType> = ({
 
                     <Flex>
                         <Image src={loc} alt={loc}/>
-                        <Text px={2} textAlign={"center"} noOfLines={1} color={'gray.500'}
+                        <Text my={0} px={1} textAlign={"center"} noOfLines={1} color={'gray.500'}
                               textTransform={'uppercase'}
                         >{product.post_address}</Text>
                     </Flex>
                     <Flex>
                         <Image src={likes} alt={likes}/>
-                        <Text px={2} textAlign={"center"} noOfLines={1} color={'gray.500'} fontSize={'sm'}
+                        <Text my={0} px={1} textAlign={"center"} noOfLines={1} color={'gray.500'} fontSize={'sm'}
                               textTransform={'uppercase'}>{product.post_like_counter}</Text>
                     </Flex>
 
@@ -105,7 +105,7 @@ export const OneProduct: React.FC<OneProductType> = ({
                     </Flex>
                 </Box>
                 {chat && <TopTips/>}
-                <Box mt={4}>
+                <Box mt={2}>
                     <Button
                         onClick={onClick}
                         backgroundColor='#FF2D55'

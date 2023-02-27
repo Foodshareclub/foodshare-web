@@ -142,7 +142,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
 
                             <Box alignSelf="center">
                                 <Input opacity={0} position="absolute" h="100%" left={0} top={0}
-                                       accept=".png, .jpg" ref={inputFileRef} type="file"
+                                       accept="image/png, image/jpeg, image/webp" ref={inputFileRef} type="file"
                                        onChange={(e) => handleChangeFile(e)}/>
 
                                 <Button onClick={() => inputFileRef?.current?.click()} background={"#ff2d55"}
