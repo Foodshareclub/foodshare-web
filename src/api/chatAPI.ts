@@ -39,6 +39,7 @@ export type RoomType = {
     last_message_sent_by?: string
     last_message_seen_by?: string
     profiles?:AllValuesType
+    post_arranged_to?:string
 }
 
 export const chatAPI = {

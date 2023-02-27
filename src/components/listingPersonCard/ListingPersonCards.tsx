@@ -8,7 +8,6 @@ import {EditIcon} from "@chakra-ui/icons";
 import {updateProfileTC, uploadImgToDBTC, userActions, userEmailFromSessionSelector} from "@/store";
 import AvatarWithRipple from "@/components/listingPersonCard/AvatarWithRipple";
 import {AllValuesType} from "@/api/profileAPI";
-import {FileInput} from "@/components/Experiment/FileInput";
 
 
 type PropsType = {
@@ -81,7 +80,6 @@ const ListingPersonCards: React.FC<PropsType> = ({children, settings}) => {
                         type="file"
                         onChange={(e) => uploadAvatar(e)}
                     />
-                    {/*<FileInput/>*/}
                     {children}
                 </Box>
             </Stack>
