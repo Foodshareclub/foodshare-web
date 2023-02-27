@@ -1,14 +1,14 @@
 import loc from "@/assets/location-blue.svg";
 import likes from "@/assets/likes.svg";
-import {InitialProductStateType} from "@/store/slices/productReducer";
+import {InitialProductStateType, updateProductTC} from "@/store/slices/productReducer";
 import {Box, Button, Flex, Heading, Image, Text} from "@chakra-ui/react";
 import React from "react";
 import {StarIcon} from "@chakra-ui/icons";
 import TopTips from "@/components/topTips/TopTips";
 import {Trans} from "@lingui/macro";
-import {useAppSelector} from "@/hook";
-import {isAuthSelector, userIdFromSessionSelector} from "@/store";
-import {useNavigate, useSearchParams} from "react-router-dom";
+import {useActionCreators, useAppSelector} from "@/hook";
+import {isAuthSelector, updateRoomTC, userIdFromSessionSelector} from "@/store";
+import {useNavigate} from "react-router-dom";
 
 export type OneProductType = {
     product: InitialProductStateType
@@ -17,6 +17,9 @@ export type OneProductType = {
     navigateHandler?: () => void
     isRoomExist?: boolean
     size?: string
+    sharerId?:string
+    requesterId?:string
+    roomId?:string
 }
 
 export const OneProduct: React.FC<OneProductType> = ({
@@ -24,20 +27,30 @@ export const OneProduct: React.FC<OneProductType> = ({
                                                          chat,
                                                          product,
                                                          buttonValue,
-                                                         navigateHandler, size
+                                                         navigateHandler,
+                                                         size,
+                                                         sharerId,
+                                                         requesterId,
+                                                         roomId
                                                      }) => {
     const isAuth = useAppSelector(isAuthSelector);
     const userID = useAppSelector(userIdFromSessionSelector);
     const navigate = useNavigate();
-    const [searchParams, setSearchParams] = useSearchParams(); //get params from url
-    const sharerId = searchParams.get('s');
+const actions = useActionCreators({updateProductTC,updateRoomTC})
 
-    const onClick = () => {
+    const onClick =async () => {
         if (navigateHandler) {
             navigateHandler()
-        } else {
-            console.log("click")
         }
+        if(userID === sharerId){
+            console.log("approval pending")
+            // await actions.updateProductTC();
+            await actions.updateRoomTC({post_arranged_to:requesterId,id:roomId as string});
+        }
+        if(userID !== sharerId){
+            console.log("leave a feedback")
+        }
+
     }
     if (!isAuth) {
         navigate("/")

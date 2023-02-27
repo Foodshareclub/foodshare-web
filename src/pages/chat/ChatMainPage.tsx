@@ -63,7 +63,7 @@ const ChatMainPage = () => {
     }, [room?.id, newMessage])
 
     return (
-        <Flex justify={"space-between"} px={7} mt="20vh" >
+        <Flex justify={"space-between"} px={7} mt="20vh">
 
             <ContactsBlockDrawerContainer
                 allRooms={allRooms}
@@ -94,10 +94,14 @@ const ChatMainPage = () => {
             }
             {oneProduct?.map((product, id) => {
                 return (
-                    <OneProductDrawerContainer chat="chat"
-                                               product={product}
-                                               buttonValue={"approval pending"}
-                                               key={id}
+                    <OneProductDrawerContainer
+                        roomId={roomId as string}
+                        sharerId={sharerId as string}
+                        requesterId={requesterId as string}
+                        chat="chat"
+                        product={product}
+                        buttonValue={sharerId === userID?"approval pending":"Leave a feedBack"}
+                        key={id}
                     />
                 )
             })

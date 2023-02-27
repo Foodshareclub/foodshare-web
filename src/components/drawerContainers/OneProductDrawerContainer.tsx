@@ -11,7 +11,9 @@ export const OneProductDrawerContainer: React.FC<OneProductType> = ({
                                                                         chat,
                                                                         product,
                                                                         buttonValue,
-                                                                        navigateHandler
+                                                                        sharerId,
+                                                                        requesterId,
+                                                                        roomId
                                                                     }) => {
     const {isOpen, onOpen, onClose} = useDisclosure();
     const isSmaller = useMediaQuery('(min-width:1200px)');
@@ -20,11 +22,6 @@ export const OneProductDrawerContainer: React.FC<OneProductType> = ({
             {!isSmaller ?
                 <>
                     <Box w={"98vw"} textAlign={"end"} position={"fixed"}>
-                        {/*<Button  backgroundColor='#FF2D55'*/}
-                        {/*         width="58px" variant='solid'*/}
-                        {/*         colorScheme='blue'*/}
-                        {/*         onClick={onOpen}>*/}
-                        {/*</Button>*/}
                         <IconButton
                             backgroundColor='#FF2D55'
                             variant='solid'
@@ -35,13 +32,15 @@ export const OneProductDrawerContainer: React.FC<OneProductType> = ({
                             aria-label={""}/>
                     </Box>
                     <UniversalDrawer
-                        children={<OneProduct size={"auto"} navigateHandler={navigateHandler} isRoomExist={isRoomExist}
+                        children={<OneProduct roomId={roomId} sharerId={sharerId} requesterId={requesterId} size={"auto"}
+                                              isRoomExist={isRoomExist}
                                               chat={chat}
                                               buttonValue={buttonValue} product={product}/>}
                         onClose={onClose}
                         isOpen={isOpen} size={"md"} placement={"right"}/>
                 </> :
-                <OneProduct size={"25%"} navigateHandler={navigateHandler} isRoomExist={isRoomExist} chat={chat}
+                <OneProduct roomId={roomId} sharerId={sharerId} requesterId={requesterId} size={"25%"} isRoomExist={isRoomExist}
+                            chat={chat}
                             buttonValue={buttonValue} product={product}/>
             }
         </>
