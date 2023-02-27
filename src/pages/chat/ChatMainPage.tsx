@@ -100,7 +100,9 @@ const ChatMainPage = () => {
                         requesterId={requesterId as string}
                         chat="chat"
                         product={product}
-                        buttonValue={sharerId === userID?"approval pending":"Leave a feedBack"}
+                        buttonValue={product.post_published && (sharerId === userID)?
+                            "approval pending":!product.post_published && (sharerId === userID)?"confirm pick up":
+                            "leave a feedBack"}
                         key={id}
                     />
                 )

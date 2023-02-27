@@ -12,12 +12,12 @@ const initialState = {
     messagesFromOneRoom: [] as Array<RoomParticipantsType>,
     status: "loading",
     isCreated: "creation",
-    updateRoomStatus:"loading"
+    updateRoomStatus: "loading"
 };
-export const updateRoomTC = createAsyncThunk("/updateRoomTC", async (room:RoomType, thunkAPI) => {
-   let res;
+export const updateRoomTC = createAsyncThunk("/updateRoomTC", async (room: RoomType, thunkAPI) => {
+    let res;
     try {
-        const {data,error} = await chatAPI.updateRoom(room)
+        const {data, error} = await chatAPI.updateRoom(room)
         if (error) {
             console.log(error);
             return thunkAPI.rejectWithValue(error);
@@ -29,9 +29,9 @@ export const updateRoomTC = createAsyncThunk("/updateRoomTC", async (room:RoomTy
         return thunkAPI.rejectWithValue(e);
     }
 });
-export const createPostInRoomTC = createAsyncThunk("/creatPostInRoomTC", async (message:RoomParticipantsType, thunkAPI) => {
+export const createPostInRoomTC = createAsyncThunk("/creatPostInRoomTC", async (message: RoomParticipantsType, thunkAPI) => {
     try {
-        const {data,error} = await chatAPI.creatPostInRoom(message)
+        const {data, error} = await chatAPI.creatPostInRoom(message)
         if (error) {
             console.log(error);
             return thunkAPI.rejectWithValue(error);
@@ -44,7 +44,7 @@ export const createPostInRoomTC = createAsyncThunk("/creatPostInRoomTC", async (
 });
 export const listenChannelTC = createAsyncThunk("/listenChannel", async (_, thunkAPI) => {
     const messageHandler = (message: RoomParticipantsType) => {
-        thunkAPI.dispatch( chatActions.addNewMessage(message))
+        thunkAPI.dispatch(chatActions.addNewMessage(message))
     }
     try {
         return await chatAPI.listenChannel(messageHandler)
@@ -62,11 +62,11 @@ export const createRoomTC = createAsyncThunk("/createRoomTC", async (payload: Ro
         }
         if (data === null) {
             res = "notCreated"
-            return {res, data:[]};
-        }else{
+            return {res, data: []};
+        } else {
             res = "created"
         }
-            return {res, data};
+        return {res, data};
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
     }
@@ -78,13 +78,13 @@ export const checkRoomAvailabilityTC = createAsyncThunk("/checkRoomAvailabilityT
         if (error) {
             console.log(error);
             return thunkAPI.rejectWithValue(error);
-        }
-        if (!data.length) {
-            res = "notCreated"
-        } else {
+        } else if (data) {
             res = "created"
+            return {res, data};
+        } else if (data === null) {
+            res = "notCreated"
+            return {res, data: []};
         }
-        return {res, data};
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
     }
@@ -108,7 +108,8 @@ export const getAllMessagesInRoomParticipantsFromOneRoomTC = createAsyncThunk("/
             console.log(error);
             return thunkAPI.rejectWithValue(error);
         }
-        return data;
+        if (data)
+            return data.reverse();
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
     }
@@ -131,26 +132,27 @@ const chatSlice = createSlice({
     name: "chat",
     initialState,
     reducers: {
-        addNewMessage:(state, action)=>{
-        state.newMessage = action.payload;
-        }},
+        addNewMessage: (state, action) => {
+            state.newMessage = action.payload;
+        }
+    },
     extraReducers: (builder) => {
-        builder.addCase(createPostInRoomTC.fulfilled, (state,action) => {
+        builder.addCase(createPostInRoomTC.fulfilled, (state, action) => {
 
         });
         builder.addCase(updateRoomTC.pending, (state) => {
-           state.updateRoomStatus = "loading"
+            state.updateRoomStatus = "loading"
         });
-        builder.addCase(updateRoomTC.fulfilled, (state,action) => {
-           state.updateRoomStatus = action.payload.res;
+        builder.addCase(updateRoomTC.fulfilled, (state, action) => {
+            state.updateRoomStatus = action.payload.res;
 
         });
         builder.addCase(createRoomTC.pending, (state) => {
             state.isCreated = "creation"
         });
         builder.addCase(createRoomTC.fulfilled, (state, action) => {
-            state.isCreated =  action.payload.res;
-                state.createdRoom = action.payload.data;
+            state.isCreated = action.payload.res;
+            state.createdRoom = action.payload.data;
 
         });
         builder.addCase(listenChannelTC.fulfilled, (state, action) => {
@@ -175,7 +177,7 @@ const chatSlice = createSlice({
             }
         });
         builder.addCase(getAllRoomsForCurrentUserTC.fulfilled, (state, action) => {
-                state.allRooms = action.payload
+            state.allRooms = action.payload
         });
         builder.addCase(getAllMessagesInRoomParticipantsFromOneRoomTC.fulfilled, (state, action) => {
             if (action.payload) {

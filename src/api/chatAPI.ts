@@ -60,7 +60,7 @@ export const chatAPI = {
     removeChannel(channel:RealtimeChannel): Promise<"error" | "ok" | "timed out">{
        return supabase.removeChannel(channel);
     },
-    checkRoomAvailability(userID:string,postID:string):any{
+    checkRoomAvailability(userID:string,postID:string):PromiseLike<PostgrestSingleResponse<Array<RoomType>>>{
         return supabase
             .from('rooms')
             .select('*')
@@ -79,12 +79,13 @@ export const chatAPI = {
                 post_id: postId
             })
     },
-    getAllMessagesInRoomParticipantsFromOneRoom(roomId:string):any {
+    getAllMessagesInRoomParticipantsFromOneRoom(roomId:string):PromiseLike<PostgrestSingleResponse<Array<RoomParticipantsType>>> {
         return  supabase
             .from("room_participants") ///need to know roomID
             .select()
             .eq('room_id',roomId)
-            .order('timestamp', {ascending: true})
+            .order('timestamp', {ascending: false})
+            .range(0,9)
     },
     getAllRoomsForCurrentUser(userID:string):any {
         return supabase  ///get all rooms for current user to show all his conversations

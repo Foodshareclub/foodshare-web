@@ -22,6 +22,7 @@ const MyListingsPage = () => {
     const isUpdateProduct = useAppSelector(isUpdateProductSelector);
     const updateProductEffect = useAppSelector(updateProductEffectSelector);
     const currentUserProducts = useAppSelector(currentUserProductsSelector);
+    const publishedProducts = currentUserProducts.filter(product => product.post_published);
     const isAuth = useAppSelector(isAuthSelector);
     const productMessage = useAppSelector(messageProductSelector);
 
@@ -38,7 +39,7 @@ const MyListingsPage = () => {
 
 
     return (
-        <Box mt="20vh">
+        <Box mt="17vh">
             <AlertComponent
                 status={isUpdateProduct}
                 title={productMessage}
@@ -63,16 +64,16 @@ const MyListingsPage = () => {
                     </ListingPersonCards>
                 </Box>
 
-                <Heading my={8} textAlign={"center"}>
+                <Heading my={6} textAlign={"center"}>
                     <Trans>Active Listings</Trans>
                 </Heading>
 
-                <SimpleGrid p={8}
+                <SimpleGrid p={8} pb={10}
                             columns={{lg: 4, md: 3, "ss": 2, base: 1}}
                             spacing={10}>
                     {
-                        currentUserProducts.length > 0
-                        && currentUserProducts.map((item, id) => (
+                        publishedProducts.length > 0
+                        && publishedProducts.map((item, id) => (
                             <ProductCard
                                 product={item}
                                 key={id}
