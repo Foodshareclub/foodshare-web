@@ -15,7 +15,10 @@ export const Main = () => {
     const gridSize = useGridSize();
 
     return (
-        <Box mt="20vh" mb={"12vh"}>
+        <Box
+            mt="18vh"
+             mb={"5vh"}
+        >
             {/*<Trans>*/}
             {/*    Last login on {i18n.date(new Date())}.*/}
             {/*</Trans>*/}

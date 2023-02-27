@@ -11,5 +11,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey,{
             eventsPerSecond: 10,
         },
     },
-})
+});
+
 

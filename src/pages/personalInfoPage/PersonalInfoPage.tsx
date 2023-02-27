@@ -6,14 +6,8 @@ import {useNavigate} from "react-router-dom";
 import {PATH} from "@/utils";
 import {useActionCreators, useAppSelector} from "@/hook";
 import {AllValuesType} from "@/api/profileAPI";
-import {
-    getAddressProfileTC,
-    getAllCountriesTC,
-    updateProfileTC,
-    uploadImgToDBTC,
-    userActions
-} from "@/store/slices/userReducer";
-import {userAddressSelector} from "@/store/slices/userSelectors";
+import {getAddressProfileTC, getAllCountriesTC, updateProfileTC, userActions, userAddressSelector} from "@/store";
+
 
 export const PersonalInfoPage = () => {
     const actions = useActionCreators({
@@ -21,7 +15,6 @@ export const PersonalInfoPage = () => {
         updateProfileTC,
         getAllCountriesTC,
         getAddressProfileTC,
-        uploadImgToDBTC
     });
 
     const navigate = useNavigate();
@@ -35,7 +28,7 @@ export const PersonalInfoPage = () => {
     const [phone, setPhone] = useState(value.phone_number);
 
     useEffect(() => {
-        if(id){
+        if (id) {
             actions.getAddressProfileTC(id)
             actions.getAllCountriesTC()
         }
@@ -76,68 +69,68 @@ export const PersonalInfoPage = () => {
                 </BreadcrumbItem>
             </Breadcrumb>
             {
-                 (address === undefined) || !Object.keys(address).length
-                     ?
-                <>
-                    <Box mt={'8vh'}>
-                        <Text fontSize='4xl' fontWeight={"bold"}>
-                            Personal info
-                        </Text>
-                        <Skeleton height='50px' isLoaded={false}/>
-                    </Box>
-                    <Box mt={5}>
-                        <Skeleton height='50px' isLoaded={false}/>
-                    </Box>
-                    <Box mt={5}>
-                        <Skeleton height='50px' isLoaded={false}/>
-                    </Box>
-                    <Box mt={5}>
-                        <Skeleton height='50px' isLoaded={false}/>
-                    </Box>
-                </>
-                :
-                <>
-                    <Box mt={'8vh'}>
-                        <Text fontSize='4xl' fontWeight={"bold"}>
-                            Personal info
-                        </Text>
-                        <NameBlock
-                            firstName={firstName || value.first_name}
-                            secondName={secondName || value.second_name}
-                            setFirstName={setFirstName}
-                            setSecondName={setSecondName}
-                            onSaveHandler={onSaveHandler}
-                            a={a} b={b} c={c} d={d}
-                            setB={setB} setC={setC} setD={setD}
-                        />
-                    </Box>
-                    <Box mt={5}>
-                        <EmailBlock
-                            setC={setC} setD={setD}
-                            a={a} b={b} c={c} d={d}
-                            email={email}
-                            onSaveHandler={onSaveHandler}
-                            setEmail={setEmail}
-                            setA={setA}
-                        />
-                    </Box>
-                    <Box mt={5}>
-                        <PhoneNumberBlock
-                            a={a} b={b} c={c} d={d}
-                            phone={phone || value.phone_number}
-                            setPhone={setPhone}
-                            onSaveHandler={onSaveHandler}
-                            setA={setA} setB={setB} setD={setD}
-                        />
-                    </Box>
-                    <Box mt={5}>
-                        <AddressBlock
-                            address={address}
-                            a={a} b={b} c={c} d={d}
-                            setA={setA} setB={setB} setC={setC}
-                        />
-                    </Box>
-                </>
+                (address === undefined) || !Object.keys(address).length
+                    ?
+                    <>
+                        <Box mt={'8vh'}>
+                            <Text fontSize='4xl' fontWeight={"bold"}>
+                                Personal info
+                            </Text>
+                            <Skeleton height='50px' isLoaded={false}/>
+                        </Box>
+                        <Box mt={5}>
+                            <Skeleton height='50px' isLoaded={false}/>
+                        </Box>
+                        <Box mt={5}>
+                            <Skeleton height='50px' isLoaded={false}/>
+                        </Box>
+                        <Box mt={5}>
+                            <Skeleton height='50px' isLoaded={false}/>
+                        </Box>
+                    </>
+                    :
+                    <>
+                        <Box mt={'8vh'}>
+                            <Text fontSize='4xl' fontWeight={"bold"}>
+                                Personal info
+                            </Text>
+                            <NameBlock
+                                firstName={firstName || value.first_name}
+                                secondName={secondName || value.second_name}
+                                setFirstName={setFirstName}
+                                setSecondName={setSecondName}
+                                onSaveHandler={onSaveHandler}
+                                a={a} b={b} c={c} d={d}
+                                setB={setB} setC={setC} setD={setD}
+                            />
+                        </Box>
+                        <Box mt={5}>
+                            <EmailBlock
+                                setC={setC} setD={setD}
+                                a={a} b={b} c={c} d={d}
+                                email={email}
+                                onSaveHandler={onSaveHandler}
+                                setEmail={setEmail}
+                                setA={setA}
+                            />
+                        </Box>
+                        <Box mt={5}>
+                            <PhoneNumberBlock
+                                a={a} b={b} c={c} d={d}
+                                phone={phone || value.phone_number}
+                                setPhone={setPhone}
+                                onSaveHandler={onSaveHandler}
+                                setA={setA} setB={setB} setD={setD}
+                            />
+                        </Box>
+                        <Box mt={5}>
+                            <AddressBlock
+                                address={address}
+                                a={a} b={b} c={c} d={d}
+                                setA={setA} setB={setB} setC={setC}
+                            />
+                        </Box>
+                    </>
 
             }
 

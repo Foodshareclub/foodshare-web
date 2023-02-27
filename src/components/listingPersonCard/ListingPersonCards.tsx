@@ -1,13 +1,15 @@
 import React, {ChangeEvent, ReactNode, useEffect, useRef, useState} from 'react';
 import {Box, Button, Flex, Heading, Image, Input, Stack} from "@chakra-ui/react";
 import peak from "@/assets/peakpx-min.jpg";
-import AvatarWithRipple from "@/components/listingPersonCard/AvatarWithRipple";
+
 import {useActionCreators, useAppSelector} from "@/hook";
 import {createPhotoUrl} from "@/utils";
 import {EditIcon} from "@chakra-ui/icons";
-import {updateProfileTC, uploadImgToDBTC, userActions} from "@/store/slices/userReducer";
+import {updateProfileTC, uploadImgToDBTC, userActions, userEmailFromSessionSelector} from "@/store";
+import AvatarWithRipple from "@/components/listingPersonCard/AvatarWithRipple";
 import {AllValuesType} from "@/api/profileAPI";
-import {userEmailFromSessionSelector} from "@/store/slices/userSelectors";
+import {FileInput} from "@/components/Experiment/FileInput";
+
 
 type PropsType = {
     children?: ReactNode
@@ -18,6 +20,7 @@ const ListingPersonCards: React.FC<PropsType> = ({children, settings}) => {
     const [object, setObject] = useState<AllValuesType>({} as AllValuesType)
     const [pastUrl, setPastUrl] = useState<string>(object.avatar_url)
     const inputFileRef = useRef<HTMLInputElement | null>(null)
+    //change value to session
     const value = useAppSelector<AllValuesType>(state => state.user.value);
     const actions = useActionCreators({...userActions, updateProfileTC, uploadImgToDBTC});
     const userEmail = useAppSelector(userEmailFromSessionSelector);
@@ -73,11 +76,12 @@ const ListingPersonCards: React.FC<PropsType> = ({children, settings}) => {
                         position="absolute"
                         h="22%" left={0}
                         top="9%"
-                        accept=".png"
+                        accept="image/png, image/jpeg"
                         ref={inputFileRef}
                         type="file"
                         onChange={(e) => uploadAvatar(e)}
                     />
+                    {/*<FileInput/>*/}
                     {children}
                 </Box>
             </Stack>

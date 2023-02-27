@@ -63,7 +63,7 @@ const ChatMainPage = () => {
     }, [room?.id, newMessage])
 
     return (
-        <Flex justify={"space-between"} px={7} mt="22vh" >
+        <Flex justify={"space-between"} px={7} mt="20vh" >
 
             <ContactsBlockDrawerContainer
                 allRooms={allRooms}
