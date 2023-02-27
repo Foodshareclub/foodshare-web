@@ -76,7 +76,7 @@ const ListingPersonCards: React.FC<PropsType> = ({children, settings}) => {
                         position="absolute"
                         h="22%" left={0}
                         top="9%"
-                        accept="image/png, image/jpeg"
+                        accept="image/png, image/jpeg, image/webp"
                         ref={inputFileRef}
                         type="file"
                         onChange={(e) => uploadAvatar(e)}
