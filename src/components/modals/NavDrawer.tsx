@@ -53,7 +53,7 @@ const NawDrawer: React.FC<ProfileSettingsProps> = memo(({
                 aria-label='See menu'
                 icon={<DragHandleIcon/>}
             />}
-            <UniversalDrawer size={size} onClose={onClose} isOpen={isOpen} headerValue={`Hi ${firstName}`}
+            <UniversalDrawer size={size} onClose={onClose} isOpen={isOpen} headerValue={`Hi ${firstName?firstName:"friend"}`}
                              placement={"right"}>
                 <>
                     <MinifiedUserInfo
