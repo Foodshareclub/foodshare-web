@@ -49,7 +49,7 @@ const Footer = () => {
                     borderColor={useColorModeValue('gray.200', 'gray.700')}
                     color={useColorModeValue('gray.700', 'gray.200')}
                     as={Stack}
-                    maxW={'8xl'}
+                    maxW={'100vw'}
                     py={1}
                     direction={{base: 'column', md: 'row'}}
                     justify={{base: 'center', md: 'space-between'}}
