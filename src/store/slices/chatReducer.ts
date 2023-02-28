@@ -134,6 +134,9 @@ const chatSlice = createSlice({
     reducers: {
         addNewMessage: (state, action) => {
             state.newMessage = action.payload;
+        },
+        clearRoom:(state)=>{
+            state.room = [] as Array<RoomType>;
         }
     },
     extraReducers: (builder) => {

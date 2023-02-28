@@ -215,6 +215,7 @@ const productSlice = createSlice({
             state.message = "Something was wrong!"
         });
         builder.addCase(updateProductTC.fulfilled, (state, action) => {
+            console.log(state.updateProductEffect)
             state.isUpdateProduct = action.payload.isUpdateProduct;
             state.message = action.payload.message;
             state.updateProductEffect = !state.updateProductEffect;

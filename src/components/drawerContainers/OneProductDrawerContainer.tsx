@@ -32,16 +32,25 @@ export const OneProductDrawerContainer: React.FC<OneProductType> = ({
                             aria-label={""}/>
                     </Box>
                     <UniversalDrawer
-                        children={<OneProduct roomId={roomId} sharerId={sharerId} requesterId={requesterId} size={"auto"}
+                        children={<OneProduct roomId={roomId}
+                                              sharerId={sharerId}
+                                              requesterId={requesterId}
+                                              size={"auto"}
                                               isRoomExist={isRoomExist}
                                               chat={chat}
-                                              buttonValue={buttonValue} product={product}/>}
+                                              buttonValue={buttonValue}
+                                              product={product}/>}
                         onClose={onClose}
                         isOpen={isOpen} size={"md"} placement={"right"}/>
                 </> :
-                <OneProduct roomId={roomId} sharerId={sharerId} requesterId={requesterId} size={"25%"} isRoomExist={isRoomExist}
+                <OneProduct roomId={roomId}
+                            sharerId={sharerId}
+                            requesterId={requesterId}
+                            size={"25%"}
+                            isRoomExist={isRoomExist}
                             chat={chat}
-                            buttonValue={buttonValue} product={product}/>
+                            buttonValue={buttonValue}
+                            product={product}/>
             }
         </>
 
