@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useEffect} from 'react';
 import {Center, Flex, Text, useDisclosure} from "@chakra-ui/react";
 import {
     ContactsBlockDrawerContainer,
@@ -9,7 +9,7 @@ import {
 import {useActionCreators, useAppSelector} from "@/hook";
 import {useParams, useSearchParams} from "react-router-dom";
 import {
-    allRoomsSelector,
+    allRoomsSelector, chatActions,
     getAllMessagesInRoomParticipantsFromOneRoomTC,
     getAllRoomsForCurrentUserTC,
     getOneProductTC,
@@ -19,56 +19,61 @@ import {
     newMessageSelector,
     oneProductSelector,
     productActions,
-    roomSelector, updateProductEffectSelector,
+    roomIdFromRoomSelector,
+    updateProductEffectSelector,
     userIdFromSessionSelector
 } from "@/store";
 
 
 const ChatMainPage = () => {
-    const {id} = useParams();
     const {isOpen, onOpen, onClose} = useDisclosure();
     const [searchParams, setSearchParams] = useSearchParams(); //get params from url
+
     const sharerId = searchParams.get('s');
+    const postId = searchParams.get('p');
     const requesterId = searchParams.get('r');
-    const roomId = searchParams.get('room');
+    const roomIdFromUrl = searchParams.get('room');
     const actions = useActionCreators({
         getOneProductTC,
         getRoomTC,
         getAllRoomsForCurrentUserTC,
-        getAllMessagesInRoomParticipantsFromOneRoomTC, ...productActions
+        getAllMessagesInRoomParticipantsFromOneRoomTC, ...productActions,...chatActions
     })
     const oneProduct = useAppSelector(oneProductSelector);
-
     const userID = useAppSelector(userIdFromSessionSelector);
-    const room = useAppSelector(roomSelector);
+    const idRoomFromSelector = useAppSelector(roomIdFromRoomSelector);
     const messagesFromOneRoom = useAppSelector(messagesFromOneRoomSelector);
     const newMessage = useAppSelector(newMessageSelector);
     const newMessageRoomId = useAppSelector(newMessageRoomIdSelector);
-    const updateProductEffect = useAppSelector(updateProductEffectSelector)
-    const allRooms = useAppSelector(allRoomsSelector)
+    const updateProductEffect = useAppSelector(updateProductEffectSelector);
+    const allRooms = useAppSelector(allRoomsSelector);
+
+    console.log("chat")
+
 
     useEffect(() => {
-        if (id) {
-            actions.getOneProductTC(Number(id));
-            console.log(updateProductEffect,"updateProductEffect")
+        if (postId) {
+            actions.getOneProductTC(Number(postId));
         }
         return () => {
-            actions.clearOneProductState()
+            actions.clearOneProductState();
+           actions.clearRoom();
         }
-    }, [id,updateProductEffect]);
+    }, [postId, updateProductEffect]);
 
     useEffect(() => {
-        if (id && sharerId && requesterId) {
+        if (postId && sharerId && requesterId) {
             console.log("getRoom")
-            actions.getRoomTC({sharerId, requesterId, postId: id})
+            actions.getRoomTC({sharerId, requesterId, postId})
         }
-    }, [id, sharerId, requesterId]);
+    }, [postId, sharerId, requesterId]);
 
     useEffect(() => {
-        if (room?.id) {
-            actions.getAllMessagesInRoomParticipantsFromOneRoomTC(room.id)
+        if (idRoomFromSelector) {
+            console.log("getAllMessageOfRoom")
+            actions.getAllMessagesInRoomParticipantsFromOneRoomTC(idRoomFromSelector)
         }
-    }, [room?.id, newMessage]);
+    }, [idRoomFromSelector, newMessage]);
 
 
     return (
@@ -77,14 +82,14 @@ const ChatMainPage = () => {
             <ContactsBlockDrawerContainer
                 allRooms={allRooms}
                 newMessageRoomId={newMessageRoomId}
-                roomIDFromUrl={roomId as string}
+                roomIDFromUrl={roomIdFromUrl as string}
             />
 
-            {id ? <MessagesWindow
-                    roomId={roomId as string}
+            {postId ? <MessagesWindow
+                    roomId={roomIdFromUrl as string}
                     requester={requesterId as string}
                     sharer={sharerId as string}
-                    postID={id as string}
+                    postID={postId as string}
                     messages={messagesFromOneRoom}
                     userID={userID}
                 />
@@ -102,23 +107,29 @@ const ChatMainPage = () => {
                 </Flex>
             }
             {oneProduct?.map((product, id) => {
-               //console.log(product.post_published)
+                console.log(product.post_published)
                 return (
                     <OneProductDrawerContainer
-                        roomId={roomId as string}
+                        roomId={roomIdFromUrl as string}
                         sharerId={sharerId as string}
                         requesterId={requesterId as string}
                         chat="chat"
                         product={product}
-                        buttonValue={product.post_published && (sharerId === userID)?
-                            "approval pending":!product.post_published && (sharerId === userID)?"confirm pick up":
-                            "leave a feedBack"}
+                        buttonValue={
+                        // product.post_published && (sharerId === userID) ?
+                        //     "approval pending" : !product.post_published && (sharerId === userID) ? "confirm pick up" :
+                        //         "leave a feedBack"
+                            product.post_published && (sharerId === userID) ?
+                            "approval pending" :
+                                // !product.post_published && (sharerId === userID) ? "confirm pick up" :
+                                "leave a feedBack"
+                    }
                         key={id}
                     />
                 )
             })
             }
-            { <PopupNotificationModal isOpen={isOpen} onClose={onClose}/>}
+            {/*<PopupNotificationModal isOpen={isOpen} onClose={onClose}/>*/}
         </Flex>
     );
 };

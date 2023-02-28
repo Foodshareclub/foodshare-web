@@ -31,7 +31,7 @@ const ContactsBlock: React.FC<ContactsBlockType> = memo(({allRooms, roomIDFromUr
         if (roomId === roomIDFromUrl) {
             return
         } else {
-            navigate(`/chat-main/${post_id}?s=${sharerId}&r=${requesterId}&room=${roomId}`);
+            navigate(`/chat-main/?p=${post_id}&s=${sharerId}&r=${requesterId}&room=${roomId}`);
         }
     };
 

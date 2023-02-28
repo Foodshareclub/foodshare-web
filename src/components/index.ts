@@ -12,7 +12,7 @@ import {Main} from "@/components/main/Main";
 import NavDrawer from "@/components/modals/NavDrawer";
 import PopupNotificationModal from "@/components/modals/PopupNotificationModal";
 import PublishListingModal from "@/components/modals/PublishListingModal";
-import UpdateProfileModal from "@/components/modals/UpdateProfileModal";
+
 import VolunteerPage from "@/pages/volunteerPages/VolunteerPage";
 import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
 import {CredentialsBlock} from "@/components/modals/AuthenticationUser/CredentialsBlock";
@@ -67,7 +67,6 @@ export {
     LanguageSelector,
     ProfileSettings,
     NavComponent,
-    UpdateProfileModal,
     PasswordRecoveryModal,
     Notification,
     EmailArea,

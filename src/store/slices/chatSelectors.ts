@@ -2,6 +2,7 @@ import {StateAppType} from "@/store/redux-store";
 
 
 export const roomSelector = (state: StateAppType) => state.chat.room[0];
+export const roomIdFromRoomSelector = (state: StateAppType) => state.chat.room[0]?.id;
 export const requesterSelector = (state: StateAppType) => state.chat.room[0]?.profiles?.avatar_url;
 export const requesterIdSelector = (state: StateAppType) => state.chat.room[0]?.profiles?.id;
 export const requesterNameSelector = (state: StateAppType) => state.chat.room[0]?.profiles?.first_name;

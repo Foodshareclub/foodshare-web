@@ -35,9 +35,8 @@ export const MinifiedUserInfo: React.FC<MinifiedUserInfoType> = memo(({
     const onClick = async () => {
         if (onGetCurrentUserMessages) {
             onGetCurrentUserMessages();
-            await actions
-                .updateRoomTC({last_message_seen_by: userId as string, id: roomId as string})
-            ///update last_message in rooms
+
+            await actions.updateRoomTC({last_message_seen_by: userId as string, id: roomId as string})
         }
         console.log("clickInMinifiedUserInfo")
     }

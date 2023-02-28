@@ -54,7 +54,7 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
         await createRoom()
         }
         if (isRoomExist) {
-            navigate(`/chat-main/${product.id}?s=${product.user}&r=${userID}&room=${createdRoom[0]?.id}`);
+            navigate(`/chat-main/?p=${product.id}&s=${product.user}&r=${userID}&room=${createdRoom[0]?.id}`);
         }
     }
 

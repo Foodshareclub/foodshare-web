@@ -37,6 +37,7 @@ export const OneProduct: React.FC<OneProductType> = ({
     const navigate = useNavigate();
     const actions = useActionCreators({updateProductTC, updateRoomTC})
     console.log(buttonValue)
+
     const onClick = async () => {
 
         if (navigateHandler) {
