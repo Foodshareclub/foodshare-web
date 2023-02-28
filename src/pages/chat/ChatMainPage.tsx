@@ -1,6 +1,11 @@
-import React, {useEffect} from 'react';
-import {Center, Flex, Text} from "@chakra-ui/react";
-import {ContactsBlockDrawerContainer, MessagesWindow, OneProductDrawerContainer} from "@/components";
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import {Center, Flex, Text, useDisclosure} from "@chakra-ui/react";
+import {
+    ContactsBlockDrawerContainer,
+    MessagesWindow,
+    OneProductDrawerContainer,
+    PopupNotificationModal
+} from "@/components";
 import {useActionCreators, useAppSelector} from "@/hook";
 import {useParams, useSearchParams} from "react-router-dom";
 import {
@@ -21,7 +26,7 @@ import {
 
 const ChatMainPage = () => {
     const {id} = useParams();
-
+    const {isOpen, onOpen, onClose} = useDisclosure();
     const [searchParams, setSearchParams] = useSearchParams(); //get params from url
     const sharerId = searchParams.get('s');
     const requesterId = searchParams.get('r');
@@ -33,6 +38,7 @@ const ChatMainPage = () => {
         getAllMessagesInRoomParticipantsFromOneRoomTC, ...productActions
     })
     const oneProduct = useAppSelector(oneProductSelector);
+
     const userID = useAppSelector(userIdFromSessionSelector);
     const room = useAppSelector(roomSelector);
     const messagesFromOneRoom = useAppSelector(messagesFromOneRoomSelector);
@@ -49,19 +55,21 @@ const ChatMainPage = () => {
         return () => {
             actions.clearOneProductState()
         }
-    }, [id,updateProductEffect])
+    }, [id,updateProductEffect]);
 
     useEffect(() => {
         if (id && sharerId && requesterId) {
+            console.log("getRoom")
             actions.getRoomTC({sharerId, requesterId, postId: id})
         }
-    }, [id, sharerId, requesterId])
+    }, [id, sharerId, requesterId]);
 
     useEffect(() => {
         if (room?.id) {
             actions.getAllMessagesInRoomParticipantsFromOneRoomTC(room.id)
         }
-    }, [room?.id, newMessage])
+    }, [room?.id, newMessage]);
+
 
     return (
         <Flex justify={"space-between"} px={7} mt="20vh">
@@ -94,6 +102,7 @@ const ChatMainPage = () => {
                 </Flex>
             }
             {oneProduct?.map((product, id) => {
+               //console.log(product.post_published)
                 return (
                     <OneProductDrawerContainer
                         roomId={roomId as string}
@@ -109,7 +118,7 @@ const ChatMainPage = () => {
                 )
             })
             }
-            {/*<PopupNotificationModal isOpen={isOpen} onClose={onClose}/>*/}
+            { <PopupNotificationModal isOpen={isOpen} onClose={onClose}/>}
         </Flex>
     );
 };
