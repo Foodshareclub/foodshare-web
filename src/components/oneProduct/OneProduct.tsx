@@ -34,8 +34,6 @@ export const OneProduct: React.FC<OneProductType> = ({
                                                          roomId
                                                      }) => {
     const isAuth = useAppSelector(isAuthSelector);
-    const userID = useAppSelector(userIdFromSessionSelector);
-
     const navigate = useNavigate();
     const actions = useActionCreators({updateProductTC, updateRoomTC})
     console.log(buttonValue)
@@ -126,9 +124,7 @@ export const OneProduct: React.FC<OneProductType> = ({
                     {buttonValue === "leave a feedBack" ?
                         <Button
                             isDisabled={product.post_published}
-                            //_hover={{ backgroundColor:'#FF2D55'}}
                             onClick={onClick}
-                            //backgroundColor='#FF2D55'
                             textTransform={"uppercase"}
                             colorScheme='red'
                             width="100%" variant='solid'>
