@@ -30,6 +30,7 @@ const MyListingsPage = () => {
 
     useEffect(() => {
         if (userId) actions.getCurrentUserProductsTC(userId);
+        console.log("my listing page")
     }, [updateProductEffect, userId]);
 
 

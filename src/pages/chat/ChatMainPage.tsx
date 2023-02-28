@@ -14,7 +14,7 @@ import {
     newMessageSelector,
     oneProductSelector,
     productActions,
-    roomSelector,
+    roomSelector, updateProductEffectSelector,
     userIdFromSessionSelector
 } from "@/store";
 
@@ -38,17 +38,18 @@ const ChatMainPage = () => {
     const messagesFromOneRoom = useAppSelector(messagesFromOneRoomSelector);
     const newMessage = useAppSelector(newMessageSelector);
     const newMessageRoomId = useAppSelector(newMessageRoomIdSelector);
-
+    const updateProductEffect = useAppSelector(updateProductEffectSelector)
     const allRooms = useAppSelector(allRoomsSelector)
 
     useEffect(() => {
         if (id) {
             actions.getOneProductTC(Number(id));
+            console.log(updateProductEffect,"updateProductEffect")
         }
         return () => {
             actions.clearOneProductState()
         }
-    }, [id])
+    }, [id,updateProductEffect])
 
     useEffect(() => {
         if (id && sharerId && requesterId) {
