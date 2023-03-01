@@ -1,7 +1,7 @@
 import loc from "@/assets/location-blue.svg";
 import likes from "@/assets/likes.svg";
 import {InitialProductStateType, updateProductTC} from "@/store/slices/productReducer";
-import {Box, Button, Flex, Heading, Image, Text} from "@chakra-ui/react";
+import {Box, Button, Flex, Heading, Image, Text, useDisclosure} from "@chakra-ui/react";
 import React from "react";
 import {StarIcon} from "@chakra-ui/icons";
 import TopTips from "@/components/topTips/TopTips";
@@ -9,6 +9,7 @@ import {Trans} from "@lingui/macro";
 import {useActionCreators, useAppSelector} from "@/hook";
 import {isAuthSelector, updateRoomTC, userIdFromSessionSelector} from "@/store";
 import {useNavigate} from "react-router-dom";
+import {PopupNotificationModal} from "@/components";
 
 export type OneProductType = {
     product: InitialProductStateType
@@ -33,13 +34,13 @@ export const OneProduct: React.FC<OneProductType> = ({
                                                          requesterId,
                                                          roomId
                                                      }) => {
+    const {isOpen, onOpen, onClose} = useDisclosure();
     const isAuth = useAppSelector(isAuthSelector);
     const navigate = useNavigate();
     const actions = useActionCreators({updateProductTC, updateRoomTC})
     console.log(buttonValue)
 
     const onClick = async () => {
-
         if (navigateHandler) {
             navigateHandler()
         }
@@ -50,16 +51,18 @@ export const OneProduct: React.FC<OneProductType> = ({
         }
         if (buttonValue === "leave a feedBack") {
             console.log("leave a feedback")
+            onOpen()
         }
-        if (buttonValue === "confirm pick up") {
-            console.log("confirm pick up")
-        }
+
     }
     if (!isAuth) {
         navigate("/")
     }
     return (
-        <Box w={{md: chat ? size : "45%", base: "100%"}}>
+        <Flex p={3}
+              direction={"column"}
+              justify={"space-between"}
+              w={{md: chat ? size : "45%", base: "100%"}}>
             <Box alignSelf="center">
                 <Image
                     objectFit={'cover'}
@@ -72,7 +75,9 @@ export const OneProduct: React.FC<OneProductType> = ({
                 />
             </Box>
             <Box>
-                <Box lineHeight={2}>
+                <Box
+                    //lineHeight={2}
+                >
                     <Heading textTransform={'uppercase'} pt={1}
                              textAlign={"center"} noOfLines={1} fontSize={'xl'} fontFamily={'body'}
                              fontWeight={500}>{product.post_name}</Heading>
@@ -121,6 +126,7 @@ export const OneProduct: React.FC<OneProductType> = ({
                     </Flex>
                 </Box>
                 {chat && <TopTips/>}
+                <PopupNotificationModal isOpen={isOpen} onClose={onClose}/>
                 <Box mt={2}>
                     {buttonValue === "leave a feedBack" ?
                         <Button
@@ -144,7 +150,7 @@ export const OneProduct: React.FC<OneProductType> = ({
 
                 </Box>
             </Box>
-        </Box>
+        </Flex>
     )
 }
 

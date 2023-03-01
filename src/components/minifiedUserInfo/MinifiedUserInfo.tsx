@@ -43,7 +43,8 @@ export const MinifiedUserInfo: React.FC<MinifiedUserInfoType> = memo(({
 
     return (
         <Flex
-            cursor={"pointer"} borderRadius={"5%"} _hover={{bg: "white"}}
+            cursor={"pointer"} borderRadius={"5%"}
+            _hover={{bg: "gray.100"}}
             py={2}
             gap='4'
             px={2} alignItems='center'

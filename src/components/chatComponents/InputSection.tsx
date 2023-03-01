@@ -1,7 +1,6 @@
 import React, {KeyboardEvent, memo, useState} from "react";
 import {useActionCreators, useAppSelector} from "@/hook";
 import {Button, Input} from "@chakra-ui/react";
-import {AddIcon} from "@chakra-ui/icons";
 import {RoomParticipantsType} from "@/api/chatAPI";
 import {createPostInRoomTC, updateRoomTC} from "@/store/slices/chatReducer";
 
@@ -47,7 +46,6 @@ export const InputSection: React.FC<InputSectionType> = memo(({messages, sharer,
                 onKeyDown={(e) => keyDown(e)}
                 _hover={{bg: "white"}}
                 variant={"filled"}
-                borderRadius={20}
                 type={'text'}
                 placeholder='Enter...'
                 value={val}
@@ -56,13 +54,11 @@ export const InputSection: React.FC<InputSectionType> = memo(({messages, sharer,
             />
             <Button
                 onClick={click}
-                as={AddIcon}
-                borderRadius={20}
-                colorScheme={"green"}
-                p={2}
                 backgroundColor='#FF2D55'
-                color={"white"}
-                variant={"solid"}>
+                textTransform={"uppercase"}
+                variant='solid'
+                colorScheme='blue'
+            >+
             </Button>
         </>
     )

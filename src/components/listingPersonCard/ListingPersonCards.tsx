@@ -71,6 +71,7 @@ const ListingPersonCards: React.FC<PropsType> = ({children, settings}) => {
                         {value.first_name} {value.second_name}
                     </Heading>
                     <Input
+                        w={0}
                         opacity={0}
                         position="absolute"
                         h="22%" left={0}

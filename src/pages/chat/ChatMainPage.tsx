@@ -1,15 +1,11 @@
 import React, {useEffect} from 'react';
-import {Center, Flex, Text, useDisclosure} from "@chakra-ui/react";
-import {
-    ContactsBlockDrawerContainer,
-    MessagesWindow,
-    OneProductDrawerContainer,
-    PopupNotificationModal
-} from "@/components";
+import {Center, Flex, Text} from "@chakra-ui/react";
+import {ContactsBlockDrawerContainer, MessagesWindow, OneProductDrawerContainer} from "@/components";
 import {useActionCreators, useAppSelector} from "@/hook";
-import {useParams, useSearchParams} from "react-router-dom";
+import {useSearchParams} from "react-router-dom";
 import {
-    allRoomsSelector, chatActions,
+    allRoomsSelector,
+    chatActions,
     getAllMessagesInRoomParticipantsFromOneRoomTC,
     getAllRoomsForCurrentUserTC,
     getOneProductTC,
@@ -26,18 +22,19 @@ import {
 
 
 const ChatMainPage = () => {
-    const {isOpen, onOpen, onClose} = useDisclosure();
+
     const [searchParams, setSearchParams] = useSearchParams(); //get params from url
 
     const sharerId = searchParams.get('s');
     const postId = searchParams.get('p');
     const requesterId = searchParams.get('r');
     const roomIdFromUrl = searchParams.get('room');
+
     const actions = useActionCreators({
         getOneProductTC,
         getRoomTC,
         getAllRoomsForCurrentUserTC,
-        getAllMessagesInRoomParticipantsFromOneRoomTC, ...productActions,...chatActions
+        getAllMessagesInRoomParticipantsFromOneRoomTC, ...productActions, ...chatActions
     })
     const oneProduct = useAppSelector(oneProductSelector);
     const userID = useAppSelector(userIdFromSessionSelector);
@@ -57,7 +54,7 @@ const ChatMainPage = () => {
         }
         return () => {
             actions.clearOneProductState();
-           actions.clearRoom();
+            actions.clearRoom();
         }
     }, [postId, updateProductEffect]);
 
@@ -116,20 +113,15 @@ const ChatMainPage = () => {
                         chat="chat"
                         product={product}
                         buttonValue={
-                        // product.post_published && (sharerId === userID) ?
-                        //     "approval pending" : !product.post_published && (sharerId === userID) ? "confirm pick up" :
-                        //         "leave a feedBack"
                             product.post_published && (sharerId === userID) ?
-                            "approval pending" :
-                                // !product.post_published && (sharerId === userID) ? "confirm pick up" :
+                                "approval pending" :
                                 "leave a feedBack"
-                    }
+                        }
                         key={id}
                     />
                 )
             })
             }
-            {/*<PopupNotificationModal isOpen={isOpen} onClose={onClose}/>*/}
         </Flex>
     );
 };

@@ -44,31 +44,35 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
     const goToUser = (id: string | undefined) => navigate(`/volunteer/${id}`)
     return (
         <Flex
+            borderRadius={6}
             justify={"space-between"}
             flex={1}
             direction={"column"}
-            p={3} bg={"gray.200"} borderRadius={20}
-            mx={3}
-            height={'550px'}
+            p={3}
+            bg={"gray.200"}
+            //mx={3}
+
         >
-            <Box p={3} borderRadius={20} bg={"gray.100"} h={"90%"} overflow={"auto"}>
+            <Box
+                maxH={"60vh"}
+                overflow={"auto"}>
                 {messages && messages
                     .filter(m => m.text !== '') //remove initial message
                     .map((m) => {
                         let time = new Date(m.timestamp as string).toLocaleTimeString() as string
-                        return userID === m.profile_id
-                            ? <Flex justify={"end"} key={m.id}>
+                        return userID === m.profile_id ?
+                            <Flex justify={"end"} key={m.id}>
                                 <Text fontSize={"10px"} color={"gray.400"}>
                                     {time}
                                 </Text>
-                                <Box my={2} bg={"red.100"} borderRadius={"25px"} maxWidth={"255px"}>
+                                <Box m={2} bg={"red.100"} borderRadius={"25px"} maxWidth={"255px"}>
                                     <Text px={4} py={2}>
                                         {m.text}
                                     </Text>
                                 </Box>
                             </Flex>
 
-                            : <Flex justify={"start"} key={m.id}>
+                            : <Flex  justify={"start"} key={m.id}>
 
                                 <Flex my={2} bg={"white"} borderRadius={"25px"} maxWidth={"255px"}>
                                     <Tooltip
@@ -104,8 +108,7 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
                     })}
                 <Box ref={messagesAnchorRef}></Box>
             </Box>
-
-            <Flex borderRadius={20} h={"7%"} bg={"gray.200"}>
+            <Flex pt={3}>
                 <InputSection
                     messages={messages}
                     requester={requester as string}
