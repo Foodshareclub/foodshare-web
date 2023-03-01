@@ -36,7 +36,7 @@ const ContactsBlock: React.FC<ContactsBlockType> = memo(({allRooms, roomIDFromUr
     };
 
     return (
-        <Flex direction={"column"}>
+        <Flex p={3} direction={"column"} >
             <Flex direction={"column"} alignSelf={"center"}>
                 <AvatarWithRipple img={imgUrl}/>
                 <Box py={2}>
@@ -58,8 +58,14 @@ const ContactsBlock: React.FC<ContactsBlockType> = memo(({allRooms, roomIDFromUr
                     />
                 </InputGroup>
             </Flex>
-            <Flex direction={"column"} alignSelf={"center"} w={'100%'}>
-                <Box bg={"gray.100"} borderRadius={"10%"} px={2} height={"350px"} overflow={"auto"}>
+            <Flex direction={"column"} alignSelf={"center"}
+                 w={'100%'}
+            >
+                <Box
+                    borderRadius={"10%"}
+                    px={2}
+                    maxH={"350px"}
+                    overflow={"auto"}>
                     {allRooms.map((data) => {
                         return (
                             <MinifiedUserInfo
