@@ -21,6 +21,7 @@ const SocialButton = ({
             rounded={'full'}
             w={8}
             h={8}
+            target={"_blank"}
             cursor={'pointer'}
             as={'a'}
             href={href}
@@ -54,17 +55,17 @@ const Footer = () => {
                     direction={{base: 'column', md: 'row'}}
                     justify={{base: 'center', md: 'space-between'}}
                     align={{base: 'center', md: 'center'}}>
-                    <Text fontSize={{sm:"16px",base:"12px"}}><Trans>© 2022 Foodshare Club, Limited. All rights reserved</Trans></Text>
+                    <Text fontSize={{md:"16px",base:"10px"}}><Trans>© 2022 Foodshare Club, Limited. All rights reserved</Trans></Text>
                     {/*<LanguageSelector/>*/}
                     <Stack direction={'row'} spacing={6}>
-                        <SocialButton label={'Twitter'} href={'#'}>
+                        <SocialButton label={'Twitter'} href={'https://twitter.com/foodshareclub'}>
                             <Avatar  size='xs' src={twitter}/>
                         </SocialButton>
-                        <SocialButton label={'facebook'} href={'#'}>
+                        <SocialButton  label={'facebook'} href={'https://www.facebook.com/foodshareclub'}>
                             <Avatar size='xs' src={facebook}/>
 
                         </SocialButton>
-                        <SocialButton label={'Instagram'} href={'#'}>
+                        <SocialButton label={'Instagram'} href={'https://www.instagram.com/foodshareclub/'}>
                             <Avatar size='xs' src={insta}/>
                         </SocialButton>
                     </Stack>

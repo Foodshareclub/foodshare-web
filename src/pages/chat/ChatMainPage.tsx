@@ -1,7 +1,7 @@
 import React, {useEffect} from 'react';
 import {Center, Flex, Text} from "@chakra-ui/react";
 import {ContactsBlockDrawerContainer, MessagesWindow, OneProductDrawerContainer} from "@/components";
-import {useActionCreators, useAppSelector} from "@/hook";
+import {useActionCreators, useAppSelector, useMediaQuery} from "@/hook";
 import {useSearchParams} from "react-router-dom";
 import {
     allRoomsSelector,
@@ -22,7 +22,7 @@ import {
 
 
 const ChatMainPage = () => {
-
+    const isSmaller = useMediaQuery('(min-width:1200px)');
     const [searchParams, setSearchParams] = useSearchParams(); //get params from url
 
     const sharerId = searchParams.get('s');
@@ -45,9 +45,6 @@ const ChatMainPage = () => {
     const updateProductEffect = useAppSelector(updateProductEffectSelector);
     const allRooms = useAppSelector(allRoomsSelector);
 
-    console.log("chat")
-
-
     useEffect(() => {
         if (postId) {
             actions.getOneProductTC(Number(postId));
@@ -60,21 +57,21 @@ const ChatMainPage = () => {
 
     useEffect(() => {
         if (postId && sharerId && requesterId) {
-            console.log("getRoom")
             actions.getRoomTC({sharerId, requesterId, postId})
         }
     }, [postId, sharerId, requesterId]);
 
     useEffect(() => {
         if (idRoomFromSelector) {
-            console.log("getAllMessageOfRoom")
             actions.getAllMessagesInRoomParticipantsFromOneRoomTC(idRoomFromSelector)
         }
     }, [idRoomFromSelector, newMessage]);
 
 
     return (
-        <Flex justify={"space-between"} px={7} mt="20vh">
+        <Flex
+            justify={{xl: "start", xxl: "center"}}
+            px={7} mt="20vh">
 
             <ContactsBlockDrawerContainer
                 allRooms={allRooms}
@@ -92,9 +89,13 @@ const ChatMainPage = () => {
                 />
                 :
                 <Flex
-                    justify={"space-between"} flex={1} direction={"column"}
-                    p={3} bg={"gray.200"} borderRadius={20}
-                    ml={3} mr={3} height={'550px'}
+                    borderRadius={6}
+                    justify={"space-between"}
+                    flex={1}
+                    direction={"column"}
+                    p={3}
+                    bg={"gray.200"}
+                    h={"550px"}
                 >
                     <Center>
                         <Text fontSize='3xl'>
@@ -104,7 +105,6 @@ const ChatMainPage = () => {
                 </Flex>
             }
             {oneProduct?.map((product, id) => {
-                console.log(product.post_published)
                 return (
                     <OneProductDrawerContainer
                         roomId={roomIdFromUrl as string}

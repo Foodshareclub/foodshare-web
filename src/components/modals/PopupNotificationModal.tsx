@@ -1,5 +1,5 @@
 import {
-    Box, Button,
+    Button,
     Flex,
     Heading,
     Image,
@@ -9,33 +9,59 @@ import {
     ModalContent,
     ModalHeader,
     ModalOverlay,
-    Text, Textarea
+    Text,
+    Textarea
 } from "@chakra-ui/react";
 import {Trans} from "@lingui/macro";
 import React, {useState} from "react";
-import calendar from "@/assets/image 22.png";
 import stars from "@/assets/starsForPopup.webp";
-import likeUp from "@/assets/likeUp.svg";
 import {StarIcon} from "@chakra-ui/icons";
+import {useSearchParams} from "react-router-dom";
+import {useAppSelector} from "@/hook";
+import {userIdFromSessionSelector} from "@/store";
 
 type ModalType = {
     isOpen: boolean
     onClose: () => void
 }
+type FeedBackType = {
+    id?: number
+    rewiewed_rating: number
+    profile_id: string
+    post_id: number
+    forum_id?: number
+    challenge_id?: number
+    feedback: string
+};
 
 const PopupNotificationModal: React.FC<ModalType> = ({isOpen, onClose}) => {
+    const [searchParams, setSearchParams] = useSearchParams(); //get params from url
+
+    const sharerId = searchParams.get('s') as string;
+    const postId = searchParams.get('p') as string;
+    const requesterId = searchParams.get('r') as string;
+    const userID = useAppSelector(userIdFromSessionSelector);
 
     const initialRef = React.useRef(null);
     const finalRef = React.useRef(null);
-    const [isChange, setIsChange] = useState(false)
-    const [value, setValue] = useState(0)
-
+    const [isChange, setIsChange] = useState(false);
+    const [value, setValue] = useState(0);
+    const [textArea, setTextArea] = useState('');
     const click = () => {
         !isChange && setIsChange(true);
-        if(isChange){
-            console.log("feedback")
+        if (isChange) {
+            const feedback: FeedBackType = {
+                rewiewed_rating: Number(value),
+                profile_id: sharerId === userID ? requesterId : sharerId,
+                post_id: Number(postId),
+                feedback: textArea
+            };
+            console.log(feedback, "feedback")
+            onClose()
         }
+        console.log(isChange)
     }
+   // console.log(isChange)
     return (
         <Modal
             isCentered
@@ -66,23 +92,25 @@ const PopupNotificationModal: React.FC<ModalType> = ({isOpen, onClose}) => {
                         <>
                             <Flex justify={"center"}>
                                 {Array(5).fill('').map((item, i) => (
-                                    <StarIcon w={10} h={10} onClick={()=>setValue(i+1)} key={i} color={i < value ? 'teal.500' : 'gray.300'}/>
+                                    <StarIcon w={10} h={10} onClick={() => setValue(i + 1)} key={i}
+                                              color={i < value ? 'teal.500' : 'gray.300'}/>
                                 ))}
                             </Flex>
-                            <Textarea mt={5} isInvalid placeholder='write smth.' />
+                            <Textarea value={textArea} onChange={(e) => setTextArea(e.currentTarget.value)} mt={5}
+                                      isInvalid placeholder='Please write smth.'/>
                         </>
                     }
                     <Button
                         display={"block"}
                         m={"20px auto 0 auto"}
-                        h={55}
+                        h={!isChange ? 55 : 10}
                         backgroundColor='#FF2D55'
                         textTransform={"uppercase"}
                         variant='solid'
                         colorScheme='blue'
-                        borderRadius={!isChange ?"50%":"15%"}
+                        borderRadius={!isChange ? "50%" : "10%"}
                         onClick={click}
-                    >{!isChange ? "yes":"send"}
+                    >{!isChange ? "yes" : "send"}
                     </Button>
                     {/*<Box>*/}
                     {/*    <Flex>*/}

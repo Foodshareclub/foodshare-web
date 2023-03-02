@@ -78,7 +78,8 @@ export const checkRoomAvailabilityTC = createAsyncThunk("/checkRoomAvailabilityT
         if (error) {
             console.log(error);
             return thunkAPI.rejectWithValue(error);
-        } else if (data) {
+        } else if (data?.length) {
+            console.log(data)
             res = "created"
             return {res, data};
         } else if (data === null) {

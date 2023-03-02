@@ -36,7 +36,11 @@ const ContactsBlock: React.FC<ContactsBlockType> = memo(({allRooms, roomIDFromUr
     };
 
     return (
-        <Flex p={3} direction={"column"} >
+        <Flex
+            w={{xl:"18vw",base:"auto"}}
+            py={3} pr={3}
+            direction={"column"}
+        >
             <Flex direction={"column"} alignSelf={"center"}>
                 <AvatarWithRipple img={imgUrl}/>
                 <Box py={2}>
@@ -44,7 +48,11 @@ const ContactsBlock: React.FC<ContactsBlockType> = memo(({allRooms, roomIDFromUr
                         {userFirstName} {userSecondName}
                     </Heading>
                 </Box>
-                <InputGroup alignSelf="center" alignItems="center" mb={5}>
+                <InputGroup
+                    w={"90%"}
+                    alignSelf="center"
+                    alignItems="center"
+                    mb={5}>
                     <InputLeftElement
                         pointerEvents={"stroke"}
                         children={<SearchIcon
