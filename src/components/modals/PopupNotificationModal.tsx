@@ -49,13 +49,13 @@ const PopupNotificationModal: React.FC<ModalType> = ({isOpen, onClose}) => {
 
     const initialRef = React.useRef(null);
     const finalRef = React.useRef(null);
-    const [numberM, setNumberM] = useState<"first" | "second" | "threeth" | "fourth">("second");
+    const [numberM, setNumberM] = useState<"first" | "second" | "third" | "fourth">("second");
     const [value, setValue] = useState(0);
     const [textArea, setTextArea] = useState('');
 
     const click = async () => {
-        numberM === "second" && setNumberM("threeth");
-        if (numberM === "threeth") {
+        numberM === "second" && setNumberM("third");
+        if (numberM === "third") {
             const feedback: FeedBackType = {
                 reviewed_rating: Number(value),
                 profile_id: sharerId === userID ? requesterId : sharerId,
@@ -103,7 +103,7 @@ const PopupNotificationModal: React.FC<ModalType> = ({isOpen, onClose}) => {
                             <Trans>Would you like to leave feedback?</Trans>
                         </Text>
                     </>}
-                    {numberM === "threeth" && <>
+                    {numberM === "third" && <>
                         <Flex justify={"center"}>
                             {Array(5).fill('').map((item, i) => (
                                 <StarIcon w={10} h={10} onClick={() => setValue(i + 1)} key={i}
@@ -114,7 +114,7 @@ const PopupNotificationModal: React.FC<ModalType> = ({isOpen, onClose}) => {
                                   isInvalid placeholder='Please write smth.'/>
                     </>
                     }
-                    {(numberM === "second" || numberM === "threeth") && <Button
+                    {(numberM === "second" || numberM === "third") && <Button
                         display={"block"}
                         m={"20px auto 0 auto"}
                         h={numberM === "second" ? 55 : 10}
