@@ -2,7 +2,7 @@ import loc from "@/assets/location-blue.svg";
 import likes from "@/assets/likes.svg";
 import {InitialProductStateType, updateProductTC} from "@/store/slices/productReducer";
 import {Box, Button, Flex, Heading, Image, Text, useDisclosure} from "@chakra-ui/react";
-import React from "react";
+import React, {useState} from "react";
 import {StarIcon} from "@chakra-ui/icons";
 import TopTips from "@/components/topTips/TopTips";
 import {Trans} from "@lingui/macro";
@@ -16,7 +16,6 @@ export type OneProductType = {
     buttonValue: string
     chat?: string
     navigateHandler?: () => void
-    isRoomExist?: boolean
     size?: string
     sharerId?: string
     requesterId?: string
@@ -24,16 +23,15 @@ export type OneProductType = {
 }
 
 export const OneProduct: React.FC<OneProductType> = ({
-                                                         isRoomExist,
                                                          chat,
                                                          product,
                                                          buttonValue,
                                                          navigateHandler,
                                                          size,
-                                                         sharerId,
                                                          requesterId,
                                                          roomId
                                                      }) => {
+    const [value, setValue] = useState(0)
     const {isOpen, onOpen, onClose} = useDisclosure();
     const isAuth = useAppSelector(isAuthSelector);
     const navigate = useNavigate();
@@ -59,10 +57,11 @@ export const OneProduct: React.FC<OneProductType> = ({
         navigate("/")
     }
     return (
-        <Flex p={3}
+        <Flex py={3} pl={3}
               direction={"column"}
               justify={"space-between"}
-              w={{md: chat ? size : "45%", base: "100%"}}>
+             w={{md: chat ? size : "45%", base: "100%"}}
+        >
             <Box alignSelf="center">
                 <Image
                     objectFit={'cover'}
@@ -76,7 +75,6 @@ export const OneProduct: React.FC<OneProductType> = ({
             </Box>
             <Box>
                 <Box
-                    //lineHeight={2}
                 >
                     <Heading textTransform={'uppercase'} pt={1}
                              textAlign={"center"} noOfLines={1} fontSize={'xl'} fontFamily={'body'}
@@ -98,9 +96,9 @@ export const OneProduct: React.FC<OneProductType> = ({
                         {Array(5)
                             .fill('')
                             .map((item, i) => (
-                                <StarIcon
+                                <StarIcon onClick={()=>setValue(i+1)}
                                     key={i}
-                                    color={i < 4 ? 'teal.500' : 'gray.300'}
+                                    color={i < value ? 'teal.500' : 'gray.300'}
                                 />
                             ))}
                     </Flex>

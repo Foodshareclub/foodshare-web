@@ -1,7 +1,7 @@
 import React, {memo, useEffect, useRef} from "react";
 import {Avatar, Box, Flex, Text, Tooltip} from "@chakra-ui/react";
 import {RoomParticipantsType} from "@/api/chatAPI";
-import {useAppSelector} from "@/hook";
+import {useAppSelector, useMediaQuery} from "@/hook";
 import {
     allRoomsSelector,
     avatarURLSelector,
@@ -30,7 +30,7 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
         messagesAnchorRef.current?.scrollIntoView({behavior: 'smooth'}); //scroll down to show last message
     }, [messages]);
     const navigate = useNavigate()
-
+    const isSmaller = useMediaQuery('(min-width:1200px)');
     const requesterImg = useAppSelector(requesterSelector);
     const requesterId = useAppSelector(requesterIdSelector);
     const requesterName = useAppSelector(requesterNameSelector);
@@ -44,14 +44,13 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
     const goToUser = (id: string | undefined) => navigate(`/volunteer/${id}`)
     return (
         <Flex
+            w={isSmaller ? "52vw" : "100vw"}
+            mx={3}
             borderRadius={6}
             justify={"space-between"}
-            flex={1}
             direction={"column"}
             p={3}
             bg={"gray.200"}
-            //mx={3}
-
         >
             <Box
                 maxH={"60vh"}
@@ -72,7 +71,7 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
                                 </Box>
                             </Flex>
 
-                            : <Flex  justify={"start"} key={m.id}>
+                            : <Flex justify={"start"} key={m.id}>
 
                                 <Flex my={2} bg={"white"} borderRadius={"25px"} maxWidth={"255px"}>
                                     <Tooltip

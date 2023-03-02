@@ -23,6 +23,7 @@ const ProductPage = () => {
                     return <OneProductContainer
                         product={product}
                         key={id}
+
                     />
                 })}
             <ProductsLocation/>
