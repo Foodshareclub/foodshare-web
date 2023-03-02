@@ -53,7 +53,7 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
             bg={"gray.200"}
         >
             <Box
-                maxH={"60vh"}
+                h={"60vh"}
                 overflow={"auto"}>
                 {messages && messages
                     .filter(m => m.text !== '') //remove initial message

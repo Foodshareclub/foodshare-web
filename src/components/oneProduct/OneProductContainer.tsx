@@ -22,7 +22,7 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
     const userID = useAppSelector(userIdFromSessionSelector);
     const isExist = useAppSelector(createdSelector)
     const isRoomExist = isExist === "created";
-    console.log(isRoomExist)
+
     useEffect(() => {  //to find out if a room exists or not
         if (id && userID) {
             const arg = {
@@ -56,6 +56,7 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
         if (isRoomExist) {
             navigate(`/chat-main/?p=${product.id}&s=${product.user}&r=${userID}&room=${createdRoom[0]?.id}`);
         }
+        console.log("OneProductContainer")
     }
 
     return (

@@ -1,11 +1,11 @@
 import React, {useEffect} from 'react';
 import {Center, Flex, Text} from "@chakra-ui/react";
 import {ContactsBlockDrawerContainer, MessagesWindow, OneProductDrawerContainer} from "@/components";
-import {useActionCreators, useAppSelector, useMediaQuery} from "@/hook";
+import {useActionCreators, useAppSelector} from "@/hook";
 import {useSearchParams} from "react-router-dom";
 import {
     allRoomsSelector,
-    chatActions,
+    chatActions, feedBackStatusSelector,
     getAllMessagesInRoomParticipantsFromOneRoomTC,
     getAllRoomsForCurrentUserTC,
     getOneProductTC,
@@ -22,7 +22,7 @@ import {
 
 
 const ChatMainPage = () => {
-    const isSmaller = useMediaQuery('(min-width:1200px)');
+
     const [searchParams, setSearchParams] = useSearchParams(); //get params from url
 
     const sharerId = searchParams.get('s');
@@ -44,7 +44,7 @@ const ChatMainPage = () => {
     const newMessageRoomId = useAppSelector(newMessageRoomIdSelector);
     const updateProductEffect = useAppSelector(updateProductEffectSelector);
     const allRooms = useAppSelector(allRoomsSelector);
-
+    const feedBackStatus = useAppSelector(feedBackStatusSelector);
     useEffect(() => {
         if (postId) {
             actions.getOneProductTC(Number(postId));
@@ -107,15 +107,17 @@ const ChatMainPage = () => {
             {oneProduct?.map((product, id) => {
                 return (
                     <OneProductDrawerContainer
+                        messagesFromOneRoom={messagesFromOneRoom}
                         roomId={roomIdFromUrl as string}
                         sharerId={sharerId as string}
                         requesterId={requesterId as string}
                         chat="chat"
                         product={product}
                         buttonValue={
-                            product.post_published && (sharerId === userID) ?
+                            (product.post_published && (sharerId === userID)) ?
                                 "approval pending" :
-                                "leave a feedBack"
+                                (product.reviews?.length || (feedBackStatus === "written")) ?
+                                    "completed" : "leave a feedBack"
                         }
                         key={id}
                     />

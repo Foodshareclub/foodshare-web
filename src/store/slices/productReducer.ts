@@ -2,6 +2,7 @@ import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import {productAPI, ProductObjType} from "../../api/productAPI";
 import {ImgUrlType, profileAPI, UploadImgUrlType} from "@/api/profileAPI";
 import {StatusType} from "@/components/alert/AlertComponent";
+import {ReviewsType} from "@/api/chatAPI";
 
 
 export type InitialProductStateType = {
@@ -25,7 +26,8 @@ export type InitialProductStateType = {
     post_published: boolean
     post_views: number
     profile_id:string
-     user: string
+    user: string
+    reviews:Array<ReviewsType>
 }
 
 const initialState = {
@@ -38,7 +40,8 @@ const initialState = {
     postImgUrl: '',
     isPostImgUpload: false,
     message: '',
-    status:"loading"
+    status:"loading",
+
 };
 
 export const getProductsTC = createAsyncThunk("/getProductsTC", async (productType: string, thunkAPI) => {
