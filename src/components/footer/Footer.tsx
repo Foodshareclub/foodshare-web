@@ -55,7 +55,7 @@ const Footer = () => {
                     direction={{base: 'column', md: 'row'}}
                     justify={{base: 'center', md: 'space-between'}}
                     align={{base: 'center', md: 'center'}}>
-                    <Text fontSize={{md:"16px",base:"10px"}}><Trans>© 2022 Foodshare Club, Limited. All rights reserved</Trans></Text>
+                    <Text fontSize={{md:"16px",base:"10px"}}><Trans>© 2023 Foodshare Club, Limited. All rights reserved</Trans></Text>
                     {/*<LanguageSelector/>*/}
                     <Stack direction={'row'} spacing={6}>
                         <SocialButton label={'Twitter'} href={'https://twitter.com/foodshareclub'}>

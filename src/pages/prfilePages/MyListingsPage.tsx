@@ -31,6 +31,9 @@ const MyListingsPage = () => {
     useEffect(() => {
         if (userId) actions.getCurrentUserProductsTC(userId);
         console.log("my listing page")
+        return ()=>{
+            actions.clearOneProductState();
+        }
     }, [updateProductEffect, userId]);
 
 

@@ -1,14 +1,17 @@
 import {supabase} from "@/supaBase.config";
+import {PostgrestSingleResponse} from "@supabase/supabase-js";
+
+import {InitialProductStateType} from "@/store";
 
 export type ProductObjType = {
     gif_url: string,
-    post_type: string,
-    post_name: string,
-    post_description: string,
-    pickup_time: string,
-    post_address: string,
-    post_metro_station: string,
-    user: string
+    post_type?: string,
+    post_name?: string,
+    post_description?: string,
+    pickup_time?: string,
+    post_address?: string,
+    post_metro_station?: string,
+    user?: string
     id?: number
     post_published?: boolean
 }
@@ -19,10 +22,10 @@ export const productAPI = {
             .from('posts')
             .select('*')
     },
-    getProducts(productType: string) {
+    getProducts(productType: string): PromiseLike<PostgrestSingleResponse<Array<InitialProductStateType>>> {
         return supabase
             .from('posts')
-            .select('*')
+            .select(`*,reviews(*)`)
             .eq('post_type', productType.toLowerCase())
     },
     getCurrentUserProduct(currentUserID: string) {
@@ -31,10 +34,10 @@ export const productAPI = {
             .select('*')
             .eq('user', currentUserID)
     },
-    getOneProduct(productId: number) {
+    getOneProduct(productId: number):any {
         return supabase
             .from('posts')
-            .select('*')
+            .select(`*,reviews(*)`)
             .eq('id', productId)
     },
     //заменим insert на upsert
@@ -44,6 +47,7 @@ export const productAPI = {
             .insert(createdProduct)
     },
     updateProduct(createdProduct: ProductObjType) {
+        console.log(createdProduct)
         return supabase.from("posts").upsert(createdProduct)
     },
     deleteProduct(productID: number) {

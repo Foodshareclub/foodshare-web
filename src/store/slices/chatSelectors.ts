@@ -14,3 +14,7 @@ export const updateRoomStatusSelector = (state: StateAppType) => state.chat.upda
 export const newMessageSelector = (state: StateAppType) => state.chat.newMessage;
 export const newMessageIdSelector = (state: StateAppType) => state.chat.newMessage?.id;
 export const newMessageRoomIdSelector = (state: StateAppType) => state.chat.newMessage?.room_id;
+
+export const feedBackStatusSelector = (state: StateAppType) => state.chat.feedBackStatus;
+
+

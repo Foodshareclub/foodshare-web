@@ -10,6 +10,9 @@ import {useActionCreators, useAppSelector} from "@/hook";
 import {isAuthSelector, updateRoomTC, userIdFromSessionSelector} from "@/store";
 import {useNavigate} from "react-router-dom";
 import {PopupNotificationModal} from "@/components";
+import {RoomParticipantsType} from "@/api/chatAPI";
+import {AllValuesType} from "@/api/profileAPI";
+import {ProductObjType} from "@/api/productAPI";
 
 export type OneProductType = {
     product: InitialProductStateType
@@ -20,9 +23,11 @@ export type OneProductType = {
     sharerId?: string
     requesterId?: string
     roomId?: string
+    messagesFromOneRoom?:Array<RoomParticipantsType>
 }
 
 export const OneProduct: React.FC<OneProductType> = ({
+                                                         messagesFromOneRoom,
                                                          chat,
                                                          product,
                                                          buttonValue,
@@ -39,12 +44,16 @@ export const OneProduct: React.FC<OneProductType> = ({
     console.log(buttonValue)
 
     const onClick = async () => {
+        if (buttonValue === "completed") {
+           return
+        }
         if (navigateHandler) {
             navigateHandler()
         }
         if (buttonValue === "approval pending") {
             console.log("approval pending")
-            await actions.updateProductTC({...product, post_published: false});
+
+            await actions.updateProductTC({gif_url:product.gif_url,id:product.id,post_published: false});
             await actions.updateRoomTC({post_arranged_to: requesterId, id: roomId as string});
         }
         if (buttonValue === "leave a feedBack") {
@@ -138,10 +147,12 @@ export const OneProduct: React.FC<OneProductType> = ({
                         :
                         <Button
                             onClick={onClick}
-                            backgroundColor='#FF2D55'
+                            backgroundColor={buttonValue === "completed"?"green.300":'#FF2D55'}
                             textTransform={"uppercase"}
                             width="100%" variant='solid'
-                            colorScheme='blue'>
+                            cursor={buttonValue === "completed"?"default":"pointer"}
+                            colorScheme={buttonValue === "completed"?"green.300":'blue'}
+                        >
                             {buttonValue}
                         </Button>
                     }

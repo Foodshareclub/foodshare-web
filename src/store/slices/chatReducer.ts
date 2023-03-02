@@ -1,5 +1,5 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
-import {chatAPI, CustomRoomType, PayloadForGEtRoom, RoomParticipantsType, RoomType} from "@/api/chatAPI";
+import {chatAPI, CustomRoomType, PayloadForGEtRoom, ReviewsType, RoomParticipantsType, RoomType} from "@/api/chatAPI";
 import {RealtimeChannel} from "@supabase/supabase-js";
 
 
@@ -12,7 +12,8 @@ const initialState = {
     messagesFromOneRoom: [] as Array<RoomParticipantsType>,
     status: "loading",
     isCreated: "creation",
-    updateRoomStatus: "loading"
+    updateRoomStatus: "loading",
+    feedBackStatus:"not written"
 };
 export const updateRoomTC = createAsyncThunk("/updateRoomTC", async (room: RoomType, thunkAPI) => {
     let res;
@@ -24,6 +25,21 @@ export const updateRoomTC = createAsyncThunk("/updateRoomTC", async (room: RoomT
         }
         res = "updated"
         console.log("updateRoomTC")
+        return {res, data};
+    } catch (e) {
+        return thunkAPI.rejectWithValue(e);
+    }
+});
+export const writeReviewTC = createAsyncThunk("/writeReviewTC", async (feedBack:ReviewsType, thunkAPI) => {
+    let res;
+    try {
+        const {data, error} = await chatAPI.writeReview(feedBack)
+        if (error) {
+            console.log(error);
+            return thunkAPI.rejectWithValue(error);
+        }
+        res = "written"
+        console.log(data,"writeReviewTC")
         return {res, data};
     } catch (e) {
         return thunkAPI.rejectWithValue(e);
@@ -149,10 +165,15 @@ const chatSlice = createSlice({
         });
         builder.addCase(updateRoomTC.fulfilled, (state, action) => {
             state.updateRoomStatus = action.payload.res;
-
+        });
+        builder.addCase(writeReviewTC.pending, (state) => {
+            state.feedBackStatus = "not written";
+        });
+        builder.addCase(writeReviewTC.fulfilled, (state) => {
+            state.feedBackStatus = "written";
         });
         builder.addCase(createRoomTC.pending, (state) => {
-            state.isCreated = "creation"
+            state.isCreated = "creation";
         });
         builder.addCase(createRoomTC.fulfilled, (state, action) => {
             state.isCreated = action.payload.res;
@@ -172,7 +193,7 @@ const chatSlice = createSlice({
             }
         });
         builder.addCase(checkRoomAvailabilityTC.pending, (state) => {
-            state.isCreated = "creation"
+            state.isCreated = "creation";
         });
         builder.addCase(checkRoomAvailabilityTC.fulfilled, (state, action) => {
             if (action.payload) {
@@ -181,7 +202,7 @@ const chatSlice = createSlice({
             }
         });
         builder.addCase(getAllRoomsForCurrentUserTC.fulfilled, (state, action) => {
-            state.allRooms = action.payload
+            state.allRooms = action.payload;
         });
         builder.addCase(getAllMessagesInRoomParticipantsFromOneRoomTC.fulfilled, (state, action) => {
             if (action.payload) {
