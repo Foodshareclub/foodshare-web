@@ -20,6 +20,16 @@ type MessagesWindowType = {
     userID: string
     roomId: string
 }
+
+const scroll = {
+    "::-webkit-scrollbar": {width: "4px", borderRadius: "10px", backgroundColor: "#f9f9fd"},
+    "::-webkit-scrollbar-thumb": {borderRadius: "10px", backgroundColor: "lightgray"},
+    "::-webkit-scrollbar-track": {
+        boxShadow: "inset 0 0 6px rgba(0,0,0,0.2)",
+        borderRadius: "10px",
+        backgroundColor: "#f9f9fd"
+    },
+}
 export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
                                                                       messages,
                                                                       requester, sharer,
@@ -53,8 +63,9 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
             bg={"gray.200"}
         >
             <Box
+                sx={scroll}
                 h={"60vh"}
-                overflow={"auto"}>
+                overflowY={"scroll"}>
                 {messages && messages
                     .filter(m => m.text !== '') //remove initial message
                     .map((m) => {

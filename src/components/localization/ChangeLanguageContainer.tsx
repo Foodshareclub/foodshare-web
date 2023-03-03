@@ -39,6 +39,7 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
             console.log('return ChangeLanguageContainer')
         };
     }, [language]);
+
     return (
 
         <I18nProvider i18n={i18n}>
@@ -57,14 +58,9 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
                         <Route path={PATH.volunteerPage} element={<VolunteerPage/>}/>
                         <Route path={"/volunteer/:id"} element={<OneVolunteer/>}/>
 
-
                         <Route path={"/chat-main"} element={<ChatMainPage/>}>
-                        {/*<Route path={"/chat-main/:id"} element={<ChatMainPage/>}>*/}
                             <Route path={":id"} element={<ChatMainPage/>}/>
                         </Route>
-
-                        <Route path={"/volunteer/:id"} element={<OneVolunteer/>}/>
-
                         <Route path={PATH.myListingsPage} element={<MyListingsPage/>}/>
                         <Route path={PATH.searchResultsPage} element={<SearchResultsPage/>}/>
 

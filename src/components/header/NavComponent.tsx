@@ -2,7 +2,7 @@ import straw from "../../assets/straw.svg";
 import * as React from 'react';
 import {memo} from 'react';
 import {useNavigate} from "react-router-dom";
-import {Avatar, Box, Flex, Text} from "@chakra-ui/react";
+import {Avatar, Box, Flex, Text, useColorModeValue} from "@chakra-ui/react";
 import {PagesType} from "./Header";
 import {useActionCreators, useAppSelector, useMediaQuery} from "@/hook";
 import {BecomeSharerBlock, NavDrawer, ProfileSettings} from "@/components";
@@ -88,7 +88,13 @@ const NavComponent: React.FC<PropsLangType> = memo(({
     }
 
     return (
-        <Flex justify={"space-between"}>
+        <Flex
+            px={{xl:20,base:7}}
+            py={3}
+            borderBottomWidth={1}
+            borderStyle={'solid'}
+            borderColor={useColorModeValue('gray.200', 'gray.700')}
+            justify={"space-between"}>
             <Flex>
                 <Avatar alignSelf="center"
                         src={straw}
@@ -107,35 +113,36 @@ const NavComponent: React.FC<PropsLangType> = memo(({
                 </Box>
             </Flex>
             <PopoverForSearch/>
-            <BecomeSharerBlock/>
-
-            {
-                !isSmallerThan800
-                    ? <NavDrawer
-                        signalOfNewMessage={signalOfNewMessage}
-                        firstName={firstName}
-                        secondName={secondName}
-                        email={email}
-                        size={'md'} isAuth={isAuth}
-                        imgUrl={imgUrl}
-                        navigateToMyLists={navigateToMyLists}
-                        navigateToLogout={navigateToLogout}
-                        navigateToHelp={navigateToHelp}
-                        navigateToAboutUs={navigateToAboutUs}
-                        navigateToMyMessages={navigateToMyMessages}
-                        navigateToAccSettings={navigateToAccountSettings}/>
-                    : <ProfileSettings
-                        signalOfNewMessage={signalOfNewMessage}
-                        navigateToAccSettings={navigateToAccountSettings}
-                        navigateToAboutUs={navigateToAboutUs}
-                        navigateToMyLists={navigateToMyLists}
-                        navigateToLogout={navigateToLogout}
-                        navigateToHelp={navigateToHelp}
-                        navigateToMyMessages={navigateToMyMessages}
-                        imgUrl={imgUrl}
-                        isAuth={isAuth}
-                    />
-            }
+            <Flex>
+                <BecomeSharerBlock/>
+                {
+                    !isSmallerThan800
+                        ? <NavDrawer
+                            signalOfNewMessage={signalOfNewMessage}
+                            firstName={firstName}
+                            secondName={secondName}
+                            email={email}
+                            size={'md'} isAuth={isAuth}
+                            imgUrl={imgUrl}
+                            navigateToMyLists={navigateToMyLists}
+                            navigateToLogout={navigateToLogout}
+                            navigateToHelp={navigateToHelp}
+                            navigateToAboutUs={navigateToAboutUs}
+                            navigateToMyMessages={navigateToMyMessages}
+                            navigateToAccSettings={navigateToAccountSettings}/>
+                        : <ProfileSettings
+                            signalOfNewMessage={signalOfNewMessage}
+                            navigateToAccSettings={navigateToAccountSettings}
+                            navigateToAboutUs={navigateToAboutUs}
+                            navigateToMyLists={navigateToMyLists}
+                            navigateToLogout={navigateToLogout}
+                            navigateToHelp={navigateToHelp}
+                            navigateToMyMessages={navigateToMyMessages}
+                            imgUrl={imgUrl}
+                            isAuth={isAuth}
+                        />
+                }
+            </Flex>
         </Flex>
     );
 })

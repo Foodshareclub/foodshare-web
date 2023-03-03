@@ -72,7 +72,7 @@ const MyListingsPage = () => {
                     <Trans>Active Listings</Trans>
                 </Heading>
 
-                <SimpleGrid p={8} pb={10}
+                <SimpleGrid px={{xl:20,base:7}}
                             columns={{lg: 4, md: 3, "ss": 2, base: 1}}
                             spacing={10}>
                     {

@@ -33,7 +33,8 @@ const ContactUsPage = () => {
     };
 
     return (
-        <Box mt="21vh" w={{md: "50%", base: "100%"}} mx={"auto"}
+        <Box mt="21vh"
+             w={{md: "50%", base: "100%"}} mx={"auto"}
              textAlign="center" fontSize={25} fontWeight={600}>
             <Box mb={4}>
                 Contact Us
