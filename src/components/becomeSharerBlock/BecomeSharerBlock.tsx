@@ -24,10 +24,16 @@ export const BecomeSharerBlock = () => {
         setType(value)
     }
     return (
-        <Menu>
+        <Menu >
             <PublishListingModal value={type} onClose={onClose} isOpen={isOpen}/>
-            <MenuButton display={{md: "block", base: "none"}} color={"#7D7D7D"} fontSize={{md: "18px", base: "14px"}}
-                        bg={"none"} alignSelf={"center"} as={Button}>
+            <MenuButton
+                mr={2}
+                display={{md: "block", base: "none"}}
+                color={"#7D7D7D"}
+                fontSize={{md: "18px", base: "14px"}}
+                        bg={"none"}
+                alignSelf={"center"}
+                as={Button}>
                 Become a Sharer
             </MenuButton>
 

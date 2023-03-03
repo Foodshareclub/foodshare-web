@@ -16,7 +16,7 @@ const VolunteerPage = () => {
     }, [])
 
     return (
-        <Box mt="24vh" px={7} mb={"24vh"}
+        <Box mt="24vh" px={{xl:20,base:7}}  mb={"24vh"}
         >
             <Box left={0} top={"80%"} textAlign={"center"} zIndex={1} position={"fixed"} w={"100%"}>
                 <Button

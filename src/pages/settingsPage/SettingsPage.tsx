@@ -14,7 +14,7 @@ export const SettingsPage = () => {
                 <ListingPersonCards settings={"settings"}
                 />
             </Box>
-            <SimpleGrid p={8}
+            <SimpleGrid px={{xl:20,base:7}} py={7}
                         columns={gridSize}
                         spacing={10}
             >

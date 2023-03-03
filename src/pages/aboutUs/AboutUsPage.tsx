@@ -27,7 +27,7 @@ const AboutUsPage = () => {
     }, []);
 
     return (
-        <Box p={7} mt="18vh" pb={10}>
+        <Box px={{xl:20,base:7}} py={7} mt="18vh" pb={10}>
             <Grid templateColumns={{base: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)'}} gap={6}>
                 {isSmallerThan960 && <GridItem w='100%' h='50vh'/>}
 
@@ -144,7 +144,7 @@ const AboutUsPage = () => {
             </Grid>
 
             <Box _hover={{bg: 'red.100'}} fontSize={25} textAlign="end" mt={5}>
-                <Link href='/contactUs'>
+                <Link href="/contactUs">
                     <Trans>Contact Us...</Trans> <ArrowForwardIcon mx={2}/>
                 </Link>
             </Box>

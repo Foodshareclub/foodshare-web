@@ -1,31 +1,29 @@
 import React, {useEffect} from 'react';
 import {useParams} from "react-router-dom";
 import {Flex} from "@chakra-ui/react";
-import {getOneProductTC} from "@/store/slices/productReducer";
+
 import {useActionCreators, useAppSelector} from "@/hook";
 import {OneProductContainer, ProductsLocation} from "@/components";
-import {oneProductSelector} from "@/store";
+import {getOneProductTC, oneProductSelector, productActions} from "@/store";
 
 const ProductPage = () => {
     const params = useParams();
-    const actions = useActionCreators({getOneProductTC})
+    const actions = useActionCreators({getOneProductTC,...productActions})
     const oneProduct = useAppSelector(oneProductSelector);
 
     useEffect(() => {
         actions.getOneProductTC(Number(params.id));
+        return ()=>{
+            actions.clearOneProductState();
+        }
     }, [params.id]);
 
     return (
-        <Flex direction={{md: "row", base: "column"}} justify={"space-between"} px={7} mt="21vh" mb={"8vh"}
+        <Flex direction={{md: "row", base: "column"}} justify={"space-between"} px={{xl:20,base:7}} mt="21vh" mb={"8vh"}
         >
-            {
-                oneProduct?.map((product, id) => {
-                    return <OneProductContainer
-                        product={product}
-                        key={id}
-
-                    />
-                })}
+            {oneProduct &&<OneProductContainer
+                        product={oneProduct}
+                    />}
             <ProductsLocation/>
         </Flex>
     );

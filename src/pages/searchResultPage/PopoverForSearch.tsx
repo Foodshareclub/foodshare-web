@@ -53,6 +53,7 @@ const PopoverForSearch = () => {
                         <SearchIcon color={!isEditing ? "gray.500" : 'red.500'}/>}/>
                 <PopoverTrigger>
                     <Input
+                        borderRadius={20}
                         // focusBorderColor='#FF2D55'
                         value={searchValue}
                         onChange={onSearchHandler}

@@ -36,7 +36,7 @@ const ChatMainPage = () => {
         getAllRoomsForCurrentUserTC,
         getAllMessagesInRoomParticipantsFromOneRoomTC, ...productActions, ...chatActions
     })
-    const oneProduct = useAppSelector(oneProductSelector);
+
     const userID = useAppSelector(userIdFromSessionSelector);
     const idRoomFromSelector = useAppSelector(roomIdFromRoomSelector);
     const messagesFromOneRoom = useAppSelector(messagesFromOneRoomSelector);
@@ -45,6 +45,10 @@ const ChatMainPage = () => {
     const updateProductEffect = useAppSelector(updateProductEffectSelector);
     const allRooms = useAppSelector(allRoomsSelector);
     const feedBackStatus = useAppSelector(feedBackStatusSelector);
+    const oneProduct = useAppSelector(oneProductSelector);
+    const anotherId = sharerId === userID ? requesterId : sharerId;
+    const oneProductWithoutReview = oneProduct?.reviews?.some(item => item.profile_id === anotherId);
+    console.log(oneProductWithoutReview)
     useEffect(() => {
         if (postId) {
             actions.getOneProductTC(Number(postId));
@@ -71,7 +75,7 @@ const ChatMainPage = () => {
     return (
         <Flex
             justify={{xl: "start", xxl: "center"}}
-            px={7} mt="20vh">
+            px={{xl:20,base:7}}  mt="20vh">
 
             <ContactsBlockDrawerContainer
                 allRooms={allRooms}
@@ -104,26 +108,21 @@ const ChatMainPage = () => {
                     </Center>
                 </Flex>
             }
-            {oneProduct?.map((product, id) => {
-                return (
-                    <OneProductDrawerContainer
-                        messagesFromOneRoom={messagesFromOneRoom}
-                        roomId={roomIdFromUrl as string}
-                        sharerId={sharerId as string}
-                        requesterId={requesterId as string}
-                        chat="chat"
-                        product={product}
-                        buttonValue={
-                            (product.post_published && (sharerId === userID)) ?
-                                "approval pending" :
-                                (product.reviews?.length || (feedBackStatus === "written")) ?
-                                    "completed" : "leave a feedBack"
-                        }
-                        key={id}
-                    />
-                )
-            })
-            }
+            {oneProduct && <OneProductDrawerContainer
+                messagesFromOneRoom={messagesFromOneRoom}
+                roomId={roomIdFromUrl as string}
+                sharerId={sharerId as string}
+                requesterId={requesterId as string}
+                chat="chat"
+                product={oneProduct}
+                buttonValue={
+                    (oneProduct.post_published && (sharerId === userID)) ?
+                        "approval pending" :
+                        (oneProductWithoutReview || (feedBackStatus === "written")) ?
+                            "completed" : "leave a feedBack"
+                }
+            />}
+
         </Flex>
     );
 };

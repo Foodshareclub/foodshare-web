@@ -26,7 +26,7 @@ export const SearchResultsPage = () => {
     const products = useAppSelector(searchProductsSelector);
 
     return (
-        <Box p={7} mt="18vh">
+        <Box px={{xl:20,base:7}} py={7} mt="18vh">
             <SimpleGrid
                 columns={gridSize}
                 spacing={10}
