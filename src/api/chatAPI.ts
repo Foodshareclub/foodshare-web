@@ -1,5 +1,4 @@
 import {supabase} from "@/supaBase.config";
-
 import {InitialProductStateType} from "@/store/slices/productReducer";
 import {AllValuesType} from "@/api/profileAPI";
 import {PostgrestSingleResponse, RealtimeChannel} from "@supabase/supabase-js";

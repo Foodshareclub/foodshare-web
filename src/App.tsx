@@ -21,7 +21,9 @@ function App() {
     useEffect(() => {
         if (productType === "settings") {
             console.log("settings on app")
-        } else if (productType === "volunteer") {
+        } else if (productType === "donation") {
+            console.log("donation on app")
+        }else if (productType === "volunteer") {
             console.log("volunteer on app")
         } else if (productType === "user-listings") {
             console.log("user-listings on app")

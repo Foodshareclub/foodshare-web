@@ -1,5 +1,5 @@
-import {useAppSelector} from "@/hook";
-import {avatarURLSelector, sessionSelector, userFirstNameSelector, userSecondNameSelector} from "@/store";
+import {useActionCreators, useAppSelector} from "@/hook";
+import {avatarURLSelector, updateRoomTC, userFirstNameSelector, userSecondNameSelector} from "@/store";
 import AvatarWithRipple from "@/components/listingPersonCard/AvatarWithRipple";
 import {Box, Flex, Heading, Input, InputGroup, InputLeftElement} from "@chakra-ui/react";
 import {SearchIcon} from "@chakra-ui/icons";
@@ -11,28 +11,28 @@ import {useNavigate} from "react-router-dom";
 import {CustomRoomType} from "@/api/chatAPI";
 
 export type ContactsBlockType = {
+    userID:string
     roomIDFromUrl: string
     newMessageRoomId: string
     allRooms: Array<CustomRoomType>
 }
 
-const ContactsBlock: React.FC<ContactsBlockType> = memo(({allRooms, roomIDFromUrl, newMessageRoomId}) => {
+const ContactsBlock: React.FC<ContactsBlockType> = memo(({allRooms, roomIDFromUrl, newMessageRoomId,userID}) => {
 
+    const actions = useActionCreators({updateRoomTC})
     const imgUrl = useAppSelector(avatarURLSelector);
     const userFirstName = useAppSelector(userFirstNameSelector);
     const userSecondName = useAppSelector(userSecondNameSelector);
 
-    const session = useAppSelector(sessionSelector);
-    const userId = session?.user?.id;
-
     const navigate = useNavigate();
 
-    const onGetCurrentUserMessages = (post_id: number, sharerId: string, requesterId: string, roomId: string) => {
+    const onGetCurrentUserMessages = async (post_id: number, sharerId: string, requesterId: string, roomId: string) => {
         if (roomId === roomIDFromUrl) {
             return
         } else {
             navigate(`/chat-main/?p=${post_id}&s=${sharerId}&r=${requesterId}&room=${roomId}`);
         }
+        await actions.updateRoomTC({last_message_seen_by: userID, id: roomId})
     };
 
     return (
@@ -78,7 +78,7 @@ const ContactsBlock: React.FC<ContactsBlockType> = memo(({allRooms, roomIDFromUr
                         return (
                             <MinifiedUserInfo
                                 lastUserSeen={data.last_message_seen_by}
-                                userId={userId}
+                                userId={userID}
                                 newMessageRoomId={newMessageRoomId}
                                 roomIDFromUrl={roomIDFromUrl}
                                 key={data.id}

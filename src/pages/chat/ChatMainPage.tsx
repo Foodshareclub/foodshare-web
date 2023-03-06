@@ -48,7 +48,8 @@ const ChatMainPage = () => {
     const oneProduct = useAppSelector(oneProductSelector);
     const anotherId = sharerId === userID ? requesterId : sharerId;
     const oneProductWithoutReview = oneProduct?.reviews?.some(item => item.profile_id === anotherId);
-    console.log(oneProductWithoutReview)
+
+
     useEffect(() => {
         if (postId) {
             actions.getOneProductTC(Number(postId));
@@ -78,6 +79,7 @@ const ChatMainPage = () => {
             px={{xl:20,base:7}}  mt="20vh">
 
             <ContactsBlockDrawerContainer
+                userID={userID}
                 allRooms={allRooms}
                 newMessageRoomId={newMessageRoomId}
                 roomIDFromUrl={roomIdFromUrl as string}
@@ -85,9 +87,6 @@ const ChatMainPage = () => {
 
             {postId ? <MessagesWindow
                     roomId={roomIdFromUrl as string}
-                    requester={requesterId as string}
-                    sharer={sharerId as string}
-                    postID={postId as string}
                     messages={messagesFromOneRoom}
                     userID={userID}
                 />
@@ -109,7 +108,6 @@ const ChatMainPage = () => {
                 </Flex>
             }
             {oneProduct && <OneProductDrawerContainer
-                messagesFromOneRoom={messagesFromOneRoom}
                 roomId={roomIdFromUrl as string}
                 sharerId={sharerId as string}
                 requesterId={requesterId as string}

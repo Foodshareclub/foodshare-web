@@ -14,9 +14,6 @@ import {InputSection} from "@/components";
 
 type MessagesWindowType = {
     messages: Array<RoomParticipantsType>
-    requester: string
-    sharer: string
-    postID: string
     userID: string
     roomId: string
 }
@@ -32,8 +29,6 @@ const scroll = {
 }
 export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
                                                                       messages,
-                                                                      requester, sharer,
-                                                                      postID,
                                                                       userID, roomId
                                                                   }) => {
     useEffect(() => {
@@ -41,6 +36,7 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
     }, [messages]);
     const navigate = useNavigate()
     const isSmaller = useMediaQuery('(min-width:1200px)');
+
     const requesterImg = useAppSelector(requesterSelector);
     const requesterId = useAppSelector(requesterIdSelector);
     const requesterName = useAppSelector(requesterNameSelector);
@@ -120,10 +116,8 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
             </Box>
             <Flex pt={3}>
                 <InputSection
-                    messages={messages}
-                    requester={requester as string}
-                    sharer={sharer as string}
-                    postID={postID as string}
+                    roomId={roomId}
+                    userID={userID}
                 />
             </Flex>
         </Flex>

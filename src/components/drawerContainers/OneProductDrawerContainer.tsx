@@ -1,6 +1,6 @@
 import {Box, IconButton, useDisclosure} from "@chakra-ui/react";
 import React from "react";
-import {OneProduct, OneProductContainer, UniversalDrawer} from "@/components";
+import {OneProduct, UniversalDrawer} from "@/components";
 import {OneProductType} from "@/components/oneProduct/OneProduct";
 import {useMediaQuery} from "@/hook";
 import {ArrowLeftIcon} from "@chakra-ui/icons";
