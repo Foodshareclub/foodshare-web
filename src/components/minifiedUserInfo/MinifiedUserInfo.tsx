@@ -1,8 +1,6 @@
 import * as React from "react";
 import {memo} from "react";
 import {Avatar, Box, Flex, Heading, Text} from "@chakra-ui/react";
-import {useActionCreators} from "@/hook";
-import {updateRoomTC} from "@/store/slices/chatReducer";
 
 type MinifiedUserInfoType = {
     userId?: string
@@ -29,18 +27,12 @@ export const MinifiedUserInfo: React.FC<MinifiedUserInfoType> = memo(({
                                                                           userId, lastUserSeen
                                                                       }) => {
 
-
-    const actions = useActionCreators({updateRoomTC})
-
     const onClick = async () => {
         if (onGetCurrentUserMessages) {
             onGetCurrentUserMessages();
-
-            await actions.updateRoomTC({last_message_seen_by: userId as string, id: roomId as string})
         }
         console.log("clickInMinifiedUserInfo")
     }
-
     return (
         <Flex
             cursor={"pointer"} borderRadius={"5%"}

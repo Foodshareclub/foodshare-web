@@ -10,7 +10,8 @@ import {ArrowRightIcon} from "@chakra-ui/icons";
 export const ContactsBlockDrawerContainer: React.FC<ContactsBlockType> = ({
                                                                               allRooms,
                                                                               roomIDFromUrl,
-                                                                              newMessageRoomId
+                                                                              newMessageRoomId,
+                                                                              userID
                                                                           }) => {
     const {isOpen, onOpen, onClose} = useDisclosure();
     const isSmaller = useMediaQuery('(min-width:1200px)');
@@ -28,6 +29,7 @@ export const ContactsBlockDrawerContainer: React.FC<ContactsBlockType> = ({
                         aria-label={""}/>
                     <UniversalDrawer
                         children={<ContactsBlock
+                            userID={userID}
                             allRooms={allRooms}
                             newMessageRoomId={newMessageRoomId}
                             roomIDFromUrl={roomIDFromUrl as string}
@@ -36,6 +38,7 @@ export const ContactsBlockDrawerContainer: React.FC<ContactsBlockType> = ({
                         isOpen={isOpen} size={"md"} placement={"left"}/>
                 </> :
                 <ContactsBlock
+                    userID={userID}
                     allRooms={allRooms}
                     newMessageRoomId={newMessageRoomId}
                     roomIDFromUrl={roomIDFromUrl as string}

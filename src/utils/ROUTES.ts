@@ -8,5 +8,6 @@ export const PATH = {
     searchResultsPage: '/s/:type',
     settingsPage: '/settings',
     personalInfoPage: '/settings/personal-info',
-    loginSecurityPage: '/settings/login-and-security'
+    loginSecurityPage: '/settings/login-and-security',
+    donationPage:"/donation"
 }

@@ -17,18 +17,20 @@ import {
     VisuallyHidden
 } from "@chakra-ui/react";
 import {Trans} from "@lingui/macro";
+import {PATH} from "@/utils";
 
 const SocialButton = ({
                           children,
                           label,
                           href,
-                          w, h
+                          w, h,target
                       }: {
     children: ReactNode;
     label: string;
     href: string;
     w?: number
     h?: number
+    target?:string
 }) => {
     return (
         <chakra.button
@@ -36,7 +38,7 @@ const SocialButton = ({
             rounded={'full'}
             w={w || 9}
             h={h || 9}
-            target={"_blank"}
+            target={target ||"_blank"}
             cursor={'pointer'}
             as={'a'}
             href={href}
@@ -88,13 +90,13 @@ const Footer = () => {
                 <SocialButton label={'linked'} href={'https://www.linkedin.com/company/37215158'}>
                     <Image w={6} src={linked}/>
                 </SocialButton>
-                <SocialButton label={'telegram'} href={'#'}>
+                <SocialButton label={'telegram'} href={'https://t.me/foodshare_club'}>
                     <Image w={6} src={telegram}/>
                 </SocialButton>
 
             </Stack>
             <Flex>
-                <SocialButton label={'donat'} href={'#'}>
+                <SocialButton target={"_parent"} label={'donat'} href={PATH.donationPage}>
                     <Image w={6} src={donat}/>
                 </SocialButton>
                 <Heading alignSelf={"center"} size={"md"} color={"red"}>Donation</Heading>

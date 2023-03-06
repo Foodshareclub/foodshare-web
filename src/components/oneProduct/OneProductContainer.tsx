@@ -56,7 +56,6 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
         if (isRoomExist) {
             navigate(`/chat-main/?p=${product.id}&s=${product.user}&r=${userID}&room=${createdRoom[0]?.id}`);
         }
-        console.log("OneProductContainer")
     }
 
     return (

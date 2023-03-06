@@ -16,6 +16,7 @@ export const SearchResultsPage = () => {
     const actions = useActionCreators({resultsSearchProductsTC})
     const [searchParams, setSearchParams] = useSearchParams(); //get params from url
     const keyWord = searchParams.get('key_word');
+
     useEffect(() => {
         actions.resultsSearchProductsTC({
             searchWord: keyWord as string,

@@ -21,6 +21,7 @@ import {PATH} from "@/utils";
 import OneVolunteer from "@/components/volonteerCard/OneVolunteer";
 import {languageSelector} from "@/store";
 import {useAppSelector} from "@/hook";
+import DonationPage from "@/pages/donationPage/DonationPage";
 
 
 type ContainerProps = {
@@ -67,6 +68,7 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
                         <Route path={PATH.settingsPage} element={<SettingsPage/>}/>
                         <Route path={PATH.personalInfoPage} element={<PersonalInfoPage/>}/>
                         <Route path={PATH.loginSecurityPage} element={<LoginSecurityPage/>}/>
+                        <Route path={PATH.donationPage} element={<DonationPage/>}/>
 
                     </Routes>
                 </CardBody>

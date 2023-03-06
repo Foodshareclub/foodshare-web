@@ -49,12 +49,6 @@ export const teamMockArray: Array<MockTeamArr> = [
         img: pitman,
         exp: "Food & Bio Expert",
         about: "Fascinated by microbiology and marine life since his youth. Studied a broad degree of biology with major in Marine Sciences and Ecology in Auckland, New Zealand."
-    },
-    {
-        name: 'Nikita Pivovarchik ',
-        img: nikita,
-        exp: "Backend Engineer",
-        about: "Python Backend engineer, 1 year in development.Student at Belarusian State Technological University in Minsk, Belarus."
     }
 ];
 
