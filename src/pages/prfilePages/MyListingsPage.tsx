@@ -3,13 +3,12 @@ import {Box, Button, Flex, Heading, SimpleGrid, useDisclosure} from "@chakra-ui/
 import {Trans} from "@lingui/macro";
 import {Navigate} from "react-router-dom";
 import {useActionCreators, useAppSelector} from "@/hook";
-import {deleteProductTC, getCurrentUserProductsTC, productActions} from "@/store/slices/productReducer";
 import {AlertComponent, ListingPersonCards, ProductCard, PublishListingModal} from "@/components";
 import {
-    currentUserProductsSelector,
+    currentUserProductsSelector, deleteProductTC, getCurrentUserProductsTC,
     isAuthSelector,
     isUpdateProductSelector,
-    messageProductSelector,
+    messageProductSelector, productActions,
     userIdFromSessionSelector,
 } from "@/store";
 import {updateProductEffectSelector} from "@/store/slices/productsSelectors";
@@ -30,7 +29,6 @@ const MyListingsPage = () => {
 
     useEffect(() => {
         if (userId) actions.getCurrentUserProductsTC(userId);
-        console.log("my listing page")
         return ()=>{
             actions.clearOneProductState();
         }
@@ -43,7 +41,7 @@ const MyListingsPage = () => {
 
 
     return (
-        <Box mt="17vh">
+        <Box mt="17vh" mb={"9vh"}>
             <AlertComponent
                 status={isUpdateProduct}
                 title={productMessage}

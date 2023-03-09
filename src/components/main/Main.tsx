@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Box, IconButton, SimpleGrid} from "@chakra-ui/react";
-import {InitialProductStateType} from "@/store/slices/productReducer";
+
 import {useAppSelector} from "@/hook";
 import {useGridSize} from "@/hook/useGridSize";
 import {ProductCard} from "@/components";
@@ -8,9 +8,10 @@ import {productsSelector, productStatusSelector} from "@/store/slices/productsSe
 import SkeletonCard from "@/components/productCard/SkeletonCard";
 import {ArrowRightIcon} from "@chakra-ui/icons";
 
+
 export const Main = () => {
 
-    const products = useAppSelector<Array<InitialProductStateType>>(productsSelector);
+    const products = useAppSelector(productsSelector);
     const filteredProducts = products.filter(products => products.post_published)
     const status = useAppSelector(productStatusSelector);
     const loaded = status === "loaded";

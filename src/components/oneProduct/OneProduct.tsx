@@ -1,6 +1,6 @@
 import loc from "@/assets/location-blue.svg";
 import likes from "@/assets/likes.svg";
-import {InitialProductStateType, updateProductTC} from "@/store/slices/productReducer";
+import {updateProductTC} from "@/store/slices/productReducer";
 import {Box, Button, Flex, Heading, Image, Text, useDisclosure} from "@chakra-ui/react";
 import React, {useState} from "react";
 import {StarIcon} from "@chakra-ui/icons";
@@ -10,6 +10,7 @@ import {useActionCreators, useAppSelector} from "@/hook";
 import {isAuthSelector, updateRoomTC} from "@/store";
 import {useNavigate} from "react-router-dom";
 import {PopupNotificationModal} from "@/components";
+import {InitialProductStateType} from "@/api/productAPI";
 
 export type OneProductType = {
     product: InitialProductStateType

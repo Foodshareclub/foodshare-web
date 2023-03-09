@@ -5,9 +5,7 @@ import wantedRed from "../assets/wantedRed.svg";
 import fridgesRed from "../assets/fridgesRed.svg";
 import foodBanksRed from "../assets/foodBanksRed.svg";
 
-type N = {
-    [key: string]: string
-}
+type N = Record<string, string>
 
 export const navigatePhotosObject: N = {
     'food': foodRed,

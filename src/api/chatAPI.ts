@@ -1,7 +1,7 @@
 import {supabase} from "@/supaBase.config";
-import {InitialProductStateType} from "@/store/slices/productReducer";
 import {AllValuesType} from "@/api/profileAPI";
 import {PostgrestSingleResponse, RealtimeChannel} from "@supabase/supabase-js";
+import {InitialProductStateType} from "@/api/productAPI";
 
 export type PayloadForGEtRoom = {
     sharerId: string
@@ -9,11 +9,11 @@ export type PayloadForGEtRoom = {
     postId: string
 }
 export type ReviewsType = {
-    id?: number
+    id: number
     profile_id: string
     post_id: number
-    forum_id?: number
-    challenge_id?: number
+    forum_id: number
+    challenge_id: number
     feedback: string
 }
 export type RoomParticipantsType = {
@@ -39,14 +39,14 @@ export type CustomRoomType = {
 }
 export type RoomType = {
     id: string
-    requester?: string
-    sharer?: string
-    post_id?: number
-    last_message?: string
-    last_message_sent_by?: string
-    last_message_seen_by?: string
-    profiles?: AllValuesType
-    post_arranged_to?: string
+    requester: string
+    sharer: string
+    post_id: number
+    last_message: string
+    last_message_sent_by: string
+    last_message_seen_by: string
+    profiles: AllValuesType
+    post_arranged_to: string
 }
 
 export const chatAPI = {
@@ -67,7 +67,7 @@ export const chatAPI = {
     removeChannel(channel: RealtimeChannel): Promise<"error" | "ok" | "timed out"> {
         return supabase.removeChannel(channel);
     },
-    writeReview(feedBack:ReviewsType){
+    writeReview(feedBack:Partial<ReviewsType>){
         return supabase
             .from('reviews')
             .insert(feedBack)
@@ -78,7 +78,7 @@ export const chatAPI = {
             .select('*')
             .match({requester: userID, post_id: postID});
     },
-    createRoom(room: RoomType): PromiseLike<PostgrestSingleResponse<Array<RoomType>>> {
+    createRoom(room: Partial<RoomType>): PromiseLike<PostgrestSingleResponse<Array<RoomType>>> {
         return supabase.from("rooms").insert(room).select().single()
     },
     getRoom({sharerId, requesterId, postId}: PayloadForGEtRoom): any {
@@ -105,7 +105,7 @@ export const chatAPI = {
             .select(`"*", posts("*"), room_participants("*"),profiles!rooms_sharer_fkey("*")`)
             .or(`sharer.eq.${userID}, requester.eq.${userID}`)
     },
-    updateRoom(room: RoomType) {
+    updateRoom(room: Partial<RoomType>) {
         return supabase
             .from("rooms")
             .update(room)

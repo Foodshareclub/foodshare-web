@@ -1,4 +1,3 @@
-import {InitialProductStateType} from "@/store/slices/productReducer";
 import React, {useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {Box, Flex, GridItem, Heading, IconButton, Image, Text, useDisclosure} from "@chakra-ui/react";
@@ -6,10 +5,12 @@ import {navigatePhotosObject} from "@/utils";
 import {Trans} from "@lingui/macro";
 import navIcon from "@/assets/map.svg";
 import {DeleteIcon, EditIcon} from "@chakra-ui/icons";
-import DeleteCardModal from "@/components/modals/DeleteCardModal";
-import PublishListingModal from "../modals/PublishListingModal";
+
 import {useAppSelector} from "@/hook";
 import {userIdFromSessionSelector} from "@/store";
+import {InitialProductStateType} from "@/api/productAPI";
+import DeleteCardModal from "@/components/modals/DeleteCardModal";
+import {PublishListingModal} from "@/components";
 
 type ProductCardType = {
     product: InitialProductStateType

@@ -1,5 +1,6 @@
 import tarlan from '../assets/Tarlan.png';
 import denis from '../assets/den.jpg';
+import imruz from '../assets/imrus.png';
 import stanislav from '../assets/stanislav.png';
 import telman from '../assets/telman.png';
 import pitman from '../assets/pitman.png';
@@ -25,6 +26,12 @@ export const teamMockArray: Array<MockTeamArr> = [
         img: denis,
         exp: "Frontend Engineer",
         about: "React frontend engineer. 1 year in development. Belarusian State Agrarian University"
+    },
+    {
+        name: 'Imruz Babaeva',
+        img: imruz,
+        exp: "UI/UX Designer",
+        about: "5+ years of experience in UI/UX design. Product Designer. Interested in B2C and B2B products, Streaming platforms, Health tech. Baku State University in Baku, Azerbaijan. "
     },
     {
         name: 'Stanislav Lisovskii',

@@ -1,34 +1,7 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
-import {productAPI, ProductObjType} from "../../api/productAPI";
+import {InitialProductStateType, productAPI} from "@/api/productAPI";
 import {ImgUrlType, profileAPI, UploadImgUrlType} from "@/api/profileAPI";
 import {StatusType} from "@/components/alert/AlertComponent";
-import {ReviewsType} from "@/api/chatAPI";
-
-
-export type InitialProductStateType = {
-    available_hours: string
-    created_att: string
-    five_star: null
-    four_star: null
-    gif_url: string
-    gif_url_2: string
-    gif_url_3: string
-    id: number
-    locations: { _latitude: number, _longitude: number }
-    pickup_time: string
-    post_address: string
-    post_arranged: boolean
-    post_description: string
-    post_like_counter: number
-    post_metro_station: string
-    post_name: string
-    post_type: string
-    post_published: boolean
-    post_views: number
-    profile_id:string
-    user: string
-    reviews:Array<ReviewsType>
-}
 
 const initialState = {
     products: [] as Array<InitialProductStateType>,
@@ -85,7 +58,7 @@ export const getOneProductTC = createAsyncThunk('/getOneProductTC', async (produ
     }
 });
 
-export const createProductTC = createAsyncThunk('/createProductTC', async (productObj: ProductObjType, thunkAPI) => {
+export const createProductTC = createAsyncThunk('/createProductTC', async (productObj: Partial<InitialProductStateType>, thunkAPI) => {
     try {
         const {error} = await productAPI.createProduct(productObj)
         if (error) {
@@ -157,7 +130,7 @@ export const uploadPostImgToDBTC = createAsyncThunk("/auth/uploadPostImgToDBTC",
         return thunkAPI.rejectWithValue(error.message);
     }
 })
-export const updateProductTC = createAsyncThunk("/auth/updateProductTC", async (updates: ProductObjType, thunkAPI) => {
+export const updateProductTC = createAsyncThunk("/auth/updateProductTC", async (updates:  Partial<InitialProductStateType>, thunkAPI) => {
     try {
         let {error} = await productAPI.updateProduct(updates);
         if (error) {
