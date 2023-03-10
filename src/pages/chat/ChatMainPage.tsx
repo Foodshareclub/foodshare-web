@@ -76,7 +76,7 @@ const ChatMainPage = () => {
     return (
         <Flex
             justify={{xl: "start", xxl: "center"}}
-            px={{xl:20,base:7}}  mt="20vh">
+            px={{xl:20,base:7}}  mt="20vh" mb={"10vh"}>
 
             <ContactsBlockDrawerContainer
                 userID={userID}

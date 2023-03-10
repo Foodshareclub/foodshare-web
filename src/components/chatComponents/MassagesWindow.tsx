@@ -90,6 +90,7 @@ export const MessagesWindow: React.FC<MessagesWindowType> = memo(({
                                             requesterName}
                                     >
                                         <Avatar
+                                            ml={1}
                                             cursor={"pointer"}
                                             onClick={() => {
                                                 if (userImg === requesterImg) {
