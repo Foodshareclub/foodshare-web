@@ -29,7 +29,7 @@ const SocialButton = ({children, label, href, w, h, target}: {
 }) => {
     return (
         <chakra.button
-            bg={useColorModeValue('blackAlpha.100', 'whiteAlpha.100')}
+            //bg={useColorModeValue('blackAlpha.100', 'whiteAlpha.100')}
             rounded={'full'}
             w={w || 9}
             h={h || 9}
@@ -40,41 +40,31 @@ const SocialButton = ({children, label, href, w, h, target}: {
             display={'inline-flex'}
             alignItems={'center'}
             justifyContent={'center'}
-            transition={'background 0.3s ease'}
-            _hover={{
-                bg: useColorModeValue('blackAlpha.300', 'whiteAlpha.200'),
-            }}>
+            //transition={'background 0.3s ease'}
+            // _hover={{
+            //     bg: useColorModeValue('blackAlpha.300', 'whiteAlpha.200'),
+            // }}
+        >
             <VisuallyHidden>{label}</VisuallyHidden>
             {children}
         </chakra.button>
     );
 };
 const Footer = () => {
-    const [scrollTop, setScrollTop] = useState(0);
 
-    useEffect(() => {
-        const handleScroll = () => {
-            setScrollTop(window.scrollY);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
-    }, []);
     return (
         <Container
-            boxShadow={scrollTop > 100 ? "rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;" : "none"}
             zIndex={1}
             bottom={0}
             position={"fixed"}
-            bg={useColorModeValue('gray.50', 'gray.900')}
+            bg={"white"}
             borderTopWidth={1}
             borderStyle={'solid'}
             borderColor={useColorModeValue('gray.200', 'gray.700')}
             color={useColorModeValue('gray.700', 'gray.200')}
             as={Stack}
             maxW={'100vw'}
-            py={1}
+            py={3}
             px={{xl: 20, base: 7}}
             direction={{base: 'column', md: 'row'}}
             justify={{base: 'center', md: 'space-between'}}
@@ -82,7 +72,7 @@ const Footer = () => {
             <Text fontSize={{md: "16px", base: "10px"}}><Trans>© 2023 Foodshare Club, Limited. All rights
                 reserved</Trans></Text>
             {/*<LanguageSelector/>*/}
-            <Stack direction={'row'} spacing={6}>
+            <Stack direction={'row'} spacing={2}>
                 <SocialButton label={'Twitter'} href={'https://twitter.com/foodshareclub'}>
                     <Image w={6} src={twitter}/>
                 </SocialButton>
@@ -99,14 +89,17 @@ const Footer = () => {
                 <SocialButton label={'telegram'} href={'https://t.me/foodshare_club'}>
                     <Image w={6} src={telegram}/>
                 </SocialButton>
-
-            </Stack>
-            <Flex>
                 <SocialButton target={"_parent"} label={'donat'} href={PATH.donationPage}>
                     <Image w={6} src={donat}/>
                 </SocialButton>
                 <Heading alignSelf={"center"} size={"md"} color={"red"}>Donation</Heading>
-            </Flex>
+            </Stack>
+            {/*<Flex>*/}
+            {/*    <SocialButton target={"_parent"} label={'donat'} href={PATH.donationPage}>*/}
+            {/*        <Image w={6} src={donat}/>*/}
+            {/*    </SocialButton>*/}
+            {/*    <Heading alignSelf={"center"} size={"md"} color={"red"}>Donation</Heading>*/}
+            {/*</Flex>*/}
 
         </Container>
     );
