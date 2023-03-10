@@ -1,4 +1,4 @@
-import React, {ReactNode} from 'react';
+import React, {ReactNode, useEffect, useState} from 'react';
 import twitter from "../../assets/twiter23.png";
 import instagram from "../../assets/insta23.png";
 import facebook from "../../assets/facebook23.png";
@@ -19,18 +19,13 @@ import {
 import {Trans} from "@lingui/macro";
 import {PATH} from "@/utils";
 
-const SocialButton = ({
-                          children,
-                          label,
-                          href,
-                          w, h,target
-                      }: {
+const SocialButton = ({children, label, href, w, h, target}: {
     children: ReactNode;
     label: string;
     href: string;
     w?: number
     h?: number
-    target?:string
+    target?: string
 }) => {
     return (
         <chakra.button
@@ -38,7 +33,7 @@ const SocialButton = ({
             rounded={'full'}
             w={w || 9}
             h={h || 9}
-            target={target ||"_blank"}
+            target={target || "_blank"}
             cursor={'pointer'}
             as={'a'}
             href={href}
@@ -55,9 +50,20 @@ const SocialButton = ({
     );
 };
 const Footer = () => {
+    const [scrollTop, setScrollTop] = useState(0);
 
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrollTop(window.scrollY);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
     return (
         <Container
+            boxShadow={scrollTop > 100 ? "rgba(14, 30, 37, 0.12) 0px 2px 4px 0px, rgba(14, 30, 37, 0.32) 0px 2px 16px 0px;" : "none"}
             zIndex={1}
             bottom={0}
             position={"fixed"}
