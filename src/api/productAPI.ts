@@ -1,21 +1,31 @@
 import {supabase} from "@/supaBase.config";
 import {PostgrestSingleResponse} from "@supabase/supabase-js";
+import {ReviewsType} from "@/api/chatAPI";
 
-import {InitialProductStateType} from "@/store";
-
-export type ProductObjType = {
-    gif_url: string,
-    post_type?: string,
-    post_name?: string,
-    post_description?: string,
-    pickup_time?: string,
-    post_address?: string,
-    post_metro_station?: string,
-    user?: string
-    id?: number
-    post_published?: boolean
+export type InitialProductStateType = {
+    available_hours: string
+    created_att: string
+    five_star: null
+    four_star: null
+    gif_url: string
+    gif_url_2: string
+    gif_url_3: string
+    id: number
+    locations: { _latitude: number, _longitude: number }
+    pickup_time: string
+    post_address: string
+    post_arranged: boolean
+    post_description: string
+    post_like_counter: number
+    post_metro_station: string
+    post_name: string
+    post_type: string
+    post_published: boolean
+    post_views: number
+    profile_id:string
+    user: string
+    reviews:Array<ReviewsType>
 }
-
 export const productAPI = {
     getAllProducts() {
         return supabase
@@ -41,13 +51,12 @@ export const productAPI = {
             .eq('id', productId)
     },
     //заменим insert на upsert
-    createProduct(createdProduct: ProductObjType) {
+    createProduct(createdProduct: Partial<InitialProductStateType>) {
         return supabase
             .from('posts')
             .insert(createdProduct)
     },
-    updateProduct(createdProduct: ProductObjType) {
-        console.log(createdProduct)
+    updateProduct(createdProduct: Partial<InitialProductStateType>) {
         return supabase.from("posts").upsert(createdProduct)
     },
     deleteProduct(productID: number) {

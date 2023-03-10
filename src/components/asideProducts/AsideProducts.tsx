@@ -3,8 +3,10 @@ import {Card, CardBody, CardFooter, Heading, IconButton, Image, Text, useDisclos
 import {useLocation, useNavigate} from "react-router-dom";
 import {Trans} from "@lingui/macro";
 import {DeleteIcon} from "@chakra-ui/icons";
-import PublishListingModal from "../modals/PublishListingModal";
-import {InitialProductStateType} from "@/store/slices/productReducer";
+import {InitialProductStateType} from "@/api/productAPI";
+import {PublishListingModal} from "@/components";
+
+
 
 type AsideProdType = {
     img: string

@@ -1,12 +1,13 @@
-import {InitialProductStateType, productActions} from "@/store/slices/productReducer";
+import {productActions} from "@/store/slices/productReducer";
 import React, {useEffect} from "react";
 import {useNavigate, useParams} from "react-router-dom";
 import {useActionCreators, useAppSelector} from "@/hook";
-import {createdSelector, userIdFromSessionSelector} from "@/store";
+import {checkRoomAvailabilityTC, createdSelector, createRoomTC, userIdFromSessionSelector} from "@/store";
 import {PATH} from "@/utils";
-import {OneProduct} from "@/components";
 import {RoomType} from "@/api/chatAPI";
-import {checkRoomAvailabilityTC, createRoomTC} from "@/store/slices/chatReducer";
+import {OneProduct} from "@/components";
+import {InitialProductStateType} from "@/api/productAPI";
+
 
 type OneProductContainerType = {
     product: InitialProductStateType

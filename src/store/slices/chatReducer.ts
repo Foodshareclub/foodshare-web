@@ -15,7 +15,7 @@ const initialState = {
     updateRoomStatus: "loading",
     feedBackStatus:"not written"
 };
-export const updateRoomTC = createAsyncThunk("/updateRoomTC", async (room: RoomType, thunkAPI) => {
+export const updateRoomTC = createAsyncThunk("/updateRoomTC", async (room: Partial<RoomType>, thunkAPI) => {
     let res;
     try {
         const {data, error} = await chatAPI.updateRoom(room)
@@ -30,7 +30,7 @@ export const updateRoomTC = createAsyncThunk("/updateRoomTC", async (room: RoomT
         return thunkAPI.rejectWithValue(e);
     }
 });
-export const writeReviewTC = createAsyncThunk("/writeReviewTC", async (feedBack:ReviewsType, thunkAPI) => {
+export const writeReviewTC = createAsyncThunk("/writeReviewTC", async (feedBack:Partial<ReviewsType>, thunkAPI) => {
     let res;
     try {
         const {data, error} = await chatAPI.writeReview(feedBack)
@@ -68,7 +68,7 @@ export const listenChannelTC = createAsyncThunk("/listenChannel", async (_, thun
         return thunkAPI.rejectWithValue(e);
     }
 });
-export const createRoomTC = createAsyncThunk("/createRoomTC", async (payload: RoomType, thunkAPI) => {
+export const createRoomTC = createAsyncThunk("/createRoomTC", async (payload: Partial<RoomType>, thunkAPI) => {
     let res;
     try {
         let {data, error} = await chatAPI.createRoom(payload)

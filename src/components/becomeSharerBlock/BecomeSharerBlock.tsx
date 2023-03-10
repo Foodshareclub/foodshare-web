@@ -120,7 +120,7 @@ export const BecomeSharerBlock = () => {
                             Sustainability
                         </Text>
                         <MenuItem onClick={() => addHandler('merchandise')}>
-                            <Image src={photoObj.merchandise} boxSize={6}/>
+                            <Image src={photoObj["zero waste"]} boxSize={6}/>
                             <Text pl={3}>Add a merchandise</Text>
                         </MenuItem>
                         <MenuItem onClick={() => addHandler('vegan-food')}>

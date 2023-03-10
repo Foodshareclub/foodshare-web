@@ -23,12 +23,13 @@ import cloud from "../../assets/cloud.svg"
 import {useActionCreators, useAppSelector} from "@/hook";
 import {t, Trans} from '@lingui/macro';
 import {RequiredStar} from "@/components";
-import {ProductObjType} from "@/api/productAPI";
+
 import {createProductTC, productActions, updateProductTC, uploadPostImgToDBTC} from "@/store/slices/productReducer";
 import {userIdFromSessionSelector} from "@/store";
+import {InitialProductStateType} from "@/api/productAPI";
 
 type PublishListingModalType = {
-    product?: ProductObjType
+    product?: InitialProductStateType
     onClose: () => void
     isOpen: boolean
     setOpenEdit?: (value: boolean) => void
