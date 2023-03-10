@@ -5,7 +5,7 @@ import stanislav from '../assets/stanislav.png';
 import telman from '../assets/telman.png';
 import pitman from '../assets/pitman.png';
 import pavel from '../assets/pavel.png';
-import nikita from '../assets/nikita.png';
+
 
 export type MockTeamArr = {
     img: string

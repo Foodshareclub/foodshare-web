@@ -67,7 +67,10 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product}) => 
                         {product.post_name.toUpperCase()}
                     </Heading>
                     <Image
-                        borderRadius='full'
+                        w={6}
+                        h={6}
+                        fit={"contain"}
+                        //borderRadius='full'
                         src={navigatePhotosObject[product.post_type]}
                         alt={"img"}
                     />

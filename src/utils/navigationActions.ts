@@ -1,28 +1,28 @@
 import food from "../assets/food.svg";
 import foodRed from "../assets/foodRed.svg";
 import things from "../assets/things.svg";
-import thingsRed from "../assets/thingsRed.svg";
+import thingsRed from "../assets/thingsRed.png";
 import borrow from "../assets/borrow.svg";
 import borrowRed from "../assets/borrowRed.svg";
 import wanted from "../assets/wanted.svg";
 import wantedRed from "../assets/wantedRed.svg";
-import foodBanks from "../assets/foodBanks.svg";
-import foodBanksRed from "../assets/foodBanksRed.svg";
+import foodBanks from "../assets/foodbanks.svg";
+import foodBanksRed from "../assets/foodbanksRed.svg";
 import fridges from "../assets/fridges.svg";
 import fridgesRed from "../assets/fridgesRed.svg";
-import business from "../assets/business.svg";
-import businessRed from "../assets/businessRed.svg";
-import volunteer from "../assets/volunteer.svg";
-import volunteerRed from "../assets/volunteerRed.svg";
-import challenges from "../assets/challenges.svg";
-import challengesRed from "../assets/challengesRed.svg";
+import business from "../assets/businesses.svg";
+import businessRed from "../assets/businessesRed.svg";
+import volunteer from "../assets/volunteers.svg";
+import volunteerRed from "../assets/volunteersRed.svg";
+import challenges from "../assets/challenges.png";
+import challengesRed from "../assets/challengesRed.png";
 import community from "../assets/community.svg";
 import communityRed from "../assets/communityRed.svg";
-import map from "../assets/mapGray.svg";
-import mapRed from "../assets/mapRed.svg";
-import veganFood from "../assets/Group.svg";
-import socFoodB from "../assets/socFoodb.svg";
-import merchandise from "../assets/Vector.svg";
+import zerowaste from "../assets/zerowaste.png";
+import zerowasteRed from "../assets/zerowasteRed.png";
+import veganFood from "../assets/govegan.png";
+import socFoodB from "../assets/community.png";
+
 
 type NavigationActionsSVGType = {
     name: string
@@ -41,9 +41,9 @@ export const photoObj ={
     "volunteer":volunteer,
     "challenges":challenges,
     "community":community,
-    "merchandise":merchandise,
     "veganFood":veganFood,
-    "socFoodB":socFoodB
+    "socFoodB":socFoodB,
+    "zero waste":zerowaste
 }
 export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     {
@@ -137,13 +137,13 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
         red: communityRed
     },
     {
-        name: 'Map',
-        "en": 'Map',
+        name: 'Zerowaste',
+        "en": 'Zero waste',
         "ru": 'Карта',
         "fr": 'Carte',
         "cs": 'Mapa',
-        src: map,
-        red: mapRed
+        src: zerowaste,
+        red: zerowasteRed
     }
 ]
 export const responsive = {
