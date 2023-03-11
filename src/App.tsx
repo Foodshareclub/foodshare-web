@@ -51,7 +51,7 @@ function App() {
         }
 
     }, [productType]);
-//Hello world!!
+
     const getRoute = (route: string) => {
         setProductType(route);
     }
