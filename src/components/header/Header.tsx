@@ -5,13 +5,15 @@ import {useActionCreators, useAppSelector} from "@/hook";
 import {AlertComponent, FilterProductComponent, NavComponent} from "@/components";
 import {
     createdSelector,
-    getAllRoomsForCurrentUserTC, getUserFromDBTC,
+    getAllRoomsForCurrentUserTC,
+    getUserFromDBTC,
     isAuthSelector,
     isUpdateProfileSelector,
     messageProfileSelector,
     newMessageIdSelector,
     updateRoomStatusSelector,
-    updateUserEffectSelector, userIdFromSessionSelector
+    updateUserEffectSelector,
+    userIdFromSessionSelector
 } from "@/store";
 
 
@@ -21,7 +23,7 @@ type HeaderType = {
     productType: string
 }
 
-export type PagesType = 'productComponent' | 'profileSettings' | "/";
+export type PagesType = 'productComponent' | 'profileSettings';
 
 const Header: React.FC<HeaderType> = memo(({getRoute, setProductType, productType}) => {
     const [scrollTop, setScrollTop] = useState(0);
