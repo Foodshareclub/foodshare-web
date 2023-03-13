@@ -1,18 +1,17 @@
 import React, {memo, useEffect, useState} from 'react';
 import {CardHeader, useColorModeValue} from "@chakra-ui/react";
-import {getUserFromDBTC} from "@/store/slices/userReducer";
+
 import {useActionCreators, useAppSelector} from "@/hook";
 import {AlertComponent, FilterProductComponent, NavComponent} from "@/components";
 import {
     createdSelector,
-    getAllRoomsForCurrentUserTC,
+    getAllRoomsForCurrentUserTC, getUserFromDBTC,
     isAuthSelector,
     isUpdateProfileSelector,
     messageProfileSelector,
     newMessageIdSelector,
-    sessionSelector,
     updateRoomStatusSelector,
-    updateUserEffectSelector
+    updateUserEffectSelector, userIdFromSessionSelector
 } from "@/store";
 
 
@@ -29,8 +28,7 @@ const Header: React.FC<HeaderType> = memo(({getRoute, setProductType, productTyp
     const actions = useActionCreators({getUserFromDBTC, getAllRoomsForCurrentUserTC});
     const [pageType, setPageType] = useState<PagesType>("productComponent");
     const isAuth = useAppSelector(isAuthSelector);
-    const session = useAppSelector(sessionSelector);
-    const userId = session?.user?.id;
+    const userId = useAppSelector(userIdFromSessionSelector);
     const isUpdateProfile = useAppSelector(isUpdateProfileSelector);
     const updateUserEffect = useAppSelector(updateUserEffectSelector);
     const profileMessageFromAlertComponent = useAppSelector(messageProfileSelector);

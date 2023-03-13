@@ -10,8 +10,8 @@ import {listenChannelTC} from "@/store/slices/chatReducer";
 function App() {
     const location = useLocation();
     let type = location.pathname.split('/')[1];
+    const [productType, setProductType] = useState(type);
     const isAuth = useAppSelector(isAuthSelector);
-    const [productType, setProductType] = useState(type || "food");
     const actions = useActionCreators({getProductsTC, getSessionTC, listenChannelTC, ...userActions});
 
     useEffect(() => {
@@ -21,9 +21,12 @@ function App() {
     useEffect(() => {
         if (productType === "settings") {
             console.log("settings on app")
+        } else if (productType === "zerowaste") {
+            setProductType("food");
+            console.log("zerowaste on app")
         } else if (productType === "donation") {
             console.log("donation on app")
-        }else if (productType === "volunteer") {
+        } else if (productType === "volunteer") {
             console.log("volunteer on app")
         } else if (productType === "user-listings") {
             console.log("user-listings on app")
@@ -34,25 +37,24 @@ function App() {
         } else if (productType === "one-product") {
             console.log("one-product on app")
         } else if (productType === "challenges") {
+            setProductType("food");
             console.log("challenges on app")
-            setProductType("food")
         } else if (productType === "business") {
+            setProductType("food");
             console.log("business on app")
-            setProductType("food")
         } else if (productType === "community") {
+            setProductType( "food");
             console.log("community on app")
-            setProductType("food")
-        } else if (productType === "map") {
-            console.log("map on app")
-            setProductType("food")
-        } else {
+        } else if (productType === "fridges") {
+            setProductType("food");
+            console.log("fridges on app")
+        }else {
             actions.getProductsTC(productType);
         }
-
     }, [productType]);
 
     const getRoute = (route: string) => {
-        setProductType(route);
+       setProductType(route);
     }
     return (
         <>

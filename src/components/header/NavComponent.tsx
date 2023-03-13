@@ -61,14 +61,14 @@ const NavComponent: React.FC<PropsLangType> = memo(({
 
     const navigateToMain = () => {
         setProductType('food');
-        navigate(PATH.main);
-        setPageType('productComponent');
+        navigate(PATH.mainFood);
+       // setPageType('productComponent');
     }
 
     const navigateToAboutUs = () => navigate('/aboutUs');
     const navigateToMyLists = () => {
         navigate(PATH.myListingsPage);
-        setPageType("profileSettings");
+       // setPageType("profileSettings");
     }
 
     const navigateToAccountSettings = () => {

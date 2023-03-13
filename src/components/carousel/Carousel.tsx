@@ -1,7 +1,7 @@
 import React from 'react';
 import AliceCarousel from 'react-alice-carousel';
 import 'react-alice-carousel/lib/alice-carousel.css';
-import {Box, Image, Text} from "@chakra-ui/react";
+import {Box, Image, Text, useColorModeValue} from "@chakra-ui/react";
 import {navigationActionsSVG, responsive} from "../../utils/navigationActions";
 import {useNavigate} from "react-router-dom";
 import "react-alice-carousel/lib/scss/alice-carousel.scss";
@@ -29,8 +29,7 @@ const Carousel: React.FC<PropsType> = ({
 
     const navigateHandler = (name: string) => {
         const routeName = name.toLowerCase();
-
-        navigate(`${routeName === 'food' ? '/' : routeName}`);
+        navigate(`${routeName === 'food' ? '/food' : routeName}`);
 
         getRoute(routeName);
         setPageType("productComponent");
@@ -48,6 +47,10 @@ const Carousel: React.FC<PropsType> = ({
         touchTracking={true}
         items={navigationActionsSVG.map((item, id) => (
                 <Box
+                    py={1}
+                    borderBottomWidth={ productType === item.name.toLowerCase()?3: 0}
+                    borderStyle={'solid'}
+                    borderColor={'#FF2D55'}
                     alignSelf={"center"}
                     key={id}
                     onClick={() => navigateHandler(item.name)}
@@ -62,6 +65,7 @@ const Carousel: React.FC<PropsType> = ({
                            boxSize={6}
                     />
                     <Text
+                        color={ productType === item.name.toLowerCase()? "#FF2D55" : "inherit"}
                         noOfLines={1}
                         mb={0}
                         pb={0}
