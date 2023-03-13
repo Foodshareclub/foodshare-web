@@ -10,7 +10,8 @@ import PopoverForSearch from "@/pages/searchResultPage/PopoverForSearch";
 import {PATH} from "@/utils";
 import {
     allRoomsSelector,
-    avatarURLSelector, downloadImgFromDBTC,
+    avatarURLSelector,
+    downloadImgFromDBTC,
     logoutTC,
     userEmailSelector,
     userFirstNameSelector,
@@ -61,11 +62,14 @@ const NavComponent: React.FC<PropsLangType> = memo(({
 
     const navigateToMain = () => {
         setProductType('food');
-        navigate(PATH.main);
-        setPageType('productComponent');
+        navigate(PATH.mainFood);
     }
 
-    const navigateToAboutUs = () => navigate('/aboutUs');
+    const navigateToAboutUs = () => {
+        navigate('/aboutUs');
+        setPageType("profileSettings");
+    }
+
     const navigateToMyLists = () => {
         navigate(PATH.myListingsPage);
         setPageType("profileSettings");
@@ -80,16 +84,17 @@ const NavComponent: React.FC<PropsLangType> = memo(({
     }
     const navigateToMyMessages = () => {
         navigate(`/chat-main`);
+        setPageType("profileSettings");
     }
 
     const navigateToLogout = () => {
         actions.logoutTC();
-        navigate(PATH.main);
+        navigate(PATH.mainFood);
     }
 
     return (
         <Flex
-            px={{xl:20,base:7}}
+            px={{xl: 20, base: 7}}
             py={3}
             borderBottomWidth={1}
             borderStyle={'solid'}

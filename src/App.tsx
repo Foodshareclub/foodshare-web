@@ -10,8 +10,8 @@ import {listenChannelTC} from "@/store/slices/chatReducer";
 function App() {
     const location = useLocation();
     let type = location.pathname.split('/')[1];
+    const [productType, setProductType] = useState(type);
     const isAuth = useAppSelector(isAuthSelector);
-    const [productType, setProductType] = useState(type || "food");
     const actions = useActionCreators({getProductsTC, getSessionTC, listenChannelTC, ...userActions});
 
     useEffect(() => {
@@ -20,35 +20,33 @@ function App() {
 
     useEffect(() => {
         if (productType === "settings") {
-            console.log("settings on app")
+            return
+        } else if (productType === "zerowaste") {
+            setProductType("food");
+
         } else if (productType === "donation") {
-            console.log("donation on app")
-        }else if (productType === "volunteer") {
-            console.log("volunteer on app")
+            return
+        } else if (productType === "volunteer") {
+            return
         } else if (productType === "user-listings") {
-            console.log("user-listings on app")
+            return
         } else if (productType === "chat-main") {
-            console.log("chat-main on app")
+            return
         } else if (productType === "aboutUs") {
-            console.log("aboutUs on app")
+            return
         } else if (productType === "one-product") {
-            console.log("one-product on app")
+            return
         } else if (productType === "challenges") {
-            console.log("challenges on app")
-            setProductType("food")
+            setProductType("food");
         } else if (productType === "business") {
-            console.log("business on app")
-            setProductType("food")
+            setProductType("food");
         } else if (productType === "community") {
-            console.log("community on app")
-            setProductType("food")
-        } else if (productType === "map") {
-            console.log("map on app")
-            setProductType("food")
+            setProductType("food");
+        } else if (productType === "fridges") {
+            setProductType("food");
         } else {
             actions.getProductsTC(productType);
         }
-
     }, [productType]);
 
     const getRoute = (route: string) => {

@@ -1,5 +1,6 @@
 export const PATH = {
     main: '/',
+    mainFood: '/food',
     productPage: '/one-product/:type/:id',
     aboutUsPage: '/aboutUs',
     contactUsPage: '/contactUs',
