@@ -10,7 +10,8 @@ import {listenChannelTC} from "@/store/slices/chatReducer";
 function App() {
     const location = useLocation();
     let type = location.pathname.split('/')[1];
-    const [productType, setProductType] = useState(type);
+    console.log(type.length)
+    const [productType, setProductType] = useState(!type.length?"food":type);
     const isAuth = useAppSelector(isAuthSelector);
     const actions = useActionCreators({getProductsTC, getSessionTC, listenChannelTC, ...userActions});
 
