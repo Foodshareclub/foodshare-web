@@ -5,8 +5,9 @@ import {useLocation, useNavigate} from "react-router-dom";
 type NavigateButtonsType = {
     messagesAnchorRef?: RefObject<HTMLDivElement>
     title: string
+    navigateTo?: string
 }
-const NavigateButtons: FC<NavigateButtonsType> = ({messagesAnchorRef, title}) => {
+const NavigateButtons: FC<NavigateButtonsType> = ({navigateTo, messagesAnchorRef, title}) => {
 
     const location = useLocation();
     let type = location.pathname.split('/')[1];
@@ -15,7 +16,13 @@ const NavigateButtons: FC<NavigateButtonsType> = ({messagesAnchorRef, title}) =>
     const [scrollTop, setScrollTop] = useState(0);
 
     const navigate = useNavigate();
-
+    const navigateHandler = () => {
+        if (navigateTo) {
+            navigate(`/${navigateTo}`)
+        } else {
+            navigate(navigationValue)
+        }
+    };
     const goToStart = () => {
         if (messagesAnchorRef)
             messagesAnchorRef.current?.scrollIntoView({behavior: 'smooth'});
@@ -43,7 +50,7 @@ const NavigateButtons: FC<NavigateButtonsType> = ({messagesAnchorRef, title}) =>
                         m={"0 auto"}
                         display={"block"}
                         boxShadow={"dark-lg"}
-                        onClick={() => navigate(navigationValue)}
+                        onClick={() => navigateHandler()}
                         borderRadius={20}
                         variant={"solid"}>
                         {title}

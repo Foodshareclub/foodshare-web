@@ -40,13 +40,13 @@ export const OneProduct: React.FC<OneProductType> = ({
 
     const onClick = async () => {
         if (buttonValue === "completed") {
-           return
+            return
         }
         if (navigateHandler) {
-            navigateHandler()
+            navigateHandler();
         }
         if (buttonValue === "approval pending") {
-            await actions.updateProductTC({gif_url:product.gif_url,id:product.id,post_published: false});
+            await actions.updateProductTC({gif_url: product.gif_url, id: product.id, post_published: false});
             await actions.updateRoomTC({post_arranged_to: requesterId, id: roomId as string});
         }
         if (buttonValue === "leave a feedBack") {
@@ -58,10 +58,10 @@ export const OneProduct: React.FC<OneProductType> = ({
         navigate("/")
     }
     return (
-        <Flex py={3} pl={3}
+        <Flex py={3}
               direction={"column"}
-              justify={"space-between"}
-             w={{md: chat ? size : "45%", base: "100%"}}
+              justify={"space-around"}
+              w={{md: chat ? size : "45%", base: "100%"}}
         >
             <Box alignSelf="center">
                 <Image
@@ -70,7 +70,7 @@ export const OneProduct: React.FC<OneProductType> = ({
                     borderRadius={chat ? "50%" : 20}
                     alt={product.post_name}
                     m={"0 auto"}
-                    width={chat ? "100px" : 268}
+                    width={chat ? "100px" : 300}
                     height={{ss: chat ? "100px" : "auto", base: "270px"}}
                 />
             </Box>
@@ -97,9 +97,9 @@ export const OneProduct: React.FC<OneProductType> = ({
                         {Array(5)
                             .fill('')
                             .map((item, i) => (
-                                <StarIcon onClick={()=>setValue(i+1)}
-                                    key={i}
-                                    color={i < value ? 'teal.500' : 'gray.300'}
+                                <StarIcon onClick={() => setValue(i + 1)}
+                                          key={i}
+                                          color={i < value ? 'teal.500' : 'gray.300'}
                                 />
                             ))}
                     </Flex>
@@ -139,11 +139,11 @@ export const OneProduct: React.FC<OneProductType> = ({
                         :
                         <Button
                             onClick={onClick}
-                            backgroundColor={buttonValue === "completed"?"green.300":'#FF2D55'}
+                            backgroundColor={buttonValue === "completed" ? "green.300" : '#FF2D55'}
                             textTransform={"uppercase"}
                             width="100%" variant='solid'
-                            cursor={buttonValue === "completed"?"default":"pointer"}
-                            colorScheme={buttonValue === "completed"?"green.300":'blue'}
+                            cursor={buttonValue === "completed" ? "default" : "pointer"}
+                            colorScheme={buttonValue === "completed" ? "green.300" : 'blue'}
                         >
                             {buttonValue}
                         </Button>
