@@ -70,7 +70,7 @@ export const OneProduct: React.FC<OneProductType> = ({
                     borderRadius={chat ? "50%" : 20}
                     alt={product.post_name}
                     m={"0 auto"}
-                    width={chat ? "100px" : 300}
+                    width={chat ? "100px" : 268}
                     height={{ss: chat ? "100px" : "auto", base: "270px"}}
                 />
             </Box>

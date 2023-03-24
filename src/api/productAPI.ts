@@ -2,6 +2,10 @@ import {supabase} from "@/supaBase.config";
 import {PostgrestSingleResponse} from "@supabase/supabase-js";
 import {ReviewsType} from "@/api/chatAPI";
 
+type  LocationsInfo = {
+    _latitude: number
+    _longitude: number
+}
 export type InitialProductStateType = {
     available_hours: string
     created_att: string
@@ -11,7 +15,7 @@ export type InitialProductStateType = {
     gif_url_2: string
     gif_url_3: string
     id: number
-    locations: { _latitude: number, _longitude: number }
+    locations: LocationsInfo
     pickup_time: string
     post_address: string
     post_arranged: boolean
@@ -22,10 +26,16 @@ export type InitialProductStateType = {
     post_type: string
     post_published: boolean
     post_views: number
-    profile_id:string
+    profile_id: string
     user: string
-    reviews:Array<ReviewsType>
+    reviews: Array<ReviewsType>
 }
+
+export type LocationType = {
+    locations: LocationsInfo
+    post_name: string
+};
+
 export const productAPI = {
     getAllProducts() {
         return supabase
@@ -38,13 +48,19 @@ export const productAPI = {
             .select(`*,reviews(*)`)
             .eq('post_type', productType.toLowerCase())
     },
+    getProductsLocation(productType: string): PromiseLike<PostgrestSingleResponse<Array<LocationType>>> {
+        return supabase
+            .from('posts')
+            .select('locations,post_name')
+            .eq('post_type', productType.toLowerCase())
+    },
     getCurrentUserProduct(currentUserID: string) {
         return supabase
             .from('posts')
             .select('*')
             .eq('user', currentUserID)
     },
-    getOneProduct(productId: number):any {
+    getOneProduct(productId: number): any {
         return supabase
             .from('posts')
             .select(`*,reviews(*)`)
@@ -74,7 +90,7 @@ export const productAPI = {
                 .textSearch('post_name', searchWord, {
                     type: 'websearch'
                 })
-        }else {
+        } else {
             return supabase
                 .from('posts')
                 .select('*')

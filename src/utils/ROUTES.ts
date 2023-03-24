@@ -10,5 +10,6 @@ export const PATH = {
     settingsPage: '/settings',
     personalInfoPage: '/settings/personal-info',
     loginSecurityPage: '/settings/login-and-security',
-    donationPage:"/donation"
+    donationPage:"/donation",
+    mapPage:'/map/:type'
 }

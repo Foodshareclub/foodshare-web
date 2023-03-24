@@ -67,7 +67,7 @@ const PopupNotificationModal: React.FC<ModalType> = ({isOpen, onClose}) => {
             setNumberM("fourth");
         }
     }
-    console.log(numberM)
+
     return (
         <Modal
             isCentered

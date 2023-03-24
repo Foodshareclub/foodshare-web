@@ -31,7 +31,7 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({
             }
             actions.checkRoomAvailabilityTC(arg)
         }
-        return console.log('dead oneProdContainer')
+        // return console.log('dead oneProdContainer')
     }, []);
 
     const createRoom = async () => {
