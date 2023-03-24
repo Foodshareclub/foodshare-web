@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import {Box, Skeleton} from "@chakra-ui/react";
-
 import {MapContainer, Marker, TileLayer} from "react-leaflet";
 import '../../components/leaflet/leaflet.scss';
 import 'leaflet/dist/leaflet.css';
@@ -12,9 +11,7 @@ import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
 import {productAPI} from "@/api";
 import {LocationType} from "@/api/productAPI";
 
-
 const LeafletPage = () => {
-
     const location = useLocation();
     let type = location.pathname.split('/')[2];
     const [locations, setLocation] = useState<LocationType[] | undefined>()
@@ -35,13 +32,13 @@ const LeafletPage = () => {
             // className="Leaflet"
             mt="19vh"
         >
-            <NavigateButtons title={"Show lists"}/>
-            <MapContainer style={{height: "81vh"}}
+            <NavigateButtons navigateTo={type} title={"Show lists"}/>
+            <MapContainer style={{height: "81vh", zIndex: 0}}
                           center={[locations[0].locations._latitude, locations[0].locations._longitude]}
                           zoom={defaultZoom}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                            attribution="&copy; <a href=&quot;https://www.openstreetmap.org/copyright&quot;>OpenStreetMap</a> contributors"/>
-                {/*для того,чтоб обьединить локации в одну*/}
+
                 <MarkerClusterGroup
                     chunkedLoading
                     maxClusterRadius={150}

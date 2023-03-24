@@ -9,7 +9,6 @@ import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
 
 
 export const Main = () => {
-
     const products = useAppSelector(productsSelector);
     const filteredProducts = products.filter(products => products.post_published)
     const status = useAppSelector(productStatusSelector);
@@ -19,10 +18,7 @@ export const Main = () => {
 
     return (
         <Box
-            ref={messagesAnchorRef}
-            mt="18vh"
-            mb={"5vh"}
-        >
+            ref={messagesAnchorRef} mt="18vh" mb="5vh">
             <NavigateButtons messagesAnchorRef={messagesAnchorRef} title={"Show map"}/>
             {/*<Box ref={messagesAnchorRef}></Box>*/}
             {/*<Trans>*/}
@@ -47,11 +43,6 @@ export const Main = () => {
                 ))
             }
             </SimpleGrid>
-            {/*<Box display={scrollTop > 400 ? "block" : "none"} textAlign={"end"} bottom={"14%"} w={"100%"}*/}
-            {/*     position={"fixed"}>*/}
-            {/*    <IconButton boxShadow={"dark-lg"} p={2} w={10} h={10} borderRadius={20} transform={"auto"} rotate={270}*/}
-            {/*                as={ArrowRightIcon} mr={"10%"} onClick={goToStart} aria-label={"UP"}>UP</IconButton>*/}
-            {/*</Box>*/}
         </Box>
     );
 }
