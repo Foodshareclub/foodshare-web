@@ -5,7 +5,7 @@
   "dependencies": {
     "@chakra-ui/icons": "^2.0.14",
     "@chakra-ui/react": "^2.4.5",
-    "@craco/craco": "^7.0.0",
+    "@craco/craco": "^7.1.0",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@lingui/react": "^3.16.0",
@@ -19,10 +19,13 @@
     "@types/react": "^18.0.26",
     "@types/react-dom": "^18.0.9",
     "framer-motion": "^8.0.2",
+    "leaflet": "^1.9.3",
     "react": "^18.2.0",
     "react-alice-carousel": "^2.7.0",
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.40.0",
+    "react-leaflet": "^4.2.1",
+    "react-leaflet-cluster": "^2.1.0",
     "react-redux": "^8.0.5",
     "react-router-dom": "^6.5.0",
     "react-scripts": "5.0.1",
@@ -61,6 +64,7 @@
   "devDependencies": {
     "@lingui/cli": "^3.16.0",
     "@lingui/macro": "^3.16.0",
+    "@types/leaflet": "^1.9.3",
     "@types/react-redux": "^7.1.24",
     "@types/react-router-dom": "^5.3.3",
     "@types/redux-thunk": "^2.1.0"

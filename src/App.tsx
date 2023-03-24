@@ -10,7 +10,6 @@ import {listenChannelTC} from "@/store/slices/chatReducer";
 function App() {
     const location = useLocation();
     let type = location.pathname.split('/')[1];
-    console.log(type.length)
     const [productType, setProductType] = useState(!type.length?"food":type);
     const isAuth = useAppSelector(isAuthSelector);
     const actions = useActionCreators({getProductsTC, getSessionTC, listenChannelTC, ...userActions});
@@ -24,6 +23,9 @@ function App() {
             return
         } else if (productType === "zerowaste") {
             setProductType("food");
+
+        } else if (productType === "map") {
+            return
 
         } else if (productType === "donation") {
             return
