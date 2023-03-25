@@ -1,16 +1,19 @@
-import AboutUsPage from "@/pages/aboutUs/AboutUsPage";
-import ContactUsPage from "@/pages/contactUs/ContactUsPage";
-import MyListingsPage from "@/pages/prfilePages/MyListingsPage";
-import ProductPage from "@/pages/productPage/ProductPage";
-import VolunteerPage from "@/pages/volunteerPages/VolunteerPage";
-import ChatMainPage from "@/pages/chat/ChatMainPage";
-import {SearchResultsPage} from "@/pages/searchResultPage/SearchResultsPage";
-import {SettingsPage} from "@/pages/settingsPage/SettingsPage";
-import {PersonalInfoPage} from "@/pages/personalInfoPage/PersonalInfoPage";
-import {LoginSecurityPage} from "@/pages/loginSecurityPage/LoginSecurityPage";
-
+import AboutUsPage from "./aboutUs/AboutUsPage";
+import ChatMainPage from "./chat/ChatMainPage";
+import ContactUsPage from "./contactUs/ContactUsPage";
+import DonationPage from "./donationPage/DonationPage";
+import LeafletPage from "./leafletPage/LeafletPage";
+import {LoginSecurityPage} from "./loginSecurityPage/LoginSecurityPage";
+import {PersonalInfoPage} from "./personalInfoPage/PersonalInfoPage";
+import MyListingsPage from "./prfilePages/MyListingsPage";
+import ProductPage from "./productPage/ProductPage";
+import {SearchResultsPage} from "./searchResultPage/SearchResultsPage";
+import {SettingsPage} from "./settingsPage/SettingsPage";
+import VolunteerPage from "./volunteerPages/VolunteerPage";
 
 export {
+    DonationPage,
+    LeafletPage,
     ProductPage,
     MyListingsPage,
     VolunteerPage,
@@ -19,5 +22,6 @@ export {
     SearchResultsPage,
     SettingsPage,
     PersonalInfoPage,
-    LoginSecurityPage,ChatMainPage
+    LoginSecurityPage,
+    ChatMainPage
 }

@@ -48,13 +48,14 @@ const NavigateButtons: FC<NavigateButtonsType> = ({navigateTo, messagesAnchorRef
                         _active={{backgroundColor: "lightGray", color: "gray"}}
                         backgroundColor={"blackAlpha.900"}
                         m={"0 auto"}
-                        display={"block"}
+                        display={!type?"none":"block"}
                         boxShadow={"dark-lg"}
                         onClick={() => navigateHandler()}
                         borderRadius={20}
                         variant={"solid"}>
                         {title}
-                    </Button></Box>
+                    </Button>
+                </Box>
                 <Box w={"30%"}>
                     <Button
                         color={"whiteAlpha.900"}
@@ -66,11 +67,8 @@ const NavigateButtons: FC<NavigateButtonsType> = ({navigateTo, messagesAnchorRef
                         m={"0 auto"}
                         p={0}
                         borderRadius={"50%"}
-                        //transform={"auto"} rotate={270}
-                        // as={ArrowRightIcon}
-                        onClick={goToStart}>UP</Button></Box>
-
-
+                        onClick={goToStart}>UP</Button>
+                </Box>
             </Flex>
 
         </Box>

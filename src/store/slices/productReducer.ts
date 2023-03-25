@@ -1,5 +1,5 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
-import {InitialProductStateType, productAPI} from "@/api/productAPI";
+import {InitialProductStateType, LocationType, productAPI} from "@/api/productAPI";
 import {ImgUrlType, profileAPI, UploadImgUrlType} from "@/api/profileAPI";
 import {StatusType} from "@/components/alert/AlertComponent";
 
@@ -9,17 +9,29 @@ const initialState = {
     searchProducts: [] as Array<InitialProductStateType>,
     oneProduct: [] as Array<InitialProductStateType>,
     isUpdateProduct: "info" as StatusType,
-    updateProductEffect:false,
+    updateProductEffect: false,
     postImgUrl: '',
     isPostImgUpload: false,
     message: '',
-    status:"loading",
-
+    status: "loading",
+    productsLocation: [] as LocationType[]
 };
 
 export const getProductsTC = createAsyncThunk("/getProductsTC", async (productType: string, thunkAPI) => {
     try {
         let {data, error} = await productAPI.getProducts(productType);
+        if (error) {
+            console.log(error);
+            return thunkAPI.rejectWithValue(error);
+        }
+        return data;
+    } catch (e) {
+        return thunkAPI.rejectWithValue(e);
+    }
+});
+export const getProductsLocationTC = createAsyncThunk("/getProductsLocationTC", async (productType: string, thunkAPI) => {
+    try {
+        let {data, error} = await productAPI.getProductsLocation(productType);
         if (error) {
             console.log(error);
             return thunkAPI.rejectWithValue(error);
@@ -130,7 +142,7 @@ export const uploadPostImgToDBTC = createAsyncThunk("/auth/uploadPostImgToDBTC",
         return thunkAPI.rejectWithValue(error.message);
     }
 })
-export const updateProductTC = createAsyncThunk("/auth/updateProductTC", async (updates:  Partial<InitialProductStateType>, thunkAPI) => {
+export const updateProductTC = createAsyncThunk("/auth/updateProductTC", async (updates: Partial<InitialProductStateType>, thunkAPI) => {
     try {
         let {error} = await productAPI.updateProduct(updates);
         if (error) {
@@ -150,18 +162,27 @@ const productSlice = createSlice({
         isUpdateProduct: (state, action) => {
             state.isUpdateProduct = action.payload;
         },
-        clearOneProductState:(state)=>{
+        clearOneProductState: (state) => {
             state.oneProduct = []
         }
     },
     extraReducers: (builder) => {
+        builder.addCase(getProductsLocationTC.pending, (state) => {
+            state.status = "loading"
+        });
+        builder.addCase(getProductsLocationTC.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.productsLocation = action.payload;
+                state.status = "loaded"
+            }
+        });
         builder.addCase(getProductsTC.pending, (state) => {
-         state.status="loading"
+            state.status = "loading"
         });
         builder.addCase(getProductsTC.fulfilled, (state, action) => {
             if (action.payload) {
                 state.products = action.payload;
-                state.status="loaded"
+                state.status = "loaded"
             }
         });
         builder.addCase(getCurrentUserProductsTC.fulfilled, (state, action) => {
@@ -200,7 +221,7 @@ const productSlice = createSlice({
             state.message = "Something was wrong!"
         });
         builder.addCase(resultsSearchProductsTC.pending, (state) => {
-         state.status = "loading"
+            state.status = "loading"
         });
         builder.addCase(resultsSearchProductsTC.fulfilled, (state, action) => {
             if (action.payload) {

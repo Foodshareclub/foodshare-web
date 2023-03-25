@@ -7,7 +7,7 @@ import {dynamicActivate} from "@/utils/i18n";
 import {
     AboutUsPage,
     ChatMainPage,
-    ContactUsPage,
+    ContactUsPage, DonationPage, LeafletPage,
     LoginSecurityPage,
     MyListingsPage,
     PersonalInfoPage,
@@ -16,13 +16,13 @@ import {
     SettingsPage,
     VolunteerPage
 } from "@/pages";
-import {Footer, Header, Main} from "@/components";
+import {Footer, Header, Main, OneVolunteer} from "@/components";
 import {PATH} from "@/utils";
-import OneVolunteer from "@/components/volonteerCard/OneVolunteer";
+
 import {languageSelector} from "@/store";
 import {useAppSelector} from "@/hook";
-import DonationPage from "@/pages/donationPage/DonationPage";
-import LeafletPage from "@/pages/leafletPage/LeafletPage";
+
+
 
 
 type ContainerProps = {

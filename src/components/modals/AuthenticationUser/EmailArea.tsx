@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import {useAppDispatch} from "@/hook";
 import {loginWithOtpTC, recoveryPasswordTC} from "@/store/slices/userReducer";
-import {Notification} from "@/components";
+import {NotificationModal} from "@/components";
 import {Button, FormLabel, Input, useDisclosure} from "@chakra-ui/react";
 
 type EmailAreaType = {
@@ -39,7 +39,7 @@ export const EmailArea: React.FC<EmailAreaType> = ({
 
     return (
         <>
-            <Notification isOpen={isOpen} onClose={onClose} setStartWith={setStartWith}/>
+            <NotificationModal isOpen={isOpen} onClose={onClose} setStartWith={setStartWith}/>
 
             <FormLabel>{invalid || 'Email'}</FormLabel>
             <Input
