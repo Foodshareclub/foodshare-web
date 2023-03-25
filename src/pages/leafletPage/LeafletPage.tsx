@@ -1,24 +1,28 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
 import {Box, Skeleton} from "@chakra-ui/react";
 import {MapContainer, Marker, TileLayer} from "react-leaflet";
-import '../../components/leaflet/leaflet.scss';
 import 'leaflet/dist/leaflet.css';
+import '../../components/leaflet/leaflet.scss';
 import {Icon} from "leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import icon from "@/assets/location-blue.svg";
 import {useLocation} from "react-router-dom";
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
-import {productAPI} from "@/api";
-import {LocationType} from "@/api/productAPI";
+import UserLocationMarker from "@/components/leaflet/UserLocationMarker";
+import {getProductsLocationTC, productsLocationSelector} from "@/store";
+import {useActionCreators, useAppSelector} from "@/hook";
 
 const LeafletPage = () => {
     const location = useLocation();
     let type = location.pathname.split('/')[2];
-    const [locations, setLocation] = useState<LocationType[] | undefined>()
+    const actions = useActionCreators({getProductsLocationTC});
     const defaultZoom = 8;
+    const locations = useAppSelector(productsLocationSelector);
 
     useEffect(() => {
-        productAPI.getProductsLocation(type).then(({data}) => data && setLocation(data));
+        if (type) {
+            actions.getProductsLocationTC(type);
+        }
     }, [type])
 
     const skater = new Icon({
@@ -26,7 +30,7 @@ const LeafletPage = () => {
         iconSize: [25, 25],
         className: "custom-marker-cluster"
     });
-    if (!locations) return <Skeleton/>
+    if (!locations.length) return <Skeleton/>
     return (
         <Box
             // className="Leaflet"
@@ -38,7 +42,7 @@ const LeafletPage = () => {
                           zoom={defaultZoom}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                            attribution="&copy; <a href=&quot;https://www.openstreetmap.org/copyright&quot;>OpenStreetMap</a> contributors"/>
-
+                <UserLocationMarker icon={skater}/>
                 <MarkerClusterGroup
                     chunkedLoading
                     maxClusterRadius={150}
@@ -49,12 +53,11 @@ const LeafletPage = () => {
                         <Marker
                             icon={skater}
                             key={index}
-                            position={[item["locations"]._latitude, item["locations"]._longitude]}
+                            position={[item.locations._latitude, item.locations._longitude]}
                             title={item.post_name}
                         ></Marker>
                     ))}
                 </MarkerClusterGroup>
-
             </MapContainer>
         </Box>
     );

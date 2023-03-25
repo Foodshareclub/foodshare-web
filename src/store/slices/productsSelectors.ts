@@ -9,3 +9,4 @@ export const currentUserProductsSelector = (state: StateAppType) => state.produc
 export const isUpdateProductSelector = (state: StateAppType) => state.product.isUpdateProduct;
 export const updateProductEffectSelector = (state: StateAppType) => state.product.updateProductEffect;
 export const messageProductSelector = (state: StateAppType) => state.product.message;
+export const productsLocationSelector = (state: StateAppType) => state.product.productsLocation;
