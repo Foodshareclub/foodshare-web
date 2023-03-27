@@ -60,6 +60,10 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
     const [productId, setProductId] = useState(product?.id || 0);
     const [filePath, setFilePath] = useState('')
     const [file, setFile] = useState<File>({} as File)
+    console.log(imgUrl)
+    console.log(category)
+    console.log(title)
+    console.log(address)
 
     const handleChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const img = createPhotoUrl(event);
@@ -120,7 +124,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
                 <ModalCloseButton/>
 
                 <ModalBody pb={6}>
-                    <FormControl mt={10}>
+                    <FormControl  mt={10}>
                         <Flex _hover={{bg: 'gray.50'}} justify="space-between" p={4} border="1px dashed #2D9CDB"
                               borderRadius={10}>
                             {
@@ -246,7 +250,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
                         w="100%"
                         onClick={() => publishHandler()}
                         colorScheme='red'
-                        disabled={!category || !title || !description}
+                        isLoading={!category || !title || !description || !imgUrl}
                     >
                         <Trans>Publish Listing</Trans>
                     </Button>
