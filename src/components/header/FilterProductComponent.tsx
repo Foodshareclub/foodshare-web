@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {Flex} from "@chakra-ui/react";
-import "../../index.scss";
+import "../../index.css";
 import Carousel from "../carousel/Carousel";
 import {PagesType} from "./Header";
 

@@ -60,10 +60,8 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
     const [productId, setProductId] = useState(product?.id || 0);
     const [filePath, setFilePath] = useState('')
     const [file, setFile] = useState<File>({} as File)
-    console.log(imgUrl)
-    console.log(category)
-    console.log(title)
-    console.log(address)
+
+
 
     const handleChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const img = createPhotoUrl(event);

@@ -1,12 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.scss';
+import './index.css';
 import {Provider} from "react-redux";
 import {BrowserRouter} from "react-router-dom";
 import store from "./store/redux-store";
 import {ChakraProvider} from '@chakra-ui/react';
 import {theme} from "./utils/themeBreakPoint";
-import ContainerForChat from "@/components/containerForChat/ContainerForChat";
+import {ContainerForChat} from "@/components";
 
 
 const root = ReactDOM.createRoot(
