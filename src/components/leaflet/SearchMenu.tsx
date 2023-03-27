@@ -1,7 +1,6 @@
 import {GeoSearchControl, OpenStreetMapProvider} from 'leaflet-geosearch';
 import {useMap} from 'react-leaflet';
 import 'leaflet-geosearch/dist/geosearch.css';
-import * as L from "leaflet";
 import {Icon} from "leaflet";
 import icon from "@/assets/location-blue.svg";
 
@@ -25,7 +24,7 @@ export const SearchMenu = () => {
     });
 
     const skater = new Icon({
-        iconUrl: icon || 'http://leafletjs.com/docs/images/logo.png',
+        iconUrl: icon,
         iconSize: [25, 25],
         // iconAnchor: [12, 41],
         // className: "custom-marker-cluster"
