@@ -62,6 +62,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
     const [file, setFile] = useState<File>({} as File)
 
 
+
     const handleChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const img = createPhotoUrl(event);
         setImgUrl(img.url);//  get photo URL

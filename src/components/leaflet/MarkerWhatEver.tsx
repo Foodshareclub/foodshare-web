@@ -26,6 +26,7 @@ const MarkerWhatEver: FC<MarkerType> = ({location, valOne, handleOnFlyTo, setLoc
         if (valTwo) setView();
     }, [valOne, valTwo])
 
+
     const mapFlyTo = () => {
         handleOnFlyTo(!valOne);
         setLocation(london);

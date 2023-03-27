@@ -25,6 +25,7 @@ const Leaflet = () => {
     // const handleOnFlyTo = (map: any) => {
     //     setValOne(map)
     // }
+
     const skater = new Icon({
         iconUrl: icon,
         iconSize: [25, 25],

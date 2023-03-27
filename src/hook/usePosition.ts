@@ -7,6 +7,7 @@ const defaultSettings = {
 };
 
 export const usePosition = (watch = false, userSettings = {}) => {
+
     const settings = {
         ...defaultSettings,
         ...userSettings,

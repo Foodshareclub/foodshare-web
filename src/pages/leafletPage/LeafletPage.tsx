@@ -12,8 +12,8 @@ import {useActionCreators, useAppSelector} from "@/hook";
 import {NavigateButtons, SearchMenu, UserLocationMarker} from '@/components';
 
 
-
 const LeafletPage = () => {
+
     const location = useLocation();
     let type = location.pathname.split('/')[2];
     const actions = useActionCreators({getProductsLocationTC});

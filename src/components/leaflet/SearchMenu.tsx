@@ -28,7 +28,7 @@ export const SearchMenu = () => {
         iconUrl: icon || 'http://leafletjs.com/docs/images/logo.png',
         iconSize: [25, 25],
         // iconAnchor: [12, 41],
-       // className: "custom-marker-cluster"
+        // className: "custom-marker-cluster"
     });
     // @ts-ignore
     const searchControl = new GeoSearchControl({
@@ -40,10 +40,11 @@ export const SearchMenu = () => {
         autoClose: true,
         autoCompleteDelay: 250,
         marker: {
-            icon:skater,
+            icon: skater,
             draggable: false,
         },
     });
+
 
     const map = useMap();
     map.addControl(searchControl);

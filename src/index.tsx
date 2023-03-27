@@ -9,9 +9,6 @@ import {theme} from "./utils/themeBreakPoint";
 import {ContainerForChat} from "@/components";
 
 
-// import ContainerForChat from "@/components/containerForChat/ContainerForChat";
-
-
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
 );

@@ -1,47 +1,48 @@
 .Leaflet {
-  display: block;
-  text-align: center;
+    display: block;
+    text-align: center;
 }
 
 .Leaflet-logo {
-  height: 40vmin;
-  pointer-events: none;
+    height: 40vmin;
+    pointer-events: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .Leaflet-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+    .Leaflet-logo {
+        animation: App-logo-spin infinite 20s linear;
+    }
 }
 
 .Leaflet-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+    background-color: #282c34;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(10px + 2vmin);
+    color: white;
 }
 
 .Leaflet-link {
-  color: #61dafb;
+    color: #61dafb;
 }
 
 @keyframes Leaflet-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
+
 .leaflet-container {
-  width: 100%;
-  height: 60vh;
-  z-index: 1;
+    width: 100%;
+    height: 60vh;
+    z-index: 1;
 }
 
 /*.sidebar {*/

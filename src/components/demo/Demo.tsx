@@ -9,7 +9,7 @@ type PropsType = {
     watch: boolean,
     settings: object,
 };
-export const Demo:FC<PropsType> = ({watch, settings}) => {
+export const Demo: FC<PropsType> = ({watch, settings}) => {
     // @ts-ignore
     const {latitude, longitude, timestamp, accuracy, speed, heading, error} = usePosition(watch, settings);
 
@@ -32,7 +32,7 @@ export const Demo:FC<PropsType> = ({watch, settings}) => {
                 heading: {heading && `${heading} degrees`}<br/>
                 error: {error}
             </code>
-          <Leaflet/>
+            <Leaflet/>
         </Box>
     );
 };
