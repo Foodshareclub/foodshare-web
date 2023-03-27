@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {MapContainer, Marker, TileLayer} from 'react-leaflet';
-// import './leaflet.scss';
-// import 'leaflet/dist/leaflet.css';
+import './leaflet.css';
+import 'leaflet/dist/leaflet.css';
 import {Icon, LatLngExpression} from "leaflet";
 import MarkerWhatEver from "@/components/leaflet/MarkerWhatEver";
 import {useAppSelector} from "@/hook";
@@ -30,18 +30,18 @@ const Leaflet = () => {
         iconSize: [25, 25],
         className: "custom-marker-cluster"
     });
-    if(!oneProduct)return <Skeleton/>
+    if (!oneProduct) return <Skeleton/>
     return (
         <div>
             <MapContainer
                 style={{height: "78vh"}}
-                center={[oneProduct.locations._longitude,oneProduct.locations._longitude]} zoom={defaultZoom}>
+                center={[oneProduct.locations._longitude, oneProduct.locations._longitude]} zoom={defaultZoom}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                            attribution="&copy; <a href=&quot;https://www.openstreetmap.org/copyright&quot;>OpenStreetMap</a> contributors"/>
                 <Marker
                     icon={skater}
-                         position={[oneProduct.locations._longitude,oneProduct.locations._longitude]}
-                         title={oneProduct.post_name} ></Marker>
+                    position={[oneProduct.locations._longitude, oneProduct.locations._longitude]}
+                    title={oneProduct.post_name}></Marker>
                 {/*<MarkerWhatEver location={location} setLocation={setLocation} valTwo={valTwo} valOne={valOne}*/}
                 {/*                handleOnFlyTo={handleOnFlyTo}*/}
                 {/*                handleOnSetView={handleOnSetView}/>*/}

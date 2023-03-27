@@ -45,8 +45,14 @@ import { MinifiedUserInfo } from "./minifiedUserInfo/MinifiedUserInfo";
 import ContactsBlock from "./chatComponents/ContactsBlock";
 import ContainerForChat from "./containerForChat/ContainerForChat";
 import { VolunteerCards } from "./volonteerCard/VolonterCards";
+import { SearchMenu } from "./leaflet/SearchMenu";
+import UserLocationMarker from "./leaflet/UserLocationMarker";
+import NavigateButtons from "./navigateButtons/NavigateButtons";
 
 export {
+    NavigateButtons,
+    UserLocationMarker,
+    SearchMenu,
     VolunteerCards,
     ContainerForChat,
     OneVolunteer,

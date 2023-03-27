@@ -44,28 +44,28 @@
   z-index: 1;
 }
 
-.sidebar {
-  display: flex;
-  box-sizing: border-box;
-  padding: 1em;
-  //width: 100vw;
-  justify-content: space-between;
-}
+/*.sidebar {*/
+/*  display: flex;*/
+/*  box-sizing: border-box;*/
+/*  padding: 1em;*/
+/*  //width: 100vw;*/
+/*  justify-content: space-between;*/
+/*}*/
 
-//.sidebar h2,
-//.sidebar p,
-//.sidebar ul {
-//  text-align: left;
-//}
+/*.sidebar h2,*/
+/*.sidebar p,*/
+/*.sidebar ul {*/
+/*  text-align: left;*/
+/*}*/
 
-//.sidebar h2 {
-//  margin-top: 0;
-//}
+/*.sidebar h2 {*/
+/*  margin-top: 0;*/
+/*}*/
 
-.sidebar button {
-  display: block;
-  width: 49%;
-  font-weight: bold;
- // padding: .8em 1em;
-  background-color:lightgray;
-}
+/*.sidebar button {*/
+/*  display: block;*/
+/*  width: 49%;*/
+/*  font-weight: bold;*/
+/* // padding: .8em 1em;*/
+/*  background-color:lightgray;*/
+/*}*/
