@@ -15,6 +15,7 @@ interface result {
     raw: any; // raw provider result
 }
 
+
 export const SearchMenu = () => {
     const provider = new OpenStreetMapProvider({
         params: {
