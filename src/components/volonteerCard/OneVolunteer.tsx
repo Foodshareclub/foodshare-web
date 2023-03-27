@@ -2,10 +2,8 @@ import React, {useEffect} from 'react';
 import {useParams} from "react-router-dom";
 import {Flex, Skeleton} from "@chakra-ui/react";
 import {useActionCreators, useAppSelector} from "@/hook";
-import {ProductsLocation} from "@/components";
-import {VolunteerCards} from "@/components/volonteerCard/VolonterCards";
-import {anotherUserSelector} from "@/store/slices/userSelectors";
-import {getAnotherUserTC} from "@/store/slices/userReducer";
+import {ProductsLocation, VolunteerCards} from "@/components";
+import {anotherUserSelector, getAnotherUserTC} from "@/store";
 
 
 const OneVolunteer = () => {

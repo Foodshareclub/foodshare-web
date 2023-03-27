@@ -43,8 +43,12 @@ import { SettingsCard } from "./settingsCard/SettingsCard";
 import { OneProductContainer } from "./oneProduct/OneProductContainer";
 import { MinifiedUserInfo } from "./minifiedUserInfo/MinifiedUserInfo";
 import ContactsBlock from "./chatComponents/ContactsBlock";
+import ContainerForChat from "./containerForChat/ContainerForChat";
+import { VolunteerCards } from "./volonteerCard/VolonterCards";
 
 export {
+    VolunteerCards,
+    ContainerForChat,
     OneVolunteer,
     OneProductDrawerContainer,
     ContactsBlockDrawerContainer,
