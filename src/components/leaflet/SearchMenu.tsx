@@ -48,6 +48,5 @@ export const SearchMenu = () => {
 
     const map = useMap();
     map.addControl(searchControl);
-    console.log(map.addControl(searchControl))
     return null;
 };
