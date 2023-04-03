@@ -6,7 +6,7 @@ import {Avatar, Box, Flex, Text, useColorModeValue} from "@chakra-ui/react";
 import {PagesType} from "./Header";
 import {useActionCreators, useAppSelector, useMediaQuery} from "@/hook";
 import {BecomeSharerBlock, NavDrawer, ProfileSettings} from "@/components";
-import PopoverForSearch from "@/pages/searchResultPage/PopoverForSearch";
+
 import {PATH} from "@/utils";
 import {
     allRoomsSelector,
@@ -18,6 +18,7 @@ import {
     userSecondNameSelector
 } from "@/store";
 import {CustomRoomType} from "@/api/chatAPI";
+import {PopoverForSearch} from "@/pages";
 
 type PropsLangType = {
     isAuth: boolean
@@ -89,7 +90,7 @@ const NavComponent: React.FC<PropsLangType> = memo(({
 
     const navigateToLogout = () => {
         actions.logoutTC();
-        navigate(PATH.mainFood);
+        navigate('/food');
     }
 
     return (
