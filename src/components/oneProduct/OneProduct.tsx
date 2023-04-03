@@ -7,9 +7,8 @@ import {StarIcon} from "@chakra-ui/icons";
 import TopTips from "@/components/topTips/TopTips";
 import {Trans} from "@lingui/macro";
 import {useActionCreators, useAppSelector} from "@/hook";
-import {isAuthSelector, updateRoomTC} from "@/store";
-import {useNavigate} from "react-router-dom";
-import {PopupNotificationModal} from "@/components";
+import {isAuthSelector, loginTC, updateRoomTC} from "@/store";
+import {AuthenticationUserModal, PopupNotificationModal} from "@/components";
 import {InitialProductStateType} from "@/api/productAPI";
 
 export type OneProductType = {
@@ -35,12 +34,11 @@ export const OneProduct: React.FC<OneProductType> = ({
     const [value, setValue] = useState(0)
     const {isOpen, onOpen, onClose} = useDisclosure();
     const isAuth = useAppSelector(isAuthSelector);
-    const navigate = useNavigate();
     const actions = useActionCreators({updateProductTC, updateRoomTC})
 
     const onClick = async () => {
         if (buttonValue === "completed") {
-            return
+            return;
         }
         if (navigateHandler) {
             navigateHandler();
@@ -50,12 +48,9 @@ export const OneProduct: React.FC<OneProductType> = ({
             await actions.updateRoomTC({post_arranged_to: requesterId, id: roomId as string});
         }
         if (buttonValue === "leave a feedBack") {
-            onOpen()
+            onOpen();
         }
 
-    }
-    if (!isAuth) {
-        navigate("/")
     }
     return (
         <Flex py={3}
@@ -127,26 +122,28 @@ export const OneProduct: React.FC<OneProductType> = ({
                 {chat && <TopTips/>}
                 <PopupNotificationModal isOpen={isOpen} onClose={onClose}/>
                 <Box mt={2}>
-                    {buttonValue === "leave a feedBack" ?
-                        <Button
-                            isDisabled={product.post_published}
-                            onClick={onClick}
-                            textTransform={"uppercase"}
-                            colorScheme='red'
-                            width="100%" variant='solid'>
-                            {buttonValue}
-                        </Button>
-                        :
-                        <Button
-                            onClick={onClick}
-                            backgroundColor={buttonValue === "completed" ? "green.300" : '#FF2D55'}
-                            textTransform={"uppercase"}
-                            width="100%" variant='solid'
-                            cursor={buttonValue === "completed" ? "default" : "pointer"}
-                            colorScheme={buttonValue === "completed" ? "green.300" : 'blue'}
-                        >
-                            {buttonValue}
-                        </Button>
+
+                    {!isAuth ? <AuthenticationUserModal oneProductComponent buttonValue="Login" thunk={loginTC}/> :
+                        buttonValue === "leave a feedBack" ?
+                            <Button
+                                isDisabled={product.post_published}
+                                onClick={onClick}
+                                textTransform={"uppercase"}
+                                colorScheme='red'
+                                width="100%" variant='solid'>
+                                {buttonValue}
+                            </Button>
+                            :
+                            <Button
+                                onClick={onClick}
+                                backgroundColor={buttonValue === "completed" ? "green.300" : '#FF2D55'}
+                                textTransform={"uppercase"}
+                                width="100%" variant='solid'
+                                cursor={buttonValue === "completed" ? "default" : "pointer"}
+                                colorScheme={buttonValue === "completed" ? "green.300" : 'blue'}
+                            >
+                                {buttonValue}
+                            </Button>
                     }
 
                 </Box>

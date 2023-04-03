@@ -7,11 +7,13 @@ import {LoginSecurityPage} from "./loginSecurityPage/LoginSecurityPage";
 import {PersonalInfoPage} from "./personalInfoPage/PersonalInfoPage";
 import MyListingsPage from "./prfilePages/MyListingsPage";
 import ProductPage from "./productPage/ProductPage";
+import PopoverForSearch from "./searchResultPage/PopoverForSearch";
 import {SearchResultsPage} from "./searchResultPage/SearchResultsPage";
 import {SettingsPage} from "./settingsPage/SettingsPage";
 import VolunteerPage from "./volunteerPages/VolunteerPage";
 
 export {
+    PopoverForSearch,
     DonationPage,
     LeafletPage,
     ProductPage,

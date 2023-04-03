@@ -16,7 +16,7 @@ import React, {useState} from "react";
 import {useNavigate} from "react-router-dom";
 import {useForm} from "react-hook-form";
 import {CredentialsBlock, EmailArea, PhoneArea} from "@/components";
-import {useAppDispatch, useAppSelector} from "@/hook";
+import {useActionCreators, useAppSelector} from "@/hook";
 import {ProviderType} from "@/api/profileAPI";
 import {AsyncThunk} from "@reduxjs/toolkit";
 import {signInWithProviderTC} from "@/store/slices/userReducer";
@@ -31,18 +31,16 @@ import {PATH} from "@/utils";
 type ModalType = {
     buttonValue: StartWithType
     thunk: AsyncThunk<any, any, any>
-    fullScreen: boolean
+    fullScreen?: boolean
+    oneProductComponent?: boolean
 }
 
 export type StartWithType = 'Start' | 'Login' | 'Registration' | 'RecoveryPass';
 
-const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullScreen}) => {
+const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, oneProductComponent, fullScreen}) => {
     const isAuth = useAppSelector(isAuthSelector);
-
     const navigate = useNavigate();
-
-    const dispatch = useAppDispatch();
-
+    const actions = useActionCreators({thunk, signInWithProviderTC})
     const {isOpen, onOpen, onClose} = useDisclosure();
 
     const initialRef = React.useRef(null);
@@ -63,12 +61,11 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullS
     const [show, setShow] = useState(false);
     const [startWith, setStartWith] = useState<StartWithType>('Start');
 
-
     const showPass = () => setShow(true);
     const hidePass = () => setShow(false);
 
     const onSubmit = async (values: { email: string, password: string }) => {
-        await dispatch(thunk(values));
+        await actions.thunk(values);
         onClose();
     };
 
@@ -81,7 +78,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullS
 
     const forgotPasswordHandler = () => setStartWith('RecoveryPass');
 
-    const onSignInWithProviderHandler = (provider: ProviderType) => dispatch(signInWithProviderTC(provider));
+    const onSignInWithProviderHandler = (provider: ProviderType) => actions.signInWithProviderTC(provider);
 
     if (isAuth) {
         navigate(PATH.main);
@@ -89,8 +86,16 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullS
     return (
         <>
             {fullScreen ?
-                <MenuItem onClick={onOpen}>{buttonValue}</MenuItem> :
-                <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl' onClick={onOpen}>{buttonValue}</Text>
+                <MenuItem onClick={onOpen}>{buttonValue}</MenuItem> : oneProductComponent ?
+                    <Button
+                        onClick={onOpen}
+                        textTransform={"uppercase"}
+                        colorScheme='red'
+                        width="100%" variant='solid'>
+                        request
+                    </Button> :
+                    <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
+                          onClick={onOpen}>{buttonValue}</Text>
             }
             <Modal
                 initialFocusRef={initialRef}
@@ -153,7 +158,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullS
                                     fontSize={20}
                                     variant="outline" mb={3} w="100%"
                                     alignSelf="center"
-                                    onClick={()=>onSignInWithProviderHandler('facebook')}
+                                    onClick={() => onSignInWithProviderHandler('facebook')}
                             >
                                 Continue with Facebook
                             </Button>
@@ -161,7 +166,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullS
                             <Button leftIcon={<Image src={apple} alt={facebook}/>} _hover={{bg: 'red.100'}}
                                     fontSize={20}
                                     variant="outline" mb={3} w="100%" alignSelf="center"
-                                    onClick={()=>onSignInWithProviderHandler('apple')}
+                                    onClick={() => onSignInWithProviderHandler('apple')}
                             >
                                 Continue with Apple
                             </Button>
@@ -169,7 +174,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, fullS
                             <Button leftIcon={<Image src={google} alt={google}/>} _hover={{bg: 'red.100'}}
                                     fontSize={20}
                                     variant="outline" m={0} w="100%" alignSelf="center"
-                                    onClick={()=>onSignInWithProviderHandler('google')}
+                                    onClick={() => onSignInWithProviderHandler('google')}
                             >
                                 Continue with Google
                             </Button>

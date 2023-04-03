@@ -7,16 +7,16 @@ import {loginTC, registerTC} from "@/store";
 
 
 const ProfileSettings: FC<ProfileSettingsProps> = memo(({
-                                                                  signalOfNewMessage,
-                                                                  navigateToMyLists,
-                                                                  navigateToHelp,
-                                                                  navigateToLogout,
-                                                                  navigateToAccSettings,
-                                                                  navigateToAboutUs,
-                                                                  navigateToMyMessages,
-                                                                  imgUrl,
-                                                                  isAuth
-                                                              }) => {
+                                                            signalOfNewMessage,
+                                                            navigateToMyLists,
+                                                            navigateToHelp,
+                                                            navigateToLogout,
+                                                            navigateToAccSettings,
+                                                            navigateToAboutUs,
+                                                            navigateToMyMessages,
+                                                            imgUrl,
+                                                            isAuth
+                                                        }) => {
 
     return (
         <>
