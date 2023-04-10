@@ -5,7 +5,8 @@ import {useActionCreators, useAppSelector} from "@/hook";
 import {useSearchParams} from "react-router-dom";
 import {
     allRoomsSelector,
-    chatActions, feedBackStatusSelector,
+    chatActions,
+    feedBackStatusSelector,
     getAllMessagesInRoomParticipantsFromOneRoomTC,
     getAllRoomsForCurrentUserTC,
     getOneProductTC,
@@ -76,7 +77,7 @@ const ChatMainPage = () => {
     return (
         <Flex
             justify={{xl: "start", xxl: "center"}}
-            px={{xl:20,base:7}}  mt="20vh" mb={"10vh"}>
+            px={{xl: 20, base: 7}} mt="20vh" mb={"10vh"}>
 
             <ContactsBlockDrawerContainer
                 userID={userID}

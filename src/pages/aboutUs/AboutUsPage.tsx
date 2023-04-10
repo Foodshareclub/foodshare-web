@@ -8,10 +8,9 @@ import rightImg from "../../assets/rightImg.png";
 import company from "../../assets/AvoAcademy.png";
 import {ArrowForwardIcon} from "@chakra-ui/icons";
 import {Trans} from '@lingui/macro';
-import {teamMockArray} from "@/utils/mockArray";
 import {PersonCard} from "@/components";
 import {useMediaQuery} from "@/hook";
-
+import {teamMockArray} from '@/utils';
 
 
 const AboutUsPage = () => {
@@ -27,7 +26,7 @@ const AboutUsPage = () => {
     }, []);
 
     return (
-        <Box px={{xl:20,base:7}} py={7} mt="18vh" pb={10}>
+        <Box px={{xl: 20, base: 7}} py={7} mt="18vh" pb={10}>
             <Grid templateColumns={{base: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)'}} gap={6}>
                 {isSmallerThan960 && <GridItem w='100%' h='50vh'/>}
 
@@ -109,7 +108,7 @@ const AboutUsPage = () => {
                 <Trans>Team</Trans>
             </Box>
 
-            <SimpleGrid columns={{md:2,base:1}} spacing={3}>
+            <SimpleGrid columns={{md: 2, base: 1}} spacing={3}>
                 {teamMockArray.map((el, id) => (
                     <PersonCard
                         aboutExp={el.about}
@@ -117,7 +116,7 @@ const AboutUsPage = () => {
                         secondName={''}
                         img={el.img}
                         key={id}
-                        />
+                    />
                 ))}
             </SimpleGrid>
 

@@ -1,10 +1,9 @@
 import React, {useEffect} from 'react';
 import {Box, SimpleGrid} from "@chakra-ui/react";
-import {VolunteerCards} from "@/components/volonteerCard/VolonterCards";
 import {useActionCreators, useAppSelector} from "@/hook";
-import {getVolunteersTC} from "@/store/slices/userReducer";
-import {volunteersSelector} from "@/store/slices/userSelectors";
-import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
+import {NavigateButtons, VolunteerCards} from "@/components";
+import {getVolunteersTC, volunteersSelector} from "@/store";
+
 
 const VolunteerPage = () => {
     const actions = useActionCreators({getVolunteersTC})

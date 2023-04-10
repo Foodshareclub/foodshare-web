@@ -5,13 +5,16 @@ import {Navigate} from "react-router-dom";
 import {useActionCreators, useAppSelector} from "@/hook";
 import {AlertComponent, ListingPersonCards, ProductCard, PublishListingModal} from "@/components";
 import {
-    currentUserProductsSelector, deleteProductTC, getCurrentUserProductsTC,
+    currentUserProductsSelector,
+    deleteProductTC,
+    getCurrentUserProductsTC,
     isAuthSelector,
     isUpdateProductSelector,
-    messageProductSelector, productActions,
-    userIdFromSessionSelector,
+    messageProductSelector,
+    productActions,
+    updateProductEffectSelector,
+    userIdFromSessionSelector
 } from "@/store";
-import {updateProductEffectSelector} from "@/store/slices/productsSelectors";
 
 
 const MyListingsPage = () => {
@@ -29,7 +32,7 @@ const MyListingsPage = () => {
 
     useEffect(() => {
         if (userId) actions.getCurrentUserProductsTC(userId);
-        return ()=>{
+        return () => {
             actions.clearOneProductState();
         }
     }, [updateProductEffect, userId]);
@@ -70,7 +73,7 @@ const MyListingsPage = () => {
                     <Trans>Active Listings</Trans>
                 </Heading>
 
-                <SimpleGrid px={{xl:20,base:7}}
+                <SimpleGrid px={{xl: 20, base: 7}}
                             columns={{lg: 4, md: 3, "ss": 2, base: 1}}
                             spacing={10}>
                     {

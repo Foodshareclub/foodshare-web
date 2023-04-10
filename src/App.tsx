@@ -1,11 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import {ChangeLanguageContainer, PasswordRecoveryModal} from "@/components";
 import {useActionCreators, useAppSelector} from "@/hook";
-import {getSessionTC, userActions} from "@/store/slices/userReducer";
-import {getProductsTC} from "@/store/slices/productReducer";
 import {useLocation} from "react-router-dom";
-import {isAuthSelector} from "@/store";
-import {listenChannelTC} from "@/store/slices/chatReducer";
+import {getProductsTC, getSessionTC, isAuthSelector, listenChannelTC, userActions} from "@/store";
 
 function App() {
     const location = useLocation();

@@ -1,7 +1,6 @@
 import React, {ChangeEvent, ReactNode, useEffect, useRef, useState} from 'react';
 import {Box, Button, Flex, Heading, Image, Input, Stack} from "@chakra-ui/react";
 import peak from "@/assets/peakpx-min.jpg";
-
 import {useActionCreators, useAppSelector} from "@/hook";
 import {createPhotoUrl} from "@/utils";
 import {EditIcon} from "@chakra-ui/icons";
