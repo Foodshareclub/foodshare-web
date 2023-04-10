@@ -1,12 +1,8 @@
 import React, {useRef} from 'react';
 import {Box, SimpleGrid} from "@chakra-ui/react";
-import {useAppSelector} from "@/hook";
-import {useGridSize} from "@/hook/useGridSize";
-import {ProductCard} from "@/components";
-import {productsSelector, productStatusSelector} from "@/store/slices/productsSelectors";
-import SkeletonCard from "@/components/productCard/SkeletonCard";
-import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
-
+import {useAppSelector, useGridSize} from "@/hook";
+import {NavigateButtons, ProductCard, SkeletonCard} from "@/components";
+import {productsSelector, productStatusSelector} from "@/store";
 
 export const Main = () => {
     const products = useAppSelector(productsSelector);
@@ -20,10 +16,6 @@ export const Main = () => {
         <Box
             ref={messagesAnchorRef} mt="18vh" mb="5vh">
             <NavigateButtons messagesAnchorRef={messagesAnchorRef} title={"Show map"}/>
-            {/*<Box ref={messagesAnchorRef}></Box>*/}
-            {/*<Trans>*/}
-            {/*    Last login on {i18n.date(new Date())}.*/}
-            {/*</Trans>*/}
             <SimpleGrid
                 columns={gridSize}
                 spacing={10}

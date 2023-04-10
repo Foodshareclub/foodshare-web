@@ -1,5 +1,5 @@
 import React from 'react';
-import {Box, Container, Flex, Heading, Text, Image, Button} from "@chakra-ui/react";
+import {Box, Button, Container, Flex, Heading, Image, Text} from "@chakra-ui/react";
 import foodShare from "@/assets/platform_foodshare.png";
 import bracketsUp from "@/assets/bracketsUp.png";
 import bracketsDown from "@/assets/bracketsDown.png";

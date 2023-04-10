@@ -7,7 +7,9 @@ import {dynamicActivate} from "@/utils/i18n";
 import {
     AboutUsPage,
     ChatMainPage,
-    ContactUsPage, DonationPage, LeafletPage,
+    ContactUsPage,
+    DonationPage,
+    LeafletPage,
     LoginSecurityPage,
     MyListingsPage,
     PersonalInfoPage,
@@ -21,8 +23,6 @@ import {PATH} from "@/utils";
 
 import {languageSelector} from "@/store";
 import {useAppSelector} from "@/hook";
-
-
 
 
 type ContainerProps = {

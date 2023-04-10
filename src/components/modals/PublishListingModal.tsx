@@ -19,13 +19,16 @@ import {
 } from "@chakra-ui/react";
 import {createPhotoUrl} from "@/utils";
 import cloud from "../../assets/cloud.svg"
-
 import {useActionCreators, useAppSelector} from "@/hook";
 import {t, Trans} from '@lingui/macro';
 import {RequiredStar} from "@/components";
-
-import {createProductTC, productActions, updateProductTC, uploadPostImgToDBTC} from "@/store/slices/productReducer";
-import {userIdFromSessionSelector} from "@/store";
+import {
+    createProductTC,
+    productActions,
+    updateProductTC,
+    uploadPostImgToDBTC,
+    userIdFromSessionSelector
+} from "@/store";
 import {InitialProductStateType} from "@/api/productAPI";
 
 type PublishListingModalType = {
@@ -33,13 +36,13 @@ type PublishListingModalType = {
     onClose: () => void
     isOpen: boolean
     setOpenEdit?: (value: boolean) => void
-    value?:string
+    value?: string
 }
 
 const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
                                                                                product,
                                                                                isOpen,
-                                                                               onClose, setOpenEdit,value
+                                                                               onClose, setOpenEdit, value
                                                                            }) => {
     const id = useAppSelector(userIdFromSessionSelector);
 
@@ -60,8 +63,6 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
     const [productId, setProductId] = useState(product?.id || 0);
     const [filePath, setFilePath] = useState('')
     const [file, setFile] = useState<File>({} as File)
-
-
 
     const handleChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const img = createPhotoUrl(event);
@@ -122,7 +123,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
                 <ModalCloseButton/>
 
                 <ModalBody pb={6}>
-                    <FormControl  mt={10}>
+                    <FormControl mt={10}>
                         <Flex _hover={{bg: 'gray.50'}} justify="space-between" p={4} border="1px dashed #2D9CDB"
                               borderRadius={10}>
                             {

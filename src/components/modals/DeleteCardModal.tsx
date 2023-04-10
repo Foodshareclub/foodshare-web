@@ -11,8 +11,8 @@ import {
     ModalOverlay
 } from "@chakra-ui/react";
 import {useActionCreators} from "@/hook";
-import {deleteProductTC, productActions} from "@/store/slices/productReducer";
 import {InitialProductStateType} from "@/api/productAPI";
+import {deleteProductTC, productActions} from "@/store";
 
 type PropsType = {
     onClose: () => void

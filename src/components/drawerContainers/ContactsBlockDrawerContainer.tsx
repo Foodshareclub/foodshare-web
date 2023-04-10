@@ -1,10 +1,9 @@
 import {IconButton, useDisclosure} from "@chakra-ui/react";
 import React from "react";
 import {ContactsBlock, UniversalDrawer} from "@/components";
-
-import {ContactsBlockType} from "@/components/chatComponents/ContactsBlock";
 import {useMediaQuery} from "@/hook";
 import {ArrowRightIcon} from "@chakra-ui/icons";
+import {ContactsBlockType} from "@/components/chatComponents/ContactsBlock";
 
 
 export const ContactsBlockDrawerContainer: React.FC<ContactsBlockType> = ({

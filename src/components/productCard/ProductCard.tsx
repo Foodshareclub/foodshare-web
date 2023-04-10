@@ -5,12 +5,10 @@ import {navigatePhotosObject} from "@/utils";
 import {Trans} from "@lingui/macro";
 import navIcon from "@/assets/map.svg";
 import {DeleteIcon, EditIcon} from "@chakra-ui/icons";
-
 import {useAppSelector} from "@/hook";
 import {userIdFromSessionSelector} from "@/store";
+import {DeleteCardModal, PublishListingModal} from "@/components";
 import {InitialProductStateType} from "@/api/productAPI";
-import DeleteCardModal from "@/components/modals/DeleteCardModal";
-import {PublishListingModal} from "@/components";
 
 type ProductCardType = {
     product: InitialProductStateType
