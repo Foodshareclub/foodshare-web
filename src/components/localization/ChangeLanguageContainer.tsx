@@ -53,19 +53,16 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
                         <Route path={PATH.main} element={<Main/>}>
                             <Route path={"*"} element={<Main/>}/>
                         </Route>
-
                         <Route path={PATH.productPage} element={<ProductPage/>}/>
                         <Route path={PATH.aboutUsPage} element={<AboutUsPage/>}/>
                         <Route path={PATH.contactUsPage} element={<ContactUsPage/>}/>
                         <Route path={PATH.volunteerPage} element={<VolunteerPage/>}/>
                         <Route path={"/volunteer/:id"} element={<OneVolunteer/>}/>
-
                         <Route path={"/chat-main"} element={<ChatMainPage/>}>
                             <Route path={":id"} element={<ChatMainPage/>}/>
                         </Route>
                         <Route path={PATH.myListingsPage} element={<MyListingsPage/>}/>
                         <Route path={PATH.searchResultsPage} element={<SearchResultsPage/>}/>
-
                         <Route path={PATH.settingsPage} element={<SettingsPage/>}/>
                         <Route path={PATH.personalInfoPage} element={<PersonalInfoPage/>}/>
                         <Route path={PATH.loginSecurityPage} element={<LoginSecurityPage/>}/>

@@ -50,9 +50,11 @@ import UserLocationMarker from "./leaflet/UserLocationMarker";
 import NavigateButtons from "./navigateButtons/NavigateButtons";
 import SkeletonCard from "./productCard/SkeletonCard";
 import DeleteCardModal from "./modals/DeleteCardModal";
+import ItemsForCarousel from "./carousel/ItemsForCarousel";
 
 
 export {
+    ItemsForCarousel,
     DeleteCardModal,
     SkeletonCard,
     NavigateButtons,

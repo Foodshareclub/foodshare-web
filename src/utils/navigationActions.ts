@@ -24,7 +24,7 @@ import veganFood from "../assets/govegan.png";
 import socFoodB from "../assets/community.png";
 
 
-type NavigationActionsSVGType = {
+export type NavigationActionsSVGType = {
     name: string
     [key: string]: string
     src: string
