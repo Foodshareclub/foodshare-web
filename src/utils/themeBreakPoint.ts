@@ -9,4 +9,10 @@ const breakpoints = {
     xl: '1200px',
     '2xl': '1536px',
 }
-export const theme = extendTheme({ breakpoints })
+export const theme = extendTheme({
+    breakpoints,
+fonts:{
+    heading: `'Open Sans', sans-serif`,
+   //  body: `'Circular', '-apple-system', 'BlinkMacSystemFont', 'Roboto', 'Helvetica Neue', sans-serif`,
+}
+})

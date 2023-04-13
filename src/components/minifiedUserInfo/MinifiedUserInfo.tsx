@@ -31,7 +31,6 @@ export const MinifiedUserInfo: React.FC<MinifiedUserInfoType> = memo(({
         if (onGetCurrentUserMessages) {
             onGetCurrentUserMessages();
         }
-        console.log("clickInMinifiedUserInfo")
     }
     return (
         <Flex
