@@ -4,13 +4,13 @@ import "../../index.css";
 import Carousel from "../carousel/Carousel";
 import {PagesType} from "./Header";
 
+
 type SimpleBottomNavigationType = {
     pageType: PagesType
     setPageType: (pageType: PagesType) => void
     getRoute: (route: string) => void
     productType: string
 }
-
 const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({
                                                                           getRoute,
                                                                           pageType,

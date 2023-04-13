@@ -1,5 +1,4 @@
 import React, {FC} from 'react';
-import PropTypes from 'prop-types';
 import {usePosition} from "@/hook/usePosition";
 import {Box} from "@chakra-ui/react";
 

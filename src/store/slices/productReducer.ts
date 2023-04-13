@@ -188,6 +188,8 @@ const productSlice = createSlice({
         builder.addCase(getCurrentUserProductsTC.fulfilled, (state, action) => {
             if (action.payload) {
                 state.currentUserProducts = action.payload;
+                state.status = "loaded"
+
             }
         });
         builder.addCase(getOneProductTC.fulfilled, (state, action) => {

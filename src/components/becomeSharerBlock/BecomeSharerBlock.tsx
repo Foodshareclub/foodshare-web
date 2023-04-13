@@ -12,9 +12,10 @@ import {
     useDisclosure
 } from "@chakra-ui/react";
 import * as React from "react";
-import {useState} from "react";
+
 import {PublishListingModal} from "@/components";
 import {photoObj} from "@/utils/navigationActions";
+import {useState} from "react";
 
 export const BecomeSharerBlock = () => {
     const {isOpen, onOpen, onClose} = useDisclosure();

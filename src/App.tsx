@@ -17,25 +17,23 @@ function App() {
 
     useEffect(() => {
         if (productType === "settings") {
-            return
+            return;
         } else if (productType === "zerowaste") {
             setProductType("food");
-
         } else if (productType === "map") {
-            return
-
+            return;
         } else if (productType === "donation") {
-            return
+            return;
         } else if (productType === "volunteer") {
-            return
+            return;
         } else if (productType === "user-listings") {
-            return
+            return;
         } else if (productType === "chat-main") {
-            return
+            return;
         } else if (productType === "aboutUs") {
-            return
+            return;
         } else if (productType === "one-product") {
-            return
+            return;
         } else if (productType === "challenges") {
             setProductType("food");
         } else if (productType === "business") {
