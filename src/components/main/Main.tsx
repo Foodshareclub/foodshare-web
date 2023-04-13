@@ -4,6 +4,7 @@ import {useAppSelector, useGridSize} from "@/hook";
 import {NavigateButtons, ProductCard, SkeletonCard} from "@/components";
 import {productsSelector, productStatusSelector} from "@/store";
 
+
 export const Main = () => {
     const products = useAppSelector(productsSelector);
     const filteredProducts = products.filter(products => products.post_published)
@@ -31,7 +32,6 @@ export const Main = () => {
                         product={product}
                         key={product.id}
                     />
-
                 ))
             }
             </SimpleGrid>

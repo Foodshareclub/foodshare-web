@@ -32,7 +32,8 @@ const Carousel: React.FC<PropsType> = ({
         setPageType("productComponent");
     }
 
-    return <AliceCarousel
+    return (
+        <AliceCarousel
         responsive={responsive}
         controlsStrategy="responsive"
         disableButtonsControls={true}
@@ -47,5 +48,6 @@ const Carousel: React.FC<PropsType> = ({
                                   pageType={pageType} productType={productType}/>
             )
         )}/>
+    )
 }
 export default Carousel

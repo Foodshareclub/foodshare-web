@@ -34,13 +34,10 @@ const Header: React.FC<HeaderType> = memo(({getRoute, setProductType, productTyp
     const isUpdateProfile = useAppSelector(isUpdateProfileSelector);
     const updateUserEffect = useAppSelector(updateUserEffectSelector);
     const profileMessageFromAlertComponent = useAppSelector(messageProfileSelector);
-
     const roomExist = useAppSelector(createdSelector)
     const isRoomCreated = roomExist === "created";
-
     const updateRoomStatus = useAppSelector(updateRoomStatusSelector);
     const isRoomUpdated = updateRoomStatus === "updated";
-
     const newMessageId = useAppSelector(newMessageIdSelector);
 
     useEffect(() => {
@@ -56,7 +53,7 @@ const Header: React.FC<HeaderType> = memo(({getRoute, setProductType, productTyp
     }, [userId, isRoomCreated, isRoomUpdated])
 
     useEffect(() => {
-        const handleScroll = (event: any) => {
+        const handleScroll = (event: Event) => {
             setScrollTop(window.scrollY);
         };
         window.addEventListener('scroll', handleScroll);
