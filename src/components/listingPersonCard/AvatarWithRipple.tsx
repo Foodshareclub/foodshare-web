@@ -24,7 +24,6 @@ const AvatarWithRipple:React.FC<PropsType>=({img}) =>{
         <Flex
             justifyContent="center"
             alignItems="center"
-            // h="216px"
             w="full"
             overflow="hidden">
             {/* Ideally, only the box should be used. The <Flex /> is used to style the preview. */}

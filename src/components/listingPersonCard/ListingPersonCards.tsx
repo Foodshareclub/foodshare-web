@@ -5,8 +5,8 @@ import {useActionCreators, useAppSelector} from "@/hook";
 import {createPhotoUrl} from "@/utils";
 import {EditIcon} from "@chakra-ui/icons";
 import {updateProfileTC, uploadImgToDBTC, userActions, userEmailFromSessionSelector} from "@/store";
-import AvatarWithRipple from "@/components/listingPersonCard/AvatarWithRipple";
 import {AllValuesType} from "@/api/profileAPI";
+import {AvatarWithRipple} from "@/components";
 
 
 type PropsType = {
