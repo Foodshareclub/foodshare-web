@@ -51,9 +51,11 @@ import NavigateButtons from "./navigateButtons/NavigateButtons";
 import SkeletonCard from "./productCard/SkeletonCard";
 import DeleteCardModal from "./modals/DeleteCardModal";
 import ItemsForCarousel from "./carousel/ItemsForCarousel";
+import AvatarWithRipple from "./listingPersonCard/AvatarWithRipple";
 
 
 export {
+    AvatarWithRipple,
     ItemsForCarousel,
     DeleteCardModal,
     SkeletonCard,

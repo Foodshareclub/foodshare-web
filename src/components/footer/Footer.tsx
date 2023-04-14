@@ -1,10 +1,11 @@
-import React, {ReactNode, useEffect, useState} from 'react';
+import React, {ReactNode} from 'react';
 import twitter from "../../assets/twiter23.png";
 import instagram from "../../assets/insta23.png";
 import facebook from "../../assets/facebook23.png";
 import linked from "../../assets/linked23.png";
 import telegram from "../../assets/telega23.png";
 import donat from "../../assets/heartRed23.png";
+import feedback from "../../assets/feedbackIcon.svg";
 import {
     chakra,
     Container,
@@ -51,7 +52,6 @@ const SocialButton = ({children, label, href, w, h, target}: {
     );
 };
 const Footer = () => {
-
     return (
         <Container
             zIndex={1}
@@ -72,37 +72,37 @@ const Footer = () => {
             <Text fontSize={{md: "16px", base: "10px"}}><Trans>© 2023 Foodshare Club, Limited. All rights
                 reserved</Trans></Text>
             {/*<LanguageSelector/>*/}
-            <Stack direction={'row'} spacing={2}>
-                <SocialButton label={'Twitter'} href={'https://twitter.com/foodshareclub'}>
-                    <Image w={6} src={twitter}/>
-                </SocialButton>
-                <SocialButton label={'facebook'} href={'https://www.facebook.com/foodshareclub'}>
-                    <Image w={6} src={facebook}/>
+            <Stack direction={{base: 'column', 'mm': 'row'}} spacing={2}>
+                <Flex justify={"center"}>
+                    <SocialButton label={'Twitter'} href={'https://twitter.com/foodshareclub'}>
+                        <Image w={6} src={twitter}/>
+                    </SocialButton>
+                    <SocialButton label={'facebook'} href={'https://www.facebook.com/foodshareclub'}>
+                        <Image w={6} src={facebook}/>
+                    </SocialButton>
+                    <SocialButton label={'Instagram'} href={'https://www.instagram.com/foodshareclub/'}>
+                        <Image w={6} src={instagram}/>
+                    </SocialButton>
+                    <SocialButton label={'linked'} href={'https://www.linkedin.com/company/37215158'}>
+                        <Image w={6} src={linked}/>
+                    </SocialButton>
+                    <SocialButton label={'telegram'} href={'https://t.me/foodshare_club'}>
+                        <Image w={6} src={telegram}/>
+                    </SocialButton>
+                </Flex>
 
-                </SocialButton>
-                <SocialButton label={'Instagram'} href={'https://www.instagram.com/foodshareclub/'}>
-                    <Image w={6} src={instagram}/>
-                </SocialButton>
-                <SocialButton label={'linked'} href={'https://www.linkedin.com/company/37215158'}>
-                    <Image w={6} src={linked}/>
-                </SocialButton>
-                <SocialButton label={'telegram'} href={'https://t.me/foodshare_club'}>
-                    <Image w={6} src={telegram}/>
-                </SocialButton>
-                <SocialButton target={"_parent"} label={'donat'} href={PATH.donationPage}>
-                    <Image w={6} src={donat}/>
-                </SocialButton>
-                <Heading alignSelf={"center"} size={"md"} color={"red"}>Donation</Heading>
+                <Flex justify={"center"} pl={{base: 'auto', 'mm': 10}}>
+                    <SocialButton  label={'feedback'} href={'https://eu-submit.jotform.com/231016600816041'}>
+                        <Image w={6} src={feedback}/>
+                    </SocialButton>
+                    <Heading pr={2} alignSelf={"center"} size={"md"}>Feedback</Heading>
+                    <SocialButton target={"_parent"} label={'donat'} href={PATH.donationPage}>
+                        <Image w={6} src={donat}/>
+                    </SocialButton>
+                    <Heading alignSelf={"center"} size={"md"} color={"red"}>Donation</Heading>
+                </Flex>
             </Stack>
-            {/*<Flex>*/}
-            {/*    <SocialButton target={"_parent"} label={'donat'} href={PATH.donationPage}>*/}
-            {/*        <Image w={6} src={donat}/>*/}
-            {/*    </SocialButton>*/}
-            {/*    <Heading alignSelf={"center"} size={"md"} color={"red"}>Donation</Heading>*/}
-            {/*</Flex>*/}
-
         </Container>
     );
 };
-
 export default Footer;

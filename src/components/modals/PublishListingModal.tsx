@@ -45,14 +45,10 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
                                                                                onClose, setOpenEdit, value
                                                                            }) => {
     const id = useAppSelector(userIdFromSessionSelector);
-
     const actions = useActionCreators({...productActions, createProductTC, updateProductTC, uploadPostImgToDBTC})
 
-
-    const initialRef = useRef(null);
-    const finalRef = useRef(null);
-
     const inputFileRef = useRef<HTMLInputElement | null>(null);
+
     const [imgUrl, setImgUrl] = useState<string>(product?.gif_url || '');
     const [category, setCategory] = useState(product?.post_type || '');
     const [title, setTitle] = useState(product?.post_name || '');
@@ -102,11 +98,8 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
             setOpenEdit(false)
         }
     }
-
     return (
         <Modal
-            initialFocusRef={initialRef}
-            finalFocusRef={finalRef}
             isOpen={isOpen}
             onClose={() => {
                 onClose()

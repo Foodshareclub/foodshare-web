@@ -42,11 +42,8 @@ const ChangeLanguageContainer: React.FC<ContainerProps> = ({productType, getRout
     useEffect(() => {
         dynamicActivate(language).then(() => {
         })
-        return () => {
-            console.log('return ChangeLanguageContainer')
-        };
+        return () => {};
     }, [language]);
-
     return (
 
         <I18nProvider i18n={i18n}>

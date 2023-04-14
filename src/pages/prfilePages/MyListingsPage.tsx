@@ -31,7 +31,6 @@ const MyListingsPage = () => {
     const status = useAppSelector(productStatusSelector);
     const loaded = status === "loaded";
 
-
     useEffect(() => {
         if (userId) actions.getCurrentUserProductsTC(userId);
         return () => {
@@ -39,12 +38,9 @@ const MyListingsPage = () => {
         }
     }, [updateProductEffect, userId]);
 
-
     if (!isAuth) {
         return <Navigate to='/'/>
     }
-
-
     return (
         <Box mt="17vh" mb={"9vh"}>
             <AlertComponent
