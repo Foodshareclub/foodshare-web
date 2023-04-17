@@ -64,7 +64,7 @@ const Footer = () => {
             color={useColorModeValue('gray.700', 'gray.200')}
             as={Stack}
             maxW={'100vw'}
-            py={3}
+            py={1}
             px={{xl: 20, base: 7}}
             direction={{base: 'column', md: 'row'}}
             justify={{base: 'center', md: 'space-between'}}
@@ -95,11 +95,11 @@ const Footer = () => {
                     <SocialButton  label={'feedback'} href={'https://eu-submit.jotform.com/231016600816041'}>
                         <Image w={6} src={feedback}/>
                     </SocialButton>
-                    <Heading pr={2} alignSelf={"center"} size={"md"}>Feedback</Heading>
+                    <Heading pr={2} alignSelf={"center"} size={"ыь"}>Feedback</Heading>
                     <SocialButton target={"_parent"} label={'donat'} href={PATH.donationPage}>
                         <Image w={6} src={donat}/>
                     </SocialButton>
-                    <Heading alignSelf={"center"} size={"md"} color={"red"}>Donation</Heading>
+                    <Heading alignSelf={"center"} size={"sm"} color={"red"}>Donation</Heading>
                 </Flex>
             </Stack>
         </Container>

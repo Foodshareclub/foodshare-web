@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {ChangeLanguageContainer, PasswordRecoveryModal} from "@/components";
 import {useActionCreators, useAppSelector} from "@/hook";
 import {useLocation} from "react-router-dom";
