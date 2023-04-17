@@ -1,5 +1,6 @@
 import loc from "@/assets/location-blue.svg";
 import likes from "@/assets/likes.svg";
+import bus from "@/assets/busIcon.png";
 import {updateProductTC} from "@/store/slices/productReducer";
 import {Box, Button, Flex, Heading, Image, Text, useDisclosure} from "@chakra-ui/react";
 import React, {useState} from "react";
@@ -76,7 +77,7 @@ export const OneProduct: React.FC<OneProductType> = ({
                              textAlign={"center"} noOfLines={1} fontSize={'xl'} fontFamily={'body'}
                              fontWeight={500}>{product.post_name}</Heading>
 
-                    <Flex>
+                    <Flex justify={"space-between"}>
                         <Image src={loc} alt={loc}/>
                         <Text my={0} px={1} textAlign={"center"} noOfLines={1} color={'gray.500'}
                               textTransform={'uppercase'}
@@ -114,9 +115,8 @@ export const OneProduct: React.FC<OneProductType> = ({
                               textTransform={'uppercase'}>{product.post_description}</Text>
                     </Flex>
                     <Flex justify={"space-between"}>
-                        <Heading fontFamily={'body'} fontWeight={500} fontSize={'xl'} alignSelf="center"
-                                 size='md'><Trans>Food Type:</Trans></Heading>
-                        <Text color={'gray.500'} fontSize={'sm'} textTransform={'uppercase'}>{product.post_type}</Text>
+                        <Image mt={1} width={7} src={bus} alt={'bus'}/>
+                        <Text color={'gray.500'} fontSize={'sm'} textTransform={'uppercase'}>{product.post_metro_station}</Text>
                     </Flex>
                 </Box>
                 {chat && <TopTips/>}

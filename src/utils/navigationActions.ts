@@ -1,6 +1,6 @@
 import food from "../assets/food.svg";
 import foodRed from "../assets/foodRed.svg";
-import things from "../assets/things.svg";
+import things from "../assets/grayBear.png";
 import thingsRed from "../assets/thingsRed.png";
 import borrow from "../assets/borrow.svg";
 import borrowRed from "../assets/borrowRed.svg";
