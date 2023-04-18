@@ -16,35 +16,30 @@ import {
 } from "@chakra-ui/react";
 import {supabase} from "@/supaBase.config";
 import {ViewIcon, ViewOffIcon} from "@chakra-ui/icons";
-import {useAppDispatch} from "@/hook";
-import {senNewPasswordTC} from "@/store/slices/userReducer";
+import {useActionCreators} from "@/hook";
+import {senNewPasswordTC} from "@/store";
+
 
 export const PasswordRecoveryModal = () => {
-    const dispatch = useAppDispatch();
-
+    
+    const actions = useActionCreators({senNewPasswordTC})
     const {isOpen, onOpen, onClose} = useDisclosure();
-
-    const initialRef = React.useRef(null);
-    const finalRef = React.useRef(null);
-
     const [show, setShow] = useState(false);
-
+    const [password, setPassword] = useState('');
     const showPass = () => setShow(true);
     const hidePass = () => setShow(false);
 
     useEffect(() => {
         supabase.auth.onAuthStateChange(async (event, session) => {
-            if (event == "PASSWORD_RECOVERY") {
+            if (event === "PASSWORD_RECOVERY") {
                 onOpen();
             }
         })
-    }, []);
-
-    const [password, setPassword] = useState('');
-
+    }, [onOpen]);
+   
     const createPasswordHandler = async () => {
-        dispatch(senNewPasswordTC(password))
-            onClose();
+        actions.senNewPasswordTC(password)
+        onClose();
     }
 
     return (
@@ -52,8 +47,6 @@ export const PasswordRecoveryModal = () => {
             <Modal
                 closeOnEsc={false}
                 closeOnOverlayClick={false}
-                initialFocusRef={initialRef}
-                finalFocusRef={finalRef}
                 isOpen={isOpen}
                 onClose={onClose}
                 isCentered={true}

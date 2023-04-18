@@ -7,12 +7,17 @@ import {getProductsTC, getSessionTC, isAuthSelector, listenChannelTC, userAction
 function App() {
     const location = useLocation();
     let type = location.pathname.split('/')[1];
-    const [productType, setProductType] = useState(!type.length?"food":type);
+    const [productType, setProductType] = useState(!type.length ? "food" : type);
     const isAuth = useAppSelector(isAuthSelector);
     const actions = useActionCreators({getProductsTC, getSessionTC, listenChannelTC, ...userActions});
-    console.log(type)
+
     useEffect(() => {
-        actions.getSessionTC()
+        actions.getSessionTC();
+        return () => {
+            navigator.geolocation.watchPosition((position) => {
+                actions.getUserLocation({_latitude: position.coords.latitude, _longitude: position.coords.longitude})
+            })
+        }
     }, [isAuth]);
 
     useEffect(() => {

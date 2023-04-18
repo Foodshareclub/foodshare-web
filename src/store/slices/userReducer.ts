@@ -28,7 +28,8 @@ const initialState = {
     isUpdateProfile: "info" as StatusType,
     updateUserEffect: false,
     language: "en",
-    message: "" as string
+    message: "" as string,
+    userLocation: {_latitude: 0, _longitude: 0}
 };
 
 export const getSessionTC = createAsyncThunk("/auth/getSessionTC", async (_, thunkAPI) => {
@@ -47,6 +48,7 @@ export const getSessionTC = createAsyncThunk("/auth/getSessionTC", async (_, thu
         return thunkAPI.rejectWithValue(e.message)
     }
 });
+
 export const loginTC = createAsyncThunk("/auth/loginTC", async ({email, password}: AuthPayload, thunkAPI) => {
     try {
         const {data, error} = await profileAPI.loginWithPass(email, password)
@@ -318,7 +320,11 @@ const userSlice = createSlice({
         },
         changeLanguage: (state, action: PayloadAction<string>) => {
             state.language = action.payload
-        }
+        },
+        getUserLocation: (state, action: PayloadAction<{ _latitude: number, _longitude: number }>) => {
+            state.userLocation = action.payload
+        },
+
     },
     extraReducers: (builder) => {
         builder.addCase(loginTC.fulfilled, (state, action) => {

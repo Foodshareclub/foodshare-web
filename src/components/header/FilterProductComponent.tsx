@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Flex} from "@chakra-ui/react";
+import {Box, Button, Flex} from "@chakra-ui/react";
 import "../../index.css";
 import Carousel from "../carousel/Carousel";
 import {PagesType} from "./Header";
@@ -19,17 +19,20 @@ const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({
                                                                       }) => {
 
     return (
-            <Flex
-                py={3}
-                px={{xl:20,base:7}}
-            >
+        <Box position={"relative"} py={3} px={{xl: 20, base: 7}}>
+            <Flex w={'90%'}>
                 <Carousel
                     getRoute={getRoute}
                     setPageType={setPageType}
                     pageType={pageType}
                     productType={productType}
                 />
+                <Button variant={"outline"} right={{xl: 20, base: 7}} position={"absolute"}
+                        alignSelf={"center"}>FILTERS</Button>
             </Flex>
+
+        </Box>
+
     )
 }
 export default SimpleBottomNavigation

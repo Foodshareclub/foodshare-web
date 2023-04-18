@@ -31,20 +31,20 @@ export type NavigationActionsSVGType = {
     src: string
     red: string
 }
-export const photoObj ={
-    "food":food,
-    "things":things,
-    "borrow":borrow,
-    "wanted":wanted,
-    "foodBanks":foodBanks,
-    "fridge":fridges,
-    "business":business,
-    "volunteer":volunteer,
-    "challenges":challenges,
-    "community":community,
-    "veganFood":veganFood,
-    "socFoodB":socFoodB,
-    "zero waste":zerowaste
+export const photoObj = {
+    "food": food,
+    "things": things,
+    "borrow": borrow,
+    "wanted": wanted,
+    "foodBanks": foodBanks,
+    "fridge": fridges,
+    "business": business,
+    "volunteer": volunteer,
+    "challenges": challenges,
+    "community": community,
+    "veganFood": veganFood,
+    "socFoodB": socFoodB,
+    "zero waste": zerowaste
 }
 export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     {
@@ -187,7 +187,7 @@ export const responsive = {
         itemsFit: 'contain',
     },
     1024: {
-        items: 11,
+        items: 10,
         itemsFit: 'contain',
     }
 }

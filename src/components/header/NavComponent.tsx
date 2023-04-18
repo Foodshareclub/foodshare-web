@@ -5,13 +5,13 @@ import {useNavigate} from "react-router-dom";
 import {Avatar, Box, Flex, Text, useColorModeValue} from "@chakra-ui/react";
 import {PagesType} from "./Header";
 import {useActionCreators, useAppSelector, useMediaQuery} from "@/hook";
-import {BecomeSharerBlock, NavDrawer, ProfileSettings} from "@/components";
+import {AuthenticationUserModal, BecomeSharerBlock, NavDrawer, ProfileSettings} from "@/components";
 
 import {PATH} from "@/utils";
 import {
     allRoomsSelector,
     avatarURLSelector,
-    downloadImgFromDBTC,
+    downloadImgFromDBTC, loginTC,
     logoutTC,
     userEmailSelector,
     userFirstNameSelector,
@@ -120,7 +120,8 @@ const NavComponent: React.FC<PropsLangType> = memo(({
             </Flex>
             <PopoverForSearch/>
             <Flex>
-                <BecomeSharerBlock/>
+                { !isAuth ? <AuthenticationUserModal becomeSharerBlock buttonValue="Login" thunk={loginTC}/> :
+                <BecomeSharerBlock/>}
                 {
                     !isSmallerThan800
                         ? <NavDrawer

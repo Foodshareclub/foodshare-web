@@ -27,7 +27,9 @@ import {
     productActions,
     updateProductTC,
     uploadPostImgToDBTC,
-    userIdFromSessionSelector
+    userActions,
+    userIdFromSessionSelector,
+    userLocationSelector
 } from "@/store";
 import {InitialProductStateType} from "@/api/productAPI";
 
@@ -45,10 +47,14 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
                                                                                onClose, setOpenEdit, value
                                                                            }) => {
     const id = useAppSelector(userIdFromSessionSelector);
-    const actions = useActionCreators({...productActions, createProductTC, updateProductTC, uploadPostImgToDBTC})
-
+    const userLocation = useAppSelector(userLocationSelector)
+    const actions = useActionCreators({
+        ...productActions, ...userActions,
+        createProductTC,
+        updateProductTC,
+        uploadPostImgToDBTC
+    })
     const inputFileRef = useRef<HTMLInputElement | null>(null);
-
     const [imgUrl, setImgUrl] = useState<string>(product?.gif_url || '');
     const [category, setCategory] = useState(product?.post_type || '');
     const [title, setTitle] = useState(product?.post_name || '');
@@ -59,6 +65,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
     const [productId, setProductId] = useState(product?.id || 0);
     const [filePath, setFilePath] = useState('')
     const [file, setFile] = useState<File>({} as File)
+
 
     const handleChangeFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const img = createPhotoUrl(event);
@@ -76,7 +83,8 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
         pickup_time: time,
         post_address: address,
         post_metro_station: metroStation,
-        user: id
+        user: id,
+        locations: userLocation
     }
 
     if (product && !filePath) {
@@ -84,6 +92,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
     }
 
     const publishHandler = async () => {
+
         await actions.uploadPostImgToDBTC({
             dir: `avatars-posts/${id}`, file, filePath
         });//если дубль фото то в сторадже не создаст новую

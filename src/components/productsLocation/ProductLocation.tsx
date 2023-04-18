@@ -24,12 +24,12 @@ export const ProductsLocation: React.FC<LocationType> = ({indicator}) => {
         <Flex direction={"column"} justify={"center"} w={{md: indicator ? "70%" : "50%", base: "100%"}}>
             <MapContainer
                 style={{height: "85vh"}}
-                center={[oneProduct.locations._longitude, oneProduct.locations._longitude]} zoom={defaultZoom}>
+                center={[oneProduct.locations._latitude, oneProduct.locations._longitude]} zoom={defaultZoom}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                            attribution="&copy; <a href=&quot;https://www.openstreetmap.org/copyright&quot;>OpenStreetMap</a> contributors"/>
                 <Marker
                     icon={skater}
-                    position={[oneProduct.locations._longitude, oneProduct.locations._longitude]}
+                    position={[oneProduct.locations._latitude, oneProduct.locations._longitude]}
                     title={oneProduct.post_name}></Marker>
             </MapContainer>
         </Flex>
