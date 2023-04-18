@@ -90,7 +90,7 @@ export const BecomeSharerBlock = () => {
                             Businesses
                         </Text>
                         <MenuItem onClick={() => addHandler('fridge')}>
-                            <Image src={photoObj.fridges} boxSize={6}/>
+                            <Image src={photoObj.fridge} boxSize={6}/>
                             <Text pl={3}>Add fridge</Text>
                         </MenuItem>
                         <MenuItem onClick={() => addHandler('buss-foodbank')}>

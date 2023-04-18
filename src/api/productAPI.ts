@@ -46,6 +46,7 @@ export const productAPI = {
         return supabase
             .from('posts')
             .select(`*,reviews(*)`)
+            .order('created_at', { ascending: false })
             .eq('post_type', productType.toLowerCase())
     },
     getProductsLocation(productType: string): PromiseLike<PostgrestSingleResponse<Array<LocationType>>> {

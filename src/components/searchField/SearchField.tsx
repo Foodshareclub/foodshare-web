@@ -36,7 +36,6 @@ export const SearchField = () => {
                     />}
                 />
                 <Input
-                    // focusBorderColor='#FF2D55'
                        value={searchValue}
                        onChange={onSearchHandler}
                        onFocus={() => setShowSearchParams(true)}
@@ -55,6 +54,7 @@ export const SearchField = () => {
                             <Radio value='things'>Things</Radio>
                             <Radio value='borrow'>Borrow</Radio>
                             <Radio value='wanted'>Wanted</Radio>
+                            <Radio value='foodbanks'>FoodBanks</Radio>
                         </Stack>
                     </RadioGroup>
                 }
