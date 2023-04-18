@@ -19,7 +19,7 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
                                                     }) => {
 
     const changeAttributeValue = (v1: any, v2: any) => {
-        if ((productType === item.name.toLowerCase()) && pageType === 'productComponent') {
+        if ((productType === item.nameForUrl.toLowerCase()) && pageType === 'productComponent') {
             return v1;
         } else return v2;
     };
@@ -30,7 +30,7 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
             borderStyle={'solid'}
             borderColor={'#FF2D55'}
             alignSelf={"center"}
-            onClick={() => navigateHandler(item.name)}
+            onClick={() => navigateHandler(item.nameForUrl)}
             cursor="pointer"
         >
             <Image
@@ -44,7 +44,7 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
                 pb={0}
                 textAlign="center"
             >
-                {item[language]}
+                {item.name}
             </Text>
         </Box>
     );

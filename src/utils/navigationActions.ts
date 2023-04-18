@@ -26,6 +26,7 @@ import socFoodB from "../assets/community.png";
 
 export type NavigationActionsSVGType = {
     name: string
+    nameForUrl: string
     [key: string]: string
     src: string
     red: string
@@ -48,6 +49,7 @@ export const photoObj ={
 export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     {
         name: 'Food',
+        nameForUrl: 'Food',
         "en": 'Food',
         "ru": 'Еда',
         "fr": 'Nourriture',
@@ -57,6 +59,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     },
     {
         name: 'Things',
+        nameForUrl: 'Things',
         "en": 'Things',
         "ru": 'Вещи',
         "fr": 'Des choses',
@@ -66,6 +69,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     },
     {
         name: 'Borrow',
+        nameForUrl: 'Borrow',
         "en": 'Borrow',
         "ru": 'Одолжить',
         "fr": 'Emprunter',
@@ -75,6 +79,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     },
     {
         name: 'Wanted',
+        nameForUrl: 'Wanted',
         "en": 'Wanted',
         "ru": 'В розыске',
         "fr": 'Voulait',
@@ -84,6 +89,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     },
     {
         name: 'FoodBanks',
+        nameForUrl: 'FoodBanks',
         "en": 'FoodBanks',
         "ru": 'FoodBanks',
         "fr": 'Banques alimentaires',
@@ -92,7 +98,8 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
         red: foodBanksRed
     },
     {
-        name: 'Fridge',
+        name: 'Fridges',
+        nameForUrl: 'Fridge',
         "en": 'Fridge',
         "ru": 'Холодильники',
         "fr": 'Réfrigérateurs',
@@ -102,6 +109,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     },
     {
         name: 'Business',
+        nameForUrl: 'Business',
         "en": 'Business',
         "ru": 'Бизнес',
         "fr": 'Affaires',
@@ -111,6 +119,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     },
     {
         name: 'Volunteer',
+        nameForUrl: 'Volunteer',
         "en": 'Volunteer',
         "ru": 'Волонтеры',
         "fr": 'Bénévole',
@@ -120,6 +129,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     },
     {
         name: 'Challenges',
+        nameForUrl: 'Challenges',
         "en": 'Challenges',
         "ru": 'Вызовы',
         "fr": 'Défis',
@@ -129,6 +139,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     },
     {
         name: 'Community',
+        nameForUrl: 'Community',
         "en": 'Community',
         "ru": 'Сообщество',
         "fr": 'Communauté',
@@ -138,6 +149,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     },
     {
         name: 'Zerowaste',
+        nameForUrl: 'Zerowaste',
         "en": 'Zero waste',
         "ru": 'Карта',
         "fr": 'Carte',
