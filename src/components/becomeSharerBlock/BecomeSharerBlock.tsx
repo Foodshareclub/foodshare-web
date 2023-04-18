@@ -12,27 +12,39 @@ import {
     useDisclosure
 } from "@chakra-ui/react";
 import * as React from "react";
+import {useState} from "react";
 
 import {PublishListingModal} from "@/components";
 import {photoObj} from "@/utils/navigationActions";
-import {useState} from "react";
+import {useAppSelector} from "@/hook";
+import {isAuthSelector} from "@/store";
+import {useNavigate} from "react-router-dom";
+import { PATH } from "@/utils";
 
 export const BecomeSharerBlock = () => {
+    const navigate = useNavigate();
+    const isAuth = useAppSelector(isAuthSelector);
     const {isOpen, onOpen, onClose} = useDisclosure();
     const [type, setType] = useState('');
+
     const addHandler = (value: string) => {
-        onOpen();
-        setType(value)
+        if(isAuth){
+            onOpen();
+            setType(value);
+        }else{
+            navigate(PATH.mainFood);
+        }
     }
+
     return (
-        <Menu >
+        <Menu>
             <PublishListingModal value={type} onClose={onClose} isOpen={isOpen}/>
             <MenuButton
                 mr={2}
                 display={{md: "block", base: "none"}}
                 color={"#7D7D7D"}
                 fontSize={{md: "18px", base: "14px"}}
-                        bg={"none"}
+                bg={"none"}
                 alignSelf={"center"}
                 as={Button}>
                 Become a Sharer
@@ -93,7 +105,7 @@ export const BecomeSharerBlock = () => {
                             <Image src={photoObj.fridge} boxSize={6}/>
                             <Text pl={3}>Add fridge</Text>
                         </MenuItem>
-                        <MenuItem onClick={() => addHandler('buss-foodbank')}>
+                        <MenuItem onClick={() => addHandler('foodBank')}>
                             <Image src={photoObj.foodBanks} boxSize={6}/>
                             <Text pl={3}>Add foodbank</Text>
                         </MenuItem>
@@ -111,7 +123,7 @@ export const BecomeSharerBlock = () => {
                             <Image src={photoObj.challenges} boxSize={6}/>
                             <Text pl={3}> Add a challenge</Text>
                         </MenuItem>
-                        <MenuItem onClick={() => addHandler('soc-foodbank')}>
+                        <MenuItem onClick={() => addHandler('foodBanks')}>
                             <Image src={photoObj.socFoodB} boxSize={6}/>
                             <Text pl={3}>Add foodbank</Text>
                         </MenuItem>
@@ -124,7 +136,7 @@ export const BecomeSharerBlock = () => {
                             <Image src={photoObj["zero waste"]} boxSize={6}/>
                             <Text pl={3}>Add a merchandise</Text>
                         </MenuItem>
-                        <MenuItem onClick={() => addHandler('vegan-food')}>
+                        <MenuItem onClick={() => addHandler('food')}>
                             <Image src={photoObj.veganFood} boxSize={6}/>
                             <Text pl={3}>Add a vegan food</Text>
                         </MenuItem>

@@ -33,11 +33,18 @@ type ModalType = {
     thunk: AsyncThunk<any, any, any>
     fullScreen?: boolean
     oneProductComponent?: boolean
+    becomeSharerBlock?: boolean
 }
 
 export type StartWithType = 'Start' | 'Login' | 'Registration' | 'RecoveryPass';
 
-const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, oneProductComponent, fullScreen}) => {
+const AuthenticationUserModal: React.FC<ModalType> = ({
+                                                          becomeSharerBlock,
+                                                          buttonValue,
+                                                          thunk,
+                                                          oneProductComponent,
+                                                          fullScreen
+                                                      }) => {
     const isAuth = useAppSelector(isAuthSelector);
     const navigate = useNavigate();
     const actions = useActionCreators({thunk, signInWithProviderTC})
@@ -86,7 +93,8 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, onePr
     return (
         <>
             {fullScreen ?
-                <MenuItem onClick={onOpen}>{buttonValue}</MenuItem> : oneProductComponent ?
+                <MenuItem onClick={onOpen}>{buttonValue}</MenuItem> :
+                oneProductComponent ?
                     <Button
                         onClick={onOpen}
                         textTransform={"uppercase"}
@@ -94,8 +102,20 @@ const AuthenticationUserModal: React.FC<ModalType> = ({buttonValue, thunk, onePr
                         width="100%" variant='solid'>
                         request
                     </Button> :
-                    <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
-                          onClick={onOpen}>{buttonValue}</Text>
+                    becomeSharerBlock ?
+                        <Button
+                            onClick={onOpen}
+                            mr={2}
+                            display={{md: "block", base: "none"}}
+                            color={"#7D7D7D"}
+                            fontSize={{md: "18px", base: "14px"}}
+                            bg={"none"}
+                            alignSelf={"center"}
+                        >
+                            Become a Sharer
+                        </Button> :
+                        <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
+                              onClick={onOpen}>{buttonValue}</Text>
             }
             <Modal
                 initialFocusRef={initialRef}

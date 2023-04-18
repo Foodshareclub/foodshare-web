@@ -7,11 +7,9 @@ type ItemsForCarouselType = {
     item: NavigationActionsSVGType
     pageType: string
     navigateHandler: (name: string) => void
-    language: string
 }
 
 const ItemsForCarousel: FC<ItemsForCarouselType> = ({
-                                                        language,
                                                         productType,
                                                         item,
                                                         pageType,
@@ -35,7 +33,7 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
         >
             <Image
                 m="0 auto" alignItems="center" src={changeAttributeValue(item.red, item.src)}
-                  boxSize={6}
+                boxSize={6}
             />
             <Text
                 color={changeAttributeValue("#FF2D55", "inherit")}

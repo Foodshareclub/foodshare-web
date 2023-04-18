@@ -31,12 +31,15 @@ const MyListingsPage = () => {
     const status = useAppSelector(productStatusSelector);
     const loaded = status === "loaded";
 
+
     useEffect(() => {
-        if (userId) actions.getCurrentUserProductsTC(userId);
+        if (userId) {
+            actions.getCurrentUserProductsTC(userId);
+        }
         return () => {
             actions.clearOneProductState();
         }
-    }, [updateProductEffect, userId]);
+    }, [actions, updateProductEffect, userId]);
 
     if (!isAuth) {
         return <Navigate to='/'/>
