@@ -10,7 +10,7 @@ function App() {
     const [productType, setProductType] = useState(!type.length?"food":type);
     const isAuth = useAppSelector(isAuthSelector);
     const actions = useActionCreators({getProductsTC, getSessionTC, listenChannelTC, ...userActions});
-
+    console.log(type)
     useEffect(() => {
         actions.getSessionTC()
     }, [isAuth]);
@@ -39,8 +39,6 @@ function App() {
         } else if (productType === "business") {
             setProductType("food");
         } else if (productType === "community") {
-            setProductType("food");
-        } else if (productType === "fridges") {
             setProductType("food");
         } else {
             actions.getProductsTC(productType);

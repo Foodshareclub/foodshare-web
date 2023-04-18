@@ -43,18 +43,10 @@ const PopoverForSearch = () => {
             lazyBehavior='keepMounted'
             placement='bottom'
         >
-            <Flex align="center" w={{md: "30%", base: "100%"}}>
-                <IconButton
-                    variant={"ghost"}
-                    onClick={onFindResultsHandler}
-                    cursor={"pointer"}
-                    aria-label={""}
-                    children={
-                        <SearchIcon color={!isEditing ? "gray.500" : 'red.500'}/>}/>
+            <Flex position={"relative"} align="center" w={{md: "30%", base: "100%"}}>
                 <PopoverTrigger>
                     <Input
                         borderRadius={20}
-                        // focusBorderColor='#FF2D55'
                         value={searchValue}
                         onChange={onSearchHandler}
                         placeholder={t({
@@ -63,20 +55,26 @@ const PopoverForSearch = () => {
                         })}
                     />
                 </PopoverTrigger>
+                <Flex right={0} position={"absolute"} zIndex={1} justifyContent={"end"}>
+                    <IconButton
+                        size={"sm"}
+                        mr={1}
+                        borderRadius={"50%"}
+                        variant={"outline"}
+                        onClick={onFindResultsHandler}
+                        cursor={"pointer"}
+                        aria-label={""}
+                        children={
+                            <SearchIcon color={!isEditing ? "gray.500" : 'red.500'}/>}
+                    />
+                </Flex>
             </Flex>
-
             <PopoverContent
-                // color='white'
-                bg='#FF2D71'
-                // borderColor='blue.800'
+                bg={"red.400"}
                 width={'100%'}
                 height={'50px'}
             >
-                {/*<PopoverHeader pt={4} fontWeight='bold' border='0'>*/}
-                {/*    Choose something*/}
-                {/*</PopoverHeader>*/}
                 <PopoverArrow/>
-                {/*<PopoverCloseButton/>*/}
                 <PopoverBody>
                     <RadioGroup
                         onChange={setProductType} value={productType}
@@ -87,11 +85,10 @@ const PopoverForSearch = () => {
                             <Radio value='things'>Things</Radio>
                             <Radio value='borrow'>Borrow</Radio>
                             <Radio value='wanted'>Wanted</Radio>
+                            <Radio value='foodbanks'>FoodBanks</Radio>
                         </Stack>
                     </RadioGroup>
-
                 </PopoverBody>
-
             </PopoverContent>
         </Popover>
     )

@@ -1,19 +1,23 @@
-import React, {FC, RefObject, useEffect, useState} from 'react';
+import React, {FC, RefObject, useState} from 'react';
 import {Box, Button, Flex} from "@chakra-ui/react";
 import {useLocation, useNavigate} from "react-router-dom";
+import {useWindowEvent} from "@/hook/useEvent";
 
 type NavigateButtonsType = {
     messagesAnchorRef?: RefObject<HTMLDivElement>
     title: string
     navigateTo?: string
 }
-const NavigateButtons: FC<NavigateButtonsType> = ({navigateTo, messagesAnchorRef, title}) => {
 
+
+const NavigateButtons: FC<NavigateButtonsType> = ({navigateTo, messagesAnchorRef, title}) => {
+    const [scrollTop, setScrollTop] = useState(0);
+    useWindowEvent('scroll', () => {
+        setScrollTop(window.scrollY)
+    });
     const location = useLocation();
     let type = location.pathname.split('/')[1];
     const navigationValue = `/map/${type}`;
-
-    const [scrollTop, setScrollTop] = useState(0);
 
     const navigate = useNavigate();
     const navigateHandler = () => {
@@ -27,15 +31,7 @@ const NavigateButtons: FC<NavigateButtonsType> = ({navigateTo, messagesAnchorRef
         if (messagesAnchorRef)
             messagesAnchorRef.current?.scrollIntoView({behavior: 'smooth'});
     }
-    useEffect(() => {
-        const handleScroll = () => {
-            setScrollTop(window.scrollY);
-        };
-        window.addEventListener('scroll', handleScroll);
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
-    }, []);
+
     return (
         <Box left={0} top={"80%"}
              zIndex={1} position={"fixed"} w={"100%"}>
@@ -48,7 +44,7 @@ const NavigateButtons: FC<NavigateButtonsType> = ({navigateTo, messagesAnchorRef
                         _active={{backgroundColor: "lightGray", color: "gray"}}
                         backgroundColor={"blackAlpha.900"}
                         m={"0 auto"}
-                        display={!type?"none":"block"}
+                        display={!type ? "none" : "block"}
                         boxShadow={"dark-lg"}
                         onClick={() => navigateHandler()}
                         borderRadius={20}
@@ -56,15 +52,15 @@ const NavigateButtons: FC<NavigateButtonsType> = ({navigateTo, messagesAnchorRef
                         {title}
                     </Button>
                 </Box>
-                <Box w={"30%"}>
+                <Box w={"30%"} textAlign={"end"}>
                     <Button
                         color={"whiteAlpha.900"}
                         _hover={{backgroundColor: "gray"}}
                         _active={{backgroundColor: "lightGray", color: "gray"}}
                         backgroundColor={"blackAlpha.900"}
-                        display={scrollTop > 400 ? "block" : "none"}
+                        display={scrollTop > 400 ? "auto" : "none"}
                         boxShadow={"dark-lg"}
-                        m={"0 auto"}
+                        mr={5}
                         p={0}
                         borderRadius={"50%"}
                         onClick={goToStart}>UP</Button>

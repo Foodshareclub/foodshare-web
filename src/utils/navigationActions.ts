@@ -36,7 +36,7 @@ export const photoObj ={
     "borrow":borrow,
     "wanted":wanted,
     "foodBanks":foodBanks,
-    "fridges":fridges,
+    "fridge":fridges,
     "business":business,
     "volunteer":volunteer,
     "challenges":challenges,
@@ -92,8 +92,8 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
         red: foodBanksRed
     },
     {
-        name: 'Fridges',
-        "en": 'Fridges',
+        name: 'Fridge',
+        "en": 'Fridge',
         "ru": 'Холодильники',
         "fr": 'Réfrigérateurs',
         "cs": 'Lednice',
