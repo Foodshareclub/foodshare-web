@@ -73,20 +73,20 @@ export const OneProduct: React.FC<OneProductType> = ({
             <Box>
                 <Box
                 >
-                    <Heading textTransform={'uppercase'} pt={1}
+                    <Heading pt={1}
                              textAlign={"center"} noOfLines={1} fontSize={'xl'} fontFamily={'body'}
                              fontWeight={500}>{product.post_name}</Heading>
 
                     <Flex justify={"space-between"}>
                         <Image src={loc} alt={loc}/>
                         <Text my={0} px={1} textAlign={"center"} noOfLines={1} color={'gray.500'}
-                              textTransform={'uppercase'}
+
                         >{product.post_address}</Text>
                     </Flex>
                     <Flex>
                         <Image src={likes} alt={likes}/>
                         <Text my={0} px={1} textAlign={"center"} noOfLines={1} color={'gray.500'} fontSize={'sm'}
-                              textTransform={'uppercase'}>{product.post_like_counter}</Text>
+                        >{product.post_like_counter}</Text>
                     </Flex>
 
                     <Flex justify={"center"}>
@@ -99,24 +99,25 @@ export const OneProduct: React.FC<OneProductType> = ({
                                 />
                             ))}
                     </Flex>
-                    <Text textAlign={"center"} noOfLines={1} color={'gray.500'} fontSize={'sm'}
-                          textTransform={'uppercase'}><Trans>{product.post_views} views</Trans></Text>
+                    <Text textAlign={"center"} noOfLines={1} color={'gray.500'} fontSize={'sm'}>
+                        <Trans>{product.post_views} views</Trans></Text>
                     <Flex justify={"space-between"}>
                         <Heading fontFamily={'body'} fontWeight={500} fontSize={'xl'}
                                  alignSelf="center"><Trans>Available:</Trans></Heading>
                         <Text pl={1}
                               noOfLines={1}
                               color={'gray.500'} fontSize={'sm'}
-                              textTransform={'uppercase'}>{product.pickup_time}</Text>
+                        >{product.pickup_time}</Text>
                     </Flex>
                     <Flex justify={"space-between"}>
                         <Heading fontFamily={'body'} fontWeight={500} fontSize={'xl'}><Trans>Quantity:</Trans></Heading>
                         <Text pl={1} noOfLines={1} color={'gray.500'} fontSize={'sm'}
-                              textTransform={'uppercase'}>{product.post_description}</Text>
+                        >{product.post_description}</Text>
                     </Flex>
                     <Flex justify={"space-between"}>
-                        <Image mt={1} width={7} src={bus} alt={'bus'}/>
-                        <Text color={'gray.500'} fontSize={'sm'} textTransform={'uppercase'}>{product.post_metro_station}</Text>
+                        <Image mt={1} width={4} src={bus} alt={'bus'}/>
+                        <Text color={'gray.500'} fontSize={'sm'}
+                              textTransform={'uppercase'}>{product.post_metro_station}</Text>
                     </Flex>
                 </Box>
                 {chat && <TopTips/>}
