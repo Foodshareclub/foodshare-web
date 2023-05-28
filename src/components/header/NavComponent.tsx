@@ -11,7 +11,8 @@ import {PATH} from "@/utils";
 import {
     allRoomsSelector,
     avatarURLSelector,
-    downloadImgFromDBTC, loginTC,
+    downloadImgFromDBTC,
+    loginTC,
     logoutTC,
     userEmailSelector,
     userFirstNameSelector,
@@ -101,13 +102,13 @@ const NavComponent: React.FC<PropsLangType> = memo(({
             borderStyle={'solid'}
             borderColor={useColorModeValue('gray.200', 'gray.700')}
             justify={"space-between"}>
-            <Flex>
+            <Flex onClick={() => navigateToMain()}>
                 <Avatar alignSelf="center"
                         src={straw}
+                        cursor={'pointer'}
                 />
-
                 <Box pl={3} alignSelf="center">
-                    <Text display={{"mm": "block", base: "none"}} onClick={() => navigateToMain()}
+                    <Text display={{"mm": "block", base: "none"}}
                           cursor="pointer"
                           fontSize="25px"
                           fontWeight={900}
@@ -120,8 +121,8 @@ const NavComponent: React.FC<PropsLangType> = memo(({
             </Flex>
             <PopoverForSearch/>
             <Flex>
-                { !isAuth ? <AuthenticationUserModal becomeSharerBlock buttonValue="Login" thunk={loginTC}/> :
-                <BecomeSharerBlock/>}
+                {!isAuth ? <AuthenticationUserModal becomeSharerBlock buttonValue="Login" thunk={loginTC}/> :
+                    <BecomeSharerBlock/>}
                 {
                     !isSmallerThan800
                         ? <NavDrawer

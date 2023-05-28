@@ -324,7 +324,6 @@ const userSlice = createSlice({
         getUserLocation: (state, action: PayloadAction<{ _latitude: number, _longitude: number }>) => {
             state.userLocation = action.payload
         },
-
     },
     extraReducers: (builder) => {
         builder.addCase(loginTC.fulfilled, (state, action) => {
@@ -335,8 +334,6 @@ const userSlice = createSlice({
             }
         });
         builder.addCase(loginTC.rejected, (state) => {
-            // @ts-ignore
-
         });
         builder.addCase(signInWithProviderTC.fulfilled, (state, action) => {
             console.log(action.payload)

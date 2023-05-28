@@ -68,29 +68,29 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product}) => 
                 <Flex justify="center" align="center" fontSize={25}>
                     <Heading noOfLines={1} fontSize={'xl'} fontFamily={'body'}
                              fontWeight={500}>
-                        {product.post_name.toUpperCase()}
+                        {product.post_name}
                     </Heading>
                 </Flex>
                 <Flex pt={3} justify="space-between" alignItems="center" alignSelf="center">
-                    <Text mt='1' color={'gray.500'} fontSize={'sm'}
-                          textTransform={'uppercase'}>
-                        <Trans>Distance:</Trans>
-                    </Text>
-                    <Text mt='1' ml="2" noOfLines={1} color={'black'} fontSize={'sm'} textTransform={'uppercase'}>
+                    {/*<Text mt='1' color={'gray.500'} fontSize={'sm'}*/}
+                    {/*      textTransform={'uppercase'}>*/}
+                    {/*    <Trans>Distance:</Trans>*/}
+                    {/*</Text>*/}
+                    <Text mt='1'  noOfLines={1} color={'black'} fontSize={'sm'} >
                         {product.post_address}
                     </Text>
                 </Flex>
                 <Flex justify={"space-between"}>
                     <Text mt='1' color={'gray.500'} fontSize={'sm'}
                           textTransform={'uppercase'}><Trans>Available:</Trans></Text>
-                    <Text mt='1' ml="2" noOfLines={1} color={'black'} fontSize={'sm'} textTransform={'uppercase'}>
+                    <Text mt='1' ml="2" noOfLines={1} color={'black'} fontSize={'sm'} >
                         {product.pickup_time}
                     </Text>
                 </Flex>
                 <Flex justify={"space-between"}>
-                    <Image mt={1} width={7} src={bus} alt={'bus'}/>
+                    <Image mt={1} width={5} src={bus} alt={'bus'}/>
                     <Text alignSelf={"center"} color={'black'} fontSize={'sm'}
-                          textTransform={'uppercase'}>{product.post_metro_station}</Text>
+                          >{product.post_metro_station}</Text>
                 </Flex>
             </Box>
         </GridItem>

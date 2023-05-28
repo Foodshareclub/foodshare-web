@@ -185,6 +185,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
                             <RequiredStar/>
                         </FormLabel>
                         <Input
+                            style={{textTransform: 'capitalize'}}
                             required={true}
                             value={title}
                             onChange={(e) => setTitle(e.currentTarget.value)}/// handler
@@ -225,6 +226,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(({
                     <FormControl>
                         <FormLabel><Trans>Address</Trans></FormLabel>
                         <Input
+                            style={{textTransform: 'capitalize'}}
                             value={address}
                             onChange={(e) => setAddress(e.currentTarget.value)}
                             placeholder={t({
