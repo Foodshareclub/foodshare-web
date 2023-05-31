@@ -12,6 +12,7 @@ import {
     Flex,
     Heading,
     Image,
+    Link,
     Stack,
     Text,
     useColorModeValue,
@@ -92,14 +93,23 @@ const Footer = () => {
                 </Flex>
 
                 <Flex justify={"center"} pl={{base: 'auto', 'mm': 10}}>
-                    <SocialButton  label={'feedback'} href={'https://eu-submit.jotform.com/231016600816041'}>
+                    <SocialButton label={'feedback'} href={'https://eu-submit.jotform.com/231016600816041'}>
                         <Image w={6} src={feedback}/>
                     </SocialButton>
-                    <Heading pr={2} alignSelf={"center"} size={"ыь"}>Feedback</Heading>
+                    <Heading pr={2} alignSelf={"center"} size={"sm"}>
+                        <Link href={'https://eu-submit.jotform.com/231016600816041'} style={{textDecoration: 'none'}}>
+                            Feedback
+                        </Link>
+                    </Heading>
+
                     <SocialButton target={"_parent"} label={'donat'} href={PATH.donationPage}>
                         <Image w={6} src={donat}/>
                     </SocialButton>
-                    <Heading alignSelf={"center"} size={"sm"} color={"red"}>Donation</Heading>
+                    <Heading alignSelf={"center"} size={"sm"} color={"red"}>
+                        <Link href={PATH.donationPage} style={{textDecoration: 'none'}}>
+                            Donation
+                        </Link>
+                    </Heading>
                 </Flex>
             </Stack>
         </Container>

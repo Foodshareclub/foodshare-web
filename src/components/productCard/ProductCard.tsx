@@ -71,7 +71,7 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product}) => 
                         {product.post_name}
                     </Heading>
                 </Flex>
-                <Flex pt={3} justify="space-between" alignItems="center" alignSelf="center">
+                <Flex pt={3}  alignItems="center" alignSelf="center">
                     {/*<Text mt='1' color={'gray.500'} fontSize={'sm'}*/}
                     {/*      textTransform={'uppercase'}>*/}
                     {/*    <Trans>Distance:</Trans>*/}
@@ -80,14 +80,14 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product}) => 
                         {product.post_address}
                     </Text>
                 </Flex>
-                <Flex justify={"space-between"}>
+                <Flex >
                     <Text mt='1' color={'gray.500'} fontSize={'sm'}
-                          textTransform={'uppercase'}><Trans>Available:</Trans></Text>
+                          ><Trans>Available:</Trans></Text>
                     <Text mt='1' ml="2" noOfLines={1} color={'black'} fontSize={'sm'} >
                         {product.pickup_time}
                     </Text>
                 </Flex>
-                <Flex justify={"space-between"}>
+                <Flex gap={'5px'}>
                     <Image mt={1} width={5} src={bus} alt={'bus'}/>
                     <Text alignSelf={"center"} color={'black'} fontSize={'sm'}
                           >{product.post_metro_station}</Text>
