@@ -22,31 +22,35 @@ const ProfileSettings: FC<ProfileSettingsProps> = memo(({
         <>
             <Box alignSelf="center" p={0} color='#303030'>
                 <Menu>
-                    {signalOfNewMessage.length ? <MenuButton
-                            cursor="pointer"
-                            borderRadius="50%"
-                            icon={<Avatar src={imgUrl}/>}
-                            as={Avatar}
-                            _after={{
-                                content: '""',
-                                w: 4,
-                                h: 4,
-                                bg: 'green.300',
-                                border: '2px solid white',
-                                rounded: 'full',
-                                pos: 'absolute',
-                                bottom: 0,
-                                right: 0,
-                            }}
-                        >
-                        </MenuButton> :
-                        <MenuButton
-                            cursor="pointer"
-                            borderRadius="50%"
-                            icon={<Avatar src={imgUrl}/>}
-                            as={Avatar}
-                        >
-                        </MenuButton>}
+                    {
+                        signalOfNewMessage.length
+                            ? <MenuButton
+                                cursor="pointer"
+                                borderRadius="50%"
+                                height={'42px'}
+                                width={'42px'}
+
+                                icon={<Avatar height={'42px'} width={'42px'} src={imgUrl}/>}
+                                as={Avatar}
+                                _after={{
+                                    content: '""',
+                                    w: 4,
+                                    h: 4,
+                                    bg: 'green.300',
+                                    border: '2px solid white',
+                                    rounded: 'full',
+                                    pos: 'absolute',
+                                    bottom: 0,
+                                    right: 0,
+                                }}
+                            />
+                            : <MenuButton
+                                cursor="pointer"
+                                borderRadius="50%"
+                                icon={<Avatar src={imgUrl}/>}
+                                as={Avatar}
+                            />
+                    }
                     <MenuList>
                         {
                             isAuth

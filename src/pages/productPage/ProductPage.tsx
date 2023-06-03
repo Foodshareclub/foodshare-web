@@ -18,12 +18,10 @@ const ProductPage = () => {
     }, [params.id]);
 
     return (
-        <Flex direction={{md: "row", base: "column"}} justify={"space-between"} px={{xl: 20, base: 7}} mt="19vh"
+        <Flex direction={{md: "row", base: "column"}} justify={"space-around"} px={{xl: 20, base: 7}} mt="19vh"
               pb={"8vh"}
         >
-            {oneProduct && <OneProductContainer
-                product={oneProduct}
-            />}
+            {oneProduct && <OneProductContainer product={oneProduct}/>}
             <ProductsLocation/>
         </Flex>
     );
