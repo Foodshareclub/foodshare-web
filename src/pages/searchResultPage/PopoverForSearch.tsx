@@ -49,6 +49,7 @@ const PopoverForSearch = () => {
                         borderRadius={20}
                         value={searchValue}
                         onChange={onSearchHandler}
+                        height={'48px'}
                         placeholder={t({
                             id: `msg.Input`,
                             message: `What are we in search of today?`
@@ -59,13 +60,13 @@ const PopoverForSearch = () => {
                     <IconButton
                         size={"sm"}
                         mr={1}
-                        borderRadius={"50%"}
-                        variant={"outline"}
+                        // variant={"outline"}
+                        isRound
                         onClick={onFindResultsHandler}
                         cursor={"pointer"}
-                        aria-label={""}
-                        children={
-                            <SearchIcon color={!isEditing ? "gray.500" : 'red.500'}/>}
+                        aria-label={"search listings"}
+                        colorScheme={'red'}
+                        icon={<SearchIcon />}
                     />
                 </Flex>
             </Flex>

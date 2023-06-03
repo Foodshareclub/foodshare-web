@@ -26,7 +26,7 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product}) => 
             <Box position={"relative"}>
                 {
                     userId === product.user &&
-                    <Flex w={'100%'} top={2} right={2} alignItems={"end"}  position={"absolute"}  justify={"end"}>
+                    <Flex w={'100%'} top={2} right={2} alignItems={"end"} position={"absolute"} justify={"end"}>
                         <IconButton
                             backgroundColor={"snow"}
                             size={"sm"}
@@ -65,32 +65,32 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product}) => 
             </Box>
             <Box mt={3}>
 
-                <Flex justify="center" align="center" fontSize={25}>
-                    <Heading noOfLines={1} fontSize={'xl'} fontFamily={'body'}
-                             fontWeight={500}>
-                        {product.post_name}
-                    </Heading>
-                </Flex>
-                <Flex pt={3}  alignItems="center" alignSelf="center">
+                {/*<Flex justify="center" align="center" fontSize={25}>*/}
+                <Heading noOfLines={1} fontSize={'xl'} fontFamily={'body'} textAlign={'left'}
+                         fontWeight={500}>
+                    {product.post_name}
+                </Heading>
+                {/*</Flex>*/}
+                <Flex pt={3} alignItems="center" alignSelf="center">
                     {/*<Text mt='1' color={'gray.500'} fontSize={'sm'}*/}
                     {/*      textTransform={'uppercase'}>*/}
                     {/*    <Trans>Distance:</Trans>*/}
                     {/*</Text>*/}
-                    <Text mt='1'  noOfLines={1} color={'black'} fontSize={'sm'} >
+                    <Text mt='1' noOfLines={1} color={'black'} fontSize={'sm'}>
                         {product.post_address}
                     </Text>
                 </Flex>
-                <Flex >
+                <Flex>
                     <Text mt='1' color={'gray.500'} fontSize={'sm'}
-                          ><Trans>Available:</Trans></Text>
-                    <Text mt='1' ml="2" noOfLines={1} color={'black'} fontSize={'sm'} >
+                    ><Trans>Available:</Trans></Text>
+                    <Text mt='1' ml="2" noOfLines={1} color={'black'} fontSize={'sm'}>
                         {product.pickup_time}
                     </Text>
                 </Flex>
                 <Flex gap={'5px'}>
                     <Image mt={1} width={5} src={bus} alt={'bus'}/>
                     <Text alignSelf={"center"} color={'black'} fontSize={'sm'}
-                          >{product.post_metro_station}</Text>
+                    >{product.post_metro_station}</Text>
                 </Flex>
             </Box>
         </GridItem>

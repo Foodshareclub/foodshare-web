@@ -54,9 +54,10 @@ export const OneProduct: React.FC<OneProductType> = ({
 
     }
     return (
-        <Flex py={3}
+        <Flex
+            // py={3}
               direction={"column"}
-              justify={"space-around"}
+              // justify={"space-between"}
               w={{md: chat ? size : "45%", base: "100%"}}
         >
             <Box alignSelf="center">
@@ -66,27 +67,33 @@ export const OneProduct: React.FC<OneProductType> = ({
                     borderRadius={chat ? "50%" : 20}
                     alt={product.post_name}
                     m={"0 auto"}
-                    width={chat ? "100px" : 300}
-                    height={{ss: chat ? "100px" : "auto", base: "270px"}}
+                    width={chat ? "100px" : 550}
+                    maxHeight={'600px'}
+                    height={{ss: chat ? "100px" : 'auto', base: "350px"}}
                 />
             </Box>
             <Box>
-                <Box
-                >
+                <Box>
                     <Heading pt={1}
                              textAlign={"center"} noOfLines={1} fontSize={'xl'} fontFamily={'body'}
-                             fontWeight={500}>{product.post_name}</Heading>
+                             fontWeight={500}>
+                        {product.post_name}
+                    </Heading>
 
                     <Flex justify={"space-between"}>
                         <Image src={loc} alt={loc}/>
                         <Text my={0} px={1} textAlign={"center"} noOfLines={1} color={'gray.500'}
-
-                        >{product.post_address}</Text>
+                        >
+                            {product.post_address}
+                        </Text>
                     </Flex>
+
                     <Flex>
                         <Image src={likes} alt={likes}/>
                         <Text my={0} px={1} textAlign={"center"} noOfLines={1} color={'gray.500'} fontSize={'sm'}
-                        >{product.post_like_counter}</Text>
+                        >
+                            {product.post_like_counter}
+                        </Text>
                     </Flex>
 
                     <Flex justify={"center"}>

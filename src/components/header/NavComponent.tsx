@@ -1,4 +1,4 @@
-import straw from "../../assets/straw.svg";
+import logo from "../../assets/logo-foodsahre.png";
 import * as React from 'react';
 import {memo} from 'react';
 import {useNavigate} from "react-router-dom";
@@ -104,25 +104,29 @@ const NavComponent: React.FC<PropsLangType> = memo(({
             justify={"space-between"}>
             <Flex onClick={() => navigateToMain()}>
                 <Avatar alignSelf="center"
-                        src={straw}
+                        src={logo}
                         cursor={'pointer'}
+                        width={'32px'}
+                        height={'32px'}
                 />
                 <Box pl={3} alignSelf="center">
                     <Text display={{"mm": "block", base: "none"}}
                           cursor="pointer"
                           fontSize="25px"
                           fontWeight={900}
-                          textTransform="uppercase"
                           color='#FF2D55'
                     >
-                        foodShare
+                        Foodshare
                     </Text>
                 </Box>
             </Flex>
             <PopoverForSearch/>
             <Flex>
-                {!isAuth ? <AuthenticationUserModal becomeSharerBlock buttonValue="Login" thunk={loginTC}/> :
-                    <BecomeSharerBlock/>}
+                {
+                    !isAuth
+                        ? <AuthenticationUserModal becomeSharerBlock buttonValue="Login" thunk={loginTC}/>
+                        : <BecomeSharerBlock/>
+                }
                 {
                     !isSmallerThan800
                         ? <NavDrawer

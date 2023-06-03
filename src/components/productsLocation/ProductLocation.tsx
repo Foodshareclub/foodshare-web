@@ -21,9 +21,9 @@ export const ProductsLocation: React.FC<LocationType> = ({indicator}) => {
     });
     if (!oneProduct) return <Skeleton/>
     return (
-        <Flex direction={"column"} justify={"center"} w={{md: indicator ? "70%" : "50%", base: "100%"}}>
+        <Flex direction={"column"}  w={{md: indicator ? "70%" : "50%", base: "100%"}}>
             <MapContainer
-                style={{height: "85vh"}}
+                style={{height: "70vh"}}
                 center={[oneProduct.locations._latitude, oneProduct.locations._longitude]} zoom={defaultZoom}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                            attribution="&copy; <a href=&quot;https://www.openstreetmap.org/copyright&quot;>OpenStreetMap</a> contributors"/>

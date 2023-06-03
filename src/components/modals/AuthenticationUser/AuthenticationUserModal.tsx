@@ -92,18 +92,18 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
     }
     return (
         <>
-            {fullScreen ?
-                <MenuItem onClick={onOpen}>{buttonValue}</MenuItem> :
-                oneProductComponent ?
-                    <Button
+            {fullScreen
+                ? <MenuItem onClick={onOpen}>{buttonValue}</MenuItem>
+                : oneProductComponent
+                    ? <Button
                         onClick={onOpen}
                         textTransform={"uppercase"}
                         colorScheme='red'
                         width="100%" variant='solid'>
                         request
-                    </Button> :
-                    becomeSharerBlock ?
-                        <Button
+                    </Button>
+                    : becomeSharerBlock
+                        ? <Button
                             onClick={onOpen}
                             mr={2}
                             display={{md: "block", base: "none"}}
@@ -113,9 +113,9 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                             alignSelf={"center"}
                         >
                             Become a Sharer
-                        </Button> :
-                        <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
-                              onClick={onOpen}>{buttonValue}</Text>
+                        </Button>
+                        : <Text cursor={"pointer"} _hover={{color: "red"}} fontSize='3xl'
+                                onClick={onOpen}>{buttonValue}</Text>
             }
             <Modal
                 initialFocusRef={initialRef}
