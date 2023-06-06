@@ -47,13 +47,14 @@ const FiltersModal = () => {
                 <ModalContent>
                     <ModalHeader textAlign={"center"}>Filter</ModalHeader>
                     <ModalCloseButton/>
-                    <ModalBody>
+                    <ModalBody mx={5}>
                         <Text textAlign={"center"} fontWeight='bold' mb='3rem'>
                             How far from you to show the products?
                         </Text>
                         <Slider defaultValue={radius || 0} step={200} max={10000} mb='3rem' aria-label='slider-ex-6'
                                 onChange={(val) => setSliderValue(val)}>
                             <SliderMark
+                                fontSize={'12px'}
                                 value={sliderValue}
                                 textAlign='center'
                                 color='blackAlpha.800'
