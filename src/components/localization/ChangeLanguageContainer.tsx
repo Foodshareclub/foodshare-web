@@ -24,10 +24,7 @@ import {languageSelector} from "@/store";
 import {useAppSelector} from "@/hook";
 
 
-const Main = lazy(() =>
-    import('@/components')
-        .then(({Main}) => ({default: Main})),
-);
+const Main = lazy(() => import('@/components').then(({Main}) => ({default: Main})));
 
 type ContainerProps = {
     productType: string

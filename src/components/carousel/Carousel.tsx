@@ -47,4 +47,4 @@ const Carousel: React.FC<PropsType> = ({
             )}/>
     )
 }
-export default Carousel
+export default Carousel;

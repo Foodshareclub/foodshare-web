@@ -4,12 +4,14 @@ import {useActionCreators, useAppSelector} from "@/hook";
 import {useLocation} from "react-router-dom";
 import {getProductsTC, getSessionTC, isAuthSelector, listenChannelTC, userActions} from "@/store";
 
+
 function App() {
+    const actions = useActionCreators({getProductsTC, getSessionTC, listenChannelTC, ...userActions});
     const location = useLocation();
     let type = location.pathname.split('/')[1];
     const [productType, setProductType] = useState(!type.length ? "food" : type);
+
     const isAuth = useAppSelector(isAuthSelector);
-    const actions = useActionCreators({getProductsTC, getSessionTC, listenChannelTC, ...userActions});
 
     useEffect(() => {
         actions.getSessionTC();

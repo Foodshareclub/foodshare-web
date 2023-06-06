@@ -15,6 +15,8 @@ export type InitialProductStateType = {
     gif_url_2: string
     gif_url_3: string
     id: number
+    latitude:number
+    longitude:number
     locations: LocationsInfo
     pickup_time: string
     post_address: string
@@ -48,6 +50,7 @@ export const productAPI = {
             .select(`*,reviews(*)`)
             .order('created_at', {ascending: false})
             .eq('post_type', productType.toLowerCase())
+            .eq('post_published',true)
     },
     getProductsLocation(productType: string): PromiseLike<PostgrestSingleResponse<Array<LocationType>>> {
         return supabase

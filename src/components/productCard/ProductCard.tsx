@@ -63,6 +63,7 @@ export const ProductCard: React.FC<ProductCardType> = React.memo(({product}) => 
                     alt="broken image"
                 />
             </Box>
+
             <Box mt={3}>
 
                 {/*<Flex justify="center" align="center" fontSize={25}>*/}

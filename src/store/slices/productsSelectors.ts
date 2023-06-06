@@ -10,3 +10,4 @@ export const isUpdateProductSelector = (state: StateAppType) => state.product.is
 export const updateProductEffectSelector = (state: StateAppType) => state.product.updateProductEffect;
 export const messageProductSelector = (state: StateAppType) => state.product.message;
 export const productsLocationSelector = (state: StateAppType) => state.product.productsLocation;
+export const geoDistanceSelector = (state: StateAppType) => state.product.geoDistance;

@@ -14,7 +14,8 @@ const initialState = {
     isPostImgUpload: false,
     message: '',
     status: "loading",
-    productsLocation: [] as LocationType[]
+    productsLocation: [] as LocationType[],
+    geoDistance:null
 };
 
 export const getProductsTC = createAsyncThunk("/getProductsTC", async (productType: string, thunkAPI) => {
@@ -164,7 +165,10 @@ const productSlice = createSlice({
         },
         clearOneProductState: (state) => {
             state.oneProduct = []
-        }
+        },
+        changeGeoDistance: (state,action) => {
+            state.geoDistance = action.payload
+        },
     },
     extraReducers: (builder) => {
         builder.addCase(getProductsLocationTC.pending, (state) => {

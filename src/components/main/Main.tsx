@@ -2,17 +2,24 @@ import React, {useRef} from 'react';
 import {Box, SimpleGrid} from "@chakra-ui/react";
 import {useAppSelector, useGridSize} from "@/hook";
 import {NavigateButtons, ProductCard, SkeletonCard} from "@/components";
-import {productsSelector, productStatusSelector} from "@/store";
+import {geoDistanceSelector, productsSelector, productStatusSelector, userLocationSelector} from "@/store";
+import {getDistanceFromLatLonInKm} from "@/utils/getDistanceFromLatLonInKm";
 
-
+// let radius = 800;
+let filteredPosts;
 export const Main = () => {
     const products = useAppSelector(productsSelector);
-    const filteredProducts = products.filter(products => products.post_published)
+    const radius = useAppSelector(geoDistanceSelector);
+    const {_latitude, _longitude} = useAppSelector(userLocationSelector);
+
+    if (radius){filteredPosts = products.filter(post => {
+        const distance = getDistanceFromLatLonInKm(_latitude, _longitude, post.locations["_latitude"], post.locations['_longitude']);
+         return distance <= radius;
+    })}else filteredPosts = products
     const status = useAppSelector(productStatusSelector);
     const loaded = status === "loaded";
     const gridSize = useGridSize();
     const messagesAnchorRef = useRef<HTMLDivElement>(null);
-
     return (
         <Box
             ref={messagesAnchorRef} mt="18vh" mb="5vh">
@@ -27,7 +34,7 @@ export const Main = () => {
                     <SkeletonCard key={i} isLoaded={false}/>
                 ))
                 :
-                filteredProducts.map((product) => (
+                filteredPosts.map((product) => (
                     <ProductCard
                         product={product}
                         key={product.id}
