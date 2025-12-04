@@ -1,0 +1,23 @@
+{
+  "enabled": true,
+  "name": "Documentation Sync",
+  "description": "Monitors TypeScript, JavaScript, and configuration files for changes and prompts the agent to update relevant documentation in README.md or the /docs folder to keep documentation synchronized with code changes",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/**/*.ts",
+      "src/**/*.tsx",
+      "src/**/*.js",
+      "src/**/*.jsx",
+      "*.config.ts",
+      "*.config.js",
+      "package.json",
+      "tsconfig.json"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A source file has been modified. Please review the changes and update the relevant documentation:\n\n1. Check if the changes affect any existing documentation in README.md or the /docs folder\n2. If this is a new feature or significant change, consider adding documentation to the appropriate location\n3. Update API documentation if function signatures or interfaces changed\n4. Update architecture docs if component structure or data flow changed\n5. Update the relevant guide (IMPLEMENTATION_GUIDE.md, QUICK_START_GUIDE.md, etc.) if setup or usage patterns changed\n6. Ensure code examples in documentation are still accurate\n7. Update any affected diagrams or visual documentation\n\nFocus on keeping documentation clear, accurate, and helpful for developers working with this codebase."
+  }
+}

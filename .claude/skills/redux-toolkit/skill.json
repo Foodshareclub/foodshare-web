@@ -1,0 +1,6 @@
+{
+  "name": "redux-toolkit",
+  "version": "1.0.0",
+  "description": "Modern Redux state management with Redux Toolkit and React Redux",
+  "tags": ["redux", "redux-toolkit", "state-management", "rtk-query"]
+}

@@ -1,0 +1,6 @@
+{
+  "name": "leaflet-maps",
+  "version": "1.0.0",
+  "description": "Interactive maps with React Leaflet, clustering, geosearch, and custom markers",
+  "tags": ["leaflet", "react-leaflet", "maps", "geolocation", "clustering"]
+}

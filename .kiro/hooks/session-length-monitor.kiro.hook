@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Session Length Monitor",
+  "description": "Monitors the current session length and proactively suggests summarizing and continuing in a new session when the conversation becomes too long, optimizing for better AI performance and context management",
+  "version": "1",
+  "when": {
+    "type": "agentEnd"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Analyze the current session length and context usage. If the session appears to be getting long (many messages, complex tasks, or approaching context limits), proactively suggest to the user:\n\n\"I notice this session is getting quite long. Would you like me to:\n1. Summarize what we've accomplished so far\n2. Create a continuation plan for a new session\n3. Highlight any remaining tasks\n\nThis will help maintain optimal performance and ensure nothing gets lost. Would you like to start a fresh session with a comprehensive summary?\"\n\nOnly make this suggestion if the session genuinely appears to be lengthy or complex. Be helpful but not intrusive."
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "supabase-backend",
+  "version": "1.0.0",
+  "description": "Supabase backend integration for authentication, database, storage, and real-time features",
+  "tags": ["supabase", "backend", "database", "auth", "storage", "realtime"]
+}

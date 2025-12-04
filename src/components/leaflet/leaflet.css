@@ -1,0 +1,524 @@
+.Leaflet {
+  display: block;
+  text-align: center;
+}
+
+.Leaflet-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .Leaflet-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.Leaflet-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.Leaflet-link {
+  color: #61dafb;
+}
+
+@keyframes Leaflet-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* GPU-Accelerated Map Container - Advanced */
+.leaflet-container {
+  width: 100%;
+  height: 100%; /* Changed from 60vh to 100% to respect parent container */
+  z-index: 1;
+
+  /* GPU acceleration */
+  transform: translate3d(0, 0, 0) translateZ(0);
+  will-change: transform;
+
+  /* Performance optimizations */
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+
+  /* Aggressive layer promotion */
+  isolation: isolate;
+  /* contain removed temporarily - was preventing tiles from rendering */
+  /* content-visibility removed - was preventing initial render */
+
+  /* GPU memory optimization */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+
+  /* CSS custom properties for adaptive refresh rates */
+  --animation-duration-fast: 0.15s;
+  --animation-duration-normal: 0.2s;
+  --animation-duration-slow: 0.3s;
+
+  /* High refresh rate optimization */
+  --easing-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --easing-snappy: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Detect 120Hz+ displays via high refresh rate pointer */
+@media (update: fast) {
+  .leaflet-container {
+    --animation-duration-fast: 0.1s;
+    --animation-duration-normal: 0.12s;
+    --animation-duration-slow: 0.2s;
+  }
+}
+
+/* GPU-accelerated tiles */
+.leaflet-tile-container {
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+/* GPU-accelerated markers */
+.leaflet-marker-icon,
+.leaflet-marker-shadow {
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* GPU-accelerated pane layers */
+.leaflet-pane {
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+/* Smooth marker animations - 120Hz optimized */
+.leaflet-marker-icon {
+  transition: transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+  /* High-precision timing for 120Hz displays */
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* 120Hz display optimizations */
+@media (min-resolution: 2dppx) and (prefers-reduced-motion: no-preference) {
+  .leaflet-marker-icon,
+  .leaflet-zoom-animated,
+  .leaflet-interactive {
+    /* Faster transitions for high refresh rate displays */
+    transition-duration: 0.12s;
+  }
+
+  .leaflet-popup {
+    transition: transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1),
+                opacity 0.15s ease-out;
+  }
+}
+
+/* GPU-accelerated zoom animations */
+.leaflet-zoom-animated {
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+}
+
+/* Cluster markers optimization */
+.marker-cluster {
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Popup optimization */
+.leaflet-popup {
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+}
+
+/* Custom GPU-accelerated tiles class */
+.gpu-accelerated-tiles {
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Performance: Reduce paint on scroll */
+.leaflet-tile {
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+  backface-visibility: hidden;
+  /* Remove strict containment from tiles to allow proper rendering */
+}
+
+/* Smooth map interactions */
+.leaflet-interactive {
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+/* Advanced GPU rendering - Off-screen layers */
+.leaflet-overlay-pane,
+.leaflet-shadow-pane,
+.leaflet-marker-pane,
+.leaflet-tooltip-pane,
+.leaflet-popup-pane {
+  /* Create separate GPU layers for each pane */
+  transform: translate3d(0, 0, 0) translateZ(0);
+  will-change: transform;
+  /* contain removed - was too aggressive */
+}
+
+/* Tile rendering optimization */
+.leaflet-tile {
+  /* GPU texture optimization */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+
+  /* contain removed - was preventing tiles from rendering */
+  /* content-visibility removed - was preventing tiles from showing */
+
+  /* Smooth tile transitions */
+  opacity: 1;
+  transition: opacity var(--animation-duration-fast) ease-in;
+}
+
+.leaflet-tile-loaded {
+  /* Instant opacity for loaded tiles */
+  transition: none;
+}
+
+/* Pointer events optimization - Reduce hit testing */
+.leaflet-container:not(:hover) .leaflet-interactive {
+  pointer-events: none;
+}
+
+.leaflet-container:hover .leaflet-interactive {
+  pointer-events: auto;
+}
+
+/* Memory management - Clean up off-screen content */
+.leaflet-tile-container {
+  /* content-visibility removed - was preventing initial render */
+  contain-intrinsic-size: 256px 256px;
+}
+
+/* Cluster marker optimization */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  /* GPU compositing for clusters */
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+  contain: layout style paint;
+
+  /* Reduce overdraw */
+  isolation: isolate;
+}
+
+/* Popup rendering optimization */
+.leaflet-popup-content-wrapper {
+  /* GPU layer for popups */
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+  contain: layout style;
+
+  /* Smooth popup animations */
+  transition: transform var(--animation-duration-normal) var(--easing-smooth),
+              opacity var(--animation-duration-fast) ease-out;
+}
+
+/* Mobile touch optimizations */
+@media (pointer: coarse) {
+  .leaflet-container {
+    touch-action: pan-x pan-y;
+    /* Reduce layout shifts on mobile */
+    contain: layout;
+  }
+
+  .leaflet-marker-icon {
+    /* Larger touch targets on mobile */
+    padding: 4px;
+    /* Prevent accidental drags */
+    touch-action: none;
+  }
+
+  /* Disable hover effects on touch devices */
+  .leaflet-interactive:hover {
+    cursor: default;
+  }
+}
+
+/* High-DPI display optimizations */
+@media (min-resolution: 2dppx) {
+  .leaflet-tile,
+  .leaflet-marker-icon {
+    /* Sharp rendering on retina displays */
+    image-rendering: -webkit-optimize-contrast;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* ===========================================
+   Custom Marker Styles
+   =========================================== */
+
+/* Custom map marker container */
+.custom-map-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Marker pin container */
+.marker-pin-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease-out;
+}
+
+/* The pin shape */
+.marker-pin {
+  width: 30px;
+  height: 30px;
+  border-radius: 50% 50% 50% 0;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  position: relative;
+  transform: rotate(-45deg);
+  box-shadow:
+    0 2px 8px rgba(238, 90, 90, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.15);
+  border: 3px solid #fff;
+}
+
+/* Inner circle of the pin */
+.marker-pin-inner {
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Pulse animation for markers */
+.marker-pulse {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(238, 90, 90, 0.3);
+  animation: pulse-animation 2s ease-out infinite;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+}
+
+@keyframes pulse-animation {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+/* Hover state for markers */
+.marker-pin-container:hover .marker-pin {
+  background: linear-gradient(135deg, #ff8585 0%, #ff6b6b 100%);
+  box-shadow:
+    0 4px 12px rgba(238, 90, 90, 0.5),
+    0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* ===========================================
+   Cluster Marker Styles
+   =========================================== */
+
+.custom-cluster-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.cluster-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 600;
+  color: #fff;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 3px solid #fff;
+  transition: transform 0.2s ease-out;
+}
+
+.cluster-marker:hover {
+  transform: scale(1.1);
+}
+
+.cluster-marker span {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Small cluster (1-10 markers) */
+.cluster-small {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+}
+
+.cluster-small span {
+  font-size: 13px;
+}
+
+/* Medium cluster (11-50 markers) */
+.cluster-medium {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+}
+
+.cluster-medium span {
+  font-size: 14px;
+}
+
+/* Large cluster (50+ markers) */
+.cluster-large {
+  width: 52px;
+  height: 52px;
+  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+}
+
+.cluster-large span {
+  font-size: 16px;
+}
+
+/* ===========================================
+   User Location Marker
+   =========================================== */
+
+.custom-marker-user {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  animation: user-location-pulse 2s ease-in-out infinite;
+}
+
+@keyframes user-location-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* ===========================================
+   Product Popup Card Styles
+   =========================================== */
+
+.product-card-popup .leaflet-popup-content-wrapper {
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.product-card-popup .leaflet-popup-content {
+  margin: 0;
+  width: 260px !important;
+}
+
+.product-card-popup .leaflet-popup-tip {
+  background: #fff;
+}
+
+.product-popup-card {
+  padding: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.product-popup-image {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.product-popup-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 6px 0;
+  line-height: 1.3;
+}
+
+.product-popup-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #f3f4f6;
+  color: #6b7280;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: capitalize;
+  margin-bottom: 8px;
+}
+
+.product-popup-address {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0 0 6px 0;
+}
+
+.product-popup-description {
+  font-size: 13px;
+  color: #4b5563;
+  margin: 0 0 10px 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-popup-distance {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0 0 10px 0;
+}
+
+.product-popup-button {
+  width: 100%;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.product-popup-button:hover {
+  background: linear-gradient(135deg, #ff8585 0%, #ff6b6b 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(238, 90, 90, 0.4);
+}

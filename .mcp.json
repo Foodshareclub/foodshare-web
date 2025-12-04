@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=***REMOVED***&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage"
+    },
+    "vercel": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "vercel-mcp@latest"],
+      "env": {
+        "VERCEL_API_TOKEN": "h4KS5EPoibAa3mjBLqqeyPv2"
+      }
+    }
+  }
+}

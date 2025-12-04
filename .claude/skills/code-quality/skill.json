@@ -1,0 +1,6 @@
+{
+  "name": "code-quality",
+  "version": "1.0.0",
+  "description": "Code quality tools: ESLint, Prettier, Lefthook for automated linting and formatting",
+  "tags": ["eslint", "prettier", "lefthook", "git-hooks", "code-quality", "linting"]
+}

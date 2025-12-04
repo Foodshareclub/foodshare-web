@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Auto-Translate Localization Files",
+  "description": "Monitors changes to primary language localization files (.po, .json, .yaml) and automatically generates translations for all configured target languages while maintaining context and locale-specific conventions",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/locales/en/messages.po",
+      "src/locales/en/*.json",
+      "src/locales/en/*.yaml"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A localization file has been modified in the primary language (English). Please:\n\n1. Identify all new or modified text entries in the changed file\n2. Determine which target languages need updates by checking src/locales/ directory (cs, de, es, fr, pt, ru, uk)\n3. For each target language:\n   - Generate accurate translations that maintain the original meaning and context\n   - Apply locale-specific conventions (date formats, currency, pluralization rules)\n   - Preserve any placeholders, variables, or formatting codes (e.g., {userName}, %s, etc.)\n   - Maintain the same file structure and format as the source\n4. Update the corresponding localization files for each target language\n5. If using Lingui (.po files), run `npm run compile` to generate the compiled message catalogs\n6. Provide a summary of:\n   - Which strings were translated\n   - Which languages were updated\n   - Any translation notes or context that might need human review\n\nImportant considerations:\n- Preserve technical terms and brand names (e.g., \"FoodShare\", \"Supabase\")\n- Maintain consistent terminology across all translations\n- Flag any ambiguous strings that may need human review\n- Respect cultural sensitivities and locale-specific conventions\n- Ensure pluralization rules are correctly applied for each language"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "i18n-lingui",
+  "version": "1.0.0",
+  "description": "Internationalization with Lingui for multi-language React applications",
+  "tags": ["i18n", "lingui", "internationalization", "localization", "translations"]
+}

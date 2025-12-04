@@ -1,0 +1,30 @@
+# Build outputs
+dist
+build
+.next
+out
+
+# Dependencies
+node_modules
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Compiled locales
+src/locales/**/*.js
+src/locales/**/*.mjs
+
+# Generated files
+*.min.js
+*.min.css
+vite-env.d.ts
+
+# Coverage
+coverage
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

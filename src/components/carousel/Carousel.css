@@ -1,0 +1,48 @@
+/* Airbnb-style Category Carousel Enhancements */
+
+/* Add consistent 8px gap between carousel items */
+.alice-carousel__stage-item {
+  padding-right: 8px;
+}
+
+/* Ensure last item doesn't have extra padding */
+.alice-carousel__stage-item:last-child {
+  padding-right: 0;
+}
+
+/* Smooth scroll behavior for better UX */
+.alice-carousel__stage {
+  scroll-behavior: smooth;
+}
+
+/* Optimize carousel container for better touch/drag interaction */
+.alice-carousel {
+  width: 100%;
+  position: relative;
+}
+
+/* Improve touch area for mobile users */
+.alice-carousel__wrapper {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.alice-carousel__wrapper:active {
+  cursor: grabbing;
+}
+
+/* Responsive gap adjustments */
+@media (min-width: 768px) {
+  .alice-carousel__stage-item {
+    padding-right: 10px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .alice-carousel__stage-item {
+    padding-right: 12px;
+  }
+}

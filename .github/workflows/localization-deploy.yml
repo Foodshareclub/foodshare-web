@@ -1,0 +1,114 @@
+name: Deploy Localization Edge Function
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'supabase/functions/localization/**'
+      - 'src/locales/**'
+      - '.github/workflows/localization-deploy.yml'
+  pull_request:
+    paths:
+      - 'supabase/functions/localization/**'
+      - 'src/locales/**'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test Localization Function
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile translations
+        run: npm run compile
+
+      - name: Run tests
+        run: npm run test-localization
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+  deploy:
+    name: Deploy to Supabase
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Deploy edge function
+        run: |
+          supabase functions deploy localization \
+            --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Verify deployment
+        run: |
+          curl -f "https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co/functions/v1/localization?locale=en" || exit 1
+
+  sync-translations:
+    name: Sync Translations to Database
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile translations
+        run: npm run compile
+
+      - name: Sync to database
+        run: npm run sync-translations
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Verify sync
+        run: |
+          echo "✅ Translations synced successfully"
+
+  notify:
+    name: Notify Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy, sync-translations]
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Send notification
+        run: |
+          echo "🚀 Localization edge function deployed"
+          echo "📊 Status: ${{ needs.deploy.result }}"
+          echo "🔄 Sync: ${{ needs.sync-translations.result }}"

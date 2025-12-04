@@ -1,0 +1,52 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=***REMOVED***&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage",
+      "headers": {
+        "Authorization": "Bearer ${SUPABASE_ACCESS_TOKEN}"
+      }
+    },
+    "Twilio-Verify": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@twilio-alpha/mcp",
+        "${TWILIO_ACCOUNT_SID}/${TWILIO_API_KEY_SID}:${TWILIO_AUTH_TOKEN}",
+        "--services",
+        "twilio_verify_v2",
+        "--tags",
+        "VerifyV2Service,VerifyV2Verification,VerifyV2VerificationCheck"
+      ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "create_verification",
+        "create_verification_check",
+        "list_services",
+        "get_service"
+      ]
+    },
+    "awslabs.core-mcp-server": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["awslabs.core-mcp-server@latest"],
+      "env": {
+        "AWS_PROFILE": "${AWS_PROFILE}",
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      }
+    },
+    "awslabs.aws-documentation-mcp-server": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["awslabs.aws-documentation-mcp-server@latest"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "autoApprove": []
+    }
+  }
+}

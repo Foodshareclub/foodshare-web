@@ -1,0 +1,64 @@
+{
+  "mcpServers": {
+    "Supabase-foodshare": {
+      "url": "https://mcp.supabase.com/mcp?project_ref=***REMOVED***&access_token=${SUPABASE_ACCESS_TOKEN}&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage",
+      "disabled": false,
+      "autoApprove": [
+        "search_docs",
+        "list_tables",
+        "list_extensions",
+        "list_migrations",
+        "execute_sql",
+        "apply_migration",
+        "list_edge_functions",
+        "get_edge_function",
+        "deploy_edge_function",
+        "list_branches",
+        "create_branch",
+        "delete_branch",
+        "merge_branch",
+        "reset_branch",
+        "rebase_branch",
+        "list_storage_buckets",
+        "get_storage_config",
+        "update_storage_config",
+        "get_logs",
+        "get_advisors",
+        "get_project_url",
+        "get_anon_key",
+        "generate_typescript_types"
+      ]
+    },
+    "Vercel": {
+      "command": "npx",
+      "args": ["-y", "@robinson_ai_systems/vercel-mcp"],
+      "env": {
+        "VERCEL_TOKEN": "${VERCEL_TOKEN}",
+        "VERCEL_TEAM_ID": "REDACTED"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "list_projects",
+        "get_project",
+        "list_deployments",
+        "get_deployment",
+        "create_deployment",
+        "cancel_deployment",
+        "list_env_vars",
+        "get_env_var",
+        "create_env_var",
+        "update_env_var",
+        "delete_env_var",
+        "list_domains",
+        "get_domain",
+        "create_domain",
+        "delete_domain",
+        "get_project_settings",
+        "update_project_settings",
+        "vercel_list_projects",
+        "vercel_list_env_vars",
+        "vercel_list_env_vars"
+      ]
+    }
+  }
+}

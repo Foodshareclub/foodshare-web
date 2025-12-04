@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "name": "Code Quality Analyzer",
+  "description": "Monitors source code file changes and analyzes them for potential improvements including code smells, design patterns, best practices, readability, maintainability, and performance optimizations while maintaining existing functionality",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/**/*.ts",
+      "src/**/*.tsx",
+      "src/**/*.js",
+      "src/**/*.jsx"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Analyze the modified code in the changed file for potential improvements. Focus on:\n\n1. **Code Smells**: Identify any code smells such as:\n   - Long functions or components that should be broken down\n   - Duplicate code that could be extracted\n   - Complex conditional logic that could be simplified\n   - Unnecessary nesting or complexity\n   - Magic numbers or hardcoded values\n\n2. **Design Patterns**: Suggest appropriate design patterns:\n   - React patterns (composition, render props, custom hooks)\n   - State management patterns\n   - Error handling patterns\n   - Async operation patterns\n\n3. **Best Practices**: Check adherence to project conventions:\n   - TypeScript strict typing (no `any`, explicit return types)\n   - React optimization (React.memo, useCallback, useMemo)\n   - Proper hook dependencies\n   - i18n usage (Trans components, t macro)\n   - Accessibility (ARIA labels, keyboard navigation)\n   - Error handling and validation\n\n4. **Readability**: Improve code clarity:\n   - Naming conventions (descriptive, consistent)\n   - Code organization and structure\n   - Comment quality (explain \"why\" not \"what\")\n   - Function/component size and single responsibility\n\n5. **Maintainability**: Enhance long-term code health:\n   - Separation of concerns\n   - Testability considerations\n   - Documentation needs\n   - Coupling and cohesion\n\n6. **Performance**: Identify optimization opportunities:\n   - Unnecessary re-renders\n   - Missing memoization\n   - Inefficient algorithms or data structures\n   - Bundle size concerns (lazy loading opportunities)\n   - Image optimization\n   - Database query optimization\n\nProvide specific, actionable suggestions with code examples where helpful. Prioritize issues by severity (critical, important, nice-to-have). Ensure all suggestions maintain the existing functionality and follow the project's established patterns and conventions."
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "ElevenLabs": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["elevenlabs-mcp"],
+      "env": {
+        "ELEVENLABS_API_KEY": "your-elevenlabs-api-key-here"
+      }
+    },
+    "Hume": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["@humeai/mcp-server"],
+      "env": {
+        "HUME_API_KEY": "your-hume-api-key-here"
+      }
+    },
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=YOUR_PROJECT_REF&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage",
+      "headers": {
+        "Authorization": "Bearer your-supabase-access-token-here"
+      }
+    }
+  }
+}

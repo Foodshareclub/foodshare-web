@@ -1,0 +1,256 @@
+# Implementation Plan
+
+- [x] 1. Set up testing infrastructure
+  - [x] 1.1 Install and configure Vitest with React Testing Library
+    - Add vitest, @testing-library/react, @testing-library/jest-dom, fast-check to devDependencies
+    - Create vitest.config.ts with jsdom environment
+    - Create src/__tests__/setup.ts with global test configuration
+    - Add test scripts to package.json
+    - _Requirements: 2.1_
+  - [x] 1.2 Write property test for distance calculation symmetry
+    - **Property 1: Distance Calculation Symmetry**
+    - **Validates: Requirements 2.4**
+  - [x] 1.3 Write property test for distance non-negativity
+    - **Property 2: Distance Non-Negativity**
+    - **Validates: Requirements 2.4**
+  - [x] 1.4 Create test utilities and mock factories
+    - Create renderWithProviders utility for component tests
+    - Create mock Supabase client factory
+    - Create test QueryClient factory
+    - Create coordinate and product arbitraries for fast-check
+    - _Requirements: 2.1, 2.2_
+
+- [x] 2. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 3. Implement TypeScript strict mode
+  - [x] 3.1 Generate Supabase database types
+    - Run supabase gen types typescript to generate database.types.ts
+    - Create src/types/database.types.ts with generated types
+    - Export typed Supabase client using Database type
+    - _Requirements: 1.4_
+  - [ ] 3.2 Create PostGIS type definitions
+    - Create src/types/postgis.types.ts with GeoJSONPoint and Coordinates interfaces
+    - Add parseGeoJSON and toGeoJSON utility functions
+    - Replace all `any` types in location handling with proper types
+    - _Requirements: 1.5_
+  - [x] 3.3 Add explicit return types to API functions
+    - Update productAPI.ts with explicit return types
+    - Update chatAPI.ts with explicit return types
+    - Update profileAPI.ts with explicit return types
+    - Update storageAPI.ts with explicit return types
+    - _Requirements: 1.3_
+  - [ ] 3.4 Enable TypeScript strict mode in build
+    - Remove `ignoreBuildErrors: true` from next.config.ts
+    - Fix all TypeScript compilation errors
+    - Update ESLint to warn on `any` usage
+    - _Requirements: 1.1, 1.2_
+
+- [ ] 4. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 5. Implement error handling infrastructure
+  - [-] 5.1 Create error types and handler
+    - Create src/lib/api/errors.ts with ErrorCode enum and ApiError interface
+    - Create src/lib/api/errorHandler.ts with ApiErrorHandler class
+    - Implement shouldRetry logic for transient errors
+    - Implement exponential backoff delay calculation
+    - _Requirements: 4.1, 4.3, 4.4, 7.3_
+  - [ ] 5.2 Write property test for retry exponential backoff
+    - **Property 5: Retry Exponential Backoff**
+    - **Validates: Requirements 4.3**
+  - [ ] 5.3 Write property test for error context completeness
+    - **Property 6: Error Context Completeness**
+    - **Validates: Requirements 4.4**
+  - [ ] 5.4 Write property test for API error structure
+    - **Property 8: API Error Structure**
+    - **Validates: Requirements 7.3**
+  - [ ] 5.5 Create error boundary components
+    - Create src/components/ErrorBoundary/RouteErrorBoundary.tsx
+    - Add error boundaries to each route segment
+    - Implement fallback UI with retry button
+    - _Requirements: 4.2_
+  - [ ] 5.6 Write property test for error boundary recovery
+    - **Property 4: Error Boundary Recovery**
+    - **Validates: Requirements 4.2**
+  - [ ] 5.7 Integrate error handler with API layer
+    - Update productAPI to use ApiErrorHandler
+    - Update chatAPI to use ApiErrorHandler
+    - Add retry logic to all API calls
+    - _Requirements: 4.1, 4.3_
+  - [ ] 5.8 Write property test for API error message safety
+    - **Property 3: API Error Message Safety**
+    - **Validates: Requirements 4.1**
+
+- [ ] 6. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 7. Implement API layer improvements
+  - [ ] 7.1 Create typed API client wrapper
+    - Create src/lib/api/client.ts with TypedApiClient class
+    - Implement generic query and mutate methods
+    - Add request/response interceptors
+    - _Requirements: 7.1, 7.2_
+  - [ ] 7.2 Add unit tests for API modules
+    - Create src/api/__tests__/productAPI.test.ts
+    - Create src/api/__tests__/chatAPI.test.ts
+    - Create src/api/__tests__/profileAPI.test.ts
+    - Test success and error scenarios
+    - _Requirements: 2.2_
+  - [ ] 7.3 Add JSDoc documentation to API functions
+    - Document all public API functions with JSDoc
+    - Include parameter types and return types
+    - Add usage examples in comments
+    - _Requirements: 7.4_
+
+- [ ] 8. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 9. Implement state management consolidation
+  - [ ] 9.1 Create React Query hooks for products
+    - Create src/hooks/queries/useProducts.ts with useProducts hook
+    - Create useProductMutation hook for create/update/delete
+    - Configure staleTime and cacheTime
+    - _Requirements: 3.1_
+  - [ ] 9.2 Create React Query hooks for profiles
+    - Create src/hooks/queries/useProfile.ts with useProfile hook
+    - Create useProfileMutation hook for updates
+    - _Requirements: 3.1_
+  - [ ] 9.3 Consolidate Zustand stores
+    - Audit useAdminStore, useAuthStore, useChatStore, useForumStore, useUIStore
+    - Migrate UI state to Redux uiSlice
+    - Remove duplicate Zustand stores
+    - _Requirements: 3.2, 3.3_
+  - [ ] 9.4 Integrate Supabase realtime with React Query
+    - Create useRealtimeProducts hook with subscription
+    - Invalidate queries on realtime updates
+    - _Requirements: 3.4_
+
+- [ ] 10. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 11. Implement component performance optimizations
+  - [ ] 11.1 Add React.memo to presentational components
+    - Add React.memo to Main.tsx
+    - Add React.memo to RequiredStar.tsx
+    - Add React.memo to BecomeSharerBlock.tsx
+    - Add displayName to all memoized components
+    - _Requirements: 5.1, 5.4_
+  - [ ] 11.2 Implement virtual scrolling for product lists
+    - Install @tanstack/react-virtual
+    - Create src/components/VirtualProductList.tsx
+    - Replace product grid with virtual list when items > 50
+    - _Requirements: 5.5_
+  - [ ] 11.3 Write property test for virtual scrolling efficiency
+    - **Property 7: Virtual Scrolling Efficiency**
+    - **Validates: Requirements 5.5**
+  - [ ] 11.4 Audit and add useCallback/useMemo
+    - Audit event handlers passed as props
+    - Wrap handlers with useCallback
+    - Memoize expensive computations with useMemo
+    - _Requirements: 5.2, 5.3_
+
+- [ ] 12. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 13. Implement map performance optimizations
+  - [ ] 13.1 Implement marker clustering
+    - Install react-leaflet-cluster if not present
+    - Create src/components/leaflet/ClusterManager.ts
+    - Configure cluster options for 100+ markers
+    - _Requirements: 9.1_
+  - [ ] 13.2 Write property test for marker clustering
+    - **Property 12: Marker Clustering**
+    - **Validates: Requirements 9.1**
+  - [ ] 13.3 Implement viewport-based marker loading
+    - Create useViewportMarkers hook
+    - Load only markers within current viewport bounds
+    - Add buffer zone for smooth panning
+    - _Requirements: 9.3_
+  - [ ] 13.4 Write property test for viewport marker loading
+    - **Property 13: Viewport Marker Loading**
+    - **Validates: Requirements 9.3**
+  - [ ] 13.5 Switch to Canvas renderer
+    - Configure Leaflet to use Canvas renderer
+    - Apply GPU-accelerated styles to markers
+    - _Requirements: 9.2, 9.4_
+
+- [ ] 14. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 15. Implement accessibility improvements
+  - [ ] 15.1 Add ARIA labels to interactive elements
+    - Audit all buttons, links, and inputs
+    - Add aria-label or aria-labelledby where missing
+    - Ensure all images have alt text
+    - _Requirements: 8.1_
+  - [ ] 15.2 Write property test for interactive element accessibility
+    - **Property 9: Interactive Element Accessibility**
+    - **Validates: Requirements 8.1**
+  - [ ] 15.3 Implement modal focus trap
+    - Update modal components with focus trap logic
+    - Restore focus to trigger element on close
+    - _Requirements: 8.2_
+  - [ ] 15.4 Write property test for modal focus trap
+    - **Property 10: Modal Focus Trap**
+    - **Validates: Requirements 8.2**
+  - [ ] 15.5 Ensure keyboard navigation
+    - Add tabIndex to custom interactive elements
+    - Add onKeyDown handlers for Enter/Space activation
+    - Test all interactive elements with keyboard only
+    - _Requirements: 8.4_
+  - [ ] 15.6 Write property test for keyboard navigation
+    - **Property 11: Keyboard Navigation**
+    - **Validates: Requirements 8.4**
+
+- [ ] 16. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 17. Implement code organization cleanup
+  - [ ] 17.1 Consolidate duplicate components
+    - Merge duplicate PasswordRecoveryModal.tsx files
+    - Merge duplicate AuthGuard.tsx files
+    - Remove or relocate _emails_disabled folder
+    - _Requirements: 6.1_
+  - [ ] 17.2 Add barrel exports to component folders
+    - Add index.ts to components/Glass
+    - Add index.ts to components/modals
+    - Add index.ts to components/leaflet
+    - Update imports to use barrel exports
+    - _Requirements: 6.2_
+  - [ ] 17.3 Remove dead code
+    - Run unused exports analysis
+    - Remove unused components and utilities
+    - Remove commented-out code blocks
+    - _Requirements: 6.3_
+  - [ ] 17.4 Standardize file naming
+    - Ensure components use PascalCase
+    - Ensure utilities use camelCase
+    - Rename any non-conforming files
+    - _Requirements: 6.4_
+
+- [ ] 18. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 19. Implement build and development optimizations
+  - [ ] 19.1 Set up pre-commit hooks
+    - Install husky and lint-staged
+    - Configure pre-commit hook to run lint and format
+    - Add commit message linting with commitlint
+    - _Requirements: 10.1_
+  - [ ] 19.2 Configure bundle analysis
+    - Ensure webpack-bundle-analyzer is configured
+    - Add script to identify chunks > 500KB
+    - Document optimization opportunities
+    - _Requirements: 10.3_
+  - [ ] 19.3 Set up dependency vulnerability scanning
+    - Add npm audit to CI pipeline
+    - Configure dependabot or renovate
+    - _Requirements: 10.4_
+  - [ ] 19.4 Optimize build performance
+    - Review and optimize next.config.ts
+    - Ensure build completes in under 3 minutes
+    - _Requirements: 10.2_
+
+- [ ] 20. Final Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
