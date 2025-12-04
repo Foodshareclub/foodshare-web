@@ -53,11 +53,14 @@ const NavigateButtons: FC<NavigateButtonsType> = memo(
       "s",
     ];
     const showMapButton = !nonListingRoutes.includes(pathType);
+    // Show button when navigateTo is explicitly provided (e.g., "Show posts" on map)
+    // OR when on listing pages (e.g., "Show map" on food/goods pages)
+    const showButton = navigateTo || showMapButton;
 
     return (
       <>
-        {/* Airbnb-style Fixed Map Button - Always Sticky Higher from Bottom */}
-        {showMapButton && (
+        {/* Airbnb-style Fixed Map/Navigate Button - Always Sticky Higher from Bottom */}
+        {showButton && (
           <div className="fixed bottom-20 md:bottom-[100px] left-1/2 -translate-x-1/2 z-[1000]">
             <button
               onClick={navigateHandler}
