@@ -2,14 +2,14 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 /**
- * Supabase Proxy (Middleware replacement for Next.js 16)
+ * Supabase Proxy (Next.js 16)
  *
  * This function handles session refresh on every request, ensuring:
  * 1. Supabase auth cookies are properly synced
  * 2. Expired sessions are refreshed automatically
  * 3. Admin routes are protected with role-based access
  *
- * Called via instrumentation.ts on every request matching the config matcher
+ * Note: In Next.js 16, this replaces the old middleware.ts pattern
  */
 export async function proxy(request: NextRequest) {
   // Create response that will be returned
@@ -101,9 +101,13 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Admin routes
-    '/admin/:path*',
-    // All routes except static files, images, and Next.js internals
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder images
+     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
