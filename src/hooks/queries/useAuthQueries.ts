@@ -112,10 +112,14 @@ export function useIsAdmin(userId: string | undefined) {
 
       const { data, error } = await supabase
         .from("user_roles")
-        .select("role_id, roles!inner(name)")
+        .select("role_id, roles!user_roles_role_id_fkey(name)")
         .eq("profile_id", userId);
 
-      if (error) throw error;
+      if (error) {
+        // If no roles found or table access issue, return empty roles
+        console.warn("Error fetching user roles:", error.message);
+        return { isAdmin: false, roles: [] as string[] };
+      }
 
       const roles = (data ?? []).flatMap((r) => {
         const roleName = (r as { roles?: { name?: string } }).roles?.name;

@@ -238,7 +238,7 @@ export function useAdminUsers(filters: Record<string, unknown> = {}) {
         .from("profiles")
         .select(`
           *,
-          user_roles(role_id, roles(name))
+          user_roles!user_roles_profile_id_fkey(role_id, roles!user_roles_role_id_fkey(name))
         `)
         .order("created_time", { ascending: false });
 
