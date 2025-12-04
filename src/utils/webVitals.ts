@@ -15,12 +15,12 @@ const logger = createLogger("WebVitals");
  */
 export const reportWebVitals = async (onPerfEntry?: (metric: any) => void) => {
   if (onPerfEntry && onPerfEntry instanceof Function) {
-    const { getCLS, getFID, getFCP, getLCP, getTTFB } = await import("web-vitals");
-    getCLS(onPerfEntry);
-    getFID(onPerfEntry); // Using FID (First Input Delay) as INP may not be available in this version
-    getFCP(onPerfEntry);
-    getLCP(onPerfEntry);
-    getTTFB(onPerfEntry);
+    const { onCLS, onINP, onFCP, onLCP, onTTFB } = await import("web-vitals");
+    onCLS(onPerfEntry);
+    onINP(onPerfEntry);
+    onFCP(onPerfEntry);
+    onLCP(onPerfEntry);
+    onTTFB(onPerfEntry);
   }
 };
 
