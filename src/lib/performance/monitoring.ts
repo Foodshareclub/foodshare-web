@@ -202,16 +202,17 @@ import React from "react";
 
 /**
  * Get Web Vitals metrics
+ * Uses web-vitals v5 API (onCLS, onINP, onFCP, onLCP, onTTFB)
  */
 export async function getWebVitals(): Promise<Record<string, number>> {
   if (typeof window === "undefined") return {};
 
   try {
-    const { getCLS, getFID, getFCP, getLCP, getTTFB } = await import("web-vitals");
+    const { onCLS, onINP, onFCP, onLCP, onTTFB } = await import("web-vitals");
 
     const vitals: Record<string, number> = {};
 
-    getCLS((metric: any) => {
+    onCLS((metric) => {
       vitals.CLS = metric.value;
       performanceMonitor.recordMetric({
         name: "web-vital-cls",
@@ -220,16 +221,16 @@ export async function getWebVitals(): Promise<Record<string, number>> {
       });
     });
 
-    getFID((metric: any) => {
-      vitals.FID = metric.value;
+    onINP((metric) => {
+      vitals.INP = metric.value;
       performanceMonitor.recordMetric({
-        name: "web-vital-fid",
+        name: "web-vital-inp",
         value: metric.value,
         timestamp: Date.now(),
       });
     });
 
-    getFCP((metric: any) => {
+    onFCP((metric) => {
       vitals.FCP = metric.value;
       performanceMonitor.recordMetric({
         name: "web-vital-fcp",
@@ -238,7 +239,7 @@ export async function getWebVitals(): Promise<Record<string, number>> {
       });
     });
 
-    getLCP((metric: any) => {
+    onLCP((metric) => {
       vitals.LCP = metric.value;
       performanceMonitor.recordMetric({
         name: "web-vital-lcp",
@@ -247,7 +248,7 @@ export async function getWebVitals(): Promise<Record<string, number>> {
       });
     });
 
-    getTTFB((metric: any) => {
+    onTTFB((metric) => {
       vitals.TTFB = metric.value;
       performanceMonitor.recordMetric({
         name: "web-vital-ttfb",
