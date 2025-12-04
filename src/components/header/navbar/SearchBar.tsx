@@ -147,7 +147,7 @@ const SearchBar: React.FC<SearchBarProps> = memo(
           {/* What Section */}
           <div className="flex flex-col px-4 py-2 flex-1 min-w-0">
             <span className="text-[10px] font-semibold text-[#222222]">
-              "What"
+              What
             </span>
             <span className="text-xs text-[#717171] truncate">{searchTerm || "Search items"}</span>
           </div>
@@ -158,7 +158,7 @@ const SearchBar: React.FC<SearchBarProps> = memo(
           {/* Distance Section */}
           <div className="flex flex-col px-4 py-2 flex-1 min-w-0">
             <span className="text-[10px] font-semibold text-[#222222]">
-              "Distance"
+              Distance
             </span>
             <span className="text-xs text-[#717171] truncate">
               {selectedDistance || "Add distance"}
@@ -171,7 +171,7 @@ const SearchBar: React.FC<SearchBarProps> = memo(
           {/* Category Section */}
           <div className="flex flex-col px-4 py-2 flex-1 min-w-0">
             <span className="text-[10px] font-semibold text-[#222222]">
-              "Category"
+              Category
             </span>
             <span className="text-xs text-[#717171] truncate">{selectedCategory}</span>
           </div>
@@ -214,7 +214,7 @@ const SearchBar: React.FC<SearchBarProps> = memo(
             }}
           >
             <span className="text-xs font-semibold text-[#222222] mb-0.5">
-              "What"
+              What
             </span>
             <span className="text-sm text-[#717171] truncate">{searchTerm || "Search items"}</span>
           </div>
@@ -234,7 +234,7 @@ const SearchBar: React.FC<SearchBarProps> = memo(
             onClick={() => setActiveSection(activeSection === "distance" ? null : "distance")}
           >
             <span className="text-xs font-semibold text-[#222222] mb-0.5">
-              "Distance"
+              Distance
             </span>
             <span className="text-sm text-[#717171] truncate">
               {selectedDistance || "Add distance"}
@@ -256,7 +256,7 @@ const SearchBar: React.FC<SearchBarProps> = memo(
             onClick={() => setActiveSection(activeSection === "category" ? null : "category")}
           >
             <span className="text-xs font-semibold text-[#222222] mb-0.5">
-              "Category"
+              Category
             </span>
             <span className="text-sm text-[#717171] truncate">
               {selectedCategory === "all" ? "All categories" : selectedCategory}
@@ -335,7 +335,7 @@ const SearchBar: React.FC<SearchBarProps> = memo(
                       onClick={clearHistory}
                       className="text-xs text-[#FF385C] hover:underline"
                     >
-                      "Clear all"
+                      Clear all
                     </button>
                   )}
                 </div>
@@ -426,10 +426,10 @@ const SearchBar: React.FC<SearchBarProps> = memo(
             {searchTerm && !isLoading && suggestions.length === 0 && (
               <div className="text-center py-8">
                 <p className="text-sm text-[#717171] mb-2">
-                  "No results found for "{searchTerm}""
+                  No results found for &quot;{searchTerm}&quot;
                 </p>
                 <p className="text-xs text-[#717171]">
-                  "Try adjusting your search or browse all categories"
+                  Try adjusting your search or browse all categories
                 </p>
               </div>
             )}
@@ -448,7 +448,7 @@ const SearchBar: React.FC<SearchBarProps> = memo(
           >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-[#222222]">
-                "Distance Filter"
+                Distance Filter
               </h3>
               <Button
                 variant="ghost"
@@ -459,12 +459,12 @@ const SearchBar: React.FC<SearchBarProps> = memo(
                 }}
                 className="text-sm text-[#717171] hover:text-[#222222]"
               >
-                "Clear"
+                Clear
               </Button>
             </div>
 
             <p className="text-sm text-[#717171] mb-4">
-              "Select distance range"
+              Select distance range
             </p>
 
             {/* Distance Options */}
@@ -510,7 +510,7 @@ const SearchBar: React.FC<SearchBarProps> = memo(
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-sm font-semibold text-[#222222] mb-3">
-              "Select a category"
+              Select a category
             </p>
             <div className="flex flex-col gap-2">
               {[
