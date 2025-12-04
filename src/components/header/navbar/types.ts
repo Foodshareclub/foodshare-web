@@ -42,6 +42,8 @@ export interface NavbarProps {
   userId?: string;
   /** User authentication status */
   isAuth: boolean;
+  /** Whether user is admin */
+  isAdmin?: boolean;
   /** Current product type/category */
   productType: string;
   /** Route change handler */

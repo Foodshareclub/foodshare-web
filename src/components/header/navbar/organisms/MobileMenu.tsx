@@ -13,6 +13,8 @@ import { MenuItem, NavbarAvatar } from "../atoms";
 export interface MobileMenuProps {
   /** User authentication status */
   isAuth: boolean;
+  /** Whether user is admin */
+  isAdmin?: boolean;
   /** User first name */
   firstName?: string;
   /** User last name */
@@ -32,6 +34,7 @@ export interface MobileMenuProps {
   onNavigateToHelp: () => void;
   onNavigateToAboutUs: () => void;
   onNavigateToMyMessages: () => void;
+  onNavigateToDashboard?: () => void;
 }
 
 /**
@@ -58,6 +61,7 @@ export const MobileMenu: FC<MobileMenuProps> = memo(
     email,
     size = "md",
     isAuth,
+    isAdmin = false,
     imgUrl,
     signalOfNewMessage,
     onNavigateToHelp,
@@ -66,6 +70,7 @@ export const MobileMenu: FC<MobileMenuProps> = memo(
     onNavigateToAboutUs,
     onNavigateToAccSettings,
     onNavigateToMyMessages,
+    onNavigateToDashboard,
   }) => {
     const [isOpen, setIsOpen] = useState(false);
 
@@ -119,6 +124,23 @@ export const MobileMenu: FC<MobileMenuProps> = memo(
               {/* Authenticated Menu */}
               {isAuth ? (
                 <div className="flex flex-col gap-3">
+                  {/* Admin Dashboard Link */}
+                  {isAdmin && onNavigateToDashboard && (
+                    <Glass
+                      variant="accentGreen"
+                      borderRadius="12px"
+                      padding="16px"
+                      className="cursor-pointer glass-accelerated"
+                      onClick={() => handleNavigation(onNavigateToDashboard)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <p className="text-3xl font-semibold">
+                        Dashboard
+                      </p>
+                    </Glass>
+                  )}
+
                   <Glass
                     variant="subtle"
                     borderRadius="12px"
@@ -129,7 +151,7 @@ export const MobileMenu: FC<MobileMenuProps> = memo(
                     tabIndex={0}
                   >
                     <p className="text-3xl">
-                      "My listing's"
+                      My listing's
                     </p>
                   </Glass>
 

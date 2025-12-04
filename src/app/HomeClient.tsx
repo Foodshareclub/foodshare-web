@@ -27,6 +27,9 @@ export function HomeClient({ initialProducts, user, productType = 'food' }: Home
   const userId = user?.id || '';
   const profile = user?.profile;
 
+  // Check if user is admin (role is 'admin' or 'superadmin')
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin';
+
   // Handle route change - navigate to category page
   const handleRouteChange = useCallback((route: string) => {
     router.push(`/${route}`);
@@ -43,6 +46,7 @@ export function HomeClient({ initialProducts, user, productType = 'food' }: Home
       <Navbar
         userId={userId}
         isAuth={isAuth}
+        isAdmin={isAdmin}
         productType={currentProductType}
         onRouteChange={handleRouteChange}
         onProductTypeChange={handleProductTypeChange}

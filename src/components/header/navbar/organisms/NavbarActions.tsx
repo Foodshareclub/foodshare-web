@@ -11,6 +11,8 @@ import { DesktopMenu } from "./DesktopMenu";
 export interface NavbarActionsProps {
   /** User authentication status */
   isAuth: boolean;
+  /** Whether user is admin */
+  isAdmin?: boolean;
   /** User ID (optional) */
   userId?: string;
   /** User avatar URL */
@@ -30,6 +32,7 @@ export interface NavbarActionsProps {
   onNavigateToHelp: () => void;
   onNavigateToAboutUs: () => void;
   onNavigateToMyMessages: () => void;
+  onNavigateToDashboard?: () => void;
 }
 
 /**
@@ -52,6 +55,7 @@ export interface NavbarActionsProps {
 export const NavbarActions: FC<NavbarActionsProps> = memo(
   ({
     isAuth,
+    isAdmin = false,
     imgUrl = "",
     firstName,
     secondName,
@@ -63,12 +67,14 @@ export const NavbarActions: FC<NavbarActionsProps> = memo(
     onNavigateToHelp,
     onNavigateToAboutUs,
     onNavigateToMyMessages,
+    onNavigateToDashboard,
   }) => {
     // Breakpoint: 800px (mobile vs desktop menu)
     const isDesktop = useMediaQuery("(min-width:800px)");
 
     const menuProps = {
       isAuth,
+      isAdmin,
       imgUrl,
       firstName,
       secondName,
@@ -80,6 +86,7 @@ export const NavbarActions: FC<NavbarActionsProps> = memo(
       onNavigateToHelp,
       onNavigateToAboutUs,
       onNavigateToMyMessages,
+      onNavigateToDashboard,
     };
 
     return (

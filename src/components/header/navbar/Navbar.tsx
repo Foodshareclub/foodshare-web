@@ -1,7 +1,10 @@
+'use client';
+
 import React, { memo, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAdvancedScroll } from "@/hooks";
+import { useAuth } from "@/hooks/useAuth";
 import NavbarLogo from "./NavbarLogo";
 import SearchBar from "./SearchBar";
 import NavbarActions from "./NavbarActions";
@@ -50,6 +53,7 @@ const Navbar: React.FC<NavbarProps> = memo(
   ({
     userId,
     isAuth,
+    isAdmin = false,
     productType,
     onRouteChange,
     onProductTypeChange,
@@ -60,6 +64,8 @@ const Navbar: React.FC<NavbarProps> = memo(
     signalOfNewMessage = [],
     mapMode = false,
   }) => {
+    // Get logout function from useAuth hook
+    const { logout } = useAuth();
     // Advanced scroll behavior
     // - At Top: Full expanded search bar
     // - Scrolling Down: Search bar becomes compact
@@ -115,12 +121,16 @@ const Navbar: React.FC<NavbarProps> = memo(
     }, [router]);
 
     const handleNavigateToHelp = useCallback(() => {
-      // Implement help navigation
-    }, []);
+      router.push('/help');
+    }, [router]);
 
-    const handleNavigateToLogout = useCallback(() => {
-      // Logout is handled by NavbarActions
-    }, []);
+    const handleNavigateToLogout = useCallback(async () => {
+      await logout();
+    }, [logout]);
+
+    const handleNavigateToDashboard = useCallback(() => {
+      router.push('/admin');
+    }, [router]);
 
     // Get active category from productType
     const activeCategory = productType.toLowerCase() || "food";
@@ -191,6 +201,7 @@ const Navbar: React.FC<NavbarProps> = memo(
             <div className="flex-shrink-0">
               <NavbarActions
                 isAuth={isAuth}
+                isAdmin={isAdmin}
                 userId={userId}
                 imgUrl={imgUrl}
                 firstName={firstName}
@@ -203,6 +214,7 @@ const Navbar: React.FC<NavbarProps> = memo(
                 onNavigateToHelp={handleNavigateToHelp}
                 onNavigateToAboutUs={handleNavigateToAboutUs}
                 onNavigateToMyMessages={handleNavigateToMyMessages}
+                onNavigateToDashboard={handleNavigateToDashboard}
               />
             </div>
           </div>

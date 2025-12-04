@@ -14,8 +14,16 @@ import { AuthenticationUserModal } from "@/components";
 export interface DesktopMenuProps {
   /** User authentication status */
   isAuth: boolean;
+  /** Whether user is admin */
+  isAdmin?: boolean;
   /** User avatar URL */
   imgUrl?: string;
+  /** User first name */
+  firstName?: string;
+  /** User last name */
+  secondName?: string;
+  /** User email */
+  email?: string;
   /** Array of new message indicators */
   signalOfNewMessage: CustomRoomType[];
   /** Navigation handlers */
@@ -25,6 +33,7 @@ export interface DesktopMenuProps {
   onNavigateToHelp: () => void;
   onNavigateToAboutUs: () => void;
   onNavigateToMyMessages: () => void;
+  onNavigateToDashboard?: () => void;
 }
 
 /**
@@ -52,14 +61,22 @@ export const DesktopMenu: FC<DesktopMenuProps> = memo(
     onNavigateToAccSettings,
     onNavigateToAboutUs,
     onNavigateToMyMessages,
+    onNavigateToDashboard,
     imgUrl,
+    firstName,
+    secondName,
+    email,
     isAuth,
+    isAdmin = false,
   }) => {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
     const hasNotifications = signalOfNewMessage.length > 0;
     const notificationCount = signalOfNewMessage.length;
+
+    // Build display name from first and second name
+    const displayName = [firstName, secondName].filter(Boolean).join(' ') || 'User';
 
     return (
       <>
@@ -76,21 +93,37 @@ export const DesktopMenu: FC<DesktopMenuProps> = memo(
               </div>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent variant="glass" className="rounded-xl min-w-[200px]" align="end">
+            <DropdownMenuContent variant="glass" className="rounded-xl min-w-[220px]" align="end">
               {isAuth ? (
                 <>
+                  {/* User Profile Info Header */}
+                  <div className="px-3 py-2 border-b border-border/50 mb-1">
+                    <p className="font-medium text-sm text-foreground truncate">{displayName}</p>
+                    {email && (
+                      <p className="text-xs text-muted-foreground truncate">{email}</p>
+                    )}
+                  </div>
+
+                  {/* Admin Dashboard Link */}
+                  {isAdmin && onNavigateToDashboard && (
+                    <MenuItem
+                      label="Dashboard"
+                      onClick={onNavigateToDashboard}
+                      variant="accent"
+                      testId="menu-dashboard"
+                    />
+                  )}
+
                   <MenuItem
-                    label={"My listing's"}
+                    label="My listing's"
                     onClick={onNavigateToMyLists}
                     testId="menu-my-listings"
                   />
                   <MenuItem
                     label={
-                      hasNotifications ? (
-                        "You have {notificationCount} unanswered messages"
-                      ) : (
-                        "My messages"
-                      )
+                      hasNotifications
+                        ? `You have ${notificationCount} unanswered messages`
+                        : "My messages"
                     }
                     onClick={onNavigateToMyMessages}
                     variant={hasNotifications ? "accent" : "default"}
@@ -104,12 +137,12 @@ export const DesktopMenu: FC<DesktopMenuProps> = memo(
                     testId="menu-messages"
                   />
                   <MenuItem
-                    label={"Account settings"}
+                    label="Account settings"
                     onClick={onNavigateToAccSettings}
                     testId="menu-account-settings"
                   />
                   <MenuItem
-                    label={"Log Out"}
+                    label="Log Out"
                     onClick={onNavigateToLogout}
                     variant="danger"
                     testId="menu-logout"
