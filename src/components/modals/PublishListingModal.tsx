@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useCallback, useMemo, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import {
   FaCalendar,
@@ -91,8 +91,13 @@ import { useImageUpload, useListingForm, useUndoRedo } from "./publish-listing/h
  * Modal for creating and editing product listings
  * Refactored to use custom hooks for cleaner architecture
  */
-const PublishListingModal: React.FC<PublishListingModalType> = React.memo(
-  ({ product, isOpen, onClose, setOpenEdit, value }) => {
+function PublishListingModal({
+  product,
+  isOpen,
+  onClose,
+  setOpenEdit,
+  value,
+}: PublishListingModalType) {
     const t = useTranslations();
     const formRef = useRef<HTMLDivElement>(null);
 
@@ -180,36 +185,31 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(
     }, [isOpen, isLoading]);
 
     // Voice input handler
-    const handleVoiceTranscript = useCallback((transcript: string) => {
+    const handleVoiceTranscript = (transcript: string) => {
       const currentDesc = form.formData.description;
       const newDesc = currentDesc ? `${currentDesc} ${transcript}` : transcript;
       form.setDescription(newDesc.slice(0, MAX_DESCRIPTION_LENGTH));
-    }, [form.formData.description]);
+    };
 
     // Template selection handler
-    const handleTemplateSelect = useCallback(
-      (template: { title: string; description: string; tags: string[] }) => {
-        const currentTitle = form.formData.title;
-        form.setTitle(template.title + (currentTitle || ""));
-        form.setDescription(template.description);
-        form.setTags(template.tags);
-        setShowTemplates(false);
-      },
-      [form.formData.title]
-    );
+    const handleTemplateSelect = (template: { title: string; description: string; tags: string[] }) => {
+      const currentTitle = form.formData.title;
+      form.setTitle(template.title + (currentTitle || ""));
+      form.setDescription(template.description);
+      form.setTags(template.tags);
+      setShowTemplates(false);
+    };
 
     // Build product object for submission
-    const imagesArray = useMemo(() => {
-      return imageUpload.images
-        .map((img) => {
-          if (img.isExisting) return img.url;
-          if (img.filePath) return getStorageUrl(STORAGE_BUCKETS.POSTS, `${id}/${img.filePath}`);
-          return null;
-        })
-        .filter((url): url is string => url !== null);
-    }, [id, imageUpload.images]);
+    const imagesArray = imageUpload.images
+      .map((img) => {
+        if (img.isExisting) return img.url;
+        if (img.filePath) return getStorageUrl(STORAGE_BUCKETS.POSTS, `${id}/${img.filePath}`);
+        return null;
+      })
+      .filter((url): url is string => url !== null);
 
-    const productObj = useMemo<Partial<InitialProductStateType>>(() => {
+    const productObj: Partial<InitialProductStateType> = (() => {
       const obj: Partial<InitialProductStateType> = {
         images: imagesArray,
         post_type: form.formData.category,
@@ -218,6 +218,7 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(
         available_hours: form.formData.time,
         post_stripped_address: form.formData.address,
         transportation: form.formData.metroStation,
+        condition: form.formData.condition || '',
         profile_id: id,
         location: userLocation
           ? `SRID=4326;POINT(${userLocation.longitude} ${userLocation.latitude})`
@@ -229,10 +230,10 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(
       }
 
       return obj;
-    }, [imagesArray, form.formData, id, userLocation, product, imageUpload.images]);
+    })();
 
     // Publish handler
-    const publishHandler = useCallback(async () => {
+    const publishHandler = async () => {
       form.touchAll();
 
       if (!form.isFormValid || imageUpload.images.length === 0) {
@@ -286,17 +287,14 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(
       } finally {
         setIsLoading(false);
       }
-    }, [createProduct, updateProduct, id, imageUpload.images, product, productObj, productId, onClose, setOpenEdit, form]);
+    };
 
-    const onDialogOpenChange = useCallback(
-      (open: boolean) => {
-        if (!open && publishState !== "loading") {
-          onClose();
-          setOpenEdit?.(false);
-        }
-      },
-      [onClose, setOpenEdit, publishState]
-    );
+    const onDialogOpenChange = (open: boolean) => {
+      if (!open && publishState !== "loading") {
+        onClose();
+        setOpenEdit?.(false);
+      }
+    };
 
     const showImageError = form.touched.image && imageUpload.images.length === 0;
     const selectedCategory = form.formData.category as keyof typeof categoryConfig;
@@ -1111,9 +1109,6 @@ const PublishListingModal: React.FC<PublishListingModalType> = React.memo(
         </GlassDialogContent>
       </Dialog>
     );
-  }
-);
-
-PublishListingModal.displayName = "PublishListingModal";
+}
 
 export default PublishListingModal;

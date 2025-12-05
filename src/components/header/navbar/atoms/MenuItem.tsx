@@ -1,4 +1,4 @@
-import { memo, type FC, type ReactNode } from "react";
+import { type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -41,8 +41,7 @@ const variantClasses = {
  * />
  * ```
  */
-export const MenuItem: FC<MenuItemProps> = memo(
-  ({ label, onClick, icon, badge, variant = "default", className, testId }) => {
+export function MenuItem({ label, onClick, icon, badge, variant = "default", className, testId }: MenuItemProps) {
     return (
       <div
         role="menuitem"
@@ -68,7 +67,4 @@ export const MenuItem: FC<MenuItemProps> = memo(
         {badge && <span className="flex-shrink-0 text-xs">{badge}</span>}
       </div>
     );
-  }
-);
-
-MenuItem.displayName = "MenuItem";
+}

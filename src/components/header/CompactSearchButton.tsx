@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React from "react";
 import { SearchIcon } from "@/utils/icons";
 import { Glass } from "@/components/Glass";
 import { useTranslations } from 'next-intl';
@@ -7,7 +7,7 @@ type CompactSearchButtonProps = {
   onClick: () => void;
 };
 
-const CompactSearchButton: React.FC<CompactSearchButtonProps> = memo(({ onClick }) => {
+export default function CompactSearchButton({ onClick }: CompactSearchButtonProps) {
   const t = useTranslations();
   return (
     <Glass
@@ -24,8 +24,4 @@ const CompactSearchButton: React.FC<CompactSearchButtonProps> = memo(({ onClick 
       </div>
     </Glass>
   );
-});
-
-CompactSearchButton.displayName = "CompactSearchButton";
-
-export default CompactSearchButton;
+}

@@ -2,152 +2,24 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
+import type { ForumComment } from '@/lib/data/forum';
 
-export interface ForumPost {
-  id: string;
-  title: string;
-  content: string;
-  category: string;
-  created_at: string;
-  updated_at: string;
-  author_id: string;
-  author: {
-    name: string;
-    avatar_url: string | null;
-  } | null;
-  comments_count: number;
-  likes_count: number;
-}
+// Re-export types and cached data functions from data layer
+export type { ForumPost, ForumComment } from '@/lib/data/forum';
+export {
+  getForumPosts,
+  getForumPostById,
+  getForumComments,
+  getForumPostWithComments,
+} from '@/lib/data/forum';
 
-export interface ForumComment {
-  id: string;
-  post_id: string;
-  content: string;
-  created_at: string;
-  author_id: string;
-  author: {
-    name: string;
-    avatar_url: string | null;
-  } | null;
-}
+// Legacy alias for backwards compatibility
+export { getForumPostWithComments as getForumPost } from '@/lib/data/forum';
 
 // Helper to extract first item from Supabase join array
 function extractFirst<T>(data: T[] | T | null | undefined): T | null {
   if (Array.isArray(data)) return data[0] ?? null;
   return data ?? null;
-}
-
-/**
- * Get forum posts with optional category filter
- */
-export async function getForumPosts(category?: string): Promise<ForumPost[]> {
-  const supabase = await createClient();
-
-  let query = supabase
-    .from('forum_posts')
-    .select(`
-      id,
-      title,
-      content,
-      category,
-      created_at,
-      updated_at,
-      author_id,
-      author:profiles!author_id(name, avatar_url),
-      comments:forum_comments(count),
-      likes:forum_likes(count)
-    `)
-    .order('created_at', { ascending: false });
-
-  if (category && category !== 'all') {
-    query = query.eq('category', category);
-  }
-
-  const { data, error } = await query;
-
-  if (error) throw new Error(error.message);
-
-  return (data ?? []).map(post => ({
-    id: post.id,
-    title: post.title,
-    content: post.content,
-    category: post.category,
-    created_at: post.created_at,
-    updated_at: post.updated_at,
-    author_id: post.author_id,
-    author: extractFirst(post.author as Array<{ name: string; avatar_url: string | null }>),
-    comments_count: (post.comments as unknown as { count: number }[])?.[0]?.count ?? 0,
-    likes_count: (post.likes as unknown as { count: number }[])?.[0]?.count ?? 0,
-  }));
-}
-
-/**
- * Get a single forum post with comments
- */
-export async function getForumPost(id: string): Promise<{
-  post: ForumPost | null;
-  comments: ForumComment[];
-}> {
-  const supabase = await createClient();
-
-  const { data: postData, error: postError } = await supabase
-    .from('forum_posts')
-    .select(`
-      id,
-      title,
-      content,
-      category,
-      created_at,
-      updated_at,
-      author_id,
-      author:profiles!author_id(name, avatar_url),
-      comments:forum_comments(count),
-      likes:forum_likes(count)
-    `)
-    .eq('id', id)
-    .single();
-
-  if (postError) {
-    if (postError.code === 'PGRST116') return { post: null, comments: [] };
-    throw new Error(postError.message);
-  }
-
-  const { data: commentsData } = await supabase
-    .from('forum_comments')
-    .select(`
-      id,
-      post_id,
-      content,
-      created_at,
-      author_id,
-      author:profiles!author_id(name, avatar_url)
-    `)
-    .eq('post_id', id)
-    .order('created_at', { ascending: true });
-
-  const post: ForumPost = {
-    id: postData.id,
-    title: postData.title,
-    content: postData.content,
-    category: postData.category,
-    created_at: postData.created_at,
-    updated_at: postData.updated_at,
-    author_id: postData.author_id,
-    author: extractFirst(postData.author as Array<{ name: string; avatar_url: string | null }>),
-    comments_count: (postData.comments as unknown as { count: number }[])?.[0]?.count ?? 0,
-    likes_count: (postData.likes as unknown as { count: number }[])?.[0]?.count ?? 0,
-  };
-
-  const comments: ForumComment[] = (commentsData ?? []).map(comment => ({
-    id: comment.id,
-    post_id: comment.post_id,
-    content: comment.content,
-    created_at: comment.created_at,
-    author_id: comment.author_id,
-    author: extractFirst(comment.author as Array<{ name: string; avatar_url: string | null }>),
-  }));
-
-  return { post, comments };
 }
 
 /**

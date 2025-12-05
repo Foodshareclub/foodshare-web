@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCurrentSeasonalPreset, type SeasonalPreset } from '@/lib/theme/themeConfig';
 import { cn } from '@/lib/utils';
@@ -14,8 +14,7 @@ interface SeasonalPresetCardProps {
   onClick: () => void;
 }
 
-export const SeasonalPresetCard: React.FC<SeasonalPresetCardProps> = memo(
-  ({ preset, isActive, onClick }) => {
+export function SeasonalPresetCard({ preset, isActive, onClick }: SeasonalPresetCardProps) {
     const [isHovered, setIsHovered] = useState(false);
 
     return (
@@ -123,7 +122,4 @@ export const SeasonalPresetCard: React.FC<SeasonalPresetCardProps> = memo(
         )}
       </motion.button>
     );
-  }
-);
-
-SeasonalPresetCard.displayName = 'SeasonalPresetCard';
+}

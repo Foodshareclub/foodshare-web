@@ -10,7 +10,6 @@ import { chatAPI } from '@/api/chatAPI';
 import Navbar from '@/components/header/navbar/Navbar';
 import ContactsBlock from '@/components/chat/ContactsBlock';
 import { MessagesWindow } from '@/components/chat/MessagesWindow';
-import { Glass } from '@/components/Glass';
 import { Skeleton } from '@/components/ui/skeleton';
 
 /**
@@ -177,7 +176,7 @@ function ChatSkeleton() {
 
 function MessagesSkeleton() {
   return (
-    <Glass variant="subtle" className="h-full rounded-2xl p-4">
+    <div className="glass-subtle h-full rounded-2xl p-4">
       <div className="space-y-4">
         {[...Array(5)].map((_, i) => (
           <div key={i} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
@@ -185,17 +184,17 @@ function MessagesSkeleton() {
           </div>
         ))}
       </div>
-    </Glass>
+    </div>
   );
 }
 
 function EmptyChat({ message }: { message: string }) {
   return (
-    <Glass variant="subtle" className="h-full rounded-2xl flex items-center justify-center">
+    <div className="glass-subtle h-full rounded-2xl flex items-center justify-center">
       <div className="text-center">
         <div className="text-6xl mb-4">💬</div>
         <p className="text-gray-500">{message}</p>
       </div>
-    </Glass>
+    </div>
   );
 }

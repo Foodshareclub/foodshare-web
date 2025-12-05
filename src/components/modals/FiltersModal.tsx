@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useUIStore } from "@/store/zustand/useUIStore";
-import { GlassDialogContent } from "@/components/Glass";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 
@@ -52,7 +51,7 @@ export default function FiltersModal() {
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <GlassDialogContent>
+        <DialogContent variant="glass">
           <DialogHeader>
             <DialogTitle className="text-center">Filter</DialogTitle>
           </DialogHeader>
@@ -82,7 +81,7 @@ export default function FiltersModal() {
               Apply
             </Button>
           </DialogFooter>
-        </GlassDialogContent>
+        </DialogContent>
       </Dialog>
     </>
   );

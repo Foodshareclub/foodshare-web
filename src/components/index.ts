@@ -70,22 +70,6 @@ export { VolunteerCards } from "./volunteerCard/VolonterCards";
 export { default as LanguageSelector } from "./languageSelector/LanguageSelector";
 export { default as ChangeLanguageContainer } from "./localization/ChangeLanguageContainer";
 
-// Glassmorphism Components
-export {
-  Glass,
-  GlassCard,
-  GlassHeader,
-  GlassModal,
-  GlassInput,
-  GlassButton,
-  GlassDialogContent,
-  GlassDialogBackdrop,
-  GlassDrawerContent,
-  GlassDrawerBackdrop,
-  GlassPopoverContent,
-  GlassPopoverArrow,
-  GlassSelect,
-  GlassSelectRoot,
-  GlassSelectField,
-} from "./Glass";
-export type { GlassProps } from "./Glass";
+// Glass utilities - Use Tailwind classes: glass, glass-subtle, glass-prominent
+// Or use Button/Dialog/Drawer with variant="glass"
+// See: src/components/ui/glass.tsx for CVA-based Glass component

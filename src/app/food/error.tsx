@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect } from 'react'
-import { GlassCard } from '@/components/Glass'
 import Link from 'next/link'
 
 /**
@@ -32,7 +31,7 @@ export default function ProductsError({
       {/* Error Content */}
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-2xl mx-auto">
-          <GlassCard variant="prominent" borderRadius="24px" className="p-8">
+          <div className="glass-prominent rounded-3xl p-8">
             {/* Error Icon */}
             <div className="text-center mb-6">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-pink-100 dark:bg-pink-900/30 rounded-full mb-4">
@@ -108,11 +107,11 @@ export default function ProductsError({
                 🏠 Go Home
               </Link>
             </div>
-          </GlassCard>
+          </div>
 
           {/* Quick Links */}
           <div className="mt-6">
-            <GlassCard variant="subtle" borderRadius="16px" className="p-6">
+            <div className="glass-subtle rounded-2xl p-6">
               <h3 className="text-sm font-semibold text-foreground mb-3">
                 Browse by Category:
               </h3>
@@ -129,7 +128,7 @@ export default function ProductsError({
                   )
                 )}
               </div>
-            </GlassCard>
+            </div>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AccentColorConfig, ContrastMode, ThemePreset } from '@/store/zustand/useUIStore';
 import {
@@ -37,7 +37,7 @@ interface ThemeCustomizerProps {
   className?: string;
 }
 
-const ThemeCustomizer: React.FC<ThemeCustomizerProps> = memo(({ className }) => {
+function ThemeCustomizer({ className }: ThemeCustomizerProps) {
   const {
     accentColor,
     contrastMode,
@@ -118,9 +118,7 @@ const ThemeCustomizer: React.FC<ThemeCustomizerProps> = memo(({ className }) => 
       </AnimatePresence>
     </div>
   );
-});
-
-ThemeCustomizer.displayName = 'ThemeCustomizer';
+}
 
 // Presets Tab Component
 interface PresetsTabProps {
@@ -130,8 +128,13 @@ interface PresetsTabProps {
   onSeasonalSelect: (seasonal: SeasonalPreset) => void;
 }
 
-const PresetsTab: React.FC<PresetsTabProps> = memo(
-  ({ themePreset, selectedSeasonal, onPresetSelect, onSeasonalSelect }) => (
+function PresetsTab({
+  themePreset,
+  selectedSeasonal,
+  onPresetSelect,
+  onSeasonalSelect,
+}: PresetsTabProps) {
+  return (
     <motion.div
       key="presets"
       initial={{ opacity: 0, y: 10 }}
@@ -185,10 +188,8 @@ const PresetsTab: React.FC<PresetsTabProps> = memo(
         </div>
       </div>
     </motion.div>
-  )
-);
-
-PresetsTab.displayName = 'PresetsTab';
+  );
+}
 
 // Colors Tab Component
 interface ColorsTabProps {
@@ -196,7 +197,8 @@ interface ColorsTabProps {
   onAccentChange: (color: AccentColorConfig) => void;
 }
 
-const ColorsTab: React.FC<ColorsTabProps> = memo(({ accentColor, onAccentChange }) => (
+function ColorsTab({ accentColor, onAccentChange }: ColorsTabProps) {
+  return (
   <motion.div
     key="colors"
     initial={{ opacity: 0, y: 10 }}
@@ -213,9 +215,8 @@ const ColorsTab: React.FC<ColorsTabProps> = memo(({ accentColor, onAccentChange 
       <AccentColorPicker current={accentColor} onChange={onAccentChange} />
     </div>
   </motion.div>
-));
-
-ColorsTab.displayName = 'ColorsTab';
+  );
+}
 
 // Accessibility Tab Component
 interface AccessibilityTabProps {
@@ -231,19 +232,19 @@ interface AccessibilityTabProps {
   onColorBlindnessChange: (mode: ColorBlindnessMode) => void;
 }
 
-const AccessibilityTab: React.FC<AccessibilityTabProps> = memo(
-  ({
-    fontScale,
-    contrastMode,
-    reducedMotion,
-    hapticEnabled,
-    colorBlindness,
-    onFontScaleChange,
-    onContrastChange,
-    onReducedMotionToggle,
-    onHapticToggle,
-    onColorBlindnessChange,
-  }) => (
+function AccessibilityTab({
+  fontScale,
+  contrastMode,
+  reducedMotion,
+  hapticEnabled,
+  colorBlindness,
+  onFontScaleChange,
+  onContrastChange,
+  onReducedMotionToggle,
+  onHapticToggle,
+  onColorBlindnessChange,
+}: AccessibilityTabProps) {
+  return (
     <motion.div
       key="accessibility"
       initial={{ opacity: 0, y: 10 }}
@@ -305,10 +306,8 @@ const AccessibilityTab: React.FC<AccessibilityTabProps> = memo(
         <ColorBlindnessSelector current={colorBlindness} onChange={onColorBlindnessChange} />
       </div>
     </motion.div>
-  )
-);
-
-AccessibilityTab.displayName = 'AccessibilityTab';
+  );
+}
 
 // Toggle Option Component
 interface ToggleOptionProps {
@@ -319,8 +318,8 @@ interface ToggleOptionProps {
   onToggle: () => void;
 }
 
-const ToggleOption: React.FC<ToggleOptionProps> = memo(
-  ({ icon, title, description, isEnabled, onToggle }) => (
+function ToggleOption({ icon, title, description, isEnabled, onToggle }: ToggleOptionProps) {
+  return (
     <div>
       <button
         onClick={onToggle}
@@ -347,9 +346,7 @@ const ToggleOption: React.FC<ToggleOptionProps> = memo(
         </div>
       </button>
     </div>
-  )
-);
-
-ToggleOption.displayName = 'ToggleOption';
+  );
+}
 
 export { ThemeCustomizer };

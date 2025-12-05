@@ -8,6 +8,7 @@ FoodShare uses a multi-layer caching strategy optimized for Next.js 16:
 2. **Route segment caching** via `revalidate` exports
 3. **Client-side caching** via TanStack Query
 4. **Image caching** via Next.js Image optimization (30-day TTL)
+5. **Redis caching** via Upstash Redis for distributed cache and rate limiting
 
 ## Cache Tags
 
@@ -17,15 +18,25 @@ All cache tags are centralized in `src/lib/data/cache-keys.ts`:
 import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
 // Available tags
-CACHE_TAGS.PRODUCTS           // 'products'
-CACHE_TAGS.PRODUCT(id)        // 'product-{id}'
-CACHE_TAGS.PRODUCT_LOCATIONS  // 'product-locations'
-CACHE_TAGS.PROFILES           // 'profiles'
-CACHE_TAGS.PROFILE(id)        // 'profile-{id}'
-CACHE_TAGS.FORUM              // 'forum'
-CACHE_TAGS.CHATS              // 'chats'
-CACHE_TAGS.ADMIN              // 'admin'
-CACHE_TAGS.AUTH               // 'auth'
+CACHE_TAGS.PRODUCTS                      // 'products'
+CACHE_TAGS.PRODUCT(id)                   // 'product-{id}'
+CACHE_TAGS.PRODUCTS_BY_TYPE(type)        // 'products-{type}'
+CACHE_TAGS.PRODUCT_LOCATIONS             // 'product-locations'
+CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(type) // 'product-locations-{type}'
+CACHE_TAGS.PROFILES                      // 'profiles'
+CACHE_TAGS.PROFILE(id)                   // 'profile-{id}'
+CACHE_TAGS.FORUM                         // 'forum'
+CACHE_TAGS.CHATS                         // 'chats'
+CACHE_TAGS.ADMIN                         // 'admin'
+CACHE_TAGS.AUTH                          // 'auth'
+
+// CRM tags (from @/lib/data/crm)
+import { CRM_CACHE_TAGS } from '@/lib/data/crm';
+CRM_CACHE_TAGS.CUSTOMERS                 // 'crm-customers'
+CRM_CACHE_TAGS.CUSTOMER(id)              // 'crm-customer-{id}'
+CRM_CACHE_TAGS.CUSTOMER_NOTES(customerId) // 'crm-customer-notes-{customerId}'
+CRM_CACHE_TAGS.TAGS                      // 'crm-tags'
+CRM_CACHE_TAGS.DASHBOARD                 // 'crm-dashboard'
 ```
 
 ## Cache Durations
@@ -67,11 +78,13 @@ export default async function FoodPage() {
 import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
 export async function createProduct(formData: FormData) {
-  // ... create product
+  // ... create product with post_type
   
-  // Invalidate relevant caches
+  // Invalidate relevant caches (granular by type)
   invalidateTag(CACHE_TAGS.PRODUCTS);
   invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS);
+  invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(post_type));
+  invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(post_type));
 }
 ```
 
@@ -81,22 +94,70 @@ export async function createProduct(formData: FormData) {
 
 | Function | Cache Duration | Tags |
 |----------|---------------|------|
-| `getProducts(type)` | 60s | `products` |
+| `getProducts(type)` | 60s | `products`, `products-{type}` |
 | `getAllProducts()` | 60s | `products` |
-| `getProductById(id)` | 120s | `products` |
-| `getProductLocations(type)` | 300s | `product-locations` |
-| `getUserProducts(userId)` | 60s | `products` |
+| `getProductById(id)` | 120s | `products`, `product-{id}` |
+| `getProductLocations(type)` | 300s | `product-locations`, `product-locations-{type}` |
+| `getUserProducts(userId)` | 60s | `products`, `user-products-{userId}` |
 | `searchProducts(query, type)` | 60s | `product-search`, `products` |
+| `getPopularProductIds(limit)` | 3600s | `products` |
+
+### Maps (`@/lib/data/maps`)
+
+| Function | Cache Duration | Tags |
+|----------|---------------|------|
+| `getMapLocations(type)` | 300s | `product-locations`, `product-locations-{type}` |
+| `getAllMapLocations()` | 300s | `product-locations` |
+| `getNearbyLocations(bounds, type?)` | 60s | `product-locations` |
+| `getLocationCountsByType()` | 300s | `product-locations` |
 
 ### Profiles (`@/lib/data/profiles`)
 
 | Function | Cache Duration | Tags |
 |----------|---------------|------|
-| `getProfile(userId)` | 300s | `profiles` |
-| `getPublicProfile(userId)` | 300s | `profiles` |
-| `getUserStats(userId)` | 600s | `profiles` |
+| `getProfile(userId)` | 300s | `profiles`, `profile-{userId}` |
+| `getPublicProfile(userId)` | 300s | `profiles`, `profile-{userId}` |
+| `getUserStats(userId)` | 600s | `profiles`, `profile-stats-{userId}` |
 | `getVolunteers()` | 3600s | `volunteers`, `profiles` |
-| `getProfileReviews(userId)` | 300s | `profiles` |
+| `getProfileReviews(userId)` | 300s | `profiles`, `profile-reviews-{userId}` |
+
+### Forum (`@/lib/data/forum`)
+
+| Function | Cache Duration | Tags |
+|----------|---------------|------|
+| `getForumPosts(category?)` | 120s | `forum` |
+| `getForumPostById(id)` | 120s | `forum` |
+| `getForumComments(postId)` | 120s | `forum` |
+| `getForumPostWithComments(id)` | 120s | `forum` (parallel fetch) |
+
+### Admin (`@/lib/data/admin`)
+
+| Function | Cache Duration | Tags |
+|----------|---------------|------|
+| `getDashboardStats()` | 300s | `admin-stats`, `admin` |
+| `getAuditLogs(limit?)` | 60s | `audit-logs`, `admin` |
+| `getPendingListings()` | 60s | `admin-listings`, `admin` |
+
+### CRM (`@/lib/data/crm`)
+
+| Function | Cache Duration | Tags |
+|----------|---------------|------|
+| `getCRMCustomersCached(filters?)` | 300s | `crm-customers` |
+| `getCustomerSummary(customerId)` | None | - |
+| `getCustomerNotes(customerId)` | None | - |
+| `getCustomerTagsCached()` | 3600s | `crm-tags` |
+| `getCRMDashboardStatsCached()` | 300s | `crm-dashboard` |
+
+> **Note:** CRM cache tags are defined in `@/lib/data/crm.ts` as `CRM_CACHE_TAGS` for module-specific organization.
+
+### Email Preferences (`@/lib/data/email-preferences`)
+
+| Function | Cache Duration | Tags |
+|----------|---------------|------|
+| `getEmailPreferences()` | None (user-specific) | - |
+| `getEmailPreferencesForUser(profileId)` | None (admin use) | - |
+
+> **Note:** Email preferences are not cached because they are user-specific and should always reflect the current state. These functions require authentication.
 
 ## Next.js 16 Changes
 
@@ -110,6 +171,128 @@ revalidateTag('products', 'default'); // Requires profile in Next.js 16
 // DO use invalidateTag helper
 import { invalidateTag } from '@/lib/data/cache-keys';
 invalidateTag(CACHE_TAGS.PRODUCTS); // Handles profile automatically
+```
+
+## Redis Caching (Upstash)
+
+For distributed caching across serverless functions, use the Redis client from `@/lib/storage/redis`:
+
+### Cache Operations
+
+```typescript
+import { cache, REDIS_KEYS, CACHE_TTL } from '@/lib/storage/redis';
+
+// Get cached value (returns null on error)
+const product = await cache.get<Product>(REDIS_KEYS.PRODUCT('123'));
+
+// Set with TTL (returns boolean success)
+const success = await cache.set(REDIS_KEYS.PRODUCT('123'), product, CACHE_TTL.MEDIUM);
+
+// Cache-aside pattern (get or fetch)
+const data = await cache.getOrSet(
+  REDIS_KEYS.PRODUCTS_LIST('food'),
+  () => fetchProducts('food'),
+  CACHE_TTL.SHORT
+);
+
+// Delete operations (return count of deleted keys)
+await cache.del('key');                    // Single key
+await cache.delMany(['key1', 'key2']);     // Multiple keys
+await cache.delByPattern('products:*');    // By pattern
+
+// Counter operations
+const views = await cache.incr(REDIS_KEYS.COUNTER('page-views'));
+
+// TTL management
+await cache.expire('key', 3600);           // Set expiration
+const remaining = await cache.ttl('key');  // Get remaining TTL (-1 if no expiry)
+```
+
+All cache methods include built-in error handling and return sensible defaults on failure.
+
+### Redis Key Prefixes
+
+```typescript
+import { REDIS_KEYS } from '@/lib/storage/redis';
+
+REDIS_KEYS.PRODUCT(id)           // 'product:{id}'
+REDIS_KEYS.PRODUCTS_LIST(type)   // 'products:list:{type}' or 'products:list:all'
+REDIS_KEYS.USER_PROFILE(id)      // 'user:profile:{id}'
+REDIS_KEYS.USER_SESSION(id)      // 'user:session:{id}'
+REDIS_KEYS.SEARCH_RESULTS(query) // 'search:{query}'
+```
+
+### Redis TTL Values
+
+```typescript
+import { CACHE_TTL } from '@/lib/storage/redis';
+
+CACHE_TTL.SHORT   // 60s - frequently changing
+CACHE_TTL.MEDIUM  // 300s - moderate changes
+CACHE_TTL.LONG    // 3600s - rarely changing
+CACHE_TTL.DAY     // 86400s - static content
+```
+
+### Rate Limiting
+
+```typescript
+import { rateLimiter } from '@/lib/storage/redis';
+
+// Check rate limit (sliding window)
+const { allowed, remaining, reset } = await rateLimiter.check(
+  `api:${userId}`,  // identifier
+  100,              // max requests
+  60                // window in seconds
+);
+
+if (!allowed) {
+  return new Response('Too Many Requests', { 
+    status: 429,
+    headers: { 'Retry-After': String(reset) }
+  });
+}
+```
+
+## Development Cache Logging
+
+In development mode, cache operations are automatically logged to the console:
+
+```
+✅ [12:34:56.789] CACHE HIT products
+❌ [12:34:56.790] CACHE MISS product-123
+💾 [12:34:56.791] CACHE SET products
+🗑️ [12:34:56.792] CACHE INVALIDATE products
+```
+
+The `logCacheOperation` function is exported from `@/lib/data/cache-keys` for use in custom caching scenarios:
+
+```typescript
+import { logCacheOperation } from '@/lib/data/cache-keys';
+
+// Log custom cache operations
+logCacheOperation('hit', 'my-custom-key', { duration: 100 });
+```
+
+## API Route Caching
+
+API routes include `Cache-Control` headers for CDN/browser caching:
+
+```typescript
+// src/app/api/products/route.ts
+const CACHE_DURATIONS = {
+  PRODUCTS: 60,        // Product lists
+  PRODUCT_DETAIL: 120, // Single product
+  LOCATIONS: 300,      // Map locations
+  SEARCH: 30,          // Search results
+  USER_PRODUCTS: 60,   // User's products
+};
+
+// Response with cache headers
+return NextResponse.json(data, {
+  headers: {
+    'Cache-Control': `public, s-maxage=${maxAge}, stale-while-revalidate=${maxAge}`,
+  },
+});
 ```
 
 ## Client-Side Caching (TanStack Query)
@@ -136,6 +319,30 @@ images: {
   minimumCacheTTL: 2592000, // 30 days
 }
 ```
+
+## Development Cache Logging
+
+In development mode, cache operations are logged to the console with color-coded output:
+
+```
+✅ [12:34:56.789] CACHE HIT products
+❌ [12:34:56.790] CACHE MISS profile-abc123
+💾 [12:34:56.791] CACHE SET products {"duration":60}
+🗑️ [12:34:56.792] CACHE INVALIDATE products
+```
+
+Use `logCacheOperation` in data functions to track cache behavior:
+
+```typescript
+import { logCacheOperation } from '@/lib/data/cache-keys';
+
+// In your cached data function
+logCacheOperation('hit', 'products');
+logCacheOperation('miss', 'products');
+logCacheOperation('set', 'products', { duration: 60 });
+```
+
+The `invalidateTag` helper automatically logs invalidations. Logging is disabled in production.
 
 ## Best Practices
 
@@ -170,23 +377,47 @@ images: {
 │  'products' ◄──────────────────────► invalidateTag()        │
 │  'profiles' ◄──────────────────────► (Server Actions)       │
 └─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                   Upstash Redis                              │
+│              (lib/storage/redis.ts)                          │
+│                                                              │
+│  cache.get/set ──► Distributed cache across edge            │
+│  rateLimiter   ──► Sliding window rate limiting             │
+└─────────────────────────────────────────────────────────────┘
 ```
+
+## Static Generation
+
+Product detail pages use `generateStaticParams` to pre-render popular products at build time:
+
+```typescript
+// app/food/[id]/page.tsx
+import { getPopularProductIds } from '@/lib/data/products';
+
+export async function generateStaticParams(): Promise<{ id: string }[]> {
+  const productIds = await getPopularProductIds(50); // Top 50 products
+  return productIds.map((id) => ({ id: String(id) }));
+}
+```
+
+This pre-generates the top 50 most popular product pages at build time, improving initial load performance for frequently accessed listings.
 
 ## Future Improvements
 
 ### High Priority
-- Add `revalidate` to `/profile`, `/map`, `/admin` pages
-- Create `src/lib/data/forum.ts` with cached forum queries
-- Create `src/lib/data/admin.ts` with cached admin queries
-- Add `generateStaticParams` for popular product detail pages
+- ✅ Add `revalidate` to `/profile` (300s), `/map` (300s), `/admin` (300s) pages
+- ✅ Create `src/lib/data/forum.ts` with cached forum queries
+- ✅ Create `src/lib/data/admin.ts` with cached admin queries
+- ✅ Add `generateStaticParams` for popular product detail pages
 
 ### Medium Priority
-- Implement hover prefetch for product cards
-- Add `placeholderData` in TanStack Query
+- ✅ Implement hover prefetch for product cards (100ms debounce in `ProductCard`)
+- ✅ Add `placeholderData` in TanStack Query (implemented in `useProductQueries.ts`)
 - Create cache dashboard for admin
-- Add ETags to API routes
+- ✅ Add Cache-Control headers to API routes
 
 ### Low Priority
-- Static generate `/terms`, `/privacy` pages
-- Add cache hit/miss logging in development
+- ✅ Static generate `/terms`, `/privacy` pages (using `force-static`)
+- ✅ Add cache hit/miss logging in development (via `logCacheOperation` in `cache-keys.ts`)
 - Database materialized views for complex aggregations

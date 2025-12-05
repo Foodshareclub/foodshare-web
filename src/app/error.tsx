@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect } from 'react'
-import { GlassCard } from '@/components/Glass'
 
 /**
  * Root Error Boundary Component
@@ -23,7 +22,7 @@ export default function Error({
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full">
-        <GlassCard variant="prominent" borderRadius="24px" className="p-8 md:p-12">
+        <div className="glass-prominent rounded-3xl p-8 md:p-12">
           {/* Error Icon */}
           <div className="text-center mb-6">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30 rounded-full mb-4">
@@ -79,7 +78,7 @@ export default function Error({
               If this problem persists, please contact support or try refreshing the page.
             </p>
           </div>
-        </GlassCard>
+        </div>
 
         {/* Additional Info */}
         <div className="mt-4 text-center">

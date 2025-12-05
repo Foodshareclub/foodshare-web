@@ -5,134 +5,75 @@
  * Allows users to manage their email notification settings
  */
 
-import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase/client";
+import React, { useState, useTransition } from "react";
 import { GlassCard } from "@/components/Glass";
+import {
+  saveEmailPreferences,
+  type EmailPreferencesInput,
+} from "@/app/actions/email-preferences";
+import type { EmailPreferences } from "@/lib/data/email-preferences";
 
-interface EmailPreferences {
-  chat_notifications: boolean;
-  food_listings_notifications: boolean;
-  feedback_notifications: boolean;
-  review_reminders: boolean;
-  notification_frequency: "instant" | "daily_digest" | "weekly_digest";
-  quiet_hours_start: string | null;
-  quiet_hours_end: string | null;
+interface EmailPreferencesFormProps {
+  initialPreferences: EmailPreferences | null;
 }
 
-export const EmailPreferencesForm: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+const defaultPreferences: EmailPreferencesInput = {
+  chat_notifications: true,
+  food_listings_notifications: true,
+  feedback_notifications: false,
+  review_reminders: true,
+  notification_frequency: "instant",
+  quiet_hours_start: null,
+  quiet_hours_end: null,
+};
+
+export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFormProps) {
+  const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [preferences, setPreferences] = useState<EmailPreferences>({
-    chat_notifications: true,
-    food_listings_notifications: true,
-    feedback_notifications: false,
-    review_reminders: true,
-    notification_frequency: "instant",
-    quiet_hours_start: null,
-    quiet_hours_end: null,
-  });
+  const [preferences, setPreferences] = useState<EmailPreferencesInput>(
+    initialPreferences
+      ? {
+          chat_notifications: initialPreferences.chat_notifications,
+          food_listings_notifications: initialPreferences.food_listings_notifications,
+          feedback_notifications: initialPreferences.feedback_notifications,
+          review_reminders: initialPreferences.review_reminders,
+          notification_frequency: initialPreferences.notification_frequency,
+          quiet_hours_start: initialPreferences.quiet_hours_start,
+          quiet_hours_end: initialPreferences.quiet_hours_end,
+        }
+      : defaultPreferences
+  );
 
-  useEffect(() => {
-    loadPreferences();
-  }, []);
+  const handleSave = () => {
+    setMessage(null);
+    startTransition(async () => {
+      const result = await saveEmailPreferences(preferences);
 
-  const loadPreferences = async () => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        setMessage({ type: "error", text: "You must be logged in to manage preferences" });
-        setLoading(false);
-        return;
+      if (result.success) {
+        setMessage({ type: "success", text: "Preferences saved successfully!" });
+        setTimeout(() => setMessage(null), 3000);
+      } else {
+        setMessage({ type: "error", text: result.error || "Failed to save preferences" });
       }
-
-      const { data, error } = await supabase
-        .from("email_preferences")
-        .select("*")
-        .eq("profile_id", user.id)
-        .single();
-
-      if (error && error.code !== "PGRST116") {
-        throw error;
-      }
-
-      if (data) {
-        setPreferences({
-          chat_notifications: data.chat_notifications,
-          food_listings_notifications: data.food_listings_notifications,
-          feedback_notifications: data.feedback_notifications,
-          review_reminders: data.review_reminders,
-          notification_frequency: data.notification_frequency,
-          quiet_hours_start: data.quiet_hours_start,
-          quiet_hours_end: data.quiet_hours_end,
-        });
-      }
-    } catch (error) {
-      console.error("Failed to load preferences:", error);
-      setMessage({ type: "error", text: "Failed to load preferences" });
-    } finally {
-      setLoading(false);
-    }
+    });
   };
-
-  const savePreferences = async () => {
-    try {
-      setSaving(true);
-      setMessage(null);
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-
-      const { error } = await supabase.from("email_preferences").upsert({
-        profile_id: user.id,
-        ...preferences,
-      });
-
-      if (error) throw error;
-
-      setMessage({ type: "success", text: "Preferences saved successfully!" });
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setMessage(null), 3000);
-    } catch (error) {
-      console.error("Failed to save preferences:", error);
-      setMessage({ type: "error", text: "Failed to save preferences" });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <GlassCard variant="standard" padding="lg" className="max-w-3xl mx-auto">
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading preferences...</p>
-        </div>
-      </GlassCard>
-    );
-  }
 
   return (
     <GlassCard variant="standard" padding="lg" className="max-w-3xl mx-auto">
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold mb-2">Email Notifications</h2>
-          <p className="text-muted-foreground">Manage how you receive email notifications from FoodShare</p>
+          <p className="text-muted-foreground">
+            Manage how you receive email notifications from FoodShare
+          </p>
         </div>
 
         {message && (
           <div
             className={`p-4 rounded-lg ${
-              message.type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+              message.type === "success"
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
             }`}
           >
             {message.text}
@@ -165,7 +106,10 @@ export const EmailPreferencesForm: React.FC = () => {
               type="checkbox"
               checked={preferences.food_listings_notifications}
               onChange={(e) =>
-                setPreferences({ ...preferences, food_listings_notifications: e.target.checked })
+                setPreferences({
+                  ...preferences,
+                  food_listings_notifications: e.target.checked,
+                })
               }
               className="mt-1 h-5 w-5 text-primary rounded focus:ring-primary"
             />
@@ -206,14 +150,16 @@ export const EmailPreferencesForm: React.FC = () => {
                 name="frequency"
                 value="instant"
                 checked={preferences.notification_frequency === "instant"}
-                onChange={(e) =>
+                onChange={() =>
                   setPreferences({ ...preferences, notification_frequency: "instant" })
                 }
                 className="h-4 w-4 text-primary focus:ring-primary"
               />
               <div>
                 <p className="font-medium">Instant</p>
-                <p className="text-sm text-muted-foreground">Receive emails as events happen</p>
+                <p className="text-sm text-muted-foreground">
+                  Receive emails as events happen
+                </p>
               </div>
             </label>
 
@@ -223,14 +169,16 @@ export const EmailPreferencesForm: React.FC = () => {
                 name="frequency"
                 value="daily_digest"
                 checked={preferences.notification_frequency === "daily_digest"}
-                onChange={(e) =>
+                onChange={() =>
                   setPreferences({ ...preferences, notification_frequency: "daily_digest" })
                 }
                 className="h-4 w-4 text-primary focus:ring-primary"
               />
               <div>
                 <p className="font-medium">Daily Digest</p>
-                <p className="text-sm text-muted-foreground">Receive one email per day with all updates</p>
+                <p className="text-sm text-muted-foreground">
+                  Receive one email per day with all updates
+                </p>
               </div>
             </label>
 
@@ -240,14 +188,16 @@ export const EmailPreferencesForm: React.FC = () => {
                 name="frequency"
                 value="weekly_digest"
                 checked={preferences.notification_frequency === "weekly_digest"}
-                onChange={(e) =>
+                onChange={() =>
                   setPreferences({ ...preferences, notification_frequency: "weekly_digest" })
                 }
                 className="h-4 w-4 text-primary focus:ring-primary"
               />
               <div>
                 <p className="font-medium">Weekly Digest</p>
-                <p className="text-sm text-muted-foreground">Receive one email per week with all updates</p>
+                <p className="text-sm text-muted-foreground">
+                  Receive one email per week with all updates
+                </p>
               </div>
             </label>
           </div>
@@ -257,7 +207,8 @@ export const EmailPreferencesForm: React.FC = () => {
         <div className="space-y-3">
           <h3 className="text-lg font-semibold">Quiet Hours</h3>
           <p className="text-sm text-muted-foreground">
-            Don't send me notifications during these hours (applies to instant notifications only)
+            Don't send me notifications during these hours (applies to instant
+            notifications only)
           </p>
 
           <div className="grid grid-cols-2 gap-4">
@@ -267,7 +218,10 @@ export const EmailPreferencesForm: React.FC = () => {
                 type="time"
                 value={preferences.quiet_hours_start || ""}
                 onChange={(e) =>
-                  setPreferences({ ...preferences, quiet_hours_start: e.target.value || null })
+                  setPreferences({
+                    ...preferences,
+                    quiet_hours_start: e.target.value || null,
+                  })
                 }
                 className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
               />
@@ -279,7 +233,10 @@ export const EmailPreferencesForm: React.FC = () => {
                 type="time"
                 value={preferences.quiet_hours_end || ""}
                 onChange={(e) =>
-                  setPreferences({ ...preferences, quiet_hours_end: e.target.value || null })
+                  setPreferences({
+                    ...preferences,
+                    quiet_hours_end: e.target.value || null,
+                  })
                 }
                 className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
               />
@@ -290,14 +247,14 @@ export const EmailPreferencesForm: React.FC = () => {
         {/* Save Button */}
         <div className="pt-4 border-t">
           <button
-            onClick={savePreferences}
-            disabled={saving}
+            onClick={handleSave}
+            disabled={isPending}
             className="w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {saving ? "Saving..." : "Save Preferences"}
+            {isPending ? "Saving..." : "Save Preferences"}
           </button>
         </div>
       </div>
     </GlassCard>
   );
-};
+}

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from "react";
-import { Glass } from "@/components/Glass";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -37,10 +36,7 @@ export const NameBlock: React.FC<NameBlockType> = ({
   const [edit, setEdit] = useState(false);
 
   return (
-    <Glass
-      variant="subtle"
-      className="flex border-b border-solid border-white/20 rounded-xl p-4 mb-3 glass-fade-in"
-    >
+    <div className="glass-subtle flex border-b border-white/20 rounded-xl p-4 mb-3 animate-fade-in">
       <div className="w-full max-w-screen-lg">
         <h2 className="text-2xl font-medium pb-2 text-foreground">Name</h2>
         {edit ? (
@@ -90,6 +86,6 @@ export const NameBlock: React.FC<NameBlockType> = ({
       >
         {edit ? "Cancel" : "Edit"}
       </Button>
-    </Glass>
+    </div>
   );
 };

@@ -83,15 +83,14 @@ export function BecomeSharerBlock() {
     <DropdownMenu>
       <PublishListingModal value={type} onClose={() => setIsOpen(false)} isOpen={isOpen} />
       <DropdownMenuTrigger asChild>
-        <GlassButton
-          variant="standard"
-          mr={2}
-          display={{ md: "block", base: "none" }}
-          fontSize={{ md: "18px", base: "14px" }}
-          className="mr-2 hidden md:block text-lg md:text-[18px]"
+        <button
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500 text-white text-sm font-medium shadow-md hover:bg-emerald-600 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 whitespace-nowrap"
         >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
           Add listing
-        </GlassButton>
+        </button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent

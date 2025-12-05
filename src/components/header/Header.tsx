@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo } from 'react';
+import React from 'react';
 import { Navbar } from '@/components/header/navbar';
 import { useAuth } from '@/hooks/useAuth';
 import { useRooms } from '@/hooks/queries/useChatQueries';
@@ -17,7 +17,7 @@ type HeaderProps = {
  * Integrates the Navbar with app logic
  * Uses useAuth hook (TanStack Query + Zustand) instead of Redux
  */
-const Header: React.FC<HeaderProps> = memo(({ getRoute, setProductType, productType }) => {
+export default function Header({ getRoute, setProductType, productType }: HeaderProps) {
   // Auth state from useAuth hook (TanStack Query + Zustand)
   const { isAuthenticated, user } = useAuth();
   const userId = user?.id;
@@ -65,8 +65,4 @@ const Header: React.FC<HeaderProps> = memo(({ getRoute, setProductType, productT
       signalOfNewMessage={signalOfNewMessage}
     />
   );
-});
-
-Header.displayName = 'Header';
-
-export default Header;
+}

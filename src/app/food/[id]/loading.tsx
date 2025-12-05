@@ -1,5 +1,3 @@
-import { GlassCard } from '@/components/Glass'
-
 /**
  * Product Detail Loading Component
  * Matches ProductDetailSkeleton from page.tsx
@@ -15,7 +13,7 @@ export default function Loading() {
         {/* Left Column - Product Detail Skeleton */}
         <div className="w-full lg:w-1/2 px-4 pb-12">
           <div className="animate-pulse">
-            <GlassCard variant="standard" padding="0" className="w-full overflow-hidden">
+            <div className="glass w-full overflow-hidden rounded-xl">
               {/* Image with back button skeleton */}
               <div className="relative aspect-[16/9] bg-muted">
                 <div className="absolute top-4 left-4 h-9 w-20 bg-background/90 rounded-lg" />
@@ -38,7 +36,7 @@ export default function Loading() {
                 </div>
                 <div className="mt-6 h-12 bg-muted rounded" />
               </div>
-            </GlassCard>
+            </div>
           </div>
         </div>
 

@@ -5,7 +5,7 @@
  * A floating action button for quick theme switching with keyboard shortcuts
  */
 
-import React, { memo, useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
@@ -45,8 +45,11 @@ interface FloatingThemeToggleProps {
   className?: string;
 }
 
-const FloatingThemeToggle: React.FC<FloatingThemeToggleProps> = memo(
-  ({ position = "bottom-right", showKeyboardHint = true, className }) => {
+function FloatingThemeToggle({
+  position = "bottom-right",
+  showKeyboardHint = true,
+  className,
+}: FloatingThemeToggleProps) {
     const { theme, resolvedTheme, setTheme, toggleTheme, hapticEnabled } = useTheme();
     const [isExpanded, setIsExpanded] = useState(false);
     const [showShortcutHint, setShowShortcutHint] = useState(false);
@@ -281,9 +284,6 @@ const FloatingThemeToggle: React.FC<FloatingThemeToggleProps> = memo(
         </motion.div>
       </div>
     );
-  }
-);
-
-FloatingThemeToggle.displayName = "FloatingThemeToggle";
+}
 
 export { FloatingThemeToggle };

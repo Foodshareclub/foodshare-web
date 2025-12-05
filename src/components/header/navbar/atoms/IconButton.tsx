@@ -1,4 +1,4 @@
-import { memo, type FC, type ReactNode, type ButtonHTMLAttributes } from "react";
+import { type ReactNode, type ButtonHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -41,17 +41,16 @@ const sizeClasses = {
  * />
  * ```
  */
-export const IconButton: FC<IconButtonProps> = memo(
-  ({
-    icon,
-    label,
-    size = "md",
-    variant = "ghost",
-    hasNotification = false,
-    isActive = false,
-    className,
-    ...props
-  }) => {
+export function IconButton({
+  icon,
+  label,
+  size = "md",
+  variant = "ghost",
+  hasNotification = false,
+  isActive = false,
+  className,
+  ...props
+}: IconButtonProps) {
     return (
       <Button
         variant={variant}
@@ -77,7 +76,4 @@ export const IconButton: FC<IconButtonProps> = memo(
         )}
       </Button>
     );
-  }
-);
-
-IconButton.displayName = "IconButton";
+}

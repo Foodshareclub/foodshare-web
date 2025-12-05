@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
 import { CategoryNav } from "@/components/ui-library";
 import type { PagesType } from "./navbar/types";
 import SearchModal from "@/components/modals/SearchModal";
@@ -15,42 +14,36 @@ type CategoryFilterComponentProps = {
   isCompact?: boolean;
 };
 
-const CategoryFilterComponent: React.FC<CategoryFilterComponentProps> = ({
+// React Compiler handles memoization automatically
+export default function CategoryFilterComponent({
   getRoute,
   setPageType,
   productType,
-}) => {
+}: CategoryFilterComponentProps) {
   const router = useRouter();
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   // Get active category from productType (which is already the plural URL value)
-  // The productType comes from the URL and matches the category IDs in CategoryNav
   const activeCategory = productType.toLowerCase() || "food";
 
   // Handle category change
-  const handleCategoryChange = useCallback(
-    (categoryId: string) => {
-      const routeName = categoryId.toLowerCase();
-      // Update the URL to reflect the category
-      router.push(`/${routeName}`);
-      // Update internal state
-      getRoute(routeName);
-      setPageType("productComponent");
-      // Open search modal when category is clicked
-      setIsSearchModalOpen(true);
-    },
-    [router, getRoute, setPageType]
-  );
+  const handleCategoryChange = (categoryId: string) => {
+    const routeName = categoryId.toLowerCase();
+    router.push(`/${routeName}`);
+    getRoute(routeName);
+    setPageType("productComponent");
+    setIsSearchModalOpen(true);
+  };
 
   // Handle search
-  const handleSearch = useCallback(() => {
+  const handleSearch = () => {
     setIsSearchModalOpen(true);
-  }, []);
+  };
 
-  // Handle filter - this will be handled by FiltersModal
-  const handleFilter = useCallback(() => {
-    // FiltersModal handles its own state
-  }, []);
+  // Handle filter - FiltersModal handles its own state
+  const handleFilter = () => {
+    // No-op: FiltersModal handles its own state
+  };
 
   return (
     <>
@@ -67,6 +60,4 @@ const CategoryFilterComponent: React.FC<CategoryFilterComponentProps> = ({
       <SearchModal isOpen={isSearchModalOpen} onClose={() => setIsSearchModalOpen(false)} />
     </>
   );
-};
-
-export default CategoryFilterComponent;
+}

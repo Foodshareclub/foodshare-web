@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { THEME_PRESETS, previewTheme } from '@/lib/theme/themeConfig';
 import { cn } from '@/lib/utils';
@@ -13,34 +13,33 @@ interface PresetCardProps {
   enablePreview?: boolean;
 }
 
-export const PresetCard: React.FC<PresetCardProps> = memo(
-  ({ preset, isActive, onClick, enablePreview = true }) => {
-    const [isHovered, setIsHovered] = useState(false);
-    const previewCleanupRef = useRef<(() => void) | null>(null);
+export function PresetCard({ preset, isActive, onClick, enablePreview = true }: PresetCardProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const previewCleanupRef = useRef<(() => void) | null>(null);
 
-    const handleMouseEnter = useCallback(() => {
-      setIsHovered(true);
-      if (enablePreview && !isActive) {
-        previewCleanupRef.current = previewTheme(preset, preset.prefersDark || false);
-      }
-    }, [preset, isActive, enablePreview]);
+  const handleMouseEnter = () => {
+    setIsHovered(true);
+    if (enablePreview && !isActive) {
+      previewCleanupRef.current = previewTheme(preset, preset.prefersDark || false);
+    }
+  };
 
-    const handleMouseLeave = useCallback(() => {
-      setIsHovered(false);
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    if (previewCleanupRef.current) {
+      previewCleanupRef.current();
+      previewCleanupRef.current = null;
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
       if (previewCleanupRef.current) {
         previewCleanupRef.current();
-        previewCleanupRef.current = null;
       }
-    }, []);
-
-    // Cleanup on unmount
-    useEffect(() => {
-      return () => {
-        if (previewCleanupRef.current) {
-          previewCleanupRef.current();
-        }
-      };
-    }, []);
+    };
+  }, []);
 
     return (
       <motion.button
@@ -129,7 +128,4 @@ export const PresetCard: React.FC<PresetCardProps> = memo(
         )}
       </motion.button>
     );
-  }
-);
-
-PresetCard.displayName = 'PresetCard';
+}

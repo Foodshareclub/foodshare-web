@@ -9,7 +9,6 @@ import { createPhotoUrl } from '@/utils';
 import { EditIcon } from '@/utils/icons';
 import type { AllValuesType } from '@/api/profileAPI';
 import { AvatarWithRipple } from '@/components';
-import { GlassCard } from '@/components/Glass';
 import { STORAGE_BUCKETS, getStorageUrl } from '@/constants/storage';
 import { ALLOWED_MIME_TYPES } from '@/constants/mime-types';
 
@@ -53,7 +52,7 @@ const ListingPersonCards: React.FC<PropsType> = ({ children, settings }) => {
   };
 
   return (
-    <GlassCard variant="standard" padding="0" overflow="hidden" className="glass-fade-in">
+    <div className="glass rounded-xl p-0 overflow-hidden">
       <img
         className="h-[200px] w-full object-cover"
         src={peak.src}
@@ -89,7 +88,7 @@ const ListingPersonCards: React.FC<PropsType> = ({ children, settings }) => {
           {children}
         </div>
       </div>
-    </GlassCard>
+    </div>
   );
 };
 

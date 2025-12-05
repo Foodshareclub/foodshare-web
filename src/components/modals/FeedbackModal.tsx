@@ -5,12 +5,14 @@
  * Allows users to submit feedback, bug reports, and feature requests
  */
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { GlassDialogContent } from "@/components/Glass";
-import { feedbackAPI, type FeedbackType } from "@/api/feedbackAPI";
-import { supabase } from "@/lib/supabase/client";
-import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  submitFeedback,
+  getCurrentUserInfo,
+  type FeedbackType,
+} from "@/app/actions/feedback";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -25,7 +27,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [feedbackType, setFeedbackType] = useState<FeedbackType>("general");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -42,20 +44,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
   // Pre-fill user info if authenticated
   useEffect(() => {
     const loadUserInfo = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        setEmail(user.email || "");
-        // Try to get user's name from profile
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", user.id)
-          .single();
-        if (profile?.full_name) {
-          setName(profile.full_name);
-        }
+      const userInfo = await getCurrentUserInfo();
+      if (userInfo) {
+        if (userInfo.email) setEmail(userInfo.email);
+        if (userInfo.name) setName(userInfo.name);
       }
     };
     if (isOpen) {
@@ -66,28 +58,22 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setIsLoading(true);
 
-    try {
-      // Validate inputs
-      if (!name.trim() || !email.trim() || !subject.trim() || !message.trim()) {
-        throw new Error("Please fill in all fields");
-      }
+    // Validate inputs
+    if (!name.trim() || !email.trim() || !subject.trim() || !message.trim()) {
+      setError("Please fill in all fields");
+      return;
+    }
 
-      // Validate email
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        throw new Error("Please enter a valid email address");
-      }
+    // Validate email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
 
-      // Get current user ID if authenticated
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      // Submit feedback
-      const { error: submitError } = await feedbackAPI.submitFeedback({
-        profile_id: user?.id,
+    startTransition(async () => {
+      const result = await submitFeedback({
         name: name.trim(),
         email: email.trim(),
         subject: subject.trim(),
@@ -95,21 +81,16 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
         feedback_type: feedbackType,
       });
 
-      if (submitError) throw submitError;
-
-      // Show success message
-      setSuccess(true);
-
-      // Reset form after 2 seconds and close
-      closeTimeoutRef.current = setTimeout(() => {
-        resetForm();
-        onClose();
-      }, 2000);
-    } catch (err: any) {
-      setError(err.message || "Failed to submit feedback. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+      if (result.success) {
+        setSuccess(true);
+        closeTimeoutRef.current = setTimeout(() => {
+          resetForm();
+          onClose();
+        }, 2000);
+      } else {
+        setError(result.error || "Failed to submit feedback. Please try again.");
+      }
+    });
   };
 
   const resetForm = () => {
@@ -129,7 +110,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
 
   return (
     <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && handleClose()}>
-      <GlassDialogContent className="max-w-[500px]">
+      <DialogContent variant="glass" className="max-w-[500px]">
         <AnimatePresence mode="wait">
           <motion.div
             key="feedback-form"
@@ -291,16 +272,16 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                         onClick={handleClose}
                         variant="outline"
                         className="flex-1 rounded-xl"
-                        disabled={isLoading}
+                        disabled={isPending}
                       >
                         "Cancel"
                       </Button>
                       <Button
                         type="submit"
                         className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 text-white"
-                        disabled={isLoading}
+                        disabled={isPending}
                       >
-                        {isLoading ? "Sending..." : "Send Feedback"}
+                        {isPending ? "Sending..." : "Send Feedback"}
                       </Button>
                     </div>
                   </div>
@@ -309,7 +290,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
             </div>
           </motion.div>
         </AnimatePresence>
-      </GlassDialogContent>
+      </DialogContent>
     </Dialog>
   );
 };

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from "react";
-import { Glass, GlassButton } from "@/components/Glass";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 type EmailBlockType = {
@@ -32,7 +32,7 @@ export const EmailBlock: React.FC<EmailBlockType> = ({
   const [edit, setEdit] = useState(false);
 
   return (
-    <Glass variant="standard" className="p-4 mb-4">
+    <div className="glass rounded-xl p-4 mb-4">
       <div className="flex">
         <div className="w-full max-w-screen-lg">
           <h2 className="text-2xl font-medium pb-2 text-left text-foreground">
@@ -43,15 +43,15 @@ export const EmailBlock: React.FC<EmailBlockType> = ({
               <div className="flex justify-between">
                 <Input variant="glass" value={email} onChange={(e) => {}} />
               </div>
-              <GlassButton variant="accentGreen" onClick={onSaveHandler} className="my-3">
+              <Button variant="glass-accent" onClick={onSaveHandler} className="my-3">
                 Save
-              </GlassButton>
+              </Button>
             </>
           ) : (
             <p className="text-foreground">{email}</p>
           )}
         </div>
-        {/*<GlassButton*/}
+        {/*<Button*/}
         {/*    variant="secondary"*/}
         {/*    className="self-start"*/}
         {/*    disabled={b}*/}
@@ -63,8 +63,8 @@ export const EmailBlock: React.FC<EmailBlockType> = ({
         {/*    }}*/}
         {/*>*/}
         {/*    {edit ? 'Cancel' : 'Edit'}*/}
-        {/*</GlassButton>*/}
+        {/*</Button>*/}
       </div>
-    </Glass>
+    </div>
   );
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
 import type { ImageItem } from "../types";
@@ -14,24 +14,24 @@ interface ImageLightboxProps {
 export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, initialIndex, onClose }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
-  const goNext = useCallback(() => {
+  const goNext = () => {
     setCurrentIndex((prev) => (prev + 1) % images.length);
-  }, [images.length]);
+  };
 
-  const goPrev = useCallback(() => {
+  const goPrev = () => {
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-  }, [images.length]);
+  };
 
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
-      if (e.key === "ArrowRight") goNext();
-      if (e.key === "ArrowLeft") goPrev();
+      if (e.key === "ArrowRight") setCurrentIndex((prev) => (prev + 1) % images.length);
+      if (e.key === "ArrowLeft") setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose, goNext, goPrev]);
+  }, [onClose, images.length]);
 
   // Touch/swipe handling
   const touchStartX = useRef<number | null>(null);

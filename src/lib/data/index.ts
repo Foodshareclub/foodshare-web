@@ -24,6 +24,7 @@ export {
   getAllProductLocations,
   getUserProducts,
   searchProducts,
+  getPopularProductIds,
   type InitialProductStateType,
   type LocationType,
 } from './products';
@@ -40,3 +41,31 @@ export {
   type ProfileStats,
   type ProfileReview,
 } from './profiles';
+
+// Forum data functions
+export {
+  getForumPosts,
+  getForumPostById,
+  getForumComments,
+  getForumPostWithComments,
+  type ForumPost,
+  type ForumComment,
+} from './forum';
+
+// Admin data functions
+export {
+  getDashboardStats,
+  getAuditLogs,
+  getPendingListings,
+  type DashboardStats,
+  type AuditLog,
+  type PendingListing,
+} from './admin';
+
+// Map data functions
+export {
+  getMapLocations,
+  getAllMapLocations,
+  getNearbyLocations,
+  getLocationCountsByType,
+} from './maps';

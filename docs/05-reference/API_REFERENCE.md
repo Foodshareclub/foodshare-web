@@ -566,7 +566,7 @@ Located: `src/api/adminAPI.ts`
 adminAPI.checkIsAdmin();
 ```
 
-**Returns:** `{ isAdmin: boolean, error: any }`
+**Returns:** `{ isAdmin: boolean, error: Error | null }`
 
 **Example:**
 

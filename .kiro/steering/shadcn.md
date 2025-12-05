@@ -52,11 +52,30 @@ Located in `src/components/ui/`:
 ```typescript
 import { Button } from '@/components/ui/button';
 
+// Standard variants
 <Button variant="default">Primary</Button>
 <Button variant="secondary">Secondary</Button>
 <Button variant="outline">Outline</Button>
 <Button variant="ghost">Ghost</Button>
 <Button variant="destructive">Delete</Button>
+<Button variant="link">Link</Button>
+
+// Glass variants (using Tailwind v4 @utility classes)
+<Button variant="glass">Glass</Button>
+<Button variant="glass-subtle">Subtle Glass</Button>
+<Button variant="glass-prominent">Prominent Glass</Button>
+<Button variant="glass-accent">Accent Glass</Button>
+
+// Sizes
+<Button size="sm">Small</Button>
+<Button size="default">Default</Button>
+<Button size="lg">Large</Button>
+<Button size="xl">Extra Large</Button>
+
+// Icon sizes
+<Button size="icon"><Icon /></Button>
+<Button size="icon-sm"><Icon /></Button>
+<Button size="icon-lg"><Icon /></Button>
 ```
 
 ### Dialog

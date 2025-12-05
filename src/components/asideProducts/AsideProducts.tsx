@@ -5,7 +5,6 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { DeleteIcon } from "@/utils/icons";
 import type { InitialProductStateType } from "@/types/product.types";
-import { GlassCard } from "@/components/Glass";
 
 // Lazy load the heavy modal (3000+ lines)
 const PublishListingModal = dynamic(
@@ -48,9 +47,8 @@ const AsideProducts: React.FC<AsideProdType> = ({
   };
 
   return (
-    <GlassCard
-      className="flex flex-col lg:flex-row overflow-hidden mt-4 mx-2 cursor-pointer rounded-2xl p-2 glass-fade-in glass-accelerated"
-      variant="standard"
+    <div
+      className="glass flex flex-col lg:flex-row overflow-hidden mt-4 mx-2 cursor-pointer rounded-2xl p-2 gpu"
     >
       <img
         className="rounded-xl object-cover p-2 h-[150px] min-w-[150px]"
@@ -78,7 +76,7 @@ const AsideProducts: React.FC<AsideProdType> = ({
           </button>
         </div>
       )}
-    </GlassCard>
+    </div>
   );
 };
 

@@ -6,7 +6,7 @@
  * Uses Framer Motion for smooth transitions
  */
 
-import React, { memo, useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "@/hooks";
 import { cn } from "@/lib/utils";
@@ -282,8 +282,11 @@ const ThemeMenuItem: React.FC<{
 );
 
 // Main Toggle Component
-const ThemeToggle: React.FC<ThemeToggleProps> = memo(
-  ({ className, size = "md", showDropdown = true }) => {
+function ThemeToggle({
+  className,
+  size = "md",
+  showDropdown = true,
+}: ThemeToggleProps) {
     const { theme, isDark, toggleTheme, setTheme, isSystem } = useTheme();
     const [isOpen, setIsOpen] = useState(false);
 
@@ -510,13 +513,10 @@ const ThemeToggle: React.FC<ThemeToggleProps> = memo(
         </AnimatePresence>
       </div>
     );
-  }
-);
-
-ThemeToggle.displayName = "ThemeToggle";
+}
 
 // Simple inline toggle for mobile drawer
-const ThemeToggleInline: React.FC<{ className?: string }> = memo(({ className }) => {
+function ThemeToggleInline({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
 
   const themes: { value: Theme; label: string; icon: React.ReactNode }[] = [
@@ -546,8 +546,6 @@ const ThemeToggleInline: React.FC<{ className?: string }> = memo(({ className })
       ))}
     </div>
   );
-});
-
-ThemeToggleInline.displayName = "ThemeToggleInline";
+}
 
 export { ThemeToggle, ThemeToggleInline, SunIcon, MoonIcon, MonitorIcon };

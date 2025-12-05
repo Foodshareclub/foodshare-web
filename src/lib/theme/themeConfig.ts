@@ -15,7 +15,9 @@ import type {
 // ============================================================================
 
 // Explicitly mark as used to prevent tree-shaking
+// Brand color: #FF2D55 = HSL(345, 100%, 59%)
 export const ACCENT_COLORS: Record<Exclude<AccentColor, "custom">, AccentColorConfig> = {
+  foodshare: { name: "foodshare", hue: 345, saturation: 100 }, // Brand pink #FF2D55
   green: { name: "green", hue: 142, saturation: 71 },
   blue: { name: "blue", hue: 217, saturation: 91 },
   purple: { name: "purple", hue: 262, saturation: 83 },
@@ -47,13 +49,13 @@ export const THEME_PRESETS: Record<Exclude<ThemePreset, "custom">, ThemePresetCo
   default: {
     id: "default",
     name: "FoodShare",
-    description: "Classic green, fresh and natural",
-    accentColor: ACCENT_COLORS.green,
+    description: "Brand pink, vibrant and energetic",
+    accentColor: ACCENT_COLORS.foodshare, // Brand color #FF2D55
     preview: {
-      primary: "#22c55e",
-      secondary: "#16a34a",
-      background: "#f0fdf4",
-      accent: "#15803d",
+      primary: "#FF2D55",
+      secondary: "#E6284D",
+      background: "#FFF5F7",
+      accent: "#D91A40",
     },
   },
   midnight: {

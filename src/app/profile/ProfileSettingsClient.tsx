@@ -8,7 +8,6 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import ListingPersonCards from '@/components/listingPersonCard/ListingPersonCards';
-import { GlassCard } from '@/components/Glass';
 import Image from 'next/image';
 import personalInfo from '@/assets/personal_info.png';
 import userShield from '@/assets/user_shield.png';
@@ -30,9 +29,8 @@ const SettingsCard: React.FC<SettingsCardProps> = ({
   const router = useRouter();
 
   return (
-    <GlassCard
-      variant="standard"
-      className="cursor-pointer hover:shadow-lg transition-shadow p-6"
+    <div
+      className="glass rounded-xl cursor-pointer hover:shadow-lg transition-shadow p-6"
       onClick={() => router.push(route)}
     >
       <div className="flex items-start gap-4">
@@ -52,7 +50,7 @@ const SettingsCard: React.FC<SettingsCardProps> = ({
           <p className="text-sm text-muted-foreground">{description}</p>
         </div>
       </div>
-    </GlassCard>
+    </div>
   );
 };
 

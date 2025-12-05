@@ -4,7 +4,7 @@
  * Optimized with custom hooks and constants
  */
 
-import React, { memo } from "react";
+import React from "react";
 
 import { type EmailStats } from "@/api/admin/emailManagement";
 import { useEmailStats } from "@/hooks/useEmailManagement";
@@ -17,7 +17,7 @@ interface StatCardProps {
   suffix?: string;
 }
 
-const StatCard = memo<StatCardProps>(({ label, value, colorScheme = "green", suffix = "" }) => {
+function StatCard({ label, value, colorScheme = "green", suffix = "" }: StatCardProps) {
   const colorClasses = {
     green: "text-green-600",
     blue: "text-blue-600",
@@ -34,11 +34,9 @@ const StatCard = memo<StatCardProps>(({ label, value, colorScheme = "green", suf
       </p>
     </div>
   );
-});
+}
 
-StatCard.displayName = "StatCard";
-
-export const EmailStatsDashboard: React.FC = memo(() => {
+export function EmailStatsDashboard() {
   // Use optimized hook with auto-refresh (60s) and request cancellation
   const { stats, loading, error } = useEmailStats(true);
 
@@ -131,6 +129,4 @@ export const EmailStatsDashboard: React.FC = memo(() => {
       </div>
     </div>
   );
-});
-
-EmailStatsDashboard.displayName = "EmailStatsDashboard";
+}

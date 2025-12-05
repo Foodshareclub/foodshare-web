@@ -368,8 +368,13 @@ export async function notifyAdminsOfFeedback(params: {
     }
 
     // Send notification to each admin
+    interface AdminProfile {
+      email: string;
+      full_name: string | null;
+    }
+
     const results = await Promise.allSettled(
-      admins.map((admin: any) =>
+      (admins as AdminProfile[]).map((admin) =>
         sendFeedbackNotification({
           adminEmail: admin.email,
           adminName: admin.full_name || undefined,

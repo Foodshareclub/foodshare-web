@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { FaCheckCircle, FaFacebookF, FaLink, FaShareAlt, FaTwitter } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
 import { Button } from "@/components/ui/button";
@@ -20,11 +20,11 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
 
-  const copyLink = useCallback(() => {
+  const copyLink = () => {
     navigator.clipboard.writeText(window.location.origin + "/listing/preview");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  }, []);
+  };
 
   return (
     <div className="p-4 rounded-lg bg-muted/50 space-y-3 animate-in slide-in-from-top-2 duration-300">

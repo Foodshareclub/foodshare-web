@@ -100,6 +100,7 @@ export function useProducts(
     queryKey: productKeys.list(productType),
     queryFn: () => fetchProducts(productType),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    placeholderData: (previousData) => previousData, // Show stale data while refetching
     ...options,
   });
 }
@@ -113,6 +114,7 @@ export function useProductsLocation(productType: string) {
     queryFn: () => fetchProductLocations(productType),
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -124,6 +126,7 @@ export function useAllProducts() {
     queryKey: [...productKeys.lists(), 'all'],
     queryFn: () => fetchAllProducts(),
     staleTime: 5 * 60 * 1000,
+    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -139,6 +142,7 @@ export function useProduct(productId: number | undefined) {
     },
     enabled: !!productId,
     staleTime: 2 * 60 * 1000, // 2 minutes
+    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -212,6 +216,7 @@ export function useCreateProduct() {
       post_address: string;
       available_hours?: string;
       transportation?: string;
+      condition?: string;
       images?: string[];
       profile_id: string;
     }) => {
@@ -225,6 +230,9 @@ export function useCreateProduct() {
       }
       if (productData.transportation) {
         formData.set('transportation', productData.transportation);
+      }
+      if (productData.condition) {
+        formData.set('condition', productData.condition);
       }
       formData.set('images', JSON.stringify(productData.images ?? []));
       formData.set('profile_id', productData.profile_id);
@@ -265,6 +273,7 @@ export function useUpdateProduct() {
       post_address?: string;
       available_hours?: string;
       transportation?: string;
+      condition?: string;
       images?: string[];
       is_active?: boolean;
     }) => {
@@ -275,6 +284,7 @@ export function useUpdateProduct() {
       if (productData.post_address) formData.set('post_address', productData.post_address);
       if (productData.available_hours) formData.set('available_hours', productData.available_hours);
       if (productData.transportation) formData.set('transportation', productData.transportation);
+      if (productData.condition) formData.set('condition', productData.condition);
       if (productData.images) formData.set('images', JSON.stringify(productData.images));
       if (productData.is_active !== undefined) formData.set('is_active', String(productData.is_active));
 

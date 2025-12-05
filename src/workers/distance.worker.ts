@@ -3,10 +3,15 @@
  * Offloads computation from main thread for better UI performance
  */
 
+interface PostGISPoint {
+  type?: string;
+  coordinates?: [number, number];
+}
+
 interface Product {
   id: number;
-  location: any; // PostGIS
-  [key: string]: any;
+  location: PostGISPoint | string | null;
+  [key: string]: string | number | boolean | null | undefined | object;
 }
 
 interface WorkerMessage {
@@ -18,7 +23,9 @@ interface WorkerMessage {
 /**
  * Parse PostGIS POINT to lat/lng
  */
-function parsePostGISPoint(location: any): { latitude: number; longitude: number } | null {
+function parsePostGISPoint(
+  location: PostGISPoint | string | null
+): { latitude: number; longitude: number } | null {
   if (!location) return null;
 
   if (typeof location === "object" && location.coordinates && Array.isArray(location.coordinates)) {

@@ -1,8 +1,8 @@
 'use client';
 
-import type { FC, RefObject } from "react";
-import React, { useState, memo } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import type { RefObject } from "react";
+import React, { useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import { useWindowEvent } from "@/hooks/useEvent";
 import { GlassButton } from "@/components/Glass";
 
@@ -12,8 +12,7 @@ type NavigateButtonsType = {
   navigateTo?: string;
 };
 
-const NavigateButtons: FC<NavigateButtonsType> = memo(
-  ({ navigateTo, messagesAnchorRef, title }) => {
+export default function NavigateButtons({ navigateTo, messagesAnchorRef, title }: NavigateButtonsType) {
     const [scrollTop, setScrollTop] = useState(0);
     useWindowEvent("scroll", () => {
       setScrollTop(window.scrollY);
@@ -95,9 +94,4 @@ const NavigateButtons: FC<NavigateButtonsType> = memo(
         )}
       </>
     );
-  }
-);
-
-NavigateButtons.displayName = "NavigateButtons";
-
-export default NavigateButtons;
+}

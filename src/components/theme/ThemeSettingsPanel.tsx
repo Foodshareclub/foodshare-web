@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { memo, useState } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   useUIStore,
@@ -187,7 +187,7 @@ const TransitionOption: React.FC<{
 );
 
 // Main Panel Component
-const ThemeSettingsPanel: React.FC<{ className?: string }> = memo(({ className }) => {
+function ThemeSettingsPanel({ className }: { className?: string }) {
   // Zustand store (replaces Redux)
   const {
     theme,
@@ -399,8 +399,6 @@ const ThemeSettingsPanel: React.FC<{ className?: string }> = memo(({ className }
       </div>
     </div>
   );
-});
-
-ThemeSettingsPanel.displayName = "ThemeSettingsPanel";
+}
 
 export { ThemeSettingsPanel };

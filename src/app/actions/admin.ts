@@ -3,25 +3,19 @@
 import { createClient } from '@/lib/supabase/server';
 import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
-export interface DashboardStats {
-  totalUsers: number;
-  totalProducts: number;
-  activeProducts: number;
-  pendingProducts: number;
-  totalChats: number;
-  newUsersThisWeek: number;
-}
+// Re-export types from data layer for backwards compatibility
+export type {
+  DashboardStats,
+  AuditLog,
+  PendingListing,
+} from '@/lib/data/admin';
 
-export interface AuditLog {
-  id: string;
-  action: string;
-  entity_type: string;
-  entity_id: string;
-  user_id: string;
-  details: Record<string, unknown>;
-  created_at: string;
-  user: { name: string; email: string } | null;
-}
+// Re-export cached data functions for backwards compatibility
+export {
+  getDashboardStats,
+  getAuditLogs,
+  getPendingListings,
+} from '@/lib/data/admin';
 
 export interface AdminUser {
   id: string;
@@ -39,12 +33,6 @@ export interface UserFilters {
   is_active?: boolean;
   page?: number;
   limit?: number;
-}
-
-// Helper to extract first item from Supabase join array
-function extractFirst<T>(data: T[] | T | null | undefined): T | null {
-  if (Array.isArray(data)) return data[0] ?? null;
-  return data ?? null;
 }
 
 /**
@@ -65,114 +53,6 @@ async function requireAdmin(): Promise<void> {
   if (profile?.role !== 'admin' && profile?.role !== 'superadmin') {
     throw new Error('Admin access required');
   }
-}
-
-/**
- * Get dashboard statistics
- */
-export async function getDashboardStats(): Promise<DashboardStats> {
-  await requireAdmin();
-  const supabase = await createClient();
-
-  const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-  const [
-    { count: totalUsers },
-    { count: totalProducts },
-    { count: activeProducts },
-    { count: pendingProducts },
-    { count: totalChats },
-    { count: newUsersThisWeek },
-  ] = await Promise.all([
-    supabase.from('profiles').select('*', { count: 'exact', head: true }),
-    supabase.from('posts').select('*', { count: 'exact', head: true }),
-    supabase.from('posts').select('*', { count: 'exact', head: true }).eq('is_active', true),
-    supabase.from('posts').select('*', { count: 'exact', head: true }).eq('is_active', false),
-    supabase.from('chats').select('*', { count: 'exact', head: true }),
-    supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', oneWeekAgo.toISOString()),
-  ]);
-
-  return {
-    totalUsers: totalUsers ?? 0,
-    totalProducts: totalProducts ?? 0,
-    activeProducts: activeProducts ?? 0,
-    pendingProducts: pendingProducts ?? 0,
-    totalChats: totalChats ?? 0,
-    newUsersThisWeek: newUsersThisWeek ?? 0,
-  };
-}
-
-/**
- * Get recent audit logs
- */
-export async function getAuditLogs(limit: number = 20): Promise<AuditLog[]> {
-  await requireAdmin();
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('audit_logs')
-    .select(`
-      id,
-      action,
-      entity_type,
-      entity_id,
-      user_id,
-      details,
-      created_at,
-      user:profiles!user_id(name, email)
-    `)
-    .order('created_at', { ascending: false })
-    .limit(limit);
-
-  if (error) throw new Error(error.message);
-
-  return (data ?? []).map(log => ({
-    id: log.id,
-    action: log.action,
-    entity_type: log.entity_type,
-    entity_id: log.entity_id,
-    user_id: log.user_id,
-    details: log.details as Record<string, unknown>,
-    created_at: log.created_at,
-    user: extractFirst(log.user as Array<{ name: string; email: string }>),
-  }));
-}
-
-/**
- * Get listings pending approval
- */
-export async function getPendingListings(): Promise<Array<{
-  id: number;
-  post_name: string;
-  post_type: string;
-  created_at: string;
-  profile: { name: string; email: string } | null;
-}>> {
-  await requireAdmin();
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('posts')
-    .select(`
-      id,
-      post_name,
-      post_type,
-      created_at,
-      profile:profiles!profile_id(name, email)
-    `)
-    .eq('is_active', false)
-    .order('created_at', { ascending: false });
-
-  if (error) throw new Error(error.message);
-
-  return (data ?? []).map(listing => ({
-    id: listing.id,
-    post_name: listing.post_name,
-    post_type: listing.post_type,
-    created_at: listing.created_at,
-    profile: extractFirst(listing.profile as Array<{ name: string; email: string }>),
-  }));
 }
 
 /**

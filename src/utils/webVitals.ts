@@ -6,6 +6,7 @@
 
 // Dynamic import to avoid build-time errors with web-vitals API changes
 import { createLogger } from "@/lib/logger";
+import type { Metric } from "web-vitals";
 
 const logger = createLogger("WebVitals");
 
@@ -13,7 +14,7 @@ const logger = createLogger("WebVitals");
  * Report Web Vitals to console or analytics service
  * @param onPerfEntry - Callback function to handle metrics
  */
-export const reportWebVitals = async (onPerfEntry?: (metric: any) => void) => {
+export const reportWebVitals = async (onPerfEntry?: (metric: Metric) => void) => {
   if (onPerfEntry && onPerfEntry instanceof Function) {
     const { onCLS, onINP, onFCP, onLCP, onTTFB } = await import("web-vitals");
     onCLS(onPerfEntry);
@@ -41,7 +42,7 @@ export const logWebVitals = () => {
  * Send Web Vitals to analytics service
  * Replace with your analytics implementation (Google Analytics, Supabase, etc.)
  */
-export const sendToAnalytics = (metric: any) => {
+export const sendToAnalytics = (metric: Metric) => {
   // Example: Send to Google Analytics
   // gtag('event', metric.name, {
   //   value: Math.round(metric.name === 'CLS' ? metric.value * 1000 : metric.value),
@@ -95,13 +96,19 @@ export const monitorLongTasks = () => {
 export const monitorLayoutShifts = () => {
   if (process.env.NODE_ENV !== 'production' && "PerformanceObserver" in window) {
     try {
+      interface LayoutShiftEntry extends PerformanceEntry {
+        hadRecentInput: boolean;
+        value: number;
+        sources?: Array<{ node: Node | null }>;
+      }
+
       const observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          const layoutShift = entry as any;
+          const layoutShift = entry as LayoutShiftEntry;
           if (!layoutShift.hadRecentInput && layoutShift.value > 0.1) {
             logger.warn("⚠️ Layout shift detected", {
               value: layoutShift.value.toFixed(4),
-              sources: layoutShift.sources?.map((s: any) => s.node),
+              sources: layoutShift.sources?.map((s) => s.node),
             });
           }
         }

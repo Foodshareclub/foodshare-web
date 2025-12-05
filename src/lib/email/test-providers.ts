@@ -24,7 +24,7 @@ export interface ProviderTestResult {
   messageId?: string;
   latency: number;
   error?: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export interface TestSuiteResults {

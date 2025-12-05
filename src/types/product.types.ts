@@ -23,6 +23,7 @@ export type ReviewsType = {
  */
 export type InitialProductStateType = {
   available_hours: string;
+  condition: string;
   created_at: string;
   five_star: number | null;
   four_star: number | null;

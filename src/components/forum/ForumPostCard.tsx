@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 import { motion } from "framer-motion";
-import { GlassCard } from "@/components/Glass";
 import type { ForumPost } from "@/api/forumAPI";
 import { ForumCategoryBadge } from "./ForumCategoryBadge";
 import { ForumTagBadge } from "./ForumTagBadge";
@@ -85,12 +84,8 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0 }: F
           whileTap={{ scale: 0.98 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
         >
-          <GlassCard
-            variant="standard"
-            borderRadius="20px"
-            padding="0"
-            overflow="hidden"
-            className="cursor-pointer group relative"
+          <div
+            className="glass rounded-[20px] p-0 overflow-hidden cursor-pointer group relative"
             onClick={onNavigateToPost}
           >
             {/* Gradient border effect on hover */}
@@ -285,7 +280,7 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0 }: F
             {post.best_answer_id && (
               <div className="h-1 bg-gradient-to-r from-green-400 to-emerald-400" />
             )}
-          </GlassCard>
+          </div>
         </motion.div>
       </motion.div>
     );

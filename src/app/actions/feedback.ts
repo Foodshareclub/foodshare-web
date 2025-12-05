@@ -2,19 +2,14 @@
 
 /**
  * Feedback Server Actions
- * Handles feedback submission with proper server-side validation
+ * Mutations for submitting and managing feedback
  */
 
-import { createClient } from '@/lib/supabase/server';
-import { serverActionError, type ServerActionResult } from '@/lib/errors';
+import { createClient } from "@/lib/supabase/server";
 
-// ============================================================================
-// Types
-// ============================================================================
+export type FeedbackType = "bug" | "feature" | "general" | "complaint";
 
-export type FeedbackType = 'general' | 'bug' | 'feature' | 'complaint';
-
-export interface FeedbackData {
+export interface FeedbackSubmission {
   name: string;
   email: string;
   subject: string;
@@ -22,99 +17,66 @@ export interface FeedbackData {
   feedback_type: FeedbackType;
 }
 
-// ============================================================================
-// Actions
-// ============================================================================
-
-/**
- * Submit feedback from a user
- */
-export async function submitFeedback(
-  data: FeedbackData
-): Promise<ServerActionResult<{ id: number }>> {
-  try {
-    const supabase = await createClient();
-
-    // Validate inputs
-    if (!data.name?.trim()) {
-      return serverActionError('Name is required', 'VALIDATION_ERROR');
-    }
-    if (!data.email?.trim()) {
-      return serverActionError('Email is required', 'VALIDATION_ERROR');
-    }
-    if (!data.subject?.trim()) {
-      return serverActionError('Subject is required', 'VALIDATION_ERROR');
-    }
-    if (!data.message?.trim()) {
-      return serverActionError('Message is required', 'VALIDATION_ERROR');
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(data.email)) {
-      return serverActionError('Please enter a valid email address', 'VALIDATION_ERROR');
-    }
-
-    // Get current user ID if authenticated (optional)
-    const { data: { user } } = await supabase.auth.getUser();
-
-    const { data: feedback, error } = await supabase
-      .from('feedback')
-      .insert({
-        profile_id: user?.id ?? null,
-        name: data.name.trim(),
-        email: data.email.trim(),
-        subject: data.subject.trim(),
-        message: data.message.trim(),
-        feedback_type: data.feedback_type,
-        status: 'new',
-      })
-      .select('id')
-      .single();
-
-    if (error) {
-      return serverActionError(error.message, 'DATABASE_ERROR');
-    }
-
-    return {
-      success: true,
-      data: { id: feedback.id },
-    };
-  } catch (error) {
-    console.error('Failed to submit feedback:', error);
-    return serverActionError('Failed to submit feedback. Please try again.', 'UNKNOWN_ERROR');
-  }
+export interface ActionResult {
+  success: boolean;
+  error?: string;
 }
 
 /**
- * Get user's previous feedback submissions
+ * Submit feedback from the current user
  */
-export async function getUserFeedback(): Promise<ServerActionResult<FeedbackData[]>> {
-  try {
-    const supabase = await createClient();
+export async function submitFeedback(
+  feedback: FeedbackSubmission
+): Promise<ActionResult> {
+  const supabase = await createClient();
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
+  // Get current user if authenticated
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-      return serverActionError('You must be logged in to view feedback', 'UNAUTHORIZED');
-    }
+  const { error } = await supabase.from("feedback").insert({
+    profile_id: user?.id || null,
+    name: feedback.name,
+    email: feedback.email,
+    subject: feedback.subject,
+    message: feedback.message,
+    feedback_type: feedback.feedback_type,
+  });
 
-    const { data, error } = await supabase
-      .from('feedback')
-      .select('*')
-      .eq('profile_id', user.id)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      return serverActionError(error.message, 'DATABASE_ERROR');
-    }
-
-    return {
-      success: true,
-      data: data ?? [],
-    };
-  } catch (error) {
-    console.error('Failed to get user feedback:', error);
-    return serverActionError('Failed to load feedback', 'UNKNOWN_ERROR');
+  if (error) {
+    console.error("Error submitting feedback:", error);
+    return { success: false, error: error.message };
   }
+
+  return { success: true };
+}
+
+/**
+ * Get current user info for pre-filling feedback form
+ */
+export async function getCurrentUserInfo(): Promise<{
+  email: string | null;
+  name: string | null;
+} | null> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return null;
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .single();
+
+  return {
+    email: user.email || null,
+    name: profile?.full_name || null,
+  };
 }

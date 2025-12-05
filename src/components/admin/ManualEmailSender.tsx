@@ -6,7 +6,7 @@
  * Optimized with custom hooks and constants
  */
 
-import React, { useState, memo, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { type ManualEmailRequest } from "@/api/admin/emailManagement";
 import { useManualEmailSender } from "@/hooks/useEmailManagement";
@@ -22,7 +22,7 @@ interface FormData {
   useHtml: boolean;
 }
 
-export const ManualEmailSender: React.FC = memo(() => {
+export function ManualEmailSender() {
   const t = useTranslations();
   const [formData, setFormData] = useState<FormData>({
     to: "",
@@ -265,6 +265,4 @@ export const ManualEmailSender: React.FC = memo(() => {
       </div>
     </div>
   );
-});
-
-ManualEmailSender.displayName = "ManualEmailSender";
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { Glass } from "@/components/Glass";
 import { FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 
@@ -21,18 +21,14 @@ type PropsType = {
 const AlertComponent: React.FC<PropsType> = ({ status, title, top, onDismiss }) => {
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const handleDismiss = useCallback(() => {
-    setIsLoaded(true);
-    onDismiss?.();
-  }, [onDismiss]);
-
   useEffect(() => {
     const time = setTimeout(() => {
-      handleDismiss();
+      setIsLoaded(true);
+      onDismiss?.();
     }, 3000);
 
     return () => clearTimeout(time);
-  }, [status, handleDismiss]);
+  }, [status, onDismiss]);
 
   if (status === "success") {
     return (

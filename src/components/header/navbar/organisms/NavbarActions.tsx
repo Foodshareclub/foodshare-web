@@ -1,9 +1,6 @@
-import { memo, type FC } from "react";
-
 import type { CustomRoomType } from "@/api/chatAPI";
 import { BecomeSharerBlock } from "@/components/becomeSharerBlock/BecomeSharerBlock";
 import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useMediaQuery } from "@/hooks";
 import { MobileMenu } from "./MobileMenu";
 import { DesktopMenu } from "./DesktopMenu";
@@ -39,7 +36,7 @@ export interface NavbarActionsProps {
  * NavbarActions Organism
  *
  * Right-side action buttons for the navbar.
- * Includes theme toggle, "Become a Sharer" button, and user menu.
+ * Includes "Add listing" button and user menu (with theme toggle inside).
  * Responsive: Shows drawer on mobile, dropdown on desktop.
  *
  * @example
@@ -52,23 +49,22 @@ export interface NavbarActionsProps {
  * />
  * ```
  */
-export const NavbarActions: FC<NavbarActionsProps> = memo(
-  ({
-    isAuth,
-    isAdmin = false,
-    imgUrl = "",
-    firstName,
-    secondName,
-    email,
-    signalOfNewMessage,
-    onNavigateToMyLists,
-    onNavigateToLogout,
-    onNavigateToAccSettings,
-    onNavigateToHelp,
-    onNavigateToAboutUs,
-    onNavigateToMyMessages,
-    onNavigateToDashboard,
-  }) => {
+export function NavbarActions({
+  isAuth,
+  isAdmin = false,
+  imgUrl = "",
+  firstName,
+  secondName,
+  email,
+  signalOfNewMessage,
+  onNavigateToMyLists,
+  onNavigateToLogout,
+  onNavigateToAccSettings,
+  onNavigateToHelp,
+  onNavigateToAboutUs,
+  onNavigateToMyMessages,
+  onNavigateToDashboard,
+}: NavbarActionsProps) {
     // Breakpoint: 800px (mobile vs desktop menu)
     const isDesktop = useMediaQuery("(min-width:800px)");
 
@@ -91,21 +87,15 @@ export const NavbarActions: FC<NavbarActionsProps> = memo(
 
     return (
       <div className="flex items-center gap-3">
-        {/* Theme Toggle */}
-        <ThemeToggle size="sm" />
-
-        {/* Become a Sharer / Login */}
+        {/* Add Listing / Login - next to profile */}
         {!isAuth ? (
           <AuthenticationUserModal becomeSharerBlock buttonValue="Login" />
         ) : (
           <BecomeSharerBlock />
         )}
 
-        {/* User Menu - Responsive */}
+        {/* User Menu - Responsive (theme toggle inside dropdown) */}
         {isDesktop ? <DesktopMenu {...menuProps} /> : <MobileMenu {...menuProps} size="md" />}
       </div>
     );
-  }
-);
-
-NavbarActions.displayName = "NavbarActions";
+}

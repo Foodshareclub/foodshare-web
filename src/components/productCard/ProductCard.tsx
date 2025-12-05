@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 
@@ -33,10 +34,27 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
   const userId = user?.id;
   const [isOpen, setIsOpen] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
+  const prefetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // React Compiler optimizes these handlers automatically
-  const onNavigateToOneProductHandler = () => {
-    router.push(`/${product.post_type}/${product.id}`);
+  // Product detail URL
+  const productUrl = `/${product.post_type}/${product.id}`;
+
+  // Prefetch on hover with debounce to avoid excessive prefetching
+  const handleMouseEnter = () => {
+    onMouseEnter?.();
+    // Prefetch after 100ms hover to avoid prefetching on quick mouse movements
+    prefetchTimeoutRef.current = setTimeout(() => {
+      router.prefetch(productUrl);
+    }, 100);
+  };
+
+  const handleMouseLeave = () => {
+    onMouseLeave?.();
+    // Cancel prefetch if mouse leaves quickly
+    if (prefetchTimeoutRef.current) {
+      clearTimeout(prefetchTimeoutRef.current);
+      prefetchTimeoutRef.current = null;
+    }
   };
 
   const onOpenEditModal = () => setOpenEdit(true);
@@ -45,7 +63,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
   const onClose = () => setIsOpen(false);
 
     return (
-      <div className="col-span-1" onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+      <div className="col-span-1" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
         <div
           className="relative rounded-[20px] overflow-hidden shadow-lg glass-fade-in glass-accelerated"
           style={gpu120Card}
@@ -79,10 +97,11 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
                 <DeleteCardModal product={product} onClose={onClose} isOpen={isOpen} />
               </div>
             )}
-            <div
-              className="relative w-full cursor-pointer"
+            <Link
+              href={productUrl}
+              className="relative w-full block cursor-pointer"
               style={{ aspectRatio: "4/3" }}
-              onClick={onNavigateToOneProductHandler}
+              prefetch={false} // We handle prefetch manually on hover
             >
               {product.images && product.images.length > 0 && isValidImageUrl(product.images[0]) ? (
                 <Image
@@ -98,7 +117,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
                   <span className="text-5xl">📦</span>
                 </div>
               )}
-            </div>
+            </Link>
           </div>
 
           {/* Glassmorphic content section */}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { COLOR_BLINDNESS_MODES, type ColorBlindnessMode } from '@/lib/theme/themeConfig';
 import { cn } from '@/lib/utils';
@@ -11,8 +11,7 @@ interface ColorBlindnessSelectorProps {
   onChange: (mode: ColorBlindnessMode) => void;
 }
 
-export const ColorBlindnessSelector: React.FC<ColorBlindnessSelectorProps> = memo(
-  ({ current, onChange }) => {
+export function ColorBlindnessSelector({ current, onChange }: ColorBlindnessSelectorProps) {
     const modes = Object.values(COLOR_BLINDNESS_MODES);
 
     return (

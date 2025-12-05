@@ -1,13 +1,13 @@
 'use client';
 
-import { memo, useRef, useEffect, type FC } from "react";
+import { useRef, useEffect, type FC } from "react";
 import { cn } from "@/lib/utils";
 import { CategoryItem } from "../atoms";
 import type { CategoryItem as CategoryItemType } from "../types";
 
 export interface CategoryNavigationProps {
   /** List of categories to display */
-  categories: CategoryItemType[];
+  categories: readonly CategoryItemType[];
   /** Currently active category ID */
   activeCategory: string;
   /** Category selection handler */
@@ -31,8 +31,12 @@ export interface CategoryNavigationProps {
  * />
  * ```
  */
-export const CategoryNavigation: FC<CategoryNavigationProps> = memo(
-  ({ categories, activeCategory, onCategoryChange, className }) => {
+export const CategoryNavigation: FC<CategoryNavigationProps> = ({
+  categories,
+  activeCategory,
+  onCategoryChange,
+  className,
+}) => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const activeButtonRef = useRef<HTMLDivElement>(null);
 
@@ -92,13 +96,8 @@ export const CategoryNavigation: FC<CategoryNavigationProps> = memo(
         aria-label="Category navigation"
         className={cn(
           "flex items-center gap-2",
-          "overflow-x-auto scrollbar-hide scroll-smooth",
           className
         )}
-        style={{
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-        }}
       >
         {categories.map((category, index) => {
           const isActive = category.id === activeCategory;
@@ -118,7 +117,4 @@ export const CategoryNavigation: FC<CategoryNavigationProps> = memo(
         })}
       </div>
     );
-  }
-);
-
-CategoryNavigation.displayName = "CategoryNavigation";
+};

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
 
 interface VoiceInputProps {
@@ -57,7 +57,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscript, disabled }
     };
   }, [onTranscript]);
 
-  const toggleListening = useCallback(() => {
+  const toggleListening = () => {
     if (!recognitionRef.current) return;
 
     if (isListening) {
@@ -67,7 +67,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscript, disabled }
       recognitionRef.current.start();
       setIsListening(true);
     }
-  }, [isListening]);
+  };
 
   if (!isSupported) return null;
 

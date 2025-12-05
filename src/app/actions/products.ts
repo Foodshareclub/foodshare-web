@@ -9,6 +9,10 @@ import {
 } from '@/lib/errors';
 import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
+// NOTE: Data functions (getProducts, getAllProducts, etc.) should be imported
+// directly from '@/lib/data/products' - they cannot be re-exported from a
+// 'use server' file as only async server actions are allowed.
+
 // ============================================================================
 // Zod Schemas for validation
 // ============================================================================
@@ -20,6 +24,7 @@ const createProductSchema = z.object({
   post_address: z.string().min(1, 'Address is required'),
   available_hours: z.string().optional(),
   transportation: z.string().optional(),
+  condition: z.string().optional(),
   images: z.array(z.string()).optional().default([]),
   profile_id: z.string().uuid('Invalid user ID'),
 });
@@ -40,6 +45,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     post_address: formData.get('post_address') as string,
     available_hours: formData.get('available_hours') as string,
     transportation: formData.get('transportation') as string,
+    condition: formData.get('condition') as string,
     images: JSON.parse(formData.get('images') as string || '[]'),
     profile_id: formData.get('profile_id') as string,
   };
@@ -65,6 +71,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     invalidateTag(CACHE_TAGS.PRODUCTS);
     invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS);
     invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(validation.data.post_type));
+    invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(validation.data.post_type));
 
     return { id: data.id };
   }, 'createProduct');
@@ -81,7 +88,7 @@ export async function updateProduct(
   const rawData: Record<string, unknown> = {};
   const fields = [
     'post_name', 'post_description', 'post_type', 'post_address',
-    'available_hours', 'transportation', 'is_active'
+    'available_hours', 'transportation', 'condition', 'is_active'
   ];
 
   for (const field of fields) {
@@ -105,6 +112,13 @@ export async function updateProduct(
   return withErrorHandling(async () => {
     const supabase = await createClient();
 
+    // Get current product type for cache invalidation
+    const { data: currentProduct } = await supabase
+      .from('posts')
+      .select('post_type')
+      .eq('id', id)
+      .single();
+
     const { error } = await supabase
       .from('posts')
       .update(validation.data)
@@ -117,6 +131,16 @@ export async function updateProduct(
     invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS);
     invalidateTag(CACHE_TAGS.PRODUCT(id));
 
+    // Invalidate type-specific caches (both old and new type if changed)
+    if (currentProduct?.post_type) {
+      invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(currentProduct.post_type));
+      invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(currentProduct.post_type));
+    }
+    if (validation.data.post_type && validation.data.post_type !== currentProduct?.post_type) {
+      invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(validation.data.post_type));
+      invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(validation.data.post_type));
+    }
+
     return undefined;
   }, 'updateProduct');
 }
@@ -127,6 +151,13 @@ export async function updateProduct(
 export async function deleteProduct(id: number): Promise<ActionResult<undefined>> {
   return withErrorHandling(async () => {
     const supabase = await createClient();
+
+    // Get product type before deletion for cache invalidation
+    const { data: product } = await supabase
+      .from('posts')
+      .select('post_type')
+      .eq('id', id)
+      .single();
 
     const { error } = await supabase
       .from('posts')
@@ -139,6 +170,12 @@ export async function deleteProduct(id: number): Promise<ActionResult<undefined>
     invalidateTag(CACHE_TAGS.PRODUCTS);
     invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS);
     invalidateTag(CACHE_TAGS.PRODUCT(id));
+
+    // Invalidate type-specific caches
+    if (product?.post_type) {
+      invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(product.post_type));
+      invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(product.post_type));
+    }
 
     return undefined;
   }, 'deleteProduct');

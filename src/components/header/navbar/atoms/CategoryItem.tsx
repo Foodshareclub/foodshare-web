@@ -1,4 +1,3 @@
-import { memo, type FC } from "react";
 import { cn } from "@/lib/utils";
 
 
@@ -36,8 +35,7 @@ export interface CategoryItemProps {
  * />
  * ```
  */
-export const CategoryItem: FC<CategoryItemProps> = memo(
-  ({ id, label, icon, isActive = false, onClick, onKeyDown: externalOnKeyDown, className }) => {
+export function CategoryItem({ id, label, icon, isActive = false, onClick, onKeyDown: externalOnKeyDown, className }: CategoryItemProps) {
     const handleClick = () => {
       onClick(id);
     };
@@ -65,7 +63,7 @@ export const CategoryItem: FC<CategoryItemProps> = memo(
           "flex flex-col items-center justify-center gap-1 px-2 py-1 min-w-fit relative",
           "transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
           "hover:scale-105 active:scale-95",
-          "focus:outline focus:outline-2 focus:outline-primary focus:outline-offset-2 focus:rounded-lg",
+          "focus:outline-none focus-visible:outline-none",
           className
         )}
         style={{
@@ -102,16 +100,13 @@ export const CategoryItem: FC<CategoryItemProps> = memo(
         {/* Active Indicator - Bottom Border */}
         {isActive && (
           <div
-            className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-full h-0.5 bg-primary rounded-t-sm"
+            className="absolute -bottom-0.5 left-0 w-full h-0.5 bg-primary rounded-t-sm"
             style={{
-              transform: "translateX(-50%) translateZ(0)",
+              transform: "translateZ(0)",
               willChange: "transform",
             }}
           />
         )}
       </button>
     );
-  }
-);
-
-CategoryItem.displayName = "CategoryItem";
+}

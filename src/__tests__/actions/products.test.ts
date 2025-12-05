@@ -1,6 +1,9 @@
 /**
- * Products Server Actions Tests
- * Unit tests for product-related server actions
+ * Products Data Functions Tests
+ * Unit tests for product-related data fetching functions
+ *
+ * Note: Data functions are in @/lib/data/products, not @/app/actions/products.
+ * Server Actions (mutations) cannot re-export data functions due to 'use server' constraints.
  */
 
 // Shared mock state - must be outside jest.mock for it to be accessible
@@ -63,16 +66,16 @@ jest.mock('@/lib/supabase/server', () => ({
 
 import { describe, it, expect, beforeEach } from '@jest/globals';
 
-// Import actions after mocks
+// Import data functions from lib/data (not actions - 'use server' files can't re-export)
 import {
   getProducts,
   getAllProducts,
   getProductById,
   getProductLocations,
   getUserProducts,
-} from '@/app/actions/products';
+} from '@/lib/data/products';
 
-describe('Products Server Actions', () => {
+describe('Products Data Functions', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockState.products = [];

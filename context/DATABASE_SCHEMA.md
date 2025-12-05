@@ -1,7 +1,7 @@
 # FoodShare Database Schema
 
 **Database:** Supabase PostgreSQL
-**Last Updated:** November 2025
+**Last Updated:** December 2025
 
 ## Overview
 
@@ -60,6 +60,7 @@ Food listings and volunteer opportunities.
 - `gif_url_3` (text) - Third image URL
 - `available_hours` (text) - Availability schedule
 - `transportation` (text) - Pickup/delivery options
+- `condition` (text) - Item condition (new/like-new/good/fair) or food freshness
 - `active` (boolean) - Whether post is active (default: true)
 - `post_arranged` (boolean) - Whether item is reserved
 - `post_views` (integer) - View counter

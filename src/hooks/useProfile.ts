@@ -129,14 +129,13 @@ export const useProfile = (userId?: string) => {
 
   /**
    * Download avatar image (handled automatically by useAvatar query)
+   * @deprecated Avatar loading is automatic via useAvatar hook
    */
-  const loadAvatar = useCallback(
-    async () => {
-      await avatarQuery.refetch();
-      return true;
-    },
-    [avatarQuery]
-  );
+  const loadAvatar = useCallback(async () => {
+    // Avatar loading is automatic via useAvatar hook
+    // No manual refetch needed
+    return true;
+  }, []);
 
   /**
    * Upload avatar image

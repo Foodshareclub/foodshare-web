@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from "react";
+import React from "react";
 import AliceCarousel from "react-alice-carousel";
 import "react-alice-carousel/lib/alice-carousel.css";
 import { navigationActionsSVG, responsive } from "@/utils/navigationActions";
@@ -15,20 +15,21 @@ type PropsType = {
   isCompact?: boolean;
 };
 
-const Carousel: React.FC<PropsType> = memo(({
+export default function Carousel({
   getRoute,
   setPageType,
   pageType,
   productType,
   isCompact = false,
-}) => {
+}: PropsType) {
   const router = useRouter();
-  const navigateHandler = useCallback((name: string) => {
+  
+  const navigateHandler = (name: string) => {
     const routeName = name.toLowerCase();
     router.push(`${routeName === "food" ? "/food" : routeName}`);
     getRoute(routeName);
     setPageType("productComponent");
-  }, [router, getRoute, setPageType]);
+  };
 
   return (
     <AliceCarousel
@@ -53,8 +54,4 @@ const Carousel: React.FC<PropsType> = memo(({
       ))}
     />
   );
-});
-
-Carousel.displayName = "Carousel";
-
-export default Carousel;
+}

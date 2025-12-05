@@ -25,6 +25,7 @@ export interface ThemeSchedule {
 }
 
 export type AccentColor =
+  | "foodshare" // Brand color #FF2D55
   | "green"
   | "blue"
   | "purple"
@@ -58,10 +59,11 @@ export type ThemeTransition = "instant" | "smooth" | "radial";
 // Default Values
 // ============================================================================
 
+// Brand color: #FF2D55 = HSL(345, 100%, 59%)
 const defaultAccentColor: AccentColorConfig = {
-  name: "green",
-  hue: 142,
-  saturation: 71,
+  name: "foodshare",
+  hue: 345,
+  saturation: 100,
 };
 
 // ============================================================================
@@ -211,6 +213,7 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: "foodshare-ui",
+      version: 2, // Bump version to reset accent color to new brand default
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         // Only persist these fields
@@ -224,6 +227,15 @@ export const useUIStore = create<UIState>()(
         reducedMotion: state.reducedMotion,
         // Note: userLocation is NOT persisted (privacy)
       }),
+      migrate: (persistedState, version) => {
+        // Migration from v1 to v2: Reset accent color to brand pink
+        if (version < 2) {
+          const state = persistedState as Record<string, unknown>;
+          state.accentColor = defaultAccentColor;
+          state.themePreset = "default";
+        }
+        return persistedState as UIState;
+      },
     }
   )
 );

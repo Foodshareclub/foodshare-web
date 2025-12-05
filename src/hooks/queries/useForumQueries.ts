@@ -64,6 +64,7 @@ export function useForumCategories() {
       return (data ?? []) as ForumCategory[];
     },
     staleTime: 30 * 60 * 1000, // 30 minutes
+    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -163,6 +164,7 @@ export function useForumPosts() {
       return (data ?? []) as ForumPost[];
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
+    placeholderData: (previousData) => previousData,
   });
 }
 

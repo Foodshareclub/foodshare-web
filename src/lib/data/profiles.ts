@@ -66,98 +66,98 @@ export interface ProfileReview {
 /**
  * Get profile by user ID with caching
  */
-export const getProfile = unstable_cache(
-  async (userId: string): Promise<Profile | null> => {
-    const supabase = await createClient();
+export async function getProfile(userId: string): Promise<Profile | null> {
+  return unstable_cache(
+    async (): Promise<Profile | null> => {
+      const supabase = await createClient();
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      throw new Error(error.message);
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw new Error(error.message);
+      }
+
+      return data;
+    },
+    [`profile-by-id-${userId}`],
+    {
+      revalidate: CACHE_DURATIONS.PROFILES,
+      tags: [CACHE_TAGS.PROFILES, CACHE_TAGS.PROFILE(userId)],
     }
-
-    return data;
-  },
-  ['profile-by-id'],
-  {
-    revalidate: CACHE_DURATIONS.PROFILES,
-    tags: [CACHE_TAGS.PROFILES],
-  }
-);
+  )();
+}
 
 /**
  * Get public profile for viewing with caching
  */
-export const getPublicProfile = unstable_cache(
-  async (userId: string): Promise<PublicProfile | null> => {
-    const supabase = await createClient();
+export async function getPublicProfile(userId: string): Promise<PublicProfile | null> {
+  return unstable_cache(
+    async (): Promise<PublicProfile | null> => {
+      const supabase = await createClient();
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, first_name, second_name, username, avatar_url, about_me, user_location, created_time, role')
-      .eq('id', userId)
-      .single();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, first_name, second_name, username, avatar_url, about_me, user_location, created_time, role')
+        .eq('id', userId)
+        .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      throw new Error(error.message);
+      if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw new Error(error.message);
+      }
+
+      return data;
+    },
+    [`public-profile-${userId}`],
+    {
+      revalidate: CACHE_DURATIONS.PROFILES,
+      tags: [CACHE_TAGS.PROFILES, CACHE_TAGS.PROFILE(userId)],
     }
-
-    return data;
-  },
-  ['public-profile'],
-  {
-    revalidate: CACHE_DURATIONS.PROFILES,
-    tags: [CACHE_TAGS.PROFILES],
-  }
-);
+  )();
+}
 
 /**
  * Get user statistics with caching
  */
-export const getUserStats = unstable_cache(
-  async (userId: string): Promise<ProfileStats> => {
-    const supabase = await createClient();
+export async function getUserStats(userId: string): Promise<ProfileStats> {
+  return unstable_cache(
+    async (): Promise<ProfileStats> => {
+      const supabase = await createClient();
 
-    const { count: totalProducts } = await supabase
-      .from('posts')
-      .select('*', { count: 'exact', head: true })
-      .eq('profile_id', userId);
+      const [
+        { count: totalProducts },
+        { count: activeProducts },
+        { data: reviews },
+      ] = await Promise.all([
+        supabase.from('posts').select('*', { count: 'exact', head: true }).eq('profile_id', userId),
+        supabase.from('posts').select('*', { count: 'exact', head: true }).eq('profile_id', userId).eq('is_active', true),
+        supabase.from('reviews').select('rating').eq('reviewed_user_id', userId),
+      ]);
 
-    const { count: activeProducts } = await supabase
-      .from('posts')
-      .select('*', { count: 'exact', head: true })
-      .eq('profile_id', userId)
-      .eq('is_active', true);
+      const totalReviews = reviews?.length ?? 0;
+      const averageRating = totalReviews > 0
+        ? (reviews?.reduce((sum, r) => sum + (r.rating || 0), 0) ?? 0) / totalReviews
+        : 0;
 
-    const { data: reviews } = await supabase
-      .from('reviews')
-      .select('rating')
-      .eq('reviewed_user_id', userId);
-
-    const totalReviews = reviews?.length ?? 0;
-    const averageRating = totalReviews > 0
-      ? (reviews?.reduce((sum, r) => sum + (r.rating || 0), 0) ?? 0) / totalReviews
-      : 0;
-
-    return {
-      totalProducts: totalProducts ?? 0,
-      activeProducts: activeProducts ?? 0,
-      totalReviews,
-      averageRating: Math.round(averageRating * 10) / 10,
-    };
-  },
-  ['user-stats'],
-  {
-    revalidate: CACHE_DURATIONS.PROFILE_STATS,
-    tags: [CACHE_TAGS.PROFILES],
-  }
-);
+      return {
+        totalProducts: totalProducts ?? 0,
+        activeProducts: activeProducts ?? 0,
+        totalReviews,
+        averageRating: Math.round(averageRating * 10) / 10,
+      };
+    },
+    [`user-stats-${userId}`],
+    {
+      revalidate: CACHE_DURATIONS.PROFILE_STATS,
+      tags: [CACHE_TAGS.PROFILES, CACHE_TAGS.PROFILE_STATS(userId)],
+    }
+  )();
+}
 
 /**
  * Get volunteers list with caching
@@ -185,41 +185,43 @@ export const getVolunteers = unstable_cache(
 /**
  * Get profile reviews with caching
  */
-export const getProfileReviews = unstable_cache(
-  async (userId: string): Promise<ProfileReview[]> => {
-    const supabase = await createClient();
+export async function getProfileReviews(userId: string): Promise<ProfileReview[]> {
+  return unstable_cache(
+    async (): Promise<ProfileReview[]> => {
+      const supabase = await createClient();
 
-    const { data, error } = await supabase
-      .from('reviews')
-      .select(`
-        id,
-        rating,
-        comment,
-        created_at,
-        reviewer:profiles!reviewer_id(name, avatar_url)
-      `)
-      .eq('reviewed_user_id', userId)
-      .order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('reviews')
+        .select(`
+          id,
+          rating,
+          comment,
+          created_at,
+          reviewer:profiles!reviewer_id(name, avatar_url)
+        `)
+        .eq('reviewed_user_id', userId)
+        .order('created_at', { ascending: false });
 
-    if (error) throw new Error(error.message);
+      if (error) throw new Error(error.message);
 
-    // Helper to extract first item from Supabase join array
-    const extractFirst = <T,>(data: T[] | T | null | undefined): T | null => {
-      if (Array.isArray(data)) return data[0] ?? null;
-      return data ?? null;
-    };
+      // Helper to extract first item from Supabase join array
+      const extractFirst = <T,>(data: T[] | T | null | undefined): T | null => {
+        if (Array.isArray(data)) return data[0] ?? null;
+        return data ?? null;
+      };
 
-    return (data ?? []).map(review => ({
-      id: review.id,
-      rating: review.rating,
-      comment: review.comment,
-      created_at: review.created_at,
-      reviewer: extractFirst(review.reviewer as Array<{ name: string; avatar_url: string | null }>),
-    }));
-  },
-  ['profile-reviews'],
-  {
-    revalidate: CACHE_DURATIONS.PROFILES,
-    tags: [CACHE_TAGS.PROFILES],
-  }
-);
+      return (data ?? []).map(review => ({
+        id: review.id,
+        rating: review.rating,
+        comment: review.comment,
+        created_at: review.created_at,
+        reviewer: extractFirst(review.reviewer as Array<{ name: string; avatar_url: string | null }>),
+      }));
+    },
+    [`profile-reviews-${userId}`],
+    {
+      revalidate: CACHE_DURATIONS.PROFILES,
+      tags: [CACHE_TAGS.PROFILES, CACHE_TAGS.PROFILE_REVIEWS(userId)],
+    }
+  )();
+}

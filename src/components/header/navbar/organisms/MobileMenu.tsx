@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useState, type FC } from "react";
+import { useState } from "react";
 
 import type { CustomRoomType } from "@/api/chatAPI";
 import { DragHandleIcon } from "@/utils/icons";
@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Glass } from "@/components/Glass";
 import { UniversalDrawer, MinifiedUserInfo, AuthenticationUserModal } from "@/components";
 import { ThemeToggleInline } from "@/components/ui/theme-toggle";
-import { MenuItem, NavbarAvatar } from "../atoms";
 
 export interface MobileMenuProps {
   /** User authentication status */
@@ -54,24 +53,23 @@ export interface MobileMenuProps {
  * />
  * ```
  */
-export const MobileMenu: FC<MobileMenuProps> = memo(
-  ({
-    firstName,
-    secondName,
-    email,
-    size = "md",
-    isAuth,
-    isAdmin = false,
-    imgUrl,
-    signalOfNewMessage,
-    onNavigateToHelp,
-    onNavigateToLogout,
-    onNavigateToMyLists,
-    onNavigateToAboutUs,
-    onNavigateToAccSettings,
-    onNavigateToMyMessages,
-    onNavigateToDashboard,
-  }) => {
+export function MobileMenu({
+  firstName,
+  secondName,
+  email,
+  size = "md",
+  isAuth,
+  isAdmin = false,
+  imgUrl,
+  signalOfNewMessage,
+  onNavigateToHelp,
+  onNavigateToLogout,
+  onNavigateToMyLists,
+  onNavigateToAboutUs,
+  onNavigateToAccSettings,
+  onNavigateToMyMessages,
+  onNavigateToDashboard,
+}: MobileMenuProps) {
     const [isOpen, setIsOpen] = useState(false);
 
     const handleOpen = () => setIsOpen(true);
@@ -258,7 +256,4 @@ export const MobileMenu: FC<MobileMenuProps> = memo(
         </UniversalDrawer>
       </div>
     );
-  }
-);
-
-MobileMenu.displayName = "MobileMenu";
+}

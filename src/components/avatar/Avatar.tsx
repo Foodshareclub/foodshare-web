@@ -7,7 +7,7 @@ import cloud from "@/assets/cloud.svg";
 import { createPhotoUrl } from "@/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentProfile } from "@/hooks/queries/useProfileQueries";
-import { Glass, GlassButton } from "@/components/Glass";
+import { Button } from "@/components/ui/button";
 import { ALLOWED_MIME_TYPES } from "@/constants/mime-types";
 
 type PropsType = {
@@ -40,10 +40,7 @@ const Avatar: React.FC<PropsType> = ({ size, onUpload, avatarUrl: propAvatarUrl 
   };
 
   return (
-    <Glass
-      variant="input"
-      className="p-4 border border-dashed border-blue-400 transition-all duration-300 ease-in-out hover:border-blue-500 hover:-translate-y-0.5"
-    >
+    <div className="glass-input rounded-xl p-4 border border-dashed border-blue-400 transition-all duration-300 ease-in-out hover:border-blue-500 hover:-translate-y-0.5">
       <div className="flex justify-between items-center gap-4">
         {(imgUrl || pastUrl) && (imgUrl !== "" || pastUrl !== "") ? (
           <div className="relative mx-auto" style={{ height: size, width: size }}>
@@ -81,12 +78,12 @@ const Avatar: React.FC<PropsType> = ({ size, onUpload, avatarUrl: propAvatarUrl 
             onChange={(e) => uploadAvatar(e)}
           />
 
-          <GlassButton onClick={() => inputFileRef?.current?.click()} variant="accentOrange">
+          <Button onClick={() => inputFileRef?.current?.click()} variant="glass" className="glass-accent-orange">
             "Download"
-          </GlassButton>
+          </Button>
         </div>
       </div>
-    </Glass>
+    </div>
   );
 };
 export default Avatar;

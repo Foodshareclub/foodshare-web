@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 
 import loc from "@/assets/location-red.svg";
 import likes from "@/assets/likes.svg";
@@ -10,7 +10,7 @@ import { useUpdateProduct, useUpdateRoom } from "@/hooks";
 import { AuthenticationUserModal, PopupNotificationModal } from "@/components";
 import TopTips from "@/components/topTips/TopTips";
 import type { InitialProductStateType } from "@/types/product.types";
-import { GlassCard, GlassButton } from "@/components/Glass";
+import { Button } from "@/components/ui/button";
 import { StarIcon } from "@/utils/icons";
 
 export type OneProductType = {
@@ -68,25 +68,17 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
   const onStarClick = (index: number) => setRating(index + 1);
   const onClose = () => setIsOpen(false);
 
-  const buttonProps = useMemo(
-    () => ({
-      isDisabled: buttonValue === "leave a feedBack" ? product.is_active : false,
-      variant: (buttonValue === "completed" ? "accentGreen" : "accentOrange") as
-        | "accentGreen"
-        | "accentOrange",
-      cursor: buttonValue === "completed" ? "default" : "pointer",
-    }),
-    [buttonValue, product.is_active]
-  );
+  // React Compiler handles memoization automatically
+  const isDisabled = buttonValue === "leave a feedBack" ? product.is_active : false;
+  const variant = buttonValue === "completed" ? "accentGreen" : "accentOrange";
+  const cursor = buttonValue === "completed" ? "default" : "pointer";
 
     // Chat mode - compact view
     if (chat) {
       return (
-        <GlassCard
-          variant="standard"
-          padding="md"
-          w={size}
-          className="transition-all duration-300 ease-in-out"
+        <div
+          className="glass rounded-xl p-5 transition-all duration-300 ease-in-out"
+          style={{ width: size }}
         >
           <div className="flex flex-col gap-3">
             <img
@@ -102,16 +94,14 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
             <h2 className="text-lg font-semibold text-center">{product.post_name}</h2>
             <TopTips />
           </div>
-        </GlassCard>
+        </div>
       );
     }
 
     // Full product detail view
     return (
-      <GlassCard
-        variant="standard"
-        padding="0"
-        className="w-full max-w-[600px] overflow-hidden transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(0,0,0,0.1)]"
+      <div
+        className="glass rounded-xl p-0 w-full max-w-[600px] overflow-hidden transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(0,0,0,0.1)]"
       >
         {/* Hero Image */}
         <div className="relative w-full" style={{ aspectRatio: "4/3" }}>
@@ -212,22 +202,22 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
             {!isAuthenticated ? (
               <AuthenticationUserModal oneProductComponent buttonValue="Login" />
             ) : (
-              <GlassButton
-                variant={buttonProps.variant}
+              <Button
+                variant="glass"
                 onClick={onClick}
                 className={`w-full uppercase font-semibold py-3 ${
-                  buttonProps.isDisabled ? "opacity-50 pointer-events-none" : ""
-                }`}
-                style={{ cursor: buttonProps.cursor }}
+                  variant === "accentGreen" ? "glass-accent-primary" : "glass-accent-orange"
+                } ${isDisabled ? "opacity-50 pointer-events-none" : ""}`}
+                style={{ cursor }}
               >
                 {buttonValue}
-              </GlassButton>
+              </Button>
             )}
           </div>
         </div>
 
       {/* Modals */}
       <PopupNotificationModal isOpen={isOpen} onClose={onClose} />
-    </GlassCard>
+    </div>
   );
 }

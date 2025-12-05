@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { GlassCard } from "@/components/Glass";
+import { cn } from "@/lib/utils";
 import type { ForumComment } from "@/api/forumAPI";
 import { useAuth } from "@/hooks/useAuth";
 import { FaAward, FaCheckCircle, FaChevronDown, FaCommentDots, FaEdit, FaEllipsisH, FaFlag, FaHeart, FaReply, FaTrash } from 'react-icons/fa';
@@ -101,13 +101,13 @@ export function ForumCommentCard({
           whileHover={{ scale: 1.005 }}
           transition={{ type: "spring", stiffness: 400, damping: 30 }}
         >
-          <GlassCard
-            variant={comment.is_best_answer ? "accentGreen" : "subtle"}
-            borderRadius="16px"
-            padding="0"
-            className={`mb-3 overflow-hidden transition-all duration-300 ${
-              comment.is_pinned ? "ring-2 ring-amber-400/50" : ""
-            } ${isHighlighted ? "ring-2 ring-green-400/50 shadow-lg" : ""}`}
+          <div
+            className={cn(
+              "rounded-2xl p-0 mb-3 overflow-hidden transition-all duration-300",
+              comment.is_best_answer ? "glass-accent-primary" : "glass-subtle",
+              comment.is_pinned && "ring-2 ring-amber-400/50",
+              isHighlighted && "ring-2 ring-green-400/50 shadow-lg"
+            )}
           >
             {/* Best Answer Banner */}
             {comment.is_best_answer && (
@@ -311,7 +311,7 @@ export function ForumCommentCard({
                 )}
               </div>
             </div>
-          </GlassCard>
+          </div>
         </motion.div>
 
         {/* Nested Replies with animation */}

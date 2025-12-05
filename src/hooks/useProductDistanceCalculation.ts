@@ -40,9 +40,14 @@ export const useProductDistanceCalculation = (
       };
     });
 
+    interface WorkerResult {
+      products?: InitialProductStateType[];
+    }
+
     calculateDistances(userLat, userLng, productsForWorker)
-      .then((result: any) => {
-        setProductsWithDistance(result.products || result);
+      .then((result: WorkerResult | InitialProductStateType[]) => {
+        const products = Array.isArray(result) ? result : result.products || [];
+        setProductsWithDistance(products as InitialProductStateType[]);
         setIsCalculating(false);
       })
       .catch((error) => {

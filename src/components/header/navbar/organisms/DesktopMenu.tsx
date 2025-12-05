@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useState, type FC } from "react";
+import { useState } from "react";
 
 import type { CustomRoomType } from "@/api/chatAPI";
 import {
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MenuItem, NavbarAvatar } from "../atoms";
 import { AuthenticationUserModal } from "@/components";
+import { ThemeToggleInline } from "@/components/ui/theme-toggle";
 
 export interface DesktopMenuProps {
   /** User authentication status */
@@ -52,23 +53,22 @@ export interface DesktopMenuProps {
  * />
  * ```
  */
-export const DesktopMenu: FC<DesktopMenuProps> = memo(
-  ({
-    signalOfNewMessage,
-    onNavigateToMyLists,
-    onNavigateToHelp,
-    onNavigateToLogout,
-    onNavigateToAccSettings,
-    onNavigateToAboutUs,
-    onNavigateToMyMessages,
-    onNavigateToDashboard,
-    imgUrl,
-    firstName,
-    secondName,
-    email,
-    isAuth,
-    isAdmin = false,
-  }) => {
+export function DesktopMenu({
+  signalOfNewMessage,
+  onNavigateToMyLists,
+  onNavigateToHelp,
+  onNavigateToLogout,
+  onNavigateToAccSettings,
+  onNavigateToAboutUs,
+  onNavigateToMyMessages,
+  onNavigateToDashboard,
+  imgUrl,
+  firstName,
+  secondName,
+  email,
+  isAuth,
+  isAdmin = false,
+}: DesktopMenuProps) {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
@@ -95,7 +95,7 @@ export const DesktopMenu: FC<DesktopMenuProps> = memo(
               </div>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent variant="glass" className="rounded-xl min-w-[220px]" align="end">
+            <DropdownMenuContent variant="glass" className="glass-strong rounded-xl min-w-[220px]" align="end">
               {isAuth ? (
                 <>
                   {/* User Profile Info Header */}
@@ -174,6 +174,13 @@ export const DesktopMenu: FC<DesktopMenuProps> = memo(
                 onClick={onNavigateToAboutUs}
                 testId="menu-about"
               />
+
+              {/* Theme Switcher */}
+              <div className="my-1 h-px bg-border" role="separator" />
+              <div className="px-2 py-2">
+                <p className="text-xs text-muted-foreground mb-2 px-1">Appearance</p>
+                <ThemeToggleInline className="w-full" />
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -191,7 +198,4 @@ export const DesktopMenu: FC<DesktopMenuProps> = memo(
         />
       </>
     );
-  }
-);
-
-DesktopMenu.displayName = "DesktopMenu";
+}

@@ -315,6 +315,7 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
     available_hours?: string;
     post_stripped_address?: string;
     transportation?: string;
+    condition?: string;
   } | null) => {
     if (product) {
       setCategory(product.post_type || '');
@@ -323,6 +324,7 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
       setTime(product.available_hours || '');
       setAddress(product.post_stripped_address || '');
       setMetroStation(product.transportation || '');
+      setCondition(product.condition || '');
     }
   }, []);
 

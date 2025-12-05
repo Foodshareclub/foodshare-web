@@ -1,6 +1,5 @@
 import React, { memo } from "react";
 import type { RoomParticipantsType } from "@/api/chatAPI";
-import { Glass } from "@/components/Glass";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 type MessageItemProps = {
@@ -23,26 +22,16 @@ const MessageItem: React.FC<MessageItemProps> = memo(
       return (
         <div className="flex justify-end" key={message.id}>
           <span className="text-[10px] text-muted-foreground self-center">{time}</span>
-          <Glass
-            variant="accentGreen"
-            borderRadius="25px"
-            enableHover={false}
-            className="glass-fade-in m-2 max-w-[255px]"
-          >
+          <div className="glass-accent-primary rounded-3xl animate-fade-in m-2 max-w-[255px]">
             <p className="px-4 py-2">{message.text}</p>
-          </Glass>
+          </div>
         </div>
       );
     }
 
     return (
       <div className="flex justify-start" key={message.id}>
-        <Glass
-          variant="standard"
-          borderRadius="25px"
-          enableHover={false}
-          className="glass-fade-in my-2 max-w-[255px] flex items-center"
-        >
+        <div className="glass rounded-3xl animate-fade-in my-2 max-w-[255px] flex items-center">
           <div className="relative group">
             <Avatar
               className="ml-1 cursor-pointer self-center w-6 h-6"
@@ -59,7 +48,7 @@ const MessageItem: React.FC<MessageItemProps> = memo(
             </div>
           </div>
           <p className="py-2 px-4">{message.text}</p>
-        </Glass>
+        </div>
         <span className="text-[10px] text-muted-foreground self-center">{time}</span>
       </div>
     );

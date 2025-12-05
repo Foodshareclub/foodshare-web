@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, memo } from 'react'
+import React, { useState, useEffect } from 'react'
 import { FaChartLine, FaUsers, FaEnvelope, FaDollarSign } from 'react-icons/fa'
 import { HiSparkles } from 'react-icons/hi'
 import { GrokAssistant } from '@/components/admin/GrokAssistant'

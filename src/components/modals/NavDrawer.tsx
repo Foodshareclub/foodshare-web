@@ -1,31 +1,29 @@
 'use client';
 
 import * as React from "react";
-import { memo, useState } from "react";
+import { useState } from "react";
 import { DragHandleIcon } from "@/utils/icons";
 
 import type { ProfileSettingsProps } from "@/components/header/navbar/types";
 import { AuthenticationUserModal, MinifiedUserInfo, UniversalDrawer } from "@/components";
-import { Glass } from "@/components/Glass";
 import { Button } from "@/components/ui/button";
 import { ThemeToggleInline } from "@/components/ui/theme-toggle";
 
-const NawDrawer: React.FC<ProfileSettingsProps> = memo(
-  ({
-    firstName,
-    secondName,
-    email,
-    size,
-    isAuth,
-    imgUrl,
-    navigateToHelp,
-    navigateToLogout,
-    navigateToMyLists,
-    navigateToAboutUs,
-    navigateToAccSettings,
-    navigateToMyMessages,
-    signalOfNewMessage,
-  }) => {
+export default function NawDrawer({
+  firstName,
+  secondName,
+  email,
+  size,
+  isAuth,
+  imgUrl,
+  navigateToHelp,
+  navigateToLogout,
+  navigateToMyLists,
+  navigateToAboutUs,
+  navigateToAccSettings,
+  navigateToMyMessages,
+  signalOfNewMessage,
+}: ProfileSettingsProps) {
     const [isOpen, setIsOpen] = useState(false);
     const onOpen = () => setIsOpen(true);
     const onClose = () => setIsOpen(false);
@@ -60,11 +58,8 @@ const NawDrawer: React.FC<ProfileSettingsProps> = memo(
             <div className="mt-10">
               {isAuth ? (
                 <div className="flex flex-col gap-3">
-                  <Glass
-                    variant="subtle"
-                    borderRadius="12px"
-                    padding="16px"
-                    className="cursor-pointer glass-accelerated"
+                  <div
+                    className="glass-subtle rounded-xl p-4 cursor-pointer gpu"
                     onClick={() => {
                       onClose();
                       navigateToMyLists();
@@ -73,12 +68,9 @@ const NawDrawer: React.FC<ProfileSettingsProps> = memo(
                     <p className="text-3xl">
                       "My listing's"
                     </p>
-                  </Glass>
-                  <Glass
-                    variant="subtle"
-                    borderRadius="12px"
-                    padding="16px"
-                    className="cursor-pointer glass-accelerated"
+                  </div>
+                  <div
+                    className="glass-subtle rounded-xl p-4 cursor-pointer gpu"
                     onClick={() => {
                       onClose();
                       navigateToAccSettings();
@@ -87,13 +79,10 @@ const NawDrawer: React.FC<ProfileSettingsProps> = memo(
                     <p className="text-3xl">
                       "Account settings"
                     </p>
-                  </Glass>
+                  </div>
 
-                  <Glass
-                    variant={signalOfNewMessage.length ? "accentGreen" : "subtle"}
-                    borderRadius="12px"
-                    padding="16px"
-                    className="cursor-pointer glass-accelerated"
+                  <div
+                    className={`${signalOfNewMessage.length ? "glass-accent-primary" : "glass-subtle"} rounded-xl p-4 cursor-pointer gpu`}
                     onClick={() => {
                       onClose();
                       navigateToMyMessages();
@@ -106,13 +95,10 @@ const NawDrawer: React.FC<ProfileSettingsProps> = memo(
                         "My messages"
                       )}
                     </p>
-                  </Glass>
+                  </div>
 
-                  <Glass
-                    variant="subtle"
-                    borderRadius="12px"
-                    padding="16px"
-                    className="cursor-pointer glass-accelerated"
+                  <div
+                    className="glass-subtle rounded-xl p-4 cursor-pointer gpu"
                     onClick={() => {
                       onClose();
                       navigateToLogout();
@@ -121,7 +107,7 @@ const NawDrawer: React.FC<ProfileSettingsProps> = memo(
                     <p className="text-3xl">
                       "Log Out"
                     </p>
-                  </Glass>
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
@@ -132,11 +118,8 @@ const NawDrawer: React.FC<ProfileSettingsProps> = memo(
                   />
                 </div>
               )}
-              <Glass
-                variant="subtle"
-                borderRadius="12px"
-                padding="16px"
-                className="cursor-pointer glass-accelerated mt-3"
+              <div
+                className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3"
                 onClick={() => {
                   onClose();
                   navigateToAboutUs();
@@ -145,18 +128,15 @@ const NawDrawer: React.FC<ProfileSettingsProps> = memo(
                 <p className="text-3xl">
                   "About Us"
                 </p>
-              </Glass>
-              <Glass
-                variant="subtle"
-                borderRadius="12px"
-                padding="16px"
-                className="cursor-pointer glass-accelerated mt-3"
+              </div>
+              <div
+                className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3"
                 onClick={() => navigateToHelp()}
               >
                 <p className="text-3xl">
                   "Help"
                 </p>
-              </Glass>
+              </div>
 
               {/* Theme Switcher */}
               <div className="mt-6 pt-4 border-t border-border/30">
@@ -170,9 +150,4 @@ const NawDrawer: React.FC<ProfileSettingsProps> = memo(
         </UniversalDrawer>
       </div>
     );
-  }
-);
-
-NawDrawer.displayName = "NawDrawer";
-
-export default NawDrawer;
+}

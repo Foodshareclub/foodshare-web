@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Image from 'next/image';
 import Navbar from '@/components/header/navbar/Navbar';
-import { GlassCard, GlassButton } from '@/components/Glass';
+import { Button } from '@/components/ui/button';
 import { StarIcon } from '@/utils/icons';
 import type { InitialProductStateType } from '@/types/product.types';
 import type { AuthUser } from '@/app/actions/auth';
@@ -46,9 +46,9 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
   // Rating state for interactive stars
   const [rating, setRating] = useState(0);
 
-  const onStarClick = useCallback((index: number) => {
+  const onStarClick = (index: number) => {
     setRating(index + 1);
-  }, []);
+  };
 
   const handleContactSeller = () => {
     if (!isAuth) {
@@ -63,8 +63,8 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
   };
 
   // Empty Navbar handlers (navigation handled internally by Navbar)
-  const handleRouteChange = useCallback(() => {}, []);
-  const handleProductTypeChange = useCallback(() => {}, []);
+  const handleRouteChange = () => {};
+  const handleProductTypeChange = () => {};
 
   if (!product) {
     return (
@@ -116,11 +116,7 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
         {/* Left Column - Product Detail (Scrollable) */}
         <div className="w-full lg:w-1/2 px-4 pb-12">
           <div className="flex flex-col gap-6">
-            <GlassCard
-              variant="standard"
-              padding="0"
-              className="w-full overflow-hidden transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-xl"
-            >
+            <div className="glass w-full overflow-hidden rounded-xl transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-xl">
               {/* Hero Image with Back Button Overlay */}
               <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
                 {product.images?.[0] && isValidImageUrl(product.images[0]) ? (
@@ -244,30 +240,28 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
                 <div className="mt-6 flex gap-3">
                   {isOwner ? (
                     <>
-                      <GlassButton
-                        variant="accentOrange"
+                      <Button
                         onClick={handleEditListing}
-                        className="flex-1 uppercase font-semibold py-3"
+                        className="flex-1 uppercase font-semibold py-3 bg-orange-500 hover:bg-orange-600"
                       >
                         {t('edit_listing')}
-                      </GlassButton>
+                      </Button>
                       <Link href="/user-listings" className="flex-1">
-                        <GlassButton
-                          variant="standard"
+                        <Button
+                          variant="glass"
                           className="w-full uppercase font-semibold py-3"
                         >
                           {t('my_listings')}
-                        </GlassButton>
+                        </Button>
                       </Link>
                     </>
                   ) : (
-                    <GlassButton
-                      variant="accentOrange"
+                    <Button
                       onClick={handleContactSeller}
-                      className="w-full uppercase font-semibold py-3"
+                      className="w-full uppercase font-semibold py-3 bg-orange-500 hover:bg-orange-600"
                     >
                       {isAuth ? t('contact_sharer') : t('login_to_contact')}
-                    </GlassButton>
+                    </Button>
                   )}
                 </div>
 
@@ -288,7 +282,7 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
                   </div>
                 )}
               </div>
-            </GlassCard>
+            </div>
 
             {/* About This Listing - Mobile Only */}
             <div className="lg:hidden">
@@ -310,7 +304,7 @@ function AboutListingCard({ product }: { product: InitialProductStateType }) {
   const t = useTranslations();
 
   return (
-    <GlassCard variant="standard" padding="md">
+    <div className="glass rounded-xl p-4">
       <h3 className="text-xl font-semibold text-foreground mb-4">{t('about_this_listing')}</h3>
       <div className="space-y-3 text-sm">
         <div>
@@ -332,7 +326,7 @@ function AboutListingCard({ product }: { product: InitialProductStateType }) {
           </span>
         </div>
       </div>
-    </GlassCard>
+    </div>
   );
 }
 

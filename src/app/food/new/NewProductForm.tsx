@@ -6,7 +6,9 @@ import { useTranslations } from 'next-intl'
 import { useCreateProduct } from '@/hooks'
 import { useUIStore } from '@/store/zustand/useUIStore'
 import { storageAPI } from '@/api/storageAPI'
-import { GlassCard } from '@/components/Glass'
+import Navbar from '@/components/header/navbar/Navbar'
+import { useAuth } from '@/hooks/useAuth'
+import { useCurrentProfile } from '@/hooks/queries/useProfileQueries'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -37,6 +39,11 @@ export function NewProductForm({ userId }: NewProductFormProps) {
   const t = useTranslations()
   const router = useRouter()
   const { userLocation } = useUIStore()
+
+  // Auth and profile for navbar
+  const { isAuthenticated } = useAuth()
+  const { profile, avatarUrl } = useCurrentProfile(userId)
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin'
 
   // React Query mutation
   const createProduct = useCreateProduct()
@@ -196,31 +203,44 @@ export function NewProductForm({ userId }: NewProductFormProps) {
     }
   }
 
+  const handleRouteChange = (route: string) => {
+    router.push(`/${route}`)
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-muted/30 to-background dark:from-background dark:to-muted/20">
-      {/* Header */}
-      <div className="bg-background border-b border-border">
-        <div className="container mx-auto px-4 py-6">
+      <Navbar
+        userId={userId}
+        isAuth={isAuthenticated}
+        isAdmin={isAdmin}
+        productType="food"
+        onRouteChange={handleRouteChange}
+        onProductTypeChange={() => {}}
+        imgUrl={avatarUrl || profile?.avatar_url || ''}
+        firstName={profile?.first_name || ''}
+        secondName={profile?.second_name || ''}
+        email={profile?.email || ''}
+        signalOfNewMessage={[]}
+      />
+
+      {/* Form */}
+      <div className="container mx-auto px-4 py-8 max-w-3xl">
+        {/* Page Header */}
+        <div className="mb-8">
           <button
             onClick={() => router.back()}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4"
           >
             <span>←</span>
-            <span>{t('back')}</span>
+            <span>Back</span>
           </button>
-          <h1 className="text-3xl font-bold text-foreground">
-            {t('create_new_listing')}
-          </h1>
+          <h1 className="text-3xl font-bold text-foreground">Create New Listing</h1>
           <p className="text-muted-foreground mt-2">
-            {t('share_food_items_or_services_with_your_community')}
+            Share food items or services with your community
           </p>
         </div>
-      </div>
-
-      {/* Form */}
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
         <form onSubmit={handleSubmit}>
-          <GlassCard variant="standard" padding="lg">
+          <div className="glass rounded-xl p-6">
             {error && (
               <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
                 <p className="text-red-800 dark:text-red-300 text-sm">{error}</p>
@@ -237,10 +257,18 @@ export function NewProductForm({ userId }: NewProductFormProps) {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="food">🍽️ Food</SelectItem>
-                  <SelectItem value="things">📦 Things</SelectItem>
-                  <SelectItem value="borrow">🤝 Borrow</SelectItem>
-                  <SelectItem value="wanted">🔍 Wanted</SelectItem>
+                  <SelectItem value="food">🍎 Food</SelectItem>
+                  <SelectItem value="thing">🎁 Things</SelectItem>
+                  <SelectItem value="borrow">🔧 Borrow</SelectItem>
+                  <SelectItem value="wanted">🤲 Wanted</SelectItem>
+                  <SelectItem value="foodbank">🏛️ FoodBanks</SelectItem>
+                  <SelectItem value="fridge">❄️ Fridges</SelectItem>
+                  <SelectItem value="business">🏛️ Business</SelectItem>
+                  <SelectItem value="volunteer">🙌 Volunteer</SelectItem>
+                  <SelectItem value="challenge">🏆 Challenges</SelectItem>
+                  <SelectItem value="zerowaste">♻️ Zero Waste</SelectItem>
+                  <SelectItem value="vegan">🌱 Vegan</SelectItem>
+                  <SelectItem value="community">💬 Forum</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -410,7 +438,7 @@ export function NewProductForm({ userId }: NewProductFormProps) {
                 )}
               </button>
             </div>
-          </GlassCard>
+          </div>
         </form>
       </div>
     </div>

@@ -6,7 +6,7 @@
  * Receives pre-fetched data from Server Component parent
  */
 
-import React, { memo } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
@@ -33,7 +33,7 @@ interface StatCardProps {
   colorScheme?: 'green' | 'blue' | 'orange' | 'red';
 }
 
-const StatCard = memo<StatCardProps>(({ label, value, colorScheme = 'green' }) => {
+function StatCard({ label, value, colorScheme = 'green' }: StatCardProps) {
   const colorClasses = {
     green: 'border-green-300 hover:border-green-400 text-green-600',
     blue: 'border-blue-300 hover:border-blue-400 text-blue-600',
@@ -51,16 +51,14 @@ const StatCard = memo<StatCardProps>(({ label, value, colorScheme = 'green' }) =
       </div>
     </div>
   );
-});
-
-StatCard.displayName = 'StatCard';
+}
 
 interface AuditLogItemProps {
   action: string;
   createdAt: string;
 }
 
-const AuditLogItem = memo<AuditLogItemProps>(({ action, createdAt }) => {
+function AuditLogItem({ action, createdAt }: AuditLogItemProps) {
   const date = new Date(createdAt).toLocaleString();
 
   return (
@@ -71,9 +69,7 @@ const AuditLogItem = memo<AuditLogItemProps>(({ action, createdAt }) => {
       </div>
     </div>
   );
-});
-
-AuditLogItem.displayName = 'AuditLogItem';
+}
 
 // ============================================================================
 // Main Client Component

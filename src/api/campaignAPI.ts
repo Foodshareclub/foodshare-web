@@ -479,10 +479,19 @@ export async function previewSegment(filters: SegmentFilters) {
       return { data: null, error };
     }
 
+    interface RawPreviewCustomer {
+      id: string;
+      profile_id: string;
+      lifecycle_stage: string;
+      engagement_score: number | null;
+      profiles: { full_name: string | null; email: string | null } | null;
+      profile_stats: { items_shared: number | null } | null;
+    }
+
     const result: SegmentPreviewResult = {
       estimated_size: count || 0,
       sample_members:
-        data?.map((customer: any) => ({
+        (data as RawPreviewCustomer[] | null)?.map((customer) => ({
           customer_id: customer.id,
           full_name: customer.profiles?.full_name || "Unknown",
           email: customer.profiles?.email || "",
@@ -792,8 +801,24 @@ export async function fetchWorkflowExecutions(workflowId: string) {
   }
 
   // Transform data
+  interface RawWorkflowExecution {
+    id: string;
+    workflow_id: string;
+    customer_id: string;
+    current_step: number;
+    status: string;
+    started_at: string;
+    paused_at: string | null;
+    completed_at: string | null;
+    failed_at: string | null;
+    error_message: string | null;
+    metadata: Record<string, unknown> | null;
+    workflow: { name: string } | null;
+    customer: { profile_id: string; profiles: { full_name: string | null; email: string | null } | null } | null;
+  }
+
   const executions: WorkflowExecutionWithDetails[] =
-    data?.map((execution: any) => ({
+    (data as RawWorkflowExecution[] | null)?.map((execution) => ({
       id: execution.id,
       workflow_id: execution.workflow_id,
       customer_id: execution.customer_id,

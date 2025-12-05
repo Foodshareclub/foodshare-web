@@ -65,6 +65,7 @@ export function useProfile(
     },
     enabled: !!userId,
     staleTime: CACHE_TIMES.MEDIUM,
+    placeholderData: (previousData) => previousData,
     ...options,
   });
 }
@@ -98,6 +99,7 @@ export function useVolunteers(): UseQueryResult<ProfileType[], Error> {
       return data ?? [];
     },
     staleTime: CACHE_TIMES.LONG,
+    placeholderData: (previousData) => previousData,
   });
 }
 

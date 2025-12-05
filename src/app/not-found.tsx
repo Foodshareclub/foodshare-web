@@ -1,4 +1,3 @@
-import { GlassCard } from '@/components/Glass'
 import Link from 'next/link'
 import { BackButton } from '@/components/ui/BackButton'
 
@@ -10,7 +9,7 @@ export default function NotFound() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950/20 dark:via-purple-950/20 dark:to-pink-950/20 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full">
-        <GlassCard variant="prominent" borderRadius="24px" className="p-8 md:p-12">
+        <div className="glass-prominent rounded-3xl p-8 md:p-12">
           {/* 404 Illustration */}
           <div className="text-center mb-8">
             <div className="relative inline-block mb-6">
@@ -148,7 +147,7 @@ export default function NotFound() {
               </Link>
             </div>
           </div>
-        </GlassCard>
+        </div>
 
         {/* Footer Info */}
         <div className="mt-6 text-center">

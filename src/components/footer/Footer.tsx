@@ -50,7 +50,7 @@ export default function Footer() {
       <div className="flex flex-col md:flex-row justify-center md:justify-between items-center gap-2">
         <div className="flex items-center gap-4">
           <p className="text-base md:text-[16px] text-[10px]">
-            "© {currentYear} Foodshare Club, Limited. All rights reserved"
+            © {currentYear} Foodshare Club, Limited. All rights reserved
           </p>
           <div className="hidden md:flex items-center gap-1.5">
             <FaGlobe className="w-4 h-4 text-muted-foreground" />

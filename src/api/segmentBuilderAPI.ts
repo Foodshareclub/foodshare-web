@@ -92,8 +92,23 @@ export async function getSampleMembers(filters: SegmentFilters, limit: number = 
     }
 
     // Transform data
+    interface RawCustomerData {
+      id: string;
+      profile_id: string;
+      customer_type: string;
+      lifecycle_stage: string;
+      engagement_score: number | null;
+      churn_risk_score: number | null;
+      ltv_score: number | null;
+      total_interactions: number | null;
+      last_interaction_at: string | null;
+      profiles: { full_name: string | null; email: string | null; avatar_url: string | null } | null;
+      profile_stats: { items_shared: number | null; items_received: number | null; rating_average: number | null } | null;
+      crm_customer_tag_assignments: Array<{ tag: { id: string; name: string; color: string } | null }> | null;
+    }
+
     const members =
-      data?.map((customer: any) => ({
+      (data as RawCustomerData[] | null)?.map((customer) => ({
         customer_id: customer.id,
         profile_id: customer.profile_id,
         full_name: customer.profiles?.full_name || "Unknown",
@@ -107,7 +122,7 @@ export async function getSampleMembers(filters: SegmentFilters, limit: number = 
         items_shared: customer.profile_stats?.items_shared || 0,
         items_received: customer.profile_stats?.items_received || 0,
         rating_average: customer.profile_stats?.rating_average || null,
-        tags: customer.crm_customer_tag_assignments?.map((assignment: any) => assignment.tag) || [],
+        tags: customer.crm_customer_tag_assignments?.map((assignment) => assignment.tag).filter(Boolean) || [],
         total_interactions: customer.total_interactions || 0,
         last_interaction_at: customer.last_interaction_at,
       })) || [];
@@ -409,7 +424,10 @@ export function validateSegmentFilters(filters: SegmentFilters): {
  * Apply segment filters to a Supabase query
  * Internal helper function to consistently apply filters across all queries
  */
-function applySegmentFilters(query: any, filters: SegmentFilters) {
+function applySegmentFilters<T>(
+  query: ReturnType<typeof supabase.from<"crm_customers">>,
+  filters: SegmentFilters
+): ReturnType<typeof supabase.from<"crm_customers">> {
   // Customer type
   if (filters.customer_type && filters.customer_type !== "all") {
     query = query.eq("customer_type", filters.customer_type);

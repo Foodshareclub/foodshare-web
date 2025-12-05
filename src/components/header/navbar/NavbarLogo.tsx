@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -9,7 +9,7 @@ interface NavbarLogoProps {
   isCompact?: boolean;
 }
 
-const NavbarLogo: React.FC<NavbarLogoProps> = memo(({ onNavigate, isCompact = false }) => {
+export default function NavbarLogo({ onNavigate, isCompact = false }: NavbarLogoProps) {
   const router = useRouter();
 
   const handleClick = () => {
@@ -61,8 +61,4 @@ const NavbarLogo: React.FC<NavbarLogoProps> = memo(({ onNavigate, isCompact = fa
       </span>
     </div>
   );
-});
-
-NavbarLogo.displayName = "NavbarLogo";
-
-export default NavbarLogo;
+}

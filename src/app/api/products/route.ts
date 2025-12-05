@@ -1,10 +1,35 @@
 /**
  * Products API Route
  * Client-safe endpoint for fetching products
+ * Includes cache headers for CDN/browser caching
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+
+// Cache durations in seconds
+const CACHE_DURATIONS = {
+  PRODUCTS: 60,
+  PRODUCT_DETAIL: 120,
+  LOCATIONS: 300,
+  SEARCH: 30,
+  USER_PRODUCTS: 60,
+} as const;
+
+/**
+ * Create response with cache headers
+ */
+function jsonWithCache(
+  data: unknown,
+  maxAge: number,
+  staleWhileRevalidate: number = maxAge
+): NextResponse {
+  return NextResponse.json(data, {
+    headers: {
+      'Cache-Control': `public, s-maxage=${maxAge}, stale-while-revalidate=${staleWhileRevalidate}`,
+    },
+  });
+}
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -31,10 +56,10 @@ export async function GET(request: NextRequest) {
         }
         throw error;
       }
-      return NextResponse.json(data);
+      return jsonWithCache(data, CACHE_DURATIONS.PRODUCT_DETAIL);
     }
 
-    // Get user's products
+    // Get user's products (shorter cache - user-specific)
     if (userId) {
       const { data, error } = await supabase
         .from('posts_with_location')
@@ -43,10 +68,10 @@ export async function GET(request: NextRequest) {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return NextResponse.json(data ?? []);
+      return jsonWithCache(data ?? [], CACHE_DURATIONS.USER_PRODUCTS);
     }
 
-    // Search products
+    // Search products (short cache - dynamic)
     if (search) {
       let query = supabase
         .from('posts_with_location')
@@ -62,10 +87,10 @@ export async function GET(request: NextRequest) {
 
       const { data, error } = await query;
       if (error) throw error;
-      return NextResponse.json(data ?? []);
+      return jsonWithCache(data ?? [], CACHE_DURATIONS.SEARCH);
     }
 
-    // Get locations for map
+    // Get locations for map (longer cache - less frequent updates)
     if (locations) {
       let query = supabase
         .from('posts_with_location')
@@ -78,7 +103,7 @@ export async function GET(request: NextRequest) {
 
       const { data, error } = await query;
       if (error) throw error;
-      return NextResponse.json(data ?? []);
+      return jsonWithCache(data ?? [], CACHE_DURATIONS.LOCATIONS);
     }
 
     // Get products by type (or all)
@@ -94,7 +119,7 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await query;
     if (error) throw error;
-    return NextResponse.json(data ?? []);
+    return jsonWithCache(data ?? [], CACHE_DURATIONS.PRODUCTS);
   } catch (error) {
     console.error('Products API error:', error);
     return NextResponse.json(

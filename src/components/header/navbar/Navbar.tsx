@@ -107,16 +107,16 @@ function Navbar({
             className={cn(
               "flex items-center justify-between gap-4 px-4 md:px-7 xl:px-20",
               "transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-              isCompact ? "py-1" : "py-1.5"
+              isCompact ? "pt-3 pb-1" : "pt-4 pb-1.5"
             )}
           >
-            {/* Left: Logo */}
-            <div className="flex-shrink-0">
+            {/* Left: Logo - fixed width for true centering */}
+            <div className="flex-shrink-0 w-[140px]">
               <NavbarLogo onNavigate={handleLogoClick} isCompact={isCompact} />
             </div>
 
-            {/* Center: Category Navigation (horizontal scrollable) */}
-            <div className="flex-1 flex justify-center overflow-x-auto scrollbar-hide">
+            {/* Center: Category Navigation - truly centered */}
+            <div className="flex-1 flex justify-center">
               <CategoryNavigation
                 categories={CATEGORIES}
                 activeCategory={activeCategory}
@@ -124,8 +124,8 @@ function Navbar({
               />
             </div>
 
-            {/* Right: Actions (ThemeToggle + BecomeSharer + Menu) */}
-            <div className="flex-shrink-0">
+            {/* Right: Actions - fixed width to match left for true centering */}
+            <div className="flex-shrink-0 w-[140px] flex justify-end">
               <NavbarActions
                 isAuth={isAuth}
                 isAdmin={isAdmin}
@@ -151,7 +151,7 @@ function Navbar({
             className={cn(
               "flex justify-center items-center px-4 md:px-7 xl:px-20",
               "transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-              isCompact ? "pb-1" : "pb-1.5"
+              isCompact ? "py-1.5" : "py-3"
             )}
           >
             <div className={cn(isCompact ? "w-auto" : "w-full max-w-[850px]")}>
@@ -167,7 +167,7 @@ function Navbar({
         {/* Spacer - adjusted for new single navbar height */}
         <div
           style={{
-            height: isCompact ? "105px" : "140px",
+            height: isCompact ? "120px" : "170px",
             transition: "height 0.3s ease-in-out",
           }}
         />

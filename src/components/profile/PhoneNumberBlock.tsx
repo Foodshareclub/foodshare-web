@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { PhoneIcon } from "@/utils/icons";
-import { Glass, GlassButton } from "@/components/Glass";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 type PhoneNumberBlockType = {
@@ -33,7 +33,7 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({
   const [edit, setEdit] = useState(false);
 
   return (
-    <Glass variant="standard" className="p-4 mb-4">
+    <div className="glass rounded-xl p-4 mb-4">
       <div className="flex">
         <div className="w-full max-w-screen-lg">
           <h2 className="text-2xl font-medium pb-2 text-left text-foreground">
@@ -56,8 +56,8 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({
                   />
                 </div>
               </div>
-              <GlassButton
-                variant="accentGreen"
+              <Button
+                variant="glass-accent"
                 onClick={() => {
                   onSaveHandler();
                   setA(!a);
@@ -68,7 +68,7 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({
                 className="my-3"
               >
                 Save
-              </GlassButton>
+              </Button>
             </>
           ) : (
             <p className="text-foreground">
@@ -76,8 +76,8 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({
             </p>
           )}
         </div>
-        <GlassButton
-          variant="standard"
+        <Button
+          variant="glass"
           className={`self-start ${c ? "opacity-50 pointer-events-none" : "opacity-100"}`}
           onClick={() => {
             setA(!a);
@@ -87,8 +87,8 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({
           }}
         >
           {edit ? "Cancel" : "Edit"}
-        </GlassButton>
+        </Button>
       </div>
-    </Glass>
+    </div>
   );
 };

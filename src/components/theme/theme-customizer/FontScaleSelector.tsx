@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { FONT_SCALES, type FontScale } from '@/lib/theme/themeConfig';
 import { cn } from '@/lib/utils';
@@ -10,8 +10,7 @@ interface FontScaleSelectorProps {
   onChange: (scale: FontScale) => void;
 }
 
-export const FontScaleSelector: React.FC<FontScaleSelectorProps> = memo(
-  ({ current, onChange }) => {
+export function FontScaleSelector({ current, onChange }: FontScaleSelectorProps) {
     const scales = Object.entries(FONT_SCALES) as [
       FontScale,
       { label: string; multiplier: number }
@@ -47,7 +46,4 @@ export const FontScaleSelector: React.FC<FontScaleSelectorProps> = memo(
         </div>
       </div>
     );
-  }
-);
-
-FontScaleSelector.displayName = 'FontScaleSelector';
+}

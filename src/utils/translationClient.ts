@@ -93,8 +93,8 @@ export interface TranslationClientConfig {
 // ============================================================================
 
 interface StorageAdapter {
-  get(key: string): Promise<any>;
-  set(key: string, value: any): Promise<void>;
+  get(key: string): Promise<unknown>;
+  set(key: string, value: unknown): Promise<void>;
   remove(key: string): Promise<void>;
   clear(): Promise<void>;
 }
@@ -125,7 +125,7 @@ class IndexedDBAdapter implements StorageAdapter {
     });
   }
 
-  async get(key: string): Promise<any> {
+  async get(key: string): Promise<unknown> {
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readonly");
@@ -137,7 +137,7 @@ class IndexedDBAdapter implements StorageAdapter {
     });
   }
 
-  async set(key: string, value: any): Promise<void> {
+  async set(key: string, value: unknown): Promise<void> {
     const db = await this.getDB();
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.storeName], "readwrite");
@@ -175,12 +175,12 @@ class IndexedDBAdapter implements StorageAdapter {
 }
 
 class LocalStorageAdapter implements StorageAdapter {
-  async get(key: string): Promise<any> {
+  async get(key: string): Promise<unknown> {
     const item = localStorage.getItem(key);
     return item ? JSON.parse(item) : null;
   }
 
-  async set(key: string, value: any): Promise<void> {
+  async set(key: string, value: unknown): Promise<void> {
     localStorage.setItem(key, JSON.stringify(value));
   }
 
@@ -194,13 +194,13 @@ class LocalStorageAdapter implements StorageAdapter {
 }
 
 class MemoryAdapter implements StorageAdapter {
-  private cache = new Map<string, any>();
+  private cache = new Map<string, unknown>();
 
-  async get(key: string): Promise<any> {
+  async get(key: string): Promise<unknown> {
     return this.cache.get(key);
   }
 
-  async set(key: string, value: any): Promise<void> {
+  async set(key: string, value: unknown): Promise<void> {
     this.cache.set(key, value);
   }
 
@@ -346,10 +346,14 @@ export class TranslationClient {
       });
 
       if (response.ok) {
+        interface PrefetchItem {
+          locale: string;
+          priority: string;
+        }
         const data = await response.json();
         this.prefetchQueue = data.prefetch
-          .filter((p: any) => p.priority === "high")
-          .map((p: any) => p.locale);
+          .filter((p: PrefetchItem) => p.priority === "high")
+          .map((p: PrefetchItem) => p.locale);
 
         // Start prefetching in background
         this.processPrefetchQueue();
@@ -379,7 +383,13 @@ export class TranslationClient {
     }
   }
 
-  private getHeaders(options: any = {}): HeadersInit {
+  private getHeaders(options: {
+    locale?: string;
+    version?: string;
+    prefetch?: boolean;
+    stream?: boolean;
+    keys?: string[];
+  } = {}): HeadersInit {
     return {
       "Content-Type": "application/json",
       "X-Platform": this.config.platform,

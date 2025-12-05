@@ -5,7 +5,7 @@
  * Beautiful toast notifications for theme changes
  */
 
-import React, { memo, useEffect, useState, createContext, useContext, useCallback } from "react";
+import React, { useEffect, useState, createContext, useContext, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -91,10 +91,7 @@ const ClockIcon = () => (
 // Toast Item Component
 // ============================================================================
 
-const ToastItem: React.FC<{
-  toast: ThemeToastData;
-  onDismiss: () => void;
-}> = memo(({ toast, onDismiss }) => {
+function ToastItem({ toast, onDismiss }: { toast: ThemeToastData; onDismiss: () => void }) {
   useEffect(() => {
     const timer = setTimeout(onDismiss, 2500);
     return () => clearTimeout(timer);
@@ -168,18 +165,14 @@ const ToastItem: React.FC<{
       />
     </motion.div>
   );
-});
-
-ToastItem.displayName = "ToastItem";
+}
 
 // ============================================================================
 // Toast Container
 // ============================================================================
 
-const ToastContainer: React.FC<{
-  toasts: ThemeToastData[];
-  onDismiss: (id: string) => void;
-}> = memo(({ toasts, onDismiss }) => (
+function ToastContainer({ toasts, onDismiss }: { toasts: ThemeToastData[]; onDismiss: (id: string) => void }) {
+  return (
   <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none">
     <AnimatePresence mode="popLayout">
       {toasts.map((toast) => (
@@ -189,9 +182,8 @@ const ToastContainer: React.FC<{
       ))}
     </AnimatePresence>
   </div>
-));
-
-ToastContainer.displayName = "ToastContainer";
+  );
+}
 
 // ============================================================================
 // Provider

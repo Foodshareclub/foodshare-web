@@ -30,7 +30,7 @@ const logger = createLogger("AdminAPI");
  * Check if current user is an admin
  * @returns Promise with admin status
  */
-export const checkIsAdmin = async (): Promise<{ isAdmin: boolean; error: any }> => {
+export const checkIsAdmin = async (): Promise<{ isAdmin: boolean; error: Error | null }> => {
   try {
     const {
       data: { user },
@@ -66,7 +66,7 @@ export const checkIsAdmin = async (): Promise<{ isAdmin: boolean; error: any }> 
  */
 export const getUserRoles = async (): Promise<{
   roles: string[];
-  error: any;
+  error: Error | null;
 }> => {
   try {
     const {
@@ -87,11 +87,11 @@ export const getUserRoles = async (): Promise<{
       return { roles: [], error };
     }
 
-    const roles = data?.map((item: any) => item.roles.name) || [];
+    const roles = data?.map((item: { roles: { name: string } }) => item.roles.name) || [];
     return { roles, error: null };
   } catch (error) {
     logger.error("Exception fetching user roles", error as Error);
-    return { roles: [], error };
+    return { roles: [], error: error as Error };
   }
 };
 
@@ -155,13 +155,13 @@ export const getListingById = (postId: number) => {
 /**
  * Get pending listings count
  */
-export const getPendingListingsCount = async (): Promise<{ count: number; error: any }> => {
+export const getPendingListingsCount = async (): Promise<{ count: number; error: Error | null }> => {
   const { count, error } = await supabase
     .from("posts")
     .select("*", { count: "exact", head: true })
     .eq("status", "pending");
 
-  return { count: count || 0, error };
+  return { count: count || 0, error: error as Error | null };
 };
 
 /**
@@ -279,7 +279,20 @@ export const updatePostStatus = async (payload: UpdatePostStatusPayload) => {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const updateData: any = {
+  interface PostUpdateData {
+    status: PostStatus;
+    approved_by?: string;
+    approved_at?: string;
+    rejected_by?: string;
+    rejected_at?: string;
+    rejection_reason?: string | null;
+    flagged_by?: string;
+    flagged_at?: string;
+    flagged_reason?: string | null;
+    admin_notes?: string;
+  }
+
+  const updateData: PostUpdateData = {
     status: payload.newStatus,
   };
 
@@ -397,7 +410,17 @@ export const bulkUpdateStatus = async (postIds: number[], newStatus: PostStatus)
     data: { user },
   } = await supabase.auth.getUser();
 
-  const updateData: any = { status: newStatus };
+  interface BulkUpdateData {
+    status: PostStatus;
+    approved_by?: string;
+    approved_at?: string;
+    rejected_by?: string;
+    rejected_at?: string;
+    flagged_by?: string;
+    flagged_at?: string;
+  }
+
+  const updateData: BulkUpdateData = { status: newStatus };
 
   if (newStatus === "approved") {
     updateData.approved_by = user?.id;
@@ -448,7 +471,7 @@ export const getRecentAuditLogs = (limit: number = 50) => {
  */
 export const getDashboardStats = async (): Promise<{
   data: AdminDashboardStats | null;
-  error: any;
+  error: Error | null;
 }> => {
   try {
     // Get listing counts by status
@@ -547,7 +570,7 @@ export const getDashboardStats = async (): Promise<{
  */
 export const getListingStatsByCategory = async (): Promise<{
   data: ListingStatsByCategory[] | null;
-  error: any;
+  error: Error | null;
 }> => {
   try {
     const categories = ["food", "volunteer", "community_fridge", "food_bank"];

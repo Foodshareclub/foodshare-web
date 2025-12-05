@@ -114,7 +114,14 @@ export async function getProviderQuotasOptimized(): Promise<ProviderQuotaStatus[
 
       if (error) throw error;
 
-      const result = (data || []).map((quota: any) => {
+      interface RawQuotaData {
+        provider: EmailProvider;
+        emails_sent: number;
+        daily_limit: number;
+        date: string;
+      }
+
+      const result = ((data || []) as RawQuotaData[]).map((quota) => {
         const remaining = quota.daily_limit - quota.emails_sent;
         const usagePercentage = (quota.emails_sent / quota.daily_limit) * 100;
 
@@ -265,20 +272,27 @@ export async function getEmailStatsOptimized(): Promise<EmailStats> {
       if (logsResult.error) throw logsResult.error;
       if (queueResult.error) throw queueResult.error;
 
-      const logs = logsResult.data || [];
+      interface RawEmailLog {
+        id: string;
+        status: string;
+        provider: EmailProvider;
+        sent_at: string;
+      }
+
+      const logs = (logsResult.data || []) as RawEmailLog[];
       const totalSent24h = logs.length;
       const totalFailed24h = logs.filter(
-        (l: any) => l.status === "failed" || l.status === "bounced"
+        (l) => l.status === "failed" || l.status === "bounced"
       ).length;
       const successRate =
         totalSent24h > 0 ? ((totalSent24h - totalFailed24h) / totalSent24h) * 100 : 100;
 
       // Provider-specific stats
       const providerStats = (["resend", "brevo", "aws_ses"] as EmailProvider[]).map((provider) => {
-        const providerLogs = logs.filter((l: any) => l.provider === provider);
+        const providerLogs = logs.filter((l) => l.provider === provider);
         const sent = providerLogs.length;
         const failed = providerLogs.filter(
-          (l: any) => l.status === "failed" || l.status === "bounced"
+          (l) => l.status === "failed" || l.status === "bounced"
         ).length;
         const providerSuccessRate = sent > 0 ? ((sent - failed) / sent) * 100 : 100;
 

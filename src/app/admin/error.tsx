@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect } from 'react'
-import { GlassCard } from '@/components/Glass'
 import Link from 'next/link'
 
 /**
@@ -28,7 +27,7 @@ export default function AdminError({
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full">
-        <GlassCard variant="prominent" borderRadius="24px" className="p-8 md:p-12">
+        <div className="glass-prominent rounded-3xl p-8 md:p-12">
           {/* Admin Badge */}
           <div className="flex justify-center mb-4">
             <span className="bg-green-100 text-green-800 text-xs font-medium px-3 py-1 rounded-full">
@@ -157,7 +156,7 @@ export default function AdminError({
               </Link>
             </div>
           </div>
-        </GlassCard>
+        </div>
       </div>
     </div>
   )

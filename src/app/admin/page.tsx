@@ -5,8 +5,11 @@
  */
 
 import { Suspense } from 'react';
-import { getDashboardStats, getAuditLogs } from '@/app/actions/admin';
+import { getDashboardStats, getAuditLogs } from '@/lib/data/admin';
 import { AdminDashboardClient } from './AdminDashboardClient';
+
+// Route segment config for caching
+export const revalidate = 300; // Revalidate every 5 minutes
 
 // ============================================================================
 // Loading Skeleton

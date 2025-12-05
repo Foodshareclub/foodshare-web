@@ -1,13 +1,11 @@
 'use client';
 
 import type { ChangeEvent } from "react";
-import React, { memo, useState } from "react";
+import React, { useState } from "react";
 import { SearchIcon } from "@/utils/icons";
 import { useTranslations } from 'next-intl';
 import { useRouter } from "next/navigation";
-import { GlassDialogContent } from "@/components/Glass";
-import { Glass } from "@/components/Glass";
-import { Dialog, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -16,7 +14,7 @@ type SearchModalProps = {
   onClose: () => void;
 };
 
-const SearchModal: React.FC<SearchModalProps> = memo(({ isOpen, onClose }) => {
+export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const t = useTranslations();
   const router = useRouter();
   const [searchValue, setSearchValue] = useState("");
@@ -51,7 +49,7 @@ const SearchModal: React.FC<SearchModalProps> = memo(({ isOpen, onClose }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
-      <GlassDialogContent maxW={{ base: "100%", md: "600px" }}>
+      <DialogContent variant="glass" className="w-full md:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold">
             {"Search FoodShare"}
@@ -81,7 +79,7 @@ const SearchModal: React.FC<SearchModalProps> = memo(({ isOpen, onClose }) => {
           </div>
 
           {/* Category Filter */}
-          <Glass variant="subtle" padding="md" borderRadius="12px">
+          <div className="glass-subtle rounded-xl p-5">
             <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
               {[
                 { value: "all", label: "All" },
@@ -104,13 +102,9 @@ const SearchModal: React.FC<SearchModalProps> = memo(({ isOpen, onClose }) => {
                 </label>
               ))}
             </div>
-          </Glass>
+          </div>
         </div>
-      </GlassDialogContent>
+      </DialogContent>
     </Dialog>
   );
-});
-
-SearchModal.displayName = "SearchModal";
-
-export default SearchModal;
+}

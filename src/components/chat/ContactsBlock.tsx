@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import { useAuth } from "@/hooks/useAuth";
@@ -9,7 +9,6 @@ import { useUpdateRoom } from "@/hooks/queries/useChatQueries";
 import AvatarWithRipple from "@/components/listingPersonCard/AvatarWithRipple";
 import { SearchIcon } from "@/utils/icons";
 import { MinifiedUserInfo } from "@/components";
-import { Glass } from "@/components/Glass";
 import { Input } from "@/components/ui/input";
 
 import type { CustomRoomType } from "@/api/chatAPI";
@@ -26,8 +25,7 @@ export type ContactsBlockType = {
  * Displays the user's chat contacts sidebar
  * Uses React Query + Zustand instead of Redux
  */
-const ContactsBlock: React.FC<ContactsBlockType> = memo(
-  ({ allRooms, roomIDFromUrl, newMessageRoomId, userID }) => {
+export default function ContactsBlock({ allRooms, roomIDFromUrl, newMessageRoomId, userID }: ContactsBlockType) {
     const t = useTranslations();
 
     // Auth and profile from React Query hooks (replaces Redux selectors)
@@ -60,11 +58,7 @@ const ContactsBlock: React.FC<ContactsBlockType> = memo(
     };
 
     return (
-      <Glass
-        variant="subtle"
-        borderRadius="16px"
-        className="glass-slide-in-left w-auto xl:w-[18vw] py-3 pr-3 flex flex-col"
-      >
+      <div className="glass-subtle rounded-2xl w-auto xl:w-[18vw] py-3 pr-3 flex flex-col animate-slide-up">
         <div className="flex flex-col self-center">
           <AvatarWithRipple img={imgUrl || ""} />
           <div className="py-2">
@@ -106,11 +100,6 @@ const ContactsBlock: React.FC<ContactsBlockType> = memo(
             })}
           </div>
         </div>
-      </Glass>
+      </div>
     );
-  }
-);
-
-ContactsBlock.displayName = "ContactsBlock";
-
-export default ContactsBlock;
+}

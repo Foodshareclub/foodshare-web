@@ -1,6 +1,6 @@
 'use client'
 
-import React, { memo } from 'react'
+import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
@@ -11,7 +11,7 @@ interface NavItemProps {
   isActive: boolean
 }
 
-const NavItem = memo<NavItemProps>(({ href, label, isActive }) => {
+function NavItem({ href, label, isActive }: NavItemProps) {
   return (
     <Link href={href} className="no-underline w-full">
       <div
@@ -22,9 +22,7 @@ const NavItem = memo<NavItemProps>(({ href, label, isActive }) => {
       </div>
     </Link>
   )
-})
-
-NavItem.displayName = 'NavItem'
+}
 
 /**
  * AdminLayout - Layout wrapper for all admin pages

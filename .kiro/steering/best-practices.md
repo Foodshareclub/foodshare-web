@@ -67,6 +67,7 @@ const supabase = createClient(); // from @/lib/supabase/client
 | Missing `NEXT_PUBLIC_` | Add prefix for client vars |
 | Not awaiting `createClient()` | Always `await` on server |
 | Hydration mismatch | Use `useEffect` for client-only |
+| Re-exporting from `'use server'` file | Only async actions allowed; import data from `@/lib/data/*` |
 
 ## Checklist
 

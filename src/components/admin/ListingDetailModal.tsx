@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, memo, useCallback, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useAdminStore } from "@/store/zustand";
 import { useAuditLogs, useApproveListing, useRejectListing, useFlagListing, type AuditLog } from "@/hooks/queries";
@@ -19,8 +19,8 @@ interface StatusBadgeProps {
   status: PostStatus;
 }
 
-const StatusBadge = memo<StatusBadgeProps>(({ status }) => {
-  const badgeClasses = useMemo(() => {
+function StatusBadge({ status }: StatusBadgeProps) {
+  const badgeClasses = (() => {
     switch (status) {
       case "approved":
         return "bg-green-100 text-green-800";
@@ -33,22 +33,20 @@ const StatusBadge = memo<StatusBadgeProps>(({ status }) => {
       default:
         return "bg-gray-100 text-gray-800";
     }
-  }, [status]);
+  })();
 
   return (
     <span className={`text-sm font-medium px-2.5 py-0.5 rounded ${badgeClasses}`}>
       {status.toUpperCase()}
     </span>
   );
-});
-
-StatusBadge.displayName = "StatusBadge";
+}
 
 interface AuditLogTimelineProps {
   logs: AuditLog[];
 }
 
-const AuditLogTimeline = memo<AuditLogTimelineProps>(({ logs }) => {
+function AuditLogTimeline({ logs }: AuditLogTimelineProps) {
   if (logs.length === 0) {
     return (
       <p className="text-gray-500 text-center py-4">
@@ -75,15 +73,13 @@ const AuditLogTimeline = memo<AuditLogTimelineProps>(({ logs }) => {
       ))}
     </div>
   );
-});
-
-AuditLogTimeline.displayName = "AuditLogTimeline";
+}
 
 /**
  * ListingDetailModal - Modal for viewing and managing listing details
  * Allows admins to approve, reject, flag, and add notes
  */
-export const ListingDetailModal: React.FC = memo(() => {
+export function ListingDetailModal() {
   const t = useTranslations();
 
   // Zustand for UI state
@@ -110,14 +106,14 @@ export const ListingDetailModal: React.FC = memo(() => {
     }
   }, [listing?.admin_notes]);
 
-  const handleClose = useCallback(() => {
+  const handleClose = () => {
     closeDetailModal();
     setRejectionReason("");
     setFlaggedReason("");
     setAdminNotes("");
-  }, [closeDetailModal]);
+  };
 
-  const handleApprove = useCallback(async () => {
+  const handleApprove = async () => {
     if (!listing) return;
     try {
       await approveMutation.mutateAsync(listing.id);
@@ -125,9 +121,9 @@ export const ListingDetailModal: React.FC = memo(() => {
     } catch (error) {
       console.error("Failed to approve listing:", error);
     }
-  }, [listing, approveMutation, handleClose]);
+  };
 
-  const handleReject = useCallback(async () => {
+  const handleReject = async () => {
     if (!listing || !rejectionReason.trim()) {
       alert("Please provide a rejection reason");
       return;
@@ -141,9 +137,9 @@ export const ListingDetailModal: React.FC = memo(() => {
     } catch (error) {
       console.error("Failed to reject listing:", error);
     }
-  }, [listing, rejectionReason, rejectMutation, handleClose]);
+  };
 
-  const handleFlag = useCallback(async () => {
+  const handleFlag = async () => {
     if (!listing || !flaggedReason.trim()) {
       alert("Please provide a flag reason");
       return;
@@ -157,12 +153,12 @@ export const ListingDetailModal: React.FC = memo(() => {
     } catch (error) {
       console.error("Failed to flag listing:", error);
     }
-  }, [listing, flaggedReason, flagMutation, handleClose]);
+  };
 
-  const handleSaveNotes = useCallback(async () => {
+  const handleSaveNotes = async () => {
     // TODO: Admin notes update could be added as a separate mutation if needed
     // For now, notes are stored in local state only
-  }, [adminNotes]);
+  };
 
   if (!listing) return null;
 
@@ -326,6 +322,4 @@ export const ListingDetailModal: React.FC = memo(() => {
       </DialogContent>
     </Dialog>
   );
-});
-
-ListingDetailModal.displayName = "ListingDetailModal";
+}

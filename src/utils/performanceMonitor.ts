@@ -179,9 +179,15 @@ class PerformanceMonitor {
     let cls = 0;
     const clsEntries = performance.getEntriesByType("layout-shift");
 
-    clsEntries.forEach((entry: any) => {
-      if (!entry.hadRecentInput) {
-        cls += entry.value;
+    interface LayoutShiftEntry extends PerformanceEntry {
+      hadRecentInput: boolean;
+      value: number;
+    }
+
+    clsEntries.forEach((entry) => {
+      const layoutShift = entry as LayoutShiftEntry;
+      if (!layoutShift.hadRecentInput) {
+        cls += layoutShift.value;
       }
     });
 
@@ -195,7 +201,7 @@ class PerformanceMonitor {
     let tbt = 0;
     const longTasks = performance.getEntriesByType("longtask");
 
-    longTasks.forEach((task: any) => {
+    longTasks.forEach((task) => {
       if (task.duration > 50) {
         tbt += task.duration - 50;
       }

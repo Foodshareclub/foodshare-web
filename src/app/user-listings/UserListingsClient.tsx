@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { ProductCard } from '@/components/productCard/ProductCard';
-import { GlassCard } from '@/components/Glass';
 import { Button } from '@/components/ui/button';
 import type { InitialProductStateType } from '@/types/product.types';
 import type { AuthUser } from '@/app/actions/auth';
@@ -39,23 +38,23 @@ export function UserListingsClient({ listings }: UserListingsClientProps) {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <GlassCard variant="standard" className="p-4">
+          <div className="glass rounded-xl p-4">
             <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400">{listings.length}</div>
             <div className="text-sm text-muted-foreground">Total Listings</div>
-          </GlassCard>
-          <GlassCard variant="standard" className="p-4">
+          </div>
+          <div className="glass rounded-xl p-4">
             <div className="text-3xl font-bold text-green-600 dark:text-green-400">{activeListings.length}</div>
             <div className="text-sm text-muted-foreground">Active</div>
-          </GlassCard>
-          <GlassCard variant="standard" className="p-4">
+          </div>
+          <div className="glass rounded-xl p-4">
             <div className="text-3xl font-bold text-muted-foreground">{inactiveListings.length}</div>
             <div className="text-sm text-muted-foreground">Inactive</div>
-          </GlassCard>
+          </div>
         </div>
 
         {/* Listings Grid */}
         {listings.length === 0 ? (
-          <GlassCard variant="standard" className="p-12 text-center">
+          <div className="glass rounded-xl p-12 text-center">
             <div className="text-6xl mb-4">📦</div>
             <h2 className="text-xl font-semibold text-foreground mb-2">
               No listings yet
@@ -68,7 +67,7 @@ export function UserListingsClient({ listings }: UserListingsClientProps) {
                 Create Your First Listing
               </Button>
             </Link>
-          </GlassCard>
+          </div>
         ) : (
           <>
             {/* Active Listings */}

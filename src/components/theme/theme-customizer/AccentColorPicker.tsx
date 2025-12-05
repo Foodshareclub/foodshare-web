@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { AccentColorConfig } from '@/store/zustand/useUIStore';
 import { ACCENT_COLORS, hexToHSL, hslToHex } from '@/lib/theme/themeConfig';
@@ -12,8 +12,7 @@ interface AccentColorPickerProps {
   onChange: (color: AccentColorConfig) => void;
 }
 
-export const AccentColorPicker: React.FC<AccentColorPickerProps> = memo(
-  ({ current, onChange }) => {
+export function AccentColorPicker({ current, onChange }: AccentColorPickerProps) {
     const [showCustom, setShowCustom] = useState(false);
     const [customHex, setCustomHex] = useState(
       current.customHex || hslToHex(current.hue, current.saturation, 50)
@@ -133,7 +132,4 @@ export const AccentColorPicker: React.FC<AccentColorPickerProps> = memo(
         </AnimatePresence>
       </div>
     );
-  }
-);
-
-AccentColorPicker.displayName = 'AccentColorPicker';
+}

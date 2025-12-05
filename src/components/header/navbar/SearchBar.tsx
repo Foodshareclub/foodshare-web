@@ -13,12 +13,11 @@
  * - Accessibility compliant (WCAG AA)
  */
 
-import React, { memo, useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslations } from 'next-intl';
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SearchIcon } from "@/utils/icons";
-import { Glass } from "@/components/Glass";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { gpu120Animation, gpu120Fade } from "@/utils/gpuStyles";
@@ -30,8 +29,7 @@ interface SearchBarProps {
   defaultCategory?: string;
 }
 
-const SearchBar: React.FC<SearchBarProps> = memo(
-  ({ isCompact = false, onSearchClick, defaultCategory = "all" }) => {
+function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }: SearchBarProps) {
     const t = useTranslations();
     const router = useRouter();
     const [isHovered, setIsHovered] = useState(false);
@@ -81,51 +79,45 @@ const SearchBar: React.FC<SearchBarProps> = memo(
     }, [activeSection]);
 
     // Handle search submission
-    const handleSearchSubmit = useCallback(
-      (term?: string) => {
-        const searchValue = term || searchTerm;
-        if (searchValue && searchValue.trim()) {
-          handleSearch(searchValue);
-          router.push(`/s/${selectedCategory}?key_word=${encodeURIComponent(searchValue.trim())}`);
-          setActiveSection(null);
-          setSearchTerm("");
-          setSelectedIndex(-1);
-        }
-      },
-      [searchTerm, selectedCategory, handleSearch, router, setSearchTerm]
-    );
+    const handleSearchSubmit = (term?: string) => {
+      const searchValue = term || searchTerm;
+      if (searchValue && searchValue.trim()) {
+        handleSearch(searchValue);
+        router.push(`/s/${selectedCategory}?key_word=${encodeURIComponent(searchValue.trim())}`);
+        setActiveSection(null);
+        setSearchTerm("");
+        setSelectedIndex(-1);
+      }
+    };
 
     // Handle keyboard navigation
-    const handleKeyDown = useCallback(
-      (e: React.KeyboardEvent) => {
-        if (!activeSection || activeSection !== "what") return;
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+      if (!activeSection || activeSection !== "what") return;
 
-        switch (e.key) {
-          case "ArrowDown":
-            e.preventDefault();
-            setSelectedIndex((prev) => Math.min(prev + 1, suggestions.length - 1));
-            break;
-          case "ArrowUp":
-            e.preventDefault();
-            setSelectedIndex((prev) => Math.max(prev - 1, -1));
-            break;
-          case "Enter":
-            e.preventDefault();
-            if (selectedIndex >= 0 && suggestions[selectedIndex]) {
-              handleSearchSubmit(suggestions[selectedIndex].text);
-            } else {
-              handleSearchSubmit();
-            }
-            break;
-          case "Escape":
-            e.preventDefault();
-            setActiveSection(null);
-            setSelectedIndex(-1);
-            break;
-        }
-      },
-      [activeSection, selectedIndex, suggestions, handleSearchSubmit]
-    );
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setSelectedIndex((prev) => Math.min(prev + 1, suggestions.length - 1));
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setSelectedIndex((prev) => Math.max(prev - 1, -1));
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (selectedIndex >= 0 && suggestions[selectedIndex]) {
+            handleSearchSubmit(suggestions[selectedIndex].text);
+          } else {
+            handleSearchSubmit();
+          }
+          break;
+        case "Escape":
+          e.preventDefault();
+          setActiveSection(null);
+          setSelectedIndex(-1);
+          break;
+      }
+    };
 
     // Compact search button (when scrolled)
     if (isCompact) {
@@ -546,9 +538,6 @@ const SearchBar: React.FC<SearchBarProps> = memo(
         )}
       </div>
     );
-  }
-);
-
-SearchBar.displayName = "SearchBar";
+}
 
 export default SearchBar;

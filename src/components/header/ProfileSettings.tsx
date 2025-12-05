@@ -1,7 +1,6 @@
 'use client';
 
-import type { FC } from "react";
-import { memo, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -14,18 +13,17 @@ import {
 import type { ProfileSettingsProps } from "@/components/header/navbar/types";
 import { AuthenticationUserModal } from "@/components";
 
-const ProfileSettings: FC<ProfileSettingsProps> = memo(
-  ({
-    signalOfNewMessage,
-    navigateToMyLists,
-    navigateToHelp,
-    navigateToLogout,
-    navigateToAccSettings,
-    navigateToAboutUs,
-    navigateToMyMessages,
-    imgUrl,
-    isAuth,
-  }) => {
+export default function ProfileSettings({
+  signalOfNewMessage,
+  navigateToMyLists,
+  navigateToHelp,
+  navigateToLogout,
+  navigateToAccSettings,
+  navigateToAboutUs,
+  navigateToMyMessages,
+  imgUrl,
+  isAuth,
+}: ProfileSettingsProps) {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
@@ -115,9 +113,4 @@ const ProfileSettings: FC<ProfileSettingsProps> = memo(
         />
       </>
     );
-  }
-);
-
-ProfileSettings.displayName = "ProfileSettings";
-
-export default ProfileSettings;
+}

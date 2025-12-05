@@ -108,9 +108,17 @@ export async function fetchCRMCustomers(filters?: Partial<CRMCustomersFilter>) {
     return { data: null, error };
   }
 
+  // Raw customer type from Supabase query
+  interface RawCustomer extends CRMCustomer {
+    profiles?: { id: string; full_name: string; email: string; avatar_url: string | null };
+    profile_stats?: { items_shared: number; items_received: number; rating_average: number | null };
+    forum_user_stats?: { reputation_score: number; trust_level: number };
+    crm_customer_tag_assignments?: Array<{ tag: CRMCustomerTag }>;
+  }
+
   // Transform data to match CRMCustomerWithProfile interface
   const customers: CRMCustomerWithProfile[] =
-    data?.map((customer: any) => ({
+    data?.map((customer: RawCustomer) => ({
       ...customer,
       full_name: customer.profiles?.full_name || "",
       email: customer.profiles?.email || "",
@@ -120,7 +128,7 @@ export async function fetchCRMCustomers(filters?: Partial<CRMCustomersFilter>) {
       rating_average: customer.profile_stats?.rating_average || null,
       forum_reputation: customer.forum_user_stats?.reputation_score || 0,
       trust_level: customer.forum_user_stats?.trust_level || 0,
-      tags: customer.crm_customer_tag_assignments?.map((assignment: any) => assignment.tag) || [],
+      tags: customer.crm_customer_tag_assignments?.map((assignment) => assignment.tag) || [],
     })) || [];
 
   // Apply search filter if provided
@@ -252,9 +260,14 @@ export async function fetchCustomerNotes(customerId: string) {
     return { data: null, error };
   }
 
+  // Raw note type from Supabase query
+  interface RawNote extends CRMCustomerNote {
+    admin?: { id: string; full_name: string; email: string; avatar_url: string | null };
+  }
+
   // Transform data
   const notes: CRMCustomerNoteWithAdmin[] =
-    data?.map((note: any) => ({
+    data?.map((note: RawNote) => ({
       ...note,
       admin_name: note.admin?.full_name || "",
       admin_email: note.admin?.email || "",
@@ -299,7 +312,7 @@ export async function createCustomerNote(payload: CreateCustomerNotePayload) {
  * Update customer note
  */
 export async function updateCustomerNote(payload: UpdateCustomerNotePayload) {
-  const updateData: any = {};
+  const updateData: Partial<Pick<CRMCustomerNote, 'note_text' | 'note_type' | 'is_pinned'>> = {};
 
   if (payload.note_text !== undefined) updateData.note_text = payload.note_text;
   if (payload.note_type !== undefined) updateData.note_type = payload.note_type;
@@ -379,7 +392,7 @@ export async function createCustomerTag(payload: CreateCustomerTagPayload) {
  * Update customer tag
  */
 export async function updateCustomerTag(payload: UpdateCustomerTagPayload) {
-  const updateData: any = {};
+  const updateData: Partial<Pick<CRMCustomerTag, 'name' | 'color' | 'description'>> = {};
 
   if (payload.name !== undefined) updateData.name = payload.name;
   if (payload.color !== undefined) updateData.color = payload.color;
@@ -574,8 +587,13 @@ export async function fetchCRMDashboardStats() {
         tag:tag_id (name)
       `);
 
+    interface TagAssignment {
+      tag_id: string;
+      tag?: { name: string };
+    }
+
     const tagCounts: Record<string, number> = {};
-    tagData?.forEach((item: any) => {
+    tagData?.forEach((item: TagAssignment) => {
       const tagName = item.tag?.name;
       if (tagName) {
         tagCounts[tagName] = (tagCounts[tagName] || 0) + 1;
@@ -602,8 +620,15 @@ export async function fetchCRMDashboardStats() {
       .order("ltv_score", { ascending: false })
       .limit(5);
 
+    interface ChampionData {
+      id: string;
+      profile_id: string;
+      ltv_score: number;
+      profiles?: { full_name: string };
+    }
+
     const topChampions =
-      championsData?.map((item: any) => ({
+      championsData?.map((item: ChampionData) => ({
         customer_id: item.id,
         full_name: item.profiles?.full_name || "Unknown",
         ltv_score: item.ltv_score,

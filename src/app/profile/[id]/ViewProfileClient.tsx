@@ -7,7 +7,6 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { GlassCard } from '@/components/Glass';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { FaEnvelope, FaMapMarkerAlt, FaCalendar } from 'react-icons/fa';
 import Image from 'next/image';
@@ -35,7 +34,7 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">
       <div className="container mx-auto max-w-4xl pt-24 pb-12 px-4">
-        <GlassCard variant="standard" padding="0" overflow="hidden" className="glass-fade-in">
+        <div className="glass rounded-xl p-0 overflow-hidden">
           {/* Cover Photo */}
           <div className="relative h-[200px] w-full">
             <Image
@@ -88,18 +87,18 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
                 <h2 className="text-xl font-semibold mb-3 text-foreground">
                   About
                 </h2>
-                <GlassCard variant="subtle" className="p-4">
+                <div className="glass-subtle rounded-xl p-4">
                   <p className="text-foreground/80 whitespace-pre-wrap">
                     {profile.about_me}
                   </p>
-                </GlassCard>
+                </div>
               </div>
             )}
 
             {/* Profile Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Join Date */}
-              <GlassCard variant="subtle" className="p-4">
+              <div className="glass-subtle rounded-xl p-4">
                 <div className="flex items-center gap-3">
                   <div className="flex-shrink-0 p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
                     <FaCalendar className="text-emerald-600 dark:text-emerald-400" />
@@ -111,11 +110,11 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
                     <p className="text-foreground font-semibold">{joinDate}</p>
                   </div>
                 </div>
-              </GlassCard>
+              </div>
 
               {/* Location */}
               {profile.user_location && (
-                <GlassCard variant="subtle" className="p-4">
+                <div className="glass-subtle rounded-xl p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0 p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                       <FaMapMarkerAlt className="text-blue-600 dark:text-blue-400" />
@@ -129,7 +128,7 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
                       </p>
                     </div>
                   </div>
-                </GlassCard>
+                </div>
               )}
             </div>
 
@@ -146,7 +145,7 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
               </div>
             )}
           </div>
-        </GlassCard>
+        </div>
 
         {/* Back Button */}
         <div className="mt-6 flex justify-center">

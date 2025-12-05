@@ -6,6 +6,31 @@
  */
 
 // ============================================================================
+// Development Cache Logging
+// ============================================================================
+
+const IS_DEV = process.env.NODE_ENV === 'development';
+
+/**
+ * Log cache operations in development
+ */
+function logCacheOperation(
+  operation: 'hit' | 'miss' | 'set' | 'invalidate',
+  key: string,
+  metadata?: Record<string, unknown>
+): void {
+  if (!IS_DEV) return;
+  
+  const emoji = operation === 'hit' ? '✅' : operation === 'miss' ? '❌' : operation === 'set' ? '💾' : '🗑️';
+  const color = operation === 'hit' ? '\x1b[32m' : operation === 'miss' ? '\x1b[33m' : operation === 'set' ? '\x1b[36m' : '\x1b[35m';
+  const reset = '\x1b[0m';
+  const time = new Date().toISOString().split('T')[1].slice(0, 12);
+  
+  const metaStr = metadata ? ` ${JSON.stringify(metadata)}` : '';
+  console.log(`${emoji} ${color}[${time}] CACHE ${operation.toUpperCase()}${reset} ${key}${metaStr}`);
+}
+
+// ============================================================================
 // Cache Tags - Used with unstable_cache and revalidateTag
 // ============================================================================
 
@@ -96,8 +121,12 @@ import { revalidateTag as nextRevalidateTag } from 'next/cache';
  * Wrapper around Next.js 16's revalidateTag which requires a profile
  */
 export function invalidateTag(tag: string): void {
+  logCacheOperation('invalidate', tag);
   nextRevalidateTag(tag, CACHE_PROFILES.DEFAULT);
 }
+
+// Export for use in data functions
+export { logCacheOperation };
 
 // ============================================================================
 // Helper to get all tags for a category (for bulk invalidation)

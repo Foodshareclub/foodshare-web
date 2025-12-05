@@ -1,7 +1,7 @@
 'use client';
 
 import type { KeyboardEvent } from "react";
-import React, { memo, useState } from "react";
+import React, { useState } from "react";
 import { useSendMessage, useUpdateRoom } from "@/hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ type InputSectionType = {
  * Chat message input with send functionality
  * Uses React Query instead of Redux for message operations
  */
-export const InputSection: React.FC<InputSectionType> = memo(({ roomId, userID }) => {
+export function InputSection({ roomId, userID }: InputSectionType) {
   // React Query mutations (replace Redux thunks)
   const sendMessageMutation = useSendMessage();
   const updateRoomMutation = useUpdateRoom();
@@ -68,6 +68,4 @@ export const InputSection: React.FC<InputSectionType> = memo(({ roomId, userID }
       </Button>
     </>
   );
-});
-
-InputSection.displayName = "InputSection";
+}

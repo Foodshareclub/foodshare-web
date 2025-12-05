@@ -114,6 +114,7 @@ export function useDashboardStats() {
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchInterval: 5 * 60 * 1000, // Auto refresh every 5 minutes
+    placeholderData: (previousData) => previousData,
   });
 }
 
@@ -154,6 +155,7 @@ export function useAdminListings(filters: AdminFilters = {}) {
       return (data ?? []) as AdminListing[];
     },
     staleTime: 1 * 60 * 1000, // 1 minute
+    placeholderData: (previousData) => previousData,
   });
 }
 

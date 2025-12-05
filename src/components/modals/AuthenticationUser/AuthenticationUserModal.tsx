@@ -9,7 +9,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/hooks";
 import { ViewIcon, ViewOffIcon } from "@/utils/icons";
-import { GlassDialogContent } from "@/components/Glass";
+
 import { PasswordStrength } from "./PasswordStrength";
 import facebook from "@/assets/facebookblue.svg";
 import apple from "@/assets/apple.svg";
@@ -20,7 +20,7 @@ import {
   clearSupabaseStorage,
   type StorageErrorInfo,
 } from "@/utils/storageErrorHandler";
-import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -322,7 +322,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
 
       {/* Modal */}
       <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && handleClose()}>
-        <GlassDialogContent className="max-w-[568px] rounded-2xl p-0" aria-describedby={undefined}>
+        <DialogContent variant="glass" className="max-w-[568px] rounded-2xl p-0" aria-describedby={undefined}>
           {/* Header with proper accessibility */}
           <DialogHeader className="border-b border-border py-4 px-6 relative">
             <DialogTitle className="text-base font-semibold text-center text-foreground">
@@ -631,7 +631,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                 </div>
               </div>
           </div>
-        </GlassDialogContent>
+        </DialogContent>
       </Dialog>
     </>
   );

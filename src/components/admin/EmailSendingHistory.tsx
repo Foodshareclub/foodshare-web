@@ -6,7 +6,7 @@
  * Optimized with custom hooks and constants
  */
 
-import React, { useState, memo, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { type EmailLogEntry, type QueuedEmailEntry } from "@/api/admin/emailManagement";
 import { useEmailLogs, useQueuedEmails } from "@/hooks/useEmailManagement";
@@ -17,7 +17,7 @@ interface EmailLogRowProps {
   log: EmailLogEntry;
 }
 
-const EmailLogRow = memo<EmailLogRowProps>(({ log }) => {
+function EmailLogRow({ log }: EmailLogRowProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "sent":
@@ -61,9 +61,7 @@ const EmailLogRow = memo<EmailLogRowProps>(({ log }) => {
       </td>
     </tr>
   );
-});
-
-EmailLogRow.displayName = "EmailLogRow";
+}
 
 interface QueuedEmailRowProps {
   email: QueuedEmailEntry;
@@ -71,7 +69,7 @@ interface QueuedEmailRowProps {
   onDelete: (id: string) => void;
 }
 
-const QueuedEmailRow = memo<QueuedEmailRowProps>(({ email, onRetry, onDelete }) => {
+function QueuedEmailRow({ email, onRetry, onDelete }: QueuedEmailRowProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "queued":
@@ -124,11 +122,9 @@ const QueuedEmailRow = memo<QueuedEmailRowProps>(({ email, onRetry, onDelete }) 
       </td>
     </tr>
   );
-});
+}
 
-QueuedEmailRow.displayName = "QueuedEmailRow";
-
-export const EmailSendingHistory: React.FC = memo(() => {
+export function EmailSendingHistory() {
   const t = useTranslations();
   const [activeTab, setActiveTab] = useState<"logs" | "queue">("logs");
 
@@ -357,6 +353,4 @@ export const EmailSendingHistory: React.FC = memo(() => {
       </div>
     </div>
   );
-});
-
-EmailSendingHistory.displayName = "EmailSendingHistory";
+}

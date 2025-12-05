@@ -1,12 +1,16 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { getProductById } from '@/lib/data/products';
+import { getProductById, getPopularProductIds } from '@/lib/data/products';
 import { getUser } from '@/app/actions/auth';
 import { ProductDetailClient } from './ProductDetailClient';
-import { GlassCard } from '@/components/Glass';
-
 // Route segment config for caching
 export const revalidate = 120; // Revalidate every 2 minutes
+
+// Pre-generate pages for popular products at build time
+export async function generateStaticParams(): Promise<{ id: string }[]> {
+  const productIds = await getPopularProductIds(50); // Top 50 products
+  return productIds.map((id) => ({ id: String(id) }));
+}
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -79,7 +83,7 @@ function ProductDetailSkeleton() {
         {/* Left Column - Product Detail Skeleton */}
         <div className="w-full lg:w-1/2 px-4 pb-12">
           <div className="animate-pulse">
-            <GlassCard variant="standard" padding="0" className="w-full overflow-hidden">
+            <div className="glass w-full overflow-hidden rounded-xl">
               {/* Image with back button skeleton */}
               <div className="relative aspect-[16/9] bg-gray-200">
                 <div className="absolute top-4 left-4 h-9 w-20 bg-white/90 rounded-lg" />
@@ -102,7 +106,7 @@ function ProductDetailSkeleton() {
                 </div>
                 <div className="mt-6 h-12 bg-gray-200 rounded" />
               </div>
-            </GlassCard>
+            </div>
           </div>
         </div>
 

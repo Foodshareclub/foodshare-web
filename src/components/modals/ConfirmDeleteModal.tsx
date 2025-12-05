@@ -1,7 +1,6 @@
 import React from "react";
-import { GlassDialogContent } from "@/components/Glass";
-import { GlassButton } from "@/components/Glass";
-import { Dialog, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 type ConfirmDeleteModalType = {
   isOpen: boolean;
@@ -18,7 +17,7 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalType> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <GlassDialogContent className="max-w-xs">
+      <DialogContent variant="glass" className="max-w-xs">
         <DialogHeader>
           <DialogTitle>Delete</DialogTitle>
         </DialogHeader>
@@ -32,15 +31,15 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalType> = ({
         </div>
 
         <DialogFooter className="justify-between">
-          <GlassButton variant="accentGreen" className="mr-3" onClick={deleteProductHandler}>
+          <Button variant="glass-accent" className="mr-3" onClick={deleteProductHandler}>
             Yes
-          </GlassButton>
+          </Button>
 
-          <GlassButton variant="standard" onClick={onClose}>
+          <Button variant="glass" onClick={onClose}>
             Cancel
-          </GlassButton>
+          </Button>
         </DialogFooter>
-      </GlassDialogContent>
+      </DialogContent>
     </Dialog>
   );
 };

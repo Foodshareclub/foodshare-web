@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import type { ContrastMode } from '@/store/zustand/useUIStore';
 import { CONTRAST_MODES } from '@/lib/theme/themeConfig';
@@ -11,8 +11,8 @@ interface ContrastSelectorProps {
   onChange: (mode: ContrastMode) => void;
 }
 
-export const ContrastSelector: React.FC<ContrastSelectorProps> = memo(
-  ({ current, onChange }) => (
+export function ContrastSelector({ current, onChange }: ContrastSelectorProps) {
+  return (
     <div className="flex gap-2">
       {Object.values(CONTRAST_MODES).map((mode) => (
         <motion.button
@@ -39,7 +39,5 @@ export const ContrastSelector: React.FC<ContrastSelectorProps> = memo(
         </motion.button>
       ))}
     </div>
-  )
-);
-
-ContrastSelector.displayName = 'ContrastSelector';
+  );
+}

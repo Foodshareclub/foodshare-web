@@ -3,8 +3,7 @@
 import React from "react";
 import { useDeleteProduct } from "@/hooks";
 import type { InitialProductStateType } from "@/types/product.types";
-import { GlassDialogContent } from "@/components/Glass";
-import { Dialog, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
 type PropsType = {
@@ -29,7 +28,7 @@ const DeleteCardModal: React.FC<PropsType> = ({ isOpen, onClose, product }) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
-      <GlassDialogContent className="max-w-xs">
+      <DialogContent variant="glass" className="max-w-xs">
         <DialogHeader>
           <DialogTitle>Delete</DialogTitle>
         </DialogHeader>
@@ -51,7 +50,7 @@ const DeleteCardModal: React.FC<PropsType> = ({ isOpen, onClose, product }) => {
             Cancel
           </Button>
         </DialogFooter>
-      </GlassDialogContent>
+      </DialogContent>
     </Dialog>
   );
 };

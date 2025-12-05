@@ -4,7 +4,7 @@
  * Optimized with custom hooks and request cancellation
  */
 
-import React, { memo, useMemo } from "react";
+import React from "react";
 import { useTranslations } from "next-intl";
 import { type ProviderQuotaStatus } from "@/api/admin/emailManagement";
 import { useProviderQuotas } from "@/hooks/useEmailManagement";
@@ -14,7 +14,7 @@ interface QuotaMeterProps {
   quota: ProviderQuotaStatus;
 }
 
-const QuotaMeter = memo<QuotaMeterProps>(({ quota }) => {
+function QuotaMeter({ quota }: QuotaMeterProps) {
   const t = useTranslations();
   const getStatusColor = () => {
     switch (quota.status) {
@@ -103,24 +103,19 @@ const QuotaMeter = memo<QuotaMeterProps>(({ quota }) => {
       </div>
     </div>
   );
-});
+}
 
-QuotaMeter.displayName = "QuotaMeter";
-
-export const EmailQuotaDashboard: React.FC = memo(() => {
+export function EmailQuotaDashboard() {
   const t = useTranslations();
   // Use optimized hook with auto-refresh and request cancellation
   const { quotas, loading, error, lastUpdated, refetch } = useProviderQuotas(true);
 
-  // Memoize calculated values to prevent unnecessary recalculations
-  const totalStats = useMemo(() => {
-    const totalCapacity = quotas.reduce((sum, q) => sum + q.daily_limit, 0);
-    const totalUsed = quotas.reduce((sum, q) => sum + q.emails_sent, 0);
-    const totalRemaining = totalCapacity - totalUsed;
-    const totalUsagePercentage = totalCapacity > 0 ? (totalUsed / totalCapacity) * 100 : 0;
-
-    return { totalCapacity, totalUsed, totalRemaining, totalUsagePercentage };
-  }, [quotas]);
+  // Calculate total stats
+  const totalCapacity = quotas.reduce((sum, q) => sum + q.daily_limit, 0);
+  const totalUsed = quotas.reduce((sum, q) => sum + q.emails_sent, 0);
+  const totalRemaining = totalCapacity - totalUsed;
+  const totalUsagePercentage = totalCapacity > 0 ? (totalUsed / totalCapacity) * 100 : 0;
+  const totalStats = { totalCapacity, totalUsed, totalRemaining, totalUsagePercentage };
 
   if (loading && quotas.length === 0) {
     return (
@@ -217,6 +212,4 @@ export const EmailQuotaDashboard: React.FC = memo(() => {
       </div>
     </div>
   );
-});
-
-EmailQuotaDashboard.displayName = "EmailQuotaDashboard";
+}
