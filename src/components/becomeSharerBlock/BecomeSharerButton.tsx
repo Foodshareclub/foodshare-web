@@ -5,8 +5,8 @@ import AuthenticationUserModal from "@/components/modals/AuthenticationUser/Auth
 
 /**
  * BecomeSharerButton Component
- * Green button for unauthenticated users that opens the auth modal
- * Matches the style of the authenticated "Add listing" button
+ * Green "Add listing" button for unauthenticated users that opens the auth modal
+ * Matches the style of the authenticated "Add listing" button from BecomeSharerBlock
  */
 export function BecomeSharerButton() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -20,7 +20,7 @@ export function BecomeSharerButton() {
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
         </svg>
-        Become a Sharer
+        Add listing
       </button>
 
       <AuthenticationUserModal

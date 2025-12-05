@@ -32,7 +32,11 @@ export default function NavigateButtons({ navigateTo, messagesAnchorRef, title }
       }
     };
     const goToStart = () => {
-      if (messagesAnchorRef) messagesAnchorRef.current?.scrollIntoView({ behavior: "smooth" });
+      if (messagesAnchorRef?.current) {
+        messagesAnchorRef.current.scrollIntoView({ behavior: "smooth" });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     };
 
     // Always show map button on listing pages (home + category pages)
