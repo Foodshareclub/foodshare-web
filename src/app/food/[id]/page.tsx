@@ -1,9 +1,12 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { getProductById } from '@/app/actions/products';
+import { getProductById } from '@/lib/data/products';
 import { getUser } from '@/app/actions/auth';
 import { ProductDetailClient } from './ProductDetailClient';
 import { GlassCard } from '@/components/Glass';
+
+// Route segment config for caching
+export const revalidate = 120; // Revalidate every 2 minutes
 
 interface PageProps {
   params: Promise<{ id: string }>;

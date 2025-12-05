@@ -1,9 +1,12 @@
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { getUser } from '@/app/actions/auth';
-import { getUserProducts } from '@/app/actions/products';
+import { getUserProducts } from '@/lib/data/products';
 import { UserListingsClient } from './UserListingsClient';
 import SkeletonCard from '@/components/productCard/SkeletonCard';
+
+// Route segment config for caching
+export const revalidate = 60;
 
 /**
  * User Listings Page - Server Component

@@ -1,8 +1,11 @@
 import { Suspense } from 'react';
-import { getProductLocations } from '@/app/actions/products';
+import { getProductLocations } from '@/lib/data/products';
 import { getUser } from '@/app/actions/auth';
 import { MapClient } from './MapClient';
 import { urlToDbType } from '@/utils/categoryMapping';
+
+// Route segment config for caching
+export const revalidate = 300; // Revalidate every 5 minutes (map data changes less frequently)
 
 interface PageProps {
   params: Promise<{ type: string }>;
