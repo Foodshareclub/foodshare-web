@@ -72,7 +72,7 @@ const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
       )}
 
       {/* Locate Me Button - Fixed position above footer */}
-      <div className="fixed bottom-14 md:bottom-12 right-4 z-[1000]">
+      <div className="fixed bottom-24 md:bottom-20 right-4 z-[1000]">
         <button
           onClick={requestLocation}
           disabled={isLoading}
