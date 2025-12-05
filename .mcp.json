@@ -9,7 +9,7 @@
       "command": "npx",
       "args": ["-y", "vercel-mcp@latest"],
       "env": {
-        "VERCEL_API_TOKEN": "h4KS5EPoibAa3mjBLqqeyPv2"
+        "VERCEL_API_TOKEN": "yKoDl2rrVyW1tRrfHR4SKqYa"
       }
     }
   }

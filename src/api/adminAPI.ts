@@ -87,7 +87,7 @@ export const getUserRoles = async (): Promise<{
       return { roles: [], error };
     }
 
-    const roles = data?.map((item: { roles: { name: string } }) => item.roles.name) || [];
+    const roles = data?.map((item: { roles: { name: string }[] }) => item.roles[0]?.name).filter(Boolean) as string[] || [];
     return { roles, error: null };
   } catch (error) {
     logger.error("Exception fetching user roles", error as Error);

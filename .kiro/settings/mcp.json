@@ -31,10 +31,13 @@
     },
     "Vercel": {
       "command": "npx",
-      "args": ["-y", "@robinson_ai_systems/vercel-mcp"],
+      "args": [
+        "-y",
+        "@robinson_ai_systems/vercel-mcp"
+      ],
       "env": {
-        "VERCEL_TOKEN": "${VERCEL_TOKEN}",
-        "VERCEL_TEAM_ID": "REDACTED"
+        "VERCEL_TOKEN": "yKoDl2rrVyW1tRrfHR4SKqYa",
+        "VERCEL_TEAM_ID": "foodshare"
       },
       "disabled": false,
       "autoApprove": [
@@ -57,7 +60,9 @@
         "update_project_settings",
         "vercel_list_projects",
         "vercel_list_env_vars",
-        "vercel_list_env_vars"
+        "vercel_list_env_vars",
+        "vercel_list_deployments",
+        "vercel_list_deployments"
       ]
     }
   }
