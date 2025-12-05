@@ -4,14 +4,14 @@ FoodShare uses several Vercel/Upstash storage services for different purposes.
 
 ## Upstash Redis
 
-**Purpose:** Distributed caching, rate limiting, session storage
+**Purpose:** Distributed caching, rate limiting, session storage, distributed locks
 
 **Client Location:** `src/lib/storage/redis.ts`
 
 ### Usage
 
 ```typescript
-import { cache, rateLimiter, REDIS_KEYS, CACHE_TTL } from '@/lib/storage/redis';
+import { cache, rateLimiter, lock, REDIS_KEYS, CACHE_TTL } from '@/lib/storage/redis';
 
 // Cache operations
 const data = await cache.get<Product>(REDIS_KEYS.PRODUCT('123'));
@@ -26,6 +26,11 @@ const products = await cache.getOrSet(
 
 // Rate limiting
 const { allowed, remaining, reset } = await rateLimiter.check('api:user123', 100, 60);
+
+// Distributed locks
+const result = await lock.withLock('my-task', async () => {
+  return await performCriticalTask();
+});
 ```
 
 ### Environment Variables
@@ -60,19 +65,39 @@ Automatically configured when linked to Vercel project.
 
 **Purpose:** Vector embeddings for semantic search
 
+**Client Location:** `src/lib/storage/vector.ts`
+
 ### Usage
 
 ```typescript
-import { Index } from '@upstash/vector';
+import {
+  upsertVector,
+  querySimilar,
+  querySimilarByType,
+  deleteVectors,
+  deleteVectorsByType,
+  type VectorContentType,
+} from '@/lib/storage/vector';
 
-const index = new Index({
-  url: process.env.UPSTASH_VECTOR_REST_URL,
-  token: process.env.UPSTASH_VECTOR_REST_TOKEN,
+// Upsert a vector
+await upsertVector('product-123', embedding, {
+  id: 'product-123',
+  type: 'product',
+  title: 'Organic Apples',
 });
 
-// Query vectors
-const result = await index.fetch(['vector-id'], { includeData: true });
+// Query similar vectors
+const results = await querySimilar(queryVector, {
+  topK: 10,
+  filter: 'type = "product"',
+  minScore: 0.7,
+});
+
+// Delete vectors by type (queries and deletes in batches)
+await deleteVectorsByType('product');
 ```
+
+See `docs/storages/storages.md` for full API documentation.
 
 ### Environment Variables
 

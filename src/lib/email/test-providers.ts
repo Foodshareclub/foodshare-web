@@ -92,7 +92,7 @@ export async function testResend(
       messageId: response.messageId,
       latency,
       error: response.error,
-      details: response,
+      details: response as unknown as Record<string, unknown>,
     };
   } catch (error) {
     const latency = Date.now() - startTime;
@@ -168,7 +168,7 @@ export async function testBrevo(
       messageId: response.messageId,
       latency,
       error: response.error,
-      details: response,
+      details: response as unknown as Record<string, unknown>,
     };
   } catch (error) {
     const latency = Date.now() - startTime;
@@ -248,7 +248,7 @@ export async function testAWSSES(
       messageId: response.messageId,
       latency,
       error: response.error,
-      details: response,
+      details: response as unknown as Record<string, unknown>,
     };
   } catch (error) {
     const latency = Date.now() - startTime;

@@ -17,7 +17,7 @@ export interface BlobUploadResult {
   url: string;
   pathname: string;
   contentType: string;
-  size: number;
+  size?: number;
 }
 
 // Maximum file sizes (in bytes)
@@ -92,7 +92,7 @@ export async function uploadBlob(
     url: blob.url,
     pathname: blob.pathname,
     contentType: blob.contentType,
-    size: blob.size,
+    size: (blob as { size?: number }).size,
   };
 }
 
@@ -186,7 +186,7 @@ export async function copyBlob(
       url: blob.url,
       pathname: blob.pathname,
       contentType: blob.contentType,
-      size: blob.size,
+      size: (blob as { size?: number }).size,
     };
   } catch (error) {
     console.error(`[Blob] Failed to copy blob:`, error);

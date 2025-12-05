@@ -389,17 +389,34 @@ export class TranslationClient {
     prefetch?: boolean;
     stream?: boolean;
     keys?: string[];
-  } = {}): HeadersInit {
-    return {
+  } = {}): Record<string, string> {
+    const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      "X-Platform": this.config.platform,
-      "X-Locale": options.locale || this.config.locale,
-      ...(this.config.apiKey && { apikey: this.config.apiKey }),
-      ...(options.version && { "X-Version": options.version }),
-      ...(options.prefetch && { "X-Prefetch": "true" }),
-      ...(options.stream && { "X-Stream": "true" }),
-      ...(options.keys && { "X-Keys": options.keys.join(",") }),
     };
+    
+    if (this.config.platform) {
+      headers["X-Platform"] = this.config.platform;
+    }
+    if (options.locale || this.config.locale) {
+      headers["X-Locale"] = options.locale || this.config.locale || "";
+    }
+    if (this.config.apiKey) {
+      headers["apikey"] = this.config.apiKey;
+    }
+    if (options.version) {
+      headers["X-Version"] = options.version;
+    }
+    if (options.prefetch) {
+      headers["X-Prefetch"] = "true";
+    }
+    if (options.stream) {
+      headers["X-Stream"] = "true";
+    }
+    if (options.keys) {
+      headers["X-Keys"] = options.keys.join(",");
+    }
+    
+    return headers;
   }
 
   private async cacheTranslations(locale: Locale, data: TranslationData) {
@@ -425,7 +442,7 @@ export class TranslationClient {
     }
 
     // Check persistent cache
-    const cached = await this.storage.get(`translations:${locale}`);
+    const cached = await this.storage.get(`translations:${locale}`) as { data: TranslationData; timestamp: number } | null;
     if (cached) {
       const age = Date.now() - cached.timestamp;
       if (age < 86400000) {

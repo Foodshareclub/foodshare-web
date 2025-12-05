@@ -11,7 +11,15 @@ FoodShare uses several Vercel/Upstash storage services for different purposes.
 ### Usage
 
 ```typescript
-import { cache, rateLimiter, lock, REDIS_KEYS, CACHE_TTL } from '@/lib/storage/redis';
+import { 
+  cache, 
+  rateLimiter, 
+  lock, 
+  REDIS_KEYS, 
+  CACHE_TTL,
+  type RateLimitResult,
+  type CacheTTL,
+} from '@/lib/storage/redis';
 
 // Cache operations (all methods have built-in error handling)
 const data = await cache.get<Product>(REDIS_KEYS.PRODUCT('123'));
@@ -62,6 +70,49 @@ const result = await lock.withLock('my-task', async () => {
 | `ttl(key)` | `number` | Get remaining TTL |
 
 All methods include error handling and return sensible defaults on failure (null, false, 0, -1).
+
+### Type Exports
+
+```typescript
+// Rate limiter result type
+type RateLimitResult = {
+  allowed: boolean;
+  remaining: number;
+  reset: number;
+};
+
+// Cache TTL union type (60 | 300 | 3600 | 86400)
+type CacheTTL = (typeof CACHE_TTL)[keyof typeof CACHE_TTL];
+```
+
+### Lock Methods (Distributed Locking)
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `lock.acquire(key, ttl?)` | `string \| null` | Acquire lock, returns token or null if held |
+| `lock.release(key, token)` | `boolean` | Release lock (only if we own it) |
+| `lock.withLock(key, fn, ttl?)` | `T \| null` | Execute function with lock, returns null if lock unavailable |
+
+```typescript
+// Manual lock management
+const token = await lock.acquire('my-task', 30); // 30 second TTL
+if (token) {
+  try {
+    await performCriticalTask();
+  } finally {
+    await lock.release('my-task', token);
+  }
+}
+
+// Automatic lock management (recommended)
+const result = await lock.withLock('my-task', async () => {
+  return await performCriticalTask();
+}, 30);
+
+if (result === null) {
+  // Lock was held by another process
+}
+```
 
 ### Environment Variables
 
@@ -165,19 +216,111 @@ Automatically configured when linked to Vercel project.
 
 **Purpose:** Vector embeddings for semantic search
 
+**Client Location:** `src/lib/storage/vector.ts`
+
 ### Usage
 
 ```typescript
-import { Index } from '@upstash/vector';
+import {
+  upsertVector,
+  upsertVectors,
+  querySimilar,
+  querySimilarByType,
+  fetchVectors,
+  deleteVectors,
+  deleteVectorsByType,
+  getIndexStats,
+  VECTOR_NAMESPACES,
+  type VectorContentType,
+  type VectorMetadata,
+  type VectorQueryResult,
+} from '@/lib/storage/vector';
 
-const index = new Index({
-  url: process.env.UPSTASH_VECTOR_REST_URL,
-  token: process.env.UPSTASH_VECTOR_REST_TOKEN,
+// Upsert a single vector
+const success = await upsertVector('product-123', embedding, {
+  id: 'product-123',
+  type: 'product',
+  title: 'Organic Apples',
+  content: 'Fresh organic apples from local farm',
 });
 
-// Query vectors
-const result = await index.fetch(['vector-id'], { includeData: true });
+// Upsert multiple vectors
+await upsertVectors([
+  { id: 'product-1', vector: embedding1, metadata: { type: 'product', ... } },
+  { id: 'product-2', vector: embedding2, metadata: { type: 'product', ... } },
+]);
+
+// Query similar vectors
+const results = await querySimilar(queryVector, {
+  topK: 10,
+  filter: 'type = "product"',
+  includeMetadata: true,
+  minScore: 0.7,
+});
+
+// Query by content type
+const products = await querySimilarByType(queryVector, 'product', {
+  topK: 5,
+  minScore: 0.8,
+});
+
+// Fetch vectors by IDs
+const vectors = await fetchVectors(['id1', 'id2'], {
+  includeMetadata: true,
+  includeVectors: false,
+});
+
+// Delete vectors by IDs
+await deleteVectors(['product-123', 'product-456']);
+
+// Delete all vectors of a specific type
+// Note: Queries up to 1000 vectors matching the type and deletes them in batch
+await deleteVectorsByType('product');
+
+// Get index statistics
+const stats = await getIndexStats();
+// Returns: { vectorCount, pendingVectorCount, indexSize, dimension }
 ```
+
+### Vector Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `upsertVector(id, vector, metadata?)` | `boolean` | Upsert single vector |
+| `upsertVectors(vectors)` | `boolean` | Upsert multiple vectors |
+| `querySimilar(vector, options?)` | `VectorQueryResult[]` | Query similar vectors |
+| `querySimilarByType(vector, type, options?)` | `VectorQueryResult[]` | Query by content type |
+| `fetchVectors(ids, options?)` | `(VectorQueryResult \| null)[]` | Fetch vectors by IDs |
+| `deleteVectors(ids)` | `boolean` | Delete vectors by IDs |
+| `deleteVectorsByType(type)` | `boolean` | Delete all vectors of a type (batched) |
+| `getIndexStats()` | `Stats \| null` | Get index statistics |
+
+All methods include built-in error handling and return sensible defaults on failure.
+
+### Content Types
+
+```typescript
+type VectorContentType = 'product' | 'user' | 'message' | 'location';
+```
+
+### Vector Namespaces
+
+```typescript
+VECTOR_NAMESPACES.PRODUCTS   // 'products'
+VECTOR_NAMESPACES.USERS      // 'users'
+VECTOR_NAMESPACES.MESSAGES   // 'messages'
+VECTOR_NAMESPACES.LOCATIONS  // 'locations'
+```
+
+### Query Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `topK` | `number` | `10` | Maximum results to return |
+| `filter` | `string` | - | Metadata filter expression |
+| `includeMetadata` | `boolean` | `true` | Include metadata in results |
+| `includeVectors` | `boolean` | `false` | Include vector data in results |
+| `minScore` | `number` | `0` | Minimum similarity score threshold |
 
 ### Environment Variables
 
@@ -321,8 +464,10 @@ import {
 } from '@/lib/storage/search';
 
 // Index a single document (returns boolean)
+// All documents must have 'id' and 'content' fields
 const success = await indexDocument(SEARCH_INDEXES.PRODUCTS, {
   id: 'product-123',
+  content: 'Organic Apples - Fresh organic apples from local farm',
   title: 'Organic Apples',
   description: 'Fresh organic apples',
   type: 'food',
@@ -334,7 +479,6 @@ const bulkSuccess = await indexDocuments(SEARCH_INDEXES.PRODUCTS, products);
 // Search documents (returns empty results on error)
 const { results, total } = await searchDocuments(SEARCH_INDEXES.PRODUCTS, 'organic', {
   limit: 10,
-  offset: 0,
   filter: 'type = "food"',
 });
 
@@ -368,6 +512,28 @@ All methods include built-in error handling and return sensible defaults on fail
 SEARCH_INDEXES.PRODUCTS  // 'products'
 SEARCH_INDEXES.USERS     // 'users'
 SEARCH_INDEXES.MESSAGES  // 'messages'
+```
+
+### Document Types
+
+```typescript
+// Base document interface - all indexed documents must have these fields
+interface SearchDocument {
+  id: string;                          // Unique identifier
+  content: Record<string, unknown>;    // Searchable content object
+  metadata?: Record<string, unknown>;  // Optional metadata
+}
+
+// Product-specific document
+interface ProductSearchDocument extends SearchDocument {
+  title: string;
+  description: string;
+  type: string;
+  location: string;
+  userId: string;
+  createdAt: string;
+  active: boolean;
+}
 ```
 
 ### Environment Variables

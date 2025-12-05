@@ -102,27 +102,27 @@ export async function getSampleMembers(filters: SegmentFilters, limit: number = 
       ltv_score: number | null;
       total_interactions: number | null;
       last_interaction_at: string | null;
-      profiles: { full_name: string | null; email: string | null; avatar_url: string | null } | null;
-      profile_stats: { items_shared: number | null; items_received: number | null; rating_average: number | null } | null;
-      crm_customer_tag_assignments: Array<{ tag: { id: string; name: string; color: string } | null }> | null;
+      profiles: { full_name: string | null; email: string | null; avatar_url: string | null }[];
+      profile_stats: { items_shared: number | null; items_received: number | null; rating_average: number | null }[];
+      crm_customer_tag_assignments: Array<{ tag: { id: string; name: string; color: string }[] }>;
     }
 
     const members =
-      (data as RawCustomerData[] | null)?.map((customer) => ({
+      (data as unknown as RawCustomerData[] | null)?.map((customer) => ({
         customer_id: customer.id,
         profile_id: customer.profile_id,
-        full_name: customer.profiles?.full_name || "Unknown",
-        email: customer.profiles?.email || "",
-        avatar_url: customer.profiles?.avatar_url || null,
+        full_name: customer.profiles?.[0]?.full_name || "Unknown",
+        email: customer.profiles?.[0]?.email || "",
+        avatar_url: customer.profiles?.[0]?.avatar_url || null,
         customer_type: customer.customer_type,
         lifecycle_stage: customer.lifecycle_stage,
         engagement_score: customer.engagement_score || 0,
         churn_risk_score: customer.churn_risk_score || 0,
         ltv_score: customer.ltv_score || 0,
-        items_shared: customer.profile_stats?.items_shared || 0,
-        items_received: customer.profile_stats?.items_received || 0,
-        rating_average: customer.profile_stats?.rating_average || null,
-        tags: customer.crm_customer_tag_assignments?.map((assignment) => assignment.tag).filter(Boolean) || [],
+        items_shared: customer.profile_stats?.[0]?.items_shared || 0,
+        items_received: customer.profile_stats?.[0]?.items_received || 0,
+        rating_average: customer.profile_stats?.[0]?.rating_average || null,
+        tags: customer.crm_customer_tag_assignments?.map((assignment) => assignment.tag?.[0]).filter(Boolean) || [],
         total_interactions: customer.total_interactions || 0,
         last_interaction_at: customer.last_interaction_at,
       })) || [];
@@ -424,10 +424,11 @@ export function validateSegmentFilters(filters: SegmentFilters): {
  * Apply segment filters to a Supabase query
  * Internal helper function to consistently apply filters across all queries
  */
-function applySegmentFilters<T>(
-  query: ReturnType<typeof supabase.from<"crm_customers">>,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function applySegmentFilters(
+  query: any,
   filters: SegmentFilters
-): ReturnType<typeof supabase.from<"crm_customers">> {
+): any {
   // Customer type
   if (filters.customer_type && filters.customer_type !== "all") {
     query = query.eq("customer_type", filters.customer_type);

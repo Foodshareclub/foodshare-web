@@ -28,7 +28,8 @@ export type SearchIndexName = (typeof SEARCH_INDEXES)[keyof typeof SEARCH_INDEXE
 
 export interface SearchDocument {
   id: string;
-  [key: string]: unknown;
+  content: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface SearchResult<T = SearchDocument> {
@@ -47,7 +48,7 @@ export async function indexDocument<T extends SearchDocument>(
   try {
     const client = getSearchClient();
     const index = client.index(indexName);
-    await index.upsert({ id: document.id, ...document });
+    await index.upsert(document);
     return true;
   } catch (error) {
     console.error(`[Search] Failed to index document in "${indexName}":`, error);
@@ -67,7 +68,7 @@ export async function indexDocuments<T extends SearchDocument>(
   try {
     const client = getSearchClient();
     const index = client.index(indexName);
-    await index.upsert(documents.map((doc) => ({ id: doc.id, ...doc })));
+    await index.upsert(documents);
     return true;
   } catch (error) {
     console.error(`[Search] Failed to index ${documents.length} documents in "${indexName}":`, error);
@@ -83,7 +84,6 @@ export async function searchDocuments<T = SearchDocument>(
   query: string,
   options?: {
     limit?: number;
-    offset?: number;
     filter?: string;
   }
 ): Promise<{
@@ -94,22 +94,21 @@ export async function searchDocuments<T = SearchDocument>(
     const client = getSearchClient();
     const index = client.index(indexName);
 
-    const { limit = 10, offset = 0, filter } = options || {};
+    const { limit = 10, filter } = options || {};
 
-    const response = await index.search({
+    const results = await index.search({
       query,
       limit,
-      offset,
       filter,
     });
 
     return {
-      results: response.hits.map((hit) => ({
-        id: hit.id as string,
+      results: results.map((hit) => ({
+        id: hit.id,
         score: hit.score,
         document: hit as unknown as T,
       })),
-      total: response.total,
+      total: results.length,
     };
   } catch (error) {
     console.error(`[Search] Query failed in "${indexName}":`, error);
@@ -188,7 +187,6 @@ export async function searchProducts(
   query: string,
   options?: {
     limit?: number;
-    offset?: number;
     type?: string;
     activeOnly?: boolean;
     location?: string;
@@ -197,7 +195,7 @@ export async function searchProducts(
   results: SearchResult<ProductSearchDocument>[];
   total: number;
 }> {
-  const { limit = 10, offset = 0, type, activeOnly = true, location } = options || {};
+  const { limit = 10, type, activeOnly = true, location } = options || {};
 
   const filters: string[] = [];
 
@@ -215,7 +213,6 @@ export async function searchProducts(
 
   return searchDocuments<ProductSearchDocument>(SEARCH_INDEXES.PRODUCTS, query, {
     limit,
-    offset,
     filter,
   });
 }

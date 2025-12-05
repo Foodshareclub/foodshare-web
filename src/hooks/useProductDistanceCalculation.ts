@@ -45,8 +45,9 @@ export const useProductDistanceCalculation = (
     }
 
     calculateDistances(userLat, userLng, productsForWorker)
-      .then((result: WorkerResult | InitialProductStateType[]) => {
-        const products = Array.isArray(result) ? result : result.products || [];
+      .then((result: unknown) => {
+        const typedResult = result as WorkerResult | InitialProductStateType[];
+        const products = Array.isArray(typedResult) ? typedResult : typedResult.products || [];
         setProductsWithDistance(products as InitialProductStateType[]);
         setIsCalculating(false);
       })

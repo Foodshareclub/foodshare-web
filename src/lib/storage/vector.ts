@@ -184,11 +184,23 @@ export async function deleteVectors(ids: string[]): Promise<boolean> {
 
 /**
  * Delete all vectors for a specific type
+ * Note: This queries vectors by type and deletes them in batches
  */
 export async function deleteVectorsByType(type: VectorContentType): Promise<boolean> {
   try {
     const index = getVectorIndex();
-    await index.reset({ filter: `type = "${type}"` });
+    // Query vectors with the specified type filter
+    const results = await index.query({
+      topK: 1000,
+      filter: `type = "${type}"`,
+      includeMetadata: false,
+      vector: new Array(1536).fill(0), // Dummy vector for filter-only query
+    });
+    
+    if (results.length > 0) {
+      const ids = results.map((r) => String(r.id));
+      await index.delete(ids);
+    }
     return true;
   } catch (error) {
     console.error(`[Vector] Failed to delete vectors by type "${type}":`, error);

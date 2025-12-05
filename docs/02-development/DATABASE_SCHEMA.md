@@ -16,14 +16,49 @@ User profile information linked to Supabase Auth users.
 **Columns:**
 
 - `id` (uuid, PK) - User identifier (matches auth.users.id)
-- `full_name` (text) - User's full name
+- `nickname` (text) - Username/display name
+- `first_name` (text) - User's first name
+- `second_name` (text) - User's last name
 - `email` (text) - User's email address
 - `phone` (text) - Phone number
 - `avatar_url` (text) - Profile picture URL
-- `bio` (text) - User biography
-- `address` (text) - User's location
-- `created_at` (timestamp) - Account creation time
+- `about_me` (text) - User biography
+- `bio` (text) - Short bio
+- `location` (geography) - User's location (PostGIS point)
+- `language` (varchar) - Preferred language code
+- `user_role` (text) - Legacy role field (deprecated)
+- `role` (jsonb) - User roles object (see below)
+- `telegram_id` (bigint) - Linked Telegram account ID
+- `is_verified` (boolean) - Email verification status
+- `is_active` (boolean) - Account active status
+- `created_time` (timestamp) - Account creation time
 - `updated_at` (timestamp) - Last profile update
+- `last_seen_at` (timestamp) - Last activity timestamp
+
+**Role Object Structure:**
+
+The `role` field is a JSONB object with boolean flags:
+
+```json
+{
+  "admin": false,
+  "volunteer": false,
+  "subscriber": true,
+  "organization": false,
+  "fridge-coordinator": false,
+  "foodbank-coordinator": false
+}
+```
+
+**Checking Admin Status (TypeScript):**
+
+```typescript
+// ✅ Correct - role is a JSONB object
+const isAdmin = profile?.role?.admin === true;
+
+// ❌ Incorrect - role is not a string
+const isAdmin = profile?.role === 'admin';
+```
 
 **Relationships:**
 

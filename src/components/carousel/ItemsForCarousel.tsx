@@ -17,7 +17,7 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
   navigateHandler,
   isCompact = false,
 }) => {
-  const changeAttributeValue = (v1: unknown, v2: unknown) => {
+  const changeAttributeValue = (v1: string, v2: string): string => {
     if (productType === item.nameForUrl.toLowerCase() && pageType === "productComponent") {
       return v1;
     } else return v2;

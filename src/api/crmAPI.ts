@@ -589,12 +589,12 @@ export async function fetchCRMDashboardStats() {
 
     interface TagAssignment {
       tag_id: string;
-      tag?: { name: string };
+      tag: { name: string }[];
     }
 
     const tagCounts: Record<string, number> = {};
-    tagData?.forEach((item: TagAssignment) => {
-      const tagName = item.tag?.name;
+    (tagData as unknown as TagAssignment[] | null)?.forEach((item) => {
+      const tagName = item.tag?.[0]?.name;
       if (tagName) {
         tagCounts[tagName] = (tagCounts[tagName] || 0) + 1;
       }
@@ -624,13 +624,13 @@ export async function fetchCRMDashboardStats() {
       id: string;
       profile_id: string;
       ltv_score: number;
-      profiles?: { full_name: string };
+      profiles: { full_name: string }[];
     }
 
     const topChampions =
-      championsData?.map((item: ChampionData) => ({
+      (championsData as unknown as ChampionData[] | null)?.map((item) => ({
         customer_id: item.id,
-        full_name: item.profiles?.full_name || "Unknown",
+        full_name: item.profiles?.[0]?.full_name || "Unknown",
         ltv_score: item.ltv_score,
       })) || [];
 

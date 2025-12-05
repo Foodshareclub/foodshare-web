@@ -180,7 +180,13 @@ For distributed caching across serverless functions, use the Redis client from `
 ### Cache Operations
 
 ```typescript
-import { cache, REDIS_KEYS, CACHE_TTL } from '@/lib/storage/redis';
+import { 
+  cache, 
+  REDIS_KEYS, 
+  CACHE_TTL,
+  type RateLimitResult,
+  type CacheTTL,
+} from '@/lib/storage/redis';
 
 // Get cached value (returns null on error)
 const product = await cache.get<Product>(REDIS_KEYS.PRODUCT('123'));
@@ -236,10 +242,10 @@ CACHE_TTL.DAY     // 86400s - static content
 ### Rate Limiting
 
 ```typescript
-import { rateLimiter } from '@/lib/storage/redis';
+import { rateLimiter, type RateLimitResult } from '@/lib/storage/redis';
 
 // Check rate limit (sliding window)
-const { allowed, remaining, reset } = await rateLimiter.check(
+const result: RateLimitResult = await rateLimiter.check(
   `api:${userId}`,  // identifier
   100,              // max requests
   60                // window in seconds

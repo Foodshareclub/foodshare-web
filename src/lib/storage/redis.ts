@@ -145,7 +145,8 @@ export const cache = {
   async expire(key: string, seconds: number): Promise<boolean> {
     try {
       const client = getRedis();
-      return await client.expire(key, seconds);
+      const result = await client.expire(key, seconds);
+      return result === 1;
     } catch (error) {
       console.error(`[Redis] Failed to set expiration on "${key}":`, error);
       return false;
@@ -191,8 +192,8 @@ export const rateLimiter = {
     const count = await redis.zcard(key);
 
     if (count >= limit) {
-      const oldestEntry = await redis.zrange(key, 0, 0, { withScores: true });
-      const reset = oldestEntry.length > 0 
+      const oldestEntry = await redis.zrange<{ score: number; member: string }[]>(key, 0, 0, { withScores: true });
+      const reset = oldestEntry.length > 0 && oldestEntry[0]?.score
         ? Math.ceil((Number(oldestEntry[0].score) + windowSeconds * 1000 - now) / 1000)
         : windowSeconds;
       
@@ -211,6 +212,15 @@ export const rateLimiter = {
   },
 };
 
+// Type exports
+export type RateLimitResult = {
+  allowed: boolean;
+  remaining: number;
+  reset: number;
+};
+
+export type CacheTTL = (typeof CACHE_TTL)[keyof typeof CACHE_TTL];
+
 // Cache key prefixes for different data types
 export const REDIS_KEYS = {
   PRODUCT: (id: string) => `product:${id}`,
@@ -228,3 +238,71 @@ export const CACHE_TTL = {
   LONG: 3600, // 1 hour
   DAY: 86400, // 24 hours
 } as const;
+
+/**
+ * Distributed lock using Redis
+ */
+export const lock = {
+  /**
+   * Acquire a lock
+   * @returns lock token if acquired, null if lock is held by another process
+   */
+  async acquire(
+    key: string,
+    ttlSeconds: number = 30
+  ): Promise<string | null> {
+    try {
+      const client = getRedis();
+      const token = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const lockKey = `lock:${key}`;
+      
+      // SET NX (only if not exists) with expiration
+      const result = await client.set(lockKey, token, { nx: true, ex: ttlSeconds });
+      
+      return result === 'OK' ? token : null;
+    } catch (error) {
+      console.error(`[Redis] Failed to acquire lock "${key}":`, error);
+      return null;
+    }
+  },
+
+  /**
+   * Release a lock (only if we own it)
+   */
+  async release(key: string, token: string): Promise<boolean> {
+    try {
+      const client = getRedis();
+      const lockKey = `lock:${key}`;
+      
+      // Only delete if token matches (we own the lock)
+      const currentToken = await client.get<string>(lockKey);
+      if (currentToken === token) {
+        await client.del(lockKey);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error(`[Redis] Failed to release lock "${key}":`, error);
+      return false;
+    }
+  },
+
+  /**
+   * Execute a function with a lock
+   */
+  async withLock<T>(
+    key: string,
+    fn: () => Promise<T>,
+    ttlSeconds: number = 30
+  ): Promise<T | null> {
+    const token = await this.acquire(key, ttlSeconds);
+    if (!token) {
+      return null;
+    }
+    try {
+      return await fn();
+    } finally {
+      await this.release(key, token);
+    }
+  },
+};
