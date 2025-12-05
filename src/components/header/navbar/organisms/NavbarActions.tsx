@@ -1,6 +1,6 @@
 import type { CustomRoomType } from "@/api/chatAPI";
 import { BecomeSharerBlock } from "@/components/becomeSharerBlock/BecomeSharerBlock";
-import AuthenticationUserModal from "@/components/modals/AuthenticationUser/AuthenticationUserModal";
+import { BecomeSharerButton } from "@/components/becomeSharerBlock/BecomeSharerButton";
 import { useMediaQuery } from "@/hooks";
 import { MobileMenu } from "./MobileMenu";
 import { DesktopMenu } from "./DesktopMenu";
@@ -89,7 +89,7 @@ export function NavbarActions({
       <div className="flex items-center gap-3">
         {/* Add Listing / Login - next to profile */}
         {!isAuth ? (
-          <AuthenticationUserModal becomeSharerBlock buttonValue="Login" />
+          <BecomeSharerButton />
         ) : (
           <BecomeSharerBlock />
         )}
