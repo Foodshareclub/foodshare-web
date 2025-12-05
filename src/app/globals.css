@@ -312,14 +312,14 @@
 @utility glass-shimmer {
   position: relative;
   overflow: hidden;
-}
 
-@utility glass-shimmer::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.05), transparent);
-  animation: shimmer 2s infinite;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.05), transparent);
+    animation: shimmer 2s infinite;
+  }
 }
 
 @keyframes glass-fade-in {
