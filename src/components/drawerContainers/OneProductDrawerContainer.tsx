@@ -6,7 +6,7 @@ import UniversalDrawer from "@/components/universalDrawer/UniversalDrawer";
 import type { OneProductType } from "@/components/oneProduct/OneProduct";
 import { useMediaQuery } from "@/hooks";
 import { ArrowLeftIcon } from "@/utils/icons";
-import { GlassButton } from "@/components/Glass";
+import { Button } from "@/components/ui/button";
 
 export const OneProductDrawerContainer: React.FC<OneProductType> = ({
   chat,
@@ -24,13 +24,12 @@ export const OneProductDrawerContainer: React.FC<OneProductType> = ({
       {!isSmaller ? (
         <>
           <div className="w-screen text-right fixed">
-            <GlassButton
-              variant="accentOrange"
+            <Button
               onClick={() => setIsOpen(true)}
-              className="right-[17px] w-[45px] h-[45px] rounded-full z-10"
+              className="right-[17px] w-[45px] h-[45px] rounded-full z-10 bg-orange-500 hover:bg-orange-600"
             >
               <ArrowLeftIcon />
-            </GlassButton>
+            </Button>
           </div>
           <UniversalDrawer
             onClose={() => setIsOpen(false)}

@@ -75,6 +75,13 @@
   --glass-saturation: 180%;
   --glass-bg-opacity: 0.7;
   --glass-border-opacity: 0.3;
+
+  /* Brand colors - FoodShare palette */
+  --brand-primary: 345 100% 59%; /* #FF2D55 */
+  --brand-primary-hover: 345 100% 52%; /* #E61E4D */
+  --brand-teal: 173 58% 39%; /* #00A699 */
+  --brand-orange: 27 87% 59%; /* #FC642D */
+  --brand-orange-light: 27 87% 67%; /* #FFA866 */
 }
 
 /* ============================================================================
@@ -130,6 +137,10 @@
   /* Glass morphism - darker */
   --glass-bg-opacity: 0.6;
   --glass-border-opacity: 0.2;
+
+  /* Brand colors - Dark mode adjustments */
+  --brand-primary: 345 100% 64%;
+  --brand-primary-hover: 345 100% 57%;
 }
 
 /* ============================================================================
@@ -195,6 +206,13 @@
   --animate-fade-in: fade-in 0.3s ease-out;
   --animate-slide-up: slide-up 0.3s ease-out;
   --animate-scale-in: scale-in 0.2s ease-out;
+
+  /* Brand colors */
+  --color-brand: hsl(var(--brand-primary));
+  --color-brand-hover: hsl(var(--brand-primary-hover));
+  --color-brand-teal: hsl(var(--brand-teal));
+  --color-brand-orange: hsl(var(--brand-orange));
+  --color-brand-orange-light: hsl(var(--brand-orange-light));
 }
 
 /* ============================================================================
@@ -280,6 +298,95 @@
 /* Glass transition utility */
 @utility glass-transition {
   transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Glass animation utilities */
+@utility glass-fade-in {
+  animation: glass-fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@utility glass-scale-in {
+  animation: glass-scale-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@utility glass-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+@utility glass-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.05), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes glass-fade-in {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(var(--glass-blur, 15px));
+  }
+}
+
+@keyframes glass-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Brand gradient utilities */
+@utility brand-gradient {
+  background: linear-gradient(135deg, hsl(var(--brand-primary)) 0%, hsl(345 100% 45%) 100%);
+}
+
+@utility brand-gradient-hover {
+  background: linear-gradient(135deg, hsl(var(--brand-primary-hover)) 0%, hsl(345 100% 40%) 100%);
+}
+
+@utility brand-gradient-text {
+  background: linear-gradient(to right, hsl(var(--brand-primary)), hsl(var(--brand-orange)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Common aspect ratio utilities */
+@utility aspect-card {
+  aspect-ratio: 4 / 3;
+}
+
+@utility aspect-hero {
+  aspect-ratio: 16 / 9;
+}
+
+/* Map height utility */
+@utility h-map {
+  height: calc(100vh - 140px);
+}
+
+/* Smooth scroll container */
+@utility scroll-smooth-touch {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
 /* ============================================================================

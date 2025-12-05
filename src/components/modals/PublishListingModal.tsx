@@ -38,9 +38,9 @@ import { useCreateProduct, useUpdateProduct } from "@/hooks";
 import { useUIStore } from "@/store/zustand/useUIStore";
 import { storageAPI } from "@/api/storageAPI";
 import type { InitialProductStateType } from "@/types/product.types";
-import { GlassDialogContent, GlassCard } from "@/components/Glass";
 import {
   Dialog,
+  DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
@@ -308,7 +308,7 @@ function PublishListingModal({
     if (publishState === "success") {
       return (
         <Dialog open={isOpen} onOpenChange={() => {}}>
-          <GlassDialogContent className="max-w-md">
+          <DialogContent variant="glass" className="max-w-md">
             <Confetti />
             <div className="flex flex-col items-center justify-center py-12 text-center relative z-10">
               <div className="relative">
@@ -324,14 +324,14 @@ function PublishListingModal({
                 {form.formData.scheduledDate ? "Your listing is scheduled" : "Your listing is now live"}
               </p>
             </div>
-          </GlassDialogContent>
+          </DialogContent>
         </Dialog>
       );
     }
 
     return (
       <Dialog open={isOpen} onOpenChange={onDialogOpenChange}>
-        <GlassDialogContent className="max-w-md md:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent variant="glass" className="max-w-md md:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
           {/* Progress bar */}
           <div className="absolute top-0 left-0 right-0">
             <ProgressBar progress={form.progress} />
@@ -954,7 +954,7 @@ function PublishListingModal({
                     <HiSparkles className="h-4 w-4" />
                     Preview
                   </div>
-                  <GlassCard variant="standard" borderRadius="16px" padding="0" overflow="hidden" className="shadow-lg">
+                  <div className="rounded-2xl overflow-hidden shadow-lg bg-background/80 backdrop-blur-md border border-white/10">
                     <div className="aspect-[4/3] overflow-hidden bg-muted relative">
                       <img src={primaryImageUrl} alt={form.formData.title} className="w-full h-full object-cover" />
                       {imageUpload.images.length > 1 && (
@@ -1055,7 +1055,7 @@ function PublishListingModal({
                         })}
                       </div>
                     </div>
-                  </GlassCard>
+                  </div>
                   <p className="text-xs text-center text-muted-foreground">This is how your listing will appear</p>
                 </div>
               )}
@@ -1106,7 +1106,7 @@ function PublishListingModal({
               onClose={() => setLightboxIndex(null)}
             />
           )}
-        </GlassDialogContent>
+        </DialogContent>
       </Dialog>
     );
 }

@@ -94,7 +94,7 @@ React Compiler handles memoization automatically. Remove manual `useMemo`/`useCa
 | `src/components/theme/ThemeSettingsPanel.tsx` | ✅ Removed `memo` | Simplified component |
 | `src/components/theme/theme-customizer/index.tsx` | ✅ Removed `memo` | Simplified component |
 | `src/components/theme/theme-customizer/AccentColorPicker.tsx` | ✅ Removed `memo` | Simplified component |
-| `src/components/theme/theme-customizer/ColorBlindnessSelector.tsx` | ✅ Removed `memo` | Simplified component |
+| `src/components/theme/theme-customizer/ColorBlindnessSelector.tsx` | ✅ Removed `memo`, `forwardRef`, `displayName` | Simplified to plain function |
 | `src/components/theme/theme-customizer/ContrastSelector.tsx` | ✅ Removed `memo` | Simplified component |
 | `src/components/theme/theme-customizer/FontScaleSelector.tsx` | ✅ Removed `memo` | Simplified component |
 | `src/components/theme/theme-customizer/SeasonalPresetCard.tsx` | ✅ Removed `memo` | Simplified component |

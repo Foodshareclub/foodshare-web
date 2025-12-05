@@ -1,7 +1,6 @@
 import React from "react";
 import Image from "next/image";
 import { StarIcon } from "@/utils/icons";
-import { GlassCard } from "@/components/Glass";
 
 type PropsCommentsType = {
   name: string;
@@ -14,10 +13,7 @@ type PropsCommentsType = {
 // React Compiler handles memoization automatically
 function Comments({ date, name, img, rating, comment }: PropsCommentsType) {
   return (
-    <GlassCard
-      variant="standard"
-      className="p-4 mt-4 mb-4 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,0,0,0.1)]"
-    >
+    <div className="glass rounded-xl p-4 mt-4 mb-4 transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_8px_16px_rgba(0,0,0,0.1)]">
       <div className="flex flex-col sm:flex-row gap-4 items-center">
         <div className="ml-2 relative w-12 h-12">
           <Image src={img} alt={name} fill className="rounded-full object-cover" sizes="48px" />
@@ -35,7 +31,7 @@ function Comments({ date, name, img, rating, comment }: PropsCommentsType) {
           <p className="text-base">{comment}</p>
         </div>
       </div>
-    </GlassCard>
+    </div>
   );
 }
 

@@ -7,7 +7,6 @@ import navIcon from "@/assets/map.svg";
 import type { AllValuesType } from "@/api/profileAPI";
 import { StarIcon } from "@/utils/icons";
 import HeartGrayImg from "@/assets/likesGray.svg";
-import { GlassCard } from "@/components/Glass";
 
 type VolunteerCardsProps = {
   volunteer: AllValuesType;
@@ -32,7 +31,7 @@ export function VolunteerCards({ volunteer, indicator }: VolunteerCardsProps) {
   const onNavigateToOneProductHandler = () => router.push(`${id}`);
 
   return (
-    <GlassCard variant="standard" padding="md" className="glass-fade-in" borderRadius="20px">
+    <div className="glass rounded-[20px] p-4 glass-fade-in">
       {!isLoaded ? (
         <>
           <div className="rounded-full w-[200px] h-[200px] sm:w-[250px] sm:h-[250px] mx-auto bg-muted animate-pulse" />
@@ -82,6 +81,6 @@ export function VolunteerCards({ volunteer, indicator }: VolunteerCardsProps) {
           </div>
         </>
       )}
-    </GlassCard>
+    </div>
   );
 }

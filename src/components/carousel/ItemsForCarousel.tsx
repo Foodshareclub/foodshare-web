@@ -1,7 +1,6 @@
 import type { FC } from "react";
 import React from "react";
 import type { NavigationActionsSVGType } from "@/utils/navigationActions";
-import { Glass } from "@/components/Glass";
 
 type ItemsForCarouselType = {
   productType: string;
@@ -18,7 +17,7 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
   navigateHandler,
   isCompact = false,
 }) => {
-  const changeAttributeValue = (v1: any, v2: any) => {
+  const changeAttributeValue = (v1: unknown, v2: unknown) => {
     if (productType === item.nameForUrl.toLowerCase() && pageType === "productComponent") {
       return v1;
     } else return v2;
@@ -27,9 +26,8 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
   const isActive = productType === item.nameForUrl.toLowerCase() && pageType === "productComponent";
 
   return (
-    <Glass
-      variant={isActive ? "subtle" : "standard"}
-      className={`cursor-pointer rounded-xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative ${
+    <div
+      className={`${isActive ? 'glass-subtle' : 'glass'} cursor-pointer rounded-xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative ${
         isCompact
           ? "min-w-[80px] md:min-w-[96px] px-2.5 md:px-3 py-1.5 md:py-2"
           : "min-w-[80px] md:min-w-[96px] px-3 md:px-4 py-2 md:py-3"
@@ -70,7 +68,7 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
           />
         )}
       </div>
-    </Glass>
+    </div>
   );
 };
 

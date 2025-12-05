@@ -9,13 +9,7 @@ export default function Loading() {
       <div className="h-[140px] bg-card border-b border-border animate-pulse" />
 
       {/* Map skeleton */}
-      <div
-        className="relative"
-        style={{
-          height: 'calc(100vh - 140px)',
-          width: '100%',
-        }}
-      >
+      <div className="relative h-map w-full">
         <div className="h-full w-full animate-pulse bg-muted flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl mb-4">🗺️</div>

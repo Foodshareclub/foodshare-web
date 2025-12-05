@@ -7,7 +7,7 @@ import { DragHandleIcon } from "@/utils/icons";
 import type { ProfileSettingsProps } from "@/components/header/navbar/types";
 import { AuthenticationUserModal, MinifiedUserInfo, UniversalDrawer } from "@/components";
 import { Button } from "@/components/ui/button";
-import { ThemeToggleInline } from "@/components/ui/theme-toggle";
+import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
 
 export default function NawDrawer({
   firstName,

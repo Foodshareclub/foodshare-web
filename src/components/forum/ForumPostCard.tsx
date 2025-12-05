@@ -137,7 +137,7 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0 }: F
                     </span>
                   )}
                   {isHot && (
-                    <span className="bg-[#FF2D55] text-white px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-lg">
+                    <span className="bg-primary text-primary-foreground px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-lg">
                       <FaChartLine className="w-3 h-3" />
                       Hot
                     </span>

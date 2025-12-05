@@ -53,7 +53,7 @@ export const PasswordRecoveryModal = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent
-        className="glass glass-transition rounded-2xl glass-scale-in glass-accelerated"
+        className="glass glass-transition rounded-2xl glass-scale-in gpu"
         onInteractOutside={(e: Event) => e.preventDefault()}
         onEscapeKeyDown={(e: KeyboardEvent) => e.preventDefault()}
       >

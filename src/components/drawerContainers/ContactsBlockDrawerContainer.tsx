@@ -5,7 +5,7 @@ import { ContactsBlock, UniversalDrawer } from "@/components";
 import { useMediaQuery } from "@/hooks";
 import { ArrowRightIcon } from "@/utils/icons";
 import type { ContactsBlockType } from "@/components/chat/ContactsBlock";
-import { GlassButton } from "@/components/Glass";
+import { Button } from "@/components/ui/button";
 
 export const ContactsBlockDrawerContainer: React.FC<ContactsBlockType> = ({
   allRooms,
@@ -20,13 +20,12 @@ export const ContactsBlockDrawerContainer: React.FC<ContactsBlockType> = ({
     <>
       {!isSmaller ? (
         <>
-          <GlassButton
-            variant="accentOrange"
+          <Button
             onClick={() => setIsOpen(true)}
-            className="fixed left-[-10px] w-[45px] h-[45px] rounded-full z-10"
+            className="fixed left-[-10px] w-[45px] h-[45px] rounded-full z-10 bg-orange-500 hover:bg-orange-600"
           >
             <ArrowRightIcon />
-          </GlassButton>
+          </Button>
           <UniversalDrawer
             onClose={() => setIsOpen(false)}
             isOpen={isOpen}

@@ -8,7 +8,7 @@ import type { PagesType } from "./navbar/types";
 import FiltersModal from "@/components/modals/FiltersModal";
 import CompactSearchButton from "./CompactSearchButton";
 import SearchModal from "@/components/modals/SearchModal";
-import { Glass } from "@/components/Glass";
+
 
 type SimpleBottomNavigationType = {
   pageType: PagesType;
@@ -29,15 +29,13 @@ const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({
 
   return (
     <>
-      <Glass
-        variant="subtle"
+      <div
         className={cn(
-          "relative px-6 md:px-7 xl:px-20 glass-accelerated",
+          "glass-subtle relative px-6 md:px-7 xl:px-20 gpu",
           "rounded-b-2xl",
           "transition-[padding] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
           isCompact ? "py-2 md:py-2.5" : "py-3 md:py-4"
         )}
-        enableHover={false}
       >
         <div className="w-full flex items-center justify-between gap-2 md:gap-3">
           {/* Categories Carousel - Primary Discovery (Airbnb-style prominence) */}
@@ -57,7 +55,7 @@ const SimpleBottomNavigation: React.FC<SimpleBottomNavigationType> = ({
             <FiltersModal />
           </div>
         </div>
-      </Glass>
+      </div>
 
       {/* Search Modal */}
       <SearchModal isOpen={isSearchModalOpen} onClose={() => setIsSearchModalOpen(false)} />

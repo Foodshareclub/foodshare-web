@@ -4,7 +4,7 @@ import type { RefObject } from "react";
 import React, { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useWindowEvent } from "@/hooks/useEvent";
-import { GlassButton } from "@/components/Glass";
+import { Button } from "@/components/ui/button";
 
 type NavigateButtonsType = {
   messagesAnchorRef?: RefObject<HTMLDivElement>;
@@ -79,8 +79,8 @@ export default function NavigateButtons({ navigateTo, messagesAnchorRef, title }
               willChange: "transform, opacity",
             }}
           >
-            <GlassButton
-              variant="prominent"
+            <Button
+              variant="glass-prominent"
               onClick={goToStart}
               className="rounded-full w-14 h-14 text-white/90 text-xs font-semibold shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-all duration-300 hover:scale-105 hover:shadow-[0_6px_16px_rgba(0,0,0,0.2)]"
               style={{
@@ -89,7 +89,7 @@ export default function NavigateButtons({ navigateTo, messagesAnchorRef, title }
               }}
             >
               ↑
-            </GlassButton>
+            </Button>
           </div>
         )}
       </>

@@ -1,10 +1,9 @@
 import React from "react";
 import light from "@/assets/noto-v1_light-bulb.svg";
-import { Glass } from "@/components/Glass";
 
 const TopTips = () => {
   return (
-    <Glass variant="accentGreen" className="p-4 mt-1 mb-2">
+    <div className="glass-accent-primary rounded-xl p-4 mt-1 mb-2">
       <div className="py-2 mx-auto w-[90%]">
         <div className="flex items-center gap-2 mb-3">
           <img className="w-5" src={light} alt="light" />
@@ -18,7 +17,7 @@ const TopTips = () => {
         </ul>
         <p className="mt-3 font-medium">Read our safe sharing guidelines</p>
       </div>
-    </Glass>
+    </div>
   );
 };
 

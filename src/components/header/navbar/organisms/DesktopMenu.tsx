@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MenuItem, NavbarAvatar } from "../atoms";
 import { AuthenticationUserModal } from "@/components";
-import { ThemeToggleInline } from "@/components/ui/theme-toggle";
+import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
 
 export interface DesktopMenuProps {
   /** User authentication status */

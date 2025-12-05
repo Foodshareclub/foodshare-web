@@ -4,7 +4,6 @@ import type { ChangeEvent } from "react";
 import { useState } from "react";
 import { SearchIcon } from "@/utils/icons";
 import { useRouter } from "next/navigation";
-import { Glass } from "@/components/Glass";
 import { Input } from "@/components/ui/input";
 
 // React Compiler handles memoization automatically
@@ -34,7 +33,7 @@ export function SearchField() {
   const onProductTypeChange = (value: string) => setProductType(value);
 
   return (
-    <Glass variant="input" className="self-center w-[30%]">
+    <div className="glass-input self-center w-[30%] rounded-xl">
       <div className="flex flex-col items-center">
         <div className="relative w-full flex items-center">
           <div className="absolute left-3 pointer-events-none">
@@ -53,7 +52,7 @@ export function SearchField() {
           />
         </div>
         {showSearchParams && (
-          <Glass variant="standard" className="p-2 mt-2 w-full">
+          <div className="glass p-2 mt-2 w-full rounded-xl">
             <div className="flex flex-wrap gap-2">
               {["all", "food", "things", "borrow", "wanted", "foodbanks"].map((type) => (
                 <label key={type} className="flex items-center gap-2 cursor-pointer">
@@ -69,9 +68,9 @@ export function SearchField() {
                 </label>
               ))}
             </div>
-          </Glass>
+          </div>
         )}
       </div>
-    </Glass>
+    </div>
   );
 }

@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useState } from "react";
-import { Glass } from "@/components/Glass";
 import { FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
 
 export type StatusType = "info" | "warning" | "success" | "error" | "loading" | undefined;
@@ -35,12 +34,12 @@ const AlertComponent: React.FC<PropsType> = ({ status, title, top, onDismiss }) 
       <>
         {isLoaded && (
           <div className="fixed left-0 z-10 w-full" style={{ top }}>
-            <Glass variant="accentGreen" className="p-4">
+            <div className="glass-accent-primary rounded-xl p-4">
               <div className="flex items-center gap-3 bg-transparent">
                 <FaCheckCircle className="w-5 h-5 text-green-600" />
                 <span className="font-medium text-green-800">{title}</span>
               </div>
-            </Glass>
+            </div>
           </div>
         )}
       </>
@@ -51,12 +50,12 @@ const AlertComponent: React.FC<PropsType> = ({ status, title, top, onDismiss }) 
       <>
         {isLoaded && (
           <div className="fixed left-0 z-10 w-full" style={{ top }}>
-            <Glass variant="accentOrange" className="p-4">
+            <div className="glass-accent-orange rounded-xl p-4">
               <div className="flex items-center gap-3 bg-transparent">
                 <FaExclamationCircle className="w-5 h-5 text-orange-600" />
                 <span className="font-medium text-orange-800">{title}</span>
               </div>
-            </Glass>
+            </div>
           </div>
         )}
       </>

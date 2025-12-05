@@ -45,7 +45,7 @@ export default function Footer() {
 
   return (
     <footer
-      className="fixed bottom-0 z-[1] w-full border-t border-border/30 text-foreground py-1 px-7 xl:px-20 glass-accelerated glass"
+      className="fixed bottom-0 z-[1] w-full border-t border-border/30 text-foreground py-1 px-7 xl:px-20 gpu glass"
     >
       <div className="flex flex-col md:flex-row justify-center md:justify-between items-center gap-2">
         <div className="flex items-center gap-4">

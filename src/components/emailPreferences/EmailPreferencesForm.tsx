@@ -6,7 +6,6 @@
  */
 
 import React, { useState, useTransition } from "react";
-import { GlassCard } from "@/components/Glass";
 import {
   saveEmailPreferences,
   type EmailPreferencesInput,
@@ -59,7 +58,7 @@ export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFor
   };
 
   return (
-    <GlassCard variant="standard" padding="lg" className="max-w-3xl mx-auto">
+    <div className="glass rounded-xl p-6 max-w-3xl mx-auto">
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold mb-2">Email Notifications</h2>
@@ -255,6 +254,6 @@ export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFor
           </button>
         </div>
       </div>
-    </GlassCard>
+    </div>
   );
 }

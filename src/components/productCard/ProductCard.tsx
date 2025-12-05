@@ -65,7 +65,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
     return (
       <div className="col-span-1" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
         <div
-          className="relative rounded-[20px] overflow-hidden shadow-lg glass-fade-in glass-accelerated"
+          className="relative rounded-[20px] overflow-hidden shadow-lg glass-fade-in gpu"
           style={gpu120Card}
         >
           {/* Image section */}

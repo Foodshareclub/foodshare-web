@@ -5,7 +5,6 @@
 
 import type { CSSProperties } from "react";
 import React from "react";
-import { GlassHeader } from "@/components/Glass";
 import { MotionHeading } from "./MotionComponents";
 
 interface AnimatedHeaderProps {
@@ -50,7 +49,7 @@ export const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
   };
 
   return (
-    <GlassHeader variant="prominent" padding="md" className={getMarginClasses()}>
+    <div className={`glass-prominent rounded-xl p-4 ${getMarginClasses()}`}>
       <MotionHeading
         className="text-[32px] md:text-[48px] text-center font-bold"
         style={headerStyle}
@@ -66,7 +65,7 @@ export const AnimatedHeader: React.FC<AnimatedHeaderProps> = ({
       >
         {children}
       </MotionHeading>
-    </GlassHeader>
+    </div>
   );
 };
 

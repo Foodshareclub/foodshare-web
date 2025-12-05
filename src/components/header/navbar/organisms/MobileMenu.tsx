@@ -5,9 +5,8 @@ import { useState } from "react";
 import type { CustomRoomType } from "@/api/chatAPI";
 import { DragHandleIcon } from "@/utils/icons";
 import { Button } from "@/components/ui/button";
-import { Glass } from "@/components/Glass";
 import { UniversalDrawer, MinifiedUserInfo, AuthenticationUserModal } from "@/components";
-import { ThemeToggleInline } from "@/components/ui/theme-toggle";
+import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
 
 export interface MobileMenuProps {
   /** User authentication status */
@@ -124,85 +123,60 @@ export function MobileMenu({
                 <div className="flex flex-col gap-3">
                   {/* Admin Dashboard Link */}
                   {isAdmin && onNavigateToDashboard && (
-                    <Glass
-                      variant="accentGreen"
-                      borderRadius="12px"
-                      padding="16px"
-                      className="cursor-pointer glass-accelerated"
+                    <div
+                      className="glass-accent-primary rounded-xl p-4 cursor-pointer gpu"
                       onClick={() => handleNavigation(onNavigateToDashboard)}
                       role="button"
                       tabIndex={0}
                     >
-                      <p className="text-3xl font-semibold">
-                        Dashboard
-                      </p>
-                    </Glass>
+                      <p className="text-3xl font-semibold">Dashboard</p>
+                    </div>
                   )}
 
-                  <Glass
-                    variant="subtle"
-                    borderRadius="12px"
-                    padding="16px"
-                    className="cursor-pointer glass-accelerated"
+                  <div
+                    className="glass-subtle rounded-xl p-4 cursor-pointer gpu"
                     onClick={() => handleNavigation(onNavigateToMyLists)}
                     role="button"
                     tabIndex={0}
                   >
-                    <p className="text-3xl">
-                      My listing's
-                    </p>
-                  </Glass>
+                    <p className="text-3xl">My listing's</p>
+                  </div>
 
-                  <Glass
-                    variant="subtle"
-                    borderRadius="12px"
-                    padding="16px"
-                    className="cursor-pointer glass-accelerated"
+                  <div
+                    className="glass-subtle rounded-xl p-4 cursor-pointer gpu"
                     onClick={() => handleNavigation(onNavigateToAccSettings)}
                     role="button"
                     tabIndex={0}
                   >
-                    <p className="text-3xl">
-                      "Account settings"
-                    </p>
-                  </Glass>
+                    <p className="text-3xl">Account settings</p>
+                  </div>
 
-                  <Glass
-                    variant={hasNotifications ? "accentGreen" : "subtle"}
-                    borderRadius="12px"
-                    padding="16px"
-                    className="cursor-pointer glass-accelerated"
+                  <div
+                    className={`${hasNotifications ? 'glass-accent-primary' : 'glass-subtle'} rounded-xl p-4 cursor-pointer gpu`}
                     onClick={() => handleNavigation(onNavigateToMyMessages)}
                     role="button"
                     tabIndex={0}
                     aria-label={
                       hasNotifications
                         ? `Messages (${signalOfNewMessage.length} unread)`
-                        : "Messages"
+                        : 'Messages'
                     }
                   >
                     <p className="text-3xl">
-                      {hasNotifications ? (
-                        "You have {signalOfNewMessage.length} unanswered messages"
-                      ) : (
-                        "My messages"
-                      )}
+                      {hasNotifications
+                        ? `You have ${signalOfNewMessage.length} unanswered messages`
+                        : 'My messages'}
                     </p>
-                  </Glass>
+                  </div>
 
-                  <Glass
-                    variant="subtle"
-                    borderRadius="12px"
-                    padding="16px"
-                    className="cursor-pointer glass-accelerated"
+                  <div
+                    className="glass-subtle rounded-xl p-4 cursor-pointer gpu"
                     onClick={() => handleNavigation(onNavigateToLogout)}
                     role="button"
                     tabIndex={0}
                   >
-                    <p className="text-3xl">
-                      "Log Out"
-                    </p>
-                  </Glass>
+                    <p className="text-3xl">Log Out</p>
+                  </div>
                 </div>
               ) : (
                 /* Unauthenticated Menu */
@@ -216,38 +190,28 @@ export function MobileMenu({
               )}
 
               {/* Common Links */}
-              <Glass
-                variant="subtle"
-                borderRadius="12px"
-                padding="16px"
-                className="cursor-pointer glass-accelerated mt-3"
+              <div
+                className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3"
                 onClick={() => handleNavigation(onNavigateToAboutUs)}
                 role="button"
                 tabIndex={0}
               >
-                <p className="text-3xl">
-                  "About Us"
-                </p>
-              </Glass>
+                <p className="text-3xl">About Us</p>
+              </div>
 
-              <Glass
-                variant="subtle"
-                borderRadius="12px"
-                padding="16px"
-                className="cursor-pointer glass-accelerated mt-3"
+              <div
+                className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3"
                 onClick={() => handleNavigation(onNavigateToHelp)}
                 role="button"
                 tabIndex={0}
               >
-                <p className="text-3xl">
-                  "Help"
-                </p>
-              </Glass>
+                <p className="text-3xl">Help</p>
+              </div>
 
               {/* Theme Switcher */}
               <div className="mt-6 pt-4 border-t border-border/30">
                 <p className="text-sm text-muted-foreground mb-3 font-medium">
-                  "Appearance"
+                  Appearance
                 </p>
                 <ThemeToggleInline />
               </div>

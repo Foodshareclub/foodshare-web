@@ -298,7 +298,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
       ) : !isControlled && oneProductComponent ? (
         <Button
           onClick={onOpen}
-          className="uppercase bg-gradient-to-r from-[#E61E4D] via-[#E31C5F] to-[#D70466] text-white w-full font-semibold hover:from-[#D01346] hover:via-[#C9184A] hover:to-[#BD0457] hover:-translate-y-px hover:shadow-lg hover:shadow-[#E61E4D]/40 transition-all"
+          className="uppercase brand-gradient text-white w-full font-semibold hover:brand-gradient-hover hover:-translate-y-px hover:shadow-lg hover:shadow-primary/40 transition-all"
         >
           "Request"
         </Button>
@@ -556,7 +556,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     {/* Submit Button */}
                     <Button
                       type="submit"
-                      className="h-11 w-full bg-gradient-to-r from-[#E61E4D] via-[#E31C5F] to-[#D70466] text-white font-semibold text-base rounded-lg hover:from-[#D01346] hover:via-[#C9184A] hover:to-[#BD0457] hover:-translate-y-px hover:shadow-lg hover:shadow-[#E61E4D]/40 active:translate-y-0 transition-all"
+                      className="h-11 w-full brand-gradient text-white font-semibold text-base rounded-lg hover:brand-gradient-hover hover:-translate-y-px hover:shadow-lg hover:shadow-primary/40 active:translate-y-0 transition-all"
                       disabled={isLoading}
                     >
                       {isLoading ? (

@@ -5,7 +5,6 @@ import { PersonCard } from "@/components";
 import { teamMockArray } from "@/utils";
 import kitchen from "../../assets/Foodies Soup Kitchen.png";
 import company from "../../assets/AvoAcademy.png";
-import { GlassCard } from "@/components/Glass";
 import { MotionBox, MotionGrid, MotionGridItem } from "./MotionComponents";
 import { AnimatedGradientBackground, FloatingOrbs } from "./BackgroundEffects";
 import { AnimatedHeader } from "./AnimatedHeader";
@@ -71,11 +70,7 @@ const AboutUsPage = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.8, type: "spring" }}
         >
-          <GlassCard
-            variant="standard"
-            padding="xl"
-            className="h-full transition-shadow duration-300 hover:shadow-[0_20px_40px_-12px_rgba(255,99,71,0.2)]"
-          >
+          <div className="glass rounded-xl p-6 h-full transition-shadow duration-300 hover:shadow-[0_20px_40px_-12px_rgba(255,99,71,0.2)]">
             <div className="flex flex-col gap-8">
               {[
                 "Foodshare was founded in 2022 by Tarlan and a passionate team of three. Our vision was simple: create an easy-to-use, cross-platform mobile app that connects communities through food sharing.",
@@ -95,7 +90,7 @@ const AboutUsPage = () => {
                 </MotionBox>
               ))}
             </div>
-          </GlassCard>
+          </div>
         </MotionGridItem>
       </MotionGrid>
 
@@ -131,11 +126,7 @@ const AboutUsPage = () => {
         "Design Tribute"
       </AnimatedHeader>
 
-      <GlassCard
-        variant="standard"
-        padding="lg"
-        className="max-w-[1200px] mx-auto mb-10 transition-shadow duration-300 hover:shadow-[0_30px_60px_-12px_rgba(255,99,71,0.25)]"
-      >
+      <div className="glass rounded-xl p-6 max-w-[1200px] mx-auto mb-10 transition-shadow duration-300 hover:shadow-[0_30px_60px_-12px_rgba(255,99,71,0.25)]">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
           <MotionGridItem
             className="w-full"
@@ -174,7 +165,7 @@ const AboutUsPage = () => {
             </div>
           </div>
         </div>
-      </GlassCard>
+      </div>
 
       <AnimatedContactButton />
     </div>

@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { isStorageHealthy } from "@/lib/supabase/client";
 import { testStorageAvailability, clearSupabaseStorage } from "@/utils/storageErrorHandler";
-import { Glass } from "@/components/Glass/Glass";
 import { Button } from "@/components/ui/button";
 import { FaExclamationCircle } from 'react-icons/fa';
 
@@ -96,7 +95,7 @@ export const StorageErrorBanner: React.FC = () => {
         } ${isVisible ? "pointer-events-auto" : "pointer-events-none"}`}
         style={{ transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)" }}
       >
-        <Glass variant="accentOrange" className="rounded-2xl overflow-hidden">
+        <div className="glass-accent-orange rounded-2xl overflow-hidden">
           <div className="relative px-4 md:px-6 py-4">
             {/* Decorative gradient overlay */}
             <div
@@ -156,7 +155,7 @@ export const StorageErrorBanner: React.FC = () => {
               </div>
             </div>
           </div>
-        </Glass>
+        </div>
       </div>
     </>
   );

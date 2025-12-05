@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { photoObj } from "@/utils/navigationActions";
 import { useAuth } from "@/hooks/useAuth";
 import { PATH } from "@/utils";
-import { GlassButton } from "@/components/Glass";
 import {
   DropdownMenu,
   DropdownMenuContent,

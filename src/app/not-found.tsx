@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { BackButton } from '@/components/ui/BackButton'
+import { BackButton } from '@/components/navigation/BackButton'
 
 /**
  * 404 Not Found Page

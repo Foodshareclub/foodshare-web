@@ -186,19 +186,12 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
           signalOfNewMessage={[]}
           mapMode={true}
         />
-        <div
-          className="relative"
-          style={{
-            height: 'calc(100vh - 140px)',
-            width: '100%',
-            isolation: 'isolate',
-          }}
-        >
+        <div className="relative h-map w-full isolate">
           <NavigateButtons navigateTo={type} title={'Show posts'} />
-          <div className="h-full w-full animate-pulse bg-gray-200 flex items-center justify-center">
+          <div className="h-full w-full animate-pulse bg-muted flex items-center justify-center">
             <div className="text-center">
               <div className="text-4xl mb-4">🗺️</div>
-              <p className="text-gray-600">Loading map...</p>
+              <p className="text-muted-foreground">Loading map...</p>
             </div>
           </div>
         </div>
@@ -221,22 +214,14 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
         signalOfNewMessage={[]}
         mapMode={true}
       />
-      <div
-        className="relative"
-        style={{
-          height: 'calc(100vh - 140px)',
-          width: '100%',
-          isolation: 'isolate',
-          contain: 'layout style paint',
-        }}
-      >
+      <div className="relative h-map w-full isolate contain-layout contain-style contain-paint">
         <NavigateButtons navigateTo={type} title={'Show posts'} />
         {/* Show loading skeleton while determining map center */}
         {isCenterLoading ? (
-          <div className="h-full w-full animate-pulse bg-gray-200 flex items-center justify-center">
+          <div className="h-full w-full animate-pulse bg-muted flex items-center justify-center">
             <div className="text-center">
               <div className="text-4xl mb-4">🗺️</div>
-              <p className="text-gray-600">Loading map...</p>
+              <p className="text-muted-foreground">Loading map...</p>
             </div>
           </div>
         ) : (

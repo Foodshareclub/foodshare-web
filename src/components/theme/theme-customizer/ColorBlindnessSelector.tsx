@@ -101,6 +101,3 @@ export function ColorBlindnessSelector({ current, onChange }: ColorBlindnessSele
       </div>
     );
   }
-);
-
-ColorBlindnessSelector.displayName = 'ColorBlindnessSelector';

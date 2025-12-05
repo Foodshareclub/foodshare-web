@@ -1,6 +1,5 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { GlassCard } from "@/components/Glass";
 import { MotionBox, MotionImage, MotionBadge } from "@/features/aboutUs/MotionComponents";
 import {
   fadeInUp,
@@ -51,12 +50,9 @@ const PersonCard: React.FC<PropsType> = ({ name, secondName, img, aboutExp, role
       transition={{ delay: index * 0.15 }}
       className="max-w-[400px] md:max-w-[320px] mx-auto w-full"
     >
-      <GlassCard
-        as={motion.div}
-        variant="standard"
-        padding="2xl"
+      <motion.div
         {...hoverProps}
-        className="glass-fade-in flex flex-col items-center overflow-hidden h-full relative"
+        className="glass rounded-xl p-8 glass-fade-in flex flex-col items-center overflow-hidden h-full relative"
         style={{
           perspective: "1000px",
           transformStyle: "preserve-3d",
@@ -102,7 +98,7 @@ const PersonCard: React.FC<PropsType> = ({ name, secondName, img, aboutExp, role
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
           >
-            <h3 className="text-center text-xl md:text-2xl font-bold text-[#FF2D55]">
+            <h3 className="text-center text-xl md:text-2xl font-bold text-primary">
               {name} {secondName}
             </h3>
           </MotionBox>
@@ -133,7 +129,7 @@ const PersonCard: React.FC<PropsType> = ({ name, secondName, img, aboutExp, role
             </p>
           </MotionBox>
         </div>
-      </GlassCard>
+      </motion.div>
     </MotionBox>
   );
 };
