@@ -146,6 +146,28 @@ import {
 </DropdownMenu>
 ```
 
+### Skeleton Loading
+
+```typescript
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Card skeleton
+<div className="space-y-3">
+  <Skeleton className="h-48 w-full" />
+  <Skeleton className="h-4 w-3/4" />
+  <Skeleton className="h-4 w-1/2" />
+</div>
+
+// Avatar + text skeleton
+<div className="flex items-center gap-4">
+  <Skeleton className="h-12 w-12 rounded-full" />
+  <div className="space-y-2">
+    <Skeleton className="h-4 w-32" />
+    <Skeleton className="h-3 w-24" />
+  </div>
+</div>
+```
+
 ## Custom Variants
 
 Extend in feature components, not in ui/ files:

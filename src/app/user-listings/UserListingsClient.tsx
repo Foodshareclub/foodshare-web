@@ -1,20 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { ProductCard } from '@/components/productCard/ProductCard';
 import { GlassCard } from '@/components/Glass';
 import { Button } from '@/components/ui/button';
 import type { InitialProductStateType } from '@/types/product.types';
-import type { User } from '@supabase/supabase-js';
+import type { AuthUser } from '@/app/actions/auth';
 
 interface UserListingsClientProps {
   listings: InitialProductStateType[];
-  user: User;
+  user: AuthUser;
 }
 
-export function UserListingsClient({ listings, user }: UserListingsClientProps) {
-  const router = useRouter();
+export function UserListingsClient({ listings }: UserListingsClientProps) {
 
   const activeListings = listings.filter((l) => l.is_active);
   const inactiveListings = listings.filter((l) => !l.is_active);

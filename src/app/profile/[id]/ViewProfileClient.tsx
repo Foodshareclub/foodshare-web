@@ -12,7 +12,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { FaEnvelope, FaMapMarkerAlt, FaCalendar } from 'react-icons/fa';
 import Image from 'next/image';
 import peak from '@/assets/peakpx-min.jpg';
-import type { PublicProfile } from '@/app/actions/profile';
+import type { PublicProfile } from '@/lib/data/profiles';
 import type { AuthUser } from '@/app/actions/auth';
 
 interface ViewProfileClientProps {

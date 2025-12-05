@@ -1,18 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { cookies } from "next/headers";
-import dynamic from "next/dynamic";
 import "./globals.css";
 import { Providers } from "./providers";
 import { defaultMetadata } from "@/lib/metadata";
 import type { Locale } from "@/i18n/config";
 import Footer from "@/components/footer/Footer";
-
-// Lazy load DevTools - only in development
-const DevTools = dynamic(
-  () => import("@/components/dev/DevTools").then((mod) => mod.DevTools),
-  { ssr: false }
-);
+import { DevTools } from "@/components/dev";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,7 +32,7 @@ export default async function RootLayout({
         <Providers initialLocale={locale}>
           {children}
           <Footer />
-          {process.env.NODE_ENV === "development" && <DevTools />}
+          <DevTools />
         </Providers>
       </body>
     </html>

@@ -1,9 +1,12 @@
 import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
-import { getPublicProfile } from '@/app/actions/profile';
+import { getPublicProfile } from '@/lib/data/profiles';
 import { getUser } from '@/app/actions/auth';
 import { ViewProfileClient } from './ViewProfileClient';
 import { GlassCard } from '@/components/Glass';
+
+// Route segment config for caching
+export const revalidate = 300;
 
 interface PageProps {
   params: Promise<{ id: string }>;

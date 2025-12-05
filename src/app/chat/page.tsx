@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/queries/useProfileQueries';
 import { useRooms, useMessages } from '@/hooks/queries/useChatQueries';
 import { useChatStore } from '@/store/zustand/useChatStore';
 import { chatAPI } from '@/api/chatAPI';
@@ -27,6 +28,9 @@ export default function ChatPage() {
 
   const [activeRoomId, setActiveRoomId] = useState<string | null>(roomIdParam);
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+
+  // Get user profile
+  const { data: profile } = useProfile(user?.id);
 
   // Get all rooms for current user
   const { data: rooms, isLoading: roomsLoading } = useRooms(user?.id);
@@ -100,8 +104,8 @@ export default function ChatPage() {
     return <ChatSkeleton />;
   }
 
-  const profile = user.profile;
-  const newMessageRoomId = useChatStore.getState().newMessageRoomId || '';
+  const newMessage = useChatStore.getState().newMessage;
+  const newMessageRoomId = newMessage?.room_id || '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">

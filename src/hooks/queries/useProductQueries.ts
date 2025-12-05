@@ -1,7 +1,7 @@
 /**
  * Product Queries (TanStack Query)
- * Handles product data fetching and mutations via Server Actions
- * No direct Supabase client calls - all data flows through Server Actions
+ * Handles product data fetching and mutations via API routes and Server Actions
+ * No direct server imports - all data flows through API routes or Server Actions
  */
 
 'use client';
@@ -13,25 +13,56 @@ import {
   type UseQueryOptions,
 } from '@tanstack/react-query';
 import {
-  getProducts,
-  getAllProducts,
-  getProductById,
-  getProductLocations,
-  getUserProducts,
-  searchProducts,
-  type InitialProductStateType,
-  type LocationType,
-} from '@/lib/data/products';
-import {
   createProduct,
   updateProduct,
   deleteProduct,
   toggleProductFavorite,
 } from '@/app/actions/products';
 import { useImageBlobUrl } from '@/hooks/useImageBlobUrl';
+import type { InitialProductStateType, LocationType } from '@/types/product.types';
 
 // Re-export types for consumers
 export type { InitialProductStateType, LocationType };
+
+// ============================================================================
+// API Fetch Functions (Client-safe)
+// ============================================================================
+
+async function fetchProducts(type: string): Promise<InitialProductStateType[]> {
+  const res = await fetch(`/api/products?type=${encodeURIComponent(type)}`);
+  if (!res.ok) throw new Error('Failed to fetch products');
+  return res.json();
+}
+
+async function fetchAllProducts(): Promise<InitialProductStateType[]> {
+  const res = await fetch('/api/products');
+  if (!res.ok) throw new Error('Failed to fetch products');
+  return res.json();
+}
+
+async function fetchProductById(id: number): Promise<InitialProductStateType | null> {
+  const res = await fetch(`/api/products?id=${id}`);
+  if (!res.ok) throw new Error('Failed to fetch product');
+  return res.json();
+}
+
+async function fetchProductLocations(type: string): Promise<LocationType[]> {
+  const res = await fetch(`/api/products?type=${encodeURIComponent(type)}&locations=true`);
+  if (!res.ok) throw new Error('Failed to fetch locations');
+  return res.json();
+}
+
+async function fetchUserProducts(userId: string): Promise<InitialProductStateType[]> {
+  const res = await fetch(`/api/products?userId=${encodeURIComponent(userId)}`);
+  if (!res.ok) throw new Error('Failed to fetch user products');
+  return res.json();
+}
+
+async function fetchSearchProducts(query: string, type: string): Promise<InitialProductStateType[]> {
+  const res = await fetch(`/api/products?search=${encodeURIComponent(query)}&type=${encodeURIComponent(type)}`);
+  if (!res.ok) throw new Error('Failed to search products');
+  return res.json();
+}
 
 // ============================================================================
 // Query Keys Factory
@@ -52,7 +83,7 @@ export const productKeys = {
 };
 
 // ============================================================================
-// Queries - Using Server Actions
+// Queries - Using API Routes
 // ============================================================================
 
 /**
@@ -67,7 +98,7 @@ export function useProducts(
 ) {
   return useQuery({
     queryKey: productKeys.list(productType),
-    queryFn: () => getProducts(productType),
+    queryFn: () => fetchProducts(productType),
     staleTime: 5 * 60 * 1000, // 5 minutes
     ...options,
   });
@@ -75,12 +106,11 @@ export function useProducts(
 
 /**
  * Get products with location for map view
- * Uses 10 minute cache (replaces custom TTL logic in Redux)
  */
 export function useProductsLocation(productType: string) {
   return useQuery({
     queryKey: productKeys.location(productType),
-    queryFn: () => getProductLocations(productType),
+    queryFn: () => fetchProductLocations(productType),
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
   });
@@ -92,7 +122,7 @@ export function useProductsLocation(productType: string) {
 export function useAllProducts() {
   return useQuery({
     queryKey: [...productKeys.lists(), 'all'],
-    queryFn: () => getAllProducts(),
+    queryFn: () => fetchAllProducts(),
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -105,7 +135,7 @@ export function useProduct(productId: number | undefined) {
     queryKey: productKeys.detail(productId ?? 0),
     queryFn: async () => {
       if (!productId) return null;
-      return getProductById(productId);
+      return fetchProductById(productId);
     },
     enabled: !!productId,
     staleTime: 2 * 60 * 1000, // 2 minutes
@@ -120,7 +150,7 @@ export function useUserProducts(userId: string | undefined) {
     queryKey: productKeys.userProducts(userId ?? ''),
     queryFn: async () => {
       if (!userId) return [];
-      return getUserProducts(userId);
+      return fetchUserProducts(userId);
     },
     enabled: !!userId,
     staleTime: 2 * 60 * 1000,
@@ -135,7 +165,7 @@ export function useSearchProducts(searchQuery: string, productType: string = 'al
     queryKey: productKeys.search(searchQuery, productType),
     queryFn: async () => {
       if (!searchQuery.trim()) return [];
-      return searchProducts(searchQuery, productType);
+      return fetchSearchProducts(searchQuery, productType);
     },
     enabled: !!searchQuery.trim(),
     staleTime: 1 * 60 * 1000, // 1 minute for search results
@@ -144,15 +174,12 @@ export function useSearchProducts(searchQuery: string, productType: string = 'al
 
 /**
  * Get product image with proper blob URL cleanup
- * Uses useImageBlobUrl to prevent memory leaks
- * Note: This still uses storage API for direct file access
  */
 export function useProductImage(imagePath: string | undefined) {
   return useImageBlobUrl({
     queryKey: productKeys.image(imagePath ?? ''),
     fetchFn: async () => {
       if (!imagePath) return null;
-      // For images, we still use the storage API since it's a direct file download
       const { storageAPI } = await import('@/api/storageAPI');
       const { data, error } = await storageAPI.downloadImage({
         path: imagePath,
@@ -209,7 +236,6 @@ export function useCreateProduct() {
       return result;
     },
     onSuccess: (_, variables) => {
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
       queryClient.invalidateQueries({ queryKey: productKeys.locations() });
       if (variables.profile_id) {
@@ -258,17 +284,13 @@ export function useUpdateProduct() {
       }
       return { id, ...productData };
     },
-    // Optimistic update
     onMutate: async (variables) => {
-      // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: productKeys.detail(variables.id) });
 
-      // Snapshot previous value
       const previousProduct = queryClient.getQueryData<InitialProductStateType>(
         productKeys.detail(variables.id)
       );
 
-      // Optimistically update the cache
       if (previousProduct) {
         queryClient.setQueryData(
           productKeys.detail(variables.id),
@@ -279,7 +301,6 @@ export function useUpdateProduct() {
       return { previousProduct };
     },
     onError: (_err, variables, context) => {
-      // Rollback on error
       if (context?.previousProduct) {
         queryClient.setQueryData(
           productKeys.detail(variables.id),
@@ -288,7 +309,6 @@ export function useUpdateProduct() {
       }
     },
     onSettled: (_, __, variables) => {
-      // Always refetch after error or success
       queryClient.invalidateQueries({
         queryKey: productKeys.detail(variables.id),
       });
@@ -312,17 +332,13 @@ export function useDeleteProduct() {
       }
       return productId;
     },
-    // Optimistic delete from lists
     onMutate: async (productId) => {
-      // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: productKeys.lists() });
 
-      // Snapshot all list queries
       const previousLists = queryClient.getQueriesData<InitialProductStateType[]>({
         queryKey: productKeys.lists(),
       });
 
-      // Optimistically remove from all lists
       queryClient.setQueriesData<InitialProductStateType[]>(
         { queryKey: productKeys.lists() },
         (old) => old?.filter((p) => p.id !== productId) ?? []
@@ -331,13 +347,11 @@ export function useDeleteProduct() {
       return { previousLists };
     },
     onError: (_err, _productId, context) => {
-      // Rollback lists on error
       context?.previousLists.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
     },
     onSettled: (productId) => {
-      // Remove from detail cache and invalidate
       if (productId) {
         queryClient.removeQueries({
           queryKey: productKeys.detail(productId),
@@ -363,7 +377,6 @@ export function useToggleFavorite() {
       }
       return result;
     },
-    // Optimistic toggle
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: productKeys.detail(variables.productId) });
 
@@ -371,7 +384,6 @@ export function useToggleFavorite() {
         productKeys.detail(variables.productId)
       );
 
-      // Optimistically toggle the like counter
       if (previousProduct) {
         queryClient.setQueryData(
           productKeys.detail(variables.productId),
@@ -385,7 +397,6 @@ export function useToggleFavorite() {
       return { previousProduct };
     },
     onError: (_err, variables, context) => {
-      // Rollback on error
       if (context?.previousProduct) {
         queryClient.setQueryData(
           productKeys.detail(variables.productId),
@@ -417,28 +428,17 @@ export function useProductsManager(productType: string = 'food') {
   const deleteProductMutation = useDeleteProduct();
 
   return {
-    // Data
     products: products.data ?? [],
     locations: locations.data ?? [],
-
-    // Loading
     isLoading: products.isLoading,
     isLocationsLoading: locations.isLoading,
-
-    // Errors
     error: products.error,
-
-    // Mutations
     create: createProductMutation.mutateAsync,
     update: updateProductMutation.mutateAsync,
     delete: deleteProductMutation.mutateAsync,
-
-    // Mutation states
     isCreating: createProductMutation.isPending,
     isUpdating: updateProductMutation.isPending,
     isDeleting: deleteProductMutation.isPending,
-
-    // Refetch
     refetch: () => {
       products.refetch();
       locations.refetch();

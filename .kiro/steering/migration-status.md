@@ -56,9 +56,12 @@ export default async function ProductsPage() {
 
 ### TanStack Query (Transitional)
 
-- `src/hooks/queries/useProductQueries.ts` - Product queries
+- `src/hooks/queries/useProductQueries.ts` - Product queries (fetches via `/api/products` routes)
 - `src/hooks/queries/useAdminQueries.ts` - Admin queries
-- `src/api/*.ts` - API functions
+- `src/app/api/products/route.ts` - API route for client-side product fetching
+- `src/api/*.ts` - Legacy API functions
+
+**Note:** TanStack Query hooks cannot import server-only functions from `lib/data/`. They use API routes (`/api/*`) for data fetching.
 
 ### Supabase Clients
 

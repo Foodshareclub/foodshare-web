@@ -154,8 +154,11 @@ export function ProductCard({ product }: { product: Product }) {
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getProducts } from '@/lib/data/products';  // Data from lib/data/
 import { createProduct } from '@/app/actions/products';  // Mutations from actions/
+
+// Client hooks fetch via API routes, not lib/data (server-only)
+const fetchProducts = (type: string) => 
+  fetch(`/api/products?type=${type}`).then(res => res.json());
 
 export function useProducts(type: string) {
   return useQuery({

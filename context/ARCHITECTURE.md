@@ -328,18 +328,26 @@ export function DeleteButton({ productId }: { productId: string }) {
 
 When you need client-side caching, polling, or optimistic updates.
 
+**Important:** TanStack Query hooks run on the client and cannot import server-only functions from `lib/data/`. Use API routes for data fetching in client hooks.
+
 ```typescript
 // src/hooks/queries/useProducts.ts
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getProducts } from '@/lib/data/products';  // Data functions from lib/data/
-import { createProduct } from '@/app/actions/products';  // Mutations from actions/
+import { createProduct } from '@/app/actions/products';  // Mutations via Server Actions
 
-export function useProducts(filters?: ProductFilters) {
+// Fetch via API route (client-safe)
+async function fetchProducts(type: string) {
+  const res = await fetch(`/api/products?type=${encodeURIComponent(type)}`);
+  if (!res.ok) throw new Error('Failed to fetch products');
+  return res.json();
+}
+
+export function useProducts(type: string) {
   return useQuery({
-    queryKey: ['products', filters],
-    queryFn: () => getProducts(filters),
+    queryKey: ['products', type],
+    queryFn: () => fetchProducts(type),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }

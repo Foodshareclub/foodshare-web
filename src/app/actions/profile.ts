@@ -2,23 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
-
-// Re-export cached data functions for backward compatibility
-export {
-  getProfile,
-  getPublicProfile,
-  getUserStats,
-  getVolunteers,
-  getProfileReviews,
-} from '@/lib/data/profiles';
-
-export type {
-  Profile,
-  PublicProfile,
-  ProfileStats,
-  ProfileReview,
-} from '@/lib/data/profiles';
-
 import { getProfile, type Profile } from '@/lib/data/profiles';
 
 /**
