@@ -1,11 +1,12 @@
 import { Suspense } from 'react';
-import { getProductLocations } from '@/lib/data/products';
+import { getMapLocations } from '@/lib/data/maps';
 import { getUser } from '@/app/actions/auth';
 import { MapClient } from './MapClient';
 import { urlToDbType } from '@/utils/categoryMapping';
+import { CACHE_DURATIONS } from '@/lib/data/cache-keys';
 
-// Route segment config for caching
-export const revalidate = 300; // Revalidate every 5 minutes (map data changes less frequently)
+// Route segment config for caching - aligned with CACHE_DURATIONS.PRODUCT_LOCATIONS
+export const revalidate = CACHE_DURATIONS.PRODUCT_LOCATIONS;
 
 interface PageProps {
   params: Promise<{ type: string }>;
@@ -21,9 +22,9 @@ export default async function MapPage({ params }: PageProps) {
   // Convert URL slug to database type
   const dbType = urlToDbType(type);
 
-  // Fetch data in parallel on the server
+  // Fetch data in parallel on the server (cached via unstable_cache)
   const [locations, user] = await Promise.all([
-    getProductLocations(dbType),
+    getMapLocations(dbType),
     getUser(),
   ]);
 

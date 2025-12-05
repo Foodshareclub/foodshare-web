@@ -22,6 +22,7 @@ export { PhoneNumberBlock } from "./profile/PhoneNumberBlock";
 export { AddressBlock } from "./profile/AddressBlock";
 export { BecomeSharerBlock } from "./becomeSharerBlock/BecomeSharerBlock";
 export { BecomeSharerButton } from "./becomeSharerBlock/BecomeSharerButton";
+export { AddListingButton } from "./becomeSharerBlock/AddListingButton";
 
 // Chat Components
 export { InputSection } from "./chat/InputSection";

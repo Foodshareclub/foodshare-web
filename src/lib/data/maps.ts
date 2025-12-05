@@ -10,7 +10,7 @@
 
 import { unstable_cache } from 'next/cache';
 import { createCachedClient } from '@/lib/supabase/server';
-import { CACHE_TAGS, CACHE_DURATIONS } from './cache-keys';
+import { CACHE_TAGS, CACHE_DURATIONS, logCacheOperation } from './cache-keys';
 import type { LocationType } from '@/types/product.types';
 
 // Re-export types for consumers
@@ -26,9 +26,11 @@ export type { LocationType };
  */
 export async function getMapLocations(productType: string): Promise<LocationType[]> {
   const normalizedType = productType.toLowerCase();
+  const cacheKey = `map-locations-${normalizedType}`;
 
   return unstable_cache(
     async (): Promise<LocationType[]> => {
+      logCacheOperation('miss', cacheKey, { type: normalizedType });
       const supabase = createCachedClient();
 
       const { data, error } = await supabase
@@ -38,9 +40,10 @@ export async function getMapLocations(productType: string): Promise<LocationType
         .eq('is_active', true);
 
       if (error) throw new Error(error.message);
+      logCacheOperation('set', cacheKey, { count: data?.length ?? 0 });
       return data ?? [];
     },
-    [`map-locations-${normalizedType}`],
+    [cacheKey],
     {
       revalidate: CACHE_DURATIONS.PRODUCT_LOCATIONS,
       tags: [CACHE_TAGS.PRODUCT_LOCATIONS, CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(normalizedType)],
@@ -54,6 +57,7 @@ export async function getMapLocations(productType: string): Promise<LocationType
  */
 export const getAllMapLocations = unstable_cache(
   async (): Promise<LocationType[]> => {
+    logCacheOperation('miss', 'all-map-locations');
     const supabase = createCachedClient();
 
     const { data, error } = await supabase
@@ -62,6 +66,7 @@ export const getAllMapLocations = unstable_cache(
       .eq('is_active', true);
 
     if (error) throw new Error(error.message);
+    logCacheOperation('set', 'all-map-locations', { count: data?.length ?? 0 });
     return data ?? [];
   },
   ['all-map-locations'],

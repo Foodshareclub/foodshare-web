@@ -4,6 +4,7 @@ import { Circle, FeatureGroup, Marker, Popup, useMapEvents } from "react-leaflet
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import type { Icon, IconOptions, LatLng } from "leaflet";
+import { FaMapMarkerAlt, FaTimes, FaSpinner } from 'react-icons/fa';
 
 type LocationMarkerType = {
   icon: Icon<IconOptions>;
@@ -56,7 +57,10 @@ const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
           <Marker icon={icon} position={position}>
             <Popup>
               <div className="flex flex-col gap-1 items-start">
-                <p className="font-semibold text-sm">📍 Your location</p>
+                <p className="flex items-center gap-1 font-semibold text-sm">
+                  <FaMapMarkerAlt className="text-red-500" />
+                  Your location
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {position.lat.toFixed(4)}, {position.lng.toFixed(4)}
                 </p>
@@ -67,13 +71,13 @@ const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
         </FeatureGroup>
       )}
 
-      {/* Locate Me Button - Fixed position */}
-      <div className="fixed bottom-[100px] md:bottom-[30px] right-5 md:right-[30px] z-[1000]">
+      {/* Locate Me Button - Fixed position above footer */}
+      <div className="fixed bottom-14 md:bottom-12 right-4 z-[1000]">
         <button
           onClick={requestLocation}
           disabled={isLoading}
           className={`
-            px-6 py-6 text-lg rounded-full shadow-md
+            flex items-center gap-1.5 px-3 py-2 text-sm rounded-full shadow-md
             transition-all duration-200
             ${
               error
@@ -87,13 +91,27 @@ const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
             disabled:opacity-50 disabled:cursor-not-allowed
           `}
         >
-          {isLoading
-            ? "Finding..."
-            : error
-              ? "❌ Try Again"
-              : position
-                ? "📍 My Location"
-                : "📍 Locate Me"}
+          {isLoading ? (
+            <>
+              <FaSpinner className="animate-spin" />
+              Finding...
+            </>
+          ) : error ? (
+            <>
+              <FaTimes />
+              Retry
+            </>
+          ) : position ? (
+            <>
+              <FaMapMarkerAlt />
+              Located
+            </>
+          ) : (
+            <>
+              <FaMapMarkerAlt />
+              Locate Me
+            </>
+          )}
         </button>
 
         {/* Error message */}
