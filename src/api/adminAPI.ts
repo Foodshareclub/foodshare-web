@@ -561,7 +561,7 @@ export const getDashboardStats = async (): Promise<{
     return { data: stats, error: null };
   } catch (error) {
     logger.error("Error fetching dashboard stats", error as Error);
-    return { data: null, error };
+    return { data: null, error: error instanceof Error ? error : new Error(String(error)) };
   }
 };
 
@@ -612,7 +612,7 @@ export const getListingStatsByCategory = async (): Promise<{
     return { data: stats, error: null };
   } catch (error) {
     logger.error("Error fetching category stats", error as Error);
-    return { data: null, error };
+    return { data: null, error: error instanceof Error ? error : new Error(String(error)) };
   }
 };
 
