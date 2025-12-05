@@ -484,20 +484,20 @@ export async function previewSegment(filters: SegmentFilters) {
       profile_id: string;
       lifecycle_stage: string;
       engagement_score: number | null;
-      profiles: { full_name: string | null; email: string | null } | null;
-      profile_stats: { items_shared: number | null } | null;
+      profiles: { full_name: string | null; email: string | null }[];
+      profile_stats: { items_shared: number | null }[];
     }
 
     const result: SegmentPreviewResult = {
       estimated_size: count || 0,
       sample_members:
-        (data as RawPreviewCustomer[] | null)?.map((customer) => ({
+        (data as unknown as RawPreviewCustomer[] | null)?.map((customer) => ({
           customer_id: customer.id,
-          full_name: customer.profiles?.full_name || "Unknown",
-          email: customer.profiles?.email || "",
+          full_name: customer.profiles?.[0]?.full_name || "Unknown",
+          email: customer.profiles?.[0]?.email || "",
           lifecycle_stage: customer.lifecycle_stage,
           engagement_score: customer.engagement_score || 0,
-          items_shared: customer.profile_stats?.items_shared || 0,
+          items_shared: customer.profile_stats?.[0]?.items_shared || 0,
         })) || [],
     };
 
