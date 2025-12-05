@@ -2,14 +2,12 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 /**
- * Supabase Proxy (Next.js 16)
+ * Supabase Auth Proxy
  *
- * This function handles session refresh on every request, ensuring:
+ * This proxy handles session refresh on every request, ensuring:
  * 1. Supabase auth cookies are properly synced
  * 2. Expired sessions are refreshed automatically
  * 3. Admin routes are protected with role-based access
- *
- * Note: In Next.js 16, this replaces the old middleware.ts pattern
  */
 export async function proxy(request: NextRequest) {
   // Create response that will be returned

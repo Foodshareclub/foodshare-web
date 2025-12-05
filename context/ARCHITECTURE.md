@@ -56,10 +56,12 @@ Every component is a Server Component by default. They:
 
 ```typescript
 // src/app/products/page.tsx - Server Component
-import { getProducts } from '@/app/actions/products';
+import { getProducts } from '@/lib/data/products';  // Data from lib/data/
+
+export const revalidate = 60; // Route segment config for time-based revalidation
 
 export default async function ProductsPage() {
-  const products = await getProducts(); // Direct DB access via Server Action
+  const products = await getProducts('food'); // Cached data fetching
 
   return (
     <main className="container mx-auto">
@@ -100,73 +102,72 @@ export function AddToFavorites({ productId }: { productId: string }) {
 }
 ```
 
-### Server Actions
+### Data Functions (lib/data/)
 
-Server Actions are async functions that run on the server. They handle:
-- Database mutations
-- Form submissions
-- Authentication
-- File uploads
+Cached data fetching functions live in `lib/data/`. They use `unstable_cache` for server-side caching with tag-based invalidation.
 
 ```typescript
-// src/app/actions/products.ts
+// src/lib/data/products.ts - Cached data fetching
+import { unstable_cache } from 'next/cache';
+import { createClient } from '@/lib/supabase/server';
+import { CACHE_TAGS, CACHE_DURATIONS } from './cache-keys';
+
+export const getProducts = unstable_cache(
+  async (productType: string) => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('posts_with_location')
+      .select('*')
+      .eq('post_type', productType)
+      .eq('is_active', true);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+  ['products-by-type'],
+  { revalidate: CACHE_DURATIONS.PRODUCTS, tags: [CACHE_TAGS.PRODUCTS] }
+);
+```
+
+### Server Actions (Mutations)
+
+Server Actions handle mutations only. They live in `app/actions/` and use `invalidateTag` from `@/lib/data/cache-keys` to invalidate caches (wrapper for Next.js 16's `revalidateTag` with default profile).
+
+```typescript
+// src/app/actions/products.ts - Mutations only
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
-// Data fetching
-export async function getProducts(filters?: ProductFilters) {
-  const supabase = await createClient();
-
-  let query = supabase
-    .from('products')
-    .select('*, profiles(username, avatar_url)')
-    .eq('active', true);
-
-  if (filters?.category) {
-    query = query.eq('category', filters.category);
-  }
-
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-
-  return data;
-}
-
-// Mutation with revalidation
+// Mutation with cache invalidation
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/login');
 
-  const { error } = await supabase.from('products').insert({
-    title: formData.get('title') as string,
-    description: formData.get('description') as string,
-    category: formData.get('category') as string,
-    user_id: user.id,
+  const { error } = await supabase.from('posts').insert({
+    post_name: formData.get('post_name') as string,
+    post_description: formData.get('post_description') as string,
+    post_type: formData.get('post_type') as string,
+    profile_id: user.id,
   });
 
   if (error) throw new Error(error.message);
 
-  revalidatePath('/products');
-  redirect('/products');
+  invalidateTag(CACHE_TAGS.PRODUCTS); // Invalidate cache
+  redirect('/food');
 }
 
-// Delete with revalidation
-export async function deleteProduct(id: string) {
+// Delete with cache invalidation
+export async function deleteProduct(id: number) {
   const supabase = await createClient();
 
-  const { error } = await supabase
-    .from('products')
-    .delete()
-    .eq('id', id);
-
+  const { error } = await supabase.from('posts').delete().eq('id', id);
   if (error) throw new Error(error.message);
 
-  revalidatePath('/products');
+  invalidateTag(CACHE_TAGS.PRODUCTS);
 }
 ```
 
@@ -474,7 +475,7 @@ export async function getCurrentUser() {
 ```typescript
 // src/app/profile/page.tsx
 import { requireAuth } from '@/app/actions/auth';
-import { getProfile } from '@/app/actions/profile';
+import { getProfile } from '@/lib/data/profiles';
 
 export default async function ProfilePage() {
   const user = await requireAuth(); // Redirects if not authenticated
@@ -543,31 +544,49 @@ export async function ProductList() {
 
 ### Next.js Cache
 
+FoodShare uses a centralized cache key system in `src/lib/data/cache-keys.ts` for consistency across all caching operations.
+
+```typescript
+// src/lib/data/cache-keys.ts - Centralized cache tags
+import { CACHE_TAGS, CACHE_DURATIONS } from '@/lib/data/cache-keys';
+
+// Available tags:
+// CACHE_TAGS.PRODUCTS, CACHE_TAGS.PRODUCT(id), CACHE_TAGS.PRODUCTS_BY_TYPE(type)
+// CACHE_TAGS.PROFILES, CACHE_TAGS.PROFILE(id), CACHE_TAGS.PROFILE_STATS(id)
+// CACHE_TAGS.FORUM, CACHE_TAGS.FORUM_POST(id), CACHE_TAGS.CHAT, etc.
+
+// Available durations (in seconds):
+// CACHE_DURATIONS.SHORT (60s), CACHE_DURATIONS.MEDIUM (300s)
+// CACHE_DURATIONS.LONG (3600s), CACHE_DURATIONS.PRODUCTS (60s), etc.
+```
+
 ```typescript
 // src/app/actions/products.ts
 'use server';
 
 import { unstable_cache } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { CACHE_TAGS, CACHE_DURATIONS, getProductTags } from '@/lib/data/cache-keys';
 
-// Cached data fetching with tags
+// Cached data fetching with centralized tags
 export const getProducts = unstable_cache(
   async (filters?: ProductFilters) => {
     const supabase = await createClient();
     const { data } = await supabase.from('products').select('*');
     return data ?? [];
   },
-  ['products'],
+  [CACHE_TAGS.PRODUCTS],
   {
-    tags: ['products'],
-    revalidate: 60, // Revalidate every 60 seconds
+    tags: [CACHE_TAGS.PRODUCTS],
+    revalidate: CACHE_DURATIONS.PRODUCTS,
   }
 );
 
-// Revalidate after mutation
+// Revalidate after mutation using helper
 export async function createProduct(formData: FormData) {
   // ... create product
-  revalidateTag('products'); // Invalidates all cached data with this tag
+  const tags = getProductTags(); // Returns all product-related tags
+  tags.forEach(tag => invalidateTag(tag));
 }
 ```
 

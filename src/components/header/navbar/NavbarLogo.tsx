@@ -52,7 +52,7 @@ const NavbarLogo: React.FC<NavbarLogoProps> = memo(({ onNavigate, isCompact = fa
       />
       <span
         className={cn(
-          "hidden sm:block font-black text-[#FF2D55] tracking-[-0.5px]",
+          "hidden sm:block font-black text-primary tracking-[-0.5px]",
           "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
           isCompact ? "text-[22px]" : "text-[26px]"
         )}

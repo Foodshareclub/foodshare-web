@@ -45,13 +45,7 @@ export default function Footer() {
 
   return (
     <footer
-      className="fixed bottom-0 z-[1] w-full border-t border-white/30 text-gray-700 py-1 px-7 xl:px-20 glass-accelerated"
-      style={{
-        background: "rgba(255, 255, 255, 0.4)",
-        backdropFilter: "blur(20px) saturate(200%)",
-        WebkitBackdropFilter: "blur(20px) saturate(200%)",
-        boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.25)",
-      }}
+      className="fixed bottom-0 z-[1] w-full border-t border-border/30 text-foreground py-1 px-7 xl:px-20 glass-accelerated glass"
     >
       <div className="flex flex-col md:flex-row justify-center md:justify-between items-center gap-2">
         <div className="flex items-center gap-4">
@@ -59,7 +53,7 @@ export default function Footer() {
             "© {currentYear} Foodshare Club, Limited. All rights reserved"
           </p>
           <div className="hidden md:flex items-center gap-1.5">
-            <FaGlobe className="w-4 h-4 text-gray-600" />
+            <FaGlobe className="w-4 h-4 text-muted-foreground" />
             <LanguageSelector />
           </div>
         </div>

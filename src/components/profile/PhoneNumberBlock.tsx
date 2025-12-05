@@ -36,9 +36,7 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({
     <Glass variant="standard" className="p-4 mb-4">
       <div className="flex">
         <div className="w-full max-w-screen-lg">
-          <h2
-            className={`text-2xl font-medium pb-2 text-left ${c ? "text-gray-100" : "text-black"}`}
-          >
+          <h2 className="text-2xl font-medium pb-2 text-left text-foreground">
             Phone number
           </h2>
           {edit ? (
@@ -46,7 +44,7 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({
               <div className="flex justify-between">
                 <div className="relative w-full">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <PhoneIcon className="text-gray-400" />
+                    <PhoneIcon className="text-muted-foreground" />
                   </div>
                   <Input
                     variant="glass"
@@ -73,7 +71,7 @@ export const PhoneNumberBlock: React.FC<PhoneNumberBlockType> = ({
               </GlassButton>
             </>
           ) : (
-            <p className={c ? "text-gray-100" : "text-black"}>
+            <p className="text-foreground">
               Add a number so confirmed users can get your products.
             </p>
           )}

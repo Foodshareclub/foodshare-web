@@ -435,6 +435,251 @@ test: add tests for chat functionality
 
 ## Debugging
 
+### DevTools Component (Recommended)
+
+FoodShare includes a `DevTools` component that initializes the logger system and provides a visual log viewer. This is the recommended way to enable dev tools in your app.
+
+**Usage:**
+
+Add to your root layout:
+
+```tsx
+import { DevTools } from '@/components/dev/DevTools';
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        {children}
+        <DevTools />
+      </body>
+    </html>
+  );
+}
+```
+
+**Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `showLogViewer` | `boolean` | `true` | Show the floating log viewer panel |
+| `position` | `'bottom-right' \| 'bottom-left' \| 'top-right' \| 'top-left'` | `'bottom-right'` | Position of the log viewer |
+| `version` | `string` | `undefined` | App version to display in console banner |
+
+**Example with options:**
+
+```tsx
+<DevTools 
+  showLogViewer={true} 
+  position="bottom-left" 
+  version="1.2.3" 
+/>
+```
+
+The component automatically hides in production (`NODE_ENV === 'production'`).
+
+### Built-in Log Viewer (Dev Only)
+
+The `LogViewer` component (used by `DevTools`) displays error history from the logger system.
+
+**Features:**
+- Floating toggle button with configurable position
+- Filter logs by level (error, warn, info, debug, success)
+- Search logs by message or component name
+- Expandable log entries with context and stack traces
+- Export logs to JSON
+- Copy individual log entries
+- Pin panel to keep it visible
+- Minimize/expand panel
+- Auto-scroll to latest logs
+- Badge showing log count with color-coded severity
+- Auto-refreshes every 500ms
+- Pulses red when errors are present
+
+**Standalone usage (if not using DevTools):**
+
+```tsx
+import { LogViewer } from '@/components/dev/LogViewer';
+
+// Default position (bottom-right)
+<LogViewer />
+
+// Custom position
+<LogViewer position="bottom-left" />
+<LogViewer position="top-right" />
+<LogViewer position="top-left" />
+```
+
+**Logging to the viewer:**
+
+```typescript
+import { logger } from '@/lib/logger';
+
+// These logs appear in the LogViewer
+logger.error('Something failed', { component: 'MyComponent', action: 'fetch' });
+logger.warn('Deprecation warning');
+logger.info('User action', { userId: '123' });
+logger.debug('Debug info');
+```
+
+### Pretty Logger (Recommended)
+
+The `pretty` logger provides beautiful, structured console output with automatic environment detection (browser vs server).
+
+```typescript
+import { pretty } from '@/lib/logger';
+
+// Basic log levels
+pretty.info('User logged in', { component: 'Auth' });
+pretty.success('Product created', { component: 'ProductForm' });
+pretty.warn('Rate limit approaching');
+pretty.error('Failed to save', new Error('Network error'), { component: 'API' });
+
+// API request logging
+pretty.api('GET', '/api/products', 200, 45, 1024); // method, url, status, duration(ms), size(bytes)
+
+// Database query logging
+pretty.db('SELECT', 'posts', 12, 50); // operation, table, duration(ms), rowCount
+
+// Performance measurements
+pretty.perf('render', 45); // name, duration(ms)
+pretty.perf('hydration', 120, { components: 15 }); // with metadata
+
+// Cache operations (browser only)
+pretty.cache('hit', 'products:list');
+pretty.cache('miss', 'user:123');
+
+// Component lifecycle (dev only, browser only)
+pretty.render('ProductCard', 'mount', { id: '123' });
+
+// Auth events (browser only)
+pretty.auth('login', 'user-123', { provider: 'google' });
+
+// Visual helpers
+pretty.divider('Section');
+pretty.banner(); // FoodShare branded header
+pretty.table('Products', [{ id: 1, name: 'Apple' }]);
+```
+
+The logger automatically adapts output styling for browser (CSS) and server (ANSI colors).
+
+### Console Theme (Visual Output)
+
+For scripts, CLI tools, or startup sequences, use the `theme` utilities for beautiful ASCII art and visual feedback:
+
+```typescript
+import { theme, printBanner, printProgress } from '@/lib/logger';
+
+// FoodShare ASCII banner
+theme.banner();
+
+// Section headers
+theme.section('Database Migration', '🗄️');
+
+// Environment info badge
+theme.envInfo(); // Shows "DEVELOPMENT" or "PRODUCTION" with color
+
+// Key-value pairs
+theme.keyValue('Version', '1.0.0', '📦');
+theme.keyValue('Users', 1234);
+
+// Status boxes
+theme.successBox('Migration completed successfully');
+theme.errorBox('Failed to connect to database');
+theme.warningBox('Using fallback configuration');
+
+// Progress bars
+theme.progress(75, 100, 'Processing'); // ████████████████░░░░ 75%
+
+// Timeline events
+theme.timeline('10:30:45', 'Server started', 'success');
+theme.timeline('10:30:46', 'Database connected', 'success');
+theme.timeline('10:30:47', 'Cache warming', 'pending');
+```
+
+All theme functions automatically adapt to browser (CSS styling) and server (ANSI colors).
+
+### Network Logger
+
+The `network` logger provides beautiful network request/response logging with waterfall visualization for debugging API calls:
+
+```typescript
+import { network } from '@/lib/logger';
+
+// Track request lifecycle
+const requestId = network.start('GET', '/api/products'); // Returns unique ID
+// ... make request ...
+network.end(requestId, 200, 1024); // status, size in bytes
+
+// Log complete request (simpler API)
+network.log('POST', '/api/products', 201, 45, {
+  size: 256,
+  requestBody: { name: 'Apple' },
+  responseBody: { id: 1, name: 'Apple' },
+  headers: { 'Content-Type': 'application/json' },
+});
+
+// View waterfall visualization (browser only)
+network.waterfall(); // Shows timing diagram of all logged requests
+
+// Get logged entries programmatically
+const entries = network.getEntries();
+
+// Clear network log
+network.clear();
+```
+
+The network logger automatically:
+- Color-codes HTTP methods (GET=green, POST=blue, DELETE=red)
+- Shows status with emoji indicators (✅ 2xx, ⚠️ 4xx, ❌ 5xx)
+- Formats timing (μs, ms, s) and size (B, KB, MB)
+- Groups detailed request/response data in collapsible console groups
+
+### Console Interceptor
+
+The `interceptor` utility globally intercepts and beautifies all console output with timestamps, emojis, and color-coding. It also maintains a buffer of recent logs for debugging.
+
+```typescript
+import { interceptor } from '@/lib/logger/interceptor';
+
+// Start intercepting console output
+interceptor.start();
+
+// All console methods now have timestamps and styling
+console.log('Hello');      // 12:30:45.123 Hello
+console.info('Info');      // ℹ️ 12:30:45.124 Info
+console.warn('Warning');   // ⚠️ 12:30:45.125 Warning
+console.error('Error');    // ❌ 12:30:45.126 Error
+console.debug('Debug');    // 🔍 12:30:45.127 Debug (dev only)
+
+// Check if intercepting
+interceptor.isActive(); // true
+
+// Access buffered logs (last 500 entries)
+const logs = interceptor.getBuffer();
+// [{ level: 'log', args: ['Hello'], timestamp: Date }, ...]
+
+// Export buffer as JSON (useful for bug reports)
+const json = interceptor.exportBuffer();
+
+// Clear the buffer
+interceptor.clearBuffer();
+
+// Stop intercepting and restore original console
+interceptor.stop();
+
+// Access original console methods (bypass interception)
+interceptor.original.log('Unformatted output');
+```
+
+**Features:**
+- Automatic environment detection (browser CSS vs server ANSI colors)
+- Timestamps on all log output
+- Emoji indicators for log levels
+- Maintains rolling buffer of last 500 log entries
+- Export buffer as JSON for debugging/bug reports
+- Access to original console methods when needed
+
 ### Browser DevTools
 
 1. **React DevTools**: Inspect component tree

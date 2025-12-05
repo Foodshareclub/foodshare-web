@@ -54,15 +54,11 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({ product
     if (!isRoomExist) {
       const newRoom = await createRoom();
       // Navigate to chat with newly created room
-      router.push(
-        `/chat-main/?p=${product.id}&s=${product.profile_id}&r=${userID}&room=${newRoom.id}`
-      );
+      router.push(`/chat?food=${product.id}&room=${newRoom.id}`);
       return;
     }
     // Navigate to existing chat room
-    router.push(
-      `/chat-main/?p=${product.id}&s=${product.profile_id}&r=${userID}&room=${existingRoom?.id}`
-    );
+    router.push(`/chat?food=${product.id}&room=${existingRoom?.id}`);
   };
 
   return (

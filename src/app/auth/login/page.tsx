@@ -84,10 +84,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 relative overflow-hidden">
+    <div className="min-h-screen bg-muted/30 dark:bg-background relative overflow-hidden">
       {/* Background Pattern */}
       <div
-        className="absolute top-0 left-0 right-0 bottom-0 opacity-[0.03] pointer-events-none"
+        className="absolute top-0 left-0 right-0 bottom-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none"
         style={{
           backgroundImage: 'radial-gradient(circle, #E61E4D 1px, transparent 1px)',
           backgroundSize: '40px 40px',
@@ -95,18 +95,18 @@ export default function LoginPage() {
       />
 
       {/* Header */}
-      <div className="sticky top-0 bg-white/95 border-b border-gray-200 z-10 backdrop-blur-[10px]">
+      <div className="sticky top-0 bg-background/95 border-b border-border z-10 backdrop-blur-[10px]">
         <div className="container mx-auto max-w-7xl py-4 px-4">
           <div className="flex justify-between items-center">
             <Link href="/">
-              <p className="text-2xl font-bold text-emerald-600 cursor-pointer hover:opacity-80 transition-opacity duration-200">
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 cursor-pointer hover:opacity-80 transition-opacity duration-200">
                 FoodShare
               </p>
             </Link>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
               <span
-                className="font-semibold text-gray-900 cursor-pointer underline hover:text-emerald-600"
+                className="font-semibold text-foreground cursor-pointer underline hover:text-emerald-600 dark:hover:text-emerald-400"
                 onClick={toggleMode}
               >
                 {mode === 'login' ? 'Sign up' : 'Log in'}
@@ -124,13 +124,13 @@ export default function LoginPage() {
           transition={{ duration: 0.5 }}
         >
           {/* Card */}
-          <div className="bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] p-6 md:p-8 border border-gray-200">
+          <div className="bg-card rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] p-6 md:p-8 border border-border">
             {/* Welcome Message */}
             <div className="mb-8 text-center">
-              <h1 className="text-[32px] font-bold mb-3 text-gray-900">
+              <h1 className="text-[32px] font-bold mb-3 text-foreground">
                 {mode === 'login' ? 'Welcome back' : 'Join FoodShare'}
               </h1>
-              <p className="text-base text-gray-600 leading-relaxed">
+              <p className="text-base text-muted-foreground leading-relaxed">
                 {mode === 'login'
                   ? 'Log in to continue sharing and discovering food in your community'
                   : 'Create an account to start sharing food and reducing waste together'}
@@ -168,7 +168,7 @@ export default function LoginPage() {
                 {mode === 'signup' && (
                   <div className="flex gap-4">
                     <div className="flex-1">
-                      <label className="block text-sm font-semibold mb-2 text-gray-700">
+                      <label className="block text-sm font-semibold mb-2 text-foreground/80">
                         First name
                       </label>
                       <Input
@@ -176,11 +176,11 @@ export default function LoginPage() {
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
                         required
-                        className="h-12 rounded-xl border border-gray-300 bg-white hover:border-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                        className="h-12 rounded-xl border border-border bg-background hover:border-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-sm font-semibold mb-2 text-gray-700">
+                      <label className="block text-sm font-semibold mb-2 text-foreground/80">
                         Last name
                       </label>
                       <Input
@@ -188,7 +188,7 @@ export default function LoginPage() {
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
                         required
-                        className="h-12 rounded-xl border border-gray-300 bg-white hover:border-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                        className="h-12 rounded-xl border border-border bg-background hover:border-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                       />
                     </div>
                   </div>
@@ -196,7 +196,7 @@ export default function LoginPage() {
 
                 {/* Email */}
                 <div>
-                  <label className="block text-sm font-semibold mb-2 text-gray-700">
+                  <label className="block text-sm font-semibold mb-2 text-foreground/80">
                     Email address
                   </label>
                   <Input
@@ -205,18 +205,18 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="h-12 rounded-xl border border-gray-300 bg-white hover:border-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                    className="h-12 rounded-xl border border-border bg-background hover:border-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                   />
                 </div>
 
                 {/* Password */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm font-semibold text-gray-700">
+                    <label className="text-sm font-semibold text-foreground/80">
                       Password
                     </label>
                     {mode === 'login' && (
-                      <Link href="/auth/forgot-password" className="text-sm text-emerald-600 font-semibold hover:underline">
+                      <Link href="/auth/forgot-password" className="text-sm text-emerald-600 dark:text-emerald-400 font-semibold hover:underline">
                         Forgot password?
                       </Link>
                     )}
@@ -228,12 +228,13 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="h-12 rounded-xl border border-gray-300 bg-white pr-12 hover:border-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                      autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                      className="h-12 rounded-xl border border-border bg-background pr-12 hover:border-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-gray-700"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                       {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
@@ -259,7 +260,7 @@ export default function LoginPage() {
             {/* Divider */}
             <div className="flex items-center my-8">
               <Separator className="flex-1" />
-              <span className="px-4 text-sm text-gray-500 font-medium">
+              <span className="px-4 text-sm text-muted-foreground font-medium">
                 or continue with
               </span>
               <Separator className="flex-1" />
@@ -271,7 +272,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => handleSocialLogin('google')}
                 variant="outline"
-                className="w-full h-14 border-gray-300 rounded-xl font-medium text-[15px] bg-white hover:border-gray-800 hover:bg-gray-50 hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all"
+                className="w-full h-14 border-border rounded-xl font-medium text-[15px] bg-background hover:border-foreground hover:bg-muted/50 hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-all"
               >
                 <FaGoogle className="w-5 h-5 mr-3 text-red-500" />
                 Google
@@ -282,7 +283,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => handleSocialLogin('facebook')}
                   variant="outline"
-                  className="flex-1 h-14 border-gray-300 rounded-xl font-medium text-[15px] bg-white hover:border-gray-800 hover:bg-gray-50 hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all"
+                  className="flex-1 h-14 border-border rounded-xl font-medium text-[15px] bg-background hover:border-foreground hover:bg-muted/50 hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-all"
                 >
                   <FaFacebook className="w-5 h-5 mr-2 text-blue-600" />
                   Facebook
@@ -292,7 +293,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => handleSocialLogin('apple')}
                   variant="outline"
-                  className="flex-1 h-14 border-gray-300 rounded-xl font-medium text-[15px] bg-white hover:border-gray-800 hover:bg-gray-50 hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] transition-all"
+                  className="flex-1 h-14 border-border rounded-xl font-medium text-[15px] bg-background hover:border-foreground hover:bg-muted/50 hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-all"
                 >
                   <FaApple className="w-5 h-5 mr-2" />
                   Apple
@@ -302,13 +303,13 @@ export default function LoginPage() {
           </div>
 
           {/* Footer */}
-          <p className="text-[13px] text-gray-600 text-center mt-6 leading-relaxed">
+          <p className="text-[13px] text-muted-foreground text-center mt-6 leading-relaxed">
             By continuing, you agree to FoodShare&apos;s{' '}
-            <Link href="/terms" className="text-gray-900 font-semibold underline hover:text-emerald-600">
+            <Link href="/terms" className="text-foreground font-semibold underline hover:text-emerald-600 dark:hover:text-emerald-400">
               Terms of Service
             </Link>{' '}
             and{' '}
-            <Link href="/privacy" className="text-gray-900 font-semibold underline hover:text-emerald-600">
+            <Link href="/privacy" className="text-foreground font-semibold underline hover:text-emerald-600 dark:hover:text-emerald-400">
               Privacy Policy
             </Link>
           </p>

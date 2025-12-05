@@ -23,7 +23,7 @@ inclusion: manual
 ```tsx
 <div className="flex items-center bg-white border rounded-full shadow-sm hover:shadow-md">
   <input className="flex-1 px-6 py-3 bg-transparent" placeholder="Search..." />
-  <Button className="m-2 rounded-full bg-[#FF385C]">
+  <Button className="m-2 rounded-full bg-[#FF2D55]">
     <Search className="h-4 w-4" />
   </Button>
 </div>
@@ -101,7 +101,7 @@ export function Header() {
 - Background: `bg-white`
 - Border: `border-gray-200`
 - Text: `text-gray-900`
-- Active: `text-[#FF385C]`
+- Active: `text-[#FF2D55]`
 
 ## Breakpoints
 

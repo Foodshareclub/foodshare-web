@@ -60,7 +60,7 @@ export const MinifiedUserInfo: React.FC<MinifiedUserInfoType> = memo(
           className={`transition-opacity duration-200 ${isActive ? "opacity-100" : "opacity-60"}`}
         >
           <h4 className="text-sm font-semibold">{description}</h4>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {firstName} {secondName}
           </p>
         </div>

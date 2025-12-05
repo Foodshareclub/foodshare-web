@@ -33,7 +33,7 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
     : 'Unknown';
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-muted/30 dark:bg-background">
       <div className="container mx-auto max-w-4xl pt-24 pb-12 px-4">
         <GlassCard variant="standard" padding="0" overflow="hidden" className="glass-fade-in">
           {/* Cover Photo */}
@@ -51,7 +51,7 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
           <div className="p-8">
             {/* Avatar */}
             <div className="flex justify-center -mt-20 mb-6">
-              <Avatar className="h-32 w-32 border-4 border-white dark:border-gray-800 shadow-xl">
+              <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
                 <AvatarImage src={profile.avatar_url || undefined} alt={profile.first_name || 'User'} />
                 <AvatarFallback className="text-3xl font-bold bg-gradient-to-br from-emerald-400 to-emerald-600 text-white">
                   {initials || '?'}
@@ -61,11 +61,11 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
 
             {/* Name */}
             <div className="text-center mb-6">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-3xl font-bold text-foreground mb-2">
                 {profile.first_name} {profile.second_name}
               </h1>
               {profile.username && (
-                <p className="text-lg text-gray-600 dark:text-gray-400">
+                <p className="text-lg text-muted-foreground">
                   @{profile.username}
                 </p>
               )}
@@ -85,11 +85,11 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
             {/* About Me */}
             {profile.about_me && (
               <div className="mb-6">
-                <h2 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white">
+                <h2 className="text-xl font-semibold mb-3 text-foreground">
                   About
                 </h2>
                 <GlassCard variant="subtle" className="p-4">
-                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                  <p className="text-foreground/80 whitespace-pre-wrap">
                     {profile.about_me}
                   </p>
                 </GlassCard>
@@ -105,10 +105,10 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
                     <FaCalendar className="text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-medium">
+                    <p className="text-xs text-muted-foreground uppercase font-medium">
                       Member Since
                     </p>
-                    <p className="text-gray-900 dark:text-white font-semibold">{joinDate}</p>
+                    <p className="text-foreground font-semibold">{joinDate}</p>
                   </div>
                 </div>
               </GlassCard>
@@ -121,10 +121,10 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
                       <FaMapMarkerAlt className="text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-medium">
+                      <p className="text-xs text-muted-foreground uppercase font-medium">
                         Location
                       </p>
-                      <p className="text-gray-900 dark:text-white font-semibold">
+                      <p className="text-foreground font-semibold">
                         {profile.user_location}
                       </p>
                     </div>
@@ -152,7 +152,7 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
         <div className="mt-6 flex justify-center">
           <button
             onClick={() => router.back()}
-            className="px-6 py-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition-colors"
+            className="px-6 py-2 text-muted-foreground hover:text-foreground font-medium transition-colors"
           >
             ← Back
           </button>

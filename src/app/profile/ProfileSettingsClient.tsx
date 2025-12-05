@@ -46,10 +46,10 @@ const SettingsCard: React.FC<SettingsCardProps> = ({
           />
         </div>
         <div className="flex-1">
-          <h3 className="text-lg font-semibold mb-1 text-gray-900 dark:text-white">
+          <h3 className="text-lg font-semibold mb-1 text-foreground">
             {settingTitle}
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{description}</p>
+          <p className="text-sm text-muted-foreground">{description}</p>
         </div>
       </div>
     </GlassCard>
@@ -77,7 +77,7 @@ export function ProfileSettingsClient({ user }: ProfileSettingsClientProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-muted/30 dark:bg-background">
       <div className="container mx-auto max-w-6xl pt-24 pb-12 px-4">
         {/* Profile Header Card */}
         <div className="mb-8">

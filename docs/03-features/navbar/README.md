@@ -180,7 +180,7 @@ const [isOpen, setIsOpen] = useState(false);
 <Navbar
   imgUrl={imgUrl}
   firstName={firstName}
-  secondName={secondName}
+  lastName={lastName}
   email={email}
   signalOfNewMessage={unreadMessages}
 />

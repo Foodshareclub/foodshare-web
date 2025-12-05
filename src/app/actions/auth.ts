@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import type { User, Session } from '@supabase/supabase-js';
+import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
 export interface AuthUser {
   id: string;
@@ -91,6 +92,7 @@ export async function signInWithPassword(
   }
 
   revalidatePath('/', 'layout');
+  invalidateTag(CACHE_TAGS.AUTH);
   return { success: true };
 }
 
@@ -130,6 +132,8 @@ export async function signUp(
   }
 
   revalidatePath('/', 'layout');
+  invalidateTag(CACHE_TAGS.AUTH);
+  invalidateTag(CACHE_TAGS.PROFILES);
   return { success: true };
 }
 
@@ -140,6 +144,7 @@ export async function signOut(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
   revalidatePath('/', 'layout');
+  invalidateTag(CACHE_TAGS.AUTH);
   redirect('/');
 }
 

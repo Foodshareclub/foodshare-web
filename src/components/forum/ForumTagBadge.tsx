@@ -15,7 +15,7 @@ export const ForumTagBadge: React.FC<ForumTagBadgeProps> = ({ tag, onClick, size
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded font-medium bg-gray-100 text-gray-600 transition-colors hover:bg-gray-200 ${sizeClasses[size]} ${onClick ? "cursor-pointer" : ""}`}
+      className={`inline-flex items-center gap-1 rounded font-medium bg-muted text-muted-foreground transition-colors hover:bg-muted/80 ${sizeClasses[size]} ${onClick ? "cursor-pointer" : ""}`}
       style={tag.color ? { color: tag.color } : undefined}
       onClick={onClick}
     >

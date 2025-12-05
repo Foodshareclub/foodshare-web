@@ -97,7 +97,7 @@ export const MobileMenu: FC<MobileMenuProps> = memo(
           <DragHandleIcon />
           {hasNotifications && (
             <span
-              className="absolute bottom-0 right-0 w-4 h-4 bg-green-300 border-2 border-white dark:border-gray-900 rounded-full"
+              className="absolute bottom-0 right-0 w-4 h-4 bg-green-300 border-2 border-background rounded-full"
               aria-label={`${signalOfNewMessage.length} new messages`}
             />
           )}

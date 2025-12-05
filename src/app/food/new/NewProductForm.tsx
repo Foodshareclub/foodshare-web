@@ -197,21 +197,21 @@ export function NewProductForm({ userId }: NewProductFormProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-muted/30 to-background dark:from-background dark:to-muted/20">
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className="bg-background border-b border-border">
         <div className="container mx-auto px-4 py-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4"
           >
             <span>←</span>
             <span>{t('back')}</span>
           </button>
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-3xl font-bold text-foreground">
             {t('create_new_listing')}
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-muted-foreground mt-2">
             {t('share_food_items_or_services_with_your_community')}
           </p>
         </div>
@@ -222,8 +222,8 @@ export function NewProductForm({ userId }: NewProductFormProps) {
         <form onSubmit={handleSubmit}>
           <GlassCard variant="standard" padding="lg">
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-800 text-sm">{error}</p>
+              <div className="mb-6 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
+                <p className="text-red-800 dark:text-red-300 text-sm">{error}</p>
               </div>
             )}
 
@@ -259,7 +259,7 @@ export function NewProductForm({ userId }: NewProductFormProps) {
                 className="w-full"
                 maxLength={100}
               />
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {formData.post_name.length}/100 characters
               </p>
             </div>
@@ -277,7 +277,7 @@ export function NewProductForm({ userId }: NewProductFormProps) {
                 className="w-full min-h-[120px]"
                 maxLength={500}
               />
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {formData.post_description.length}/500 characters
               </p>
             </div>
@@ -320,11 +320,11 @@ export function NewProductForm({ userId }: NewProductFormProps) {
                     />
                     <label
                       htmlFor="image-upload"
-                      className="flex items-center justify-center w-full p-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-orange-400 transition-colors"
+                      className="flex items-center justify-center w-full p-6 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-orange-400 dark:hover:border-orange-500 transition-colors"
                     >
                       <div className="text-center">
                         <span className="text-3xl mb-2 block">📷</span>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-muted-foreground">
                           {t('click_to_add_photos', { current: selectedImages.length, max: MAX_IMAGES })}
                         </p>
                       </div>
@@ -379,7 +379,7 @@ export function NewProductForm({ userId }: NewProductFormProps) {
                 placeholder="Enter your address"
                 className="w-full"
               />
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-muted-foreground mt-1">
                 {t('your_exact_address_wont_be_shared_publicly')}
               </p>
             </div>

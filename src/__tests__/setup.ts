@@ -18,6 +18,12 @@ jest.mock('next/cache', () => ({
   unstable_noStore: jest.fn(),
 }));
 
+// Mock the invalidateTag helper from cache-keys
+jest.mock('@/lib/data/cache-keys', () => ({
+  ...jest.requireActual('@/lib/data/cache-keys'),
+  invalidateTag: jest.fn(),
+}));
+
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
   useRouter: () => ({

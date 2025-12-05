@@ -19,12 +19,14 @@ import {
   getProductLocations,
   getUserProducts,
   searchProducts,
+  type InitialProductStateType,
+  type LocationType,
+} from '@/lib/data/products';
+import {
   createProduct,
   updateProduct,
   deleteProduct,
   toggleProductFavorite,
-  type InitialProductStateType,
-  type LocationType,
 } from '@/app/actions/products';
 import { useImageBlobUrl } from '@/hooks/useImageBlobUrl';
 

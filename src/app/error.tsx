@@ -21,34 +21,34 @@ export default function Error({
   }, [error])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full">
         <GlassCard variant="prominent" borderRadius="24px" className="p-8 md:p-12">
           {/* Error Icon */}
           <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-100 to-orange-100 rounded-full mb-4">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30 rounded-full mb-4">
               <span className="text-4xl">⚠️</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               Oops! Something went wrong
             </h1>
-            <p className="text-lg text-gray-600">
+            <p className="text-lg text-muted-foreground">
               We encountered an unexpected error. Don't worry, we're on it!
             </p>
           </div>
 
           {/* Error Details */}
           <div className="mb-6">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
               <div className="flex items-start gap-3">
                 <span className="text-xl shrink-0">🐛</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-red-800 mb-1">Error Details:</p>
-                  <p className="text-sm text-red-700 break-words font-mono">
+                  <p className="text-sm font-semibold text-red-800 dark:text-red-300 mb-1">Error Details:</p>
+                  <p className="text-sm text-red-700 dark:text-red-400 break-words font-mono">
                     {error.message || 'An unexpected error occurred'}
                   </p>
                   {error.digest && (
-                    <p className="text-xs text-red-600 mt-2">
+                    <p className="text-xs text-red-600 dark:text-red-500 mt-2">
                       Error ID: {error.digest}
                     </p>
                   )}
@@ -61,21 +61,21 @@ export default function Error({
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={reset}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+              className="flex-1 px-6 py-3 bg-[#FF2D55] hover:bg-[#E6284D] text-white rounded-lg font-semibold hover:shadow-lg transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#FF2D55] focus:ring-offset-2"
             >
               Try Again
             </button>
             <button
               onClick={() => (window.location.href = '/')}
-              className="flex-1 px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:border-gray-400 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+              className="flex-1 px-6 py-3 bg-card border-2 border-border text-foreground rounded-lg font-semibold hover:border-foreground/50 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-border focus:ring-offset-2"
             >
               Go Home
             </button>
           </div>
 
           {/* Help Text */}
-          <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-500 text-center">
+          <div className="mt-6 pt-6 border-t border-border">
+            <p className="text-sm text-muted-foreground text-center">
               If this problem persists, please contact support or try refreshing the page.
             </p>
           </div>
@@ -83,7 +83,7 @@ export default function Error({
 
         {/* Additional Info */}
         <div className="mt-4 text-center">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Error occurred at: {new Date().toLocaleString()}
           </p>
         </div>

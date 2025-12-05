@@ -89,14 +89,12 @@ Category pages use rewrites to maintain clean URLs while serving from the produc
 
 ### Legacy Route Redirects
 
-Old detail page URLs are permanently redirected (301) to the new unified products route:
+Old URLs are permanently redirected (301) to the correct routes:
 
 | Legacy URL | Redirects to |
 |-----------|--------------|
-| `/food/:id` | `/products/:id` |
-| `/things/:id` | `/products/:id` |
-| `/borrow/:id` | `/products/:id` |
-| `/wanted/:id` | `/products/:id` |
+| `/products/:id` | `/food/:id` |
+| `/things/:id` | `/thing/:id` |
 
 ### Route Constants
 

@@ -28,23 +28,17 @@ Handle PostGIS POINT data types and coordinate conversions for location-based fe
 
 ### parsePostGISPoint()
 
-Parse PostGIS location data into a standardized lat/lng object.
+Parse PostGIS location data into a standardized lat/lng object with coordinate validation.
 
 **Signature:**
 
 ```typescript
-function parsePostGISPoint(location: any): PostGISPoint | null;
+function parsePostGISPoint(location: unknown): PostGISPoint | null;
 ```
 
 **Supported Input Formats:**
 
-1. **WKT String** (Well-Known Text):
-
-   ```typescript
-   "POINT(14.4208 50.0875)";
-   ```
-
-2. **GeoJSON Format**:
+1. **GeoJSON Object** (preferred):
 
    ```typescript
    {
@@ -53,45 +47,71 @@ function parsePostGISPoint(location: any): PostGISPoint | null;
    }
    ```
 
-3. **Raw Coordinates Object**:
+2. **Raw Coordinates Object**:
+
    ```typescript
    {
      coordinates: [14.4208, 50.0875]; // [lng, lat]
    }
    ```
 
+3. **WKT String** (Well-Known Text):
+
+   ```typescript
+   "POINT(14.4208 50.0875)";
+   ```
+
+4. **Stringified GeoJSON**:
+
+   ```typescript
+   '{"type":"Point","coordinates":[14.4208,50.0875]}';
+   ```
+
+5. **WKB Hex String**: Returns `null` - use `ST_AsGeoJSON()` in your query instead.
+
 **Returns:**
 
 ```typescript
 interface PostGISPoint {
-  latitude: number; // Decimal degrees
-  longitude: number; // Decimal degrees
+  latitude: number; // Decimal degrees (-90 to 90)
+  longitude: number; // Decimal degrees (-180 to 180)
 }
 ```
 
-Returns `null` if input is invalid or cannot be parsed.
+Returns `null` if:
+- Input is invalid or cannot be parsed
+- Coordinates are outside valid ranges
+- Coordinates are (0, 0) - often indicates invalid/default data
 
 **Examples:**
 
 ```typescript
 import { parsePostGISPoint } from "@/utils/postgis";
 
-// Parse WKT string from database
-const location1 = parsePostGISPoint("POINT(14.4208 50.0875)");
-// { latitude: 50.0875, longitude: 14.4208 }
-
-// Parse GeoJSON from API
-const location2 = parsePostGISPoint({
+// Parse GeoJSON from API (preferred)
+const location1 = parsePostGISPoint({
   type: "Point",
   coordinates: [14.4208, 50.0875],
 });
 // { latitude: 50.0875, longitude: 14.4208 }
 
+// Parse WKT string from database
+const location2 = parsePostGISPoint("POINT(14.4208 50.0875)");
+// { latitude: 50.0875, longitude: 14.4208 }
+
+// Parse stringified JSON
+const location3 = parsePostGISPoint('{"type":"Point","coordinates":[14.4208,50.0875]}');
+// { latitude: 50.0875, longitude: 14.4208 }
+
 // Handle invalid input
-const location3 = parsePostGISPoint(null);
+const location4 = parsePostGISPoint(null);
 // null
 
-const location4 = parsePostGISPoint("invalid");
+const location5 = parsePostGISPoint("invalid");
+// null
+
+// Invalid coordinates (0, 0) are filtered out
+const location6 = parsePostGISPoint({ coordinates: [0, 0] });
 // null
 ```
 
@@ -100,6 +120,7 @@ const location4 = parsePostGISPoint("invalid");
 - Parsing location data from Supabase database
 - Converting API responses to standardized format
 - Preparing coordinates for map display (Leaflet)
+- Handling stringified JSON from various sources
 
 ---
 
@@ -476,15 +497,7 @@ import {
 
 describe("PostGIS Utilities", () => {
   describe("parsePostGISPoint", () => {
-    it("should parse WKT string", () => {
-      const result = parsePostGISPoint("POINT(14.4208 50.0875)");
-      expect(result).toEqual({
-        latitude: 50.0875,
-        longitude: 14.4208,
-      });
-    });
-
-    it("should parse GeoJSON", () => {
+    it("should parse GeoJSON object", () => {
       const result = parsePostGISPoint({
         type: "Point",
         coordinates: [14.4208, 50.0875],
@@ -495,9 +508,33 @@ describe("PostGIS Utilities", () => {
       });
     });
 
+    it("should parse WKT string (case-insensitive)", () => {
+      const result = parsePostGISPoint("POINT(14.4208 50.0875)");
+      expect(result).toEqual({
+        latitude: 50.0875,
+        longitude: 14.4208,
+      });
+    });
+
+    it("should parse stringified GeoJSON", () => {
+      const result = parsePostGISPoint('{"type":"Point","coordinates":[14.4208,50.0875]}');
+      expect(result).toEqual({
+        latitude: 50.0875,
+        longitude: 14.4208,
+      });
+    });
+
     it("should return null for invalid input", () => {
       expect(parsePostGISPoint(null)).toBeNull();
       expect(parsePostGISPoint("invalid")).toBeNull();
+    });
+
+    it("should return null for out-of-range coordinates", () => {
+      expect(parsePostGISPoint({ coordinates: [200, 100] })).toBeNull();
+    });
+
+    it("should return null for (0, 0) coordinates", () => {
+      expect(parsePostGISPoint({ coordinates: [0, 0] })).toBeNull();
     });
   });
 

@@ -81,9 +81,7 @@ export const AddressBlock: React.FC<AddressBlockType> = ({
     <Glass variant="standard" className="p-4 mb-4">
       <div className="flex">
         <div className="w-full max-w-screen-lg">
-          <h2
-            className={`text-2xl font-medium pb-2 text-left ${d ? "text-gray-100" : "text-black"}`}
-          >
+          <h2 className="text-2xl font-medium pb-2 text-left text-foreground">
             Address
           </h2>
           {edit ? (
@@ -195,7 +193,7 @@ export const AddressBlock: React.FC<AddressBlockType> = ({
               </GlassButton>
             </>
           ) : (
-            <p className={d ? "text-gray-100" : "text-black"}>
+            <p className="text-foreground">
               Use a permanent address where you can receive mail.
             </p>
           )}

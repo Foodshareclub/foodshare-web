@@ -100,10 +100,10 @@ export default function ResetPasswordPage() {
   const passwordStrength = getPasswordStrength();
 
   return (
-    <div className="min-h-screen bg-gray-50 relative overflow-hidden">
+    <div className="min-h-screen bg-muted/30 dark:bg-background relative overflow-hidden">
       {/* Background Pattern */}
       <div
-        className="absolute top-0 left-0 right-0 bottom-0 opacity-[0.03] pointer-events-none"
+        className="absolute top-0 left-0 right-0 bottom-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none"
         style={{
           backgroundImage: 'radial-gradient(circle, #E61E4D 1px, transparent 1px)',
           backgroundSize: '40px 40px',
@@ -111,11 +111,11 @@ export default function ResetPasswordPage() {
       />
 
       {/* Header */}
-      <div className="sticky top-0 bg-white/95 border-b border-gray-200 z-10 backdrop-blur-[10px]">
+      <div className="sticky top-0 bg-background/95 border-b border-border z-10 backdrop-blur-[10px]">
         <div className="container mx-auto max-w-7xl py-4 px-4">
           <div className="flex justify-between items-center">
             <Link href="/">
-              <p className="text-2xl font-bold text-emerald-600 cursor-pointer hover:opacity-80 transition-opacity duration-200">
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 cursor-pointer hover:opacity-80 transition-opacity duration-200">
                 FoodShare
               </p>
             </Link>
@@ -131,25 +131,25 @@ export default function ResetPasswordPage() {
           transition={{ duration: 0.5 }}
         >
           {/* Card */}
-          <div className="bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] p-6 md:p-8 border border-gray-200">
+          <div className="bg-card rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] p-6 md:p-8 border border-border">
             {/* Loading state while checking session */}
             {isValidSession === null && (
               <div className="text-center py-8">
                 <AiOutlineLoading3Quarters className="w-12 h-12 animate-spin text-emerald-500 mx-auto mb-4" />
-                <p className="text-gray-600">Verifying your reset link...</p>
+                <p className="text-muted-foreground">Verifying your reset link...</p>
               </div>
             )}
 
             {/* Invalid/Expired Session */}
             {isValidSession === false && (
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-6">
-                  <FaExclamationTriangle className="w-8 h-8 text-red-600" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full mb-6">
+                  <FaExclamationTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
                 </div>
-                <h1 className="text-[28px] font-bold mb-3 text-gray-900">
+                <h1 className="text-[28px] font-bold mb-3 text-foreground">
                   Link expired or invalid
                 </h1>
-                <p className="text-base text-gray-600 leading-relaxed mb-6">
+                <p className="text-base text-muted-foreground leading-relaxed mb-6">
                   This password reset link has expired or is invalid. Please request a new one.
                 </p>
                 <Link href="/auth/forgot-password">
@@ -163,16 +163,16 @@ export default function ResetPasswordPage() {
             {/* Success State */}
             {isSuccess && (
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mb-6">
-                  <FaCheckCircle className="w-8 h-8 text-emerald-600" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full mb-6">
+                  <FaCheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <h1 className="text-[28px] font-bold mb-3 text-gray-900">
+                <h1 className="text-[28px] font-bold mb-3 text-foreground">
                   Password updated!
                 </h1>
-                <p className="text-base text-gray-600 leading-relaxed mb-6">
+                <p className="text-base text-muted-foreground leading-relaxed mb-6">
                   Your password has been successfully reset. You can now log in with your new password.
                 </p>
-                <p className="text-sm text-gray-500 mb-6">
+                <p className="text-sm text-muted-foreground mb-6">
                   Redirecting you to the homepage...
                 </p>
                 <Link href="/">
@@ -188,13 +188,13 @@ export default function ResetPasswordPage() {
               <>
                 {/* Header */}
                 <div className="mb-8 text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mb-6">
-                    <FaLock className="w-7 h-7 text-emerald-600" />
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full mb-6">
+                    <FaLock className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <h1 className="text-[28px] font-bold mb-3 text-gray-900">
+                  <h1 className="text-[28px] font-bold mb-3 text-foreground">
                     Set new password
                   </h1>
-                  <p className="text-base text-gray-600 leading-relaxed">
+                  <p className="text-base text-muted-foreground leading-relaxed">
                     Create a strong password that you don&apos;t use elsewhere.
                   </p>
                 </div>
@@ -228,7 +228,7 @@ export default function ResetPasswordPage() {
                   <div className="flex flex-col gap-5">
                     {/* New Password */}
                     <div>
-                      <label className="block text-sm font-semibold mb-2 text-gray-700">
+                      <label className="block text-sm font-semibold mb-2 text-foreground/80">
                         New password
                       </label>
                       <div className="relative">
@@ -239,12 +239,12 @@ export default function ResetPasswordPage() {
                           onChange={(e) => setPassword(e.target.value)}
                           required
                           autoFocus
-                          className="h-12 rounded-xl border border-gray-300 bg-white pr-12 hover:border-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                          className="h-12 rounded-xl border border-border bg-background pr-12 hover:border-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-gray-700"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
                           aria-label={showPassword ? 'Hide password' : 'Show password'}
                         >
                           {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
@@ -279,7 +279,7 @@ export default function ResetPasswordPage() {
 
                     {/* Confirm Password */}
                     <div>
-                      <label className="block text-sm font-semibold mb-2 text-gray-700">
+                      <label className="block text-sm font-semibold mb-2 text-foreground/80">
                         Confirm new password
                       </label>
                       <div className="relative">
@@ -289,12 +289,12 @@ export default function ResetPasswordPage() {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           required
-                          className="h-12 rounded-xl border border-gray-300 bg-white pr-12 hover:border-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                          className="h-12 rounded-xl border border-border bg-background pr-12 hover:border-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                         />
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-500 hover:text-gray-700"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
                           aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                         >
                           {showConfirmPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
@@ -327,9 +327,9 @@ export default function ResetPasswordPage() {
                 </form>
 
                 {/* Password Requirements */}
-                <div className="mt-6 p-4 bg-gray-50 rounded-xl">
-                  <p className="text-sm font-medium text-gray-700 mb-2">Password requirements:</p>
-                  <ul className="text-sm text-gray-600 space-y-1">
+                <div className="mt-6 p-4 bg-muted/50 rounded-xl">
+                  <p className="text-sm font-medium text-foreground/80 mb-2">Password requirements:</p>
+                  <ul className="text-sm text-muted-foreground space-y-1">
                     <li className={`flex items-center gap-2 ${password.length >= 8 ? 'text-emerald-600' : ''}`}>
                       {password.length >= 8 ? '✓' : '•'} At least 8 characters
                     </li>

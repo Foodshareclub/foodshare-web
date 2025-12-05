@@ -35,9 +35,7 @@ export const EmailBlock: React.FC<EmailBlockType> = ({
     <Glass variant="standard" className="p-4 mb-4">
       <div className="flex">
         <div className="w-full max-w-screen-lg">
-          <h2
-            className={`text-2xl font-medium pb-2 text-left ${b ? "text-gray-100" : "text-black"}`}
-          >
+          <h2 className="text-2xl font-medium pb-2 text-left text-foreground">
             Email address
           </h2>
           {edit ? (
@@ -50,7 +48,7 @@ export const EmailBlock: React.FC<EmailBlockType> = ({
               </GlassButton>
             </>
           ) : (
-            <p className={b ? "text-gray-100" : "text-black"}>{email}</p>
+            <p className="text-foreground">{email}</p>
           )}
         </div>
         {/*<GlassButton*/}

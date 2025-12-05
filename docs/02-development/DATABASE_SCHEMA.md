@@ -1,7 +1,7 @@
 # FoodShare Database Schema
 
 **Database:** Supabase PostgreSQL
-**Last Updated:** November 2025
+**Last Updated:** December 2025
 
 ## Overview
 
@@ -169,6 +169,33 @@ User reviews and ratings for posts.
 - Anyone can read reviews
 - Only authenticated users can create reviews
 - Users can only update/delete their own reviews
+
+---
+
+## Database Views
+
+### `posts_with_location`
+
+A view that wraps the `posts` table and converts PostGIS geography data to GeoJSON format for easier client-side consumption.
+
+**Purpose:** Provides location data as proper GeoJSON via `ST_AsGeoJSON()`, avoiding WKB hex format issues on the client.
+
+**Key Columns:**
+
+- All columns from `posts` table
+- `location_json` (jsonb) - Location as GeoJSON: `{ "type": "Point", "coordinates": [lng, lat] }`
+
+**Usage:**
+
+```typescript
+// Product API uses this view for all read operations
+const { data } = await supabase.from("posts_with_location").select("*");
+
+// Access coordinates from location_json
+const coords = data[0].location_json?.coordinates; // [longitude, latitude]
+```
+
+**Note:** Write operations (INSERT, UPDATE, DELETE) should still target the `posts` table directly. The view is read-only.
 
 ---
 

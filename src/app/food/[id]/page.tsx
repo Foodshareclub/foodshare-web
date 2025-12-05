@@ -71,18 +71,16 @@ function ProductDetailSkeleton() {
       {/* Navbar skeleton */}
       <div className="h-[140px] bg-white border-b animate-pulse" />
 
-      {/* Back button skeleton */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="h-6 w-20 bg-gray-200 rounded animate-pulse" />
-      </div>
-
       {/* Main content skeleton */}
-      <div className="container mx-auto px-4 pb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-          {/* Left Column - Product Detail Skeleton */}
+      <div className="flex flex-col lg:flex-row">
+        {/* Left Column - Product Detail Skeleton */}
+        <div className="w-full lg:w-1/2 px-4 pb-12">
           <div className="animate-pulse">
             <GlassCard variant="standard" padding="0" className="w-full overflow-hidden">
-              <div className="aspect-[4/3] bg-gray-200" />
+              {/* Image with back button skeleton */}
+              <div className="relative aspect-[16/9] bg-gray-200">
+                <div className="absolute top-4 left-4 h-9 w-20 bg-white/90 rounded-lg" />
+              </div>
               <div className="p-6">
                 <div className="h-6 bg-gray-200 rounded w-20 mb-3" />
                 <div className="h-8 bg-gray-200 rounded mb-3" />
@@ -103,11 +101,11 @@ function ProductDetailSkeleton() {
               </div>
             </GlassCard>
           </div>
+        </div>
 
-          {/* Right Column - Map Skeleton */}
-          <div className="rounded-2xl overflow-hidden shadow-lg h-[400px] lg:h-[500px] xl:h-[600px] bg-gray-200 animate-pulse flex items-center justify-center">
-            <span className="text-4xl">🗺️</span>
-          </div>
+        {/* Right Column - Map Skeleton */}
+        <div className="w-full lg:w-1/2 h-[400px] lg:h-auto lg:fixed lg:right-0 lg:top-0 lg:bottom-0 bg-gray-200 animate-pulse flex items-center justify-center">
+          <span className="text-4xl">🗺️</span>
         </div>
       </div>
     </div>

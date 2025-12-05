@@ -50,19 +50,19 @@ export function SettingsClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-muted/30 dark:bg-background">
       {/* Header Section */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="bg-card border-b border-border">
         <div className="container mx-auto px-7 xl:px-20 py-8">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-4xl font-bold text-foreground mb-2">
               Account Settings
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-muted-foreground">
               Manage your account preferences and security settings
             </p>
           </motion.div>
@@ -79,7 +79,7 @@ export function SettingsClient() {
             transition={{ duration: 0.4, delay: index * 0.1 }}
           >
             <Link href={card.route}>
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-emerald-500 dark:hover:border-emerald-400">
+              <div className="bg-card rounded-xl shadow-sm border border-border p-6 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-emerald-500 dark:hover:border-emerald-400">
                 <div className="mb-4">
                   <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
                     <Image
@@ -92,11 +92,11 @@ export function SettingsClient() {
                   </div>
                 </div>
 
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                <h3 className="text-lg font-bold text-foreground mb-2">
                   {card.settingTitle}
                 </h3>
 
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-muted-foreground">
                   {card.description}
                 </p>
 

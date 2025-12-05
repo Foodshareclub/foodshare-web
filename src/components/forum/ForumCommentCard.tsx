@@ -90,8 +90,8 @@ export function ForumCommentCard({
         {/* Thread connector for nested comments */}
         {comment.depth > 0 && (
           <div className="flex items-start mb-2">
-            <FaReply className="w-4 h-4 text-gray-300 mr-2 mt-1 flex-shrink-0" />
-            <span className="text-xs text-gray-400">
+            <FaReply className="w-4 h-4 text-muted-foreground/50 mr-2 mt-1 flex-shrink-0" />
+            <span className="text-xs text-muted-foreground">
               "Reply"
             </span>
           </div>
@@ -153,7 +153,7 @@ export function ForumCommentCard({
 
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-gray-800">
+                      <span className="font-semibold text-foreground">
                         {comment.profiles?.nickname || comment.profiles?.first_name || "Anonymous"}
                       </span>
                       {isOwnComment && (
@@ -162,7 +162,7 @@ export function ForumCommentCard({
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span>{formatDate(comment.comment_created_at)}</span>
                       {comment.is_edited && (
                         <span className="italic flex items-center gap-1">
@@ -182,7 +182,7 @@ export function ForumCommentCard({
                     className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                     onClick={() => setShowMenu(!showMenu)}
                   >
-                    <FaEllipsisH className="w-4 h-4 text-gray-400" />
+                    <FaEllipsisH className="w-4 h-4 text-muted-foreground" />
                   </motion.button>
 
                   <AnimatePresence>
@@ -195,17 +195,17 @@ export function ForumCommentCard({
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95, y: -10 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute right-0 top-10 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-20 min-w-[160px] overflow-hidden"
+                          className="absolute right-0 top-10 bg-popover rounded-xl shadow-xl border border-border py-2 z-20 min-w-[160px] overflow-hidden"
                         >
                           {isOwnComment && onEdit && (
                             <button
-                              className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                              className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted/50 flex items-center gap-3 transition-colors"
                               onClick={() => {
                                 onEdit(comment);
                                 setShowMenu(false);
                               }}
                             >
-                              <FaEdit className="w-4 h-4 text-gray-400" />
+                              <FaEdit className="w-4 h-4 text-muted-foreground" />
                               "Edit"
                             </button>
                           )}
@@ -223,13 +223,13 @@ export function ForumCommentCard({
                           )}
                           {!isOwnComment && onReport && (
                             <button
-                              className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                              className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted/50 flex items-center gap-3 transition-colors"
                               onClick={() => {
                                 onReport(comment.id);
                                 setShowMenu(false);
                               }}
                             >
-                              <FaFlag className="w-4 h-4 text-gray-400" />
+                              <FaFlag className="w-4 h-4 text-muted-foreground" />
                               "Report"
                             </button>
                           )}
@@ -256,7 +256,7 @@ export function ForumCommentCard({
               </div>
 
               {/* Comment Content */}
-              <div className="text-gray-700 leading-relaxed whitespace-pre-wrap mb-4 pl-[52px]">
+              <div className="text-foreground/80 leading-relaxed whitespace-pre-wrap mb-4 pl-[52px]">
                 {comment.comment}
               </div>
 
@@ -268,8 +268,8 @@ export function ForumCommentCard({
                     whileTap={{ scale: 0.95 }}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all ${
                       isLiked
-                        ? "bg-red-100 text-red-600"
-                        : "text-gray-500 hover:bg-gray-100 hover:text-red-500"
+                        ? "bg-red-500/10 text-red-600 dark:text-red-400"
+                        : "text-muted-foreground hover:bg-muted hover:text-red-500"
                     }`}
                     onClick={handleLike}
                   >
@@ -284,7 +284,7 @@ export function ForumCommentCard({
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-gray-500 hover:bg-blue-50 hover:text-blue-600 transition-all"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-muted-foreground hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
                     onClick={() => onReply(comment.id)}
                   >
                     <FaReply className="w-4 h-4" />
@@ -296,7 +296,7 @@ export function ForumCommentCard({
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-gray-500 hover:bg-gray-100 transition-all ml-auto"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-muted-foreground hover:bg-muted transition-all ml-auto"
                     onClick={handleToggleReplies}
                   >
                     <FaCommentDots className="w-4 h-4" />

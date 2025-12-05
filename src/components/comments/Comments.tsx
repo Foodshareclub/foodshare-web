@@ -31,7 +31,7 @@ function Comments({ date, name, img, rating, comment }: PropsCommentsType) {
                 <StarIcon key={i} color={i < rating ? "#ECC94B" : "#D1D5DB"} />
               ))}
           </div>
-          <p className="text-sm text-gray-600">{date}</p>
+          <p className="text-sm text-muted-foreground">{date}</p>
           <p className="text-base">{comment}</p>
         </div>
       </div>

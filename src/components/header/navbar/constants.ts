@@ -5,9 +5,9 @@
 
 // Colors (Section 7)
 export const COLORS = {
-  // Airbnb brand colors
-  airbnbRed: "#FF385C",
-  airbnbRedHover: "#E31C5F",
+  // FoodShare brand colors
+  primary: "#FF2D55",
+  primaryHover: "#E6284D",
 
   // Background
   backgroundWhite: "#FFFFFF",

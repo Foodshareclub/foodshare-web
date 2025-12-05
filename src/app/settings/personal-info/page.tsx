@@ -28,19 +28,19 @@ export default async function PersonalInfoPage() {
  */
 function PersonalInfoSkeleton() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-muted/30">
       <div className="container mx-auto max-w-3xl px-4 py-8">
         {/* Breadcrumb Skeleton */}
         <div className="flex items-center gap-2 mb-8">
-          <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-          <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-          <div className="h-4 w-28 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+          <div className="h-4 w-4 bg-muted rounded animate-pulse" />
+          <div className="h-4 w-28 bg-muted rounded animate-pulse" />
         </div>
 
         {/* Title Skeleton */}
         <div className="mb-8">
-          <div className="h-10 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
-          <div className="h-5 w-80 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <div className="h-10 w-48 bg-muted rounded animate-pulse mb-2" />
+          <div className="h-5 w-80 bg-muted rounded animate-pulse" />
         </div>
 
         {/* Content Skeleton */}
@@ -48,10 +48,10 @@ function PersonalInfoSkeleton() {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+              className="bg-card rounded-xl shadow-sm border border-border p-6"
             >
-              <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-4" />
-              <div className="h-5 w-48 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+              <div className="h-6 w-24 bg-muted rounded animate-pulse mb-4" />
+              <div className="h-5 w-48 bg-muted rounded animate-pulse" />
             </div>
           ))}
         </div>

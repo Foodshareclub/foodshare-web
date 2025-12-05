@@ -22,7 +22,7 @@ const MessageItem: React.FC<MessageItemProps> = memo(
     if (isOwnMessage) {
       return (
         <div className="flex justify-end" key={message.id}>
-          <span className="text-[10px] text-gray-400 self-center">{time}</span>
+          <span className="text-[10px] text-muted-foreground self-center">{time}</span>
           <Glass
             variant="accentGreen"
             borderRadius="25px"
@@ -53,14 +53,14 @@ const MessageItem: React.FC<MessageItemProps> = memo(
               <AvatarFallback>👤</AvatarFallback>
             </Avatar>
             {/* Custom tooltip */}
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-300 text-black text-xs rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none shadow-md">
               {userName}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-300" />
+              <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-popover" />
             </div>
           </div>
           <p className="py-2 px-4">{message.text}</p>
         </Glass>
-        <span className="text-[10px] text-gray-400 self-center">{time}</span>
+        <span className="text-[10px] text-muted-foreground self-center">{time}</span>
       </div>
     );
   },

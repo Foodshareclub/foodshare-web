@@ -46,7 +46,7 @@ const NavigateButtons: FC<NavigateButtonsType> = memo(
       "feedback",
       "admin",
       "auth",
-      "chat-main",
+      "chat",
       "user-listings",
       "volunteer",
       "map",

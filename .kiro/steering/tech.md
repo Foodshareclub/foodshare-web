@@ -21,7 +21,7 @@ inclusion: always
 ## Backend
 
 - **Supabase** - PostgreSQL, Auth, Realtime, Storage
-- **Server Actions** - Form mutations with `revalidateTag`/`revalidatePath`
+- **Server Actions** - Form mutations with `invalidateTag`/`revalidatePath`
 
 ## State Management
 

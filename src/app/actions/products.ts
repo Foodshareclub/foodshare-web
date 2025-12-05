@@ -1,7 +1,6 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import type { InitialProductStateType, LocationType } from '@/types/product.types';
 import {
@@ -15,6 +14,17 @@ import {
   databaseError,
   notFoundError,
 } from '@/lib/errors';
+import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
+
+// Re-export cached data functions for backward compatibility
+export {
+  getProducts,
+  getAllProducts,
+  getProductById,
+  getProductLocations,
+  getUserProducts,
+  searchProducts,
+} from '@/lib/data/products';
 
 // Re-export types for consumers
 export type { InitialProductStateType, LocationType, ActionResult };
@@ -37,117 +47,6 @@ const createProductSchema = z.object({
 const updateProductSchema = createProductSchema.partial().extend({
   is_active: z.boolean().optional(),
 });
-
-/**
- * Get products filtered by type
- */
-export async function getProducts(productType: string): Promise<InitialProductStateType[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('post_type', productType.toLowerCase())
-    .eq('is_active', true)
-    .order('created_at', { ascending: false });
-
-  if (error) throw new Error(error.message);
-  return data ?? [];
-}
-
-/**
- * Get all products
- */
-export async function getAllProducts(): Promise<InitialProductStateType[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('is_active', true)
-    .order('created_at', { ascending: false });
-
-  if (error) throw new Error(error.message);
-  return data ?? [];
-}
-
-/**
- * Get a single product by ID with reviews
- */
-export async function getProductById(productId: number): Promise<InitialProductStateType | null> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('posts_with_location')
-    .select('*, reviews(*)')
-    .eq('id', productId)
-    .single();
-
-  if (error) {
-    if (error.code === 'PGRST116') return null; // Not found
-    throw new Error(error.message);
-  }
-  return data;
-}
-
-/**
- * Get product locations for map display
- */
-export async function getProductLocations(productType: string): Promise<LocationType[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('posts_with_location')
-    .select('id, location_json, post_name, post_type, images')
-    .eq('post_type', productType.toLowerCase())
-    .eq('is_active', true);
-
-  if (error) throw new Error(error.message);
-  return data ?? [];
-}
-
-/**
- * Get products created by a specific user
- */
-export async function getUserProducts(userId: string): Promise<InitialProductStateType[]> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('profile_id', userId)
-    .order('created_at', { ascending: false });
-
-  if (error) throw new Error(error.message);
-  return data ?? [];
-}
-
-/**
- * Search products by name with optional type filter
- */
-export async function searchProducts(
-  searchWord: string,
-  productSearchType?: string
-): Promise<InitialProductStateType[]> {
-  const supabase = await createClient();
-
-  let query = supabase
-    .from('posts')
-    .select('*, reviews(*)')
-    .eq('is_active', true)
-    .order('created_at', { ascending: false });
-
-  if (productSearchType && productSearchType !== 'all') {
-    query = query.eq('post_type', productSearchType.toLowerCase());
-  }
-
-  query = query.textSearch('post_name', searchWord, { type: 'websearch' });
-
-  const { data, error } = await query;
-
-  if (error) throw new Error(error.message);
-  return data ?? [];
-}
 
 /**
  * Create a new product
@@ -182,9 +81,10 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
 
     if (error) throw new Error(error.message);
 
-    revalidatePath('/');
-    revalidatePath('/food');
-    revalidatePath('/map/[type]', 'page');
+    // Invalidate product caches
+    invalidateTag(CACHE_TAGS.PRODUCTS);
+    invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS);
+    invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(validation.data.post_type));
 
     return { id: data.id };
   }, 'createProduct');
@@ -232,10 +132,10 @@ export async function updateProduct(
 
     if (error) throw new Error(error.message);
 
-    revalidatePath('/');
-    revalidatePath('/food');
-    revalidatePath(`/food/${id}`);
-    revalidatePath('/map/[type]', 'page');
+    // Invalidate product caches
+    invalidateTag(CACHE_TAGS.PRODUCTS);
+    invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS);
+    invalidateTag(CACHE_TAGS.PRODUCT(id));
 
     return undefined;
   }, 'updateProduct');
@@ -255,9 +155,10 @@ export async function deleteProduct(id: number): Promise<ActionResult<undefined>
 
     if (error) throw new Error(error.message);
 
-    revalidatePath('/');
-    revalidatePath('/food');
-    revalidatePath('/map/[type]', 'page');
+    // Invalidate product caches
+    invalidateTag(CACHE_TAGS.PRODUCTS);
+    invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS);
+    invalidateTag(CACHE_TAGS.PRODUCT(id));
 
     return undefined;
   }, 'deleteProduct');

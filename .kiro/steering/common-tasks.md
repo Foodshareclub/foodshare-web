@@ -25,14 +25,14 @@ export async function getMyData() {
 ```typescript
 // app/actions/myFeature.ts
 'use server';
-import { revalidateTag } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { invalidateTag } from '@/lib/data/cache-keys';
 
 export async function createMyItem(formData: FormData) {
   const supabase = await createClient();
   const { error } = await supabase.from('my_table').insert({ name: formData.get('name') });
   if (error) return { error: error.message };
-  revalidateTag('myFeature');
+  invalidateTag('myFeature');
   return { success: true };
 }
 ```

@@ -76,18 +76,18 @@ export default function ProfileEditPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-muted/30 dark:bg-background">
       <div className="container mx-auto max-w-3xl pt-24 pb-12 px-4">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 mb-8">
           <button
             onClick={() => router.push('/profile')}
-            className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             Account settings
           </button>
-          <FaChevronRight className="text-gray-800 dark:text-gray-400 text-xs" />
-          <span className="text-sm font-medium text-gray-900 dark:text-white">
+          <FaChevronRight className="text-muted-foreground text-xs" />
+          <span className="text-sm font-medium text-foreground">
             Personal info
           </span>
         </nav>
@@ -96,19 +96,19 @@ export default function ProfileEditPage() {
         {isLoading || !address || !currentProfile ? (
           <>
             <div className="mt-8">
-              <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">
+              <h1 className="text-4xl font-bold mb-4 text-foreground">
                 Personal info
               </h1>
-              <div className="h-[50px] bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg mb-5" />
+              <div className="h-[50px] bg-muted animate-pulse rounded-lg mb-5" />
             </div>
-            <div className="h-[50px] bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg mb-5" />
-            <div className="h-[50px] bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg mb-5" />
-            <div className="h-[50px] bg-gray-200 dark:bg-gray-700 animate-pulse rounded-lg mb-5" />
+            <div className="h-[50px] bg-muted animate-pulse rounded-lg mb-5" />
+            <div className="h-[50px] bg-muted animate-pulse rounded-lg mb-5" />
+            <div className="h-[50px] bg-muted animate-pulse rounded-lg mb-5" />
           </>
         ) : (
           <>
             <div className="mt-8">
-              <h1 className="text-4xl font-bold mb-6 text-gray-900 dark:text-white">
+              <h1 className="text-4xl font-bold mb-6 text-foreground">
                 Personal info
               </h1>
 

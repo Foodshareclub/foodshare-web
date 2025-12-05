@@ -1,6 +1,6 @@
 # FoodShare API Reference
 
-**Last Updated:** November 2025
+**Last Updated:** December 2025
 
 ## Overview
 
@@ -12,13 +12,17 @@ FoodShare uses a client-side API layer that interfaces with Supabase backend ser
 
 Located: `src/api/productAPI.ts`
 
+> **Note:** All read operations use the `posts_with_location` database view, which provides location data as proper GeoJSON via `ST_AsGeoJSON()`. This ensures consistent coordinate handling across the application. Write operations (create, update, delete) still use the `posts` table directly.
+
 ### Get All Products
 
 ```typescript
 productAPI.getAllProducts();
 ```
 
-**Returns:** All posts from the database (no filtering)
+**Returns:** All posts from the `posts_with_location` view (no filtering)
+
+**Data Source:** `posts_with_location` view (provides `location_json` as GeoJSON)
 
 **Example:**
 
@@ -39,6 +43,8 @@ productAPI.getProducts(productType: string)
 - `productType` - Type of product ('food', 'volunteer', 'food_bank', 'community_fridge')
 
 **Returns:** Posts matching the type, with reviews included
+
+**Data Source:** `posts_with_location` view
 
 **Query:**
 
@@ -1057,14 +1063,14 @@ Located: `src/utils/postgis.ts`
 
 ### Overview
 
-Utilities for handling PostGIS POINT data types and coordinate conversions. Supports multiple PostGIS formats (WKT strings, GeoJSON) and provides distance calculations.
+Utilities for handling PostGIS POINT data types and coordinate conversions. Supports multiple PostGIS formats (WKT strings, GeoJSON, stringified JSON) and provides distance calculations with coordinate validation.
 
 ---
 
 ### Parse PostGIS Point
 
 ```typescript
-postgis.parsePostGISPoint(location: any)
+postgis.parsePostGISPoint(location: unknown)
 ```
 
 **Parameters:**
@@ -1073,37 +1079,45 @@ postgis.parsePostGISPoint(location: any)
 
 **Supported Formats:**
 
-1. **WKT String**: `"POINT(14.4208 50.0875)"`
-2. **GeoJSON**: `{ type: "Point", coordinates: [14.4208, 50.0875] }`
-3. **Raw Object**: `{ coordinates: [14.4208, 50.0875] }`
+1. **GeoJSON**: `{ type: "Point", coordinates: [14.4208, 50.0875] }` (preferred)
+2. **Raw Object**: `{ coordinates: [14.4208, 50.0875] }`
+3. **WKT String**: `"POINT(14.4208 50.0875)"` (case-insensitive)
+4. **Stringified GeoJSON**: `'{"type":"Point","coordinates":[14.4208,50.0875]}'`
+5. **WKB Hex**: Returns `null` - use `ST_AsGeoJSON()` in query
 
 **Returns:** `PostGISPoint | null`
 
 ```typescript
 interface PostGISPoint {
-  latitude: number;
-  longitude: number;
+  latitude: number;  // -90 to 90
+  longitude: number; // -180 to 180
 }
 ```
+
+Returns `null` for invalid input, out-of-range coordinates, or (0, 0) coordinates.
 
 **Example:**
 
 ```typescript
 import { parsePostGISPoint } from "@/utils/postgis";
 
-// WKT format
-const point1 = parsePostGISPoint("POINT(14.4208 50.0875)");
-// { latitude: 50.0875, longitude: 14.4208 }
-
-// GeoJSON format
-const point2 = parsePostGISPoint({
+// GeoJSON format (preferred)
+const point1 = parsePostGISPoint({
   type: "Point",
   coordinates: [14.4208, 50.0875],
 });
 // { latitude: 50.0875, longitude: 14.4208 }
 
+// WKT format
+const point2 = parsePostGISPoint("POINT(14.4208 50.0875)");
+// { latitude: 50.0875, longitude: 14.4208 }
+
+// Stringified JSON
+const point3 = parsePostGISPoint('{"coordinates":[14.4208,50.0875]}');
+// { latitude: 50.0875, longitude: 14.4208 }
+
 // Handle null safely
-const point3 = parsePostGISPoint(null);
+const point4 = parsePostGISPoint(null);
 // null
 ```
 

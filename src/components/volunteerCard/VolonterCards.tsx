@@ -35,12 +35,12 @@ export function VolunteerCards({ volunteer, indicator }: VolunteerCardsProps) {
     <GlassCard variant="standard" padding="md" className="glass-fade-in" borderRadius="20px">
       {!isLoaded ? (
         <>
-          <div className="rounded-full w-[200px] h-[200px] sm:w-[250px] sm:h-[250px] mx-auto bg-gray-200 animate-pulse" />
+          <div className="rounded-full w-[200px] h-[200px] sm:w-[250px] sm:h-[250px] mx-auto bg-muted animate-pulse" />
           <div>
-            <div className="mt-4 h-5 bg-gray-200 animate-pulse rounded-lg border-none" />
-            <div className="mt-2 h-5 bg-gray-200 animate-pulse rounded-lg" />
-            <div className="mt-2 h-5 bg-gray-200 animate-pulse rounded-lg" />
-            <div className="mt-2 h-5 bg-gray-200 animate-pulse rounded-lg" />
+            <div className="mt-4 h-5 bg-muted animate-pulse rounded-lg border-none" />
+            <div className="mt-2 h-5 bg-muted animate-pulse rounded-lg" />
+            <div className="mt-2 h-5 bg-muted animate-pulse rounded-lg" />
+            <div className="mt-2 h-5 bg-muted animate-pulse rounded-lg" />
           </div>
         </>
       ) : (
@@ -48,7 +48,7 @@ export function VolunteerCards({ volunteer, indicator }: VolunteerCardsProps) {
           <div className="relative">
             <div className="text-center z-10 absolute">
               <button
-                className="ml-10 cursor-pointer rounded-full p-2 border border-gray-200 bg-white"
+                className="ml-10 cursor-pointer rounded-full p-2 border border-border bg-background"
                 aria-label="volunteer"
               >
                 <img src={HeartGrayImg.src} alt="like" style={{ filter: 'invert(27%) sepia(95%) saturate(6943%) hue-rotate(358deg) brightness(96%) contrast(117%)' }} />
@@ -74,7 +74,7 @@ export function VolunteerCards({ volunteer, indicator }: VolunteerCardsProps) {
               <StarIcon color="black" />
             </div>
             <div className="flex pt-3 justify-between items-center self-center">
-              <p className="mt-1 text-sm text-gray-500 uppercase">
+              <p className="mt-1 text-sm text-muted-foreground uppercase">
                 "{volunteer.user_address}"
               </p>
               <img className="cursor-pointer rounded-full" src={navIcon.src} alt="View on map" />

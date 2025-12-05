@@ -11,45 +11,75 @@ export interface PostGISPoint {
 /**
  * Parse PostGIS POINT to lat/lng object
  * Handles multiple formats:
- * - WKT string: "POINT(14.4208 50.0875)"
- * - GeoJSON: { type: "Point", coordinates: [14.4208, 50.0875] }
- * - Raw object: { coordinates: [14.4208, 50.0875] }
- * - WKB hex string from Supabase (decoded via ST_AsGeoJSON)
+ * - GeoJSON object: { type: "Point", coordinates: [lng, lat] }
+ * - Raw coordinates object: { coordinates: [lng, lat] }
+ * - WKT string: "POINT(lng lat)"
+ * - Stringified GeoJSON
+ * - WKB hex string (returns null - use ST_AsGeoJSON in query)
  */
-export function parsePostGISPoint(location: any): PostGISPoint | null {
+export function parsePostGISPoint(location: unknown): PostGISPoint | null {
   if (!location) return null;
 
-  // GeoJSON format (preferred)
-  if (typeof location === "object" && location.coordinates && Array.isArray(location.coordinates)) {
-    const [lng, lat] = location.coordinates;
-    if (typeof lat === "number" && typeof lng === "number") {
-      return { latitude: lat, longitude: lng };
-    }
-  }
-
-  // WKT string format
+  // Handle stringified JSON first
   if (typeof location === "string") {
-    // Try WKT format first
-    const match = location.match(/POINT\(([^ ]+) ([^ ]+)\)/);
+    // Try to parse as JSON (stringified GeoJSON)
+    try {
+      const parsed = JSON.parse(location);
+      if (parsed && typeof parsed === "object") {
+        return parsePostGISPoint(parsed); // Recursively parse the object
+      }
+    } catch {
+      // Not JSON, continue with other formats
+    }
+
+    // Try WKT format: "POINT(lng lat)"
+    const match = location.match(/POINT\s*\(\s*([^\s]+)\s+([^\s]+)\s*\)/i);
     if (match) {
       const lng = parseFloat(match[1]);
       const lat = parseFloat(match[2]);
-      if (!isNaN(lat) && !isNaN(lng)) {
+      if (!isNaN(lat) && !isNaN(lng) && isValidCoordinate(lat, lng)) {
         return { latitude: lat, longitude: lng };
       }
     }
 
-    // If it's a hex string (WKB format from Supabase), we can't parse it directly
-    // The queries should be updated to use ::json casting instead
-    if (location.match(/^[0-9A-Fa-f]+$/)) {
-      console.warn(
-        "PostGIS: Received WKB hex format. Update query to use ST_AsGeoJSON() or ::json casting for proper parsing."
-      );
+    // WKB hex format - can't parse directly
+    if (/^[0-9A-Fa-f]+$/.test(location)) {
       return null;
+    }
+
+    return null;
+  }
+
+  // GeoJSON format: { type: "Point", coordinates: [lng, lat] }
+  if (typeof location === "object" && location !== null) {
+    const obj = location as Record<string, unknown>;
+    
+    // Check for coordinates array
+    if (Array.isArray(obj.coordinates) && obj.coordinates.length >= 2) {
+      const [lng, lat] = obj.coordinates as [number, number];
+      if (typeof lat === "number" && typeof lng === "number" && isValidCoordinate(lat, lng)) {
+        return { latitude: lat, longitude: lng };
+      }
     }
   }
 
   return null;
+}
+
+/**
+ * Validate coordinate values are within valid ranges
+ */
+function isValidCoordinate(lat: number, lng: number): boolean {
+  return (
+    !isNaN(lat) &&
+    !isNaN(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180 &&
+    // Filter out (0, 0) as it's often a default/invalid value
+    !(lat === 0 && lng === 0)
+  );
 }
 
 /**

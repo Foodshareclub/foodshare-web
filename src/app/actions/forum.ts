@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
 export interface ForumPost {
   id: string;
@@ -178,7 +178,7 @@ export async function createForumPost(
     return { success: false, error: error.message };
   }
 
-  revalidatePath('/forum');
+  invalidateTag(CACHE_TAGS.FORUM);
 
   return { success: true, id: data.id };
 }
@@ -222,8 +222,8 @@ export async function updateForumPost(
     return { success: false, error: error.message };
   }
 
-  revalidatePath('/forum');
-  revalidatePath(`/forum/${id}`);
+  invalidateTag(CACHE_TAGS.FORUM);
+  invalidateTag(CACHE_TAGS.FORUM_POST(Number(id)));
 
   return { success: true };
 }
@@ -267,7 +267,7 @@ export async function deleteForumPost(id: string): Promise<{ success: boolean; e
     return { success: false, error: error.message };
   }
 
-  revalidatePath('/forum');
+  invalidateTag(CACHE_TAGS.FORUM);
 
   return { success: true };
 }
@@ -307,7 +307,8 @@ export async function addComment(
     return { success: false, error: error.message };
   }
 
-  revalidatePath(`/forum/${postId}`);
+  invalidateTag(CACHE_TAGS.FORUM_POST(Number(postId)));
+  invalidateTag(CACHE_TAGS.FORUM_COMMENTS(Number(postId)));
 
   const comment: ForumComment = {
     id: data.id,
@@ -362,7 +363,8 @@ export async function deleteComment(commentId: string): Promise<{ success: boole
   }
 
   if (comment?.post_id) {
-    revalidatePath(`/forum/${comment.post_id}`);
+    invalidateTag(CACHE_TAGS.FORUM_POST(Number(comment.post_id)));
+    invalidateTag(CACHE_TAGS.FORUM_COMMENTS(Number(comment.post_id)));
   }
 
   return { success: true };
@@ -398,7 +400,7 @@ export async function togglePostLike(
 
     if (error) return { success: false, isLiked: true, error: error.message };
 
-    revalidatePath(`/forum/${postId}`);
+    invalidateTag(CACHE_TAGS.FORUM_POST(Number(postId)));
     return { success: true, isLiked: false };
   } else {
     // Add like
@@ -408,7 +410,7 @@ export async function togglePostLike(
 
     if (error) return { success: false, isLiked: false, error: error.message };
 
-    revalidatePath(`/forum/${postId}`);
+    invalidateTag(CACHE_TAGS.FORUM_POST(Number(postId)));
     return { success: true, isLiked: true };
   }
 }

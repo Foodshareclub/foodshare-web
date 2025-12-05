@@ -80,17 +80,17 @@ export class StorageErrorBoundary extends Component<Props, State> {
       const storageError = detectStorageError(this.state.error);
 
       return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
-          <div className="max-w-[600px] w-full p-6 rounded-lg border-2 border-red-200 bg-red-50">
+        <div className="flex items-center justify-center min-h-screen bg-background p-4">
+          <div className="max-w-[600px] w-full p-6 rounded-lg border-2 border-red-500/30 bg-red-500/10 dark:bg-red-500/5">
             <div className="flex items-start gap-4">
-              <FaExclamationCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
+              <FaExclamationCircle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-1" />
               <div className="flex flex-col gap-3 flex-1">
-                <h2 className="text-xl font-bold text-red-900">Application Storage Error</h2>
+                <h2 className="text-xl font-bold text-foreground">Application Storage Error</h2>
                 <div className="space-y-3">
-                  <p className="text-red-800 mb-2">
+                  <p className="text-red-800 dark:text-red-300 mb-2">
                     {storageError?.message || "An error occurred with browser storage."}
                   </p>
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className="text-sm text-muted-foreground mb-3">
                     {storageError?.userGuidance ||
                       "Please clear your browser cache and reload the page."}
                   </p>
@@ -115,7 +115,7 @@ export class StorageErrorBoundary extends Component<Props, State> {
                   </div>
 
                   {!storageError?.canRecover && (
-                    <p className="mt-3 text-xs text-gray-500">
+                    <p className="mt-3 text-xs text-muted-foreground">
                       This issue cannot be automatically recovered. Please check your browser
                       settings or try using a regular browser window (not private/incognito).
                     </p>

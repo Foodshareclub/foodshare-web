@@ -1,57 +1,31 @@
 /**
  * Settings Loading Component
- * Displays a skeleton loader while settings page loads
+ * Matches SettingsSkeleton from page.tsx
  */
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          {/* Header skeleton */}
-          <div className="animate-pulse mb-8">
-            <div className="h-8 bg-gray-200 rounded-lg w-32 mb-2" />
-            <div className="h-4 bg-gray-200 rounded w-64" />
-          </div>
-
-          {/* Settings sections */}
-          <div className="space-y-6">
-            {Array(4).fill(null).map((_, i) => (
-              <div key={i} className="bg-white rounded-xl p-6 shadow-sm border animate-pulse">
-                <div className="h-5 bg-gray-200 rounded w-1/4 mb-4" />
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <div className="h-4 bg-gray-200 rounded w-32" />
-                      <div className="h-3 bg-gray-200 rounded w-48" />
-                    </div>
-                    <div className="h-6 w-12 bg-gray-200 rounded-full" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <div className="h-4 bg-gray-200 rounded w-28" />
-                      <div className="h-3 bg-gray-200 rounded w-40" />
-                    </div>
-                    <div className="h-6 w-12 bg-gray-200 rounded-full" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Save button skeleton */}
-          <div className="mt-8 animate-pulse">
-            <div className="h-12 bg-gray-200 rounded-lg w-full" />
-          </div>
+    <div className="min-h-screen bg-muted/30">
+      {/* Header Section */}
+      <div className="bg-card border-b border-border">
+        <div className="container mx-auto px-7 xl:px-20 py-8">
+          <div className="h-10 w-64 bg-muted rounded animate-pulse mb-2" />
+          <div className="h-5 w-96 bg-muted rounded animate-pulse" />
         </div>
       </div>
 
-      {/* Loading indicator */}
-      <div className="fixed bottom-8 right-8">
-        <div className="flex items-center gap-3 bg-white rounded-full shadow-lg px-6 py-3">
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500" />
-          <span className="text-sm font-medium text-gray-700">Loading settings...</span>
-        </div>
+      {/* Settings Cards Grid Skeleton */}
+      <div className="px-7 xl:px-20 py-10 grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+        {[...Array(2)].map((_, i) => (
+          <div
+            key={i}
+            className="bg-card rounded-xl shadow-sm border border-border p-6"
+          >
+            <div className="w-14 h-14 rounded-full bg-muted animate-pulse mb-4" />
+            <div className="h-6 w-32 bg-muted rounded animate-pulse mb-2" />
+            <div className="h-4 w-48 bg-muted rounded animate-pulse" />
+          </div>
+        ))}
       </div>
     </div>
-  );
+  )
 }

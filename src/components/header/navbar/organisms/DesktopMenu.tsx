@@ -80,13 +80,15 @@ export const DesktopMenu: FC<DesktopMenuProps> = memo(
 
     return (
       <>
-        <div className="self-center p-0 text-[#303030]">
+        <div className="self-center p-0 text-foreground">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div>
                 <NavbarAvatar
                   src={imgUrl}
                   alt="User profile"
+                  firstName={firstName}
+                  secondName={secondName}
                   hasNotification={hasNotifications}
                   size="md"
                 />

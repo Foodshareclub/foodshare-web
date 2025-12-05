@@ -36,15 +36,15 @@ export async function getProducts() {
 // app/actions/products.ts
 'use server';
 
-import { revalidateTag } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
   await supabase.from('posts').insert({
     post_name: formData.get('name') as string,
   });
-  revalidateTag('products');
+  invalidateTag(CACHE_TAGS.PRODUCTS);
 }
 ```
 
@@ -113,7 +113,7 @@ const Map = dynamic(() => import('@/components/leaflet/Map'), {
 | Need | Solution |
 |------|----------|
 | Fetch data | Server Component + lib/data function |
-| Mutate data | Server Action + revalidateTag |
+| Mutate data | Server Action + invalidateTag |
 | Form submit | form action={serverAction} |
 | Pending state | useFormStatus |
 | Interactivity | Client Component |

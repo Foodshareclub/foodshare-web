@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
 export interface Chat {
   id: string;
@@ -355,6 +355,7 @@ export async function deleteChat(chatId: string): Promise<{ success: boolean; er
     return { success: false, error: error.message };
   }
 
-  revalidatePath('/chat');
+  invalidateTag(CACHE_TAGS.CHATS);
+  invalidateTag(CACHE_TAGS.CHAT(chatId));
   return { success: true };
 }

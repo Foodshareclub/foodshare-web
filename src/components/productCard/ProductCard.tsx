@@ -55,7 +55,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
             {(userId === product.profile_id || isAdmin) && (
               <div className="absolute top-2 right-2 z-10 flex items-end justify-end w-full">
                 <button
-                  className="bg-white/90 backdrop-blur-[10px] p-2 rounded-md border border-gray-200 transition-all hover:bg-white/95 hover:scale-105"
+                  className="bg-background/90 backdrop-blur-[10px] p-2 rounded-md border border-border transition-all hover:bg-background/95 hover:scale-105"
                   onClick={onOpenEditModal}
                   aria-label="update"
                   style={gpu120Interactive}
@@ -69,7 +69,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
                   setOpenEdit={setOpenEdit}
                 />
                 <button
-                  className="bg-white/90 backdrop-blur-[10px] p-2 rounded-md border border-gray-200 ml-4 transition-all hover:bg-white/95 hover:scale-105"
+                  className="bg-background/90 backdrop-blur-[10px] p-2 rounded-md border border-border ml-4 transition-all hover:bg-background/95 hover:scale-105"
                   onClick={onOpen}
                   aria-label="delete"
                   style={gpu120Interactive}
@@ -94,7 +94,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-br from-muted to-muted/80 flex items-center justify-center">
                   <span className="text-5xl">📦</span>
                 </div>
               )}
@@ -102,26 +102,26 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
           </div>
 
           {/* Glassmorphic content section */}
-          <div className="p-4 h-[140px] bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl backdrop-saturate-150 border-t border-white/20 dark:border-white/10">
-            <h3 className="text-xl font-semibold text-left font-body line-clamp-1 text-gray-900 dark:text-white">
+          <div className="p-4 h-[140px] bg-card/70 backdrop-blur-xl backdrop-saturate-150 border-t border-border/20">
+            <h3 className="text-xl font-semibold text-left font-body line-clamp-1 text-card-foreground">
               {product.post_name}
             </h3>
             <div className="flex pt-2 items-center">
-              <p className="text-sm text-gray-700 dark:text-gray-200 line-clamp-1">
+              <p className="text-sm text-foreground/80 line-clamp-1">
                 {product.post_stripped_address}
               </p>
             </div>
             <div className="flex pt-1">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 Available:
               </p>
-              <p className="ml-2 text-sm text-gray-700 dark:text-gray-200 line-clamp-1">{product.available_hours}</p>
+              <p className="ml-2 text-sm text-foreground/80 line-clamp-1">{product.available_hours}</p>
             </div>
             <div className="flex gap-[5px] items-center pt-1">
               <div className="relative w-5 h-5">
                 <Image src={bus} alt="bus" fill sizes="20px" className="object-contain" />
               </div>
-              <p className="text-sm text-gray-700 dark:text-gray-200 line-clamp-1">{product.transportation}</p>
+              <p className="text-sm text-foreground/80 line-clamp-1">{product.transportation}</p>
             </div>
           </div>
         </div>

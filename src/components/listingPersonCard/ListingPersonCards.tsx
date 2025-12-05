@@ -66,7 +66,7 @@ const ListingPersonCards: React.FC<PropsType> = ({ children, settings }) => {
         <AvatarWithRipple img={pastUrl ? pastUrl : profile?.avatar_url} />
         {settings && (
           <button
-            className="bg-gray-200 hover:bg-green-200 p-2 rounded-full absolute cursor-pointer transition-colors"
+            className="bg-muted hover:bg-green-200 dark:hover:bg-green-900 p-2 rounded-full absolute cursor-pointer transition-colors"
             style={{ top: '48vh', left: '51vw' }}
             onClick={() => inputFileRef?.current?.click()}
           >

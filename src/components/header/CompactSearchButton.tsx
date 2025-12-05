@@ -17,8 +17,8 @@ const CompactSearchButton: React.FC<CompactSearchButtonProps> = memo(({ onClick 
       onClick={onClick}
     >
       <div className="flex items-center gap-2">
-        <SearchIcon className="text-lg text-gray-600" />
-        <span className="hidden md:block text-sm text-gray-600 font-medium truncate">
+        <SearchIcon className="text-lg text-muted-foreground" />
+        <span className="hidden md:block text-sm text-muted-foreground font-medium truncate">
           {t('search')}
         </span>
       </div>

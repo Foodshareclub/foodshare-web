@@ -125,7 +125,7 @@ export function useAdminListings(filters: AdminFilters = {}) {
     queryKey: adminKeys.listingsList(filters),
     queryFn: async () => {
       let query = supabase
-        .from("posts")
+        .from("posts_with_location")
         .select(`
           *,
           profiles:profile_id(id, first_name, second_name, email)
@@ -159,6 +159,7 @@ export function useAdminListings(filters: AdminFilters = {}) {
 
 /**
  * Get single listing by ID
+ * Uses posts_with_location view for proper PostGIS coordinate parsing
  */
 export function useAdminListing(listingId: number | undefined) {
   return useQuery({
@@ -166,7 +167,7 @@ export function useAdminListing(listingId: number | undefined) {
     queryFn: async () => {
       if (!listingId) return null;
       const { data, error } = await supabase
-        .from("posts")
+        .from("posts_with_location")
         .select(`
           *,
           profiles:profile_id(id, first_name, second_name, email, phone),
@@ -184,13 +185,14 @@ export function useAdminListing(listingId: number | undefined) {
 
 /**
  * Get flagged listings
+ * Uses posts_with_location view for proper PostGIS coordinate parsing
  */
 export function useFlaggedListings() {
   return useQuery({
     queryKey: adminKeys.flagged(),
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("posts")
+        .from("posts_with_location")
         .select(`
           *,
           profiles:profile_id(id, first_name, second_name, email)

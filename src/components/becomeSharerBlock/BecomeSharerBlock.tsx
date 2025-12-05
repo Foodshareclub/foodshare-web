@@ -48,7 +48,7 @@ function ListingMenuItem({ value, icon, label, onClick }: ListingMenuItemProps) 
 
 // Section header component
 const SectionHeader: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="text-[11px] font-semibold text-gray-500 uppercase tracking-[0.5px] px-3 pt-3 pb-1">
+  <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.5px] px-3 pt-3 pb-1">
     {children}
   </div>
 );
@@ -96,7 +96,7 @@ export function BecomeSharerBlock() {
 
       <DropdownMenuContent
         variant="glass"
-        className="backdrop-blur-[16px] bg-white/95 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-2xl p-2 min-w-[280px]"
+        className="backdrop-blur-[16px] bg-popover/95 border border-border/30 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-2xl p-2 min-w-[280px]"
       >
         {/* Main Categories - Most Used */}
         <SectionHeader>Share</SectionHeader>
@@ -123,7 +123,7 @@ export function BecomeSharerBlock() {
         </div>
 
         {/* Divider */}
-        <DropdownMenuSeparator className="h-px bg-gray-200 my-2 mx-2" />
+        <DropdownMenuSeparator className="h-px bg-border my-2 mx-2" />
 
         {/* Community */}
         <SectionHeader>Community</SectionHeader>
@@ -147,7 +147,7 @@ export function BecomeSharerBlock() {
         />
 
         {/* Divider */}
-        <DropdownMenuSeparator className="h-px bg-gray-200 my-2 mx-2" />
+        <DropdownMenuSeparator className="h-px bg-border my-2 mx-2" />
 
         {/* More Options */}
         <SectionHeader>More</SectionHeader>

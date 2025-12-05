@@ -66,7 +66,7 @@ const Avatar: React.FC<PropsType> = ({ size, onUpload, avatarUrl: propAvatarUrl 
               <p className="font-medium">
                 "Select a file or drag and drop here"
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 "JPG or PNG file size no more than 10MB"
               </p>
             </div>

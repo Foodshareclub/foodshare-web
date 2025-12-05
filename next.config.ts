@@ -72,7 +72,7 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60,
+    minimumCacheTTL: 2592000, // 30 days - images rarely change
     dangerouslyAllowSVG: true,
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
@@ -97,28 +97,16 @@ const nextConfig: NextConfig = {
   // Redirects for legacy detail page routes only
   async redirects() {
     return [
-      // Legacy /food/:id routes → /products/:id
+      // Legacy /products/:id routes → /food/:id (products route doesn't exist)
       {
-        source: "/food/:id(\\d+)",
-        destination: "/products/:id",
+        source: "/products/:id(\\d+)",
+        destination: "/food/:id",
         permanent: true,
       },
-      // Legacy /things/:id routes → /products/:id
+      // Legacy /things/:id routes → /thing/:id (plural to singular)
       {
         source: "/things/:id(\\d+)",
-        destination: "/products/:id",
-        permanent: true,
-      },
-      // Legacy /borrow/:id routes → /products/:id
-      {
-        source: "/borrow/:id(\\d+)",
-        destination: "/products/:id",
-        permanent: true,
-      },
-      // Legacy /wanted/:id routes → /products/:id
-      {
-        source: "/wanted/:id(\\d+)",
-        destination: "/products/:id",
+        destination: "/thing/:id",
         permanent: true,
       },
     ];

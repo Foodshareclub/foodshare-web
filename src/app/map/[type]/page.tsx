@@ -36,9 +36,9 @@ export default async function MapPage({ params }: PageProps) {
  */
 function MapPageSkeleton({ type }: { type: string }) {
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       {/* Navbar skeleton */}
-      <div className="h-[140px] bg-white dark:bg-gray-800 border-b animate-pulse" />
+      <div className="h-[140px] bg-card border-b border-border animate-pulse" />
 
       {/* Map skeleton */}
       <div
@@ -48,10 +48,10 @@ function MapPageSkeleton({ type }: { type: string }) {
           width: '100%',
         }}
       >
-        <div className="h-full w-full animate-pulse bg-gray-200 flex items-center justify-center">
+        <div className="h-full w-full animate-pulse bg-muted flex items-center justify-center">
           <div className="text-center">
             <div className="text-4xl mb-4">🗺️</div>
-            <p className="text-gray-600">Loading {type} map...</p>
+            <p className="text-muted-foreground">Loading {type} map...</p>
           </div>
         </div>
       </div>

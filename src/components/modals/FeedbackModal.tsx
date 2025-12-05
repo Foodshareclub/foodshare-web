@@ -142,10 +142,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
               {/* Header */}
               <div className="text-center">
                 <DialogHeader>
-                  <DialogTitle className="text-2xl font-semibold text-gray-900">
+                  <DialogTitle className="text-2xl font-semibold text-foreground">
                     "Send us your feedback"
                   </DialogTitle>
-                  <DialogDescription className="text-sm text-gray-600 mt-2">
+                  <DialogDescription className="text-sm text-muted-foreground mt-2">
                     
                       We'd love to hear from you! Share your thoughts, report bugs, or suggest new
                       features.
@@ -212,7 +212,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                   <div className="flex flex-col gap-4 items-stretch">
                     {/* Feedback Type */}
                     <div>
-                      <label className="text-sm font-medium mb-2 block text-gray-700">
+                      <label className="text-sm font-medium mb-2 block text-foreground/80">
                         "Type of feedback"
                       </label>
                       <select
@@ -229,7 +229,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
 
                     {/* Name */}
                     <div>
-                      <label className="text-sm font-medium mb-2 block text-gray-700">
+                      <label className="text-sm font-medium mb-2 block text-foreground/80">
                         "Your name"
                       </label>
                       <Input
@@ -243,7 +243,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
 
                     {/* Email */}
                     <div>
-                      <label className="text-sm font-medium mb-2 block text-gray-700">
+                      <label className="text-sm font-medium mb-2 block text-foreground/80">
                         "Email address"
                       </label>
                       <Input
@@ -258,7 +258,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
 
                     {/* Subject */}
                     <div>
-                      <label className="text-sm font-medium mb-2 block text-gray-700">
+                      <label className="text-sm font-medium mb-2 block text-foreground/80">
                         "Subject"
                       </label>
                       <Input
@@ -272,7 +272,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
 
                     {/* Message */}
                     <div>
-                      <label className="text-sm font-medium mb-2 block text-gray-700">
+                      <label className="text-sm font-medium mb-2 block text-foreground/80">
                         "Message"
                       </label>
                       <textarea

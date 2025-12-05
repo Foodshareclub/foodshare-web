@@ -45,8 +45,8 @@ export function Counter() {
 // app/actions/products.ts
 'use server';
 
-import { revalidateTag } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
+import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
@@ -54,7 +54,7 @@ export async function createProduct(formData: FormData) {
     post_name: formData.get('name') as string,
   });
   if (error) return { error: error.message };
-  revalidateTag('products');
+  invalidateTag(CACHE_TAGS.PRODUCTS);
   return { success: true };
 }
 ```

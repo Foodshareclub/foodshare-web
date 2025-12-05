@@ -21,11 +21,11 @@ export default function ProductsError({
   }, [error])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-muted/30 to-background">
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className="bg-card border-b border-border">
         <div className="container mx-auto px-4 py-6">
-          <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+          <h1 className="text-2xl font-bold text-foreground">Products</h1>
         </div>
       </div>
 
@@ -35,13 +35,13 @@ export default function ProductsError({
           <GlassCard variant="prominent" borderRadius="24px" className="p-8">
             {/* Error Icon */}
             <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-orange-100 to-red-100 rounded-full mb-4">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-pink-100 dark:bg-pink-900/30 rounded-full mb-4">
                 <span className="text-3xl">📦</span>
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
                 Couldn't Load Products
               </h2>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 We had trouble loading the product listings. This might be a temporary issue.
               </p>
             </div>
@@ -70,10 +70,10 @@ export default function ProductsError({
 
             {/* Helpful Suggestions */}
             <div className="mb-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">
+              <h3 className="text-sm font-semibold text-foreground mb-3">
                 You can try:
               </h3>
-              <ul className="space-y-2 text-sm text-gray-600">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="text-orange-500 mt-0.5">•</span>
                   <span>Refreshing the page or trying again</span>
@@ -97,13 +97,13 @@ export default function ProductsError({
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={reset}
-                className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+                className="flex-1 px-6 py-3 bg-[#FF2D55] hover:bg-[#E6284D] text-white rounded-lg font-semibold hover:shadow-lg transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#FF2D55] focus:ring-offset-2"
               >
                 🔄 Try Again
               </button>
               <Link
                 href="/"
-                className="flex-1 px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:border-gray-400 hover:shadow-md transition-all text-center focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
+                className="flex-1 px-6 py-3 bg-card border-2 border-border text-foreground rounded-lg font-semibold hover:border-foreground/50 hover:shadow-md transition-all text-center focus:outline-none focus:ring-2 focus:ring-border focus:ring-offset-2"
               >
                 🏠 Go Home
               </Link>
@@ -113,7 +113,7 @@ export default function ProductsError({
           {/* Quick Links */}
           <div className="mt-6">
             <GlassCard variant="subtle" borderRadius="16px" className="p-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">
+              <h3 className="text-sm font-semibold text-foreground mb-3">
                 Browse by Category:
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -122,7 +122,7 @@ export default function ProductsError({
                     <Link
                       key={category}
                       href={`/food?type=${category}`}
-                      className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-700 hover:border-orange-300 hover:shadow-sm transition-all capitalize"
+                      className="px-4 py-2 bg-card border border-border rounded-full text-sm text-foreground hover:border-orange-300 dark:hover:border-orange-700 hover:shadow-sm transition-all capitalize"
                     >
                       {category}
                     </Link>

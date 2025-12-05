@@ -55,7 +55,7 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
       router.push('/auth/login');
       return;
     }
-    router.push(`/chat?product=${product?.id}`);
+    router.push(`/chat?food=${product?.id}`);
   };
 
   const handleEditListing = () => {
@@ -68,7 +68,7 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      <div className="min-h-screen bg-gradient-to-br from-muted/30 to-background dark:from-background dark:to-muted/20">
         <Navbar
           userId={userId}
           isAuth={isAuth}
@@ -83,10 +83,10 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
         />
         <div className="container mx-auto px-4 py-16 text-center">
           <div className="text-6xl mb-4">📭</div>
-          <h2 className="text-2xl font-semibold mb-2">{t('product_not_found')}</h2>
+          <h2 className="text-2xl font-semibold text-foreground mb-2">{t('product_not_found')}</h2>
           <button
             onClick={() => router.push('/food')}
-            className="mt-6 px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all hover:-translate-y-0.5"
+            className="mt-6 px-6 py-3 bg-[#FF2D55] hover:bg-[#E6284D] text-white rounded-lg font-semibold hover:shadow-lg transition-all hover:-translate-y-0.5"
           >
             {t('browse_products')}
           </button>
@@ -96,7 +96,7 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-muted/30 to-background dark:from-background dark:to-muted/20">
       {/* Navbar */}
       <Navbar
         userId={userId}
@@ -111,29 +111,18 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
         signalOfNewMessage={[]}
       />
 
-      {/* Back Button */}
-      <div className="container mx-auto px-4 py-6">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          <span>←</span>
-          <span>{t('back')}</span>
-        </button>
-      </div>
-
       {/* Main Content - Two Column Layout */}
-      <div className="container mx-auto px-4 pb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-          {/* Left Column - Product Detail */}
+      <div className="flex flex-col lg:flex-row">
+        {/* Left Column - Product Detail (Scrollable) */}
+        <div className="w-full lg:w-1/2 px-4 pb-12">
           <div className="flex flex-col gap-6">
             <GlassCard
               variant="standard"
               padding="0"
               className="w-full overflow-hidden transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-xl"
             >
-              {/* Hero Image */}
-              <div className="relative w-full" style={{ aspectRatio: '4/3' }}>
+              {/* Hero Image with Back Button Overlay */}
+              <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
                 {product.images?.[0] && isValidImageUrl(product.images[0]) ? (
                   <Image
                     src={product.images[0]}
@@ -145,10 +134,18 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
                     quality={90}
                   />
                 ) : (
-                  <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
                     <span className="text-6xl">📦</span>
                   </div>
                 )}
+                {/* Back Button on Image */}
+                <button
+                  onClick={() => router.back()}
+                  className="absolute top-4 left-4 flex items-center gap-2 px-3 py-2 bg-background/90 backdrop-blur-sm rounded-lg text-muted-foreground hover:bg-background hover:text-foreground transition-all shadow-md"
+                >
+                  <span>←</span>
+                  <span className="text-sm font-medium">{t('back')}</span>
+                </button>
                 {product.images && product.images.length > 1 && (
                   <div className="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
                     {product.images.length} photos
@@ -169,24 +166,24 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
                 <h1 className="text-3xl font-bold mb-3">{product.post_name}</h1>
 
                 {/* Location */}
-                <div className="flex items-center gap-2 mb-4 text-gray-600">
+                <div className="flex items-center gap-2 mb-4 text-muted-foreground">
                   <span className="text-lg">📍</span>
                   <p className="text-base">{product.post_stripped_address}</p>
                 </div>
 
-                <hr className="my-4 border-gray-200" />
+                <hr className="my-4 border-border" />
 
                 {/* Stats Row */}
                 <div className="flex justify-between mb-4 flex-wrap gap-3">
-                  <div className="flex items-center gap-2 text-gray-600">
+                  <div className="flex items-center gap-2 text-muted-foreground">
                     <span className="text-lg">❤️</span>
                     <p className="text-sm">{product.post_like_counter || 0} likes</p>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600">
+                  <div className="flex items-center gap-2 text-muted-foreground">
                     <span className="text-lg">👁</span>
                     <p className="text-sm">{t('views_count', { count: product.post_views })}</p>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600">
+                  <div className="flex items-center gap-2 text-muted-foreground">
                     <span className="text-lg">📅</span>
                     <p className="text-sm">{new Date(product.created_at).toLocaleDateString()}</p>
                   </div>
@@ -208,25 +205,25 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
                   </div>
                 )}
 
-                <hr className="my-4 border-gray-200" />
+                <hr className="my-4 border-border" />
 
                 {/* Details */}
                 <div className="flex flex-col gap-3 mb-4">
                   <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-2 text-gray-700">
+                    <div className="flex items-center gap-2 text-foreground/80">
                       <span className="text-lg">🕐</span>
                       <p className="font-medium">{t('available')}</p>
                     </div>
-                    <p className="text-gray-600">{product.available_hours}</p>
+                    <p className="text-muted-foreground">{product.available_hours}</p>
                   </div>
 
                   {product.post_description && (
                     <div className="mt-2">
-                      <div className="flex items-center gap-2 text-gray-700 mb-2">
+                      <div className="flex items-center gap-2 text-foreground/80 mb-2">
                         <span className="text-lg">📝</span>
                         <p className="font-medium">{t('description')}</p>
                       </div>
-                      <p className="text-gray-600 leading-relaxed pl-7">
+                      <p className="text-muted-foreground leading-relaxed pl-7">
                         {product.post_description}
                       </p>
                     </div>
@@ -234,11 +231,11 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
 
                   {product.transportation && (
                     <div className="flex justify-between items-center mt-2">
-                      <div className="flex items-center gap-2 text-gray-700">
+                      <div className="flex items-center gap-2 text-foreground/80">
                         <span className="text-lg">🚌</span>
                         <p className="font-medium">{t('transport')}</p>
                       </div>
-                      <p className="text-gray-600 uppercase text-sm">{product.transportation}</p>
+                      <p className="text-muted-foreground uppercase text-sm">{product.transportation}</p>
                     </div>
                   )}
                 </div>
@@ -276,16 +273,16 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
 
                 {/* Status Indicators */}
                 {!product.is_active && (
-                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
-                    <p className="text-yellow-800 text-sm font-medium">
+                  <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg text-center">
+                    <p className="text-yellow-800 dark:text-yellow-300 text-sm font-medium">
                       {t('this_listing_is_no_longer_active')}
                     </p>
                   </div>
                 )}
 
                 {product.is_arranged && (
-                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-center">
-                    <p className="text-green-800 text-sm font-medium">
+                  <div className="mt-4 p-3 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg text-center">
+                    <p className="text-green-800 dark:text-green-300 text-sm font-medium">
                       {t('this_item_has_been_arranged')}
                     </p>
                   </div>
@@ -293,23 +290,16 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
               </div>
             </GlassCard>
 
-            {/* About This Listing - Mobile */}
+            {/* About This Listing - Mobile Only */}
             <div className="lg:hidden">
               <AboutListingCard product={product} />
             </div>
           </div>
+        </div>
 
-          {/* Right Column - Map */}
-          <div className="flex flex-col gap-6">
-            <div className="rounded-2xl overflow-hidden shadow-lg h-[400px] lg:h-[500px] xl:h-[600px]">
-              <Leaflet />
-            </div>
-
-            {/* About This Listing - Desktop */}
-            <div className="hidden lg:block">
-              <AboutListingCard product={product} />
-            </div>
-          </div>
+        {/* Right Column - Map (Fixed on Desktop) */}
+        <div className="w-full lg:w-1/2 h-[400px] lg:h-auto lg:fixed lg:right-0 lg:top-0 lg:bottom-0">
+          <Leaflet product={product} />
         </div>
       </div>
     </div>
@@ -321,22 +311,22 @@ function AboutListingCard({ product }: { product: InitialProductStateType }) {
 
   return (
     <GlassCard variant="standard" padding="md">
-      <h3 className="text-xl font-semibold mb-4">{t('about_this_listing')}</h3>
+      <h3 className="text-xl font-semibold text-foreground mb-4">{t('about_this_listing')}</h3>
       <div className="space-y-3 text-sm">
         <div>
-          <span className="text-gray-600">{t('category')}:</span>{' '}
-          <span className="font-medium capitalize">{product.post_type}</span>
+          <span className="text-muted-foreground">{t('category')}:</span>{' '}
+          <span className="font-medium text-foreground capitalize">{product.post_type}</span>
         </div>
         <div>
-          <span className="text-gray-600">{t('posted')}:</span>{' '}
-          <span className="font-medium">
+          <span className="text-muted-foreground">{t('posted')}:</span>{' '}
+          <span className="font-medium text-foreground">
             {new Date(product.created_at).toLocaleDateString()}
           </span>
         </div>
         <div>
-          <span className="text-gray-600">{t('status')}:</span>{' '}
+          <span className="text-muted-foreground">{t('status')}:</span>{' '}
           <span
-            className={`font-medium ${product.is_active ? 'text-green-600' : 'text-gray-400'}`}
+            className={`font-medium ${product.is_active ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}`}
           >
             {product.is_active ? 'Active' : 'Inactive'}
           </span>

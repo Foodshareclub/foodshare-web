@@ -60,41 +60,61 @@ Server Component re-renders with fresh data
 
 ```typescript
 // src/app/products/page.tsx - Server Component (no 'use client')
-import { getProducts } from '@/app/actions/products';
+import { getProducts } from '@/lib/data/products';  // Data fetching from lib/data/
 import { ProductGrid } from '@/components/products/ProductGrid';
 
+export const revalidate = 60; // Route segment config for time-based revalidation
+
 export default async function ProductsPage() {
-  const products = await getProducts(); // Direct async/await
+  const products = await getProducts('food'); // Direct async/await
   return <ProductGrid products={products} />;
 }
 ```
 
-### Server Actions
+### Data Functions (lib/data/)
 
 ```typescript
-// src/app/actions/products.ts
+// src/lib/data/products.ts - Cached data fetching
+import { unstable_cache } from 'next/cache';
+import { createClient } from '@/lib/supabase/server';
+import { CACHE_TAGS, CACHE_DURATIONS } from './cache-keys';
+
+export const getProducts = unstable_cache(
+  async (productType: string) => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('posts_with_location')
+      .select('*')
+      .eq('post_type', productType)
+      .eq('is_active', true);
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+  ['products-by-type'],
+  { revalidate: CACHE_DURATIONS.PRODUCTS, tags: [CACHE_TAGS.PRODUCTS] }
+);
+```
+
+### Server Actions (Mutations)
+
+```typescript
+// src/app/actions/products.ts - Mutations only
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
 
-  const { error } = await supabase.from('products').insert({
-    title: formData.get('title'),
-    description: formData.get('description'),
+  const { error } = await supabase.from('posts').insert({
+    post_name: formData.get('post_name'),
+    post_description: formData.get('post_description'),
   });
 
   if (error) throw new Error(error.message);
 
-  revalidatePath('/products');
-}
-
-export async function getProducts() {
-  const supabase = await createClient();
-  const { data } = await supabase.from('products').select('*');
-  return data ?? [];
+  invalidateTag(CACHE_TAGS.PRODUCTS); // Invalidate cache
 }
 ```
 
@@ -134,12 +154,13 @@ export function ProductCard({ product }: { product: Product }) {
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getProducts, createProduct } from '@/app/actions/products';
+import { getProducts } from '@/lib/data/products';  // Data from lib/data/
+import { createProduct } from '@/app/actions/products';  // Mutations from actions/
 
-export function useProducts() {
+export function useProducts(type: string) {
   return useQuery({
-    queryKey: ['products'],
-    queryFn: getProducts,
+    queryKey: ['products', type],
+    queryFn: () => getProducts(type),
   });
 }
 
@@ -249,15 +270,19 @@ context/                   # Documentation
 │  Server Components → Client Components → UI          │
 ├─────────────────────────────────────────────────────┤
 │                 Action Layer                         │
-│  Server Actions (mutations, data fetching)           │
+│  Server Actions (mutations with revalidation)        │
 ├─────────────────────────────────────────────────────┤
 │                  Data Layer                          │
-│  Supabase Client (server.ts, client.ts)             │
+│  lib/data/ (cached fetching with unstable_cache)     │
 ├─────────────────────────────────────────────────────┤
 │              Infrastructure Layer                    │
-│  Supabase, Vercel, Edge Functions                   │
+│  Supabase Client (server.ts, client.ts)             │
 └─────────────────────────────────────────────────────┘
 ```
+
+**Data Flow**:
+- READ: Server Component → `lib/data/` function → Supabase → Render
+- WRITE: Form action → Server Action → Supabase → `invalidateTag()` → Re-render
 
 ### Key Patterns
 

@@ -60,11 +60,14 @@ export type LocationType = {
  * Helper to get coordinates from product (PostGIS format)
  * Checks location_json (GeoJSON from computed column) first,
  * then falls back to location field for backwards compatibility
+ * 
+ * Best practice: Use posts_with_location view which provides location_json
+ * as proper GeoJSON via ST_AsGeoJSON()
  */
 export function getCoordinates(
   product: InitialProductStateType | LocationType
 ): { lat: number; lng: number } | null {
-  // Prefer location_json (GeoJSON from computed column)
+  // Prefer location_json (GeoJSON from computed column via ST_AsGeoJSON)
   if ('location_json' in product && product.location_json) {
     const parsed = parsePostGISPoint(product.location_json);
     if (parsed) {
@@ -73,6 +76,7 @@ export function getCoordinates(
   }
 
   // Fallback to location field (may be WKB hex or already parsed)
+  // Note: WKB hex format cannot be parsed client-side, use posts_with_location view
   if (product.location) {
     const parsed = parsePostGISPoint(product.location);
     if (parsed) {

@@ -1,4 +1,4 @@
-import { memo, type FC } from "react";
+import type { FC } from "react";
 import { cn } from "@/lib/utils";
 import { Avatar as AvatarPrimitive, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
@@ -7,6 +7,12 @@ export interface NavbarAvatarProps {
   src?: string;
   /** Alt text for accessibility */
   alt?: string;
+  /** User's first name for initials fallback */
+  firstName?: string;
+  /** User's last name for initials fallback */
+  lastName?: string;
+  /** @deprecated Use lastName instead */
+  secondName?: string;
   /** Display notification badge */
   hasNotification?: boolean;
   /** Number to display in badge (optional) */
@@ -17,6 +23,16 @@ export interface NavbarAvatarProps {
   className?: string;
   /** Click handler */
   onClick?: () => void;
+}
+
+/** Generate initials from user name, with alt text fallback */
+function getInitials(firstName?: string, lastName?: string, alt = "User"): string {
+  if (firstName || lastName) {
+    const first = firstName?.charAt(0).toUpperCase() ?? "";
+    const last = lastName?.charAt(0).toUpperCase() ?? "";
+    return `${first}${last}`.trim() || alt.charAt(0).toUpperCase();
+  }
+  return alt.charAt(0).toUpperCase();
 }
 
 const sizeClasses = {
@@ -41,57 +57,86 @@ const badgeSizeClasses = {
  * ```tsx
  * <NavbarAvatar
  *   src="/avatar.jpg"
+ *   firstName="John"
+ *   lastName="Doe"
  *   hasNotification
  *   notificationCount={3}
  *   size="md"
  * />
  * ```
  */
-export const NavbarAvatar: FC<NavbarAvatarProps> = memo(
-  ({
-    src,
-    alt = "User avatar",
-    hasNotification = false,
-    notificationCount,
-    size = "md",
-    className,
-    onClick,
-  }) => {
-    const containerClasses = cn(
-      "relative rounded-full cursor-pointer transition-transform hover:scale-105",
-      sizeClasses[size],
-      hasNotification && [
-        "after:content-['']",
-        "after:absolute after:bottom-0 after:right-0",
-        "after:bg-green-300 after:border-2 after:border-background",
-        "after:rounded-full",
-        badgeSizeClasses[size],
-      ],
-      className
-    );
-
-    return (
-      <div className={containerClasses} onClick={onClick} role={onClick ? "button" : undefined}>
-        <AvatarPrimitive className={sizeClasses[size]}>
-          {src && <AvatarImage src={src} alt={alt} />}
-          <AvatarFallback>{alt.charAt(0).toUpperCase()}</AvatarFallback>
-        </AvatarPrimitive>
-        {hasNotification && notificationCount && notificationCount > 0 && (
-          <span
-            className={cn(
-              "absolute -top-1 -right-1 flex items-center justify-center",
-              "min-w-5 h-5 px-1 rounded-full",
-              "bg-red-500 text-white text-xs font-semibold",
-              "border-2 border-background"
-            )}
-            aria-label={`${notificationCount} notifications`}
-          >
-            {notificationCount > 9 ? "9+" : notificationCount}
-          </span>
-        )}
-      </div>
-    );
+export const NavbarAvatar: FC<NavbarAvatarProps> = ({
+  src,
+  alt = "User avatar",
+  firstName,
+  lastName,
+  secondName,
+  hasNotification = false,
+  notificationCount,
+  size = "md",
+  className,
+  onClick,
+}) => {
+  // Debug: Log avatar src
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[NavbarAvatar] src:', src);
   }
-);
 
-NavbarAvatar.displayName = "NavbarAvatar";
+  // Support deprecated secondName prop for backwards compatibility
+  const resolvedLastName = lastName ?? secondName;
+  const containerClasses = cn(
+    "relative rounded-full cursor-pointer transition-transform hover:scale-105",
+    sizeClasses[size],
+    hasNotification && [
+      "after:content-['']",
+      "after:absolute after:bottom-0 after:right-0",
+      "after:bg-green-300 after:border-2 after:border-background",
+      "after:rounded-full",
+      badgeSizeClasses[size],
+    ],
+    className
+  );
+
+  const handleKeyDown = (e: React.KeyboardEvent): void => {
+    if (onClick && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
+  return (
+    <div
+      className={containerClasses}
+      onClick={onClick}
+      onKeyDown={onClick ? handleKeyDown : undefined}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+    >
+      <AvatarPrimitive className={sizeClasses[size]}>
+        <AvatarImage 
+          src={src} 
+          alt={alt}
+          onLoadingStatusChange={(status) => {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('[NavbarAvatar] Image load status:', status, 'src:', src?.substring(0, 50));
+            }
+          }}
+        />
+        <AvatarFallback>{getInitials(firstName, resolvedLastName, alt)}</AvatarFallback>
+      </AvatarPrimitive>
+      {hasNotification && notificationCount && notificationCount > 0 && (
+        <span
+          className={cn(
+            "absolute -top-1 -right-1 flex items-center justify-center",
+            "min-w-5 h-5 px-1 rounded-full",
+            "bg-red-500 text-white text-xs font-semibold",
+            "border-2 border-background"
+          )}
+          aria-label={`${notificationCount} notifications`}
+        >
+          {notificationCount > 9 ? "9+" : notificationCount}
+        </span>
+      )}
+    </div>
+  );
+};

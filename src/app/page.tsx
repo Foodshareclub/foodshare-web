@@ -1,8 +1,11 @@
 import { Suspense } from 'react';
-import { getProducts } from '@/app/actions/products';
+import { getProducts } from '@/lib/data/products';
 import { getUser } from '@/app/actions/auth';
 import { HomeClient } from './HomeClient';
 import SkeletonCard from '@/components/productCard/SkeletonCard';
+
+// Route segment config for caching
+export const revalidate = 60; // Revalidate every 60 seconds
 
 /**
  * Home Page - Server Component
@@ -31,9 +34,9 @@ export default async function Home() {
  */
 function HomePageSkeleton() {
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       {/* Navbar skeleton */}
-      <div className="h-[140px] bg-white dark:bg-gray-800 border-b animate-pulse" />
+      <div className="h-[140px] bg-card border-b border-border animate-pulse" />
 
       {/* Product grid skeleton */}
       <div className="grid gap-10 px-7 py-7 xl:px-20 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">

@@ -306,7 +306,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
         <Button
           onClick={onOpen}
           variant="ghost"
-          className="mr-2 hidden md:block text-gray-700 text-base font-semibold hover:text-[#E61E4D] transition-colors"
+          className="mr-2 hidden md:block text-foreground text-base font-semibold hover:text-primary transition-colors"
         >
           "Become a Sharer"
         </Button>
@@ -314,7 +314,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
         <Button
           onClick={onOpen}
           variant="outline"
-          className="bg-white text-gray-800 border border-gray-300 font-semibold px-6 hover:border-gray-800 hover:shadow-md transition-all"
+          className="bg-background text-foreground border border-border font-semibold px-6 hover:border-foreground hover:shadow-md transition-all"
         >
           "{buttonValue}"
         </Button>
@@ -324,8 +324,8 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
       <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && handleClose()}>
         <GlassDialogContent className="max-w-[568px] rounded-2xl p-0" aria-describedby={undefined}>
           {/* Header with proper accessibility */}
-          <DialogHeader className="border-b border-gray-200 py-4 px-6 relative">
-            <DialogTitle className="text-base font-semibold text-center text-gray-900">
+          <DialogHeader className="border-b border-border py-4 px-6 relative">
+            <DialogTitle className="text-base font-semibold text-center text-foreground">
               {mode === "login" ? "Log in" : "Sign up"}
             </DialogTitle>
           </DialogHeader>
@@ -334,10 +334,10 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
             <div key={mode} className="transition-opacity duration-200">
                 {/* Welcome Message */}
                 <div className="mb-6">
-                  <h2 className="text-[22px] font-semibold mb-2 text-gray-900">
+                  <h2 className="text-[22px] font-semibold mb-2 text-foreground">
                     "Welcome to FoodShare"
                   </h2>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
 
                     {mode === "login"
                       ? "Log in to continue sharing and discovering food"
@@ -490,7 +490,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                             onChange={(e) => setFirstName(e.target.value)}
                             autoComplete="given-name"
                             required
-                            className="h-11 rounded-lg border border-gray-300 hover:border-gray-800 focus:border-gray-800 focus:ring-1 focus:ring-gray-800"
+                            className="h-11 rounded-lg border border-border hover:border-foreground focus:border-foreground focus:ring-1 focus:ring-foreground"
                           />
                         </div>
                         <div className="flex-1">
@@ -500,7 +500,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                             onChange={(e) => setLastName(e.target.value)}
                             autoComplete="family-name"
                             required
-                            className="h-11 rounded-lg border border-gray-300 hover:border-gray-800 focus:border-gray-800 focus:ring-1 focus:ring-gray-800"
+                            className="h-11 rounded-lg border border-border hover:border-foreground focus:border-foreground focus:ring-1 focus:ring-foreground"
                           />
                         </div>
                       </div>
@@ -516,14 +516,14 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                         onBlur={handleEmailBlur}
                         autoComplete="email"
                         required
-                        className={`h-11 rounded-lg border ${emailError ? "border-red-500" : "border-gray-300"
-                          } hover:border-gray-800 focus:border-gray-800 focus:ring-1 ${emailError ? "focus:ring-red-500" : "focus:ring-gray-800"
+                        className={`h-11 rounded-lg border ${emailError ? "border-red-500 dark:border-red-400" : "border-border"
+                          } hover:border-foreground focus:border-foreground focus:ring-1 ${emailError ? "focus:ring-red-500 dark:focus:ring-red-400" : "focus:ring-foreground"
                           }`}
                         aria-invalid={!!emailError}
                         aria-describedby={emailError ? "email-error" : undefined}
                       />
                       {emailError && (
-                        <p id="email-error" className="text-xs text-red-500 mt-1" role="alert">
+                        <p id="email-error" className="text-xs text-red-500 dark:text-red-400 mt-1" role="alert">
                           {emailError}
                         </p>
                       )}
@@ -538,12 +538,12 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                         onChange={(e) => setPassword(e.target.value)}
                         autoComplete={mode === "login" ? "current-password" : "new-password"}
                         required
-                        className="h-11 rounded-lg border border-gray-300 pr-12 hover:border-gray-800 focus:border-gray-800 focus:ring-1 focus:ring-gray-800"
+                        className="h-11 rounded-lg border border-border pr-12 hover:border-foreground focus:border-foreground focus:ring-1 focus:ring-foreground"
                       />
                       <button
                         type="button"
                         aria-label={showPassword ? "Hide password" : "Show password"}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? <ViewOffIcon /> : <ViewIcon />}
@@ -574,11 +574,11 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
 
                 {/* Divider */}
                 <div className="flex items-center my-6">
-                  <div className="flex-1 border-t border-gray-300" />
-                  <span className="px-4 text-xs text-gray-500 font-medium">
+                  <div className="flex-1 border-t border-border" />
+                  <span className="px-4 text-xs text-muted-foreground font-medium">
                     "or"
                   </span>
-                  <div className="flex-1 border-t border-gray-300" />
+                  <div className="flex-1 border-t border-border" />
                 </div>
 
                 {/* Social Login Buttons */}
@@ -587,7 +587,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     type="button"
                     onClick={() => handleSocialLogin("google")}
                     variant="outline"
-                    className="w-full h-11 border-gray-300 rounded-lg font-medium text-sm hover:border-gray-800 hover:bg-gray-50 transition-all"
+                    className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
                   >
                     <img src={google} alt="Google" className="w-5 h-5 mr-3" />
                     "Continue with Google"
@@ -597,7 +597,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     type="button"
                     onClick={() => handleSocialLogin("facebook")}
                     variant="outline"
-                    className="w-full h-11 border-gray-300 rounded-lg font-medium text-sm hover:border-gray-800 hover:bg-gray-50 transition-all"
+                    className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
                   >
                     <img src={facebook} alt="Facebook" className="w-5 h-5 mr-3" />
                     "Continue with Facebook"
@@ -607,7 +607,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     type="button"
                     onClick={() => handleSocialLogin("apple")}
                     variant="outline"
-                    className="w-full h-11 border-gray-300 rounded-lg font-medium text-sm hover:border-gray-800 hover:bg-gray-50 transition-all"
+                    className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
                   >
                     <img src={apple} alt="Apple" className="w-5 h-5 mr-3" />
                     "Continue with Apple"
@@ -615,14 +615,14 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                 </div>
 
                 {/* Toggle Mode */}
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <p className="text-sm text-gray-700 text-center">
+                <div className="mt-6 pt-6 border-t border-border">
+                  <p className="text-sm text-muted-foreground text-center">
 
                     {mode === "login" ? "Don't have an account?" : "Already have an account?"}
                     {" "}
                     <button
                       type="button"
-                      className="font-semibold text-gray-900 underline hover:text-[#E61E4D] cursor-pointer"
+                      className="font-semibold text-foreground underline hover:text-primary cursor-pointer"
                       onClick={toggleMode}
                     >
                       "{mode === "login" ? "Sign up" : "Log in"}"

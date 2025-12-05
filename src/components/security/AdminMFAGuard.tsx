@@ -128,8 +128,8 @@ export const AdminMFAGuard: React.FC<AdminMFAGuardProps> = ({ children }) => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center p-8">
-          <h1 className="text-2xl font-bold mb-4 text-gray-900">Access Denied</h1>
-          <p className="text-gray-600">You do not have permission to access this page.</p>
+          <h1 className="text-2xl font-bold mb-4 text-foreground">Access Denied</h1>
+          <p className="text-muted-foreground">You do not have permission to access this page.</p>
         </div>
       </div>
     );
@@ -138,7 +138,7 @@ export const AdminMFAGuard: React.FC<AdminMFAGuardProps> = ({ children }) => {
   // Show MFA verification if required
   if (requiresMFA && user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen bg-muted">
         <MFAVerification
           profileId={user.id}
           onVerified={handleMFAVerified}

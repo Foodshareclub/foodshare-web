@@ -113,7 +113,7 @@ const Navbar: React.FC<NavbarProps> = memo(
     }, [router]);
 
     const handleNavigateToMyMessages = useCallback(() => {
-      router.push("/chat-main");
+      router.push("/chat");
     }, [router]);
 
     const handleNavigateToAboutUs = useCallback(() => {
@@ -156,11 +156,12 @@ const Navbar: React.FC<NavbarProps> = memo(
     );
 
     // 120fps: Memoize box shadow to prevent recalculation
+    // Uses CSS variables for dark mode compatibility
     const navbarShadow = useMemo(
       () =>
         scrollY > 10
-          ? "0 1px 2px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05)"
-          : "0 1px 2px rgba(0, 0, 0, 0.08)",
+          ? "0 1px 2px hsl(var(--foreground) / 0.08), 0 4px 12px hsl(var(--foreground) / 0.05)"
+          : "0 1px 2px hsl(var(--foreground) / 0.08)",
       [scrollY]
     );
 
@@ -168,7 +169,10 @@ const Navbar: React.FC<NavbarProps> = memo(
       <>
         {/* SINGLE MERGED NAVBAR - Always Visible */}
         <div
-          className={cn("bg-white w-full fixed top-0 z-[100]", "border-b border-black/[0.08]")}
+          className={cn(
+            "bg-background w-full fixed top-0 z-[100]",
+            "border-b border-border"
+          )}
           style={{
             boxShadow: navbarShadow,
             backfaceVisibility: "hidden" as const,

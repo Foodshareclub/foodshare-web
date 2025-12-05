@@ -102,7 +102,7 @@ const PersonCard: React.FC<PropsType> = ({ name, secondName, img, aboutExp, role
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
           >
-            <h3 className="text-center text-xl md:text-2xl font-bold bg-gradient-to-r from-red-500 via-orange-400 to-red-500 bg-clip-text text-transparent bg-[length:200%_100%]">
+            <h3 className="text-center text-xl md:text-2xl font-bold text-[#FF2D55]">
               {name} {secondName}
             </h3>
           </MotionBox>

@@ -117,11 +117,11 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
 
   if (isLoading && !currentProfile) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-muted/30 dark:bg-background">
         <div className="container mx-auto max-w-3xl px-4 py-8">
           <div className="space-y-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-24 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-lg" />
+              <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
             ))}
           </div>
         </div>
@@ -130,13 +130,13 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-muted/30 dark:bg-background">
       <div className="container mx-auto max-w-3xl px-4 py-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 mb-8">
           <Link
             href="/settings"
-            className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             Account settings
           </Link>
@@ -153,7 +153,7 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
               d="M9 5l7 7-7 7"
             />
           </svg>
-          <span className="text-sm font-medium text-gray-900 dark:text-white">
+          <span className="text-sm font-medium text-foreground">
             Personal info
           </span>
         </nav>
@@ -165,10 +165,10 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
           transition={{ duration: 0.5 }}
           className="mb-8"
         >
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-4xl font-bold text-foreground mb-2">
             Personal info
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-muted-foreground">
             Provide personal details and how we can reach you
           </p>
         </motion.div>
@@ -178,11 +178,11 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-4"
+          className="bg-card rounded-xl shadow-sm border border-border p-6 mb-4"
         >
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 Name
               </h2>
               {editingName ? (
@@ -217,7 +217,7 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-700 dark:text-gray-300">
+                <p className="text-foreground/80">
                   {firstName} {lastName}
                 </p>
               )}
@@ -240,15 +240,15 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-4"
+          className="bg-card rounded-xl shadow-sm border border-border p-6 mb-4"
         >
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 Email address
               </h2>
-              <p className="text-gray-700 dark:text-gray-300">{user.email}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+              <p className="text-foreground/80">{user.email}</p>
+              <p className="text-sm text-muted-foreground mt-2">
                 Email changes require verification and must be done through account security
               </p>
             </div>
@@ -260,11 +260,11 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.3 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-4"
+          className="bg-card rounded-xl shadow-sm border border-border p-6 mb-4"
         >
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 Phone number
               </h2>
               {editingPhone ? (
@@ -290,7 +290,7 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-700 dark:text-gray-300">
+                <p className="text-foreground/80">
                   {phone || 'Not provided'}
                 </p>
               )}
@@ -313,11 +313,11 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.4 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+          className="bg-card rounded-xl shadow-sm border border-border p-6"
         >
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              <h2 className="text-xl font-semibold text-foreground mb-4">
                 Address
               </h2>
               {editingAddress ? (
@@ -370,7 +370,7 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
                   </div>
                 </div>
               ) : (
-                <div className="text-gray-700 dark:text-gray-300">
+                <div className="text-foreground/80">
                   {streetAddress && (
                     <>
                       <p>{streetAddress}</p>
@@ -381,7 +381,7 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
                     </>
                   )}
                   {!streetAddress && !city && !postalCode && !country && (
-                    <p className="text-gray-500 dark:text-gray-400">Not provided</p>
+                    <p className="text-muted-foreground">Not provided</p>
                   )}
                 </div>
               )}

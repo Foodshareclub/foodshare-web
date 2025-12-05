@@ -42,10 +42,10 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 relative overflow-hidden">
+    <div className="min-h-screen bg-muted/30 dark:bg-background relative overflow-hidden">
       {/* Background Pattern */}
       <div
-        className="absolute top-0 left-0 right-0 bottom-0 opacity-[0.03] pointer-events-none"
+        className="absolute top-0 left-0 right-0 bottom-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none"
         style={{
           backgroundImage: 'radial-gradient(circle, #E61E4D 1px, transparent 1px)',
           backgroundSize: '40px 40px',
@@ -53,17 +53,17 @@ export default function ForgotPasswordPage() {
       />
 
       {/* Header */}
-      <div className="sticky top-0 bg-white/95 border-b border-gray-200 z-10 backdrop-blur-[10px]">
+      <div className="sticky top-0 bg-background/95 border-b border-border z-10 backdrop-blur-[10px]">
         <div className="container mx-auto max-w-7xl py-4 px-4">
           <div className="flex justify-between items-center">
             <Link href="/">
-              <p className="text-2xl font-bold text-emerald-600 cursor-pointer hover:opacity-80 transition-opacity duration-200">
+              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 cursor-pointer hover:opacity-80 transition-opacity duration-200">
                 FoodShare
               </p>
             </Link>
             <Link
               href="/auth/login"
-              className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-2"
+              className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
             >
               <FaArrowLeft className="w-3 h-3" />
               Back to login
@@ -80,28 +80,28 @@ export default function ForgotPasswordPage() {
           transition={{ duration: 0.5 }}
         >
           {/* Card */}
-          <div className="bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] p-6 md:p-8 border border-gray-200">
+          <div className="bg-card rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] p-6 md:p-8 border border-border">
             {isSuccess ? (
               /* Success State */
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mb-6">
-                  <FaCheckCircle className="w-8 h-8 text-emerald-600" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full mb-6">
+                  <FaCheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <h1 className="text-[28px] font-bold mb-3 text-gray-900">
+                <h1 className="text-[28px] font-bold mb-3 text-foreground">
                   Check your email
                 </h1>
-                <p className="text-base text-gray-600 leading-relaxed mb-6">
+                <p className="text-base text-muted-foreground leading-relaxed mb-6">
                   We&apos;ve sent a password reset link to{' '}
-                  <span className="font-semibold text-gray-900">{email}</span>
+                  <span className="font-semibold text-foreground">{email}</span>
                 </p>
-                <p className="text-sm text-gray-500 mb-8">
+                <p className="text-sm text-muted-foreground mb-8">
                   Didn&apos;t receive the email? Check your spam folder or{' '}
                   <button
                     onClick={() => {
                       setIsSuccess(false);
                       setEmail('');
                     }}
-                    className="text-emerald-600 font-semibold hover:underline"
+                    className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline"
                   >
                     try again
                   </button>
@@ -117,13 +117,13 @@ export default function ForgotPasswordPage() {
               <>
                 {/* Header */}
                 <div className="mb-8 text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mb-6">
-                    <FaEnvelope className="w-7 h-7 text-emerald-600" />
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full mb-6">
+                    <FaEnvelope className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
                   </div>
-                  <h1 className="text-[28px] font-bold mb-3 text-gray-900">
+                  <h1 className="text-[28px] font-bold mb-3 text-foreground">
                     Forgot your password?
                   </h1>
-                  <p className="text-base text-gray-600 leading-relaxed">
+                  <p className="text-base text-muted-foreground leading-relaxed">
                     No worries! Enter your email address and we&apos;ll send you a link to reset your password.
                   </p>
                 </div>
@@ -157,7 +157,7 @@ export default function ForgotPasswordPage() {
                   <div className="flex flex-col gap-5">
                     {/* Email */}
                     <div>
-                      <label className="block text-sm font-semibold mb-2 text-gray-700">
+                      <label className="block text-sm font-semibold mb-2 text-foreground/80">
                         Email address
                       </label>
                       <Input
@@ -167,7 +167,7 @@ export default function ForgotPasswordPage() {
                         onChange={(e) => setEmail(e.target.value)}
                         required
                         autoFocus
-                        className="h-12 rounded-xl border border-gray-300 bg-white hover:border-gray-400 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                        className="h-12 rounded-xl border border-border bg-background hover:border-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                       />
                     </div>
 
@@ -193,7 +193,7 @@ export default function ForgotPasswordPage() {
                 <div className="mt-8 text-center">
                   <Link
                     href="/auth/login"
-                    className="text-sm text-gray-600 hover:text-gray-900 inline-flex items-center gap-2"
+                    className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-2"
                   >
                     <FaArrowLeft className="w-3 h-3" />
                     Back to login
@@ -204,9 +204,9 @@ export default function ForgotPasswordPage() {
           </div>
 
           {/* Footer */}
-          <p className="text-[13px] text-gray-600 text-center mt-6 leading-relaxed">
+          <p className="text-[13px] text-muted-foreground text-center mt-6 leading-relaxed">
             Remember your password?{' '}
-            <Link href="/auth/login" className="text-gray-900 font-semibold underline hover:text-emerald-600">
+            <Link href="/auth/login" className="text-foreground font-semibold underline hover:text-emerald-600 dark:hover:text-emerald-400">
               Log in
             </Link>
           </p>

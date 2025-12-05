@@ -23,7 +23,22 @@ const Header: React.FC<HeaderProps> = memo(({ getRoute, setProductType, productT
   const userId = user?.id;
 
   // Profile data from React Query
-  const { profile, avatarUrl } = useCurrentProfile(userId);
+  const { profile, avatarUrl, isProfileLoading } = useCurrentProfile(userId);
+
+  // Final avatar URL with fallback chain
+  const finalAvatarUrl = avatarUrl || profile?.avatar_url || undefined;
+
+  // Debug: Log avatar data flow (only when authenticated)
+  if (process.env.NODE_ENV === 'development' && isAuthenticated) {
+    console.log('[Header] Avatar debug:', {
+      userId,
+      isProfileLoading,
+      hasProfile: !!profile,
+      profileAvatarUrl: profile?.avatar_url,
+      computedAvatarUrl: avatarUrl,
+      finalAvatarUrl,
+    });
+  }
 
   // Chat rooms from React Query
   const { data: allUserRooms = [] } = useRooms(userId);
@@ -43,7 +58,7 @@ const Header: React.FC<HeaderProps> = memo(({ getRoute, setProductType, productT
       productType={productType}
       onRouteChange={getRoute}
       onProductTypeChange={setProductType}
-      imgUrl={avatarUrl ?? profile?.avatar_url ?? undefined}
+      imgUrl={finalAvatarUrl}
       firstName={firstName ?? undefined}
       secondName={secondName ?? undefined}
       email={email ?? undefined}

@@ -53,7 +53,7 @@ const ContactsBlock: React.FC<ContactsBlockType> = memo(
       if (roomId === roomIDFromUrl) {
         return;
       } else {
-        router.push(`/chat-main/?p=${post_id}&s=${sharerId}&r=${requesterId}&room=${roomId}`);
+        router.push(`/chat?food=${post_id}&room=${roomId}`);
       }
       // Update room using React Query mutation
       await updateRoom.mutateAsync({ last_message_seen_by: userID, id: roomId });

@@ -157,7 +157,7 @@ import { cn } from '@/lib/utils';
 export function BrandButton({ className, ...props }) {
   return (
     <Button
-      className={cn('bg-[#FF385C] hover:bg-[#E31C5F]', className)}
+      className={cn('bg-[#FF2D55] hover:bg-[#E6284D]', className)}
       {...props}
     />
   );

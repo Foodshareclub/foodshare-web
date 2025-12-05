@@ -70,7 +70,7 @@ const DropdownMenuContent = React.forwardRef<
         "z-[200] min-w-[8rem] overflow-hidden rounded-md border p-1 shadow-md",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         variant === "glass"
-          ? "bg-white/70 backdrop-blur-xl backdrop-saturate-150 border-white/20 text-foreground"
+          ? "glass text-foreground"
           : "bg-popover text-popover-foreground",
         className
       )}

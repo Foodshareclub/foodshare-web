@@ -10,10 +10,10 @@ import {
   useQueryClient,
   type UseQueryOptions,
 } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store/zustand";
-import type { User, Session, Provider } from "@supabase/supabase-js";
+import type { User, Session, Provider, AuthChangeEvent } from "@supabase/supabase-js";
 
 // ============================================================================
 // Query Keys
@@ -63,7 +63,9 @@ interface OtpCredentials {
 export function useSession(
   options?: Omit<UseQueryOptions<AuthState, Error>, "queryKey" | "queryFn">
 ) {
+  const queryClient = useQueryClient();
   const setAuth = useAuthStore((state) => state.setAuth);
+  const listenerSetup = useRef(false);
 
   const query = useQuery({
     queryKey: authKeys.session(),
@@ -87,7 +89,40 @@ export function useSession(
     ...options,
   });
 
-  // Sync to Zustand store
+  // Listen for auth state changes and sync to React Query cache
+  useEffect(() => {
+    // Prevent duplicate listeners
+    if (listenerSetup.current) return;
+    listenerSetup.current = true;
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event: AuthChangeEvent, session: Session | null) => {
+        // Update React Query cache immediately when auth state changes
+        const newState: AuthState = {
+          user: session?.user ?? null,
+          session,
+          isAuthenticated: !!session,
+        };
+
+        queryClient.setQueryData(authKeys.session(), newState);
+
+        // Also sync to Zustand
+        setAuth(session?.user ?? null, session);
+
+        // Log auth events in development
+        if (process.env.NODE_ENV === "development") {
+          console.log("[Auth] State change:", event, !!session);
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+      listenerSetup.current = false;
+    };
+  }, [queryClient, setAuth]);
+
+  // Sync to Zustand store (for initial load)
   useEffect(() => {
     if (query.data) {
       setAuth(query.data.user, query.data.session);

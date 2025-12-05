@@ -65,7 +65,7 @@ export const CategoryItem: FC<CategoryItemProps> = memo(
           "flex flex-col items-center justify-center gap-1 px-2 py-1 min-w-fit relative",
           "transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
           "hover:scale-105 active:scale-95",
-          "focus:outline focus:outline-2 focus:outline-[#FF385C] focus:outline-offset-2 focus:rounded-lg",
+          "focus:outline focus:outline-2 focus:outline-primary focus:outline-offset-2 focus:rounded-lg",
           className
         )}
         style={{
@@ -92,8 +92,8 @@ export const CategoryItem: FC<CategoryItemProps> = memo(
             "text-[10px] md:text-[11px] whitespace-nowrap tracking-wide select-none",
             "transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
             isActive
-              ? "font-semibold text-[#222222]"
-              : "font-medium text-[#717171]"
+              ? "font-semibold text-foreground"
+              : "font-medium text-muted-foreground"
           )}
         >
           {label}
@@ -102,7 +102,7 @@ export const CategoryItem: FC<CategoryItemProps> = memo(
         {/* Active Indicator - Bottom Border */}
         {isActive && (
           <div
-            className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-full h-0.5 bg-[#FF385C] rounded-t-sm"
+            className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-full h-0.5 bg-primary rounded-t-sm"
             style={{
               transform: "translateX(-50%) translateZ(0)",
               willChange: "transform",

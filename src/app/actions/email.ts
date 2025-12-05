@@ -6,8 +6,8 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
 import { serverActionError, successVoid, type ServerActionResult } from '@/lib/errors';
+import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
 // ============================================================================
 // Types
@@ -103,7 +103,7 @@ export async function updateEmailPreferences(
       return serverActionError(error.message, 'DATABASE_ERROR');
     }
 
-    revalidatePath('/settings');
+    invalidateTag(CACHE_TAGS.PROFILES);
 
     return successVoid();
   } catch (error) {
@@ -134,7 +134,7 @@ export async function resetEmailPreferences(): Promise<ServerActionResult<void>>
       return serverActionError(error.message, 'DATABASE_ERROR');
     }
 
-    revalidatePath('/settings');
+    invalidateTag(CACHE_TAGS.PROFILES);
 
     return successVoid();
   } catch (error) {

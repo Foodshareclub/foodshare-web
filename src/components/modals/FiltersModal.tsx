@@ -61,7 +61,7 @@ export default function FiltersModal() {
             <p className="text-center font-bold">How far from you to show the products?</p>
 
             <div className="relative mb-12">
-              <div className="absolute -top-10 left-0 right-0 text-center text-xs text-gray-800">
+              <div className="absolute -top-10 left-0 right-0 text-center text-xs text-foreground">
                 {sliderValue}km
               </div>
               <Slider

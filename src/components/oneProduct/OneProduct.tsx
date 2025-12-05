@@ -130,20 +130,20 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
           <h1 className="text-2xl font-semibold mb-2">{product.post_name}</h1>
 
           {/* Location */}
-          <div className="flex items-center gap-2 mb-4 text-gray-600">
+          <div className="flex items-center gap-2 mb-4 text-muted-foreground">
             <img src={loc} alt="location" className="w-5 h-5" />
             <p className="text-base">{product.post_stripped_address}</p>
           </div>
 
-          <hr className="my-4 border-gray-200" />
+          <hr className="my-4 border-border" />
 
           {/* Stats Row */}
           <div className="flex justify-between mb-4 flex-wrap gap-3">
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <img src={likes} alt="likes" className="w-5 h-5" />
               <p className="text-sm">{product.post_like_counter || 0} likes</p>
             </div>
-            <div className="flex items-center gap-2 text-gray-600">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <span className="text-sm font-medium">👁</span>
               <p className="text-sm">
                 "{product.post_views} views"
@@ -165,44 +165,44 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
               ))}
           </div>
 
-          <hr className="my-4 border-gray-200" />
+          <hr className="my-4 border-border" />
 
           {/* Details */}
           <div className="flex flex-col gap-3 mb-4">
             {/* Available Hours */}
             <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2 text-gray-700">
+              <div className="flex items-center gap-2 text-foreground/80">
                 <span className="text-lg">🕐</span>
                 <p className="font-medium">
                   "Available"
                 </p>
               </div>
-              <p className="text-gray-600">{product.available_hours}</p>
+              <p className="text-muted-foreground">{product.available_hours}</p>
             </div>
 
             {/* Description/Quantity */}
             {product.post_description && (
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2 text-gray-700">
+                <div className="flex items-center gap-2 text-foreground/80">
                   <span className="text-lg">📦</span>
                   <p className="font-medium">
                     "Details"
                   </p>
                 </div>
-                <p className="text-gray-600 text-right max-w-[60%]">{product.post_description}</p>
+                <p className="text-muted-foreground text-right max-w-[60%]">{product.post_description}</p>
               </div>
             )}
 
             {/* Transportation */}
             {product.transportation && (
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2 text-gray-700">
+                <div className="flex items-center gap-2 text-foreground/80">
                   <img src={bus.src} alt="transport" className="w-4 h-4" />
                   <p className="font-medium">
                     "Transport"
                   </p>
                 </div>
-                <p className="text-gray-600 uppercase text-sm">{product.transportation}</p>
+                <p className="text-muted-foreground uppercase text-sm">{product.transportation}</p>
               </div>
             )}
           </div>

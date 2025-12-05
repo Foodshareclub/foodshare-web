@@ -88,7 +88,7 @@ export const CustomCategoryNav: React.FC<CustomCategoryNavProps> = ({
     <nav
       role="navigation"
       aria-label="Category navigation"
-      className="bg-white border-b border-[#EBEBEB] sticky top-0 z-10 shadow-sm"
+      className="bg-background border-b border-border sticky top-0 z-10 shadow-sm"
     >
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between gap-4">
         {/* Categories */}
@@ -112,14 +112,14 @@ export const CustomCategoryNav: React.FC<CustomCategoryNavProps> = ({
                 tabIndex={isDisabled ? -1 : isActive ? 0 : -1}
                 className={`flex flex-col items-center gap-2 min-w-[60px] cursor-pointer relative pb-2 transition-all duration-200 ease-in-out ${
                   isDisabled ? "opacity-40 cursor-not-allowed" : ""
-                } ${isActive ? "scale-100" : "scale-[0.98]"} hover:scale-100 focus:outline-2 focus:outline-[#FF385C] focus:outline-offset-4 focus:rounded-lg`}
+                } ${isActive ? "scale-100" : "scale-[0.98]"} hover:scale-100 focus:outline-2 focus:outline-primary focus:outline-offset-4 focus:rounded-lg`}
                 onClick={() => handleCategoryClick(category.id, isDisabled)}
                 onKeyDown={(e) => handleKeyDown(e, category.id, isDisabled)}
               >
                 {/* Icon */}
                 <div
                   className={`text-xl md:text-2xl transition-all duration-200 ${
-                    isActive ? "text-[#222222]" : "text-[#717171]"
+                    isActive ? "text-foreground" : "text-muted-foreground"
                   }`}
                   role="img"
                   aria-hidden="true"
@@ -134,7 +134,7 @@ export const CustomCategoryNav: React.FC<CustomCategoryNavProps> = ({
                 {/* Label */}
                 <span
                   className={`text-[10px] md:text-xs whitespace-nowrap transition-all duration-200 select-none ${
-                    isActive ? "font-semibold text-[#222222]" : "font-medium text-[#717171]"
+                    isActive ? "font-semibold text-foreground" : "font-medium text-muted-foreground"
                   }`}
                 >
                   {category.label}
@@ -148,7 +148,7 @@ export const CustomCategoryNav: React.FC<CustomCategoryNavProps> = ({
 
                 {/* Active Indicator */}
                 {isActive && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#222222] rounded-t-sm transition-all duration-200" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-t-sm transition-all duration-200" />
                 )}
               </li>
             );
@@ -161,11 +161,11 @@ export const CustomCategoryNav: React.FC<CustomCategoryNavProps> = ({
             <button
               role="button"
               aria-label="Open search"
-              className="flex items-center gap-2 px-3 md:px-4 py-2 border border-[#DDDDDD] rounded-3xl cursor-pointer transition-all duration-200 bg-white hover:border-[#222222] hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm focus:outline-2 focus:outline-[#FF385C] focus:outline-offset-2"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 border border-border rounded-3xl cursor-pointer transition-all duration-200 bg-background hover:border-foreground hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm focus:outline-2 focus:outline-primary focus:outline-offset-2"
               onClick={onSearch}
             >
-              <SearchIcon style={{ color: "#717171" }} aria-hidden="true" />
-              <span className="hidden sm:block text-xs md:text-sm font-medium text-[#222222]">
+              <SearchIcon className="text-muted-foreground" aria-hidden="true" />
+              <span className="hidden sm:block text-xs md:text-sm font-medium text-foreground">
                 Search
               </span>
             </button>
@@ -175,18 +175,18 @@ export const CustomCategoryNav: React.FC<CustomCategoryNavProps> = ({
             <button
               role="button"
               aria-label="Open filters"
-              className="flex items-center gap-2 px-3 md:px-4 py-2 border border-[#DDDDDD] rounded-3xl cursor-pointer transition-all duration-200 bg-white hover:border-[#222222] hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm focus:outline-2 focus:outline-[#FF385C] focus:outline-offset-2"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 border border-border rounded-3xl cursor-pointer transition-all duration-200 bg-background hover:border-foreground hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm focus:outline-2 focus:outline-primary focus:outline-offset-2"
               onClick={onFilter}
             >
-              <svg width="16" height="16" fill="none" aria-hidden="true">
+              <svg width="16" height="16" fill="none" className="text-muted-foreground" aria-hidden="true">
                 <path
                   d="M2 4h12M4 8h8M6 12h4"
-                  stroke="#717171"
+                  stroke="currentColor"
                   strokeWidth="2"
                   strokeLinecap="round"
                 />
               </svg>
-              <span className="hidden sm:block text-xs md:text-sm font-medium text-[#222222]">
+              <span className="hidden sm:block text-xs md:text-sm font-medium text-foreground">
                 Filter
               </span>
             </button>

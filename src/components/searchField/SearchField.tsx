@@ -39,7 +39,7 @@ export function SearchField() {
         <div className="relative w-full flex items-center">
           <div className="absolute left-3 pointer-events-none">
             <SearchIcon
-              className={`cursor-pointer ${showSearchParams ? "text-red-500" : "text-gray-300"}`}
+              className={`cursor-pointer ${showSearchParams ? "text-primary" : "text-muted-foreground"}`}
               onClick={showSearchParams ? onFindResultsHandler : undefined}
             />
           </div>

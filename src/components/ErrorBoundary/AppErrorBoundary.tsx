@@ -168,8 +168,8 @@ export class AppErrorBoundary extends Component<Props, State> {
 
       // Default error UI
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50 p-4">
-          <div className="max-w-2xl w-full bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-orange-950/20 p-4">
+          <div className="max-w-2xl w-full bg-card rounded-2xl shadow-2xl overflow-hidden border border-border">
             {/* Header */}
             <div className="bg-gradient-to-r from-red-500 to-orange-500 p-6 text-white">
               <div className="flex items-center gap-3">
@@ -186,17 +186,17 @@ export class AppErrorBoundary extends Component<Props, State> {
             {/* Error Details */}
             <div className="p-6 space-y-4">
               {/* Error Message */}
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <h3 className="font-semibold text-red-900 mb-2">Error Message:</h3>
-                <p className="text-red-700 font-mono text-sm break-words">
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <h3 className="font-semibold text-red-900 dark:text-red-300 mb-2">Error Message:</h3>
+                <p className="text-red-700 dark:text-red-400 font-mono text-sm break-words">
                   {error.message || 'Unknown error'}
                 </p>
               </div>
 
               {/* Error Count Warning */}
               {errorCount > 1 && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-yellow-800 text-sm">
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                  <p className="text-yellow-800 dark:text-yellow-300 text-sm">
                     ⚠️ This error has occurred {errorCount} times. Consider clearing your cache.
                   </p>
                 </div>
@@ -204,11 +204,11 @@ export class AppErrorBoundary extends Component<Props, State> {
 
               {/* Stack Trace (Development only) */}
               {process.env.NODE_ENV === 'development' && error.stack && (
-                <details className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <summary className="font-semibold text-gray-900 cursor-pointer hover:text-gray-700">
+                <details className="bg-muted border border-border rounded-lg p-4">
+                  <summary className="font-semibold text-foreground cursor-pointer hover:text-foreground/80">
                     🔍 Stack Trace (Development)
                   </summary>
-                  <pre className="mt-3 text-xs text-gray-700 overflow-x-auto whitespace-pre-wrap break-words">
+                  <pre className="mt-3 text-xs text-foreground/80 overflow-x-auto whitespace-pre-wrap break-words">
                     {error.stack}
                   </pre>
                 </details>
@@ -216,11 +216,11 @@ export class AppErrorBoundary extends Component<Props, State> {
 
               {/* Component Stack (Development only) */}
               {process.env.NODE_ENV === 'development' && errorInfo?.componentStack && (
-                <details className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <summary className="font-semibold text-gray-900 cursor-pointer hover:text-gray-700">
+                <details className="bg-muted border border-border rounded-lg p-4">
+                  <summary className="font-semibold text-foreground cursor-pointer hover:text-foreground/80">
                     🧩 Component Stack (Development)
                   </summary>
-                  <pre className="mt-3 text-xs text-gray-700 overflow-x-auto whitespace-pre-wrap break-words">
+                  <pre className="mt-3 text-xs text-foreground/80 overflow-x-auto whitespace-pre-wrap break-words">
                     {errorInfo.componentStack}
                   </pre>
                 </details>
@@ -237,7 +237,7 @@ export class AppErrorBoundary extends Component<Props, State> {
                 
                 <button
                   onClick={this.reloadApp}
-                  className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-all border border-gray-300"
+                  className="flex-1 bg-muted text-foreground px-6 py-3 rounded-lg font-semibold hover:bg-muted/80 transition-all border border-border"
                 >
                   ↻ Reload Page
                 </button>
@@ -247,23 +247,23 @@ export class AppErrorBoundary extends Component<Props, State> {
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={this.clearCacheAndReload}
-                  className="flex-1 bg-yellow-50 text-yellow-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-yellow-100 transition-all border border-yellow-200"
+                  className="flex-1 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-yellow-100 dark:hover:bg-yellow-900/30 transition-all border border-yellow-200 dark:border-yellow-800"
                 >
                   🧹 Clear Cache & Reload
                 </button>
                 
                 <button
                   onClick={this.copyErrorDetails}
-                  className="flex-1 bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition-all border border-blue-200"
+                  className="flex-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all border border-blue-200 dark:border-blue-800"
                 >
                   📋 Copy Error Details
                 </button>
               </div>
 
               {/* Help Text */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-                <h4 className="font-semibold text-blue-900 mb-2">💡 What can you do?</h4>
-                <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mt-4">
+                <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">💡 What can you do?</h4>
+                <ul className="text-sm text-blue-800 dark:text-blue-400 space-y-1 list-disc list-inside">
                   <li>Try clicking "Try Again" to recover without reloading</li>
                   <li>Reload the page to start fresh</li>
                   <li>Clear your cache if the error persists</li>
@@ -273,7 +273,7 @@ export class AppErrorBoundary extends Component<Props, State> {
 
               {/* Production Note */}
               {process.env.NODE_ENV === 'production' && (
-                <p className="text-xs text-gray-500 text-center pt-4 border-t">
+                <p className="text-xs text-muted-foreground text-center pt-4 border-t border-border">
                   Error ID: {Date.now()} • This error has been automatically logged
                 </p>
               )}

@@ -31,7 +31,7 @@ const ProfileSettings: FC<ProfileSettingsProps> = memo(
 
     return (
       <>
-        <div className="self-center p-0 text-[#303030]">
+        <div className="self-center p-0 text-foreground">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               {signalOfNewMessage.length ? (
@@ -39,7 +39,7 @@ const ProfileSettings: FC<ProfileSettingsProps> = memo(
                   className={cn(
                     "cursor-pointer rounded-full h-[42px] w-[42px] relative",
                     "after:content-[''] after:w-4 after:h-4 after:bg-green-300",
-                    "after:border-2 after:border-white after:rounded-full",
+                    "after:border-2 after:border-background after:rounded-full",
                     "after:absolute after:bottom-0 after:right-0"
                   )}
                 >

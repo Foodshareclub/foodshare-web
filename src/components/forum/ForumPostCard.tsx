@@ -142,7 +142,7 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0 }: F
                     </span>
                   )}
                   {isHot && (
-                    <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-lg">
+                    <span className="bg-[#FF2D55] text-white px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-lg">
                       <FaChartLine className="w-3 h-3" />
                       Hot
                     </span>
@@ -164,8 +164,8 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0 }: F
                   animate={{ opacity: isHovered ? 1 : 0, scale: isHovered ? 1 : 0.8 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <span className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg block">
-                    <FaArrowUp className="w-4 h-4 text-gray-700" />
+                  <span className="bg-background/90 backdrop-blur-sm p-2 rounded-full shadow-lg block">
+                    <FaArrowUp className="w-4 h-4 text-foreground" />
                   </span>
                 </motion.div>
               </div>
@@ -197,13 +197,13 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0 }: F
               </div>
 
               {/* Title */}
-              <h3 className="text-lg font-bold text-gray-800 line-clamp-2 mb-2 group-hover:text-green-600 transition-colors duration-200">
+              <h3 className="text-lg font-bold text-foreground line-clamp-2 mb-2 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors duration-200">
                 {post.forum_post_name}
               </h3>
 
               {/* Description preview */}
               {post.forum_post_description && (
-                <p className="text-sm text-gray-500 line-clamp-2 mb-3 leading-relaxed">
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
                   {post.forum_post_description}
                 </p>
               )}
@@ -219,7 +219,7 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0 }: F
                     />
                   ))}
                   {post.forum_post_tags.length > 3 && (
-                    <span className="text-xs text-gray-400 px-2 py-0.5 bg-gray-50 rounded-full">
+                    <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded-full">
                       +{post.forum_post_tags.length - 3}
                     </span>
                   )}
@@ -227,7 +227,7 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0 }: F
               )}
 
               {/* Author & Meta */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100/80">
+              <div className="flex items-center justify-between pt-4 border-t border-border/50">
                 {/* Author */}
                 <div className="flex items-center gap-2.5">
                   <div className="relative">
@@ -250,10 +250,10 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0 }: F
                     )}
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-gray-700 truncate max-w-[100px]">
+                    <span className="text-sm font-medium text-foreground/80 truncate max-w-[100px]">
                       {post.profiles?.nickname || post.profiles?.first_name || "Anonymous"}
                     </span>
-                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <FaClock className="w-3 h-3" />
                       {formatDate(post.last_activity_at || post.forum_post_created_at)}
                     </span>
@@ -263,14 +263,14 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0 }: F
                 {/* Stats */}
                 <div className="flex items-center gap-3">
                   <motion.span
-                    className="flex items-center gap-1 text-gray-400 text-xs hover:text-red-500 transition-colors cursor-pointer"
+                    className="flex items-center gap-1 text-muted-foreground text-xs hover:text-red-500 transition-colors cursor-pointer"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     <FaHeart className="w-4 h-4" />
                     <span className="font-medium">{post.forum_likes_counter || 0}</span>
                   </motion.span>
-                  <span className="flex items-center gap-1 text-gray-400 text-xs">
+                  <span className="flex items-center gap-1 text-muted-foreground text-xs">
                     <FaCommentDots className="w-4 h-4" />
                     <span className="font-medium">{post.forum_comments_counter || 0}</span>
                   </span>

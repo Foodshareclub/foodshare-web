@@ -57,7 +57,7 @@ const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
             <Popup>
               <div className="flex flex-col gap-1 items-start">
                 <p className="font-semibold text-sm">📍 Your location</p>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-muted-foreground">
                   {position.lat.toFixed(4)}, {position.lng.toFixed(4)}
                 </p>
               </div>
@@ -98,9 +98,9 @@ const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
 
         {/* Error message */}
         {error && hasAsked && (
-          <div className="mt-2 bg-white p-3 rounded-lg shadow-sm max-w-[250px]">
-            <p className="text-xs text-red-600 font-medium">{error}</p>
-            <p className="text-xs text-gray-600 mt-1">
+          <div className="mt-2 bg-popover p-3 rounded-lg shadow-sm max-w-[250px]">
+            <p className="text-xs text-red-600 dark:text-red-400 font-medium">{error}</p>
+            <p className="text-xs text-muted-foreground mt-1">
               Please enable location access in your browser settings
             </p>
           </div>

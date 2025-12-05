@@ -5,6 +5,8 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { defaultMetadata } from "@/lib/metadata";
 import type { Locale } from "@/i18n/config";
+import Footer from "@/components/footer/Footer";
+import { DevTools } from "@/components/dev/DevTools";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
@@ -24,6 +26,8 @@ export default async function RootLayout({
       <body className={inter.className}>
         <Providers initialLocale={locale}>
           {children}
+          <Footer />
+          <DevTools />
         </Providers>
       </body>
     </html>

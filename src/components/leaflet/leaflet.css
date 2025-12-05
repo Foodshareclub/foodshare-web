@@ -291,11 +291,11 @@
   width: 30px;
   height: 30px;
   border-radius: 50% 50% 50% 0;
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  background: linear-gradient(135deg, #FF2D55 0%, #E6284D 100%);
   position: relative;
   transform: rotate(-45deg);
   box-shadow:
-    0 2px 8px rgba(238, 90, 90, 0.4),
+    0 2px 8px rgba(255, 45, 85, 0.4),
     0 4px 16px rgba(0, 0, 0, 0.15);
   border: 3px solid #fff;
 }
@@ -318,7 +318,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: rgba(238, 90, 90, 0.3);
+  background: rgba(255, 45, 85, 0.3);
   animation: pulse-animation 2s ease-out infinite;
   top: 50%;
   left: 50%;
@@ -339,9 +339,9 @@
 
 /* Hover state for markers */
 .marker-pin-container:hover .marker-pin {
-  background: linear-gradient(135deg, #ff8585 0%, #ff6b6b 100%);
+  background: linear-gradient(135deg, #FF4D6D 0%, #FF2D55 100%);
   box-shadow:
-    0 4px 12px rgba(238, 90, 90, 0.5),
+    0 4px 12px rgba(255, 45, 85, 0.5),
     0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
@@ -507,7 +507,7 @@
 .product-popup-button {
   width: 100%;
   padding: 10px 16px;
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  background: linear-gradient(135deg, #FF2D55 0%, #E6284D 100%);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -518,7 +518,7 @@
 }
 
 .product-popup-button:hover {
-  background: linear-gradient(135deg, #ff8585 0%, #ff6b6b 100%);
+  background: linear-gradient(135deg, #FF4D6D 0%, #FF2D55 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(238, 90, 90, 0.4);
+  box-shadow: 0 4px 12px rgba(255, 45, 85, 0.4);
 }

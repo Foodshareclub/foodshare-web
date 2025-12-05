@@ -42,7 +42,7 @@ export const NameBlock: React.FC<NameBlockType> = ({
       className="flex border-b border-solid border-white/20 rounded-xl p-4 mb-3 glass-fade-in"
     >
       <div className="w-full max-w-screen-lg">
-        <h2 className={`text-2xl font-medium pb-2 ${a ? "text-gray-100" : "text-black"}`}>Name</h2>
+        <h2 className="text-2xl font-medium pb-2 text-foreground">Name</h2>
         {edit ? (
           <>
             <div className="flex justify-between gap-4">
@@ -72,7 +72,7 @@ export const NameBlock: React.FC<NameBlockType> = ({
             </Button>
           </>
         ) : (
-          <p className={a ? "text-gray-100" : "text-black"}>
+          <p className="text-foreground">
             {firstName} {secondName}
           </p>
         )}

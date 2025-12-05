@@ -10,9 +10,23 @@ import {
   useQueryClient,
   type UseQueryOptions,
 } from "@tanstack/react-query";
+import type { UseQueryResult } from "@tanstack/react-query";
 import { profileAPI, type ProfileType, type AddressType } from "@/api/profileAPI";
 import { storageAPI } from "@/api/storageAPI";
 import { useImageBlobUrl } from "@/hooks/useImageBlobUrl";
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+/** Cache duration constants (in milliseconds) */
+const CACHE_TIMES = {
+  SHORT: 2 * 60 * 1000,     // 2 minutes - for frequently changing data
+  MEDIUM: 5 * 60 * 1000,    // 5 minutes - default for profile data
+  LONG: 10 * 60 * 1000,     // 10 minutes - for stable lists
+  AVATAR: 30 * 60 * 1000,   // 30 minutes - avatars rarely change
+  AVATAR_GC: 60 * 60 * 1000, // 1 hour - garbage collection for avatar blobs
+} as const;
 
 // ============================================================================
 // Query Keys
@@ -40,7 +54,7 @@ export const profileKeys = {
 export function useProfile(
   userId: string | undefined,
   options?: Omit<UseQueryOptions<ProfileType | null, Error>, "queryKey" | "queryFn">
-) {
+): UseQueryResult<ProfileType | null, Error> {
   return useQuery({
     queryKey: profileKeys.detail(userId ?? ""),
     queryFn: async () => {
@@ -50,7 +64,7 @@ export function useProfile(
       return data;
     },
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: CACHE_TIMES.MEDIUM,
     ...options,
   });
 }
@@ -58,7 +72,7 @@ export function useProfile(
 /**
  * Get another user's profile (for viewing)
  */
-export function useOtherProfile(userId: string | undefined) {
+export function useOtherProfile(userId: string | undefined): UseQueryResult<ProfileType | null, Error> {
   return useQuery({
     queryKey: [...profileKeys.detail(userId ?? ""), "other"],
     queryFn: async () => {
@@ -68,14 +82,14 @@ export function useOtherProfile(userId: string | undefined) {
       return data;
     },
     enabled: !!userId,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: CACHE_TIMES.SHORT,
   });
 }
 
 /**
  * Get volunteers list
  */
-export function useVolunteers() {
+export function useVolunteers(): UseQueryResult<ProfileType[], Error> {
   return useQuery({
     queryKey: profileKeys.volunteers(),
     queryFn: async () => {
@@ -83,14 +97,14 @@ export function useVolunteers() {
       if (error) throw error;
       return data ?? [];
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: CACHE_TIMES.LONG,
   });
 }
 
 /**
  * Get user address
  */
-export function useAddress(userId: string | undefined) {
+export function useAddress(userId: string | undefined): UseQueryResult<AddressType | null, Error> {
   return useQuery({
     queryKey: profileKeys.address(userId ?? ""),
     queryFn: async () => {
@@ -100,16 +114,54 @@ export function useAddress(userId: string | undefined) {
       return data?.[0] ?? null;
     },
     enabled: !!userId,
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE_TIMES.MEDIUM,
   });
+}
+
+/**
+ * Check if a string is a full URL (http/https)
+ */
+function isFullUrl(url: string): boolean {
+  return url.startsWith("http://") || url.startsWith("https://");
+}
+
+/** Avatar query result type */
+interface AvatarQueryResult {
+  /** The resolved avatar URL (either direct URL or blob URL) */
+  data: string | null | undefined;
+  /** Whether the avatar is currently loading */
+  isLoading: boolean;
+  /** Any error that occurred during fetching */
+  error: Error | null;
+  /** Whether the avatar is a public URL (no blob conversion needed) */
+  isPublicUrl: boolean;
 }
 
 /**
  * Get avatar URL with proper blob URL cleanup
  * Uses useImageBlobUrl to prevent memory leaks
+ * 
+ * Handles two cases:
+ * 1. Full URLs (http/https) - returns directly without downloading
+ * 2. Storage paths - downloads from avatars bucket and creates blob URL
+ * 
+ * @param avatarPath - Either a full URL or a storage path in the avatars bucket
+ * @returns Avatar query result with resolved URL
  */
-export function useAvatar(avatarPath: string | undefined) {
-  return useImageBlobUrl({
+export function useAvatar(avatarPath: string | undefined): AvatarQueryResult {
+  // Determine if the path is already a full URL
+  const isPublicUrl = avatarPath ? isFullUrl(avatarPath) : false;
+
+  // For full URLs, use a simple query that returns the URL directly
+  const directUrlQuery = useQuery({
+    queryKey: [...profileKeys.avatar(avatarPath ?? ""), "direct"],
+    queryFn: () => avatarPath ?? null,
+    enabled: !!avatarPath && isPublicUrl,
+    staleTime: Infinity, // Public URLs don't change
+  });
+
+  // For storage paths, download and create blob URL
+  const blobUrlQuery = useImageBlobUrl({
     queryKey: profileKeys.avatar(avatarPath ?? ""),
     fetchFn: async () => {
       if (!avatarPath) return null;
@@ -117,10 +169,27 @@ export function useAvatar(avatarPath: string | undefined) {
       if (error) throw error;
       return data ?? null;
     },
-    enabled: !!avatarPath,
-    staleTime: 30 * 60 * 1000, // 30 minutes
-    gcTime: 60 * 60 * 1000, // 1 hour
+    enabled: !!avatarPath && !isPublicUrl,
+    staleTime: CACHE_TIMES.AVATAR,
+    gcTime: CACHE_TIMES.AVATAR_GC,
   });
+
+  // Return the appropriate result based on URL type
+  if (isPublicUrl) {
+    return {
+      data: directUrlQuery.data,
+      isLoading: directUrlQuery.isLoading,
+      error: directUrlQuery.error,
+      isPublicUrl: true,
+    };
+  }
+
+  return {
+    data: blobUrlQuery.data,
+    isLoading: blobUrlQuery.isLoading,
+    error: blobUrlQuery.error,
+    isPublicUrl: false,
+  };
 }
 
 // ============================================================================
@@ -207,12 +276,47 @@ export function useUploadAvatar() {
 // Convenience Hook
 // ============================================================================
 
+/** Return type for useCurrentProfile hook */
+export interface CurrentProfileResult {
+  // Data
+  profile: ProfileType | null | undefined;
+  address: AddressType | null | undefined;
+  avatarUrl: string | null | undefined;
+
+  // Loading states
+  isLoading: boolean;
+  isProfileLoading: boolean;
+  isAddressLoading: boolean;
+  isAvatarLoading: boolean;
+
+  // Errors
+  error: Error | null;
+
+  // Mutations
+  updateProfile: (updates: Partial<ProfileType>) => Promise<Partial<ProfileType>>;
+  updateAddress: (address: AddressType) => Promise<AddressType>;
+  uploadAvatar: (params: { userId: string; file: File }) => Promise<string>;
+
+  // Mutation states
+  isUpdating: boolean;
+  isUploadingAvatar: boolean;
+
+  // Actions
+  refetch: () => void;
+}
+
 /**
  * Combined profile hook for current user
+ * Aggregates profile, address, and avatar data with mutations
+ * 
+ * @param userId - The user ID to fetch profile for
+ * @returns Combined profile data and mutation functions
  */
-export function useCurrentProfile(userId: string | undefined) {
+export function useCurrentProfile(userId: string | undefined): CurrentProfileResult {
   const profile = useProfile(userId);
   const address = useAddress(userId);
+  
+  // useAvatar handles both public URLs and storage paths internally
   const avatar = useAvatar(profile.data?.avatar_url);
 
   const updateProfile = useUpdateProfile();
@@ -232,7 +336,7 @@ export function useCurrentProfile(userId: string | undefined) {
     isAvatarLoading: avatar.isLoading,
 
     // Errors
-    error: profile.error || address.error,
+    error: profile.error || address.error || avatar.error,
 
     // Mutations
     updateProfile: updateProfile.mutateAsync,

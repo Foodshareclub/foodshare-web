@@ -65,14 +65,16 @@ export function getCoordinates(
 export const productAPI = {
   /**
    * Get all products from the database
+   * Uses posts_with_location view for proper GeoJSON coordinates
    * @returns Promise with all products
    */
   getAllProducts(): PromiseLike<PostgrestResponse<InitialProductStateType>> {
-    return supabase.from("posts").select("*");
+    return supabase.from("posts_with_location").select("*");
   },
 
   /**
    * Get products filtered by type
+   * Uses posts_with_location view for proper GeoJSON coordinates
    * @param productType - The type of product to filter by
    * @returns Promise with filtered products
    */
@@ -80,7 +82,7 @@ export const productAPI = {
     productType: string
   ): PromiseLike<PostgrestSingleResponse<Array<InitialProductStateType>>> {
     return supabase
-      .from("posts")
+      .from("posts_with_location")
       .select(`*`)
       .order("created_at", { ascending: false })
       .eq("post_type", productType.toLowerCase())
@@ -102,11 +104,12 @@ export const productAPI = {
 
   /**
    * Get products created by a specific user
+   * Uses posts_with_location view for proper GeoJSON coordinates
    * @param currentUserID - The user's profile ID
    * @returns Promise with user's products
    */
   getCurrentUserProduct(currentUserID: string): PromiseLike<PostgrestResponse<InitialProductStateType>> {
-    return supabase.from("posts").select("*").eq("profile_id", currentUserID);
+    return supabase.from("posts_with_location").select("*").eq("profile_id", currentUserID);
   },
 
   /**
@@ -147,13 +150,14 @@ export const productAPI = {
 
   /**
    * Search products by name with optional type filter
+   * Uses posts_with_location view for proper GeoJSON coordinates
    * @param searchWord - The search term
    * @param productSearchType - Optional product type filter
    * @returns Promise with search results
    */
   searchProducts(searchWord: string, productSearchType: string): PromiseLike<PostgrestResponse<InitialProductStateType>> {
     let query = supabase
-      .from("posts")
+      .from("posts_with_location")
       .select("*, reviews(*)")
       .eq("is_active", true)
       .order("created_at", { ascending: false });

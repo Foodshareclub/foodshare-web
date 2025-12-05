@@ -27,11 +27,11 @@ export default async function Page({ params }) {
 
 ```typescript
 'use server';
-import { revalidateTag } from 'next/cache';
+import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
 export async function createItem(formData: FormData) {
   await supabase.from('items').insert({ name: formData.get('name') });
-  revalidateTag('items');
+  invalidateTag(CACHE_TAGS.PRODUCTS); // Use centralized cache helper
 }
 ```
 
@@ -77,3 +77,4 @@ const supabase = createClient(); // from @/lib/supabase/client
 - [ ] Images use Next.js Image component
 - [ ] No console.log in production
 - [ ] TypeScript types explicit
+- [ ] Use `invalidateTag` from `@/lib/data/cache-keys` for cache invalidation

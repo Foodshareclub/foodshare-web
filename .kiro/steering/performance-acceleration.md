@@ -47,21 +47,30 @@ const Map = dynamic(() => import('@/components/leaflet/Map'), { ssr: false });
 
 ## Caching
 
+Use centralized cache keys from `@/lib/data/cache-keys`:
+
 ```typescript
 import { unstable_cache } from 'next/cache';
+import { CACHE_TAGS, CACHE_DURATIONS } from '@/lib/data/cache-keys';
 
 export const getData = unstable_cache(
   async () => { /* fetch */ },
-  ['key'],
-  { revalidate: 60, tags: ['data'] }
+  [CACHE_TAGS.PRODUCTS],
+  { revalidate: CACHE_DURATIONS.PRODUCTS, tags: [CACHE_TAGS.PRODUCTS] }
 );
 ```
 
 ## Revalidation
 
 ```typescript
-revalidateTag('products');
+import { revalidatePath } from 'next/cache';
+import { CACHE_TAGS, invalidateTag, getProductTags } from '@/lib/data/cache-keys';
+
+invalidateTag(CACHE_TAGS.PRODUCTS);
 revalidatePath('/products');
+
+// Bulk invalidation
+getProductTags(productId, type).forEach(tag => invalidateTag(tag));
 ```
 
 ## Checklist

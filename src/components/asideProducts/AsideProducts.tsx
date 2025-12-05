@@ -63,7 +63,7 @@ const AsideProducts: React.FC<AsideProdType> = ({
 
       <div className="flex-1 self-center p-4" onClick={goToProduct}>
         <h2 className="text-2xl font-medium text-center line-clamp-1 font-body">{name}</h2>
-        <p className="text-center line-clamp-1 text-gray-600 text-sm uppercase">{about}</p>
+        <p className="text-center line-clamp-1 text-muted-foreground text-sm uppercase">{about}</p>
       </div>
 
       {pathname === "/user-listings" && (
@@ -71,7 +71,7 @@ const AsideProducts: React.FC<AsideProdType> = ({
           <PublishListingModal isOpen={isOpen} onClose={() => setIsOpen(false)} product={product} />
           <button
             onClick={deleteHandler}
-            className="ml-4 p-2 rounded-lg border border-gray-300 bg-white/20 backdrop-blur-md hover:bg-white/30 hover:scale-105 transition-all duration-200"
+            className="ml-4 p-2 rounded-lg border border-border bg-background/20 backdrop-blur-md hover:bg-background/30 hover:scale-105 transition-all duration-200"
             aria-label="delete"
           >
             <DeleteIcon />

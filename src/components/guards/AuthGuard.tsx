@@ -135,7 +135,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4">
         <AiOutlineLoading3Quarters className="w-12 h-12 animate-spin text-primary" />
-        {showLoadingMessage && <p className="text-gray-600 text-sm">Loading...</p>}
+        {showLoadingMessage && <p className="text-muted-foreground text-sm">Loading...</p>}
       </div>
     );
   };
@@ -158,11 +158,11 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   // Show access denied if admin required but user is not admin
   if (requireAdmin && !isAdmin) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-screen bg-background">
         <div className="flex flex-col items-center gap-4 p-8 text-center">
           <div className="text-6xl mb-4">🔒</div>
-          <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-          <p className="text-gray-600 mb-6">
+          <h1 className="text-2xl font-bold mb-2 text-foreground">Access Denied</h1>
+          <p className="text-muted-foreground mb-6">
             You don&apos;t have permission to access this page.
           </p>
           <Button onClick={() => window.history.back()}>Go Back</Button>

@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
 export interface DashboardStats {
   totalUsers: number;
@@ -202,8 +202,9 @@ export async function approveListing(id: number): Promise<{ success: boolean; er
     details: { listing_id: id },
   });
 
-  revalidatePath('/admin');
-  revalidatePath('/food');
+  invalidateTag(CACHE_TAGS.ADMIN);
+  invalidateTag(CACHE_TAGS.PRODUCTS);
+  invalidateTag(CACHE_TAGS.PRODUCT(id));
 
   return { success: true };
 }
@@ -238,7 +239,8 @@ export async function rejectListing(
     details: { listing_id: id, reason },
   });
 
-  revalidatePath('/admin');
+  invalidateTag(CACHE_TAGS.ADMIN);
+  invalidateTag(CACHE_TAGS.ADMIN_LISTINGS);
 
   return { success: true };
 }
@@ -334,7 +336,8 @@ export async function updateUserRole(
     details: { target_user_id: userId, new_role: role },
   });
 
-  revalidatePath('/admin');
+  invalidateTag(CACHE_TAGS.ADMIN);
+  invalidateTag(CACHE_TAGS.PROFILES);
 
   return { success: true };
 }
@@ -380,7 +383,9 @@ export async function banUser(
     details: { target_user_id: userId, reason },
   });
 
-  revalidatePath('/admin');
+  invalidateTag(CACHE_TAGS.ADMIN);
+  invalidateTag(CACHE_TAGS.PROFILES);
+  invalidateTag(CACHE_TAGS.PRODUCTS);
 
   return { success: true };
 }

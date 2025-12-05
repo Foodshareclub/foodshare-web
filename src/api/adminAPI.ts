@@ -101,6 +101,7 @@ export const getUserRoles = async (): Promise<{
 
 /**
  * Get all listings (admin view) with optional filters
+ * Uses posts_with_location view for proper PostGIS coordinate parsing
  */
 export const getAllListings = (filters?: {
   status?: PostStatus | "all";
@@ -111,7 +112,7 @@ export const getAllListings = (filters?: {
   limit?: number;
   offset?: number;
 }) => {
-  let query = supabase.from("posts").select("*, reviews(*)", { count: "exact" });
+  let query = supabase.from("posts_with_location").select("*, reviews(*)", { count: "exact" });
 
   // Apply status filter
   if (filters?.status && filters.status !== "all") {
@@ -145,9 +146,10 @@ export const getAllListings = (filters?: {
 
 /**
  * Get a single listing by ID (admin view with all fields)
+ * Uses posts_with_location view for proper PostGIS coordinate parsing
  */
 export const getListingById = (postId: number) => {
-  return supabase.from("posts").select("*, reviews(*)").eq("id", postId).single();
+  return supabase.from("posts_with_location").select("*, reviews(*)").eq("id", postId).single();
 };
 
 /**
@@ -164,10 +166,11 @@ export const getPendingListingsCount = async (): Promise<{ count: number; error:
 
 /**
  * Get flagged listings
+ * Uses posts_with_location view for proper PostGIS coordinate parsing
  */
 export const getFlaggedListings = () => {
   return supabase
-    .from("posts")
+    .from("posts_with_location")
     .select("*,reviews(*)")
     .eq("status", "flagged")
     .order("flagged_at", { ascending: false });

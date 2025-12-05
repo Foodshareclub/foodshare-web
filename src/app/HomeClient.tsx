@@ -42,7 +42,7 @@ export function HomeClient({ initialProducts, user, productType = 'food' }: Home
   }, []);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-background">
       <Navbar
         userId={userId}
         isAuth={isAuth}

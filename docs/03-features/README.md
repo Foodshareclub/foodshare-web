@@ -94,6 +94,24 @@ Admin CRM and management tools.
 - Analytics
 - Bulk operations
 
+### Dev Tools
+
+Development-only debugging utilities (hidden in production).
+
+- **DevTools** (`src/components/dev/DevTools.tsx`) - Main dev tools wrapper (recommended)
+  - Initializes logger with console banner and environment info
+  - Enables performance profiler
+  - Includes LogViewer component
+  - Props: `showLogViewer`, `position`, `version`
+
+- **LogViewer** (`src/components/dev/LogViewer.tsx`) - Visual log viewer panel
+  - Displays error history from `@/lib/logger`
+  - Filter by log level (error, warn, info, debug, success)
+  - Search logs by message or component
+  - Export logs to JSON, copy individual entries
+  - Expandable entries with context and stack traces
+  - Configurable position, pin/minimize support
+
 ## 🎯 Feature Status
 
 | Feature      | Status      | Documentation                                          |

@@ -6,7 +6,7 @@ inclusion: always
 
 ## Colors
 
-Brand: Primary `#FF385C`, Hover `#E31C5F`, Teal `#00A699`, Orange `#FC642D`
+Brand: Primary `#FF2D55`, Hover `#E6284D`, Teal `#00A699`, Orange `#FC642D`
 
 ## Typography
 

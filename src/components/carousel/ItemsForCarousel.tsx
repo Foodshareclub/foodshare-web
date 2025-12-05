@@ -34,8 +34,8 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
           ? "min-w-[80px] md:min-w-[96px] px-2.5 md:px-3 py-1.5 md:py-2"
           : "min-w-[80px] md:min-w-[96px] px-3 md:px-4 py-2 md:py-3"
       } ${
-        isActive ? "hover:bg-[rgba(255,45,85,0.08)]" : "hover:bg-[rgba(0,0,0,0.04)]"
-      } hover:-translate-y-px active:translate-y-0 active:bg-[rgba(0,0,0,0.08)]`}
+        isActive ? "hover:bg-primary/10" : "hover:bg-muted"
+      } hover:-translate-y-px active:translate-y-0 active:bg-muted`}
       onClick={() => navigateHandler(item.nameForUrl)}
     >
       <div className="text-center relative group">
@@ -56,7 +56,7 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
         <p
           className={`line-clamp-1 mb-0 pb-0 text-center transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isCompact ? "mt-1 md:mt-1.5" : "mt-1.5 md:mt-2"
-          } ${isActive ? "text-[#FF2D55] font-semibold tracking-tight" : "text-gray-700 font-medium"} text-xs sm:text-sm`}
+          } ${isActive ? "text-primary font-semibold tracking-tight" : "text-muted-foreground font-medium"} text-xs sm:text-sm`}
         >
           {item.name}
         </p>
@@ -64,7 +64,7 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
         {/* Airbnb-style Active Underline */}
         {isActive && (
           <div
-            className={`absolute left-1/2 -translate-x-1/2 w-[80%] h-[3px] bg-[#FF2D55] rounded-sm transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            className={`absolute left-1/2 -translate-x-1/2 w-[80%] h-[3px] bg-primary rounded-sm transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
               isCompact ? "-bottom-[8px]" : "-bottom-[10px]"
             }`}
           />

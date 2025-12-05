@@ -68,7 +68,7 @@ export default async function ProductsPage() {
   - Automatic serialization
   - Works with forms (`<form action={...}>`)
   - Works with `useTransition` for programmatic calls
-  - Cache invalidation via `revalidatePath()` / `revalidateTag()`
+  - Cache invalidation via `revalidatePath()` / `invalidateTag()`
 
 ```typescript
 // src/app/actions/products.ts
@@ -76,6 +76,7 @@ export default async function ProductsPage() {
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
@@ -87,6 +88,7 @@ export async function createProduct(formData: FormData) {
 
   if (error) throw new Error(error.message);
 
+  invalidateTag(CACHE_TAGS.PRODUCTS);
   revalidatePath('/products');
 }
 ```
@@ -94,7 +96,7 @@ export async function createProduct(formData: FormData) {
 ### **Caching & Revalidation**
 
 - **`revalidatePath(path)`**: Invalidate cache for a specific route
-- **`revalidateTag(tag)`**: Invalidate cache for tagged fetches
+- **`invalidateTag(tag)`**: Invalidate cache for tagged fetches (use from `@/lib/data/cache-keys`)
 - **`unstable_cache()`**: Cache function results with tags
 - **Route Segment Config**: `export const revalidate = 3600` for time-based revalidation
 

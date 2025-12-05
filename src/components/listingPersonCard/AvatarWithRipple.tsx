@@ -28,7 +28,7 @@ const AvatarWithRipple: React.FC<PropsType> = ({ img }) => {
           {img ? (
             <img src={img} alt="User avatar" className="w-full h-full rounded-full object-cover" loading="lazy" decoding="async" />
           ) : (
-            <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center text-4xl">
+            <div className="w-full h-full rounded-full bg-muted flex items-center justify-center text-4xl">
               👤
             </div>
           )}

@@ -156,14 +156,14 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
   // Render backup code input
   if (showBackupCodeInput) {
     return (
-      <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <div className="max-w-md mx-auto p-6 bg-card rounded-lg shadow-lg">
         <div className="space-y-6">
           <div className="text-center">
-            <FaShieldAlt className="w-16 h-16 mx-auto mb-4 text-green-600" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <FaShieldAlt className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
+            <h2 className="text-2xl font-bold text-foreground mb-2">
               "Enter Backup Code"
             </h2>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               "Use one of your backup codes to verify your identity"
             </p>
           </div>
@@ -176,7 +176,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-foreground/80 mb-2">
               "Backup Code"
             </label>
             <input
@@ -184,21 +184,21 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
               value={backupCode}
               onChange={(e) => setBackupCode(e.target.value.trim())}
               placeholder="XXXXXXXXXXXX"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-center font-mono"
+              className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent text-center font-mono"
             />
           </div>
 
           <div className="flex gap-3">
             <button
               onClick={() => setShowBackupCodeInput(false)}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-3 border border-border rounded-lg hover:bg-muted transition-colors"
             >
               "Back"
             </button>
             <button
               onClick={handleBackupCodeVerify}
               disabled={isLoading || !backupCode}
-              className="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -217,14 +217,14 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
 
   // Render normal verification
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-lg">
+    <div className="max-w-md mx-auto p-6 bg-card rounded-lg shadow-lg">
       <div className="space-y-6">
         <div className="text-center">
-          <FaShieldAlt className="w-16 h-16 mx-auto mb-4 text-green-600" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          <FaShieldAlt className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
+          <h2 className="text-2xl font-bold text-foreground mb-2">
             "Two-Factor Authentication"
           </h2>
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             
               Enter the verification code sent to your {method === "email" ? "email" : "phone"}
             
@@ -246,7 +246,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground/80 mb-2">
             "Verification Code"
           </label>
           <input
@@ -254,11 +254,11 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
             value={verificationCode}
             onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
             placeholder="000000"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-center text-2xl tracking-widest font-mono"
+            className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent text-center text-2xl tracking-widest font-mono"
             maxLength={6}
             autoFocus
           />
-          <p className="mt-1 text-xs text-gray-500 text-center">
+          <p className="mt-1 text-xs text-muted-foreground text-center">
             "Code expires in 5 minutes"
           </p>
         </div>
@@ -266,7 +266,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
         <button
           onClick={handleVerify}
           disabled={isLoading || verificationCode.length !== 6}
-          className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isLoading ? (
             <>
@@ -282,7 +282,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
           <button
             onClick={handleResend}
             disabled={!canResend || isLoading}
-            className="text-green-600 hover:text-green-700 disabled:text-gray-400 disabled:cursor-not-allowed flex items-center gap-1"
+            className="text-primary hover:text-primary/80 disabled:text-muted-foreground disabled:cursor-not-allowed flex items-center gap-1"
           >
             <FaSyncAlt className="w-4 h-4" />
             {canResend ? "Resend Code" : "Resend in {resendCountdown}s"}
@@ -290,17 +290,17 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
 
           <button
             onClick={() => setShowBackupCodeInput(true)}
-            className="text-gray-600 hover:text-gray-800 underline"
+            className="text-muted-foreground hover:text-foreground underline"
           >
             "Use Backup Code"
           </button>
         </div>
 
         {onCancel && (
-          <div className="text-center pt-4 border-t border-gray-200">
+          <div className="text-center pt-4 border-t border-border">
             <button
               onClick={onCancel}
-              className="text-gray-600 hover:text-gray-800 underline text-sm"
+              className="text-muted-foreground hover:text-foreground underline text-sm"
             >
               "Cancel and Logout"
             </button>

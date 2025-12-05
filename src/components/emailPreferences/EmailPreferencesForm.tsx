@@ -114,8 +114,8 @@ export const EmailPreferencesForm: React.FC = () => {
     return (
       <GlassCard variant="standard" padding="lg" className="max-w-3xl mx-auto">
         <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading preferences...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading preferences...</p>
         </div>
       </GlassCard>
     );
@@ -126,7 +126,7 @@ export const EmailPreferencesForm: React.FC = () => {
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold mb-2">Email Notifications</h2>
-          <p className="text-gray-600">Manage how you receive email notifications from FoodShare</p>
+          <p className="text-muted-foreground">Manage how you receive email notifications from FoodShare</p>
         </div>
 
         {message && (
@@ -150,11 +150,11 @@ export const EmailPreferencesForm: React.FC = () => {
               onChange={(e) =>
                 setPreferences({ ...preferences, chat_notifications: e.target.checked })
               }
-              className="mt-1 h-5 w-5 text-green-600 rounded focus:ring-green-500"
+              className="mt-1 h-5 w-5 text-primary rounded focus:ring-primary"
             />
             <div>
               <p className="font-medium">Chat Messages</p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Get notified when you receive new chat messages
               </p>
             </div>
@@ -167,11 +167,11 @@ export const EmailPreferencesForm: React.FC = () => {
               onChange={(e) =>
                 setPreferences({ ...preferences, food_listings_notifications: e.target.checked })
               }
-              className="mt-1 h-5 w-5 text-green-600 rounded focus:ring-green-500"
+              className="mt-1 h-5 w-5 text-primary rounded focus:ring-primary"
             />
             <div>
               <p className="font-medium">Food Listings Nearby</p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Get notified when new food is listed near your location
               </p>
             </div>
@@ -184,11 +184,11 @@ export const EmailPreferencesForm: React.FC = () => {
               onChange={(e) =>
                 setPreferences({ ...preferences, review_reminders: e.target.checked })
               }
-              className="mt-1 h-5 w-5 text-green-600 rounded focus:ring-green-500"
+              className="mt-1 h-5 w-5 text-primary rounded focus:ring-primary"
             />
             <div>
               <p className="font-medium">Review Reminders</p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Get reminded to leave reviews after completing food shares
               </p>
             </div>
@@ -209,11 +209,11 @@ export const EmailPreferencesForm: React.FC = () => {
                 onChange={(e) =>
                   setPreferences({ ...preferences, notification_frequency: "instant" })
                 }
-                className="h-4 w-4 text-green-600 focus:ring-green-500"
+                className="h-4 w-4 text-primary focus:ring-primary"
               />
               <div>
                 <p className="font-medium">Instant</p>
-                <p className="text-sm text-gray-600">Receive emails as events happen</p>
+                <p className="text-sm text-muted-foreground">Receive emails as events happen</p>
               </div>
             </label>
 
@@ -226,11 +226,11 @@ export const EmailPreferencesForm: React.FC = () => {
                 onChange={(e) =>
                   setPreferences({ ...preferences, notification_frequency: "daily_digest" })
                 }
-                className="h-4 w-4 text-green-600 focus:ring-green-500"
+                className="h-4 w-4 text-primary focus:ring-primary"
               />
               <div>
                 <p className="font-medium">Daily Digest</p>
-                <p className="text-sm text-gray-600">Receive one email per day with all updates</p>
+                <p className="text-sm text-muted-foreground">Receive one email per day with all updates</p>
               </div>
             </label>
 
@@ -243,11 +243,11 @@ export const EmailPreferencesForm: React.FC = () => {
                 onChange={(e) =>
                   setPreferences({ ...preferences, notification_frequency: "weekly_digest" })
                 }
-                className="h-4 w-4 text-green-600 focus:ring-green-500"
+                className="h-4 w-4 text-primary focus:ring-primary"
               />
               <div>
                 <p className="font-medium">Weekly Digest</p>
-                <p className="text-sm text-gray-600">Receive one email per week with all updates</p>
+                <p className="text-sm text-muted-foreground">Receive one email per week with all updates</p>
               </div>
             </label>
           </div>
@@ -256,7 +256,7 @@ export const EmailPreferencesForm: React.FC = () => {
         {/* Quiet Hours */}
         <div className="space-y-3">
           <h3 className="text-lg font-semibold">Quiet Hours</h3>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Don't send me notifications during these hours (applies to instant notifications only)
           </p>
 
@@ -269,7 +269,7 @@ export const EmailPreferencesForm: React.FC = () => {
                 onChange={(e) =>
                   setPreferences({ ...preferences, quiet_hours_start: e.target.value || null })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
 
@@ -281,7 +281,7 @@ export const EmailPreferencesForm: React.FC = () => {
                 onChange={(e) =>
                   setPreferences({ ...preferences, quiet_hours_end: e.target.value || null })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
           </div>

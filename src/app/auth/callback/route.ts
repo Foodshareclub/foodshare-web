@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
 /**
  * Auth Callback Route Handler
@@ -25,6 +26,7 @@ export async function GET(request: Request) {
     if (!error) {
       // Revalidate the entire app to reflect the new auth state
       revalidatePath('/', 'layout');
+      invalidateTag(CACHE_TAGS.AUTH);
 
       // Handle password recovery redirect
       if (type === 'recovery') {

@@ -56,8 +56,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (requireAdmin && !isAdmin) {
     return (
       <div className="p-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
-        <p className="text-gray-600">
+        <h1 className="text-2xl font-bold mb-4 text-foreground">Access Denied</h1>
+        <p className="text-muted-foreground">
           You don&apos;t have permission to access this page.
         </p>
       </div>
