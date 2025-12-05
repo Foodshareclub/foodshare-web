@@ -56,7 +56,7 @@ export const checkIsAdmin = async (): Promise<{ isAdmin: boolean; error: Error |
     return { isAdmin: !!data, error: null };
   } catch (error) {
     logger.error("Exception checking admin status", error as Error);
-    return { isAdmin: false, error };
+    return { isAdmin: false, error: error instanceof Error ? error : new Error(String(error)) };
   }
 };
 
