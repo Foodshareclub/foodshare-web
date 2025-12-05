@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useCallback, useMemo } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAdvancedScroll } from "@/hooks";
@@ -13,157 +13,80 @@ import { CategoryNavigation } from "./organisms";
 import { PATH } from "@/utils";
 import type { NavbarProps } from "./types";
 
-// 120fps optimization: Pre-calculate GPU-accelerated styles
-const GPU_LAYER_STYLE = {
-  transform: "translateZ(0)",
-  backfaceVisibility: "hidden" as const,
-  perspective: 1000,
-  willChange: "transform, opacity",
-};
-
-const NAVBAR_TRANSITION = "transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)";
+// Category definitions (module-level constant)
+const CATEGORIES = [
+  { id: "food", label: "Food", icon: "🍎" },
+  { id: "thing", label: "Things", icon: "🎁" },
+  { id: "borrow", label: "Borrow", icon: "🔧" },
+  { id: "wanted", label: "Wanted", icon: "📦" },
+  { id: "foodbank", label: "FoodBanks", icon: "🏠" },
+  { id: "fridge", label: "Fridges", icon: "❄️" },
+  { id: "business", label: "Business", icon: "🏛️" },
+  { id: "volunteer", label: "Volunteer", icon: "🙌🏻" },
+  { id: "challenge", label: "Challenges", icon: "🏆" },
+  { id: "zerowaste", label: "Zero Waste", icon: "♻️" },
+  { id: "vegan", label: "Vegan", icon: "🌱" },
+  { id: "community", label: "Forum", icon: "💬" },
+] as const;
 
 /**
  * Navbar Component - Airbnb Pattern Implementation
- *
- * DESIGN PHILOSOPHY (Based on Airbnb Research):
- * ================================================
- * 1. SEARCH-FIRST: Search is the hero element, not navigation
- * 2. VISUAL HIERARCHY: Logo → Search → Actions (top), Categories (below)
- * 3. PROGRESSIVE DISCLOSURE: Start simple, reveal complexity on demand
- * 4. STICKY CATEGORIES: Always accessible for quick filtering
- * 5. SMART SCROLL: Hide top bar on scroll down, show on scroll up
- *
- * LAYOUT STRUCTURE:
- * ================
- * Top Bar (hides on scroll)
- * [Logo]           [Search Bar]           [Actions]
- * Category Bar (sticky)
- * [Food] [Things] [Borrow] ... [Filters]
- *
- * Features:
- * - Search-first design with prominent search bar
- * - Sticky category navigation (always visible)
- * - Smart scroll behavior (hide top bar, keep categories)
- * - Responsive design (mobile-first)
- * - GPU-accelerated animations
- * - Accessibility compliant (WCAG AA)
+ * Note: React Compiler handles memoization automatically
  */
-const Navbar: React.FC<NavbarProps> = memo(
-  ({
-    userId,
-    isAuth,
-    isAdmin = false,
-    productType,
-    onRouteChange,
-    onProductTypeChange,
-    imgUrl = "",
-    firstName = "",
-    secondName = "",
-    email = "",
-    signalOfNewMessage = [],
-    mapMode = false,
-  }) => {
-    // Get logout function from useAuth hook
-    const { logout } = useAuth();
-    // Advanced scroll behavior
-    // - At Top: Full expanded search bar
-    // - Scrolling Down: Search bar becomes compact
-    // - Navbar always visible (never hides)
-    const { isCompact, scrollY, isAtTop } = useAdvancedScroll({
-      compactThreshold: 100, // Compact mode after 100px scroll
-      hideThreshold: 150, // Not used (navbar never hides)
-      showOnScrollUp: false, // Not needed
-      hideOnScrollDown: false, // Navbar always visible
-    });
+function Navbar({
+  userId,
+  isAuth,
+  isAdmin = false,
+  productType,
+  onRouteChange,
+  onProductTypeChange,
+  imgUrl = "",
+  firstName = "",
+  secondName = "",
+  email = "",
+  signalOfNewMessage = [],
+  mapMode = false,
+}: NavbarProps) {
+  const { logout } = useAuth();
+  const { isCompact, scrollY } = useAdvancedScroll({
+    compactThreshold: 100,
+    hideThreshold: 150,
+    showOnScrollUp: false,
+    hideOnScrollDown: false,
+  });
 
-    const router = useRouter();
+  const router = useRouter();
+  const activeCategory = productType.toLowerCase() || "food";
 
-    // Navigation handlers
-    const handleLogoClick = useCallback(() => {
-      onProductTypeChange("food");
-      router.push(PATH.mainFood);
-    }, [router, onProductTypeChange]);
+  // Navigation handlers - React Compiler optimizes these
+  const handleLogoClick = () => {
+    onProductTypeChange("food");
+    router.push(PATH.mainFood);
+  };
 
-    const handleCategoryChange = useCallback(
-      (categoryId: string) => {
-        const routeName = categoryId.toLowerCase();
-        // Update state
-        onRouteChange(routeName);
-        onProductTypeChange(categoryId);
-        // Navigate to category route - use /map/ prefix in map mode
-        const path = mapMode ? `/map/${routeName}` : `/${routeName}`;
-        router.push(path);
-      },
-      [router, onRouteChange, onProductTypeChange, mapMode]
-    );
+  const handleCategoryChange = (categoryId: string) => {
+    const routeName = categoryId.toLowerCase();
+    onRouteChange(routeName);
+    onProductTypeChange(categoryId);
+    const path = mapMode ? `/map/${routeName}` : `/${routeName}`;
+    router.push(path);
+  };
 
-    // Handle search click - scroll to top to show expanded search
-    const handleSearchClick = useCallback(() => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, []);
+  const handleSearchClick = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
-    // Navigation callbacks for profile menu
-    const handleNavigateToMyLists = useCallback(() => {
-      router.push(PATH.myListingsPage);
-    }, [router]);
+  const handleNavigateToMyLists = () => router.push(PATH.myListingsPage);
+  const handleNavigateToAccountSettings = () => router.push(PATH.settingsPage);
+  const handleNavigateToMyMessages = () => router.push("/chat");
+  const handleNavigateToAboutUs = () => router.push(PATH.aboutUsPage);
+  const handleNavigateToHelp = () => router.push('/help');
+  const handleNavigateToLogout = async () => await logout();
+  const handleNavigateToDashboard = () => router.push('/admin');
 
-    const handleNavigateToAccountSettings = useCallback(() => {
-      router.push(PATH.settingsPage);
-    }, [router]);
-
-    const handleNavigateToMyMessages = useCallback(() => {
-      router.push("/chat");
-    }, [router]);
-
-    const handleNavigateToAboutUs = useCallback(() => {
-      router.push(PATH.aboutUsPage);
-    }, [router]);
-
-    const handleNavigateToHelp = useCallback(() => {
-      router.push('/help');
-    }, [router]);
-
-    const handleNavigateToLogout = useCallback(async () => {
-      await logout();
-    }, [logout]);
-
-    const handleNavigateToDashboard = useCallback(() => {
-      router.push('/admin');
-    }, [router]);
-
-    // Get active category from productType
-    const activeCategory = productType.toLowerCase() || "food";
-
-    // 120fps: Memoize categories to prevent re-renders
-    // NOTE: Category IDs must match database post_type values (singular forms)
-    const categories = useMemo(
-      () => [
-        { id: "food", label: "Food", icon: "🍎" },
-        { id: "thing", label: "Things", icon: "🎁" },
-        { id: "borrow", label: "Borrow", icon: "🔧" },
-        { id: "wanted", label: "Wanted", icon: "📦" },
-        { id: "foodbank", label: "FoodBanks", icon: "🏠" },
-        { id: "fridge", label: "Fridges", icon: "❄️" },
-        { id: "business", label: "Business", icon: "🏛️" },
-        { id: "volunteer", label: "Volunteer", icon: "🙌🏻" },
-        { id: "challenge", label: "Challenges", icon: "🏆" },
-        { id: "zerowaste", label: "Zero Waste", icon: "♻️" },
-        { id: "vegan", label: "Vegan", icon: "🌱" },
-        { id: "community", label: "Forum", icon: "💬" },
-      ],
-      []
-    );
-
-    // 120fps: Memoize box shadow to prevent recalculation
-    // Uses CSS variables for dark mode compatibility
-    const navbarShadow = useMemo(
-      () =>
-        scrollY > 10
-          ? "0 1px 2px hsl(var(--foreground) / 0.08), 0 4px 12px hsl(var(--foreground) / 0.05)"
-          : "0 1px 2px hsl(var(--foreground) / 0.08)",
-      [scrollY]
-    );
+  const navbarShadow = scrollY > 10
+    ? "0 1px 2px hsl(var(--foreground) / 0.08), 0 4px 12px hsl(var(--foreground) / 0.05)"
+    : "0 1px 2px hsl(var(--foreground) / 0.08)";
 
     return (
       <>
@@ -195,7 +118,7 @@ const Navbar: React.FC<NavbarProps> = memo(
             {/* Center: Category Navigation (horizontal scrollable) */}
             <div className="flex-1 flex justify-center overflow-x-auto scrollbar-hide">
               <CategoryNavigation
-                categories={categories}
+                categories={CATEGORIES}
                 activeCategory={activeCategory}
                 onCategoryChange={handleCategoryChange}
               />
@@ -250,9 +173,6 @@ const Navbar: React.FC<NavbarProps> = memo(
         />
       </>
     );
-  }
-);
-
-Navbar.displayName = "Navbar";
+}
 
 export default Navbar;

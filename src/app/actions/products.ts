@@ -2,32 +2,12 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
-import type { InitialProductStateType, LocationType } from '@/types/product.types';
 import {
   type ActionResult,
   withErrorHandling,
   validateWithSchema,
-  success,
-  successVoid,
-  failure,
-  validationError,
-  databaseError,
-  notFoundError,
 } from '@/lib/errors';
 import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
-
-// Re-export cached data functions for backward compatibility
-export {
-  getProducts,
-  getAllProducts,
-  getProductById,
-  getProductLocations,
-  getUserProducts,
-  searchProducts,
-} from '@/lib/data/products';
-
-// Re-export types for consumers
-export type { InitialProductStateType, LocationType, ActionResult };
 
 // ============================================================================
 // Zod Schemas for validation

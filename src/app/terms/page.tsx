@@ -5,6 +5,9 @@ export const metadata = {
   description: 'FoodShare Terms of Service - Read our terms and conditions for using the platform.',
 }
 
+// Static page - no revalidation needed
+export const dynamic = 'force-static'
+
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">

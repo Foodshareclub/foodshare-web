@@ -48,7 +48,7 @@ Documentation:
 | **Glassmorphism** | Beautiful frosted glass effects          |
 | **Responsive**    | Mobile, tablet, desktop optimized        |
 | **Accessible**    | WCAG AA compliant                        |
-| **Performant**    | Memoized, optimized animations           |
+| **Performant**    | React Compiler auto-optimized            |
 
 ## 🎨 Visual States
 
@@ -283,8 +283,9 @@ Category navigation. When a category is selected, the component:
 ### Performance
 
 ```tsx
-// Use React DevTools Profiler
-// Check "Highlight updates when components render"
+// React Compiler handles memoization automatically
+// No need for manual React.memo, useMemo, or useCallback
+// Use React DevTools Profiler to verify
 // Monitor scroll performance in Chrome DevTools
 ```
 

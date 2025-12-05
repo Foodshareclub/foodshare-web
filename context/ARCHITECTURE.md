@@ -255,7 +255,7 @@ The primary pattern for data display. No client-side JavaScript needed.
 
 ```typescript
 // src/app/food/page.tsx
-import { getProducts } from '@/app/actions/products';
+import { getProducts } from '@/lib/data/products';  // Data functions from lib/data/
 import { ProductGrid } from '@/components/products/ProductGrid';
 
 export default async function FoodPage() {
@@ -333,7 +333,8 @@ When you need client-side caching, polling, or optimistic updates.
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getProducts, createProduct } from '@/app/actions/products';
+import { getProducts } from '@/lib/data/products';  // Data functions from lib/data/
+import { createProduct } from '@/app/actions/products';  // Mutations from actions/
 
 export function useProducts(filters?: ProductFilters) {
   return useQuery({
@@ -523,7 +524,7 @@ export default function FoodPage() {
 
 ```typescript
 // src/components/products/ProductList.tsx
-import { getProducts } from '@/app/actions/products';
+import { getProducts } from '@/lib/data/products';  // Data functions from lib/data/
 
 export async function ProductList() {
   const products = await getProducts();
@@ -561,12 +562,10 @@ import { CACHE_TAGS, CACHE_DURATIONS } from '@/lib/data/cache-keys';
 ```
 
 ```typescript
-// src/app/actions/products.ts
-'use server';
-
+// src/lib/data/products.ts - Cached data fetching
 import { unstable_cache } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import { CACHE_TAGS, CACHE_DURATIONS, getProductTags } from '@/lib/data/cache-keys';
+import { CACHE_TAGS, CACHE_DURATIONS } from '@/lib/data/cache-keys';
 
 // Cached data fetching with centralized tags
 export const getProducts = unstable_cache(
@@ -581,6 +580,11 @@ export const getProducts = unstable_cache(
     revalidate: CACHE_DURATIONS.PRODUCTS,
   }
 );
+
+// src/app/actions/products.ts - Mutations only
+'use server';
+
+import { CACHE_TAGS, invalidateTag, getProductTags } from '@/lib/data/cache-keys';
 
 // Revalidate after mutation using helper
 export async function createProduct(formData: FormData) {

@@ -5,6 +5,9 @@ export const metadata = {
   description: 'FoodShare Privacy Policy - Learn how we collect, use, and protect your personal information.',
 }
 
+// Static page - no revalidation needed
+export const dynamic = 'force-static'
+
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">
