@@ -26,8 +26,11 @@ export async function GET(): Promise<Response> {
 
   const feedItems = (posts || [])
     .map((post) => {
-      // Handle profiles which may be an array or single object from the join
+      // Handle profiles and categories which may be arrays or single objects from the join
       const profile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
+      const category = Array.isArray(post.forum_categories)
+        ? post.forum_categories[0]
+        : post.forum_categories;
       const authorName =
         profile?.nickname || profile?.first_name || 'Community Member';
       const postUrl = `${siteConfig.url}/forum/${post.slug || post.id}`;
@@ -42,7 +45,7 @@ export async function GET(): Promise<Response> {
       <guid isPermaLink="true">${postUrl}</guid>
       <pubDate>${new Date(post.forum_post_created_at).toUTCString()}</pubDate>
       <author>${escapeXml(authorName)}</author>
-      ${post.forum_categories ? `<category>${escapeXml(post.forum_categories.name)}</category>` : ''}
+      ${category?.name ? `<category>${escapeXml(category.name)}</category>` : ''}
       <description><![CDATA[${description}]]></description>
       ${post.forum_post_image ? `<enclosure url="${post.forum_post_image}" type="image/jpeg" />` : ''}
     </item>`;
