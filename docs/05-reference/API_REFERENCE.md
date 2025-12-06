@@ -252,6 +252,227 @@ const { data, error } = await productAPI.searchProducts("apple", "food");
 
 ---
 
+## Products Data Layer
+
+Located: `src/lib/data/products.ts`
+
+Server-side data fetching functions for products with caching and cursor-based pagination. Uses `unstable_cache` for optimal performance with tag-based invalidation.
+
+> **Note:** Uses `createCachedClient()` instead of `createClient()` because `cookies()` cannot be called inside `unstable_cache()`.
+
+### Pagination Types
+
+```typescript
+interface PaginatedResult<T> {
+  data: T[];
+  nextCursor: number | null;
+  hasMore: boolean;
+  totalCount?: number;
+}
+
+interface PaginationOptions {
+  cursor?: number | null;  // Last seen ID for cursor-based pagination
+  limit?: number;          // Items per page (default: 20, max: 100)
+}
+```
+
+---
+
+### Get Products by Type
+
+```typescript
+import { getProducts } from '@/lib/data/products';
+
+// First page (cached)
+const products = await getProducts('food');
+
+// With pagination
+const products = await getProducts('food', { limit: 10 });
+
+// Subsequent pages (cursor-based)
+const nextPage = await getProducts('food', { cursor: lastProductId, limit: 10 });
+```
+
+**Parameters:**
+
+- `productType` - Type of product ('food', 'volunteer', 'fridge', etc.)
+- `options` - Optional pagination options
+
+**Returns:** `InitialProductStateType[]`
+
+**Caching:** First page is cached with `CACHE_TAGS.PRODUCTS_BY_TYPE(type)`. Subsequent pages (with cursor) are fetched directly.
+
+---
+
+### Get Products Paginated (Infinite Scroll)
+
+```typescript
+import { getProductsPaginated } from '@/lib/data/products';
+
+const result = await getProductsPaginated('food', { limit: 20 });
+// { data: [...], nextCursor: 42, hasMore: true }
+
+// Load more
+const nextResult = await getProductsPaginated('food', { 
+  cursor: result.nextCursor, 
+  limit: 20 
+});
+```
+
+**Parameters:**
+
+- `productType` - Type of product
+- `options` - Optional pagination options
+
+**Returns:** `PaginatedResult<InitialProductStateType>`
+
+**Optimization:** Fetches `limit + 1` items to efficiently determine `hasMore` without a separate count query.
+
+**Example (Server Component with infinite scroll):**
+
+```typescript
+// app/food/page.tsx
+import { getProductsPaginated } from '@/lib/data/products';
+import { ProductGrid } from '@/components/productCard/ProductGrid';
+
+export default async function FoodPage() {
+  const { data, nextCursor, hasMore } = await getProductsPaginated('food', { limit: 20 });
+
+  return (
+    <ProductGrid 
+      initialProducts={data} 
+      initialCursor={nextCursor}
+      hasMore={hasMore}
+      productType="food"
+    />
+  );
+}
+```
+
+---
+
+### Get All Products
+
+```typescript
+import { getAllProducts } from '@/lib/data/products';
+
+const products = await getAllProducts();
+```
+
+**Returns:** All active products ordered by `created_at` descending
+
+**Caching:** Uses `CACHE_TAGS.PRODUCTS` tag
+
+---
+
+### Get Product by ID
+
+```typescript
+import { getProductById } from '@/lib/data/products';
+
+const product = await getProductById(42);
+```
+
+**Parameters:**
+
+- `productId` - Product ID (number)
+
+**Returns:** `InitialProductStateType | null` - Product with reviews, or null if not found
+
+**Caching:** Uses `CACHE_TAGS.PRODUCT(productId)` tag
+
+---
+
+### Get Product Locations (Map)
+
+```typescript
+import { getProductLocations, getAllProductLocations } from '@/lib/data/products';
+
+// By type
+const foodLocations = await getProductLocations('food');
+
+// All types
+const allLocations = await getAllProductLocations();
+```
+
+**Returns:** `LocationType[]` - Minimal data for map markers (id, location_json, post_name, post_type, images)
+
+**Caching:** Uses `CACHE_TAGS.PRODUCT_LOCATIONS` tag
+
+---
+
+### Get User Products
+
+```typescript
+import { getUserProducts } from '@/lib/data/products';
+
+const userProducts = await getUserProducts(userId);
+```
+
+**Parameters:**
+
+- `userId` - User's profile ID (UUID)
+
+**Returns:** All products created by the user
+
+**Caching:** Uses `CACHE_TAGS.USER_PRODUCTS(userId)` tag
+
+---
+
+### Search Products
+
+```typescript
+import { searchProducts } from '@/lib/data/products';
+
+// Search all types
+const results = await searchProducts('apple', 'all');
+
+// Search specific type
+const foodResults = await searchProducts('apple', 'food');
+```
+
+**Parameters:**
+
+- `searchWord` - Search term (uses PostgreSQL full-text search)
+- `productSearchType` - 'all' or specific type
+
+**Returns:** `InitialProductStateType[]` - Matching products with reviews
+
+**Caching:** Short cache duration due to dynamic nature
+
+---
+
+### Get Popular Product IDs
+
+```typescript
+import { getPopularProductIds } from '@/lib/data/products';
+
+const ids = await getPopularProductIds(50);
+```
+
+**Parameters:**
+
+- `limit` - Number of IDs to return (default: 50)
+
+**Returns:** `number[]` - Product IDs for static generation
+
+**Use Case:** `generateStaticParams()` for product detail pages
+
+---
+
+### Pagination Constants
+
+Located: `src/lib/constants.ts`
+
+```typescript
+export const PAGINATION = {
+  DEFAULT_PAGE_SIZE: 20,
+  MAX_PAGE_SIZE: 100,
+} as const;
+```
+
+---
+
 ## Challenges Data Layer
 
 Located: `src/lib/data/challenges.ts`
@@ -2027,6 +2248,214 @@ export default async function ProductsPage() {
 - Pages that can gracefully degrade (show login prompt, empty state)
 - Client Components (use `MaintenanceBanner` polling instead)
 - API routes (use the `/api/health` endpoint pattern)
+
+---
+
+## Reports Server Actions
+
+Located: `src/app/actions/reports.ts`
+
+Server actions for post reporting with AI-powered content analysis. Provides user-facing report submission and admin moderation workflows.
+
+### Report Reasons
+
+```typescript
+type ReportReason =
+  | 'spam'
+  | 'inappropriate'
+  | 'misleading'
+  | 'expired'
+  | 'wrong_location'
+  | 'safety_concern'
+  | 'duplicate'
+  | 'other';
+```
+
+### Create Post Report
+
+```typescript
+import { createPostReport } from '@/app/actions/reports';
+
+const result = await createPostReport({
+  post_id: 42,
+  reason: 'spam',
+  description: 'This listing appears to be advertising',
+});
+```
+
+**Parameters:**
+
+```typescript
+interface CreateReportInput {
+  post_id: number;           // Post ID to report
+  reason: ReportReason;      // Report category
+  description?: string;      // Optional details (max 1000 chars)
+}
+```
+
+**Returns:** `ActionResult<{ id: string; aiAnalyzed: boolean }>`
+
+```typescript
+// Success
+{ success: true, data: { id: 'uuid', aiAnalyzed: true } }
+
+// Error
+{ success: false, error: 'You have already reported this post' }
+```
+
+**Behavior:**
+
+1. Validates input with Zod schema
+2. Checks user authentication
+3. Prevents duplicate reports from same user
+4. Creates report with `pending` status
+5. Triggers async AI analysis (non-blocking)
+6. Updates report with AI results if successful
+7. Invalidates admin cache
+
+**AI Analysis Fields (when successful):**
+
+- `ai_analysis` - Structured analysis object
+- `ai_severity_score` - Numeric severity (0-1)
+- `ai_recommended_action` - Suggested moderation action
+- `ai_confidence` - AI confidence score (0-1)
+- `status` - Updated to `ai_reviewed`
+
+**Example (Client Component):**
+
+```typescript
+'use client';
+import { createPostReport, type ReportReason } from '@/app/actions/reports';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+
+export function ReportButton({ postId }: { postId: number }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleReport = async (reason: ReportReason) => {
+    setIsSubmitting(true);
+    const result = await createPostReport({ post_id: postId, reason });
+    setIsSubmitting(false);
+
+    if (result.success) {
+      toast.success('Report submitted. Thank you for helping keep our community safe!');
+    } else {
+      toast.error(result.error);
+    }
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      onClick={() => handleReport('spam')}
+      disabled={isSubmitting}
+    >
+      Report
+    </Button>
+  );
+}
+```
+
+---
+
+### Resolve Post Report (Admin)
+
+```typescript
+import { resolvePostReport } from '@/app/actions/reports';
+
+const result = await resolvePostReport({
+  report_id: 'uuid',
+  action: 'post_hidden',
+  notes: 'Confirmed spam content',
+});
+```
+
+**Parameters:**
+
+```typescript
+interface ResolveReportInput {
+  report_id: string;  // Report UUID
+  action: 'dismissed' | 'warning_sent' | 'post_hidden' | 'post_removed' | 'user_banned';
+  notes?: string;     // Optional moderator notes (max 500 chars)
+}
+```
+
+**Returns:** `ActionResult<undefined>`
+
+```typescript
+// Success
+{ success: true, data: undefined }
+
+// Error
+{ success: false, error: 'Admin access required' }
+```
+
+**Behavior:**
+
+1. Validates input with Zod schema
+2. Verifies admin/super_admin role
+3. Checks report exists and is not already resolved
+4. Updates report with resolution details:
+   - `status` → `resolved`
+   - `moderator_id` → current admin
+   - `moderator_action` → selected action
+   - `moderator_notes` → optional notes
+   - `resolved_at` → timestamp
+5. If action is `post_hidden` or `post_removed`:
+   - Sets `posts.is_active = false`
+   - Invalidates product caches
+6. Invalidates admin cache
+
+**Example (Admin Component):**
+
+```typescript
+'use client';
+import { resolvePostReport } from '@/app/actions/reports';
+
+export function ReportActions({ reportId }: { reportId: string }) {
+  const handleResolve = async (action: string) => {
+    const result = await resolvePostReport({
+      report_id: reportId,
+      action: action as any,
+    });
+
+    if (result.success) {
+      toast.success('Report resolved');
+    } else {
+      toast.error(result.error);
+    }
+  };
+
+  return (
+    <div className="flex gap-2">
+      <Button variant="ghost" onClick={() => handleResolve('dismissed')}>
+        Dismiss
+      </Button>
+      <Button variant="destructive" onClick={() => handleResolve('post_removed')}>
+        Remove Post
+      </Button>
+    </div>
+  );
+}
+```
+
+---
+
+### AI Analysis Types
+
+```typescript
+interface AIAnalysis {
+  summary: string;           // Brief summary of the report
+  categories: string[];      // Detected content categories
+  reasoning: string;         // AI reasoning for assessment
+  suggestedAction: string;   // Recommended moderation action
+  riskFactors: string[];     // Identified risk factors
+}
+```
+
+**AI Analysis Endpoint:** `POST /api/moderation/analyze`
+
+The AI analysis is triggered asynchronously and does not block report creation. If AI analysis fails, the report is still created with `pending` status.
 
 ---
 

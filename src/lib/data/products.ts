@@ -11,41 +11,126 @@
 import { unstable_cache } from 'next/cache';
 import { createCachedClient } from '@/lib/supabase/server';
 import { CACHE_TAGS, CACHE_DURATIONS } from './cache-keys';
+import { PAGINATION } from '@/lib/constants';
 import type { InitialProductStateType, LocationType } from '@/types/product.types';
 
 // Re-export types for consumers
 export type { InitialProductStateType, LocationType };
 
 // ============================================================================
+// Pagination Types
+// ============================================================================
+
+export interface PaginatedResult<T> {
+  data: T[];
+  nextCursor: number | null;
+  hasMore: boolean;
+  totalCount?: number;
+}
+
+export interface PaginationOptions {
+  cursor?: number | null;
+  limit?: number;
+}
+
+// ============================================================================
 // Cached Data Functions
 // ============================================================================
 
 /**
- * Get products by type with caching
+ * Get products by type with cursor-based pagination and caching
+ * Uses cursor (last seen ID) for efficient pagination with Supabase
  */
-export async function getProducts(productType: string): Promise<InitialProductStateType[]> {
+export async function getProducts(
+  productType: string,
+  options?: PaginationOptions
+): Promise<InitialProductStateType[]> {
   const normalizedType = productType.toLowerCase();
+  const limit = options?.limit ?? PAGINATION.DEFAULT_PAGE_SIZE;
+  const cursor = options?.cursor;
   
-  return unstable_cache(
-    async (): Promise<InitialProductStateType[]> => {
-      const supabase = createCachedClient();
+  // For initial page load (no cursor), use cached version
+  if (!cursor) {
+    return unstable_cache(
+      async (): Promise<InitialProductStateType[]> => {
+        const supabase = createCachedClient();
 
-      const { data, error } = await supabase
-        .from('posts_with_location')
-        .select('*')
-        .eq('post_type', normalizedType)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        const { data, error } = await supabase
+          .from('posts_with_location')
+          .select('*')
+          .eq('post_type', normalizedType)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false })
+          .limit(limit);
 
-      if (error) throw new Error(error.message);
-      return data ?? [];
-    },
-    [`products-by-type-${normalizedType}`],
-    {
-      revalidate: CACHE_DURATIONS.PRODUCTS,
-      tags: [CACHE_TAGS.PRODUCTS, CACHE_TAGS.PRODUCTS_BY_TYPE(normalizedType)],
-    }
-  )();
+        if (error) throw new Error(error.message);
+        return data ?? [];
+      },
+      [`products-by-type-${normalizedType}-page-1`],
+      {
+        revalidate: CACHE_DURATIONS.PRODUCTS,
+        tags: [CACHE_TAGS.PRODUCTS, CACHE_TAGS.PRODUCTS_BY_TYPE(normalizedType)],
+      }
+    )();
+  }
+
+  // For subsequent pages, fetch directly (cursor changes)
+  const supabase = createCachedClient();
+  const { data, error } = await supabase
+    .from('posts_with_location')
+    .select('*')
+    .eq('post_type', normalizedType)
+    .eq('is_active', true)
+    .lt('id', cursor) // Cursor-based: get items with ID less than cursor
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+/**
+ * Get paginated products with metadata (hasMore, nextCursor)
+ * Optimized for infinite scroll - fetches limit+1 to check if more exist
+ */
+export async function getProductsPaginated(
+  productType: string,
+  options?: PaginationOptions
+): Promise<PaginatedResult<InitialProductStateType>> {
+  const normalizedType = productType.toLowerCase();
+  const limit = options?.limit ?? PAGINATION.DEFAULT_PAGE_SIZE;
+  const cursor = options?.cursor;
+  
+  const supabase = createCachedClient();
+  
+  let query = supabase
+    .from('posts_with_location')
+    .select('*')
+    .eq('post_type', normalizedType)
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
+    .limit(limit + 1); // Fetch one extra to check hasMore
+
+  if (cursor) {
+    query = query.lt('id', cursor);
+  }
+
+  const { data, error } = await query;
+
+  if (error) throw new Error(error.message);
+  
+  const items = data ?? [];
+  const hasMore = items.length > limit;
+  const resultItems = hasMore ? items.slice(0, limit) : items;
+  const nextCursor = hasMore && resultItems.length > 0 
+    ? resultItems[resultItems.length - 1].id 
+    : null;
+
+  return {
+    data: resultItems,
+    nextCursor,
+    hasMore,
+  };
 }
 
 /**

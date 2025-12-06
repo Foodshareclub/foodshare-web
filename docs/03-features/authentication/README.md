@@ -2,7 +2,12 @@
 
 ## Overview
 
-This guide documents the optimized authentication system for FoodShare, built with Supabase Auth, Redux Toolkit, and React 19.
+This guide documents the authentication system for FoodShare, built with Supabase Auth. The codebase supports two patterns:
+
+1. **Server Actions (Recommended)** - For new features, uses `src/app/actions/auth.ts`
+2. **useAuth Hook (Legacy)** - Existing code uses Redux-based `useAuth` hook
+
+New features should use Server Actions with `useTransition` for pending states.
 
 ---
 
@@ -12,26 +17,124 @@ This guide documents the optimized authentication system for FoodShare, built wi
 
 ```
 src/
+├── app/
+│   └── actions/
+│       └── auth.ts                # Server Actions (recommended)
 ├── lib/
 │   └── supabase/
-│       └── client.ts              # Optimized Supabase client
+│       ├── client.ts              # Browser client (realtime, OAuth)
+│       └── server.ts              # Server client (Server Actions)
 ├── api/
-│   ├── authAPI.ts                 # Auth API methods
+│   ├── authAPI.ts                 # Legacy auth API methods
 │   └── profileAPI.ts              # Profile operations
-├── hook/
-│   └── useAuth.ts                 # Custom auth hook
+├── hooks/
+│   └── useAuth.ts                 # Legacy custom auth hook
 ├── components/
 │   └── auth/
 │       ├── AuthProvider.tsx       # Auth state provider
 │       └── ProtectedRoute.tsx     # Route protection
 └── store/
     └── slices/
-        └── userReducer.ts         # Auth state management
+        └── userReducer.ts         # Legacy auth state management
 ```
 
 ---
 
-## Key Improvements
+## Server Actions (Recommended Pattern)
+
+### Available Actions
+
+Located in `src/app/actions/auth.ts`:
+
+| Action | Purpose |
+|--------|---------|
+| `getSession()` | Get current session |
+| `getUser()` | Get user with profile |
+| `checkIsAdmin()` | Check admin status |
+| `signInWithPassword()` | Email/password login |
+| `signUp()` | Register new user |
+| `signOut()` | Sign out and redirect |
+| `resetPassword()` | Request password reset |
+| `updatePassword()` | Update password |
+| `getOAuthSignInUrl()` | Get OAuth redirect URL |
+
+### Password Reset Example (Server Action Pattern)
+
+```tsx
+// src/app/auth/forgot-password/page.tsx
+'use client';
+
+import { useState, useTransition } from 'react';
+import { useTranslations } from 'next-intl';
+import { resetPassword } from '@/app/actions/auth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+export default function ForgotPasswordPage() {
+  const t = useTranslations();
+  const [isPending, startTransition] = useTransition();
+  
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    startTransition(async () => {
+      const result = await resetPassword(email);
+      if (result.success) {
+        setIsSuccess(true);
+      } else {
+        setError(result.error || t('ForgotPassword.error_generic'));
+      }
+    });
+  };
+
+  if (isSuccess) {
+    return <SuccessMessage email={email} />;
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      <Input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <Button type="submit" disabled={isPending || !email}>
+        {isPending ? 'Sending...' : t('ForgotPassword.send_reset_link')}
+      </Button>
+    </form>
+  );
+}
+```
+
+### Key Benefits of Server Actions
+
+- **No client-side API calls** - Auth logic runs on server
+- **Automatic cache invalidation** - Uses `invalidateTag()` and `revalidatePath()`
+- **Type-safe** - Full TypeScript support
+- **i18n ready** - Works with `next-intl`
+- **Better UX** - `useTransition` provides non-blocking pending states
+
+---
+
+## Legacy Pattern (useAuth Hook)
+
+The following sections document the legacy `useAuth` hook pattern. Use this when working with existing code that already uses Redux for auth state.
+
+---
+
+## Key Improvements (Legacy)
 
 ### 1. Optimized Supabase Client
 

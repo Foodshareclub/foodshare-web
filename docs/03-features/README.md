@@ -91,6 +91,7 @@ Admin CRM and management tools.
 
 - User management
 - Content moderation
+- Post reporting with AI analysis
 - Analytics
 - Bulk operations
 

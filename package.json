@@ -19,6 +19,7 @@
     "import:foodbanks": "tsx scripts/foodbank-import/index.ts"
   },
   "dependencies": {
+    "@ai-sdk/xai": "^2.0.39",
     "@aws-sdk/client-ses": "^3.940.0",
     "@getbrevo/brevo": "^3.0.1",
     "@motherduck/wasm-client": "^0.8.0",
@@ -67,6 +68,7 @@
     "@vercel/blob": "^2.0.0",
     "@vercel/edge-config": "^1.4.3",
     "@vercel/speed-insights": "^1.2.0",
+    "ai": "^5.0.108",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

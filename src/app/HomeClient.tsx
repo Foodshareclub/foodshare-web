@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/header/navbar/Navbar';
 import { ProductGrid } from '@/components/productCard/ProductGrid';
 import NavigateButtons from '@/components/navigateButtons/NavigateButtons';
+import { useInfiniteProducts } from '@/hooks/queries/useProductQueries';
 import type { InitialProductStateType } from '@/types/product.types';
 import type { AuthUser } from '@/app/actions/auth';
 
@@ -16,12 +17,34 @@ interface HomeClientProps {
 
 /**
  * HomeClient - Client wrapper for the home page
- * Handles interactive navigation while receiving server-fetched data
- * Note: React Compiler handles memoization automatically
+ * Uses React 19 patterns: useTransition for non-blocking updates
+ * Uses infinite scroll with cursor-based pagination
+ * React Compiler handles memoization automatically
  */
 export function HomeClient({ initialProducts, user, productType = 'food' }: HomeClientProps) {
   const router = useRouter();
   const [currentProductType, setCurrentProductType] = useState(productType);
+  const [isPending, startTransition] = useTransition();
+
+  // Only use initialProducts for the original productType
+  const isOriginalType = currentProductType === productType;
+
+  // Infinite scroll query - uses server-fetched initialProducts as first page
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useInfiniteProducts(
+    currentProductType,
+    isOriginalType ? initialProducts : undefined
+  );
+
+  // Flatten pages into single array
+  const products = data?.pages?.length
+    ? data.pages.flatMap((page) => page.data)
+    : isOriginalType ? initialProducts : [];
 
   // Derive auth state from user prop
   const isAuth = !!user;
@@ -33,9 +56,21 @@ export function HomeClient({ initialProducts, user, productType = 'food' }: Home
     router.push(`/${route}`);
   };
 
+  // Use startTransition for non-blocking category changes
   const handleProductTypeChange = (type: string) => {
-    setCurrentProductType(type);
+    startTransition(() => {
+      setCurrentProductType(type);
+    });
   };
+
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
+  // Show loading state during category transition or initial load
+  const showLoading = (isLoading || isPending) && !products.length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,7 +89,13 @@ export function HomeClient({ initialProducts, user, productType = 'food' }: Home
       />
 
       <NavigateButtons title="Show map" />
-      <ProductGrid products={initialProducts} />
+      <ProductGrid
+        products={products}
+        isLoading={showLoading}
+        onLoadMore={handleLoadMore}
+        isFetchingMore={isFetchingNextPage || isPending}
+        hasMore={hasNextPage ?? false}
+      />
     </div>
   );
 }

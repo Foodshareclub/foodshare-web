@@ -309,12 +309,28 @@ return NextResponse.json(data, {
 For client components needing real-time updates:
 
 ```typescript
-import { useProducts } from '@/hooks/queries/useProductQueries';
+import { useProducts, useInfiniteProducts } from '@/hooks/queries/useProductQueries';
 
+// Standard query (all products at once)
 function ProductList() {
   const { data, isLoading } = useProducts('food');
   // staleTime: 5 minutes
   // gcTime: 30 minutes
+}
+
+// Infinite scroll with cursor-based pagination
+function InfiniteProductList() {
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteProducts('food');
+  // staleTime: 5 minutes
+  // gcTime: 30 minutes
+  // Uses cursor-based pagination via /api/products
+  
+  const products = data?.pages.flatMap(page => page.data) ?? [];
 }
 ```
 

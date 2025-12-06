@@ -38,6 +38,8 @@ export async function GET(request: NextRequest) {
   const userId = searchParams.get('userId');
   const search = searchParams.get('search');
   const locations = searchParams.get('locations') === 'true';
+  const cursor = searchParams.get('cursor');
+  const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
 
   const supabase = await createClient();
 
@@ -118,20 +120,37 @@ export async function GET(request: NextRequest) {
       return jsonWithCache(data ?? [], CACHE_DURATIONS.PRODUCTS);
     }
 
-    // Get products by type (or all)
+    // Get products by type with cursor-based pagination
     let query = supabase
       .from('posts_with_location')
       .select('*')
       .eq('is_active', true)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(limit + 1); // Fetch one extra to check hasMore
 
     if (type && type !== 'all') {
       query = query.eq('post_type', type.toLowerCase());
     }
 
+    // Cursor-based pagination: get items with ID less than cursor
+    if (cursor) {
+      query = query.lt('id', parseInt(cursor));
+    }
+
     const { data, error } = await query;
     if (error) throw error;
-    return jsonWithCache(data ?? [], CACHE_DURATIONS.PRODUCTS);
+
+    const items = data ?? [];
+    const hasMore = items.length > limit;
+    const resultItems = hasMore ? items.slice(0, limit) : items;
+    const nextCursor = hasMore && resultItems.length > 0 
+      ? resultItems[resultItems.length - 1].id 
+      : null;
+
+    return jsonWithCache(
+      { data: resultItems, nextCursor, hasMore },
+      CACHE_DURATIONS.PRODUCTS
+    );
   } catch (error) {
     console.error('Products API error:', error);
     return NextResponse.json(

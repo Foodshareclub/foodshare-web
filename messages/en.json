@@ -526,5 +526,42 @@
     "maintenanceMessage": "We are performing scheduled maintenance. Some features may be temporarily unavailable.",
     "dismiss": "Dismiss",
     "refresh": "Check status"
+  },
+  "ForgotPassword": {
+    "title": "Forgot your password?",
+    "description": "No worries! Enter your email address and we'll send you a link to reset your password.",
+    "back_to_login": "Back to login",
+    "send_reset_link": "Send reset link",
+    "check_email_title": "Check your email",
+    "check_email_description": "We've sent a password reset link to",
+    "didnt_receive": "Didn't receive the email? Check your spam folder or",
+    "return_to_login": "Return to login",
+    "remember_password": "Remember your password?",
+    "error_generic": "Failed to send reset email. Please try again."
+  },
+  "Reports": {
+    "report": "Report",
+    "reportPost": "Report Post",
+    "reportPostDescription": "Help us keep FoodShare safe by reporting \"{name}\"",
+    "reportPostDescriptionGeneric": "Help us keep FoodShare safe by reporting inappropriate content",
+    "selectReason": "Why are you reporting this?",
+    "additionalDetails": "Additional details (optional)",
+    "additionalDetailsPlaceholder": "Provide any additional context that might help us review this report...",
+    "submitReport": "Submit Report",
+    "submitting": "Submitting...",
+    "cancel": "Cancel",
+    "reportSubmitted": "Report Submitted",
+    "reportSubmittedDescription": "Thank you for helping keep our community safe. We'll review this report shortly.",
+    "submitError": "Failed to submit report. Please try again.",
+    "reasons": {
+      "spam": "Spam",
+      "inappropriate": "Inappropriate",
+      "misleading": "Misleading",
+      "expired": "Expired",
+      "wrongLocation": "Wrong Location",
+      "safetyConcern": "Safety Concern",
+      "duplicate": "Duplicate",
+      "other": "Other"
+    }
   }
 }
