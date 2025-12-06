@@ -14,7 +14,7 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
   const userId = user?.id || '';
   const { profile, avatarUrl } = useCurrentProfile(userId);
 
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin';
+  const isAdmin = profile?.role?.admin === true;
 
   const handleRouteChange = (route: string) => {
     router.push(`/${route}`);
