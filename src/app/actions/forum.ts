@@ -252,7 +252,7 @@ export async function deleteComment(commentId: string): Promise<{ success: boole
 /**
  * Toggle like on a forum post
  */
-export async function togglePostLike(
+export async function toggleForumLike(
   postId: string
 ): Promise<{ success: boolean; isLiked: boolean; error?: string }> {
   const supabase = await createClient();
