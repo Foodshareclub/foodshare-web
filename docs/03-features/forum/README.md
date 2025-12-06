@@ -95,8 +95,8 @@ async function getForumPosts() {
     .from('forum')
     .select(`
       *,
-      profiles:profile_id (*),
-      forum_categories:category_id (*),
+      profiles!forum_profile_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url),
+      forum_categories!forum_category_id_fkey (*),
       forum_post_tags (forum_tags (*))
     `)
     .eq('forum_published', true)

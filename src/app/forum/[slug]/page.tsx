@@ -22,8 +22,8 @@ async function getForumPost(slugOrId: string): Promise<ForumPost | null> {
     .from('forum')
     .select(`
       *,
-      profiles:profile_id (id, nickname, first_name, second_name, avatar_url),
-      forum_categories:category_id (*),
+      profiles!forum_profile_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url),
+      forum_categories!forum_category_id_fkey (*),
       forum_post_tags (forum_tags (*))
     `);
 
@@ -40,7 +40,7 @@ async function getInitialComments(forumId: number): Promise<ForumComment[]> {
 
   const { data } = await supabase
     .from('comments')
-    .select('*, profiles:user_id (id, nickname, first_name, second_name, avatar_url)')
+    .select('*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)')
     .eq('forum_id', forumId)
     .is('parent_id', null)
     .order('is_pinned', { ascending: false })

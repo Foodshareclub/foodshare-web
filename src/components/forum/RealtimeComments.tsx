@@ -35,7 +35,7 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
       const supabase = createClient();
       const { data } = await supabase
         .from('comments')
-        .select('*, profiles:user_id (id, nickname, first_name, second_name, avatar_url)')
+        .select('*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)')
         .eq('forum_id', forumId)
         .is('parent_id', null)
         .order('is_pinned', { ascending: false })
@@ -62,7 +62,7 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
           // Fetch the full comment with profile
           const { data } = await supabase
             .from('comments')
-            .select('*, profiles:user_id (id, nickname, first_name, second_name, avatar_url)')
+            .select('*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)')
             .eq('id', payload.new.id)
             .single();
 
@@ -87,7 +87,7 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
         async (payload) => {
           const { data } = await supabase
             .from('comments')
-            .select('*, profiles:user_id (id, nickname, first_name, second_name, avatar_url)')
+            .select('*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)')
             .eq('id', payload.new.id)
             .single();
 
@@ -153,7 +153,7 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
     const supabase = createClient();
     const { data } = await supabase
       .from('comments')
-      .select('*, profiles:user_id (id, nickname, first_name, second_name, avatar_url)')
+      .select('*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)')
       .eq('parent_id', commentId)
       .order('comment_created_at', { ascending: true });
 
