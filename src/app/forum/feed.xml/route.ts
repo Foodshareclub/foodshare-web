@@ -26,8 +26,10 @@ export async function GET(): Promise<Response> {
 
   const feedItems = (posts || [])
     .map((post) => {
+      // Handle profiles which may be an array or single object from the join
+      const profile = Array.isArray(post.profiles) ? post.profiles[0] : post.profiles;
       const authorName =
-        post.profiles?.nickname || post.profiles?.first_name || 'Community Member';
+        profile?.nickname || profile?.first_name || 'Community Member';
       const postUrl = `${siteConfig.url}/forum/${post.slug || post.id}`;
       const description = post.forum_post_description
         ? stripHtml(post.forum_post_description).slice(0, 500)

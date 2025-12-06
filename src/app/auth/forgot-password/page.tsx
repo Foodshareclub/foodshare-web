@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
       <div
         className="absolute top-0 left-0 right-0 bottom-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none"
         style={{
-          backgroundImage: 'radial-gradient(circle, #E61E4D 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, #FF2D55 1px, transparent 1px)',
           backgroundSize: '40px 40px',
         }}
       />
@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
         <div className="container mx-auto max-w-7xl py-4 px-4">
           <div className="flex justify-between items-center">
             <Link href="/">
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 cursor-pointer hover:opacity-80 transition-opacity duration-200">
+              <p className="text-2xl font-bold text-[#FF2D55] cursor-pointer hover:opacity-80 transition-opacity duration-200">
                 FoodShare
               </p>
             </Link>
@@ -84,8 +84,8 @@ export default function ForgotPasswordPage() {
             {isSuccess ? (
               /* Success State */
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full mb-6">
-                  <FaCheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FF2D55]/10 rounded-full mb-6">
+                  <FaCheckCircle className="w-8 h-8 text-[#FF2D55]" />
                 </div>
                 <h1 className="text-[28px] font-bold mb-3 text-foreground">
                   Check your email
@@ -101,13 +101,13 @@ export default function ForgotPasswordPage() {
                       setIsSuccess(false);
                       setEmail('');
                     }}
-                    className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline"
+                    className="text-[#FF2D55] font-semibold hover:underline"
                   >
                     try again
                   </button>
                 </p>
                 <Link href="/auth/login">
-                  <Button className="w-full h-14 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 text-white font-semibold text-base rounded-xl hover:from-emerald-600 hover:via-emerald-700 hover:to-emerald-800">
+                  <Button className="w-full h-14 bg-gradient-to-r from-[#FF2D55] via-[#E6284D] to-[#CC2345] text-white font-semibold text-base rounded-xl hover:from-[#E6284D] hover:via-[#CC2345] hover:to-[#B31F3D]">
                     Return to login
                   </Button>
                 </Link>
@@ -117,8 +117,8 @@ export default function ForgotPasswordPage() {
               <>
                 {/* Header */}
                 <div className="mb-8 text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full mb-6">
-                    <FaEnvelope className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FF2D55]/10 rounded-full mb-6">
+                    <FaEnvelope className="w-7 h-7 text-[#FF2D55]" />
                   </div>
                   <h1 className="text-[28px] font-bold mb-3 text-foreground">
                     Forgot your password?
@@ -167,7 +167,7 @@ export default function ForgotPasswordPage() {
                         onChange={(e) => setEmail(e.target.value)}
                         required
                         autoFocus
-                        className="h-12 rounded-xl border border-border bg-background hover:border-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                        className="h-12 rounded-xl border border-border bg-background hover:border-muted-foreground focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
                       />
                     </div>
 
@@ -175,7 +175,7 @@ export default function ForgotPasswordPage() {
                     <Button
                       type="submit"
                       disabled={isLoading || !email}
-                      className="w-full h-14 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 text-white font-semibold text-base rounded-xl hover:from-emerald-600 hover:via-emerald-700 hover:to-emerald-800 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(16,185,129,0.35)] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                      className="w-full h-14 bg-gradient-to-r from-[#FF2D55] via-[#E6284D] to-[#CC2345] text-white font-semibold text-base rounded-xl hover:from-[#E6284D] hover:via-[#CC2345] hover:to-[#B31F3D] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(255,45,85,0.35)] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                     >
                       {isLoading ? (
                         <span className="flex items-center gap-2">
@@ -206,7 +206,7 @@ export default function ForgotPasswordPage() {
           {/* Footer */}
           <p className="text-[13px] text-muted-foreground text-center mt-6 leading-relaxed">
             Remember your password?{' '}
-            <Link href="/auth/login" className="text-foreground font-semibold underline hover:text-emerald-600 dark:hover:text-emerald-400">
+            <Link href="/auth/login" className="text-foreground font-semibold underline hover:text-[#FF2D55]">
               Log in
             </Link>
           </p>

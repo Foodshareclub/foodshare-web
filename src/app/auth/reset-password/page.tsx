@@ -93,8 +93,8 @@ export default function ResetPasswordPage() {
 
     if (strength <= 2) return { strength: 1, label: 'Weak', color: 'bg-red-500' };
     if (strength <= 3) return { strength: 2, label: 'Fair', color: 'bg-yellow-500' };
-    if (strength <= 4) return { strength: 3, label: 'Good', color: 'bg-emerald-400' };
-    return { strength: 4, label: 'Strong', color: 'bg-emerald-600' };
+    if (strength <= 4) return { strength: 3, label: 'Good', color: 'bg-[#FF2D55]/70' };
+    return { strength: 4, label: 'Strong', color: 'bg-[#FF2D55]' };
   };
 
   const passwordStrength = getPasswordStrength();
@@ -105,7 +105,7 @@ export default function ResetPasswordPage() {
       <div
         className="absolute top-0 left-0 right-0 bottom-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none"
         style={{
-          backgroundImage: 'radial-gradient(circle, #E61E4D 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, #FF2D55 1px, transparent 1px)',
           backgroundSize: '40px 40px',
         }}
       />
@@ -115,7 +115,7 @@ export default function ResetPasswordPage() {
         <div className="container mx-auto max-w-7xl py-4 px-4">
           <div className="flex justify-between items-center">
             <Link href="/">
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 cursor-pointer hover:opacity-80 transition-opacity duration-200">
+              <p className="text-2xl font-bold text-[#FF2D55] cursor-pointer hover:opacity-80 transition-opacity duration-200">
                 FoodShare
               </p>
             </Link>
@@ -135,7 +135,7 @@ export default function ResetPasswordPage() {
             {/* Loading state while checking session */}
             {isValidSession === null && (
               <div className="text-center py-8">
-                <AiOutlineLoading3Quarters className="w-12 h-12 animate-spin text-emerald-500 mx-auto mb-4" />
+                <AiOutlineLoading3Quarters className="w-12 h-12 animate-spin text-[#FF2D55] mx-auto mb-4" />
                 <p className="text-muted-foreground">Verifying your reset link...</p>
               </div>
             )}
@@ -153,7 +153,7 @@ export default function ResetPasswordPage() {
                   This password reset link has expired or is invalid. Please request a new one.
                 </p>
                 <Link href="/auth/forgot-password">
-                  <Button className="w-full h-14 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 text-white font-semibold text-base rounded-xl hover:from-emerald-600 hover:via-emerald-700 hover:to-emerald-800">
+                  <Button className="w-full h-14 bg-gradient-to-r from-[#FF2D55] via-[#E6284D] to-[#CC2345] text-white font-semibold text-base rounded-xl hover:from-[#E6284D] hover:via-[#CC2345] hover:to-[#B31F3D]">
                     Request new reset link
                   </Button>
                 </Link>
@@ -163,8 +163,8 @@ export default function ResetPasswordPage() {
             {/* Success State */}
             {isSuccess && (
               <div className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full mb-6">
-                  <FaCheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FF2D55]/10 rounded-full mb-6">
+                  <FaCheckCircle className="w-8 h-8 text-[#FF2D55]" />
                 </div>
                 <h1 className="text-[28px] font-bold mb-3 text-foreground">
                   Password updated!
@@ -176,7 +176,7 @@ export default function ResetPasswordPage() {
                   Redirecting you to the homepage...
                 </p>
                 <Link href="/">
-                  <Button className="w-full h-14 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 text-white font-semibold text-base rounded-xl hover:from-emerald-600 hover:via-emerald-700 hover:to-emerald-800">
+                  <Button className="w-full h-14 bg-gradient-to-r from-[#FF2D55] via-[#E6284D] to-[#CC2345] text-white font-semibold text-base rounded-xl hover:from-[#E6284D] hover:via-[#CC2345] hover:to-[#B31F3D]">
                     Go to homepage
                   </Button>
                 </Link>
@@ -188,8 +188,8 @@ export default function ResetPasswordPage() {
               <>
                 {/* Header */}
                 <div className="mb-8 text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full mb-6">
-                    <FaLock className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FF2D55]/10 rounded-full mb-6">
+                    <FaLock className="w-7 h-7 text-[#FF2D55]" />
                   </div>
                   <h1 className="text-[28px] font-bold mb-3 text-foreground">
                     Set new password
@@ -239,7 +239,7 @@ export default function ResetPasswordPage() {
                           onChange={(e) => setPassword(e.target.value)}
                           required
                           autoFocus
-                          className="h-12 rounded-xl border border-border bg-background pr-12 hover:border-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                          className="h-12 rounded-xl border border-border bg-background pr-12 hover:border-muted-foreground focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
                         />
                         <button
                           type="button"
@@ -269,7 +269,7 @@ export default function ResetPasswordPage() {
                           <p className={`text-xs ${
                             passwordStrength.strength <= 1 ? 'text-red-600' :
                             passwordStrength.strength <= 2 ? 'text-yellow-600' :
-                            'text-emerald-600'
+                            'text-[#FF2D55]'
                           }`}>
                             {passwordStrength.label}
                           </p>
@@ -289,7 +289,7 @@ export default function ResetPasswordPage() {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           required
-                          className="h-12 rounded-xl border border-border bg-background pr-12 hover:border-muted-foreground focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                          className="h-12 rounded-xl border border-border bg-background pr-12 hover:border-muted-foreground focus:border-[#FF2D55] focus:ring-1 focus:ring-[#FF2D55]"
                         />
                         <button
                           type="button"
@@ -304,7 +304,7 @@ export default function ResetPasswordPage() {
                         <p className="text-xs text-red-600 mt-1">Passwords do not match</p>
                       )}
                       {confirmPassword && password === confirmPassword && (
-                        <p className="text-xs text-emerald-600 mt-1">Passwords match</p>
+                        <p className="text-xs text-[#FF2D55] mt-1">Passwords match</p>
                       )}
                     </div>
 
@@ -312,7 +312,7 @@ export default function ResetPasswordPage() {
                     <Button
                       type="submit"
                       disabled={isLoading || !password || !confirmPassword}
-                      className="w-full h-14 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 text-white font-semibold text-base rounded-xl hover:from-emerald-600 hover:via-emerald-700 hover:to-emerald-800 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(16,185,129,0.35)] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                      className="w-full h-14 bg-gradient-to-r from-[#FF2D55] via-[#E6284D] to-[#CC2345] text-white font-semibold text-base rounded-xl hover:from-[#E6284D] hover:via-[#CC2345] hover:to-[#B31F3D] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(255,45,85,0.35)] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                     >
                       {isLoading ? (
                         <span className="flex items-center gap-2">
@@ -330,16 +330,16 @@ export default function ResetPasswordPage() {
                 <div className="mt-6 p-4 bg-muted/50 rounded-xl">
                   <p className="text-sm font-medium text-foreground/80 mb-2">Password requirements:</p>
                   <ul className="text-sm text-muted-foreground space-y-1">
-                    <li className={`flex items-center gap-2 ${password.length >= 8 ? 'text-emerald-600' : ''}`}>
+                    <li className={`flex items-center gap-2 ${password.length >= 8 ? 'text-[#FF2D55]' : ''}`}>
                       {password.length >= 8 ? '✓' : '•'} At least 8 characters
                     </li>
-                    <li className={`flex items-center gap-2 ${/[A-Z]/.test(password) ? 'text-emerald-600' : ''}`}>
+                    <li className={`flex items-center gap-2 ${/[A-Z]/.test(password) ? 'text-[#FF2D55]' : ''}`}>
                       {/[A-Z]/.test(password) ? '✓' : '•'} One uppercase letter
                     </li>
-                    <li className={`flex items-center gap-2 ${/[0-9]/.test(password) ? 'text-emerald-600' : ''}`}>
+                    <li className={`flex items-center gap-2 ${/[0-9]/.test(password) ? 'text-[#FF2D55]' : ''}`}>
                       {/[0-9]/.test(password) ? '✓' : '•'} One number
                     </li>
-                    <li className={`flex items-center gap-2 ${/[^A-Za-z0-9]/.test(password) ? 'text-emerald-600' : ''}`}>
+                    <li className={`flex items-center gap-2 ${/[^A-Za-z0-9]/.test(password) ? 'text-[#FF2D55]' : ''}`}>
                       {/[^A-Za-z0-9]/.test(password) ? '✓' : '•'} One special character
                     </li>
                   </ul>

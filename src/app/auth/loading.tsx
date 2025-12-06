@@ -9,7 +9,7 @@ export default function Loading() {
       <div
         className="absolute top-0 left-0 right-0 bottom-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none"
         style={{
-          backgroundImage: 'radial-gradient(circle, #E61E4D 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(circle, #FF2D55 1px, transparent 1px)',
           backgroundSize: '40px 40px',
         }}
       />
