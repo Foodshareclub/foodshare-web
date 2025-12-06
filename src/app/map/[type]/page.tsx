@@ -3,10 +3,9 @@ import { getMapLocations } from '@/lib/data/maps';
 import { getUser } from '@/app/actions/auth';
 import { MapClient } from './MapClient';
 import { urlToDbType } from '@/utils/categoryMapping';
-import { CACHE_DURATIONS } from '@/lib/data/cache-keys';
 
-// Route segment config for caching - aligned with CACHE_DURATIONS.PRODUCT_LOCATIONS
-export const revalidate = CACHE_DURATIONS.PRODUCT_LOCATIONS;
+// Route segment config for caching - 5 minutes (aligned with CACHE_DURATIONS.PRODUCT_LOCATIONS)
+export const revalidate = 300;
 
 interface PageProps {
   params: Promise<{ type: string }>;
