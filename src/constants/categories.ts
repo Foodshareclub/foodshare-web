@@ -3,7 +3,7 @@
  * IDs match URL paths (plural form where applicable)
  */
 
-// Order: Food basics → Community resources → Challenges → Special interests → Forum
+// Order: Food basics → Community resources → Lifestyle → Engagement → Forum
 export const CATEGORIES = [
   { id: 'food', labelKey: 'categories.food', icon: '🍎' },
   { id: 'things', labelKey: 'categories.things', icon: '🎁' },
@@ -11,11 +11,11 @@ export const CATEGORIES = [
   { id: 'wanted', labelKey: 'categories.wanted', icon: '📦' },
   { id: 'foodbanks', labelKey: 'categories.foodbanks', icon: '🏠' },
   { id: 'fridges', labelKey: 'categories.fridges', icon: '❄️' },
+  { id: 'zerowaste', labelKey: 'categories.zerowaste', icon: '♻️' },
+  { id: 'vegan', labelKey: 'categories.vegan', icon: '🌱' },
   { id: 'organisations', labelKey: 'categories.organisations', icon: '🏛️' },
   { id: 'volunteers', labelKey: 'categories.volunteers', icon: '🙌🏻' },
   { id: 'challenges', labelKey: 'categories.challenges', icon: '🏆' },
-  { id: 'zerowaste', labelKey: 'categories.zerowaste', icon: '♻️' },
-  { id: 'vegan', labelKey: 'categories.vegan', icon: '🌱' },
   { id: 'community', labelKey: 'categories.community', icon: '💬' },
 ] as const;
 
