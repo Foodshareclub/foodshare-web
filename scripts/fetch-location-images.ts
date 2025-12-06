@@ -265,16 +265,21 @@ async function processPost(post: Post): Promise<FetchResult> {
 }
 
 /**
- * Fetch posts that need images (with pagination to bypass 1000 row limit)
+ * Fetch posts that need images (with pagination - Supabase limits to 100 rows per request)
  */
 async function fetchPostsWithoutImages(): Promise<Post[]> {
   const allPosts: Post[] = [];
-  const PAGE_SIZE = 1000;
-  let offset = 0;
+  const PAGE_SIZE = 100; // Supabase project limit is 100 rows
+  let lastId = 0;
   let hasMore = true;
+  let pageNum = 0;
+
+  console.log('  Fetching pages (100 rows per page due to Supabase limit)...');
 
   while (hasMore) {
-    let query = supabase
+    pageNum++;
+    // Use cursor-based pagination
+    const { data, error } = await supabase
       .from('posts')
       .select('id, post_name, post_type, website')
       .in('post_type', TYPE_FILTER ? [TYPE_FILTER] : ['fridge', 'foodbank'])
@@ -282,10 +287,9 @@ async function fetchPostsWithoutImages(): Promise<Post[]> {
       .neq('website', '-')
       .neq('website', '')
       .not('website', 'is', null)
-      .order('id')
-      .range(offset, offset + PAGE_SIZE - 1);
-
-    const { data, error } = await query;
+      .gt('id', lastId)
+      .order('id', { ascending: true })
+      .limit(PAGE_SIZE);
 
     if (error) {
       throw new Error(`Failed to fetch posts: ${error.message}`);
@@ -293,18 +297,21 @@ async function fetchPostsWithoutImages(): Promise<Post[]> {
 
     if (data && data.length > 0) {
       allPosts.push(...(data as Post[]));
-      offset += PAGE_SIZE;
+      lastId = data[data.length - 1].id;
       hasMore = data.length === PAGE_SIZE;
+      process.stdout.write(`  Page ${pageNum}: ${allPosts.length} posts total\r`);
     } else {
       hasMore = false;
     }
 
     // Apply user limit if specified
     if (LIMIT < Infinity && allPosts.length >= LIMIT) {
+      console.log('');
       return allPosts.slice(0, LIMIT);
     }
   }
 
+  console.log(''); // New line after progress
   return allPosts;
 }
 

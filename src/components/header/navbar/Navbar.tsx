@@ -1,7 +1,8 @@
 'use client';
 
-import React from "react";
+import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useAdvancedScroll } from "@/hooks";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,23 +12,8 @@ import NavbarActions from "./NavbarActions";
 import { CategoryNavigation } from "./organisms";
 
 import { PATH } from "@/utils";
+import { CATEGORIES } from "@/constants/categories";
 import type { NavbarProps } from "./types";
-
-// Category definitions (module-level constant)
-const CATEGORIES = [
-  { id: "food", label: "Food", icon: "🍎" },
-  { id: "thing", label: "Things", icon: "🎁" },
-  { id: "borrow", label: "Borrow", icon: "🔧" },
-  { id: "wanted", label: "Wanted", icon: "📦" },
-  { id: "foodbank", label: "FoodBanks", icon: "🏠" },
-  { id: "fridge", label: "Fridges", icon: "❄️" },
-  { id: "business", label: "Business", icon: "🏛️" },
-  { id: "volunteer", label: "Volunteer", icon: "🙌🏻" },
-  { id: "zerowaste", label: "Zero Waste", icon: "♻️" },
-  { id: "vegan", label: "Vegan", icon: "🌱" },
-  { id: "challenge", label: "Challenges", icon: "🏆" },
-  { id: "community", label: "Forum", icon: "💬" },
-] as const;
 
 /**
  * Navbar Component - Airbnb Pattern Implementation
@@ -47,6 +33,7 @@ function Navbar({
   signalOfNewMessage = [],
   mapMode = false,
 }: NavbarProps) {
+  const t = useTranslations();
   const { logout } = useAuth();
   const { isCompact, scrollY } = useAdvancedScroll({
     compactThreshold: 100,
@@ -57,6 +44,17 @@ function Navbar({
 
   const router = useRouter();
   const activeCategory = productType.toLowerCase() || "food";
+
+  // Translate category labels
+  const translatedCategories = useMemo(
+    () =>
+      CATEGORIES.map((cat) => ({
+        id: cat.id,
+        label: t(cat.labelKey),
+        icon: cat.icon,
+      })),
+    [t]
+  );
 
   // Navigation handlers - React Compiler optimizes these
   const handleLogoClick = () => {
@@ -73,7 +71,8 @@ function Navbar({
       router.push('/forum');
       return;
     }
-    const path = mapMode ? `/map/${routeName}` : `/${routeName}`;
+    // Use /s/[category] route for all category pages
+    const path = mapMode ? `/map/${routeName}` : `/s/${routeName}`;
     router.push(path);
   };
 
@@ -123,7 +122,7 @@ function Navbar({
             {/* Center: Category Navigation - truly centered */}
             <div className="flex-1 flex justify-center">
               <CategoryNavigation
-                categories={CATEGORIES}
+                categories={translatedCategories}
                 activeCategory={activeCategory}
                 onCategoryChange={handleCategoryChange}
               />

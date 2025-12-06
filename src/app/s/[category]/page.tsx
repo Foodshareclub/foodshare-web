@@ -4,8 +4,24 @@ import { getUser } from '@/app/actions/auth';
 import { HomeClient } from '@/app/HomeClient';
 import SkeletonCard from '@/components/productCard/SkeletonCard';
 
-// Valid category paths that map to post_type values
-const CATEGORY_PATHS = ['all', 'food', 'thing', 'borrow', 'wanted', 'fridge', 'foodbank', 'business', 'volunteer', 'challenge', 'zerowaste', 'vegan', 'community'];
+// Valid category URL paths (plural form for consistency)
+const CATEGORY_PATHS = ['all', 'food', 'things', 'borrow', 'wanted', 'fridges', 'foodbanks', 'organisations', 'volunteers', 'challenges', 'zerowaste', 'vegan', 'community'];
+
+// Map URL paths to database post_type values (singular form)
+const URL_TO_POST_TYPE: Record<string, string> = {
+  'food': 'food',
+  'things': 'thing',
+  'borrow': 'borrow',
+  'wanted': 'wanted',
+  'fridges': 'fridge',
+  'foodbanks': 'foodbank',
+  'organisations': 'business',
+  'volunteers': 'volunteer',
+  'challenges': 'challenge',
+  'zerowaste': 'zerowaste',
+  'vegan': 'vegan',
+  'community': 'community',
+};
 
 interface PageProps {
   params: Promise<{ category: string }>;
@@ -19,16 +35,17 @@ interface PageProps {
 export default async function SearchPage({ params, searchParams }: PageProps) {
   const [{ category }, { key_word }] = await Promise.all([params, searchParams]);
 
-  // Normalize category
-  const productType = CATEGORY_PATHS.includes(category) ? category : 'all';
+  // Validate URL category path
+  const urlCategory = CATEGORY_PATHS.includes(category) ? category : 'all';
+  
+  // Map URL path to database post_type
+  const dbPostType = urlCategory === 'all' ? 'food' : (URL_TO_POST_TYPE[urlCategory] || 'food');
 
   // Fetch data in parallel
   const [products, user] = await Promise.all([
     key_word
-      ? searchProducts(key_word, productType)
-      : productType === 'all'
-        ? getProducts('food')
-        : getProducts(productType),
+      ? searchProducts(key_word, dbPostType)
+      : getProducts(dbPostType),
     getUser(),
   ]);
 
@@ -37,7 +54,7 @@ export default async function SearchPage({ params, searchParams }: PageProps) {
       <HomeClient
         initialProducts={products}
         user={user}
-        productType={productType === 'all' ? 'food' : productType}
+        productType={urlCategory === 'all' ? 'food' : urlCategory}
       />
     </Suspense>
   );

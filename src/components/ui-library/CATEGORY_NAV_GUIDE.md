@@ -29,15 +29,19 @@ function MyPage() {
 
 **Built-in Categories:**
 
+Order: Food basics → Community resources → Special interests → Challenges → Forum
+
 - Food 🍎
 - Things 🎁
 - Borrow 🔧
 - Wanted 📦
 - FoodBanks 🏠
 - Fridges ❄️
-- Business 💼
-- Volunteer 🤝
-- Challenges 🔥
+- Organisations 🏛️
+- Volunteers 🙌🏻
+- Challenges 🏆
+- Zero Waste ♻️
+- Vegan 🌱
 - Community 🌐
 
 ### 2. AirbnbCategoryNav (Customizable)

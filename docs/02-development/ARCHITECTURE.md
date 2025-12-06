@@ -68,31 +68,37 @@
 
 The application uses Next.js routing with custom configuration in `next.config.ts`:
 
-### Clean Category URLs (Rewrites)
+### Category URLs
 
-Category pages use rewrites to maintain clean URLs while serving from the products page:
+Category pages use the `/s/[category]` route pattern:
 
-| User sees in browser | Internally serves            |
-| -------------------- | ---------------------------- |
-| `/food`              | `/products?type=food`        |
-| `/things`            | `/products?type=things`      |
-| `/borrow`            | `/products?type=borrow`      |
-| `/wanted`            | `/products?type=wanted`      |
-| `/fridges`           | `/products?type=fridges`     |
-| `/foodbanks`         | `/products?type=foodbanks`   |
-| `/business`          | `/products?type=business`    |
-| `/volunteer`         | `/products?type=volunteer`   |
-| `/zerowaste`         | `/products?type=zerowaste`   |
-| `/vegan`             | `/products?type=vegan`       |
+| URL | Description |
+| --- | ----------- |
+| `/s/food` | Food listings |
+| `/s/things` | Things to share |
+| `/s/borrow` | Items to borrow |
+| `/s/wanted` | Wanted items |
+| `/s/fridges` | Community fridges |
+| `/s/foodbanks` | Food banks |
+| `/s/organisations` | Organisations |
+| `/s/volunteers` | Volunteer opportunities |
+| `/s/zerowaste` | Zero waste listings |
+| `/s/vegan` | Vegan listings |
+
+The `/s/[category]` route also supports search via query params: `/s/food?key_word=apples`
 
 ### Dedicated Feature Routes
 
-Some features have their own dedicated routes instead of rewrites:
+Some features have their own dedicated routes instead of using the `/s/[category]` pattern:
 
 | Route | Description |
 | ----- | ----------- |
-| `/challenge` | Challenges listing page (dedicated route) |
+| `/food` | Food listings page |
+| `/food/[id]` | Individual food listing detail |
+| `/challenge` | Challenges listing page |
 | `/challenge/[id]` | Individual challenge detail page |
+| `/forum` | Community forum |
+| `/forum/[slug]` | Individual forum post |
 
 ### Legacy Route Redirects
 
@@ -101,7 +107,9 @@ Old URLs are permanently redirected (301) to the correct routes:
 | Legacy URL | Redirects to |
 |-----------|--------------|
 | `/products/:id` | `/food/:id` |
-| `/things/:id` | `/thing/:id` |
+| `/thing/:id` | `/things/:id` |
+| `/business` | `/organisations` |
+| `/volunteer` | `/volunteers` |
 | `/community` | `/forum` |
 
 ### Route Constants
@@ -205,7 +213,7 @@ All application routes are defined in `src/utils/ROUTES.ts` for consistent navig
 ```
 User Action
     │
-    │ 1. Navigate to /food
+    │ 1. Navigate to /s/food
     ▼
 ┌─────────────┐
 │   Router    │
@@ -627,6 +635,6 @@ Mobile First Approach
 
 ---
 
-**Last Updated**: November 30, 2024
+**Last Updated**: December 6, 2025
 **Status**: ✅ Optimized Architecture
 **Next Review**: After Phase 1 completion

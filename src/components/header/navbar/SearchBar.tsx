@@ -513,8 +513,11 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
                 { id: "wanted", label: "Wanted", icon: "📦" },
                 { id: "foodbanks", label: "FoodBanks", icon: "🏠" },
                 { id: "fridges", label: "Fridges", icon: "❄️" },
-                { id: "business", label: "Business", icon: "🏛️" },
-                { id: "volunteer", label: "Volunteer", icon: "🙌🏻" },
+                { id: "organisations", label: "Organisations", icon: "🏛️" },
+                { id: "volunteers", label: "Volunteers", icon: "🙌🏻" },
+                { id: "challenges", label: "Challenges", icon: "🏆" },
+                { id: "zerowaste", label: "Zero Waste", icon: "♻️" },
+                { id: "vegan", label: "Vegan", icon: "🌱" },
               ].map((category) => (
                 <div
                   key={category.id}

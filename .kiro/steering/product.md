@@ -30,7 +30,7 @@ FoodShare is a community-driven food sharing platform that connects people with 
 - `wanted` - Items users are looking for
 - `fridge` - Community fridges
 - `foodbank` - Food banks
-- `business` - Business listings
+- `business` - Organisations (businesses, charities, community groups)
 - `volunteer` - Volunteer opportunities
 - `challenge` - Community challenges
 - `zerowaste` - Zero waste initiatives

@@ -101,6 +101,12 @@ src/
 │   ├── robots.ts               # Robots.txt generator
 │   ├── sitemap.ts              # Sitemap generator
 │   │
+│   ├── [category]/             # Category redirect handler
+│   │   └── page.tsx            # Redirects /{category} → /s/{category}
+│   │
+│   ├── s/                      # Search/category routes (canonical)
+│   │   └── [category]/page.tsx # Category listing page
+│   │
 │   ├── actions/                # Server Actions (mutations)
 │   │   ├── auth.ts             # Auth actions (login, logout, signup)
 │   │   ├── products.ts         # Product CRUD actions
@@ -454,6 +460,30 @@ error.tsx                         // Error boundary
 not-found.tsx                     // 404 page
 ```
 
+### Category URL Routing
+
+The app uses a two-tier routing pattern for category pages:
+
+```typescript
+// Canonical category routes (primary)
+src/app/s/[category]/page.tsx    → /s/food, /s/things, /s/fridges, etc.
+
+// Redirect handler (convenience)
+src/app/[category]/page.tsx      → Redirects /{category} to /s/{category}
+```
+
+**Valid Categories:** `things`, `borrow`, `wanted`, `fridges`, `foodbanks`, `organisations`, `volunteers`, `challenges`, `zerowaste`, `vegan`, `community`
+
+**Note:** Some categories have dedicated routes and are excluded from the redirect handler:
+- `/food` → Has its own route at `src/app/food/`
+- `/challenge` → Has its own route at `src/app/challenge/`
+- `/forum` → Has its own route at `src/app/forum/`
+
+**Special Redirects:**
+- `/community` → Redirects to `/forum`
+
+**Legacy Redirects:** Singular forms redirect to plural (e.g., `/thing` → `/s/things`, `/fridge` → `/s/fridges`)
+
 ### Server Actions
 
 ```typescript
@@ -513,6 +543,7 @@ useFilterStore.ts
 | What You Need            | Where to Look                                        |
 | ------------------------ | ---------------------------------------------------- |
 | **Add a new page**       | `src/app/[route]/page.tsx`                          |
+| **Add category page**    | `src/app/s/[category]/page.tsx` (add to CATEGORY_PATHS) |
 | **Add a Server Action**  | `src/app/actions/[entity].ts`                       |
 | **Add a component**      | `src/components/[category]/ComponentName.tsx`        |
 | **Add shadcn component** | Run `npx shadcn@latest add [component]`             |

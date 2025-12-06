@@ -113,8 +113,9 @@ const Leaflet = dynamic(() => import('@/components/leaflet/Leaflet'), {
 ## Routes Using Maps
 
 Split-view enabled on:
-- `/food`, `/things`, `/borrow`, `/wanted`
-- All other category routes
+- `/s/food`, `/s/things`, `/s/borrow`, `/s/wanted`
+- All other `/s/[category]` routes
+- `/map/[category]` routes (map-focused view)
 
 Product detail map on:
 - `/food/[id]` and similar detail pages

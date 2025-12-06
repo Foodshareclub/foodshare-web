@@ -263,8 +263,8 @@ export function NewProductForm({ userId }: NewProductFormProps) {
                   <SelectItem value="wanted">🤲 Wanted</SelectItem>
                   <SelectItem value="foodbank">🏛️ FoodBanks</SelectItem>
                   <SelectItem value="fridge">❄️ Fridges</SelectItem>
-                  <SelectItem value="business">🏛️ Business</SelectItem>
-                  <SelectItem value="volunteer">🙌 Volunteer</SelectItem>
+                  <SelectItem value="business">🏛️ Organisations</SelectItem>
+                  <SelectItem value="volunteer">🙌 Volunteers</SelectItem>
                   <SelectItem value="challenge">🏆 Challenges</SelectItem>
                   <SelectItem value="zerowaste">♻️ Zero Waste</SelectItem>
                   <SelectItem value="vegan">🌱 Vegan</SelectItem>

@@ -1,5 +1,19 @@
 {
   "0": "{0}",
+  "categories": {
+    "food": "Еда",
+    "things": "Вещи",
+    "borrow": "Одолжить",
+    "wanted": "Ищу",
+    "foodbanks": "Фудбанки",
+    "fridges": "Холодильники",
+    "organisations": "Организации",
+    "volunteers": "Волонтёры",
+    "zerowaste": "Без отходов",
+    "vegan": "Веган",
+    "challenges": "Челленджи",
+    "community": "Форум"
+  },
   "0_views": "{0} просмотров",
   "buttonvalue": "{buttonValue}",
   "text": "{text}",

@@ -32,7 +32,8 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
   const activeItemRef = useRef<HTMLLIElement>(null);
 
   // Memoize categories to prevent recreation on every render
-  // IDs are plural for URLs, mapped to singular DB post_type in filters
+  // IDs match URL paths (plural form)
+  // Order: Food basics → Community resources → Special interests → Challenges → Forum
   const categories = useMemo(
     () => [
       { id: "food", label: "Food", icon: "🍎", ariaLabel: "Browse food items" },
@@ -41,9 +42,11 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
       { id: "wanted", label: "Wanted", icon: "📦", ariaLabel: "Wanted items" },
       { id: "foodbanks", label: "FoodBanks", icon: "🏠", ariaLabel: "Find food banks" },
       { id: "fridges", label: "Fridges", icon: "❄️", ariaLabel: "Community fridges" },
-      { id: "business", label: "Business", icon: "🏛️", ariaLabel: "Business listings" },
-      { id: "volunteer", label: "Volunteer", icon: "🙌🏻", ariaLabel: "Volunteer opportunities" },
-      { id: "challenges", label: "Challenges", icon: "🚀", ariaLabel: "Community challenges" },
+      { id: "organisations", label: "Organisations", icon: "🏛️", ariaLabel: "Organisation listings" },
+      { id: "volunteers", label: "Volunteers", icon: "🙌🏻", ariaLabel: "Volunteer opportunities" },
+      { id: "challenges", label: "Challenges", icon: "🏆", ariaLabel: "Community challenges" },
+      { id: "zerowaste", label: "Zero Waste", icon: "♻️", ariaLabel: "Zero waste initiatives" },
+      { id: "vegan", label: "Vegan", icon: "🌱", ariaLabel: "Vegan listings" },
       { id: "community", label: "Community", icon: "🌐", ariaLabel: "Community events" },
     ],
     []
