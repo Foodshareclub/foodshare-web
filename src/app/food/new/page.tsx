@@ -1,6 +1,12 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { NewProductForm } from './NewProductForm'
+import { generateNoIndexMetadata } from '@/lib/metadata'
+
+export const metadata = generateNoIndexMetadata(
+  'Create New Listing',
+  'Share food or items with your community'
+);
 
 /**
  * New Product Page - Server Component

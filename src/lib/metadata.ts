@@ -213,19 +213,46 @@ export function generatePageMetadata({
     },
     robots: noIndex
       ? {
-          index: false,
-          follow: false,
-        }
+        index: false,
+        follow: false,
+      }
       : {
+        index: true,
+        follow: true,
+        googleBot: {
           index: true,
           follow: true,
-          googleBot: {
-            index: true,
-            follow: true,
-            "max-video-preview": -1,
-            "max-image-preview": "large",
-            "max-snippet": -1,
-          },
+          "max-video-preview": -1,
+          "max-image-preview": "large",
+          "max-snippet": -1,
         },
+      },
+  };
+}
+
+/**
+ * Reusable noIndex metadata for private/authenticated pages
+ * Use this for auth, admin, settings, and other non-public pages
+ */
+export const noIndexMetadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
+};
+
+/**
+ * Generate noIndex metadata with a custom title
+ * Use for pages that need a title but should not be indexed
+ */
+export function generateNoIndexMetadata(title: string, description?: string): Metadata {
+  return {
+    title,
+    description: description || siteConfig.description,
+    ...noIndexMetadata,
   };
 }

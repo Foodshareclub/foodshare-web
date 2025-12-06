@@ -11,11 +11,9 @@ import Navbar from '@/components/header/navbar/Navbar';
 import ContactsBlock from '@/components/chat/ContactsBlock';
 import { MessagesWindow } from '@/components/chat/MessagesWindow';
 import { Skeleton } from '@/components/ui/skeleton';
-
-/**
  * Chat page - Full chat interface
- * Supports: /chat, /chat?food=123, /chat?user=uuid, /chat?room=uuid
- */
+  * Supports: /chat, /chat ? food = 123, /chat?user=uuid, /chat ? room = uuid
+    */
 export default function ChatPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,7 +31,7 @@ export default function ChatPage() {
 
   // Get all rooms for current user
   const { data: rooms, isLoading: roomsLoading } = useRooms(user?.id);
-  
+
   // Get messages for active room (syncs to Zustand store)
   useMessages(activeRoomId || undefined);
   const storeMessages = useChatStore((state) => state.messages);
@@ -54,7 +52,7 @@ export default function ChatPage() {
         setIsCreatingRoom(true);
         try {
           const { data: existingRooms } = await chatAPI.checkRoomAvailability(user.id, foodId);
-          
+
           if (existingRooms && existingRooms.length > 0) {
             setActiveRoomId(existingRooms[0].id);
           }
@@ -112,8 +110,8 @@ export default function ChatPage() {
         userId={user.id}
         isAuth={true}
         productType="food"
-        onRouteChange={() => {}}
-        onProductTypeChange={() => {}}
+        onRouteChange={() => { }}
+        onProductTypeChange={() => { }}
         imgUrl={profile?.avatar_url || ''}
         firstName={profile?.first_name || ''}
         secondName={profile?.second_name || ''}

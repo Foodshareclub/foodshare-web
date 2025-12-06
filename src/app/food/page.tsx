@@ -1,15 +1,63 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
 import { getProducts } from '@/lib/data/products';
 import { getChallenges } from '@/lib/data/challenges';
 import { HomeClient } from '@/app/HomeClient';
 import SkeletonCard from '@/components/productCard/SkeletonCard';
+import { categoryMetadata, generatePageMetadata } from '@/lib/metadata';
 
 // Route segment config for caching
 export const revalidate = 60;
 
 const CATEGORY_PATHS = [
   'food',
+  'thing',
+  'borrow',
+  'wanted',
+  'fridge',
+  'foodbank',
+  'business',
+  'volunteer',
+  'challenge',
+  'zerowaste',
+  'vegan',
+  'community',
+];
+
+// Map URL params to categoryMetadata keys
+const categoryKeyMap: Record<string, keyof typeof categoryMetadata> = {
+  food: 'food',
+  thing: 'things',
+  things: 'things',
+  borrow: 'borrow',
+  wanted: 'wanted',
+  fridge: 'fridges',
+  fridges: 'fridges',
+  foodbank: 'foodbanks',
+  foodbanks: 'foodbanks',
+  business: 'business',
+  volunteer: 'volunteer',
+};
+
+interface PageProps {
+  searchParams: Promise<{ type?: string }>;
+}
+
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const params = await searchParams;
+  const type = params.type || 'food';
+  const categoryKey = categoryKeyMap[type] || 'food';
+  const category = categoryMetadata[categoryKey];
+
+  return generatePageMetadata({
+    title: category.title,
+    description: category.description,
+    keywords: category.keywords,
+    path: type === 'food' ? '/food' : `/food?type=${type}`,
+  });
+}
+'food',
   'thing',
   'borrow',
   'wanted',

@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
 import { searchProducts, getProducts } from '@/lib/data/products';
 import { getUser } from '@/app/actions/auth';
 import { HomeClient } from '@/app/HomeClient';
@@ -37,6 +38,11 @@ export default async function SearchPage({ params, searchParams }: PageProps) {
 
   // Validate URL category path
   const urlCategory = CATEGORY_PATHS.includes(category) ? category : 'all';
+  
+  // Challenges have a dedicated table and page - redirect there
+  if (urlCategory === 'challenges') {
+    redirect('/challenge');
+  }
   
   // Map URL path to database post_type
   const dbPostType = urlCategory === 'all' ? 'food' : (URL_TO_POST_TYPE[urlCategory] || 'food');

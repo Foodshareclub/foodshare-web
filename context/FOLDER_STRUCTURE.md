@@ -481,6 +481,7 @@ src/app/[category]/page.tsx      → Redirects /{category} to /s/{category}
 
 **Special Redirects:**
 - `/community` → Redirects to `/forum`
+- `/s/challenges` → Redirects to `/challenge` (challenges use a dedicated table)
 
 **Legacy Redirects:** Singular forms redirect to plural (e.g., `/thing` → `/s/things`, `/fridge` → `/s/fridges`)
 
