@@ -188,15 +188,32 @@ plugins: [
 
 ### 4.3 Avatar Duplication
 
-| Location | Purpose |
-|----------|---------|
-| `ui/avatar.tsx` | shadcn Avatar (Radix) |
-| `avatar/Avatar.tsx` | Upload component (misnamed) |
-| `listingPersonCard/AvatarWithRipple.tsx` | Animated avatar |
+| Location | Purpose | Status |
+|----------|---------|--------|
+| `ui/avatar.tsx` | shadcn Avatar (Radix) | ✅ Keep |
+| `avatar/Avatar.tsx` | Upload component (legacy) | ⚠️ Deprecated |
+| `avatar/UnifiedAvatar.tsx` | Unified avatar component | ✅ NEW |
+| `listingPersonCard/AvatarWithRipple.tsx` | Animated avatar | ⚠️ Use UnifiedAvatar |
 
-**Problem:** `avatar/Avatar.tsx` is actually an upload component, not an avatar display.
+**Status:** ✅ RESOLVED - New `UnifiedAvatar` component consolidates all avatar variants.
 
-**Recommendation:** Rename to `AvatarUploader.tsx`.
+**UnifiedAvatar Variants:**
+- `display` (default) - Simple avatar display with fallback
+- `upload` - Avatar with file upload functionality
+- `ripple` - Animated avatar with pulse ring effect
+
+```tsx
+// Display avatar
+<UnifiedAvatar src={url} size="md" />
+
+// Upload avatar
+<UnifiedAvatar variant="upload" size={96} onUpload={handleUpload} />
+
+// Ripple avatar
+<UnifiedAvatar variant="ripple" src={url} rippleColor="teal" />
+```
+
+**Migration:** Replace `Avatar.tsx` and `AvatarWithRipple.tsx` usage with `UnifiedAvatar`.
 
 ---
 
@@ -307,8 +324,9 @@ className="transform-gpu backface-hidden"
 2. **Delete redundant files:**
    - ~~`ui-library/StyledButton.tsx`~~ ✅ DONE (removed from exports)
 
-3. **Rename confusing files:**
-   - `avatar/Avatar.tsx` → `avatar/AvatarUploader.tsx`
+3. **Avatar consolidation:** ✅ DONE
+   - New `UnifiedAvatar` component created with `display`, `upload`, `ripple` variants
+   - Legacy `Avatar.tsx` can be deprecated in favor of `UnifiedAvatar`
 
 ### Phase 2: Glass Consolidation (2-4 hours)
 

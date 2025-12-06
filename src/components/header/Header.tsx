@@ -28,23 +28,11 @@ export default function Header({ getRoute, setProductType, productType }: Header
   // Final avatar URL with fallback chain
   const finalAvatarUrl = avatarUrl || profile?.avatar_url || undefined;
 
-  // Debug: Log avatar data flow (only when authenticated)
-  if (process.env.NODE_ENV === 'development' && isAuthenticated) {
-    console.log('[Header] Avatar debug:', {
-      userId,
-      isProfileLoading,
-      hasProfile: !!profile,
-      profileAvatarUrl: profile?.avatar_url,
-      computedAvatarUrl: avatarUrl,
-      finalAvatarUrl,
-    });
-  }
-
   // Chat rooms from React Query
   const { data: allUserRooms = [] } = useRooms(userId);
 
   // User data from profile
-  const firstName = profile?.first_name ?? null;
+  const firstName = profile?.first_name || profile?.nickname || null;
   const secondName = profile?.second_name ?? null;
   const email = user?.email ?? profile?.email ?? null;
 

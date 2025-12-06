@@ -2,6 +2,15 @@
  * Profile API
  * Handles user profile operations (NOT authentication)
  * Auth operations are in authAPI.ts
+ *
+ * @deprecated This API layer is deprecated for server-side usage.
+ * Use @/lib/data/profiles for server-side data fetching instead.
+ * This file is kept for backward compatibility with client-side TanStack Query hooks.
+ *
+ * Migration guide:
+ * - Server Components: import { getProfile } from '@/lib/data/profiles'
+ * - Server Actions: import { createClient } from '@/lib/supabase/server'
+ * - Client (realtime only): Keep using this file
  */
 
 import { supabase } from "@/lib/supabase/client";
@@ -47,6 +56,7 @@ export type ProfileType = {
   birth_date: string;
   first_name: string;
   last_name?: string; // Alias for second_name
+  nickname?: string;
   phone: string;
   second_name: string;
   updated_at: Date;

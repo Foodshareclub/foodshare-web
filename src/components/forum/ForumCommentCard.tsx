@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { ForumComment } from "@/api/forumAPI";
+import { RichTextViewer } from "./RichTextViewer";
 import { useAuth } from "@/hooks/useAuth";
 import { FaAward, FaCheckCircle, FaChevronDown, FaCommentDots, FaEdit, FaEllipsisH, FaFlag, FaHeart, FaReply, FaTrash } from 'react-icons/fa';
 
@@ -256,8 +257,12 @@ export function ForumCommentCard({
               </div>
 
               {/* Comment Content */}
-              <div className="text-foreground/80 leading-relaxed whitespace-pre-wrap mb-4 pl-[52px]">
-                {comment.comment}
+              <div className="text-foreground/80 leading-relaxed mb-4 pl-[52px]">
+                {comment.rich_content ? (
+                  <RichTextViewer content={comment.rich_content} />
+                ) : (
+                  <p className="whitespace-pre-wrap">{comment.comment}</p>
+                )}
               </div>
 
               {/* Footer: Actions */}

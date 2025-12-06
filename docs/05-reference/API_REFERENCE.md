@@ -12,6 +12,13 @@ FoodShare uses a client-side API layer that interfaces with Supabase backend ser
 
 Located: `src/api/productAPI.ts`
 
+> ⚠️ **Deprecated:** This API layer is deprecated. Use `@/lib/data/products` for server-side data fetching instead. This file is kept for backward compatibility with client-side TanStack Query hooks.
+>
+> **Migration guide:**
+> - Server Components: `import { getProducts } from '@/lib/data/products'`
+> - Server Actions: `import { createClient } from '@/lib/supabase/server'`
+> - Client (realtime only): Keep using this file
+
 > **Note:** All read operations use the `posts_with_location` database view, which provides location data as proper GeoJSON via `ST_AsGeoJSON()`. This ensures consistent coordinate handling across the application. Write operations (create, update, delete) still use the `posts` table directly.
 
 ### Get All Products

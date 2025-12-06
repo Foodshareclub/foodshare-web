@@ -199,9 +199,10 @@ supabase
 **Technical Implementation:**
 
 - API: `profileAPI.ts` - `getProfile`, `updateProfile`, `createProfile`
-- State: Redux `userReducer` manages user state
-- Components: `PersonalInfoPage`, `NameBlock`, `EmailBlock`, `PhoneNumberBlock`, `AddressBlock`
-- Pages: `/profile`, `/settings`
+- State: React Query `useCurrentProfile` hook for profile data
+- Components: `PersonalInfoClient` with reusable `InfoCard` pattern
+- Design: Modern card-based UI with gradient icons, Framer Motion animations
+- Pages: `/profile`, `/settings/personal-info`
 
 ---
 

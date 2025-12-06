@@ -12,6 +12,7 @@ export { ProductsLocation } from "./productsLocation/ProductLocation";
 
 // User Profile & Personal Info
 export { default as Avatar } from "./avatar/Avatar";
+export { UnifiedAvatar, DisplayAvatar, RippleAvatar, UploadAvatar } from "./avatar/UnifiedAvatar";
 export { default as AvatarWithRipple } from "./listingPersonCard/AvatarWithRipple";
 export { default as PersonCard } from "./personCard/PersonCard";
 export { default as ListingPersonCards } from "./listingPersonCard/ListingPersonCards";
@@ -45,11 +46,13 @@ export { default as NavDrawer } from "./modals/NavDrawer";
 export { default as PublishListingModal } from "./modals/PublishListingModal";
 export { default as VolunteerInfoModal } from "./modals/VolunteerInfoModal";
 export { default as DeleteCardModal } from "./modals/DeleteCardModal";
+export { ConfirmationModal, DeleteConfirmationModal } from "./modals/ConfirmationModal";
 
-// Drawers
+// Drawers & Responsive Containers
 export { ContactsBlockDrawerContainer } from "./drawerContainers/ContactsBlockDrawerContainer";
 export { OneProductDrawerContainer } from "./drawerContainers/OneProductDrawerContainer";
 export { default as UniversalDrawer } from "./universalDrawer/UniversalDrawer";
+export { ResponsiveContainer } from "./shared/ResponsiveContainer";
 
 // UI Components
 export { default as Carousel } from "./carousel/Carousel";
@@ -71,6 +74,12 @@ export { VolunteerCards } from "./volunteerCard/VolonterCards";
 // Localization
 export { default as LanguageSelector } from "./languageSelector/LanguageSelector";
 export { default as ChangeLanguageContainer } from "./localization/ChangeLanguageContainer";
+
+// Error Boundaries
+export { GenericErrorBoundary, withErrorBoundary } from "./ErrorBoundary";
+
+// Auth Guards
+export { AuthGuard, RequireAuth, RequireGuest, RequireAdmin } from "./guards/AuthGuard";
 
 // Glass utilities - Use Tailwind classes: glass, glass-subtle, glass-prominent
 // Or use Button/Dialog/Drawer with variant="glass"

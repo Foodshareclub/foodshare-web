@@ -68,6 +68,11 @@ function Navbar({
     const routeName = categoryId.toLowerCase();
     onRouteChange(routeName);
     onProductTypeChange(categoryId);
+    // Forum is a special case - it's not a product type filter
+    if (routeName === 'community') {
+      router.push('/forum');
+      return;
+    }
     const path = mapMode ? `/map/${routeName}` : `/${routeName}`;
     router.push(path);
   };

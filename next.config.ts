@@ -1,4 +1,7 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   // Enable React Compiler (stable in Next.js 16)
@@ -109,6 +112,12 @@ const nextConfig: NextConfig = {
         destination: "/thing/:id",
         permanent: true,
       },
+      // /community → /forum (community is now the forum)
+      {
+        source: "/community",
+        destination: "/forum",
+        permanent: true,
+      },
     ];
   },
 
@@ -157,10 +166,6 @@ const nextConfig: NextConfig = {
         source: "/vegan",
         destination: "/food?type=vegan",
       },
-      {
-        source: "/community",
-        destination: "/food?type=community",
-      },
       // Detail page rewrites: /:type/:id -> /food/:id
       {
         source: "/thing/:id",
@@ -200,10 +205,6 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/vegan/:id",
-        destination: "/food/:id",
-      },
-      {
-        source: "/community/:id",
         destination: "/food/:id",
       },
     ];
@@ -264,4 +265,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

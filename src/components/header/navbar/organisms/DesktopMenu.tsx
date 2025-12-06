@@ -75,8 +75,10 @@ export function DesktopMenu({
     const hasNotifications = signalOfNewMessage.length > 0;
     const notificationCount = signalOfNewMessage.length;
 
-    // Build display name from first and second name
-    const displayName = [firstName, secondName].filter(Boolean).join(' ') || 'User';
+    // Build display name with fallback chain: full name -> first name -> email username -> 'User'
+    const fullName = [firstName, secondName].filter(Boolean).join(' ');
+    const emailUsername = email?.split('@')[0];
+    const displayName = fullName || emailUsername || 'User';
 
     return (
       <>
@@ -99,11 +101,20 @@ export function DesktopMenu({
               {isAuth ? (
                 <>
                   {/* User Profile Info Header */}
-                  <div className="px-3 py-2 border-b border-border/50 mb-1">
-                    <p className="font-medium text-sm text-foreground truncate">{displayName}</p>
-                    {email && (
-                      <p className="text-xs text-muted-foreground truncate">{email}</p>
-                    )}
+                  <div className="px-3 py-3 border-b border-border/50 mb-1 flex items-center gap-3">
+                    <NavbarAvatar
+                      src={imgUrl}
+                      alt="User profile"
+                      firstName={firstName}
+                      secondName={secondName}
+                      size="md"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-foreground truncate">{displayName}</p>
+                      {email && (
+                        <p className="text-xs text-muted-foreground truncate">{email}</p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Admin Dashboard Link */}

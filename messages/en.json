@@ -483,5 +483,7 @@
   "your_name": "Your name",
   "your_published_listings_will_appear_here": "Your published listings will appear here",
   "youremailcom": "your@email.com",
-  "zippostal_code": "Zip/Postal Code *"
+  "zippostal_code": "Zip/Postal Code *",
+  "forum_title": "Community Forum",
+  "forum_description": "Join the discussion with fellow food sharers"
 }

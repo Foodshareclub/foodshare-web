@@ -28,25 +28,25 @@ export default async function LoginAndSecurityPage() {
  */
 function LoginSecuritySkeleton() {
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="bg-muted/30 dark:bg-background pb-10">
       <div className="container mx-auto max-w-3xl px-4 py-8">
         {/* Breadcrumb Skeleton */}
         <div className="flex items-center gap-2 mb-8">
-          <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-          <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
-          <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+          <div className="h-4 w-4 bg-muted rounded animate-pulse" />
+          <div className="h-4 w-32 bg-muted rounded animate-pulse" />
         </div>
 
         {/* Title Skeleton */}
         <div className="mb-8">
-          <div className="h-10 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
-          <div className="h-5 w-96 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          <div className="h-10 w-64 bg-muted rounded animate-pulse mb-2" />
+          <div className="h-5 w-96 bg-muted rounded animate-pulse" />
         </div>
 
         {/* Content Skeleton */}
         <div className="space-y-4">
-          <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
-          <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse" />
+          <div className="h-32 bg-muted rounded-xl animate-pulse" />
+          <div className="h-48 bg-muted rounded-xl animate-pulse" />
         </div>
       </div>
     </div>

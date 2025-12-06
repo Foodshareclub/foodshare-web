@@ -81,6 +81,10 @@ export function MobileMenu({
 
     const hasNotifications = signalOfNewMessage.length > 0;
 
+    // Build display name with fallback chain
+    const emailUsername = email?.split('@')[0];
+    const displayName = firstName || emailUsername || 'friend';
+
     return (
       <div className="self-center">
         {/* Menu Trigger Button */}
@@ -105,7 +109,7 @@ export function MobileMenu({
           size={size}
           onClose={handleClose}
           isOpen={isOpen}
-          headerValue={`Hi ${firstName || "friend"}`}
+          headerValue={`Hi ${displayName}`}
           placement="end"
         >
           <>

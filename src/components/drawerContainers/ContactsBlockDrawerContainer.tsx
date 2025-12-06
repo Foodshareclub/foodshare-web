@@ -1,53 +1,33 @@
 'use client';
 
-import React, { useState } from "react";
-import { ContactsBlock, UniversalDrawer } from "@/components";
-import { useMediaQuery } from "@/hooks";
-import { ArrowRightIcon } from "@/utils/icons";
-import type { ContactsBlockType } from "@/components/chat/ContactsBlock";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { ContactsBlock } from '@/components';
+import { ResponsiveContainer } from '@/components/shared/ResponsiveContainer';
+import type { ContactsBlockType } from '@/components/chat/ContactsBlock';
 
+/**
+ * ContactsBlockDrawerContainer
+ * Shows contacts inline on desktop, in drawer on mobile
+ * Uses unified ResponsiveContainer
+ */
 export const ContactsBlockDrawerContainer: React.FC<ContactsBlockType> = ({
   allRooms,
   roomIDFromUrl,
   newMessageRoomId,
   userID,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const isSmaller = useMediaQuery("(min-width:1200px)");
-
   return (
-    <>
-      {!isSmaller ? (
-        <>
-          <Button
-            onClick={() => setIsOpen(true)}
-            className="fixed left-[-10px] w-[45px] h-[45px] rounded-full z-10 bg-orange-500 hover:bg-orange-600"
-          >
-            <ArrowRightIcon />
-          </Button>
-          <UniversalDrawer
-            onClose={() => setIsOpen(false)}
-            isOpen={isOpen}
-            size={"md"}
-            placement={"start"}
-          >
-            <ContactsBlock
-              userID={userID}
-              allRooms={allRooms}
-              newMessageRoomId={newMessageRoomId}
-              roomIDFromUrl={roomIDFromUrl as string}
-            />
-          </UniversalDrawer>
-        </>
-      ) : (
-        <ContactsBlock
-          userID={userID}
-          allRooms={allRooms}
-          newMessageRoomId={newMessageRoomId}
-          roomIDFromUrl={roomIDFromUrl as string}
-        />
-      )}
-    </>
+    <ResponsiveContainer
+      drawerPlacement="start"
+      drawerSize="md"
+      triggerPosition="left"
+    >
+      <ContactsBlock
+        userID={userID}
+        allRooms={allRooms}
+        newMessageRoomId={newMessageRoomId}
+        roomIDFromUrl={roomIDFromUrl as string}
+      />
+    </ResponsiveContainer>
   );
 };

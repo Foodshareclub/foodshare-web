@@ -1,20 +1,19 @@
-import Link from 'next/link'
+import { PageHeader } from '@/components/navigation/PageHeader'
 
 export const metadata = {
   title: 'Privacy Policy | FoodShare',
   description: 'FoodShare Privacy Policy - Learn how we collect, use, and protect your personal information.',
 }
 
-// Static page - no revalidation needed
 export const dynamic = 'force-static'
 
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">
-      <div className="container mx-auto max-w-4xl py-12 px-4">
+      <PageHeader title="Privacy Policy" />
+      
+      <div className="container mx-auto max-w-4xl py-8 px-4">
         <div className="bg-card rounded-2xl shadow-sm p-8 md:p-12">
-          <h1 className="text-3xl font-bold text-foreground mb-8">Privacy Policy</h1>
-
           <div className="prose prose-gray dark:prose-invert max-w-none">
             <p className="text-muted-foreground mb-6">
               Last updated: December 2024
@@ -113,22 +112,13 @@ export default function PrivacyPage() {
               </p>
             </section>
 
-            <section className="mb-8">
+            <section>
               <h2 className="text-xl font-semibold text-foreground mb-4">10. Contact Us</h2>
-              <p className="text-foreground/80 mb-4">
+              <p className="text-foreground/80">
                 If you have questions about this Privacy Policy, please contact us through the
                 feedback form in your account settings.
               </p>
             </section>
-          </div>
-
-          <div className="mt-8 pt-6 border-t border-border">
-            <Link
-              href="/"
-              className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium"
-            >
-              &larr; Back to Home
-            </Link>
           </div>
         </div>
       </div>

@@ -27,7 +27,7 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0 }: F
 
   // React Compiler optimizes this handler automatically
   const onNavigateToPost = () => {
-    router.push(`/community/${post.slug || post.id}`);
+    router.push(`/forum/${post.slug || post.id}`);
   };
 
     const formatDate = (dateString: string) => {

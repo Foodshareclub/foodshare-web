@@ -266,25 +266,43 @@ This checks:
 
 ### Avatar Upload
 
+Avatars are uploaded to the `profiles` bucket with a consistent path pattern. A database trigger automatically updates `profiles.avatar_url` when a file is uploaded.
+
 ```typescript
 const uploadAvatar = async (file: File, userId: string) => {
   const validation = validateFile(file, "PROFILES");
   if (!validation.valid) throw new Error(validation.error);
 
-  const ext = file.name.split(".").pop();
-  const { data, error } = await storageAPI.uploadImage({
+  // Get file extension from filename
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  // Use profile ID as directory: {userId}/avatar.{ext}
+  const filePath = `${userId}/avatar.${ext}`;
+  const { error } = await storageAPI.uploadImage({
     bucket: STORAGE_BUCKETS.PROFILES,
-    filePath: `${userId}/avatar.${ext}`,
+    filePath,
     file,
   });
 
   if (error) throw error;
 
+  // Note: profiles.avatar_url is automatically updated by DB trigger
   return storageAPI.getPublicUrl({
     bucket: STORAGE_BUCKETS.PROFILES,
-    path: `${userId}/avatar.${ext}`,
+    path: filePath,
   });
 };
+```
+
+**Using the hook:**
+
+```typescript
+import { useUploadAvatar } from '@/hooks/queries';
+
+const { mutateAsync: uploadAvatar } = useUploadAvatar();
+
+// Upload triggers DB trigger to update profiles.avatar_url
+await uploadAvatar({ userId: user.id, file });
+```
 ```
 
 ### Multiple Images

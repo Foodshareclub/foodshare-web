@@ -77,11 +77,6 @@ export const NavbarAvatar: FC<NavbarAvatarProps> = ({
   className,
   onClick,
 }) => {
-  // Debug: Log avatar src
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[NavbarAvatar] src:', src);
-  }
-
   // Support deprecated secondName prop for backwards compatibility
   const resolvedLastName = lastName ?? secondName;
   const containerClasses = cn(
@@ -113,15 +108,7 @@ export const NavbarAvatar: FC<NavbarAvatarProps> = ({
       tabIndex={onClick ? 0 : undefined}
     >
       <AvatarPrimitive className={sizeClasses[size]}>
-        <AvatarImage 
-          src={src} 
-          alt={alt}
-          onLoadingStatusChange={(status) => {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('[NavbarAvatar] Image load status:', status, 'src:', src?.substring(0, 50));
-            }
-          }}
-        />
+        <AvatarImage src={src} alt={alt} />
         <AvatarFallback>{getInitials(firstName, resolvedLastName, alt)}</AvatarFallback>
       </AvatarPrimitive>
       {hasNotification && notificationCount && notificationCount > 0 && (

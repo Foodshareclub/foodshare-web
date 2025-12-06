@@ -2,24 +2,53 @@
 
 /**
  * Login & Security Client Component
- * Handles password reset, MFA, and security settings
+ * Premium security settings with modern design
  */
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import {
+  FaShieldAlt,
+  FaKey,
+  FaChevronRight,
+  FaCheck,
+  FaTimes,
+  FaCheckCircle,
+  FaExclamationCircle,
+  FaLock,
+  FaFingerprint,
+} from 'react-icons/fa';
 import { auth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { MFAEnrollment } from '@/components/security/MFAEnrollment';
-import { FaShieldAlt } from 'react-icons/fa';
+import { cn } from '@/lib/utils';
 import type { AuthUser } from '@/app/actions/auth';
 
 interface LoginSecurityClientProps {
   user: AuthUser;
   isAdmin: boolean;
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: 'spring', stiffness: 300, damping: 24 },
+  },
+};
 
 export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps) {
   const [editingPassword, setEditingPassword] = useState(false);
@@ -31,9 +60,7 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
 
   useEffect(() => {
     return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
+      if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, []);
 
@@ -42,19 +69,15 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
       setError('Please enter your email address');
       return;
     }
-
     setIsLoading(true);
     setError(null);
 
     try {
       const { error: resetError } = await auth.resetPassword(email);
-
       if (resetError) {
         setError(resetError.message || 'Failed to send reset email');
       } else {
         setIsEmailSent(true);
-
-        // Auto-hide success message after 5 seconds
         timerRef.current = setTimeout(() => {
           setIsEmailSent(false);
           setEditingPassword(false);
@@ -74,277 +97,248 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
     setEmail(user.email || '');
   };
 
+  const securityTips = [
+    'Use a unique password that you don\'t use for other accounts',
+    'Make your password at least 12 characters with letters, numbers, and symbols',
+    'Never share your password with anyone, even FoodShare support',
+    'Enable two-factor authentication for additional security',
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="container mx-auto max-w-3xl px-4 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 mb-8">
-          <Link
-            href="/settings"
-            className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+    <div className="bg-gradient-to-b from-background via-muted/30 to-background pb-10">
+      {/* Decorative background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -left-20 w-60 h-60 bg-teal-500/10 rounded-full blur-3xl" />
+      </div>
+
+      {/* Header */}
+      <header className="border-b border-border/50 bg-card/50 backdrop-blur-xl">
+        <div className="container mx-auto max-w-3xl px-4 py-8">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 mb-6 text-sm">
+            <Link
+              href="/settings"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Settings
+            </Link>
+            <FaChevronRight className="w-3 h-3 text-muted-foreground/50" />
+            <span className="text-foreground font-medium">Login & security</span>
+          </nav>
+
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            Account settings
-          </Link>
-          <svg
-            className="w-4 h-4 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                <FaShieldAlt className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold text-foreground">Login & security</h1>
+            </div>
+            <p className="text-muted-foreground">
+              Manage your password and keep your account secure
+            </p>
+          </motion.div>
+        </div>
+      </header>
+
+      {/* Content */}
+      <main className="container mx-auto max-w-3xl px-4 py-8">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="space-y-4"
+        >
+          {/* Password Section */}
+          <motion.div
+            variants={itemVariants}
+            className="group relative bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-6 hover:border-border hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20 transition-all duration-300"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-          <span className="text-sm font-medium text-gray-900 dark:text-white">
-            Login & security
-          </span>
-        </nav>
+            <div className="flex items-start gap-4">
+              <div className="relative flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg">
+                <FaKey className="w-5 h-5 text-white" />
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-white/20 to-transparent" />
+              </div>
 
-        {/* Page Title */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-8"
-        >
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            Login & security
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Update your password and secure your account
-          </p>
-        </motion.div>
-
-        {/* Change Password Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6"
-        >
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                Change password
-              </h2>
-
-              {editingPassword ? (
-                <div className="space-y-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Enter your email and you will receive a link to change your password
-                  </p>
-
-                  {/* Success Message */}
-                  {isEmailSent && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4"
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-foreground">Password</h3>
+                  {!editingPassword && (
+                    <Button
+                      onClick={() => setEditingPassword(true)}
+                      variant="ghost"
+                      size="sm"
+                      className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
                     >
-                      <div className="flex items-center gap-3">
-                        <svg
-                          className="w-5 h-5 text-green-600 dark:text-green-400"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
+                      Update
+                    </Button>
+                  )}
+                </div>
+
+                {editingPassword ? (
+                  <div className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      We&apos;ll send a password reset link to your email address
+                    </p>
+
+                    {/* Success Message */}
+                    {isEmailSent && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex items-start gap-3 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800"
+                      >
+                        <FaCheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5" />
                         <div>
-                          <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                            Password reset email sent!
+                          <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
+                            Reset link sent!
                           </p>
-                          <p className="text-sm text-green-700 dark:text-green-300">
-                            Please check your email for the reset link.
+                          <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                            Check your email for the password reset link.
                           </p>
                         </div>
-                      </div>
-                    </motion.div>
-                  )}
+                      </motion.div>
+                    )}
 
-                  {/* Error Message */}
-                  {error && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4"
-                    >
-                      <div className="flex items-center gap-3">
-                        <svg
-                          className="w-5 h-5 text-red-600 dark:text-red-400"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
+                    {/* Error Message */}
+                    {error && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="flex items-start gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+                      >
+                        <FaExclamationCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
                         <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
-                      </div>
-                    </motion.div>
-                  )}
+                      </motion.div>
+                    )}
 
-                  <div>
-                    <Label htmlFor="email">Email address</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="your@email.com"
-                      className="mt-1"
-                      disabled={isEmailSent}
-                    />
+                    <div>
+                      <Label htmlFor="email" className="text-xs text-muted-foreground">
+                        Email address
+                      </Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="your@email.com"
+                        className="mt-1"
+                        disabled={isEmailSent}
+                      />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handleSendResetEmail}
+                        disabled={isLoading || isEmailSent || !email}
+                        size="sm"
+                        className="bg-emerald-600 hover:bg-emerald-700"
+                      >
+                        {isLoading ? (
+                          'Sending...'
+                        ) : (
+                          <>
+                            <FaCheck className="w-3 h-3 mr-1.5" />
+                            Send reset link
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={handleCancelPasswordEdit}
+                        variant="outline"
+                        size="sm"
+                        disabled={isLoading}
+                      >
+                        <FaTimes className="w-3 h-3 mr-1.5" />
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
+                ) : (
+                  <p className="text-muted-foreground">
+                    Keep your account secure with a strong password
+                  </p>
+                )}
+              </div>
+            </div>
+          </motion.div>
 
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={handleSendResetEmail}
-                      disabled={isLoading || isEmailSent || !email}
-                      size="sm"
-                    >
-                      {isLoading ? 'Sending...' : 'Send reset link'}
-                    </Button>
-                    <Button
-                      onClick={handleCancelPasswordEdit}
-                      variant="outline"
-                      size="sm"
-                      disabled={isLoading}
-                    >
-                      Cancel
-                    </Button>
+          {/* Admin MFA Section */}
+          {isAdmin && user.id && (
+            <>
+              <Separator className="my-6 bg-border/50" />
+
+              <motion.div
+                variants={itemVariants}
+                className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-6"
+              >
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="relative flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
+                    <FaFingerprint className="w-5 h-5 text-white" />
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-white/20 to-transparent" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Admin Security
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Multi-factor authentication for administrator access
+                    </p>
                   </div>
                 </div>
-              ) : (
-                <p className="text-gray-700 dark:text-gray-300">
-                  Keep your account secure by using a strong password
-                </p>
-              )}
-            </div>
-            {!editingPassword && (
-              <Button
-                onClick={() => setEditingPassword(true)}
-                variant="ghost"
-                size="sm"
-              >
-                Edit
-              </Button>
-            )}
-          </div>
-        </motion.div>
 
-        {/* Admin MFA Section - Only visible to admins */}
-        {isAdmin && user.id && (
+                <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 mb-6">
+                  <div className="flex items-start gap-3">
+                    <FaLock className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5" />
+                    <p className="text-sm text-blue-900 dark:text-blue-100">
+                      <strong>Admin Access Protection:</strong> As an administrator, MFA adds
+                      an extra layer of security to protect sensitive features and the CMS.
+                    </p>
+                  </div>
+                </div>
+
+                <MFAEnrollment profileId={user.id} />
+              </motion.div>
+            </>
+          )}
+
+          <Separator className="my-6 bg-border/50" />
+
+          {/* Security Tips */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
+            variants={itemVariants}
+            className="bg-muted/50 rounded-2xl border border-border/50 p-6"
           >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                <FaShieldAlt className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                <FaShieldAlt className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  Admin Security
-                </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Multi-factor authentication for administrator access
-                </p>
-              </div>
+              <h3 className="text-lg font-semibold text-foreground">Security tips</h3>
             </div>
 
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
-              <p className="text-sm text-blue-900 dark:text-blue-100">
-                <strong>Admin Access Protection:</strong> As an administrator, you have access to
-                sensitive features. Multi-factor authentication (MFA) adds an extra layer of
-                security to protect your admin account and the CMS.
-              </p>
-            </div>
-
-            <MFAEnrollment profileId={user.id} />
+            <ul className="space-y-3">
+              {securityTips.map((tip, index) => (
+                <motion.li
+                  key={index}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + index * 0.1 }}
+                  className="flex items-start gap-3"
+                >
+                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mt-0.5">
+                    <FaCheck className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <span className="text-sm text-muted-foreground">{tip}</span>
+                </motion.li>
+              ))}
+            </ul>
           </motion.div>
-        )}
-
-        {/* Security Tips */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-          className="mt-6 bg-gray-100 dark:bg-gray-800/50 rounded-xl p-6 border border-gray-200 dark:border-gray-700"
-        >
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Security tips
-          </h3>
-          <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-            <li className="flex items-start gap-2">
-              <svg
-                className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>Use a unique password that you do not use for other accounts</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <svg
-                className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>Make your password at least 12 characters long with a mix of letters, numbers, and symbols</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <svg
-                className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>Never share your password with anyone, even FoodShare support staff</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <svg
-                className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>Enable two-factor authentication for additional security</span>
-            </li>
-          </ul>
         </motion.div>
-      </div>
+      </main>
     </div>
   );
 }

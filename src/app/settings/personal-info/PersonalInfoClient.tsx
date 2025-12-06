@@ -2,48 +2,168 @@
 
 /**
  * Personal Info Client Component
- * Handles profile editing with form state management
+ * Premium profile editing with avatar upload and modern design
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
+import {
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaMapMarkerAlt,
+  FaChevronRight,
+  FaCheck,
+  FaTimes,
+  FaCamera,
+  FaSpinner,
+} from 'react-icons/fa';
 import { useCurrentProfile } from '@/hooks/queries';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+import { ALLOWED_MIME_TYPES } from '@/constants/mime-types';
 import type { AuthUser } from '@/app/actions/auth';
 
 interface PersonalInfoClientProps {
   user: AuthUser;
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: 'spring', stiffness: 300, damping: 24 },
+  },
+};
+
+interface InfoCardProps {
+  icon: React.ReactNode;
+  gradient: string;
+  title: string;
+  children: React.ReactNode;
+  isEditing: boolean;
+  onEdit: () => void;
+  onSave: () => void;
+  onCancel: () => void;
+  canEdit?: boolean;
+  editDisabled?: boolean;
+  isSaving?: boolean;
+}
+
+function InfoCard({
+  icon,
+  gradient,
+  title,
+  children,
+  isEditing,
+  onEdit,
+  onSave,
+  onCancel,
+  canEdit = true,
+  editDisabled = false,
+  isSaving = false,
+}: InfoCardProps) {
+  return (
+    <motion.div
+      variants={itemVariants}
+      className="group relative bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-6 hover:border-border hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20 transition-all duration-300"
+    >
+      <div className="flex items-start gap-4">
+        <div
+          className={cn(
+            'relative flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center',
+            'bg-gradient-to-br shadow-lg',
+            gradient
+          )}
+        >
+          <span className="text-white">{icon}</span>
+          <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-white/20 to-transparent" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+            {canEdit && !isEditing && (
+              <Button
+                onClick={onEdit}
+                variant="ghost"
+                size="sm"
+                disabled={editDisabled}
+                className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+              >
+                Edit
+              </Button>
+            )}
+          </div>
+          {children}
+          {isEditing && (
+            <div className="flex gap-2 mt-4">
+              <Button
+                onClick={onSave}
+                size="sm"
+                disabled={isSaving}
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                {isSaving ? (
+                  <FaSpinner className="w-3 h-3 mr-1.5 animate-spin" />
+                ) : (
+                  <FaCheck className="w-3 h-3 mr-1.5" />
+                )}
+                {isSaving ? 'Saving...' : 'Save'}
+              </Button>
+              <Button onClick={onCancel} variant="outline" size="sm" disabled={isSaving}>
+                <FaTimes className="w-3 h-3 mr-1.5" />
+                Cancel
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
-  // Profile state from React Query
   const {
     profile: currentProfile,
     address,
+    avatarUrl,
     isLoading,
+    isUploadingAvatar,
     updateProfile: updateProfileMutation,
     updateAddress: updateAddressMutation,
+    uploadAvatar: uploadAvatarMutation,
   } = useCurrentProfile(user.id);
 
-  // Local state for editable fields
   const [editingName, setEditingName] = useState(false);
   const [editingPhone, setEditingPhone] = useState(false);
   const [editingAddress, setEditingAddress] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
-
-  // Address fields
   const [streetAddress, setStreetAddress] = useState('');
   const [city, setCity] = useState('');
   const [postalCode, setPostalCode] = useState('');
   const [country, setCountry] = useState('');
 
-  // Update local state when profile data loads
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (currentProfile) {
       setFirstName(currentProfile.first_name || '');
@@ -52,7 +172,6 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
     }
   }, [currentProfile]);
 
-  // Update local state when address data loads
   useEffect(() => {
     if (address) {
       setStreetAddress(address.address_line_1 || '');
@@ -62,9 +181,36 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
     }
   }, [address]);
 
+  const isAnyEditing = editingName || editingPhone || editingAddress;
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user.id) return;
+
+    // Create preview
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+
+    try {
+      await uploadAvatarMutation({ userId: user.id, file });
+    } catch (error) {
+      // Revert preview on error
+      setPreviewUrl(null);
+      console.error('Failed to upload avatar:', error);
+    }
+
+    // Clean up input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSaveName = async () => {
     if (!currentProfile?.id) return;
-
     await updateProfileMutation({
       id: currentProfile.id,
       first_name: firstName,
@@ -75,17 +221,12 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
 
   const handleSavePhone = async () => {
     if (!currentProfile?.id) return;
-
-    await updateProfileMutation({
-      id: currentProfile.id,
-      phone,
-    });
+    await updateProfileMutation({ id: currentProfile.id, phone });
     setEditingPhone(false);
   };
 
   const handleSaveAddress = async () => {
     if (!address) return;
-
     await updateAddressMutation({
       ...address,
       address_line_1: streetAddress,
@@ -115,13 +256,18 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
     setEditingAddress(false);
   };
 
+  const displayAvatarUrl = previewUrl || avatarUrl;
+
   if (isLoading && !currentProfile) {
     return (
-      <div className="min-h-screen bg-muted/30 dark:bg-background">
+      <div className="bg-gradient-to-b from-background via-muted/30 to-background pb-10">
         <div className="container mx-auto max-w-3xl px-4 py-8">
           <div className="space-y-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="h-32 bg-card rounded-2xl border border-border animate-pulse"
+              />
             ))}
           </div>
         </div>
@@ -130,275 +276,320 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 dark:bg-background">
-      <div className="container mx-auto max-w-3xl px-4 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 mb-8">
-          <Link
-            href="/settings"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+    <div className="bg-gradient-to-b from-background via-muted/30 to-background pb-10">
+      {/* Decorative background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -left-20 w-60 h-60 bg-cyan-500/10 rounded-full blur-3xl" />
+      </div>
+
+      {/* Header */}
+      <header className="border-b border-border/50 bg-card/50 backdrop-blur-xl">
+        <div className="container mx-auto max-w-3xl px-4 py-8">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 mb-6 text-sm">
+            <Link
+              href="/settings"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Settings
+            </Link>
+            <FaChevronRight className="w-3 h-3 text-muted-foreground/50" />
+            <span className="text-foreground font-medium">Personal info</span>
+          </nav>
+
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            Account settings
-          </Link>
-          <svg
-            className="w-4 h-4 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/25">
+                <FaUser className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold text-foreground">Personal info</h1>
+            </div>
+            <p className="text-muted-foreground">
+              Manage your personal details and how we can reach you
+            </p>
+          </motion.div>
+        </div>
+      </header>
+
+      {/* Content */}
+      <main className="container mx-auto max-w-3xl px-4 py-8">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="space-y-4"
+        >
+          {/* Profile Photo */}
+          <motion.div
+            variants={itemVariants}
+            className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-6 hover:border-border hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20 transition-all duration-300"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
-          </svg>
-          <span className="text-sm font-medium text-foreground">
-            Personal info
-          </span>
-        </nav>
-
-        {/* Page Title */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-8"
-        >
-          <h1 className="text-4xl font-bold text-foreground mb-2">
-            Personal info
-          </h1>
-          <p className="text-muted-foreground">
-            Provide personal details and how we can reach you
-          </p>
-        </motion.div>
-
-        {/* Name Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="bg-card rounded-xl shadow-sm border border-border p-6 mb-4"
-        >
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold text-foreground mb-4">
-                Name
-              </h2>
-              {editingName ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="firstName">First name</Label>
-                      <Input
-                        id="firstName"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        className="mt-1"
-                      />
+            <div className="flex items-center gap-6">
+              {/* Avatar */}
+              <div className="relative group">
+                <div
+                  className={cn(
+                    'relative w-24 h-24 rounded-full overflow-hidden',
+                    'ring-4 ring-background shadow-xl',
+                    'transition-transform duration-300 group-hover:scale-105'
+                  )}
+                >
+                  {displayAvatarUrl ? (
+                    <Image
+                      src={displayAvatarUrl}
+                      alt="Profile photo"
+                      fill
+                      className="object-cover"
+                      sizes="96px"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
+                      <span className="text-3xl text-white font-semibold">
+                        {firstName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || '?'}
+                      </span>
                     </div>
-                    <div>
-                      <Label htmlFor="lastName">Last name</Label>
-                      <Input
-                        id="lastName"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleSaveName} size="sm">
-                      Save
-                    </Button>
-                    <Button onClick={handleCancelName} variant="outline" size="sm">
-                      Cancel
-                    </Button>
-                  </div>
+                  )}
+
+                  {/* Upload overlay */}
+                  <button
+                    onClick={handleAvatarClick}
+                    disabled={isUploadingAvatar}
+                    className={cn(
+                      'absolute inset-0 bg-black/50 flex items-center justify-center',
+                      'opacity-0 group-hover:opacity-100 transition-opacity duration-200',
+                      'cursor-pointer'
+                    )}
+                  >
+                    {isUploadingAvatar ? (
+                      <FaSpinner className="w-6 h-6 text-white animate-spin" />
+                    ) : (
+                      <FaCamera className="w-6 h-6 text-white" />
+                    )}
+                  </button>
                 </div>
-              ) : (
-                <p className="text-foreground/80">
-                  {firstName} {lastName}
+
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept={ALLOWED_MIME_TYPES.PROFILES.join(',')}
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+              </div>
+
+              {/* Info */}
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-foreground mb-1">Profile photo</h3>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Click on the photo to upload a new image. JPG or PNG, max 10MB.
                 </p>
-              )}
-            </div>
-            {!editingName && (
-              <Button
-                onClick={() => setEditingName(true)}
-                variant="ghost"
-                size="sm"
-                disabled={editingPhone || editingAddress}
-              >
-                Edit
-              </Button>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Email Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="bg-card rounded-xl shadow-sm border border-border p-6 mb-4"
-        >
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold text-foreground mb-4">
-                Email address
-              </h2>
-              <p className="text-foreground/80">{user.email}</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Email changes require verification and must be done through account security
-              </p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Phone Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-          className="bg-card rounded-xl shadow-sm border border-border p-6 mb-4"
-        >
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold text-foreground mb-4">
-                Phone number
-              </h2>
-              {editingPhone ? (
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="phone">Phone number</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+1 (555) 123-4567"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleSavePhone} size="sm">
-                      Save
-                    </Button>
-                    <Button onClick={handleCancelPhone} variant="outline" size="sm">
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-foreground/80">
-                  {phone || 'Not provided'}
-                </p>
-              )}
-            </div>
-            {!editingPhone && (
-              <Button
-                onClick={() => setEditingPhone(true)}
-                variant="ghost"
-                size="sm"
-                disabled={editingName || editingAddress}
-              >
-                Edit
-              </Button>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Address Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.4 }}
-          className="bg-card rounded-xl shadow-sm border border-border p-6"
-        >
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold text-foreground mb-4">
-                Address
-              </h2>
-              {editingAddress ? (
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="streetAddress">Street address</Label>
-                    <Input
-                      id="streetAddress"
-                      value={streetAddress}
-                      onChange={(e) => setStreetAddress(e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="city">City</Label>
-                      <Input
-                        id="city"
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="postalCode">Postal code</Label>
-                      <Input
-                        id="postalCode"
-                        value={postalCode}
-                        onChange={(e) => setPostalCode(e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="country">Country</Label>
-                    <Input
-                      id="country"
-                      value={country}
-                      onChange={(e) => setCountry(e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleSaveAddress} size="sm">
-                      Save
-                    </Button>
-                    <Button onClick={handleCancelAddress} variant="outline" size="sm">
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-foreground/80">
-                  {streetAddress && (
+                <Button
+                  onClick={handleAvatarClick}
+                  variant="outline"
+                  size="sm"
+                  disabled={isUploadingAvatar}
+                  className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/20"
+                >
+                  {isUploadingAvatar ? (
                     <>
-                      <p>{streetAddress}</p>
-                      <p>
-                        {city && postalCode ? `${city}, ${postalCode}` : city || postalCode}
-                      </p>
-                      <p>{country}</p>
+                      <FaSpinner className="w-3 h-3 mr-1.5 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <FaCamera className="w-3 h-3 mr-1.5" />
+                      Change photo
                     </>
                   )}
-                  {!streetAddress && !city && !postalCode && !country && (
-                    <p className="text-muted-foreground">Not provided</p>
-                  )}
-                </div>
-              )}
+                </Button>
+              </div>
             </div>
-            {!editingAddress && (
-              <Button
-                onClick={() => setEditingAddress(true)}
-                variant="ghost"
-                size="sm"
-                disabled={editingName || editingPhone}
-              >
-                Edit
-              </Button>
+          </motion.div>
+
+          <Separator className="my-6 bg-border/50" />
+
+          {/* Name */}
+          <InfoCard
+            icon={<FaUser className="w-5 h-5" />}
+            gradient="from-blue-500 to-cyan-500"
+            title="Legal name"
+            isEditing={editingName}
+            onEdit={() => setEditingName(true)}
+            onSave={handleSaveName}
+            onCancel={handleCancelName}
+            editDisabled={isAnyEditing && !editingName}
+          >
+            {editingName ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="firstName" className="text-xs text-muted-foreground">
+                    First name
+                  </Label>
+                  <Input
+                    id="firstName"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="mt-1"
+                    placeholder="John"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastName" className="text-xs text-muted-foreground">
+                    Last name
+                  </Label>
+                  <Input
+                    id="lastName"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="mt-1"
+                    placeholder="Doe"
+                  />
+                </div>
+              </div>
+            ) : (
+              <p className="text-foreground">
+                {firstName && lastName ? `${firstName} ${lastName}` : 'Not provided'}
+              </p>
             )}
-          </div>
+          </InfoCard>
+
+          {/* Email */}
+          <InfoCard
+            icon={<FaEnvelope className="w-5 h-5" />}
+            gradient="from-violet-500 to-purple-500"
+            title="Email address"
+            isEditing={false}
+            onEdit={() => {}}
+            onSave={() => {}}
+            onCancel={() => {}}
+            canEdit={false}
+          >
+            <p className="text-foreground">{user.email}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Email changes require verification through account security
+            </p>
+          </InfoCard>
+
+          {/* Phone */}
+          <InfoCard
+            icon={<FaPhone className="w-5 h-5" />}
+            gradient="from-emerald-500 to-teal-500"
+            title="Phone number"
+            isEditing={editingPhone}
+            onEdit={() => setEditingPhone(true)}
+            onSave={handleSavePhone}
+            onCancel={handleCancelPhone}
+            editDisabled={isAnyEditing && !editingPhone}
+          >
+            {editingPhone ? (
+              <div>
+                <Label htmlFor="phone" className="text-xs text-muted-foreground">
+                  Phone number
+                </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+1 (555) 123-4567"
+                  className="mt-1"
+                />
+              </div>
+            ) : (
+              <p className="text-foreground">{phone || 'Not provided'}</p>
+            )}
+          </InfoCard>
+
+          <Separator className="my-6 bg-border/50" />
+
+          {/* Address */}
+          <InfoCard
+            icon={<FaMapMarkerAlt className="w-5 h-5" />}
+            gradient="from-orange-500 to-amber-500"
+            title="Address"
+            isEditing={editingAddress}
+            onEdit={() => setEditingAddress(true)}
+            onSave={handleSaveAddress}
+            onCancel={handleCancelAddress}
+            editDisabled={isAnyEditing && !editingAddress}
+          >
+            {editingAddress ? (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="streetAddress" className="text-xs text-muted-foreground">
+                    Street address
+                  </Label>
+                  <Input
+                    id="streetAddress"
+                    value={streetAddress}
+                    onChange={(e) => setStreetAddress(e.target.value)}
+                    className="mt-1"
+                    placeholder="123 Main St"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="city" className="text-xs text-muted-foreground">
+                      City
+                    </Label>
+                    <Input
+                      id="city"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      className="mt-1"
+                      placeholder="New York"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="postalCode" className="text-xs text-muted-foreground">
+                      Postal code
+                    </Label>
+                    <Input
+                      id="postalCode"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                      className="mt-1"
+                      placeholder="10001"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="country" className="text-xs text-muted-foreground">
+                    Country
+                  </Label>
+                  <Input
+                    id="country"
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="mt-1"
+                    placeholder="United States"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="text-foreground">
+                {streetAddress ? (
+                  <>
+                    <p>{streetAddress}</p>
+                    <p className="text-muted-foreground">
+                      {[city, postalCode].filter(Boolean).join(', ')}
+                    </p>
+                    {country && <p className="text-muted-foreground">{country}</p>}
+                  </>
+                ) : (
+                  <p className="text-muted-foreground">Not provided</p>
+                )}
+              </div>
+            )}
+          </InfoCard>
         </motion.div>
-      </div>
+      </main>
     </div>
   );
 }

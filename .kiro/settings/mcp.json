@@ -26,7 +26,22 @@
         "get_advisors",
         "get_project_url",
         "get_anon_key",
-        "generate_typescript_types"
+        "generate_typescript_types",
+        "get_publishable_keys",
+        "get_publishable_keys",
+        "get_publishable_keys",
+        "get_publishable_keys",
+        "get_publishable_keys",
+        "get_publishable_keys",
+        "get_publishable_keys",
+        "get_publishable_keys",
+        "get_publishable_keys",
+        "get_publishable_keys",
+        "get_publishable_keys",
+        "get_publishable_keys",
+        "get_publishable_keys",
+        "get_publishable_keys",
+        "get_publishable_keys"
       ]
     },
     "Vercel": {

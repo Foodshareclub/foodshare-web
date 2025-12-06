@@ -1,6 +1,5 @@
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import React from 'react';
+import { DeleteConfirmationModal } from './ConfirmationModal';
 
 type ConfirmDeleteModalType = {
   isOpen: boolean;
@@ -9,6 +8,9 @@ type ConfirmDeleteModalType = {
   deleteProductHandler: () => void;
 };
 
+/**
+ * @deprecated Use DeleteConfirmationModal directly from ConfirmationModal.tsx
+ */
 export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalType> = ({
   isOpen,
   onClose,
@@ -16,30 +18,12 @@ export const ConfirmDeleteModal: React.FC<ConfirmDeleteModalType> = ({
   deleteProductHandler,
 }) => {
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent variant="glass" className="max-w-xs">
-        <DialogHeader>
-          <DialogTitle>Delete</DialogTitle>
-        </DialogHeader>
-
-        <div className="pb-6">
-          You are going to delete the product{" "}
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            {deleteProduct.productName}
-          </span>
-          . Are you sure?
-        </div>
-
-        <DialogFooter className="justify-between">
-          <Button variant="glass-accent" className="mr-3" onClick={deleteProductHandler}>
-            Yes
-          </Button>
-
-          <Button variant="glass" onClick={onClose}>
-            Cancel
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <DeleteConfirmationModal
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={deleteProductHandler}
+      itemName={deleteProduct.productName}
+      itemType="product"
+    />
   );
 };

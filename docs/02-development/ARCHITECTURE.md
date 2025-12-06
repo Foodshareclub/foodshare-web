@@ -85,7 +85,6 @@ Category pages use rewrites to maintain clean URLs while serving from the produc
 | `/challenges`        | `/products?type=challenges`  |
 | `/zerowaste`         | `/products?type=zerowaste`   |
 | `/vegan`             | `/products?type=vegan`       |
-| `/community`         | `/products?type=community`   |
 
 ### Legacy Route Redirects
 
@@ -95,6 +94,7 @@ Old URLs are permanently redirected (301) to the correct routes:
 |-----------|--------------|
 | `/products/:id` | `/food/:id` |
 | `/things/:id` | `/thing/:id` |
+| `/community` | `/forum` |
 
 ### Route Constants
 

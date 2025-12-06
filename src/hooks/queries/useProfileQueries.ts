@@ -143,35 +143,39 @@ interface AvatarQueryResult {
  * Get avatar URL with proper blob URL cleanup
  * Uses useImageBlobUrl to prevent memory leaks
  * 
- * Handles two cases:
- * 1. Full URLs (http/https) - returns directly without downloading
- * 2. Storage paths - downloads from avatars bucket and creates blob URL
+ * Handles three cases:
+ * 1. Empty/undefined - returns null immediately
+ * 2. Full URLs (http/https) - returns directly without downloading
+ * 3. Storage paths - downloads from profiles bucket and creates blob URL
  * 
- * @param avatarPath - Either a full URL or a storage path in the avatars bucket
+ * @param avatarPath - Either a full URL or a storage path in the profiles bucket
  * @returns Avatar query result with resolved URL
  */
 export function useAvatar(avatarPath: string | undefined): AvatarQueryResult {
+  // Normalize empty strings to undefined for consistent handling
+  const normalizedPath = avatarPath?.trim() || undefined;
+  
   // Determine if the path is already a full URL
-  const isPublicUrl = avatarPath ? isFullUrl(avatarPath) : false;
+  const isPublicUrl = normalizedPath ? isFullUrl(normalizedPath) : false;
 
   // For full URLs, use a simple query that returns the URL directly
   const directUrlQuery = useQuery({
-    queryKey: [...profileKeys.avatar(avatarPath ?? ""), "direct"],
-    queryFn: () => avatarPath ?? null,
-    enabled: !!avatarPath && isPublicUrl,
+    queryKey: [...profileKeys.avatar(normalizedPath ?? ""), "direct"],
+    queryFn: () => normalizedPath ?? null,
+    enabled: !!normalizedPath && isPublicUrl,
     staleTime: Infinity, // Public URLs don't change
   });
 
   // For storage paths, download and create blob URL
   const blobUrlQuery = useImageBlobUrl({
-    queryKey: profileKeys.avatar(avatarPath ?? ""),
+    queryKey: profileKeys.avatar(normalizedPath ?? ""),
     fetchFn: async () => {
-      if (!avatarPath) return null;
-      const { data, error } = await storageAPI.downloadImage({ path: avatarPath, bucket: "avatars" });
+      if (!normalizedPath) return null;
+      const { data, error } = await storageAPI.downloadImage({ path: normalizedPath, bucket: "profiles" });
       if (error) throw error;
       return data ?? null;
     },
-    enabled: !!avatarPath && !isPublicUrl,
+    enabled: !!normalizedPath && !isPublicUrl,
     staleTime: CACHE_TIMES.AVATAR,
     gcTime: CACHE_TIMES.AVATAR_GC,
   });
@@ -244,6 +248,8 @@ export function useUpdateAddress() {
 
 /**
  * Upload avatar
+ * Uploads to profiles bucket with path: {userId}/avatar.{ext}
+ * Database trigger automatically updates profiles.avatar_url
  */
 export function useUploadAvatar() {
   const queryClient = useQueryClient();
@@ -256,17 +262,24 @@ export function useUploadAvatar() {
       userId: string;
       file: File;
     }) => {
-      const filePath = `${userId}/avatar`;
-      const { error } = await storageAPI.uploadImage({ file, filePath, bucket: "avatars" });
+      // Get file extension from mime type or filename
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      // Use profile ID as directory: {userId}/avatar.{ext}
+      const filePath = `${userId}/avatar.${ext}`;
+      const { error } = await storageAPI.uploadImage({ 
+        file, 
+        filePath, 
+        bucket: "profiles" // Use profiles bucket (trigger listens to this)
+      });
       if (error) throw error;
       return filePath;
     },
     onSuccess: (filePath, { userId }) => {
-      // Invalidate avatar query
+      // Invalidate avatar query to refetch new image
       queryClient.invalidateQueries({
         queryKey: profileKeys.avatar(filePath),
       });
-      // Update profile with new avatar path
+      // Invalidate profile to get updated avatar_url (set by DB trigger)
       queryClient.invalidateQueries({
         queryKey: profileKeys.detail(userId),
       });

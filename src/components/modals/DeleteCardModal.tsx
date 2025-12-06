@@ -1,10 +1,9 @@
 'use client';
 
-import React from "react";
-import { useDeleteProduct } from "@/hooks";
-import type { InitialProductStateType } from "@/types/product.types";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { useDeleteProduct } from '@/hooks';
+import type { InitialProductStateType } from '@/types/product.types';
+import { DeleteConfirmationModal } from './ConfirmationModal';
 
 type PropsType = {
   onClose: () => void;
@@ -15,43 +14,25 @@ type PropsType = {
 /**
  * DeleteCardModal Component
  * Modal for confirming product deletion
- * Uses React Query instead of Redux for delete mutation
+ * Uses unified DeleteConfirmationModal
  */
 const DeleteCardModal: React.FC<PropsType> = ({ isOpen, onClose, product }) => {
-  // React Query mutation (replaces Redux thunk)
   const deleteProduct = useDeleteProduct();
 
-  const deleteProductHandler = async () => {
+  const handleDelete = async () => {
     await deleteProduct.mutateAsync(product.id);
     onClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
-      <DialogContent variant="glass" className="max-w-xs">
-        <DialogHeader>
-          <DialogTitle>Delete</DialogTitle>
-        </DialogHeader>
-
-        <div className="pb-6">
-          You are going to delete the product{" "}
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-            {product.post_name}
-          </span>
-          . Are you sure?
-        </div>
-
-        <DialogFooter className="justify-between">
-          <Button variant="default" onClick={deleteProductHandler} className="mr-3">
-            Yes
-          </Button>
-
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <DeleteConfirmationModal
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={handleDelete}
+      itemName={product.post_name}
+      itemType="product"
+      isLoading={deleteProduct.isPending}
+    />
   );
 };
 

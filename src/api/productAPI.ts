@@ -1,3 +1,14 @@
+/**
+ * @deprecated This API layer is deprecated.
+ * Use @/lib/data/products for server-side data fetching instead.
+ * This file is kept for backward compatibility with client-side TanStack Query hooks.
+ *
+ * Migration guide:
+ * - Server Components: import { getProducts } from '@/lib/data/products'
+ * - Server Actions: import { createClient } from '@/lib/supabase/server'
+ * - Client (realtime only): Keep using this file
+ */
+
 import { supabase } from "@/lib/supabase/client";
 import type { PostgrestSingleResponse, PostgrestResponse } from "@supabase/supabase-js";
 import type { ReviewsType } from "@/api/chatAPI";

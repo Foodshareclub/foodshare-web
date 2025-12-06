@@ -28,7 +28,7 @@ export default async function PersonalInfoPage() {
  */
 function PersonalInfoSkeleton() {
   return (
-    <div className="min-h-screen bg-muted/30">
+    <div className="bg-muted/30 dark:bg-background pb-10">
       <div className="container mx-auto max-w-3xl px-4 py-8">
         {/* Breadcrumb Skeleton */}
         <div className="flex items-center gap-2 mb-8">

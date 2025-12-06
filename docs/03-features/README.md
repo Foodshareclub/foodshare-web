@@ -94,6 +94,16 @@ Admin CRM and management tools.
 - Analytics
 - Bulk operations
 
+### [forum/](./forum/) - Community Forum
+
+Community discussion forum.
+
+- Categories and tags
+- Post types (discussion, Q&A, guides)
+- Nested comments
+- Reactions and bookmarks
+- User reputation system
+
 ### Dev Tools
 
 Development-only debugging utilities (hidden in production).
@@ -126,6 +136,7 @@ Development-only debugging utilities (hidden in production).
 | Security     | ✅ Complete | [security/README.md](./security/README.md)             |
 | Storage      | ✅ Complete | [storage/README.md](./storage/README.md)               |
 | Admin        | ✅ Complete | [admin/README.md](./admin/README.md)                   |
+| Forum        | ✅ Complete | [forum/README.md](./forum/README.md)                   |
 
 ## 🚀 Adding a New Feature
 
