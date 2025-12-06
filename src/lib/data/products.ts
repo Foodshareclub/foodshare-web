@@ -55,12 +55,13 @@ export async function getProducts(
       async (): Promise<InitialProductStateType[]> => {
         const supabase = createCachedClient();
 
+        // Order by id DESC for stable cursor pagination
         const { data, error } = await supabase
           .from('posts_with_location')
           .select('*')
           .eq('post_type', normalizedType)
           .eq('is_active', true)
-          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
           .limit(limit);
 
         if (error) throw new Error(error.message);
@@ -82,7 +83,7 @@ export async function getProducts(
     .eq('post_type', normalizedType)
     .eq('is_active', true)
     .lt('id', cursor) // Cursor-based: get items with ID less than cursor
-    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
     .limit(limit);
 
   if (error) throw new Error(error.message);
@@ -103,12 +104,13 @@ export async function getProductsPaginated(
   
   const supabase = createCachedClient();
   
+  // Order by id DESC for stable cursor pagination
   let query = supabase
     .from('posts_with_location')
     .select('*')
     .eq('post_type', normalizedType)
     .eq('is_active', true)
-    .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
     .limit(limit + 1); // Fetch one extra to check hasMore
 
   if (cursor) {

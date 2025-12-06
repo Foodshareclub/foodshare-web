@@ -464,5 +464,30 @@
   "your_name": "Ihr Name",
   "your_published_listings_will_appear_here": "Ihre veröffentlichten Anzeigen werden hier angezeigt",
   "youremailcom": "ihre@email.de",
-  "zippostal_code": "Postleitzahl *"
+  "zippostal_code": "Postleitzahl *",
+  "Reports": {
+    "report": "Melden",
+    "reportPost": "Beitrag Melden",
+    "reportPostDescription": "Helfen Sie uns, FoodShare sicher zu halten, indem Sie \"{name}\" melden",
+    "reportPostDescriptionGeneric": "Helfen Sie uns, FoodShare sicher zu halten, indem Sie unangemessene Inhalte melden",
+    "selectReason": "Warum melden Sie dies?",
+    "additionalDetails": "Zusätzliche Details (optional)",
+    "additionalDetailsPlaceholder": "Geben Sie zusätzlichen Kontext an, der uns bei der Überprüfung dieser Meldung helfen könnte...",
+    "submitReport": "Meldung Absenden",
+    "submitting": "Wird gesendet...",
+    "cancel": "Abbrechen",
+    "reportSubmitted": "Meldung Gesendet",
+    "reportSubmittedDescription": "Vielen Dank, dass Sie uns helfen, unsere Community sicher zu halten. Wir werden diese Meldung in Kürze überprüfen.",
+    "submitError": "Meldung konnte nicht gesendet werden. Bitte versuchen Sie es erneut.",
+    "reasons": {
+      "spam": "Spam",
+      "inappropriate": "Unangemessen",
+      "misleading": "Irreführend",
+      "expired": "Abgelaufen",
+      "wrongLocation": "Falscher Standort",
+      "safetyConcern": "Sicherheitsbedenken",
+      "duplicate": "Duplikat",
+      "other": "Sonstiges"
+    }
+  }
 }

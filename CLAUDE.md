@@ -196,7 +196,7 @@ export const useUIStore = create<UIStore>((set) => ({
 }));
 ```
 
-## i18n: next-intl (17 languages)
+## i18n: next-intl (21 languages)
 
 Translation files: `/messages/{locale}.json`
 
@@ -209,7 +209,7 @@ function MyComponent() {
 }
 ```
 
-Supported locales: en, cs, de, es, fr, pt, ru, uk, zh, hi, ar (RTL), it, pl, nl, ja, ko, tr
+Supported locales: en, cs, de, es, fr, pt, ru, uk, zh, hi, ar (RTL), it, pl, nl, ja, ko, tr, vi, id, th, sv
 
 ## Development Commands
 

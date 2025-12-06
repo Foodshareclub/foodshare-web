@@ -4,10 +4,60 @@ import { z } from 'zod';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-// Initialize xAI (Grok) client
-const xai = createXai({
-  apiKey: process.env.XAI_API_KEY,
-});
+// Constants
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const SECRET_NAME = 'XAI_API_KEY';
+const XAI_MODEL = 'grok-3-mini';
+const XAI_TEMPERATURE = 0.3;
+
+// Cache for API key to avoid repeated vault lookups
+let cachedApiKey: string | null = null;
+let cacheExpiry = 0;
+
+interface VaultSecret {
+  name: string;
+  value: string;
+}
+
+/**
+ * Get XAI API key from environment variable or Supabase Vault
+ */
+async function getXaiApiKey(): Promise<string | null> {
+  // Check environment variable first (for local dev or Vercel env)
+  if (process.env.XAI_API_KEY) {
+    return process.env.XAI_API_KEY;
+  }
+
+  // Check cache
+  if (cachedApiKey && Date.now() < cacheExpiry) {
+    return cachedApiKey;
+  }
+
+  // Fetch from Supabase Vault
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc('get_secrets', {
+      secret_names: [SECRET_NAME],
+    });
+
+    if (error || !data || data.length === 0) {
+      console.error('Failed to fetch XAI_API_KEY from vault:', error?.message);
+      return null;
+    }
+
+    const secret = (data as VaultSecret[]).find((s) => s.name === SECRET_NAME);
+    if (secret?.value) {
+      cachedApiKey = secret.value;
+      cacheExpiry = Date.now() + CACHE_TTL;
+      return cachedApiKey;
+    }
+
+    return null;
+  } catch (err) {
+    console.error('Error fetching secret from vault:', err);
+    return null;
+  }
+}
 
 // Response schema for structured AI output
 const moderationSchema = z.object({
@@ -39,16 +89,20 @@ const requestSchema = z.object({
   reportDescription: z.string(),
 });
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   try {
-    // Verify API key is configured
-    if (!process.env.XAI_API_KEY) {
-      console.error('XAI_API_KEY not configured');
+    // Get API key from vault or environment
+    const apiKey = await getXaiApiKey();
+    if (!apiKey) {
+      console.error('XAI_API_KEY not configured in vault or environment');
       return NextResponse.json(
         { error: 'AI service not configured' },
         { status: 503 }
       );
     }
+
+    // Initialize xAI client with the fetched key
+    const xai = createXai({ apiKey });
 
     // Parse and validate request
     const body = await request.json();
@@ -94,18 +148,18 @@ Provide a thorough analysis and recommendation.`;
 
     // Call Grok via Vercel AI SDK
     const result = await generateObject({
-      model: xai('grok-3-mini'),
+      model: xai(XAI_MODEL),
       schema: moderationSchema,
       system: systemPrompt,
       prompt: userPrompt,
-      temperature: 0.3, // Lower temperature for more consistent moderation
+      temperature: XAI_TEMPERATURE,
     });
 
     // Log usage for monitoring (optional - uses existing grok_usage_logs table)
     try {
       const supabase = await createClient();
       await supabase.from('grok_usage_logs').insert({
-        model: 'grok-3-mini',
+        model: XAI_MODEL,
         tokens: result.usage?.totalTokens || 0,
       });
     } catch {

@@ -18,7 +18,7 @@ FoodShare is a community-driven food sharing platform that connects people with 
 - **Food Listings**: Users post surplus food with photos, descriptions, and locations
 - **Interactive Map**: Leaflet-based map showing food availability, community fridges, food banks
 - **Real-time Chat**: Secure messaging between sharers and seekers to coordinate pickup
-- **Multi-language**: Supports 17+ languages via next-intl
+- **Multi-language**: Supports 21 languages via next-intl
 - **User Profiles**: Reputation system with reviews and ratings
 - **Search & Filters**: Find food by type, distance, and availability
 

@@ -1,4 +1,4 @@
-# 🌍 i18n Quick Reference - 17 Languages
+# 🌍 i18n Quick Reference - 21 Languages
 
 **Quick lookup for FoodShare's internationalization system**
 
@@ -25,6 +25,10 @@
 | 15  | Japanese   | `ja` | 🇯🇵   | 🆕 New      | 0%       | LTR       | Asia   |
 | 16  | Korean     | `ko` | 🇰🇷   | 🆕 New      | 0%       | LTR       | Asia   |
 | 17  | Turkish    | `tr` | 🇹🇷   | 🆕 New      | 0%       | LTR       | MENA   |
+| 18  | Vietnamese | `vi` | 🇻🇳   | 🆕 New      | 0%       | LTR       | Asia   |
+| 19  | Indonesian | `id` | 🇮🇩   | 🆕 New      | 0%       | LTR       | Asia   |
+| 20  | Thai       | `th` | 🇹🇭   | 🆕 New      | 0%       | LTR       | Asia   |
+| 21  | Swedish    | `sv` | 🇸🇪   | 🆕 New      | 0%       | LTR       | Europe |
 
 ---
 

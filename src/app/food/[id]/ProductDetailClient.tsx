@@ -6,9 +6,11 @@ import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Image from 'next/image';
+import { FiFlag } from 'react-icons/fi';
 import Navbar from '@/components/header/navbar/Navbar';
 import { Button } from '@/components/ui/button';
 import { StarIcon } from '@/utils/icons';
+import { ReportPostDialog } from '@/components/reports';
 import type { InitialProductStateType } from '@/types/product.types';
 import type { AuthUser } from '@/app/actions/auth';
 import { isValidImageUrl } from '@/lib/image';
@@ -256,12 +258,26 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
                       </Link>
                     </>
                   ) : (
-                    <Button
-                      onClick={handleContactSeller}
-                      className="w-full uppercase font-semibold py-3 bg-orange-500 hover:bg-orange-600"
-                    >
-                      {isAuth ? t('contact_sharer') : t('login_to_contact')}
-                    </Button>
+                    <>
+                      <Button
+                        onClick={handleContactSeller}
+                        className="flex-1 uppercase font-semibold py-3 bg-orange-500 hover:bg-orange-600"
+                      >
+                        {isAuth ? t('contact_sharer') : t('login_to_contact')}
+                      </Button>
+                      {/* Report button - only for logged-in users */}
+                      {isAuth && (
+                        <ReportPostDialog
+                          postId={product.id}
+                          postName={product.post_name}
+                          trigger={
+                            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+                              <FiFlag className="h-5 w-5" />
+                            </Button>
+                          }
+                        />
+                      )}
+                    </>
                   )}
                 </div>
 

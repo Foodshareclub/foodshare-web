@@ -1518,7 +1518,7 @@ Backend-level internationalization system for universal i18n across Web + Mobile
 
 ### Extended Locale Support
 
-Supports 17 languages including RTL support for Arabic:
+Supports 21 languages including RTL support for Arabic:
 
 ```typescript
 const extendedLocales = [

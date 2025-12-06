@@ -464,5 +464,30 @@
   "your_name": "Tu nombre",
   "your_published_listings_will_appear_here": "Tus listados publicados aparecerán aquí",
   "youremailcom": "tu@email.com",
-  "zippostal_code": "Código postal *"
+  "zippostal_code": "Código postal *",
+  "Reports": {
+    "report": "Reportar",
+    "reportPost": "Reportar Publicación",
+    "reportPostDescription": "Ayúdanos a mantener FoodShare seguro reportando \"{name}\"",
+    "reportPostDescriptionGeneric": "Ayúdanos a mantener FoodShare seguro reportando contenido inapropiado",
+    "selectReason": "¿Por qué estás reportando esto?",
+    "additionalDetails": "Detalles adicionales (opcional)",
+    "additionalDetailsPlaceholder": "Proporciona cualquier contexto adicional que pueda ayudarnos a revisar este reporte...",
+    "submitReport": "Enviar Reporte",
+    "submitting": "Enviando...",
+    "cancel": "Cancelar",
+    "reportSubmitted": "Reporte Enviado",
+    "reportSubmittedDescription": "Gracias por ayudar a mantener nuestra comunidad segura. Revisaremos este reporte pronto.",
+    "submitError": "Error al enviar el reporte. Por favor intenta de nuevo.",
+    "reasons": {
+      "spam": "Spam",
+      "inappropriate": "Inapropiado",
+      "misleading": "Engañoso",
+      "expired": "Expirado",
+      "wrongLocation": "Ubicación Incorrecta",
+      "safetyConcern": "Preocupación de Seguridad",
+      "duplicate": "Duplicado",
+      "other": "Otro"
+    }
+  }
 }

@@ -261,5 +261,30 @@
   "welcome_to_foodshare": "Bienvenue sur FoodShare",
   "msginput": "Que recherchons-nous aujourd'hui?",
   "youexamplecom": "vous@exemple.fr",
-  "youremailcom": "votre@email.fr"
+  "youremailcom": "votre@email.fr",
+  "Reports": {
+    "report": "Signaler",
+    "reportPost": "Signaler la Publication",
+    "reportPostDescription": "Aidez-nous à garder FoodShare sûr en signalant \"{name}\"",
+    "reportPostDescriptionGeneric": "Aidez-nous à garder FoodShare sûr en signalant du contenu inapproprié",
+    "selectReason": "Pourquoi signalez-vous ceci?",
+    "additionalDetails": "Détails supplémentaires (optionnel)",
+    "additionalDetailsPlaceholder": "Fournissez tout contexte supplémentaire qui pourrait nous aider à examiner ce signalement...",
+    "submitReport": "Envoyer le Signalement",
+    "submitting": "Envoi en cours...",
+    "cancel": "Annuler",
+    "reportSubmitted": "Signalement Envoyé",
+    "reportSubmittedDescription": "Merci de nous aider à garder notre communauté sûre. Nous examinerons ce signalement bientôt.",
+    "submitError": "Échec de l'envoi du signalement. Veuillez réessayer.",
+    "reasons": {
+      "spam": "Spam",
+      "inappropriate": "Inapproprié",
+      "misleading": "Trompeur",
+      "expired": "Expiré",
+      "wrongLocation": "Mauvais Emplacement",
+      "safetyConcern": "Problème de Sécurité",
+      "duplicate": "Doublon",
+      "other": "Autre"
+    }
+  }
 }

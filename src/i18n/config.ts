@@ -7,7 +7,8 @@ export const defaultLocale = 'en' as const;
 
 export const locales = [
   'en', 'cs', 'de', 'es', 'fr', 'pt', 'ru', 'uk',
-  'zh', 'hi', 'ar', 'it', 'pl', 'nl', 'ja', 'ko', 'tr'
+  'zh', 'hi', 'ar', 'it', 'pl', 'nl', 'ja', 'ko', 'tr',
+  'vi', 'id', 'th', 'sv'
 ] as const;
 
 export type Locale = (typeof locales)[number];
@@ -41,6 +42,10 @@ export const localeMetadata: Record<
   ja: { name: 'Japanese', nativeName: '日本語', flag: '🇯🇵', direction: 'ltr', code: 'ja-JP', region: 'asia' },
   ko: { name: 'Korean', nativeName: '한국어', flag: '🇰🇷', direction: 'ltr', code: 'ko-KR', region: 'asia' },
   tr: { name: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷', direction: 'ltr', code: 'tr-TR', region: 'mena' },
+  vi: { name: 'Vietnamese', nativeName: 'Tiếng Việt', flag: '🇻🇳', direction: 'ltr', code: 'vi-VN', region: 'asia' },
+  id: { name: 'Indonesian', nativeName: 'Bahasa Indonesia', flag: '🇮🇩', direction: 'ltr', code: 'id-ID', region: 'asia' },
+  th: { name: 'Thai', nativeName: 'ไทย', flag: '🇹🇭', direction: 'ltr', code: 'th-TH', region: 'asia' },
+  sv: { name: 'Swedish', nativeName: 'Svenska', flag: '🇸🇪', direction: 'ltr', code: 'sv-SE', region: 'europe' },
 };
 
 // Backward compatibility exports

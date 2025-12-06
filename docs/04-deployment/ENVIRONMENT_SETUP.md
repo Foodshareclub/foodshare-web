@@ -249,6 +249,43 @@ optionalEnvVars.forEach((key) => {
 
 ---
 
+## Supabase Vault for Secrets
+
+For sensitive API keys that shouldn't be stored in environment variables (or as a fallback), use Supabase Vault:
+
+### Storing Secrets
+
+```sql
+-- Store a secret in vault
+SELECT vault.create_secret('XAI_API_KEY', 'xai-your-api-key-here');
+```
+
+### Retrieving Secrets (Server-Side Only)
+
+```typescript
+// Example: Get secret with caching
+const supabase = await createClient();
+const { data, error } = await supabase.rpc('get_secrets', {
+  secret_names: ['XAI_API_KEY'],
+});
+
+const apiKey = data?.find(s => s.name === 'XAI_API_KEY')?.value;
+```
+
+### When to Use Vault vs Environment Variables
+
+| Use Case | Recommendation |
+|----------|----------------|
+| Local development | Environment variables (`.env.local`) |
+| Vercel deployment | Vercel environment variables |
+| Shared secrets across services | Supabase Vault |
+| Secrets that need rotation | Supabase Vault |
+| Edge Functions needing secrets | Supabase Vault |
+
+See [AI Moderation docs](../03-features/admin/AI_MODERATION.md) for a complete implementation example.
+
+---
+
 ## Security Best Practices
 
 ### Never Commit Secrets

@@ -9,7 +9,7 @@ A modern food sharing platform that connects people to reduce food waste by enab
 - **Real-time Chat** - Message other users about food items
 - **User Profiles** - Manage your profile and track your sharing activity
 - **Admin Dashboard** - CRM and administrative tools for platform management
-- **Multi-language Support** - 17 languages including RTL support (Arabic)
+- **Multi-language Support** - 21 languages including RTL support (Arabic)
 - **Dark/Light Theme** - Full theme support via next-themes
 - **PWA Ready** - Progressive Web App with service worker support
 - **Telegram Bot Integration** - Notifications and interactions via Telegram
@@ -117,7 +117,7 @@ foodshare-nextjs/
 │   ├── features/          # Feature modules
 │   ├── hooks/             # Custom React hooks
 │   ├── lib/               # Utilities and configurations
-│   ├── locales/           # Translation files (17 languages)
+│   ├── locales/           # Translation files (21 languages)
 │   ├── store/             # Redux store and slices
 │   ├── types/             # TypeScript type definitions
 │   ├── utils/             # Helper functions
@@ -155,7 +155,7 @@ See `.env.local.example` for the complete list with documentation.
 
 ## Internationalization
 
-FoodShare supports 17 languages using [Lingui](https://lingui.dev/):
+FoodShare supports 21 languages using [next-intl](https://next-intl-docs.vercel.app/):
 
 - English (en) - Source
 - Czech (cs), German (de), Spanish (es), French (fr), Portuguese (pt), Russian (ru), Ukrainian (uk)

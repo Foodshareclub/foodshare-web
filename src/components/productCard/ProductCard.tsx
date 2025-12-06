@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
+import { FiFlag } from 'react-icons/fi';
 
 import { DeleteIcon, EditIcon } from '@/utils/icons';
 import { useAuth } from '@/hooks/useAuth';
 import DeleteCardModal from '@/components/modals/DeleteCardModal';
+import { ReportPostDialog } from '@/components/reports';
 import type { InitialProductStateType } from '@/types/product.types';
 import { gpu120Card, gpu120Interactive, gpu120Image } from '@/utils/gpuStyles';
 import { isValidImageUrl } from '@/lib/image';
@@ -70,33 +72,52 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
         >
           {/* Image section */}
           <div className="relative">
-            {(userId === product.profile_id || isAdmin) && (
-              <div className="absolute top-2 right-2 z-10 flex items-end justify-end w-full">
-                <button
-                  className="bg-background/90 backdrop-blur-[10px] p-2 rounded-md border border-border transition-all hover:bg-background/95 hover:scale-105"
-                  onClick={onOpenEditModal}
-                  aria-label="update"
-                  style={gpu120Interactive}
-                >
-                  <EditIcon />
-                </button>
-                <PublishListingModal
-                  product={product}
-                  isOpen={openEdit}
-                  onClose={onCloseEditModal}
-                  setOpenEdit={setOpenEdit}
+            <div className="absolute top-2 right-2 z-10 flex items-end justify-end w-full gap-2">
+              {/* Report button - visible to logged-in users who don't own the post */}
+              {userId && userId !== product.profile_id && !isAdmin && (
+                <ReportPostDialog
+                  postId={product.id}
+                  postName={product.post_name}
+                  trigger={
+                    <button
+                      className="bg-background/90 backdrop-blur-[10px] p-2 rounded-md border border-border transition-all hover:bg-background/95 hover:scale-105"
+                      aria-label="report"
+                      style={gpu120Interactive}
+                    >
+                      <FiFlag className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  }
                 />
-                <button
-                  className="bg-background/90 backdrop-blur-[10px] p-2 rounded-md border border-border ml-4 transition-all hover:bg-background/95 hover:scale-105"
-                  onClick={onOpen}
-                  aria-label="delete"
-                  style={gpu120Interactive}
-                >
-                  <DeleteIcon />
-                </button>
-                <DeleteCardModal product={product} onClose={onClose} isOpen={isOpen} />
-              </div>
-            )}
+              )}
+              {/* Edit/Delete buttons - visible to owner or admin */}
+              {(userId === product.profile_id || isAdmin) && (
+                <>
+                  <button
+                    className="bg-background/90 backdrop-blur-[10px] p-2 rounded-md border border-border transition-all hover:bg-background/95 hover:scale-105"
+                    onClick={onOpenEditModal}
+                    aria-label="update"
+                    style={gpu120Interactive}
+                  >
+                    <EditIcon />
+                  </button>
+                  <PublishListingModal
+                    product={product}
+                    isOpen={openEdit}
+                    onClose={onCloseEditModal}
+                    setOpenEdit={setOpenEdit}
+                  />
+                  <button
+                    className="bg-background/90 backdrop-blur-[10px] p-2 rounded-md border border-border transition-all hover:bg-background/95 hover:scale-105"
+                    onClick={onOpen}
+                    aria-label="delete"
+                    style={gpu120Interactive}
+                  >
+                    <DeleteIcon />
+                  </button>
+                  <DeleteCardModal product={product} onClose={onClose} isOpen={isOpen} />
+                </>
+              )}
+            </div>
             <Link
               href={productUrl}
               className="relative w-full block cursor-pointer"

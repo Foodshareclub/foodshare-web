@@ -121,11 +121,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Get products by type with cursor-based pagination
+    // Order by id DESC for stable cursor pagination (id is sequential with creation)
     let query = supabase
       .from('posts_with_location')
       .select('*')
       .eq('is_active', true)
-      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
       .limit(limit + 1); // Fetch one extra to check hasMore
 
     if (type && type !== 'all') {
