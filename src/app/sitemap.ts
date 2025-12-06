@@ -4,15 +4,16 @@ import { createCachedClient } from "@/lib/supabase/server";
 
 /**
  * Dynamic sitemap for SEO
- * Includes static routes, forum posts, and forum categories
+ * Includes static routes, food products, forum posts, and forum categories
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
 
-  // Fetch forum data for sitemap
-  const [forumPosts, forumCategories] = await Promise.all([
+  // Fetch all dynamic data for sitemap
+  const [forumPosts, forumCategories, foodProducts] = await Promise.all([
     getForumPostsForSitemap(),
     getForumCategoriesForSitemap(),
+    getFoodProductsForSitemap(),
   ]);
 
   // Static routes
@@ -96,11 +97,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "hourly",
       priority: 0.8,
     },
+    // Static content pages
     {
-      url: `${baseUrl}/auth/login`,
+      url: `${baseUrl}/help`,
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.5,
+      priority: 0.6,
+    },
+    {
+      url: `${baseUrl}/terms`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.4,
+    },
+    {
+      url: `${baseUrl}/privacy`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.4,
     },
   ];
 
@@ -120,7 +134,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: post.is_pinned ? 0.8 : post.is_featured ? 0.7 : 0.6,
   }));
 
-  return [...staticRoutes, ...forumCategoryRoutes, ...forumPostRoutes];
+  // Food product routes (individual listings)
+  const foodProductRoutes: MetadataRoute.Sitemap = foodProducts.map((product) => ({
+    url: `${baseUrl}/food/${product.id}`,
+    lastModified: new Date(product.updated_at || product.created_at),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
+  return [...staticRoutes, ...forumCategoryRoutes, ...forumPostRoutes, ...foodProductRoutes];
 }
 
 /**
@@ -170,6 +192,33 @@ async function getForumCategoriesForSitemap() {
     return data || [];
   } catch {
     console.error("Error fetching forum categories for sitemap");
+    return [];
+  }
+}
+
+/**
+ * Fetch active food products for sitemap
+ * Returns top 100 most viewed active products
+ */
+async function getFoodProductsForSitemap() {
+  try {
+    const supabase = createCachedClient();
+
+    const { data, error } = await supabase
+      .from("products")
+      .select("id, created_at, updated_at")
+      .eq("is_active", true)
+      .order("post_views", { ascending: false })
+      .limit(100);
+
+    if (error) {
+      console.error("Failed to fetch food products for sitemap:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch {
+    console.error("Error fetching food products for sitemap");
     return [];
   }
 }

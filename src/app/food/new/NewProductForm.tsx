@@ -268,7 +268,7 @@ export function NewProductForm({ userId }: NewProductFormProps) {
                   <SelectItem value="challenge">🏆 Challenges</SelectItem>
                   <SelectItem value="zerowaste">♻️ Zero Waste</SelectItem>
                   <SelectItem value="vegan">🌱 Vegan</SelectItem>
-                  <SelectItem value="community">💬 Forum</SelectItem>
+                  <SelectItem value="forum">💬 Forum</SelectItem>
                 </SelectContent>
               </Select>
             </div>

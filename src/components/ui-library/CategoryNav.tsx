@@ -47,7 +47,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
       { id: "organisations", label: "Organisations", icon: "🏛️", ariaLabel: "Organisation listings" },
       { id: "volunteers", label: "Volunteers", icon: "🙌🏻", ariaLabel: "Volunteer opportunities" },
       { id: "challenges", label: "Challenges", icon: "🏆", ariaLabel: "Community challenges" },
-      { id: "community", label: "Community", icon: "🌐", ariaLabel: "Community events" },
+      { id: "forum", label: "Forum", icon: "💬", ariaLabel: "Community forum" },
     ],
     []
   );
