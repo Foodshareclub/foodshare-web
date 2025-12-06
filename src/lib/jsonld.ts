@@ -201,24 +201,3 @@ export function generateFAQJsonLd(
         })),
     };
 }
-
-/**
- * Helper to render JSON-LD script tag
- * Use in page components: <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
- */
-export function JsonLdScript({ data }: { data: object | object[] }) {
-    const jsonLdArray = Array.isArray(data) ? data : [data];
-    return (
-        <>
-        {
-            jsonLdArray.map((item, index) => (
-                <script
-          key= { index }
-          type = "application/ld+json"
-          dangerouslySetInnerHTML = {{ __html: JSON.stringify(item) }}
-        />
-      ))
-}
-</>
-  );
-}

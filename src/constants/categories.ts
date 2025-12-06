@@ -16,7 +16,7 @@ export const CATEGORIES = [
   { id: 'organisations', labelKey: 'categories.organisations', icon: '🏛️' },
   { id: 'volunteers', labelKey: 'categories.volunteers', icon: '🙌🏻' },
   { id: 'challenges', labelKey: 'categories.challenges', icon: '🏆' },
-  { id: 'community', labelKey: 'categories.community', icon: '💬' },
+  { id: 'forum', labelKey: 'categories.forum', icon: '💬' },
 ] as const;
 
 export type CategoryId = (typeof CATEGORIES)[number]['id'];

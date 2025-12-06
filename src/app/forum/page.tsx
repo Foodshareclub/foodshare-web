@@ -2,15 +2,18 @@ import { Suspense } from 'react';
 import { getForumPageData } from '@/lib/data/forum';
 import { ForumPageClient } from '@/components/forum';
 import { Skeleton } from '@/components/ui/skeleton';
+import { generatePageMetadata } from '@/lib/metadata';
 
 // ============================================================================
 // Metadata
 // ============================================================================
 
-export const metadata = {
-  title: 'Community Forum | FoodShare',
+export const metadata = generatePageMetadata({
+  title: 'Community Forum',
   description: 'Join the FoodShare community forum to share ideas, ask questions, and connect with other food sharers.',
-};
+  keywords: ['forum', 'community', 'discussion', 'food sharing tips'],
+  path: '/forum',
+});
 
 // ============================================================================
 // Loading Skeleton

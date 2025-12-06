@@ -67,7 +67,7 @@ function Navbar({
     onRouteChange(routeName);
     onProductTypeChange(categoryId);
     // Forum is a special case - it's not a product type filter
-    if (routeName === 'community') {
+    if (routeName === 'forum') {
       router.push('/forum');
       return;
     }

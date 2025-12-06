@@ -6,7 +6,7 @@ import { HomeClient } from '@/app/HomeClient';
 import SkeletonCard from '@/components/productCard/SkeletonCard';
 
 // Valid category URL paths (plural form for consistency)
-const CATEGORY_PATHS = ['all', 'food', 'things', 'borrow', 'wanted', 'fridges', 'foodbanks', 'organisations', 'volunteers', 'challenges', 'zerowaste', 'vegan', 'community'];
+const CATEGORY_PATHS = ['all', 'food', 'things', 'borrow', 'wanted', 'fridges', 'foodbanks', 'organisations', 'volunteers', 'challenges', 'zerowaste', 'vegan', 'forum'];
 
 // Map URL paths to database post_type values (singular form)
 const URL_TO_POST_TYPE: Record<string, string> = {
@@ -21,7 +21,7 @@ const URL_TO_POST_TYPE: Record<string, string> = {
   'challenges': 'challenge',
   'zerowaste': 'zerowaste',
   'vegan': 'vegan',
-  'community': 'community',
+  'forum': 'forum',
 };
 
 interface PageProps {

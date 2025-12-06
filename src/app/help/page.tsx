@@ -1,10 +1,13 @@
 import Link from 'next/link'
 import { PageHeader } from '@/components/navigation/PageHeader'
+import { generatePageMetadata } from '@/lib/metadata'
 
-export const metadata = {
-  title: 'Help Center | FoodShare',
+export const metadata = generatePageMetadata({
+  title: 'Help Center',
   description: 'Get help with FoodShare - FAQs, guides, and support for sharing food in your community.',
-}
+  keywords: ['help', 'support', 'FAQ', 'guide', 'how to'],
+  path: '/help',
+});
 
 export const dynamic = 'force-static'
 
@@ -12,7 +15,7 @@ export default function HelpPage() {
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">
       <PageHeader title="Help Center" />
-      
+
       <div className="container mx-auto max-w-4xl py-8 px-4">
         <div className="bg-card rounded-2xl shadow-sm p-8 md:p-12">
           <div className="prose prose-gray dark:prose-invert max-w-none">
@@ -22,21 +25,21 @@ export default function HelpPage() {
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <h3 className="font-medium text-foreground mb-2">How do I create an account?</h3>
                   <p className="text-foreground/80 text-sm">
-                    Click the &quot;Sign Up&quot; button and register with your email or social account. 
+                    Click the &quot;Sign Up&quot; button and register with your email or social account.
                     Complete your profile to start sharing food with your community.
                   </p>
                 </div>
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <h3 className="font-medium text-foreground mb-2">How do I share food?</h3>
                   <p className="text-foreground/80 text-sm">
-                    Click the &quot;+&quot; button to create a new listing. Add photos, description, 
+                    Click the &quot;+&quot; button to create a new listing. Add photos, description,
                     pickup location, and availability. Your listing will appear on the map for nearby users.
                   </p>
                 </div>
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <h3 className="font-medium text-foreground mb-2">How do I find food near me?</h3>
                   <p className="text-foreground/80 text-sm">
-                    Use the interactive map to browse available food in your area. You can filter by 
+                    Use the interactive map to browse available food in your area. You can filter by
                     food type, distance, and availability. Tap on a listing to see details and contact the sharer.
                   </p>
                 </div>
@@ -49,7 +52,7 @@ export default function HelpPage() {
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <h3 className="font-medium text-foreground mb-2">What food can I share?</h3>
                   <p className="text-foreground/80 text-sm">
-                    Share surplus food that is still safe to eat - unopened packaged goods, fresh produce, 
+                    Share surplus food that is still safe to eat - unopened packaged goods, fresh produce,
                     home-cooked meals, and baked goods. Always be honest about ingredients and preparation date.
                   </p>
                 </div>
@@ -72,21 +75,21 @@ export default function HelpPage() {
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <h3 className="font-medium text-foreground mb-2">How do I message someone?</h3>
                   <p className="text-foreground/80 text-sm">
-                    Open a listing and tap &quot;Message&quot; to start a chat with the sharer. 
+                    Open a listing and tap &quot;Message&quot; to start a chat with the sharer.
                     Use chat to coordinate pickup time and location.
                   </p>
                 </div>
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <h3 className="font-medium text-foreground mb-2">How do I edit or delete my listing?</h3>
                   <p className="text-foreground/80 text-sm">
-                    Go to your profile and find the listing under &quot;My Listings&quot;. 
+                    Go to your profile and find the listing under &quot;My Listings&quot;.
                     Tap the menu icon to edit details or mark as collected/delete.
                   </p>
                 </div>
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <h3 className="font-medium text-foreground mb-2">What are community fridges?</h3>
                   <p className="text-foreground/80 text-sm">
-                    Community fridges are public refrigerators where anyone can leave or take food. 
+                    Community fridges are public refrigerators where anyone can leave or take food.
                     They appear on the map with a special icon. Check their hours and guidelines before visiting.
                   </p>
                 </div>
@@ -99,21 +102,21 @@ export default function HelpPage() {
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <h3 className="font-medium text-foreground mb-2">How do I change my settings?</h3>
                   <p className="text-foreground/80 text-sm">
-                    Go to Settings from your profile menu. You can update your email, password, 
+                    Go to Settings from your profile menu. You can update your email, password,
                     notification preferences, and privacy settings.
                   </p>
                 </div>
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <h3 className="font-medium text-foreground mb-2">Is my location shared?</h3>
                   <p className="text-foreground/80 text-sm">
-                    Your exact location is never shared. Listings show an approximate area. 
+                    Your exact location is never shared. Listings show an approximate area.
                     You control what location details to share when coordinating pickup.
                   </p>
                 </div>
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <h3 className="font-medium text-foreground mb-2">How do I delete my account?</h3>
                   <p className="text-foreground/80 text-sm">
-                    Go to Settings &gt; Account &gt; Delete Account. This will permanently remove 
+                    Go to Settings &gt; Account &gt; Delete Account. This will permanently remove
                     your profile, listings, and messages.
                   </p>
                 </div>

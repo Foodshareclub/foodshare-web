@@ -138,7 +138,7 @@ export const productTypeArbitrary = fc.constantFrom(
   'challenge',
   'zerowaste',
   'vegan',
-  'community'
+  'forum'
 );
 
 // Product arbitrary

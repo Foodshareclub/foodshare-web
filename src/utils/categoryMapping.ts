@@ -37,8 +37,8 @@ export const URL_TO_DB_MAP: Record<string, string> = {
   zerowaste: "zerowaste",
   // Vegan
   vegan: "vegan",
-  // Community
-  community: "community",
+  // Forum
+  forum: "forum",
 };
 
 /**
@@ -56,7 +56,7 @@ export const DB_TO_URL_MAP: Record<string, string> = {
   challenge: "challenges",
   zerowaste: "zerowaste",
   vegan: "vegan",
-  community: "community",
+  forum: "forum",
 };
 
 /**

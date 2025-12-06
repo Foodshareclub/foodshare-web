@@ -2,6 +2,12 @@ import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { getUser } from '@/app/actions/auth';
 import { SettingsClient } from './SettingsClient';
+import { generateNoIndexMetadata } from '@/lib/metadata';
+
+export const metadata = generateNoIndexMetadata(
+  'Settings',
+  'Manage your FoodShare account settings'
+);
 
 /**
  * Settings Page - Server Component

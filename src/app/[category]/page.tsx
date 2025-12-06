@@ -13,7 +13,7 @@ const VALID_CATEGORIES = [
   'challenges',
   'zerowaste',
   'vegan',
-  'community',
+  'forum',
 ];
 
 // Legacy singular paths that should redirect to plural
@@ -47,8 +47,8 @@ export default async function CategoryRedirectPage({ params }: PageProps) {
 
   // Handle valid plural category paths
   if (VALID_CATEGORIES.includes(lowerCategory)) {
-    // Special case: community goes to /forum
-    if (lowerCategory === 'community') {
+    // Forum has its own route
+    if (lowerCategory === 'forum') {
       redirect('/forum');
     }
     redirect(`/s/${lowerCategory}`);

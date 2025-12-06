@@ -22,7 +22,7 @@ const CATEGORY_PATHS = [
   'challenge',
   'zerowaste',
   'vegan',
-  'community',
+  'forum',
 ];
 
 // Map URL params to categoryMetadata keys
@@ -56,23 +56,6 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     keywords: category.keywords,
     path: type === 'food' ? '/food' : `/food?type=${type}`,
   });
-}
-'food',
-  'thing',
-  'borrow',
-  'wanted',
-  'fridge',
-  'foodbank',
-  'business',
-  'volunteer',
-  'challenge',
-  'zerowaste',
-  'vegan',
-  'community',
-];
-
-interface PageProps {
-  searchParams: Promise<{ type?: string }>;
 }
 
 /**

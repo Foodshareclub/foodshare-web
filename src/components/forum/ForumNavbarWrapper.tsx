@@ -12,7 +12,7 @@ import { useCurrentProfile } from '@/hooks/queries/useProfileQueries';
  */
 export function ForumNavbarWrapper() {
   const router = useRouter();
-  const [productType, setProductType] = useState('community');
+  const [productType, setProductType] = useState('forum');
 
   const { isAuthenticated, user } = useAuth();
   const userId = user?.id || '';

@@ -4,6 +4,7 @@ import { getProductById, getPopularProductIds } from '@/lib/data/products';
 import { getChallengeById } from '@/lib/data/challenges';
 import { ProductDetailClient } from './ProductDetailClient';
 import type { InitialProductStateType } from '@/types/product.types';
+import { generateProductJsonLd } from '@/lib/jsonld';
 
 export const revalidate = 120;
 
@@ -113,8 +114,8 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
     try {
       product = isChallenge
         ? await getChallengeById(productId).then((c) =>
-            c ? transformChallengeToProduct(c) : null
-          )
+          c ? transformChallengeToProduct(c) : null
+        )
         : await getProductById(productId);
     } catch {
       redirect('/maintenance');
@@ -127,10 +128,27 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
     // Only fetch user if product succeeded
     const user = await safeGetUser();
 
+    // Generate JSON-LD structured data for SEO
+    const jsonLd = generateProductJsonLd({
+      id: product.id,
+      name: product.post_name || 'Food Item',
+      description: product.post_description || 'Available for sharing',
+      image: product.images?.[0],
+      category: product.post_type || 'Food',
+      datePosted: product.created_at,
+      location: product.post_stripped_address,
+    });
+
     return (
-      <Suspense fallback={<ProductDetailSkeleton />}>
-        <ProductDetailClient product={product} user={user} />
-      </Suspense>
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <Suspense fallback={<ProductDetailSkeleton />}>
+          <ProductDetailClient product={product} user={user} />
+        </Suspense>
+      </>
     );
   } catch {
     redirect('/maintenance');

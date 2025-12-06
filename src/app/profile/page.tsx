@@ -2,6 +2,12 @@ import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { getUser } from '@/app/actions/auth';
 import { ProfileSettingsClient } from './ProfileSettingsClient';
+import { generateNoIndexMetadata } from '@/lib/metadata';
+
+export const metadata = generateNoIndexMetadata(
+  'Profile',
+  'Manage your FoodShare profile settings'
+);
 
 // Route segment config for caching
 export const revalidate = 300; // Revalidate every 5 minutes

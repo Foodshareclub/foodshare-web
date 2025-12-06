@@ -1,9 +1,12 @@
 import { PageHeader } from '@/components/navigation/PageHeader'
+import { generatePageMetadata } from '@/lib/metadata'
 
-export const metadata = {
-  title: 'Privacy Policy | FoodShare',
+export const metadata = generatePageMetadata({
+  title: 'Privacy Policy',
   description: 'FoodShare Privacy Policy - Learn how we collect, use, and protect your personal information.',
-}
+  keywords: ['privacy policy', 'privacy', 'data protection', 'GDPR'],
+  path: '/privacy',
+});
 
 export const dynamic = 'force-static'
 
@@ -11,7 +14,7 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">
       <PageHeader title="Privacy Policy" />
-      
+
       <div className="container mx-auto max-w-4xl py-8 px-4">
         <div className="bg-card rounded-2xl shadow-sm p-8 md:p-12">
           <div className="prose prose-gray dark:prose-invert max-w-none">

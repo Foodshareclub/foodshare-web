@@ -11,7 +11,7 @@ export const PATH = {
   business: "/business",
   volunteer: "/volunteers",
   challenges: "/challenges",
-  community: "/community",
+  forum: "/forum",
   vegan: "/vegan",
   zerowaste: "/zerowaste",
   // Other routes

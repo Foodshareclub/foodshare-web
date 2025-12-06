@@ -41,7 +41,7 @@ export const photoObj = {
   business: business,
   volunteer: volunteer,
   challenges: challenges,
-  community: community,
+  forum: community,
   vegan: vegan,
   socFoodB: socFoodB,
   "zero waste": zerowaste,
@@ -139,7 +139,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
   },
   {
     name: "Forum",
-    nameForUrl: "Community",
+    nameForUrl: "Forum",
     en: "Forum",
     ru: "Форум",
     fr: "Forum",

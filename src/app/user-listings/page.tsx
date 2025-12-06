@@ -4,6 +4,12 @@ import { getUser } from '@/app/actions/auth';
 import { getUserProducts } from '@/lib/data/products';
 import { UserListingsClient } from './UserListingsClient';
 import SkeletonCard from '@/components/productCard/SkeletonCard';
+import { generateNoIndexMetadata } from '@/lib/metadata';
+
+export const metadata = generateNoIndexMetadata(
+  'My Listings',
+  'Manage your food and item listings'
+);
 
 // Route segment config for caching
 export const revalidate = 60;

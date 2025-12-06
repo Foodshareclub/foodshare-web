@@ -1,10 +1,13 @@
 import Link from 'next/link'
 import { PageHeader } from '@/components/navigation/PageHeader'
+import { generatePageMetadata } from '@/lib/metadata'
 
-export const metadata = {
-  title: 'Terms of Service | FoodShare',
+export const metadata = generatePageMetadata({
+  title: 'Terms of Service',
   description: 'FoodShare Terms of Service - Read our terms and conditions for using the platform.',
-}
+  keywords: ['terms of service', 'terms', 'conditions', 'legal'],
+  path: '/terms',
+});
 
 export const dynamic = 'force-static'
 
@@ -12,7 +15,7 @@ export default function TermsPage() {
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">
       <PageHeader title="Terms of Service" />
-      
+
       <div className="container mx-auto max-w-4xl py-8 px-4">
         <div className="bg-card rounded-2xl shadow-sm p-8 md:p-12">
           <div className="prose prose-gray dark:prose-invert max-w-none">

@@ -11,9 +11,11 @@ import Navbar from '@/components/header/navbar/Navbar';
 import ContactsBlock from '@/components/chat/ContactsBlock';
 import { MessagesWindow } from '@/components/chat/MessagesWindow';
 import { Skeleton } from '@/components/ui/skeleton';
+
+/**
  * Chat page - Full chat interface
-  * Supports: /chat, /chat ? food = 123, /chat?user=uuid, /chat ? room = uuid
-    */
+ * Supports: /chat, /chat?food=123, /chat?user=uuid, /chat?room=uuid
+ */
 export default function ChatPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
