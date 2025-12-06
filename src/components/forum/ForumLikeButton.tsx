@@ -20,7 +20,7 @@ export function ForumLikeButton({
   initialIsLiked,
   isAuthenticated,
   className,
-}: ForumLikeButtonProps): JSX.Element {
+}: ForumLikeButtonProps): React.ReactElement {
   const [isPending, startTransition] = useTransition();
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
@@ -33,14 +33,13 @@ export function ForumLikeButton({
     setLikeCount((prev) => (isLiked ? prev - 1 : prev + 1));
 
     startTransition(async () => {
-      const result = await toggleForumLike(forumId);
+      const result = await toggleForumLike(String(forumId));
       if (!result.success) {
         // Revert on error
         setIsLiked((prev) => !prev);
         setLikeCount((prev) => (isLiked ? prev + 1 : prev - 1));
       } else {
-        // Sync with server
-        setLikeCount(result.likeCount);
+        // Sync with server state
         setIsLiked(result.isLiked);
       }
     });
