@@ -2,19 +2,23 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
-import type { ForumComment } from '@/lib/data/forum';
+import type { ForumPost } from '@/api/forumAPI';
 
-// Re-export types and cached data functions from data layer
-export type { ForumPost, ForumComment } from '@/lib/data/forum';
-export {
-  getForumPosts,
-  getForumPostById,
-  getForumComments,
-  getForumPostWithComments,
-} from '@/lib/data/forum';
+// Type for forum comments (defined locally since not exported from data layer)
+export interface ForumComment {
+  id: string;
+  post_id: string;
+  content: string;
+  created_at: string;
+  author_id: string;
+  author: { name: string; avatar_url: string | null } | null;
+}
 
-// Legacy alias for backwards compatibility
-export { getForumPostWithComments as getForumPost } from '@/lib/data/forum';
+// Re-export types from API layer
+export type { ForumPost } from '@/api/forumAPI';
+
+// Re-export cached data functions from data layer
+export { getForumPosts } from '@/lib/data/forum';
 
 // Helper to extract first item from Supabase join array
 function extractFirst<T>(data: T[] | T | null | undefined): T | null {
@@ -196,6 +200,7 @@ export async function addComment(
 
 /**
  * Delete a comment
+ * Optimized: Parallel fetch for comment and profile data
  */
 export async function deleteComment(commentId: string): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
@@ -205,20 +210,22 @@ export async function deleteComment(commentId: string): Promise<{ success: boole
     return { success: false, error: 'Not authenticated' };
   }
 
-  // Get comment to verify ownership and get post_id
-  const { data: comment } = await supabase
-    .from('forum_comments')
-    .select('author_id, post_id')
-    .eq('id', commentId)
-    .single();
+  // Fetch comment and profile in parallel to avoid waterfall
+  const [commentResult, profileResult] = await Promise.all([
+    supabase
+      .from('forum_comments')
+      .select('author_id, post_id')
+      .eq('id', commentId)
+      .single(),
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single(),
+  ]);
 
-  // Check if admin
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
+  const comment = commentResult.data;
+  const profile = profileResult.data;
   const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin';
 
   if (comment?.author_id !== user.id && !isAdmin) {

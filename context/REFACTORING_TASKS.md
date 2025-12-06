@@ -4,6 +4,22 @@ This document outlines identified areas for improvement and refactoring in the F
 
 ## High Priority
 
+### 0. Fix Admin Role Check Pattern (URGENT)
+The `role` field in profiles is a JSONB object, not a string. Several files use the incorrect pattern.
+
+| File | Current (Incorrect) | Correct |
+|------|---------------------|---------|
+| `src/app/actions/auth.ts` | `profile?.role === 'admin'` | `profile?.role?.admin === true` |
+| `src/app/actions/forum.ts` | `profile?.role === 'admin'` | `profile?.role?.admin === true` |
+| `src/app/HomeClient.tsx` | `profile?.role === 'admin'` | `profile?.role?.admin === true` |
+| `src/lib/security/mfa.ts` | `profile?.user_role === 'admin'` | `profile?.role?.admin === true` |
+
+**Reference:** See `docs/02-development/DATABASE_SCHEMA.md` for the correct role object structure.
+
+**Already Fixed:**
+- ✅ `src/app/forum/layout.tsx`
+- ✅ `src/app/food/new/NewProductForm.tsx`
+
 ### 1. Type Safety Improvements
 Replace `any` types with proper TypeScript types across the codebase.
 

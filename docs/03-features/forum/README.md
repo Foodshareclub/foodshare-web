@@ -10,26 +10,47 @@ The forum enables community discussions with support for categories, tags, react
 
 ```text
 Server Component (page.tsx)
+    ↓ Suspense boundary with ForumSkeleton
     ↓
-lib/data/forum.ts (data fetching)
+ForumContent (async component)
     ↓
+getForumPageData() → lib/data/forum.ts
+    ↓ unstable_cache with tag-based invalidation
 Supabase (PostgreSQL)
+    ↓
+ForumPageClient (client component for interactivity)
 ```
+
+> **Note:** The forum uses server-side data fetching with Suspense streaming for optimal initial load. The `getForumPageData()` function aggregates all data (posts, categories, tags, stats, leaderboard, trending, activity) in parallel. The client component (`ForumPageClient`) handles filtering, sorting, view modes, and animations.
 
 ## Key Files
 
 | File | Purpose |
 |------|---------|
-| `src/app/forum/page.tsx` | Forum listing page (Server Component) |
-| `src/app/forum/new/page.tsx` | Create new post page (Server Component) |
-| `src/lib/data/forum.ts` | Server-side data functions |
-| `src/api/forumAPI.ts` | Client-side API (legacy, for realtime) |
+| `src/app/forum/page.tsx` | Forum listing page (Server Component wrapper) |
+| `src/app/forum/new/page.tsx` | Create new post page |
+| `src/api/forumAPI.ts` | Forum API types and utilities |
+| `src/lib/data/forum.ts` | Server-side data fetching (`getForumPageData`, `getForumPosts`, etc.) |
 | `src/app/actions/forum.ts` | Server Actions for mutations |
 | `src/components/forum/` | Forum UI components |
 
 ## Components
 
-- `ForumPostCard` - Post preview card with author, category, tags
+### ForumPageClient
+
+The main client component (`ForumPageClient.tsx`) handles all interactive forum UI with rich filtering, sorting, and animations. It receives server-fetched data as props.
+
+**Sub-components (internal to ForumPageClient):**
+- `StatCard` - Stats display with icon, value, and trend indicator
+- `TrendingPost` - Trending post item with rank badge (1st/2nd/3rd styling)
+- `LeaderboardCard` - User leaderboard entry with avatar, score, and rank badges
+- `ActivityItem` - Recent activity feed item with time-ago formatting
+- `CategoryCard` - Category filter button with selection state
+- `TagPill` - Tag filter pill with color indicator
+- `QuickActionCard` - Gradient action card with hover animations
+
+### Shared Components
+- `ForumPostCard` - Post preview card with author, category, tags (supports `variant`: `default`, `compact`, `featured`)
 - `ForumCategoryBadge` - Category indicator
 - `ForumTagBadge` - Tag pill
 - `ForumCommentCard` - Comment display with replies
@@ -83,31 +104,67 @@ Features:
 
 ## Usage
 
-### Server Component (Recommended)
+### Server Component + Client Component Pattern
+
+The forum uses a hybrid approach: server-side data fetching with a rich client component for interactivity. The page uses Suspense for streaming with a skeleton fallback.
 
 ```typescript
-// app/forum/page.tsx
-import { createClient } from '@/lib/supabase/server';
+// app/forum/page.tsx (Server Component)
+import { Suspense } from 'react';
+import { getForumPageData } from '@/lib/data/forum';
+import { ForumPageClient } from '@/components/forum';
 
-async function getForumPosts() {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('forum')
-    .select(`
-      *,
-      profiles!forum_profile_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url),
-      forum_categories!forum_category_id_fkey (*),
-      forum_post_tags (forum_tags (*))
-    `)
-    .eq('forum_published', true)
-    .order('is_pinned', { ascending: false })
-    .order('last_activity_at', { ascending: false });
-  return data ?? [];
+export const metadata = {
+  title: 'Community Forum | FoodShare',
+  description: 'Join the FoodShare community forum...',
+};
+
+async function ForumContent() {
+  const data = await getForumPageData();
+
+  return (
+    <ForumPageClient
+      posts={data.posts}
+      categories={data.categories}
+      tags={data.tags}
+      stats={data.stats}
+      leaderboard={data.leaderboard}
+      trendingPosts={data.trendingPosts}
+      recentActivity={data.recentActivity}
+    />
+  );
 }
 
-export default async function ForumPage() {
-  const posts = await getForumPosts();
-  return <ForumPostsList posts={posts} />;
+export default function ForumPage() {
+  return (
+    <Suspense fallback={<ForumSkeleton />}>
+      <ForumContent />
+    </Suspense>
+  );
+}
+```
+
+```typescript
+// components/forum/ForumPageClient.tsx (Client Component)
+'use client';
+
+import { useState } from 'react';
+import type { ForumPost, ForumCategory, ForumTag } from '@/api/forumAPI';
+import type { ForumStats, LeaderboardUser } from '@/lib/data/forum';
+
+interface ForumPageClientProps {
+  posts: ForumPost[];
+  categories: ForumCategory[];
+  tags: ForumTag[];
+  stats: ForumStats;
+  leaderboard: LeaderboardUser[];
+  trendingPosts: ForumPost[];
+  recentActivity: ForumPost[];
+}
+
+export function ForumPageClient({ posts, categories, tags, stats, leaderboard, trendingPosts, recentActivity }: ForumPageClientProps) {
+  // Rich filtering, sorting, and view mode state...
+  return <ForumUI />;
 }
 ```
 
@@ -118,7 +175,7 @@ export default async function ForumPage() {
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
 export async function createForumPost(formData: FormData) {
   const supabase = await createClient();
@@ -127,7 +184,7 @@ export async function createForumPost(formData: FormData) {
     forum_post_description: formData.get('description'),
     category_id: formData.get('category'),
   });
-  revalidatePath('/forum');
+  invalidateTag(CACHE_TAGS.FORUM);
 }
 ```
 
@@ -141,6 +198,7 @@ export async function createForumPost(formData: FormData) {
 
 ## Features
 
+### Core Features
 - Category filtering
 - Tag-based organization
 - Pinned/featured posts
@@ -153,6 +211,16 @@ export async function createForumPost(formData: FormData) {
 - User reputation system
 - Polls
 - Draft saving
+
+### UI Features
+- Multiple view modes (grid, list, compact)
+- Animated stat counters
+- Trending posts sidebar
+- Leaderboard with top contributors
+- Recent activity feed
+- Quick action cards
+- Mobile-responsive filters panel
+- Framer Motion animations
 
 ## Translations
 

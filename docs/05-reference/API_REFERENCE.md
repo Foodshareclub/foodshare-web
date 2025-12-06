@@ -252,6 +252,464 @@ const { data, error } = await productAPI.searchProducts("apple", "food");
 
 ---
 
+## Challenges Data Layer
+
+Located: `src/lib/data/challenges.ts`
+
+Server-side data fetching functions for challenges with caching. Uses `unstable_cache` for optimal performance.
+
+> **Note:** `getChallenges()` returns data transformed to `InitialProductStateType` for compatibility with `ProductGrid` and `HomeClient` components. Numeric fields (views, likes) are coerced from strings since Supabase may return them as strings.
+
+### Get All Challenges
+
+```typescript
+import { getChallenges } from '@/lib/data/challenges';
+
+const challenges = await getChallenges();
+```
+
+**Returns:** `InitialProductStateType[]` - Challenges transformed for component compatibility
+
+**Caching:** Uses `CACHE_TAGS.CHALLENGES` tag, revalidates per `CACHE_DURATIONS.CHALLENGES`
+
+**Example (Server Component with parallel fetching):**
+
+```typescript
+// app/challenge/page.tsx
+import { getChallenges, getPopularChallenges } from '@/lib/data/challenges';
+import { getUser } from '@/app/actions/auth';
+import { ChallengesClient } from './ChallengesClient';
+
+export const revalidate = 60;
+
+export default async function ChallengePage() {
+  // Parallel data fetching for optimal performance
+  const [challenges, popularChallenges, user] = await Promise.all([
+    getChallenges(),
+    getPopularChallenges(3),
+    getUser(),
+  ]);
+
+  const stats = {
+    totalChallenges: challenges.length,
+    totalParticipants: challenges.reduce(
+      (sum, c) => sum + (Number(c.post_like_counter) || 0),
+      0
+    ),
+  };
+
+  return (
+    <ChallengesClient
+      challenges={challenges}
+      popularChallenges={popularChallenges}
+      user={user}
+      stats={stats}
+    />
+  );
+}
+```
+
+---
+
+### Get Challenge by ID
+
+```typescript
+import { getChallengeById } from '@/lib/data/challenges';
+
+const challenge = await getChallengeById(42);
+```
+
+**Parameters:**
+
+- `challengeId` - Challenge ID (number)
+
+**Returns:** `Challenge | null` - Raw challenge data (not transformed)
+
+---
+
+### Get Challenges by Difficulty
+
+```typescript
+import { getChallengesByDifficulty } from '@/lib/data/challenges';
+
+const challenges = await getChallengesByDifficulty('easy');
+```
+
+**Parameters:**
+
+- `difficulty` - Difficulty level string
+
+**Returns:** `Challenge[]` - Raw challenge data
+
+---
+
+### Get User Challenges
+
+```typescript
+import { getUserChallenges } from '@/lib/data/challenges';
+
+const challenges = await getUserChallenges(userId);
+```
+
+**Parameters:**
+
+- `userId` - User's profile ID (UUID)
+
+**Returns:** `Challenge[]` - All challenges created by the user
+
+---
+
+### Get Popular Challenges
+
+```typescript
+import { getPopularChallenges } from '@/lib/data/challenges';
+
+const popular = await getPopularChallenges(10);
+```
+
+**Parameters:**
+
+- `limit` - Number of challenges to return (default: 10)
+
+**Returns:** `Challenge[]` - Challenges ordered by views
+
+---
+
+### Challenge Type
+
+```typescript
+interface Challenge {
+  id: number;
+  challenge_title: string;
+  challenge_description: string;
+  challenge_image: string;
+  challenge_difficulty: string;
+  challenge_action: string;
+  challenge_score: number;
+  challenge_views: number;
+  challenge_likes_counter: number;
+  challenged_people: number;
+  challenge_published: boolean;
+  challenge_created_at: string;
+  challenge_updated_at: string;
+  profile_id: string;
+}
+```
+
+---
+
+## Challenge Server Actions
+
+Located: `src/app/actions/challenges.ts`
+
+Server actions for challenge interactions. These handle user participation and engagement with challenges.
+
+### Accept Challenge
+
+```typescript
+import { acceptChallenge } from '@/app/actions/challenges';
+
+const result = await acceptChallenge(challengeId);
+```
+
+**Parameters:**
+
+- `challengeId` - Challenge ID (number)
+
+**Returns:** `{ success: boolean; error?: string }`
+
+**Behavior:**
+
+- Adds user to `challenge_participants` table
+- Increments `challenged_people` count via RPC
+- Invalidates challenge cache and revalidates path
+- Returns success if already accepted (idempotent)
+
+**Example (Client Component):**
+
+```typescript
+'use client';
+import { acceptChallenge } from '@/app/actions/challenges';
+import { Button } from '@/components/ui/button';
+
+export function AcceptChallengeButton({ challengeId }: { challengeId: number }) {
+  const handleAccept = async () => {
+    const result = await acceptChallenge(challengeId);
+    if (!result.success) {
+      console.error(result.error);
+    }
+  };
+
+  return <Button onClick={handleAccept}>Accept Challenge</Button>;
+}
+```
+
+---
+
+### Check Challenge Acceptance
+
+```typescript
+import { hasAcceptedChallenge } from '@/app/actions/challenges';
+
+const isAccepted = await hasAcceptedChallenge(challengeId);
+```
+
+**Parameters:**
+
+- `challengeId` - Challenge ID (number)
+
+**Returns:** `boolean` - True if current user has accepted the challenge
+
+**Example:**
+
+```typescript
+const hasAccepted = await hasAcceptedChallenge(42);
+if (hasAccepted) {
+  // Show "Already Accepted" state
+}
+```
+
+---
+
+### Toggle Challenge Like
+
+```typescript
+import { toggleChallengeLike } from '@/app/actions/challenges';
+
+const result = await toggleChallengeLike(challengeId);
+```
+
+**Parameters:**
+
+- `challengeId` - Challenge ID (number)
+
+**Returns:** `{ success: boolean; isLiked: boolean; error?: string }`
+
+**Note:** Current implementation increments the counter. For production, consider implementing a `challenge_likes` table similar to `post_likes` for proper toggle behavior.
+
+**Example:**
+
+```typescript
+'use client';
+import { toggleChallengeLike } from '@/app/actions/challenges';
+
+export function LikeChallengeButton({ challengeId }: { challengeId: number }) {
+  const handleLike = async () => {
+    const result = await toggleChallengeLike(challengeId);
+    if (result.success) {
+      // Update UI
+    }
+  };
+
+  return <Button variant="ghost" onClick={handleLike}>❤️ Like</Button>;
+}
+```
+
+---
+
+## Auth Server Actions
+
+Located: `src/app/actions/auth.ts`
+
+Server actions for authentication and user data. These provide graceful degradation during database unavailability.
+
+### Get Current User
+
+```typescript
+import { getUser } from '@/app/actions/auth';
+
+const user = await getUser();
+```
+
+**Returns:** `AuthUser | null`
+
+```typescript
+interface AuthUser {
+  id: string;
+  email?: string;
+  profile: {
+    id: string;
+    name?: string;
+    first_name?: string;
+    second_name?: string;
+    avatar_url?: string;
+    role?: string;
+    email?: string;
+  } | null;
+}
+```
+
+**Graceful Degradation:**
+
+Returns `null` (instead of throwing) when:
+- User is not authenticated
+- Auth service returns an error
+- Database is unavailable (maintenance mode)
+- Profile fetch fails (returns user without profile)
+
+This ensures pages using `getUser()` continue to render during maintenance, showing unauthenticated state rather than error pages.
+
+**Example (Server Component with parallel fetching):**
+
+```typescript
+// app/challenge/[id]/page.tsx
+import { getUser } from '@/app/actions/auth';
+import { getChallengeById } from '@/lib/data/challenges';
+
+export default async function ChallengeDetailPage({ params }: PageProps) {
+  const { id } = await params;
+
+  // Parallel fetch - getUser() won't throw even if DB is down
+  const [challenge, user] = await Promise.all([
+    getChallengeById(parseInt(id, 10)),
+    getUser(),
+  ]);
+
+  if (!challenge) notFound();
+
+  // user may be null (not logged in OR DB unavailable)
+  return <ChallengeDetailClient challenge={challenge} user={user} />;
+}
+```
+
+**Behavior During Maintenance:**
+
+| Scenario | Result |
+|----------|--------|
+| User authenticated, DB healthy | Returns full `AuthUser` with profile |
+| User authenticated, profile fetch fails | Returns `AuthUser` with `profile: null` |
+| User not authenticated | Returns `null` |
+| Auth service error | Returns `null` |
+| Database unavailable | Returns `null` |
+
+**Note:** Components should handle `null` user gracefully, showing login prompts or limited functionality rather than assuming an error occurred.
+
+---
+
+## Safe Auth Helpers
+
+Located: `src/lib/supabase/safe-auth.ts`
+
+Low-level auth wrappers that gracefully handle database unavailability during maintenance. These return `null`/`false` instead of throwing errors.
+
+### Safe Get Session
+
+```typescript
+import { safeGetSession } from '@/lib/supabase/safe-auth';
+
+const session = await safeGetSession();
+```
+
+**Returns:** `Session | null`
+
+Returns `null` if DB is unavailable or auth fails.
+
+---
+
+### Safe Get User
+
+```typescript
+import { safeGetUser } from '@/lib/supabase/safe-auth';
+
+const user = await safeGetUser();
+```
+
+**Returns:** `User | null` (Supabase `User` type)
+
+Returns `null` if DB is unavailable or auth fails.
+
+---
+
+### Safe Get User With Profile
+
+```typescript
+import { safeGetUserWithProfile } from '@/lib/supabase/safe-auth';
+
+const user = await safeGetUserWithProfile();
+```
+
+**Returns:** `SafeAuthUser | null`
+
+```typescript
+interface SafeAuthUser {
+  id: string;
+  email: string | undefined;
+  profile?: {
+    id: string;
+    name: string;
+    first_name: string | null;
+    second_name: string | null;
+    avatar_url: string | null;
+    role: string;
+    email: string | null;
+  } | null;
+}
+```
+
+Returns user with profile data. If profile fetch fails, returns user with `profile: null`.
+
+---
+
+### Safe Check Is Admin
+
+```typescript
+import { safeCheckIsAdmin } from '@/lib/supabase/safe-auth';
+
+const isAdmin = await safeCheckIsAdmin();
+```
+
+**Returns:** `boolean`
+
+Returns `false` if DB is unavailable, user not authenticated, or user is not admin.
+
+---
+
+### Is Database Available
+
+```typescript
+import { isDatabaseAvailable } from '@/lib/supabase/safe-auth';
+
+const available = await isDatabaseAvailable();
+```
+
+**Returns:** `boolean`
+
+Quick check if database is reachable. Useful for conditional rendering or feature flags.
+
+---
+
+### When to Use Safe Auth vs Regular Auth
+
+| Use Case | Recommended |
+|----------|-------------|
+| Server Components (pages) | `getUser()` from `@/app/actions/auth` |
+| Middleware auth checks | `safeGetSession()` |
+| Admin route protection | `safeCheckIsAdmin()` |
+| Feature flags based on DB status | `isDatabaseAvailable()` |
+| Custom auth flows | `safeGetUser()` or `safeGetUserWithProfile()` |
+
+**Example (Middleware-style check):**
+
+```typescript
+import { safeGetSession, isDatabaseAvailable } from '@/lib/supabase/safe-auth';
+
+export async function checkAccess() {
+  // First check if DB is even available
+  if (!await isDatabaseAvailable()) {
+    return { allowed: false, reason: 'maintenance' };
+  }
+
+  const session = await safeGetSession();
+  if (!session) {
+    return { allowed: false, reason: 'unauthenticated' };
+  }
+
+  return { allowed: true, userId: session.user.id };
+}
+```
+
+---
+
 ## Chat API (`chatAPI`)
 
 Located: `src/api/chatAPI.ts`
@@ -1264,6 +1722,311 @@ await supabase.from("posts").insert({
   location: newLocation,
 });
 ```
+
+---
+
+## Health Check API
+
+Located: `src/app/api/health/route.ts`
+
+Edge runtime endpoint that performs comprehensive health monitoring by checking:
+1. Direct database connectivity
+2. Supabase project health via Management API
+3. Supabase upgrade status (detects ongoing Postgres upgrades)
+
+### Check Health Status
+
+```
+GET /api/health
+```
+
+**Runtime:** Edge (low latency, global distribution)
+
+**Caching:** Disabled (`revalidate = 0`, `dynamic = 'force-dynamic'`)
+
+**Timeouts:**
+- Database check: 4 seconds
+- Management API checks: 3 seconds
+
+**Returns:** `HealthStatus`
+
+```typescript
+interface HealthStatus {
+  status: 'healthy' | 'degraded' | 'maintenance';
+  database: boolean;
+  timestamp: string;
+  message?: string;
+  retryAfter?: number; // seconds until next check recommended
+  services: {
+    database: 'up' | 'down' | 'degraded';
+    auth: 'up' | 'down' | 'unknown';
+    storage: 'up' | 'down' | 'unknown';
+  };
+  upgradeStatus?: {
+    status: string;      // e.g., 'upgrading', 'COMPLETED', 'FAILED'
+    progress?: string;   // upgrade progress indicator
+    targetVersion?: string; // target Postgres version
+  };
+}
+```
+
+**Response Codes:**
+
+| Status | Code | Description |
+|--------|------|-------------|
+| `healthy` | 200 | Database reachable, all services operational |
+| `maintenance` | 503 | Database unreachable, upgrade in progress, or services unhealthy |
+
+**How It Works:**
+
+The endpoint performs three checks in parallel:
+1. **Direct DB connectivity** - REST API call to Supabase (`/rest/v1/profiles?select=id&limit=1`)
+2. **Project health** - Supabase Management API (`/v1/projects/{ref}/health?services=db,auth,storage`)
+3. **Upgrade status** - Supabase Management API (`/v1/projects/{ref}/upgrade/status`)
+
+**Maintenance Detection:**
+
+Returns maintenance status when:
+- Postgres upgrade is in progress (detected via upgrade status API)
+- Project health API reports unhealthy services
+- Database connection times out (4s limit)
+- Network errors occur (DNS failure, connection refused/reset, SSL errors)
+- Supabase returns 5xx errors
+- Missing environment configuration
+- Any uncaught exception (fail-safe)
+
+**Note:** 4xx errors (except 5xx) are treated as "healthy" since they indicate the database is reachable but there's a configuration or query issue.
+
+**Required Environment Variables:**
+- `NEXT_PUBLIC_SUPABASE_URL` - Used to extract project reference
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - For direct DB connectivity check
+- `SUPABASE_ACCESS_TOKEN` - Personal Access Token (PAT) for Management API calls (project health & upgrade status). Generate at: https://supabase.com/dashboard/account/tokens. Note: This is NOT the service role key.
+
+**Example Response (Healthy):**
+
+```json
+{
+  "status": "healthy",
+  "database": true,
+  "timestamp": "2025-12-06T10:30:00.000Z",
+  "services": {
+    "database": "up",
+    "auth": "up",
+    "storage": "up"
+  }
+}
+```
+
+**Example Response (Maintenance - Database Down):**
+
+```json
+{
+  "status": "maintenance",
+  "database": false,
+  "timestamp": "2025-12-06T10:30:00.000Z",
+  "message": "We're sprucing things up! Back shortly — thanks for your patience! 💚",
+  "retryAfter": 30,
+  "services": {
+    "database": "down",
+    "auth": "unknown",
+    "storage": "unknown"
+  }
+}
+```
+
+**Example Response (Postgres Upgrade in Progress):**
+
+```json
+{
+  "status": "maintenance",
+  "database": false,
+  "timestamp": "2025-12-06T10:30:00.000Z",
+  "message": "Database upgrade to v15.4 in progress...",
+  "retryAfter": 30,
+  "services": {
+    "database": "down",
+    "auth": "unknown",
+    "storage": "unknown"
+  },
+  "upgradeStatus": {
+    "status": "upgrading",
+    "progress": "50%",
+    "targetVersion": "15.4"
+  }
+}
+```
+
+**Example Response (Services Under Maintenance):**
+
+```json
+{
+  "status": "maintenance",
+  "database": false,
+  "timestamp": "2025-12-06T10:30:00.000Z",
+  "message": "Services under maintenance: db, auth",
+  "retryAfter": 30,
+  "services": {
+    "database": "down",
+    "auth": "down",
+    "storage": "up"
+  }
+}
+```
+
+**Usage Example (Client-side polling):**
+
+The `MaintenanceBanner` component (`src/components/maintenance/MaintenanceBanner.tsx`) provides a ready-to-use implementation with:
+- Adaptive polling interval (15s initial, backs off to 60s max during issues)
+- 8-second fetch timeout with `AbortController`
+- Automatic retry with exponential backoff
+- Dismissible banner with manual refresh
+- Inline SVG icons (no external icon dependencies)
+
+```typescript
+// Simplified client-side interface (only consumes what's needed)
+interface HealthStatus {
+  status: 'healthy' | 'degraded' | 'maintenance';
+  database: boolean;
+  message?: string;
+  retryAfter?: number;
+}
+
+// Polling with adaptive interval and timeout
+const [pollInterval, setPollInterval] = useState(15000);
+
+const checkHealth = async () => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const res = await fetch('/api/health', {
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      // 503 = maintenance mode
+      setStatus({ status: 'maintenance', database: false });
+      setPollInterval(Math.min(pollInterval * 1.5, 60000));
+      return;
+    }
+
+    const data = await res.json();
+    setStatus(data);
+
+    if (data.status === 'healthy') {
+      setPollInterval(15000); // Reset interval
+    }
+  } catch {
+    // Network error or timeout = maintenance mode
+    setStatus({ status: 'maintenance', database: false });
+  }
+};
+```
+
+**Use Cases:**
+
+- Display maintenance banners during database downtime (`MaintenanceBanner` component)
+- Uptime monitoring integrations (Vercel, UptimeRobot, etc.)
+- Graceful degradation in client applications
+- Load balancer health checks
+
+---
+
+### Server-Side Health Check Pattern
+
+For Server Components that need to check database availability before rendering, use a direct health check instead of calling the `/api/health` endpoint (avoids extra network hop).
+
+**Pattern:** Check DB health → Redirect to maintenance if unhealthy → Fetch data → Render
+
+```typescript
+// app/food/page.tsx (or any Server Component)
+
+/**
+ * Direct database health check for Server Components
+ * Uses REST API call with 3s timeout - faster than /api/health endpoint
+ */
+async function isDatabaseHealthy(): Promise<boolean> {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseKey) return false;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    const response = await fetch(`${supabaseUrl}/rest/v1/profiles?select=id&limit=1`, {
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+      },
+      signal: controller.signal,
+      cache: 'no-store',
+    });
+
+    clearTimeout(timeoutId);
+    return response.ok || response.status < 500;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Safe user fetch - uses dynamic import to avoid import-time errors
+ */
+async function safeGetUser() {
+  try {
+    const { getUser } = await import('@/app/actions/auth');
+    return await getUser();
+  } catch {
+    return null;
+  }
+}
+
+export default async function ProductsPage() {
+  // 1. Check DB health first (fast fail)
+  const dbHealthy = await isDatabaseHealthy();
+  if (!dbHealthy) {
+    redirect('/maintenance');
+  }
+
+  // 2. Fetch primary data
+  let products;
+  try {
+    products = await getProducts();
+  } catch {
+    redirect('/maintenance');
+  }
+
+  // 3. Fetch user only if products succeeded
+  const user = await safeGetUser();
+
+  return <HomeClient products={products} user={user} />;
+}
+```
+
+**Key Points:**
+
+| Aspect | Recommendation |
+|--------|----------------|
+| Timeout | 3 seconds (aggressive, fail fast) |
+| Health check | Direct REST call to Supabase (no client library) |
+| User fetch | Dynamic import to avoid import-time errors |
+| Order | Health → Data → User (sequential with early exit) |
+| Failure | Redirect to `/maintenance` page |
+
+**When to Use:**
+
+- Pages that must have data to render (product listings, forum posts)
+- Pages where showing stale/empty data is worse than maintenance page
+- High-traffic pages where fast failure detection is critical
+
+**When NOT to Use:**
+
+- Pages that can gracefully degrade (show login prompt, empty state)
+- Client Components (use `MaintenanceBanner` polling instead)
+- API routes (use the `/api/health` endpoint pattern)
 
 ---
 

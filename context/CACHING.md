@@ -25,6 +25,9 @@ CACHE_TAGS.PRODUCT_LOCATIONS             // 'product-locations'
 CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(type) // 'product-locations-{type}'
 CACHE_TAGS.PROFILES                      // 'profiles'
 CACHE_TAGS.PROFILE(id)                   // 'profile-{id}'
+CACHE_TAGS.CHALLENGES                    // 'challenges'
+CACHE_TAGS.CHALLENGE(id)                 // 'challenge-{id}'
+CACHE_TAGS.USER_CHALLENGES(userId)       // 'user-challenges-{userId}'
 CACHE_TAGS.FORUM                         // 'forum'
 CACHE_TAGS.CHATS                         // 'chats'
 CACHE_TAGS.ADMIN                         // 'admin'
@@ -125,10 +128,10 @@ export async function createProduct(formData: FormData) {
 
 | Function | Cache Duration | Tags |
 |----------|---------------|------|
-| `getForumPosts(category?)` | 120s | `forum` |
-| `getForumPostById(id)` | 120s | `forum` |
-| `getForumComments(postId)` | 120s | `forum` |
-| `getForumPostWithComments(id)` | 120s | `forum` (parallel fetch) |
+| `getForumPosts(options?)` | 120s | `forum` |
+| `getForumCategories()` | 120s | `forum` |
+| `getForumTags(limit?)` | 120s | `forum` |
+| `getForumPageData(options?)` | N/A | Aggregates above (parallel fetch) |
 
 ### Admin (`@/lib/data/admin`)
 

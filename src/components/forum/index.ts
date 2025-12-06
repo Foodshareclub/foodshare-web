@@ -11,3 +11,4 @@ export { RichTextEditor } from "./RichTextEditor";
 export { RichTextViewer } from "./RichTextViewer";
 export { RealtimeComments } from "./RealtimeComments";
 export { CreatePostForm } from "./CreatePostForm";
+export { ForumPageClient } from "./ForumPageClient";

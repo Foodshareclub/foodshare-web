@@ -1,44 +1,89 @@
 import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
 import { getProducts } from '@/lib/data/products';
-import { getUser } from '@/app/actions/auth';
 import { HomeClient } from './HomeClient';
 import SkeletonCard from '@/components/productCard/SkeletonCard';
 
-// Route segment config for caching
-export const revalidate = 60; // Revalidate every 60 seconds
+export const revalidate = 60;
 
 /**
- * Home Page - Server Component
- * Fetches initial data on the server and passes to client components
+ * Check if database is healthy before making any calls
  */
-export default async function Home() {
-  // Fetch data in parallel on the server
-  const [products, user] = await Promise.all([
-    getProducts('food'),
-    getUser(),
-  ]);
+async function isDatabaseHealthy(): Promise<boolean> {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseKey) return false;
 
-  return (
-    <Suspense fallback={<HomePageSkeleton />}>
-      <HomeClient
-        initialProducts={products}
-        user={user}
-        productType="food"
-      />
-    </Suspense>
-  );
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    const response = await fetch(`${supabaseUrl}/rest/v1/profiles?select=id&limit=1`, {
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+      },
+      signal: controller.signal,
+      cache: 'no-store',
+    });
+
+    clearTimeout(timeoutId);
+    return response.ok || response.status < 500;
+  } catch {
+    return false;
+  }
 }
 
 /**
- * Skeleton loader for the home page
+ * Safely get user - only if DB is healthy
  */
+async function safeGetUser() {
+  try {
+    const { getUser } = await import('@/app/actions/auth');
+    return await getUser();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Home Page - Server Component
+ * Checks DB health first, then fetches data
+ */
+export default async function Home() {
+  // First check if DB is healthy
+  const dbHealthy = await isDatabaseHealthy();
+
+  if (!dbHealthy) {
+    redirect('/maintenance');
+  }
+
+  try {
+    // Fetch products first
+    let products;
+    try {
+      products = await getProducts('food');
+    } catch {
+      redirect('/maintenance');
+    }
+
+    // Only fetch user if products succeeded
+    const user = await safeGetUser();
+
+    return (
+      <Suspense fallback={<HomePageSkeleton />}>
+        <HomeClient initialProducts={products} user={user} productType="food" />
+      </Suspense>
+    );
+  } catch {
+    redirect('/maintenance');
+  }
+}
+
 function HomePageSkeleton() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Navbar skeleton */}
       <div className="h-[140px] bg-card border-b border-border animate-pulse" />
-
-      {/* Product grid skeleton */}
       <div className="grid gap-10 px-7 py-7 xl:px-20 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
         {[...Array(10)].map((_, i) => (
           <SkeletonCard key={i} isLoaded={false} />

@@ -54,6 +54,7 @@ export default function NavigateButtons({ navigateTo, messagesAnchorRef, title }
       "volunteer",
       "map",
       "s",
+      "challenge",
     ];
     const showMapButton = !nonListingRoutes.includes(pathType);
     // Show button when navigateTo is explicitly provided (e.g., "Show posts" on map)

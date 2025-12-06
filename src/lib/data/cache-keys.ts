@@ -51,6 +51,11 @@ export const CACHE_TAGS = {
   PROFILE_REVIEWS: (id: string) => `profile-reviews-${id}`,
   VOLUNTEERS: 'volunteers',
 
+  // Challenges
+  CHALLENGES: 'challenges',
+  CHALLENGE: (id: number) => `challenge-${id}`,
+  USER_CHALLENGES: (userId: string) => `user-challenges-${userId}`,
+
   // Forum
   FORUM: 'forum',
   FORUM_POST: (id: number) => `forum-post-${id}`,
@@ -96,6 +101,8 @@ export const CACHE_DURATIONS = {
   PROFILES: 300, // 5 minutes
   PROFILE_STATS: 600, // 10 minutes
   VOLUNTEERS: 3600, // 1 hour
+  CHALLENGES: 300, // 5 minutes
+  CHALLENGE_DETAIL: 300, // 5 minutes
   FORUM: 120, // 2 minutes
   ADMIN_STATS: 300, // 5 minutes
   STATIC_PAGES: 86400, // 24 hours
@@ -156,6 +163,14 @@ export function getForumTags(postId?: number): string[] {
   if (postId) {
     tags.push(CACHE_TAGS.FORUM_POST(postId));
     tags.push(CACHE_TAGS.FORUM_COMMENTS(postId));
+  }
+  return tags;
+}
+
+export function getChallengeTags(challengeId?: number): string[] {
+  const tags: string[] = [CACHE_TAGS.CHALLENGES];
+  if (challengeId) {
+    tags.push(CACHE_TAGS.CHALLENGE(challengeId));
   }
   return tags;
 }

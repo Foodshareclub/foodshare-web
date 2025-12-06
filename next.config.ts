@@ -154,10 +154,8 @@ const nextConfig: NextConfig = {
         source: "/volunteer",
         destination: "/food?type=volunteer",
       },
-      {
-        source: "/challenge",
-        destination: "/food?type=challenge",
-      },
+      // Challenge has its own dedicated route at /challenge
+      // No rewrite needed
       {
         source: "/zerowaste",
         destination: "/food?type=zerowaste",
@@ -195,10 +193,8 @@ const nextConfig: NextConfig = {
         source: "/volunteer/:id",
         destination: "/food/:id",
       },
-      {
-        source: "/challenge/:id",
-        destination: "/food/:id",
-      },
+      // Challenge detail has its own dedicated route at /challenge/[id]
+      // No rewrite needed
       {
         source: "/zerowaste/:id",
         destination: "/food/:id",
@@ -248,7 +244,8 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel-scripts.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://vercel.live https://*.vercel-scripts.com",
+              "worker-src 'self' blob:",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: blob: https://*.supabase.co https://*.openstreetmap.org https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://firebasestorage.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",

@@ -82,9 +82,17 @@ Category pages use rewrites to maintain clean URLs while serving from the produc
 | `/foodbanks`         | `/products?type=foodbanks`   |
 | `/business`          | `/products?type=business`    |
 | `/volunteer`         | `/products?type=volunteer`   |
-| `/challenges`        | `/products?type=challenges`  |
 | `/zerowaste`         | `/products?type=zerowaste`   |
 | `/vegan`             | `/products?type=vegan`       |
+
+### Dedicated Feature Routes
+
+Some features have their own dedicated routes instead of rewrites:
+
+| Route | Description |
+| ----- | ----------- |
+| `/challenge` | Challenges listing page (dedicated route) |
+| `/challenge/[id]` | Individual challenge detail page |
 
 ### Legacy Route Redirects
 

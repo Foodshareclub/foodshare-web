@@ -1,5 +1,7 @@
+import { cache } from 'react';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
+import parse from 'html-react-parser';
 import { createClient } from '@/lib/supabase/server';
 import { ForumCategoryBadge, ForumTagBadge, RealtimeComments } from '@/components/forum';
 import { RichTextViewer } from '@/components/forum/RichTextViewer';
@@ -12,7 +14,8 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-async function getForumPost(slugOrId: string): Promise<ForumPost | null> {
+// Wrapped with cache() to deduplicate calls between generateMetadata and page component
+const getForumPost = cache(async (slugOrId: string): Promise<ForumPost | null> => {
   const supabase = await createClient();
 
   // Check if it's a numeric ID
@@ -33,7 +36,7 @@ async function getForumPost(slugOrId: string): Promise<ForumPost | null> {
 
   if (error || !data) return null;
   return data as ForumPost;
-}
+});
 
 async function getInitialComments(forumId: number): Promise<ForumComment[]> {
   const supabase = await createClient();
@@ -73,6 +76,30 @@ function CommentsSkeleton() {
       ))}
     </div>
   );
+}
+
+// generateMetadata uses cached getForumPost - no duplicate DB call
+export async function generateMetadata({ params }: PageProps) {
+  const { slug } = await params;
+  const post = await getForumPost(slug);
+
+  if (!post) {
+    return { title: 'Post Not Found | FoodShare Forum' };
+  }
+
+  const description = post.forum_post_description
+    ? post.forum_post_description.replace(/<[^>]*>/g, '').slice(0, 160)
+    : 'Join the discussion on FoodShare Forum';
+
+  return {
+    title: `${post.forum_post_name} | FoodShare Forum`,
+    description,
+    openGraph: {
+      title: post.forum_post_name,
+      description,
+      images: post.forum_post_image ? [post.forum_post_image] : [],
+    },
+  };
 }
 
 export default async function ForumPostPage({ params }: PageProps) {
@@ -170,9 +197,11 @@ export default async function ForumPostPage({ params }: PageProps) {
         <div className="prose prose-lg dark:prose-invert max-w-none mb-6">
           {post.rich_content ? (
             <RichTextViewer content={post.rich_content} />
-          ) : (
-            <p className="whitespace-pre-wrap">{post.forum_post_description}</p>
-          )}
+          ) : post.forum_post_description ? (
+            <div className="forum-content">
+              {parse(post.forum_post_description)}
+            </div>
+          ) : null}
         </div>
 
         {/* Tags */}

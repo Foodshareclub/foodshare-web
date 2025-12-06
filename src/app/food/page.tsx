@@ -1,58 +1,115 @@
 import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
 import { getProducts } from '@/lib/data/products';
-import { getUser } from '@/app/actions/auth';
+import { getChallenges } from '@/lib/data/challenges';
 import { HomeClient } from '@/app/HomeClient';
 import SkeletonCard from '@/components/productCard/SkeletonCard';
 
 // Route segment config for caching
-export const revalidate = 60; // Revalidate every 60 seconds
+export const revalidate = 60;
 
-// Valid category paths that map to post_type values
-const CATEGORY_PATHS = ['food', 'thing', 'borrow', 'wanted', 'fridge', 'foodbank', 'business', 'volunteer', 'challenge', 'zerowaste', 'vegan', 'community'];
+const CATEGORY_PATHS = [
+  'food',
+  'thing',
+  'borrow',
+  'wanted',
+  'fridge',
+  'foodbank',
+  'business',
+  'volunteer',
+  'challenge',
+  'zerowaste',
+  'vegan',
+  'community',
+];
 
 interface PageProps {
   searchParams: Promise<{ type?: string }>;
 }
 
 /**
- * Food/Products Listings Page - Server Component
- * Handles all category routes via URL rewrites
+ * Check if database is healthy before making auth calls
  */
-export default async function ProductsPage({ searchParams }: PageProps) {
-  const params = await searchParams;
+async function isDatabaseHealthy(): Promise<boolean> {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!supabaseUrl || !supabaseKey) return false;
 
-  // Get product type from searchParams, default to 'food'
-  const productType = params.type && CATEGORY_PATHS.includes(params.type)
-    ? params.type
-    : 'food';
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-  // Fetch data in parallel on the server
-  const [products, user] = await Promise.all([
-    getProducts(productType),
-    getUser(),
-  ]);
+    const response = await fetch(`${supabaseUrl}/rest/v1/profiles?select=id&limit=1`, {
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+      },
+      signal: controller.signal,
+      cache: 'no-store',
+    });
 
-  return (
-    <Suspense fallback={<ProductsPageSkeleton />}>
-      <HomeClient
-        initialProducts={products}
-        user={user}
-        productType={productType}
-      />
-    </Suspense>
-  );
+    clearTimeout(timeoutId);
+    return response.ok || response.status < 500;
+  } catch {
+    return false;
+  }
 }
 
 /**
- * Skeleton loader for the products page
+ * Safely get user - only if DB is healthy
  */
+async function safeGetUser() {
+  try {
+    const { getUser } = await import('@/app/actions/auth');
+    return await getUser();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Food/Products Listings Page - Server Component
+ * Gracefully handles DB unavailability
+ */
+export default async function ProductsPage({ searchParams }: PageProps) {
+  // First check if DB is healthy
+  const dbHealthy = await isDatabaseHealthy();
+
+  if (!dbHealthy) {
+    redirect('/maintenance');
+  }
+
+  try {
+    const params = await searchParams;
+    const productType =
+      params.type && CATEGORY_PATHS.includes(params.type) ? params.type : 'food';
+
+    // Fetch products first
+    let products;
+    try {
+      products =
+        productType === 'challenge' ? await getChallenges() : await getProducts(productType);
+    } catch {
+      redirect('/maintenance');
+    }
+
+    // Only fetch user if products succeeded
+    const user = await safeGetUser();
+
+    return (
+      <Suspense fallback={<ProductsPageSkeleton />}>
+        <HomeClient initialProducts={products} user={user} productType={productType} />
+      </Suspense>
+    );
+  } catch {
+    redirect('/maintenance');
+  }
+}
+
 function ProductsPageSkeleton() {
   return (
     <div className="min-h-screen bg-background">
-      {/* Navbar skeleton */}
       <div className="h-[140px] bg-card border-b border-border animate-pulse" />
-
-      {/* Product grid skeleton */}
       <div className="grid gap-10 px-7 py-7 xl:px-20 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
         {[...Array(10)].map((_, i) => (
           <SkeletonCard key={i} isLoaded={false} />

@@ -20,6 +20,7 @@ export function RichTextViewer({ content, className }: RichTextViewerProps) {
     ],
     content: typeof content === 'string' ? content : content ?? '',
     editable: false,
+    immediatelyRender: false,
     editorProps: {
       attributes: {
         class: cn(

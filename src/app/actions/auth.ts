@@ -22,53 +22,81 @@ export interface AuthUser {
 
 /**
  * Get current session
+ * Returns null if DB is unavailable (graceful degradation)
  */
 export async function getSession(): Promise<Session | null> {
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
-  return session;
+  try {
+    const supabase = await createClient();
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) return null;
+    return session;
+  } catch {
+    // DB unavailable - return null gracefully
+    return null;
+  }
 }
 
 /**
  * Get current user with profile
+ * Returns null if DB is unavailable (graceful degradation)
  */
 export async function getUser(): Promise<AuthUser | null> {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-  if (!user) return null;
+    // Auth error or no user = return null gracefully
+    if (authError || !user) return null;
 
-  // Get profile data
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('id, name, first_name, second_name, avatar_url, role, email')
-    .eq('id', user.id)
-    .single();
+    // Get profile data - also wrapped in try-catch
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, name, first_name, second_name, avatar_url, role, email')
+        .eq('id', user.id)
+        .single();
 
-  return {
-    id: user.id,
-    email: user.email,
-    profile,
-  };
+      return {
+        id: user.id,
+        email: user.email,
+        profile,
+      };
+    } catch {
+      // Profile fetch failed, return user without profile
+      return {
+        id: user.id,
+        email: user.email,
+        profile: null,
+      };
+    }
+  } catch {
+    // DB unavailable - return null gracefully
+    return null;
+  }
 }
 
 /**
  * Check if current user is admin
+ * Returns false if DB is unavailable (graceful degradation)
  */
 export async function checkIsAdmin(): Promise<boolean> {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) return false;
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
 
-  return profile?.role === 'admin' || profile?.role === 'superadmin';
+    return profile?.role === 'admin' || profile?.role === 'superadmin';
+  } catch {
+    return false;
+  }
 }
 
 /**

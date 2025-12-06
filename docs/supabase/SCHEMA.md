@@ -135,11 +135,19 @@ Gamification challenges.
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | bigint | Primary key |
-| `title` | text | Challenge name |
-| `description` | text | Challenge description |
-| `points` | integer | Points awarded |
-| `start_date` | date | Challenge start |
-| `end_date` | date | Challenge end |
+| `challenge_title` | text | Challenge name |
+| `challenge_description` | text | Challenge description |
+| `challenge_image` | text | Challenge image URL |
+| `challenge_difficulty` | text | Difficulty level |
+| `challenge_action` | text | Action required |
+| `challenge_score` | integer | Points awarded |
+| `challenge_views` | integer | View count |
+| `challenge_likes_counter` | integer | Likes count |
+| `challenged_people` | integer | Participants count |
+| `challenge_published` | boolean | Published status |
+| `challenge_created_at` | timestamptz | Creation date |
+| `challenge_updated_at` | timestamptz | Last update |
+| `profile_id` | uuid | Creator (references profiles) |
 
 ---
 

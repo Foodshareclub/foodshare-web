@@ -1,44 +1,60 @@
-'use client';
+import type { Metadata } from 'next';
+import { siteConfig } from '@/lib/metadata';
+import { ForumNavbarWrapper } from '@/components/forum/ForumNavbarWrapper';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Navbar from '@/components/header/navbar/Navbar';
-import { useAuth } from '@/hooks/useAuth';
-import { useCurrentProfile } from '@/hooks/queries/useProfileQueries';
+export const metadata: Metadata = {
+  title: {
+    default: 'Community Forum',
+    template: '%s | Forum | FoodShare',
+  },
+  description:
+    'Join the FoodShare community forum to share ideas, ask questions, and connect with other food sharers. Discuss food sharing tips, sustainability, and community initiatives.',
+  keywords: [
+    'food sharing forum',
+    'community discussion',
+    'sustainability forum',
+    'food waste reduction',
+    'community support',
+    'food sharing tips',
+    'zero waste community',
+  ],
+  alternates: {
+    canonical: `${siteConfig.url}/forum`,
+    types: {
+      'application/rss+xml': `${siteConfig.url}/forum/feed.xml`,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: `${siteConfig.url}/forum`,
+    siteName: siteConfig.name,
+    title: `Community Forum | ${siteConfig.name}`,
+    description:
+      'Join the FoodShare community forum to share ideas, ask questions, and connect with other food sharers.',
+    images: [
+      {
+        url: siteConfig.ogImage,
+        width: 1200,
+        height: 630,
+        alt: 'FoodShare Community Forum',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    site: siteConfig.twitterHandle,
+    title: `Community Forum | ${siteConfig.name}`,
+    description:
+      'Join the FoodShare community forum to share ideas, ask questions, and connect with other food sharers.',
+    images: [siteConfig.ogImage],
+  },
+};
 
 export default function ForumLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const [productType, setProductType] = useState('community');
-
-  const { isAuthenticated, user } = useAuth();
-  const userId = user?.id || '';
-  const { profile, avatarUrl } = useCurrentProfile(userId);
-
-  const isAdmin = profile?.role?.admin === true;
-
-  const handleRouteChange = (route: string) => {
-    router.push(`/${route}`);
-  };
-
-  const handleProductTypeChange = (type: string) => {
-    setProductType(type);
-  };
-
   return (
     <div className="min-h-screen bg-background">
-      <Navbar
-        userId={userId}
-        isAuth={isAuthenticated}
-        isAdmin={isAdmin}
-        productType={productType}
-        onRouteChange={handleRouteChange}
-        onProductTypeChange={handleProductTypeChange}
-        imgUrl={avatarUrl || profile?.avatar_url || ''}
-        firstName={profile?.first_name || ''}
-        secondName={profile?.second_name || ''}
-        email={profile?.email || ''}
-        signalOfNewMessage={[]}
-      />
+      <ForumNavbarWrapper />
       {children}
     </div>
   );

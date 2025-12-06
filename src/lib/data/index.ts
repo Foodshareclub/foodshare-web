@@ -13,6 +13,7 @@ export {
   getProductTags,
   getProfileTags,
   getForumTags,
+  getChallengeTags,
 } from './cache-keys';
 
 // Product data functions
@@ -45,12 +46,17 @@ export {
 // Forum data functions
 export {
   getForumPosts,
-  getForumPostById,
-  getForumComments,
-  getForumPostWithComments,
-  type ForumPost,
-  type ForumComment,
+  getForumCategories,
+  getForumTags as getForumTagsList,
+  getForumPageData,
+  type SortOption,
+  type ForumStats,
+  type LeaderboardUser,
+  type ForumPageData,
 } from './forum';
+
+// Forum types from API layer
+export type { ForumPost, ForumCategory, ForumTag } from '@/api/forumAPI';
 
 // Admin data functions
 export {
@@ -69,3 +75,13 @@ export {
   getNearbyLocations,
   getLocationCountsByType,
 } from './maps';
+
+// Challenge data functions
+export {
+  getChallenges,
+  getChallengeById,
+  getChallengesByDifficulty,
+  getUserChallenges,
+  getPopularChallenges,
+  type Challenge,
+} from './challenges';

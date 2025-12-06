@@ -23,9 +23,9 @@ const CATEGORIES = [
   { id: "fridge", label: "Fridges", icon: "❄️" },
   { id: "business", label: "Business", icon: "🏛️" },
   { id: "volunteer", label: "Volunteer", icon: "🙌🏻" },
-  { id: "challenge", label: "Challenges", icon: "🏆" },
   { id: "zerowaste", label: "Zero Waste", icon: "♻️" },
   { id: "vegan", label: "Vegan", icon: "🌱" },
+  { id: "challenge", label: "Challenges", icon: "🏆" },
   { id: "community", label: "Forum", icon: "💬" },
 ] as const;
 

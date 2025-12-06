@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/food", "/map", "/food/"],
+        allow: ["/", "/food", "/map", "/food/", "/forum", "/forum/"],
         disallow: [
           "/api/",
           "/admin/",
@@ -16,11 +16,12 @@ export default function robots(): MetadataRoute.Robots {
           "/_next/",
           "/food/new",
           "/food/*/edit",
+          "/forum/new",
         ],
       },
       {
         userAgent: "Googlebot",
-        allow: ["/", "/food", "/map", "/food/", "/profile/"],
+        allow: ["/", "/food", "/map", "/food/", "/profile/", "/forum", "/forum/"],
         disallow: [
           "/api/",
           "/admin/",
@@ -29,9 +30,13 @@ export default function robots(): MetadataRoute.Robots {
           "/auth/",
           "/food/new",
           "/food/*/edit",
+          "/forum/new",
         ],
       },
     ],
-    sitemap: `${siteConfig.url}/sitemap.xml`,
+    sitemap: [
+      `${siteConfig.url}/sitemap.xml`,
+      `${siteConfig.url}/forum/feed.xml`,
+    ],
   };
 }

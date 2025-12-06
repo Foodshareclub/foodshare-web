@@ -7,6 +7,7 @@ import { defaultMetadata } from "@/lib/metadata";
 import type { Locale } from "@/i18n/config";
 import Footer from "@/components/footer/Footer";
 import { DevTools } from "@/components/dev";
+import { MaintenanceBanner } from "@/components/maintenance/MaintenanceBanner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -28,8 +29,9 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <Providers initialLocale={locale}>
+          <MaintenanceBanner />
           {children}
           <Footer />
           <DevTools />

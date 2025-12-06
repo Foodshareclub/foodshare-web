@@ -106,6 +106,18 @@ export async function GET(request: NextRequest) {
       return jsonWithCache(data ?? [], CACHE_DURATIONS.LOCATIONS);
     }
 
+    // Handle challenges separately - they come from the challenges table
+    if (type === 'challenge') {
+      const { data, error } = await supabase
+        .from('challenges')
+        .select('*')
+        .eq('challenge_published', true)
+        .order('challenge_created_at', { ascending: false });
+
+      if (error) throw error;
+      return jsonWithCache(data ?? [], CACHE_DURATIONS.PRODUCTS);
+    }
+
     // Get products by type (or all)
     let query = supabase
       .from('posts_with_location')
