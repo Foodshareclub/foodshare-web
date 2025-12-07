@@ -25,11 +25,31 @@ Client-side wrapper that handles auth state and navigation, allowing parent layo
 ```tsx
 import { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
 
-// In a layout file
+// Basic usage in a layout file
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen">
       <NavbarWrapper defaultProductType="food" />
+      <main>{children}</main>
+    </div>
+  );
+}
+```
+
+### Preventing Avatar Loading Flicker
+
+To prevent the avatar from flickering during hydration, pass the user data from the server:
+
+```tsx
+import { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
+import { getUser } from '@/app/actions/auth';
+
+export default async function Layout({ children }: { children: React.ReactNode }) {
+  const user = await getUser(); // Fetch user on server
+  
+  return (
+    <div className="min-h-screen">
+      <NavbarWrapper defaultProductType="food" initialUser={user} />
       <main>{children}</main>
     </div>
   );
@@ -41,13 +61,32 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `defaultProductType` | `string` | `'food'` | Initial product type for category filtering |
+| `initialUser` | `AuthUser \| null` | `undefined` | Server-fetched user data to prevent loading flicker |
 
 ### Features
 
 - Fetches current user auth state via `useAuth`
 - Loads user profile and avatar via `useCurrentProfile`
+- **Supports server-side initial user data** to prevent avatar loading flicker
+- **Caches last known good avatar URL** to prevent flicker during navigation
 - Handles route changes with `router.push()`
 - Manages product type state internally
 - Passes all required props to the underlying `Navbar` component
+- Falls back gracefully from server data to client-fetched data
+
+### Avatar URL Resolution
+
+The component uses a server-first fallback chain to ensure the avatar is always displayed immediately without flicker:
+
+1. **Server-provided avatar URL** - From `initialUser.profile.avatar_url` prop (displayed immediately on page load)
+2. **Client-fetched profile avatar_url** - From `useCurrentProfile` hook (used after query loads; avatar URLs are stored as full URLs in the database)
+3. **Default avatar** - The Avatar component handles empty/invalid URLs with a default fallback
+
+This server-first approach ensures smooth transitions during:
+- Initial page load (immediate display without waiting for client queries)
+- Navigation between pages
+- Auth state changes
+
+> **Note:** Avatar URLs are stored as complete URLs in the database, so no URL resolution is needed at runtime.
 
 See full documentation in `docs/03-features/navbar/README.md`.

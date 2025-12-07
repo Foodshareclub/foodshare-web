@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
 
 export const metadata: Metadata = {
   title: {
@@ -19,10 +18,5 @@ export const metadata: Metadata = {
 };
 
 export default function ChallengeLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen bg-background">
-      <NavbarWrapper defaultProductType="challenge" />
-      {children}
-    </div>
-  );
+  return <>{children}</>;
 }

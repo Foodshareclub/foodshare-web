@@ -13,8 +13,8 @@ export const runtime = 'edge';
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
-const DB_TIMEOUT_MS = 4000;
-const API_TIMEOUT_MS = 3000;
+const DB_TIMEOUT_MS = 30000; // 30s for Supabase cold-start on free tier
+const API_TIMEOUT_MS = 30000; // 30s for Management API
 
 interface HealthStatus {
   status: 'healthy' | 'degraded' | 'maintenance';

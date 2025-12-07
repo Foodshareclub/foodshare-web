@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { generatePageMetadata, categoryMetadata } from "@/lib/metadata";
 import { NavbarWrapper } from "@/components/header/navbar/NavbarWrapper";
+import { getUser } from "@/app/actions/auth";
 
 export const metadata: Metadata = generatePageMetadata({
   title: "Food Listings - Share & Discover Free Food",
@@ -19,10 +20,6 @@ export default function ProductsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="min-h-screen bg-background">
-      <NavbarWrapper defaultProductType="food" />
-      {children}
-    </div>
-  );
+  // Navbar is rendered by HomeClient which receives user data directly
+  return <>{children}</>;
 }

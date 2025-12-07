@@ -44,6 +44,9 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
   const profile = user?.profile;
   const isOwner = userId === product?.profile_id;
   const productType = product?.post_type || 'food';
+  
+  // Avatar URL: Avatar component handles default fallback
+  const avatarUrl = profile?.avatar_url || '';
 
   // Rating state for interactive stars
   const [rating, setRating] = useState(0);
@@ -77,7 +80,7 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
           productType="food"
           onRouteChange={handleRouteChange}
           onProductTypeChange={handleProductTypeChange}
-          imgUrl={profile?.avatar_url || ''}
+          imgUrl={avatarUrl}
           firstName={profile?.first_name || ''}
           secondName={profile?.second_name || ''}
           email={profile?.email || ''}
@@ -106,7 +109,7 @@ export function ProductDetailClient({ product, user }: ProductDetailClientProps)
         productType={productType}
         onRouteChange={handleRouteChange}
         onProductTypeChange={handleProductTypeChange}
-        imgUrl={profile?.avatar_url || ''}
+        imgUrl={avatarUrl}
         firstName={profile?.first_name || ''}
         secondName={profile?.second_name || ''}
         email={profile?.email || ''}

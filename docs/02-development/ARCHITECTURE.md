@@ -100,6 +100,95 @@ Some features have their own dedicated routes instead of using the `/s/[category
 | `/forum` | Community forum |
 | `/forum/[slug]` | Individual forum post |
 
+---
+
+## 🔍 SEO & Metadata
+
+### Dynamic Metadata
+
+Each route can export a `generateMetadata` function for dynamic SEO metadata:
+
+```typescript
+// app/food/[id]/page.tsx
+export async function generateMetadata({ params }: PageProps) {
+  const product = await getProductById(params.id);
+  return {
+    title: `${product.post_name} | FoodShare`,
+    description: product.post_description?.slice(0, 160),
+    openGraph: {
+      title: product.post_name,
+      description: product.post_description,
+      images: [{ url: product.images?.[0] }],
+    },
+  };
+}
+```
+
+### Dynamic OpenGraph Images
+
+Routes can generate custom OG images using Next.js Image Response:
+
+| Route | OG Image File | Description |
+| ----- | ------------- | ----------- |
+| `/food/[id]` | `opengraph-image.tsx` | Dynamic food listing preview |
+| `/challenge/[id]` | `opengraph-image.tsx` | Challenge preview with event details |
+| `/forum/[slug]` | `opengraph-image.tsx` | Forum post preview |
+
+**Implementation Pattern:**
+
+```typescript
+// app/food/[id]/opengraph-image.tsx
+import { ImageResponse } from 'next/og';
+
+export const runtime = 'edge';
+export const alt = 'FoodShare Listing';
+export const size = { width: 1200, height: 630 };
+export const contentType = 'image/png';
+
+export default async function Image({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const product = await getProductById(parseInt(id, 10));
+  
+  return new ImageResponse(
+    (
+      <div style={{ /* gradient background, emoji, title, location */ }}>
+        {/* Dynamic content based on listing type */}
+      </div>
+    ),
+    { ...size }
+  );
+}
+```
+
+**Features:**
+- Type-specific gradients and emojis (food 🍽️, borrow 🤝, wanted 🔍, etc.)
+- Background image overlay when listing has photos
+- Location badge with 📍 icon
+- "FREE" badge for food sharing
+- FoodShare branding footer
+
+### JSON-LD Structured Data
+
+Pages include JSON-LD for rich search results:
+
+```typescript
+// Challenge pages use Event schema
+const eventJsonLd = generateEventJsonLd({
+  name: challenge.challenge_title,
+  description: challenge.challenge_description,
+  image: challenge.challenge_image,
+  url: `https://foodshare.club/challenge/${id}`,
+});
+
+// Forum posts use Article schema
+const articleJsonLd = generateArticleJsonLd({
+  title: post.forum_post_name,
+  description: post.forum_post_description,
+  datePublished: post.forum_post_created_at,
+  authorName: post.profiles?.nickname,
+});
+```
+
 ### Legacy Route Redirects
 
 Old URLs are permanently redirected (301) to the correct routes:

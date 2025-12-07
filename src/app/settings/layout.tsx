@@ -4,7 +4,15 @@ import { createClient } from '@/lib/supabase/server';
 import { SettingsNavbar } from './SettingsNavbar';
 
 /**
+ * Check if a string is a full URL (http/https)
+ */
+function isFullUrl(url: string): boolean {
+  return url.startsWith('http://') || url.startsWith('https://');
+}
+
+/**
  * Fetch profile directly without unstable_cache to avoid cookies() conflict
+ * Resolves avatar_url to public URL if it's a storage path
  */
 async function getProfileForNavbar(userId: string) {
   const supabase = await createClient();
@@ -13,7 +21,20 @@ async function getProfileForNavbar(userId: string) {
     .select('first_name, second_name, avatar_url')
     .eq('id', userId)
     .single();
-  return data;
+  
+  if (!data) return null;
+  
+  // Resolve avatar URL to public URL if needed
+  let resolvedAvatarUrl = data.avatar_url;
+  if (data.avatar_url && !isFullUrl(data.avatar_url)) {
+    const { data: urlData } = supabase.storage.from('profiles').getPublicUrl(data.avatar_url);
+    resolvedAvatarUrl = urlData?.publicUrl || null;
+  }
+  
+  return {
+    ...data,
+    avatar_url: resolvedAvatarUrl,
+  };
 }
 
 /**

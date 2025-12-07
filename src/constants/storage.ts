@@ -3,6 +3,9 @@
  * Centralized bucket names for Supabase Storage
  */
 
+/** Default avatar URL for unauthenticated users or users without a profile picture */
+export const DEFAULT_AVATAR_URL = "https://***REMOVED***.supabase.co/storage/v1/object/public/profiles/cuties/cute-strawberry.png";
+
 export const STORAGE_BUCKETS = {
   /** User profile pictures and avatars (public) */
   PROFILES: "profiles",

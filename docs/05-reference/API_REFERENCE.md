@@ -1966,8 +1966,8 @@ GET /api/health
 **Caching:** Disabled (`revalidate = 0`, `dynamic = 'force-dynamic'`)
 
 **Timeouts:**
-- Database check: 4 seconds
-- Management API checks: 3 seconds
+- Database check: 8 seconds (increased for cold-start on free tier)
+- Management API checks: 5 seconds
 
 **Returns:** `HealthStatus`
 
@@ -2010,7 +2010,7 @@ The endpoint performs three checks in parallel:
 Returns maintenance status when:
 - Postgres upgrade is in progress (detected via upgrade status API)
 - Project health API reports unhealthy services
-- Database connection times out (4s limit)
+- Database connection times out (8s limit)
 - Network errors occur (DNS failure, connection refused/reset, SSL errors)
 - Supabase returns 5xx errors
 - Missing environment configuration
@@ -2096,15 +2096,22 @@ Returns maintenance status when:
 
 **Usage Example (Client-side polling):**
 
-The `MaintenanceBanner` component (`src/components/maintenance/MaintenanceBanner.tsx`) provides a ready-to-use implementation with:
-- Adaptive polling interval (15s initial, backs off to 60s max during issues)
-- 8-second fetch timeout with `AbortController`
-- Automatic retry with exponential backoff
-- Dismissible banner with manual refresh
-- Inline SVG icons (no external icon dependencies)
+The `MaintenanceBanner` component (`src/components/maintenance/MaintenanceBanner.tsx`) is integrated into the root layout (`src/app/layout.tsx`) and automatically displays on all pages when maintenance is detected. Features:
+- Adaptive polling interval (30s initial, exponential backoff up to 60s max)
+- 12-second fetch timeout with `AbortController` (accommodates slow cold starts)
+- **Consecutive failures threshold** - banner only shows after 2 consecutive failures (reduces false positives)
+- **Initial delay** - first health check delayed by 2s to let page load first
+- Respects `retryAfter` from server response for polling interval
+- Dismissible banner with close button
+- Manual refresh button with loading spinner animation
+- Fixed position at top of viewport with gradient background (amber/orange)
+- Progress indicator bar during maintenance status
+- Responsive design with different messages for mobile/desktop
+- Accessibility: `aria-live="polite"` for screen readers
+- Auto-resets dismissed state and consecutive failure counter when status returns to healthy
 
 ```typescript
-// Simplified client-side interface (only consumes what's needed)
+// Client-side interface matching the health API response
 interface HealthStatus {
   status: 'healthy' | 'degraded' | 'maintenance';
   database: boolean;
@@ -2112,37 +2119,50 @@ interface HealthStatus {
   retryAfter?: number;
 }
 
-// Polling with adaptive interval and timeout
-const [pollInterval, setPollInterval] = useState(15000);
+// Polling with adaptive interval and exponential backoff
+const INITIAL_POLL_INTERVAL = 30000; // 30 seconds between checks
+const MAX_POLL_INTERVAL = 60000;     // 60 seconds max
+const CONSECUTIVE_FAILURES_THRESHOLD = 2; // Only show banner after 2 consecutive failures
+const [pollInterval, setPollInterval] = useState(INITIAL_POLL_INTERVAL);
+const [isChecking, setIsChecking] = useState(false);
+const consecutiveFailures = useRef(0);
+const [showBanner, setShowBanner] = useState(false);
 
 const checkHealth = async () => {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  const fetchTimeout = setTimeout(() => controller.abort(), 12000); // 12s for slow cold starts
 
   try {
     const res = await fetch('/api/health', {
       cache: 'no-store',
       signal: controller.signal,
     });
-    clearTimeout(timeoutId);
+    clearTimeout(fetchTimeout);
 
-    if (!res.ok) {
-      // 503 = maintenance mode
-      setStatus({ status: 'maintenance', database: false });
-      setPollInterval(Math.min(pollInterval * 1.5, 60000));
-      return;
-    }
-
-    const data = await res.json();
+    const data: HealthStatus = await res.json();
     setStatus(data);
 
+    // Adjust polling interval based on status
     if (data.status === 'healthy') {
-      setPollInterval(15000); // Reset interval
+      pollIntervalRef.current = MAX_POLL_INTERVAL;
+    } else {
+      pollIntervalRef.current = data.retryAfter
+        ? data.retryAfter * 1000
+        : INITIAL_POLL_INTERVAL;
     }
   } catch {
-    // Network error or timeout = maintenance mode
-    setStatus({ status: 'maintenance', database: false });
+    // Network error or timeout = assume maintenance
+    setStatus({
+      status: 'maintenance',
+      database: false,
+      timestamp: new Date().toISOString(),
+      message: 'Unable to reach server',
+    });
+    pollIntervalRef.current = INITIAL_POLL_INTERVAL;
   }
+
+  // Schedule next check
+  timeoutId = setTimeout(checkHealth, pollIntervalRef.current);
 };
 ```
 

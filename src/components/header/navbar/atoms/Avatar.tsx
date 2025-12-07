@@ -1,6 +1,7 @@
 import type { FC } from "react";
 import { cn } from "@/lib/utils";
 import { Avatar as AvatarPrimitive, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { DEFAULT_AVATAR_URL } from "@/constants/storage";
 
 export interface NavbarAvatarProps {
   /** Image URL for the avatar */
@@ -25,14 +26,14 @@ export interface NavbarAvatarProps {
   onClick?: () => void;
 }
 
-/** Generate initials from user name, with alt text fallback */
-function getInitials(firstName?: string, lastName?: string, alt = "User"): string {
+/** Generate initials from user name, with strawberry emoji fallback */
+function getInitials(firstName?: string, lastName?: string): string {
   if (firstName || lastName) {
     const first = firstName?.charAt(0).toUpperCase() ?? "";
     const last = lastName?.charAt(0).toUpperCase() ?? "";
-    return `${first}${last}`.trim() || alt.charAt(0).toUpperCase();
+    return `${first}${last}`.trim() || "🍓";
   }
-  return alt.charAt(0).toUpperCase();
+  return "🍓";
 }
 
 const sizeClasses = {
@@ -108,8 +109,8 @@ export const NavbarAvatar: FC<NavbarAvatarProps> = ({
       tabIndex={onClick ? 0 : undefined}
     >
       <AvatarPrimitive className={sizeClasses[size]}>
-        <AvatarImage src={src} alt={alt} />
-        <AvatarFallback>{getInitials(firstName, resolvedLastName, alt)}</AvatarFallback>
+        <AvatarImage src={src?.trim() || DEFAULT_AVATAR_URL} alt={alt} />
+        <AvatarFallback>{getInitials(firstName, resolvedLastName)}</AvatarFallback>
       </AvatarPrimitive>
       {hasNotification && notificationCount && notificationCount > 0 && (
         <span

@@ -262,6 +262,13 @@ Client-side wrappers that allow parent layouts to remain Server Components for b
 
 > **Note:** `ForumNavbarWrapper` in `@/components/forum/` is deprecated. Use `NavbarWrapper` with `defaultProductType="forum"` instead.
 
+**NavbarWrapper Props:**
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `defaultProductType` | `string` | `'food'` | Initial product type for category filtering |
+| `initialUser` | `AuthUser \| null` | `undefined` | Server-fetched user data to prevent avatar loading flicker |
+
 **Usage in layouts:**
 
 ```tsx
@@ -273,6 +280,22 @@ export default function ProductsLayout({ children }: { children: React.ReactNode
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <NavbarWrapper defaultProductType="food" />
+      <main className="flex-1">{children}</main>
+    </div>
+  );
+}
+
+// With server-side user data to prevent avatar flicker
+// app/products/layout.tsx
+import { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
+import { getUser } from '@/app/actions/auth';
+
+export default async function ProductsLayout({ children }: { children: React.ReactNode }) {
+  const user = await getUser(); // Fetch user on server
+  
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <NavbarWrapper defaultProductType="food" initialUser={user} />
       <main className="flex-1">{children}</main>
     </div>
   );
@@ -310,6 +333,20 @@ export default function DonationLayout({ children }: { children: React.ReactNode
 - Encapsulates auth state and profile fetching
 - Provides consistent navbar behavior across pages
 - Handles routing and product type changes internally
+- **Supports `initialUser` prop** to prevent avatar loading flicker during hydration
+- **Caches last known good avatar URL** to prevent flicker during navigation
+
+**Avatar URL Resolution Chain:**
+
+The `NavbarWrapper` uses a multi-layer fallback to ensure avatars display without flicker:
+
+1. Server-provided avatar URL (from `initialUser.profile.avatar_url` prop) - displayed immediately on page load
+2. Client-fetched profile avatar_url (from `useCurrentProfile` hook) - used after query loads, avatar URLs are stored as full URLs in the database
+3. Default avatar (the Avatar component handles empty/invalid URLs with a default fallback)
+
+This server-first approach ensures immediate display without waiting for client-side queries, providing smooth transitions during initial page load, navigation between pages, and auth state changes.
+
+> **Note:** Avatar URLs are stored as complete URLs in the database, so no URL resolution is needed at runtime.
 
 ### SearchBar
 

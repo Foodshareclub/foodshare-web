@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { DEFAULT_AVATAR_URL } from "@/constants/storage";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,15 +43,15 @@ export default function ProfileSettings({
                   )}
                 >
                   <Avatar className="h-[42px] w-[42px]">
-                    {imgUrl && <AvatarImage src={imgUrl} />}
-                    {!imgUrl && <AvatarFallback />}
+                    <AvatarImage src={imgUrl?.trim() || DEFAULT_AVATAR_URL} />
+                    <AvatarFallback>🍓</AvatarFallback>
                   </Avatar>
                 </div>
               ) : (
                 <div className="cursor-pointer rounded-full">
                   <Avatar>
-                    {imgUrl && <AvatarImage src={imgUrl} />}
-                    {!imgUrl && <AvatarFallback />}
+                    <AvatarImage src={imgUrl?.trim() || DEFAULT_AVATAR_URL} />
+                    <AvatarFallback>🍓</AvatarFallback>
                   </Avatar>
                 </div>
               )}

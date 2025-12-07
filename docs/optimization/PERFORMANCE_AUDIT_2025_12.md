@@ -359,9 +359,9 @@ The `cache-keys.ts` implementation is solid:
 
 ### 8.4 Cookie Resilience ✅ IMPLEMENTED
 
-**Status:** ✅ Complete (Defense in Depth)
+**Status:** ✅ Complete (Defense in Depth - 3 Layers)
 
-Cookie validation is implemented at two layers for maximum resilience:
+Cookie validation is implemented at three layers for maximum resilience:
 
 **Layer 1: Middleware Proxy (`src/proxy.ts`)**
 - Intercepts all requests before they reach the application
@@ -376,9 +376,17 @@ Cookie validation is implemented at two layers for maximum resilience:
 - Validates base64url encoding before passing to Supabase SSR
 - Prevents "Invalid UTF-8 sequence" errors from crashing the app
 
+**Layer 3: Browser Client (`src/lib/supabase/client.ts`)** ✅ NEW
+- `clearCorruptedCookies()` runs before Supabase client initialization
+- Proactively scans and removes corrupted `sb-` cookies from `document.cookie`
+- Validates base64url encoding of cookie values
+- Deletes invalid cookies by setting expiry to past date
+- Logs warnings for debugging: `Cleared corrupted Supabase cookie: {name}`
+
 **Benefits:**
 - Proactive cleanup at middleware level (cookies cleared before app code runs)
-- Defensive fallback at client level (graceful handling if middleware misses)
+- Defensive fallback at server client level (graceful handling if middleware misses)
+- Client-side cleanup for realtime subscriptions and browser-only operations
 - No user-facing errors from corrupted auth state
 - Automatic recovery - users simply retry and get fresh session
 

@@ -23,10 +23,10 @@ export default function Header({ getRoute, setProductType, productType }: Header
   const userId = user?.id;
 
   // Profile data from React Query
-  const { profile, avatarUrl, isProfileLoading } = useCurrentProfile(userId);
+  const { profile, avatarUrl } = useCurrentProfile(userId);
 
-  // Final avatar URL with fallback chain
-  const finalAvatarUrl = avatarUrl || profile?.avatar_url || undefined;
+  // Avatar URL - Avatar component handles default fallback
+  const finalAvatarUrl = avatarUrl || profile?.avatar_url || '';
 
   // Chat rooms from React Query
   const { data: allUserRooms = [] } = useRooms(userId);

@@ -393,14 +393,6 @@ export function ForumPageClient({
               </Button>
             </Link>
           </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
-            <StatCard icon={FaCommentDots} label={t('forum_stats_posts', { defaultValue: 'Posts' })} value={stats.totalPosts} color="bg-blue-500" />
-            <StatCard icon={FaHeart} label={t('forum_stats_comments', { defaultValue: 'Comments' })} value={stats.totalComments} color="bg-red-500" />
-            <StatCard icon={FaUsers} label={t('forum_stats_active_users', { defaultValue: 'Active Users' })} value={stats.activeUsers} color="bg-green-500" />
-            <StatCard icon={FaChartLine} label={t('forum_stats_today', { defaultValue: 'Today' })} value={stats.postsToday} color="bg-purple-500" />
-          </div>
         </div>
       </div>
 

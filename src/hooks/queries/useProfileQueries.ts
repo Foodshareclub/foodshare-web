@@ -127,6 +127,28 @@ function isFullUrl(url: string): boolean {
   return url.startsWith("http://") || url.startsWith("https://");
 }
 
+/**
+ * Normalize avatar path - handles edge cases like empty strings, quotes, etc.
+ * Returns undefined for invalid/empty paths
+ */
+function normalizeAvatarPath(path: string | undefined): string | undefined {
+  if (!path) return undefined;
+  
+  // Remove whitespace
+  let normalized = path.trim();
+  
+  // Handle escaped empty strings like '""' or "''"
+  if (normalized === '""' || normalized === "''") return undefined;
+  
+  // Handle JSON-escaped empty strings
+  if (normalized === '\\"\\"' || normalized === "\\'\\'" ) return undefined;
+  
+  // Return undefined for empty strings
+  if (!normalized) return undefined;
+  
+  return normalized;
+}
+
 /** Avatar query result type */
 interface AvatarQueryResult {
   /** The resolved avatar URL (either direct URL or blob URL) */
@@ -152,8 +174,8 @@ interface AvatarQueryResult {
  * @returns Avatar query result with resolved URL
  */
 export function useAvatar(avatarPath: string | undefined): AvatarQueryResult {
-  // Normalize empty strings to undefined for consistent handling
-  const normalizedPath = avatarPath?.trim() || undefined;
+  // Normalize path - handles empty strings, quotes, whitespace, etc.
+  const normalizedPath = normalizeAvatarPath(avatarPath);
   
   // Determine if the path is already a full URL
   const isPublicUrl = normalizedPath ? isFullUrl(normalizedPath) : false;

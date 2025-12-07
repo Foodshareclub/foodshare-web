@@ -21,6 +21,32 @@ export interface AuthUser {
 }
 
 /**
+ * Check if a string is a full URL (http/https)
+ */
+function isFullUrl(url: string): boolean {
+  return url.startsWith('http://') || url.startsWith('https://');
+}
+
+/**
+ * Resolve avatar URL to a public URL
+ * If it's already a full URL, return as-is
+ * If it's a storage path, generate the public URL
+ */
+async function resolveAvatarUrl(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  avatarUrl: string | null
+): Promise<string | null> {
+  if (!avatarUrl || avatarUrl.trim() === '') return null;
+  
+  // If already a full URL, return as-is
+  if (isFullUrl(avatarUrl)) return avatarUrl;
+  
+  // Otherwise, it's a storage path - get the public URL
+  const { data } = supabase.storage.from('profiles').getPublicUrl(avatarUrl);
+  return data?.publicUrl || null;
+}
+
+/**
  * Get current session
  * Returns null if DB is unavailable (graceful degradation)
  */
@@ -39,6 +65,7 @@ export async function getSession(): Promise<Session | null> {
 /**
  * Get current user with profile
  * Returns null if DB is unavailable (graceful degradation)
+ * Resolves avatar_url to a public URL if it's a storage path
  */
 export async function getUser(): Promise<AuthUser | null> {
   try {
@@ -57,10 +84,18 @@ export async function getUser(): Promise<AuthUser | null> {
         .eq('id', user.id)
         .single();
 
+      // Resolve avatar URL to public URL if needed
+      const resolvedAvatarUrl = profile?.avatar_url 
+        ? await resolveAvatarUrl(supabase, profile.avatar_url)
+        : null;
+
       return {
         id: user.id,
         email: user.email,
-        profile,
+        profile: profile ? {
+          ...profile,
+          avatar_url: resolvedAvatarUrl,
+        } : null,
       };
     } catch {
       // Profile fetch failed, return user without profile

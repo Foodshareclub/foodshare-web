@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
 interface HealthStatus {
@@ -10,20 +10,23 @@ interface HealthStatus {
   retryAfter?: number;
 }
 
-const INITIAL_POLL_INTERVAL = 15000;
+const INITIAL_POLL_INTERVAL = 30000; // 30s between checks
 const MAX_POLL_INTERVAL = 60000;
+const CONSECUTIVE_FAILURES_THRESHOLD = 2; // Only show banner after 2 consecutive failures
 
 export function MaintenanceBanner(): React.ReactElement | null {
   const [status, setStatus] = useState<HealthStatus | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [pollInterval, setPollInterval] = useState(INITIAL_POLL_INTERVAL);
+  const consecutiveFailures = useRef(0);
+  const [showBanner, setShowBanner] = useState(false);
 
   const checkHealth = async (): Promise<void> => {
     setIsChecking(true);
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s timeout for slow cold starts
 
       const res = await fetch('/api/health', {
         cache: 'no-store',
@@ -34,12 +37,20 @@ export function MaintenanceBanner(): React.ReactElement | null {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
+        consecutiveFailures.current += 1;
+        
         setStatus({
           status: 'maintenance',
           database: false,
           message: data.message,
           retryAfter: data.retryAfter || 30,
         });
+        
+        // Only show banner after consecutive failures
+        if (consecutiveFailures.current >= CONSECUTIVE_FAILURES_THRESHOLD) {
+          setShowBanner(true);
+        }
+        
         setPollInterval(Math.min(pollInterval * 1.5, MAX_POLL_INTERVAL));
         return;
       }
@@ -48,20 +59,33 @@ export function MaintenanceBanner(): React.ReactElement | null {
       setStatus(data);
 
       if (data.status === 'healthy') {
+        consecutiveFailures.current = 0;
+        setShowBanner(false);
         setDismissed(false);
         setPollInterval(INITIAL_POLL_INTERVAL);
       } else {
+        consecutiveFailures.current += 1;
+        if (consecutiveFailures.current >= CONSECUTIVE_FAILURES_THRESHOLD) {
+          setShowBanner(true);
+        }
         const nextInterval = data.retryAfter
           ? data.retryAfter * 1000
           : Math.min(pollInterval * 1.5, MAX_POLL_INTERVAL);
         setPollInterval(nextInterval);
       }
     } catch {
-      setStatus({
-        status: 'maintenance',
-        database: false,
-        retryAfter: 30,
-      });
+      consecutiveFailures.current += 1;
+      
+      // Only show banner after consecutive failures (not on first timeout)
+      if (consecutiveFailures.current >= CONSECUTIVE_FAILURES_THRESHOLD) {
+        setStatus({
+          status: 'maintenance',
+          database: false,
+          retryAfter: 30,
+        });
+        setShowBanner(true);
+      }
+      
       setPollInterval(Math.min(pollInterval * 1.5, MAX_POLL_INTERVAL));
     } finally {
       setIsChecking(false);
@@ -80,15 +104,20 @@ export function MaintenanceBanner(): React.ReactElement | null {
       }
     };
 
-    poll();
+    // Delay first check by 2s to let the page load first
+    const initialDelay = setTimeout(() => {
+      poll();
+    }, 2000);
 
     return () => {
       mounted = false;
       clearTimeout(timeoutId);
+      clearTimeout(initialDelay);
     };
   }, [pollInterval]);
 
-  if (!status || status.status === 'healthy' || dismissed) {
+  // Don't show if healthy, dismissed, or not enough consecutive failures
+  if (!showBanner || !status || status.status === 'healthy' || dismissed) {
     return null;
   }
 
@@ -116,17 +145,13 @@ export function MaintenanceBanner(): React.ReactElement | null {
             <p className="text-white font-medium text-sm sm:text-base drop-shadow-sm">
               {isMaintenance ? (
                 <>
-                  <span className="hidden sm:inline">
-                    We&apos;re sprucing things up! 
-                  </span>
+                  <span className="hidden sm:inline">We&apos;re sprucing things up! </span>
                   <span className="sm:hidden">Maintenance in progress </span>
-                  <span className="opacity-90">
-                    Back shortly — thanks for your patience! 💚
-                  </span>
+                  <span className="opacity-90">Back shortly — thanks for your patience! 💚</span>
                 </>
               ) : (
                 <>
-                  Things might be a bit slow right now. 
+                  Things might be a bit slow right now.{' '}
                   <span className="opacity-90"> We&apos;re on it! 🚀</span>
                 </>
               )}

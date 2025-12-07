@@ -27,10 +27,10 @@ const TYPE_FILTER = args.find((a) => a.startsWith('--type='))?.split('=')[1] as 
 const SOURCE_FILTER = args.find((a) => a.startsWith('--source='))?.split('=')[1] as 'favicon' | 'wiki' | 'mapillary' | undefined;
 
 const CONFIG = {
-  BATCH_SIZE: 20,
-  DELAY_BETWEEN_BATCHES_MS: 1000,
-  CONCURRENCY: 10,
-  REQUEST_TIMEOUT_MS: 8000,
+  BATCH_SIZE: 50,
+  DELAY_BETWEEN_BATCHES_MS: 200,
+  CONCURRENCY: 25,
+  REQUEST_TIMEOUT_MS: 5000,
   MAX_IMAGE_SIZE_MB: 5,
   SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL!,
   SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY!,

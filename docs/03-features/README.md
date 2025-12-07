@@ -105,6 +105,16 @@ Community discussion forum.
 - Reactions and bookmarks
 - User reputation system
 
+### SEO & Social Sharing
+
+Dynamic metadata and OpenGraph images for social sharing.
+
+- Dynamic `generateMetadata` per route
+- Custom OG image generation (Edge runtime)
+- JSON-LD structured data (Event, Article schemas)
+- Type-specific gradients and emojis
+- See [Architecture - SEO & Metadata](../02-development/ARCHITECTURE.md#-seo--metadata)
+
 ### Dev Tools
 
 Development-only debugging utilities (hidden in production).
@@ -138,6 +148,7 @@ Development-only debugging utilities (hidden in production).
 | Storage      | ✅ Complete | [storage/README.md](./storage/README.md)               |
 | Admin        | ✅ Complete | [admin/README.md](./admin/README.md)                   |
 | Forum        | ✅ Complete | [forum/README.md](./forum/README.md)                   |
+| SEO/OG Images| ✅ Complete | [Architecture - SEO](../02-development/ARCHITECTURE.md#-seo--metadata) |
 
 ## 🚀 Adding a New Feature
 
