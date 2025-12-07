@@ -2,7 +2,6 @@ import { Suspense } from 'react';
 import { redirect, notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { searchProducts, getProducts } from '@/lib/data/products';
-import { getUser } from '@/app/actions/auth';
 import { HomeClient } from '@/app/HomeClient';
 import SkeletonCard from '@/components/productCard/SkeletonCard';
 import { categoryMetadata, generatePageMetadata } from '@/lib/metadata';
@@ -110,18 +109,14 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const dbPostType = lowerCategory === 'all' ? 'food' : (URL_TO_POST_TYPE[lowerCategory] || 'food');
 
   // 5. Fetch data
-  const [products, user] = await Promise.all([
-    key_word
-      ? searchProducts(key_word, dbPostType)
-      : getProducts(dbPostType),
-    getUser(),
-  ]);
+  const products = key_word
+    ? await searchProducts(key_word, dbPostType)
+    : await getProducts(dbPostType);
 
   return (
     <Suspense fallback={<SearchPageSkeleton />}>
       <HomeClient
         initialProducts={products}
-        user={user}
         productType={lowerCategory === 'all' ? 'food' : lowerCategory}
       />
     </Suspense>
