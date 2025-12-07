@@ -2240,10 +2240,8 @@ export default async function ProductsPage() {
     redirect('/maintenance');
   }
 
-  // 3. Fetch user only if products succeeded
-  const user = await safeGetUser();
-
-  return <HomeClient products={products} user={user} />;
+  // 3. Render page (user auth handled by Navbar in root layout)
+  return <HomeClient initialProducts={products} />;
 }
 ```
 

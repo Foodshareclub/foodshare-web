@@ -129,10 +129,12 @@ export async function proxy(request: NextRequest) {
 **File**: `/src/app/page.tsx`
 ```typescript
 export default async function Home() {
-  const user = await getUser(); // Reads from cookies
-  return <HomeClient user={user} />;
+  const products = await getProducts('food');
+  return <HomeClient initialProducts={products} />;
 }
 ```
+
+> **Note:** User authentication is handled by the Navbar component (rendered in root layout), which fetches user data independently. Page components like `HomeClient` focus on displaying content data.
 
 ### 5. Server Action: getUser()
 **File**: `/src/app/actions/auth.ts`

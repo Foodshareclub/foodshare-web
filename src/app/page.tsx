@@ -36,18 +36,6 @@ async function isDatabaseHealthy(): Promise<boolean> {
 }
 
 /**
- * Safely get user - only if DB is healthy
- */
-async function safeGetUser() {
-  try {
-    const { getUser } = await import('@/app/actions/auth');
-    return await getUser();
-  } catch {
-    return null;
-  }
-}
-
-/**
  * Home Page - Server Component
  * Checks DB health first, then fetches data
  */
@@ -60,16 +48,13 @@ export default async function Home() {
   }
 
   try {
-    // Fetch products first
+    // Fetch products
     let products;
     try {
       products = await getProducts('food');
     } catch {
       redirect('/maintenance');
     }
-
-    // Only fetch user if products succeeded
-    const user = await safeGetUser();
 
     // Generate JSON-LD structured data for SEO
     const organizationJsonLd = generateOrganizationJsonLd();
@@ -91,7 +76,7 @@ export default async function Home() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppJsonLd) }}
         />
         <Suspense fallback={<HomePageSkeleton />}>
-          <HomeClient initialProducts={products} user={user} productType="food" />
+          <HomeClient initialProducts={products} productType="food" />
         </Suspense>
       </>
     );

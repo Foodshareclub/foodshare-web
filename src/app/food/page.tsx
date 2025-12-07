@@ -87,18 +87,6 @@ async function isDatabaseHealthy(): Promise<boolean> {
 }
 
 /**
- * Safely get user - only if DB is healthy
- */
-async function safeGetUser() {
-  try {
-    const { getUser } = await import('@/app/actions/auth');
-    return await getUser();
-  } catch {
-    return null;
-  }
-}
-
-/**
  * Food/Products Listings Page - Server Component
  * Gracefully handles DB unavailability
  */
@@ -115,7 +103,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     const productType =
       params.type && CATEGORY_PATHS.includes(params.type) ? params.type : 'food';
 
-    // Fetch products first
+    // Fetch products
     let products;
     try {
       products =
@@ -124,12 +112,9 @@ export default async function ProductsPage({ searchParams }: PageProps) {
       redirect('/maintenance');
     }
 
-    // Only fetch user if products succeeded
-    const user = await safeGetUser();
-
     return (
       <Suspense fallback={<ProductsPageSkeleton />}>
-        <HomeClient initialProducts={products} user={user} productType={productType} />
+        <HomeClient initialProducts={products} productType={productType} />
       </Suspense>
     );
   } catch {
