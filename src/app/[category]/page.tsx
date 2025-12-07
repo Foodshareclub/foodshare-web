@@ -117,7 +117,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
     <Suspense fallback={<SearchPageSkeleton />}>
       <HomeClient
         initialProducts={products}
-        productType={lowerCategory === 'all' ? 'food' : lowerCategory}
+        productType={dbPostType}
       />
     </Suspense>
   );

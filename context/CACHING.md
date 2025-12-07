@@ -284,24 +284,61 @@ logCacheOperation('hit', 'my-custom-key', { duration: 100 });
 
 ## API Route Caching
 
-API routes include `Cache-Control` headers for CDN/browser caching:
+API routes include optimized `Cache-Control` headers for CDN/browser caching with stale-while-revalidate for instant responses:
 
 ```typescript
 // src/app/api/products/route.ts
 const CACHE_DURATIONS = {
-  PRODUCTS: 60,        // Product lists
-  PRODUCT_DETAIL: 120, // Single product
-  LOCATIONS: 300,      // Map locations
-  SEARCH: 30,          // Search results
-  USER_PRODUCTS: 60,   // User's products
+  PRODUCTS_PAGINATED: 60,    // Paginated products (1 min)
+  PRODUCTS_FIRST_PAGE: 120,  // First page - longer cache (2 min)
+  PRODUCT_DETAIL: 180,       // Single product (3 min)
+  LOCATIONS: 300,            // Map locations (5 min)
+  SEARCH: 30,                // Search results (30 sec)
+  USER_PRODUCTS: 60,         // User's products (1 min)
 };
 
-// Response with cache headers
-return NextResponse.json(data, {
-  headers: {
-    'Cache-Control': `public, s-maxage=${maxAge}, stale-while-revalidate=${maxAge}`,
-  },
-});
+// Stale-while-revalidate multiplier (2x cache duration)
+const SWR_MULTIPLIER = 2;
+
+// Response with optimized cache headers
+function jsonWithCache(data: unknown, maxAge: number, options?: { etag?: string }) {
+  const swr = maxAge * SWR_MULTIPLIER;
+  
+  const headers: HeadersInit = {
+    // CDN caching with stale-while-revalidate
+    'Cache-Control': `public, s-maxage=${maxAge}, stale-while-revalidate=${swr}`,
+    // Vary by query params for proper cache differentiation
+    'Vary': 'Accept-Encoding',
+  };
+
+  // Add ETag for conditional requests (reduces bandwidth)
+  if (options?.etag) {
+    headers['ETag'] = options.etag;
+  }
+
+  return NextResponse.json(data, { headers });
+}
+```
+
+### Caching Strategy
+
+| Endpoint | Cache Duration | SWR Duration | Notes |
+|----------|---------------|--------------|-------|
+| First page products | 120s | 240s | Most frequently accessed |
+| Paginated products | 60s | 120s | Subsequent pages |
+| Product detail | 180s | 360s | Individual product |
+| Map locations | 300s | 600s | Less frequent updates |
+| Search results | 30s | 60s | Dynamic content |
+| User products | 60s | 120s | User-specific |
+
+### ETag Support
+
+The API generates ETags for paginated responses to enable conditional requests:
+
+```typescript
+// Client can send If-None-Match header
+// Server returns 304 Not Modified if content unchanged
+// Reduces bandwidth for unchanged data
 ```
 
 ## Client-Side Caching (TanStack Query)

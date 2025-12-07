@@ -903,7 +903,8 @@ Quick check if database is reachable. Useful for conditional rendering or featur
 
 | Use Case | Recommended |
 |----------|-------------|
-| Server Components (pages) | `getUser()` from `@/app/actions/auth` |
+| Server Components (pages) | User auth handled by Navbar in root layout |
+| Server Actions requiring user | `getUser()` from `@/app/actions/auth` |
 | Middleware auth checks | `safeGetSession()` |
 | Admin route protection | `safeCheckIsAdmin()` |
 | Feature flags based on DB status | `isDatabaseAvailable()` |
@@ -2213,18 +2214,6 @@ async function isDatabaseHealthy(): Promise<boolean> {
   }
 }
 
-/**
- * Safe user fetch - uses dynamic import to avoid import-time errors
- */
-async function safeGetUser() {
-  try {
-    const { getUser } = await import('@/app/actions/auth');
-    return await getUser();
-  } catch {
-    return null;
-  }
-}
-
 export default async function ProductsPage() {
   // 1. Check DB health first (fast fail)
   const dbHealthy = await isDatabaseHealthy();
@@ -2232,7 +2221,7 @@ export default async function ProductsPage() {
     redirect('/maintenance');
   }
 
-  // 2. Fetch primary data
+  // 2. Fetch products
   let products;
   try {
     products = await getProducts();
@@ -2241,7 +2230,7 @@ export default async function ProductsPage() {
   }
 
   // 3. Render page (user auth handled by Navbar in root layout)
-  return <HomeClient initialProducts={products} />;
+  return <HomeClient initialProducts={products} productType={productType} />;
 }
 ```
 
@@ -2251,8 +2240,8 @@ export default async function ProductsPage() {
 |--------|----------------|
 | Timeout | 3 seconds (aggressive, fail fast) |
 | Health check | Direct REST call to Supabase (no client library) |
-| User fetch | Dynamic import to avoid import-time errors |
-| Order | Health → Data → User (sequential with early exit) |
+| User auth | Handled by Navbar in root layout, not in page components |
+| Order | Health → Data (sequential with early exit) |
 | Failure | Redirect to `/maintenance` page |
 
 **When to Use:**

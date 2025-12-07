@@ -141,20 +141,37 @@ export function useProducts(
  * Get products with infinite scroll pagination
  * Uses cursor-based pagination for efficient loading
  * Accepts optional initialData from server-side fetch to avoid refetch on mount
+ * 
+ * Caching strategy:
+ * - staleTime: 2 min - data considered fresh, no refetch
+ * - gcTime: 30 min - keep in memory for instant back-navigation
+ * - refetchOnMount: false when initialData provided (server already fetched)
+ * - placeholderData: keepPreviousData for smooth transitions
  */
 export function useInfiniteProducts(
   productType: string,
   initialData?: InitialProductStateType[]
 ) {
+  const hasInitialData = initialData && initialData.length > 0;
+  
   return useInfiniteQuery({
     queryKey: productKeys.infinite(productType),
     queryFn: ({ pageParam }) => fetchProductsPaginated(productType, pageParam),
     initialPageParam: null as number | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+    
+    // Caching configuration optimized for infinite scroll
+    staleTime: 2 * 60 * 1000, // 2 minutes - matches API first page cache
+    gcTime: 30 * 60 * 1000, // 30 minutes - keep for back navigation
+    
+    // Don't refetch on mount if we have server-provided initial data
+    refetchOnMount: hasInitialData ? false : true,
+    
+    // Keep previous data during refetch for smooth UX
+    placeholderData: (previousData) => previousData,
+    
     // Use server-fetched data as initial page to avoid refetch
-    initialData: initialData?.length
+    initialData: hasInitialData
       ? {
           pages: [
             {
@@ -168,6 +185,9 @@ export function useInfiniteProducts(
           pageParams: [null],
         }
       : undefined,
+      
+    // Mark initial data as fresh to prevent immediate refetch
+    initialDataUpdatedAt: hasInitialData ? Date.now() : undefined,
   });
 }
 

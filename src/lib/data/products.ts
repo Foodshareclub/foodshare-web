@@ -40,6 +40,11 @@ export interface PaginationOptions {
 /**
  * Get products by type with cursor-based pagination and caching
  * Uses cursor (last seen ID) for efficient pagination with Supabase
+ * 
+ * Caching strategy:
+ * - First page: Cached with unstable_cache (2 min) + tag-based invalidation
+ * - Subsequent pages: Direct fetch (cursor-specific, not cacheable server-side)
+ * - API route handles HTTP caching for client requests
  */
 export async function getProducts(
   productType: string,
@@ -50,6 +55,7 @@ export async function getProducts(
   const cursor = options?.cursor;
   
   // For initial page load (no cursor), use cached version
+  // This is the most frequently accessed data - optimize for it
   if (!cursor) {
     return unstable_cache(
       async (): Promise<InitialProductStateType[]> => {
@@ -67,15 +73,18 @@ export async function getProducts(
         if (error) throw new Error(error.message);
         return data ?? [];
       },
-      [`products-by-type-${normalizedType}-page-1`],
+      // Cache key includes type and limit for proper differentiation
+      [`products-first-page-${normalizedType}-${limit}`],
       {
-        revalidate: CACHE_DURATIONS.PRODUCTS,
+        // 2 minutes - matches API cache duration for consistency
+        revalidate: 120,
         tags: [CACHE_TAGS.PRODUCTS, CACHE_TAGS.PRODUCTS_BY_TYPE(normalizedType)],
       }
     )();
   }
 
-  // For subsequent pages, fetch directly (cursor changes)
+  // For subsequent pages, fetch directly (cursor changes per request)
+  // HTTP caching at API route level handles client-side caching
   const supabase = createCachedClient();
   const { data, error } = await supabase
     .from('posts_with_location')
