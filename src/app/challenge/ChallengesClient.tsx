@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -16,9 +15,7 @@ import {
   FiStar,
 } from 'react-icons/fi';
 import { HiOutlineFire } from 'react-icons/hi';
-import Navbar from '@/components/header/navbar/Navbar';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { InitialProductStateType } from '@/types/product.types';
 import type { Challenge } from '@/lib/data/challenges';
@@ -45,9 +42,7 @@ export function ChallengesClient({
   user,
   stats,
 }: ChallengesClientProps) {
-  const router = useRouter();
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('all');
-  const [productType, setProductType] = useState('challenge');
   const t = useTranslations('Common');
 
   const filteredChallenges =
@@ -56,34 +51,9 @@ export function ChallengesClient({
       : challenges.filter((c) => c.condition === selectedDifficulty);
 
   const isAuth = !!user;
-  const userId = user?.id || '';
-  const profile = user?.profile;
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin';
-
-  const handleRouteChange = (route: string) => {
-    router.push(`/${route}`);
-  };
-
-  const handleProductTypeChange = (type: string) => {
-    setProductType(type);
-  };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar
-        userId={userId}
-        isAuth={isAuth}
-        isAdmin={isAdmin}
-        productType={productType}
-        onRouteChange={handleRouteChange}
-        onProductTypeChange={handleProductTypeChange}
-        imgUrl={profile?.avatar_url || ''}
-        firstName={profile?.first_name || ''}
-        secondName={profile?.second_name || ''}
-        email={profile?.email || ''}
-        signalOfNewMessage={[]}
-      />
-
+    <>
       {/* Hero Section */}
       <HeroSection stats={stats} isAuth={isAuth} />
 
@@ -127,7 +97,7 @@ export function ChallengesClient({
           <EmptyState difficulty={selectedDifficulty} />
         )}
       </div>
-    </div>
+    </>
   );
 }
 

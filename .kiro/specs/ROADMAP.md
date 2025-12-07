@@ -10,7 +10,7 @@ Transform FoodShare into the world's leading community-driven food sharing platf
 
 ---
 
-## Phase 1: Core Experience Enhancement (Q1 2024)
+## Phase 1: Core Experience Enhancement (Q1 2025)
 
 **Goal:** Improve the fundamental user experience and make the platform more discoverable and usable.
 
@@ -55,7 +55,7 @@ Transform FoodShare into the world's leading community-driven food sharing platf
 
 ---
 
-## Phase 2: Trust & Community Building (Q2 2024)
+## Phase 2: Trust & Community Building (Q2 2025)
 
 **Goal:** Build trust and engagement through reputation systems and community features.
 
@@ -100,7 +100,7 @@ Transform FoodShare into the world's leading community-driven food sharing platf
 
 ---
 
-## Phase 3: Insights & Growth (Q3 2024)
+## Phase 3: Insights & Growth (Q3 2025)
 
 **Goal:** Provide users with insights into their impact and expand platform reach.
 
@@ -132,7 +132,7 @@ Transform FoodShare into the world's leading community-driven food sharing platf
 
 ---
 
-## Phase 4: Accessibility & Inclusivity (Q4 2024)
+## Phase 4: Accessibility & Inclusivity (Q4 2025)
 
 **Goal:** Ensure the platform is accessible to all users regardless of ability.
 
@@ -151,7 +151,7 @@ Transform FoodShare into the world's leading community-driven food sharing platf
 
 ---
 
-## Phase 5: Sustainability & Monetization (Q1 2025)
+## Phase 5: Sustainability & Monetization (Q1 2026)
 
 **Goal:** Create sustainable revenue streams while maintaining free core functionality.
 
@@ -174,16 +174,16 @@ Transform FoodShare into the world's leading community-driven food sharing platf
 
 | Feature                     | Priority | Effort | Impact | Dependencies  | Timeline |
 | --------------------------- | -------- | ------ | ------ | ------------- | -------- |
-| Enhanced Search & Filtering | High     | Medium | High   | None          | Q1 2024  |
-| Food Expiry Tracking        | High     | Low    | High   | None          | Q1 2024  |
-| Mobile PWA                  | High     | Medium | High   | Notifications | Q1 2024  |
-| User Reputation System      | High     | Medium | High   | None          | Q2 2024  |
-| Real-time Notifications     | High     | Medium | High   | None          | Q2 2024  |
-| Community Events            | Medium   | Medium | Medium | Notifications | Q2 2024  |
-| Analytics Dashboard         | Medium   | Medium | Medium | Reputation    | Q3 2024  |
-| Multi-language Expansion    | Medium   | High   | High   | None          | Q3 2024  |
-| Accessibility Improvements  | High     | Medium | High   | None          | Q4 2024  |
-| Payment Integration         | Low      | High   | Medium | Reputation    | Q1 2025  |
+| Enhanced Search & Filtering | High     | Medium | High   | None          | Q1 2025  |
+| Food Expiry Tracking        | High     | Low    | High   | None          | Q1 2025  |
+| Mobile PWA                  | High     | Medium | High   | Notifications | Q1 2025  |
+| User Reputation System      | High     | Medium | High   | None          | Q2 2025  |
+| Real-time Notifications     | High     | Medium | High   | None          | Q2 2025  |
+| Community Events            | Medium   | Medium | Medium | Notifications | Q2 2025  |
+| Analytics Dashboard         | Medium   | Medium | Medium | Reputation    | Q3 2025  |
+| Multi-language Expansion    | Medium   | High   | High   | None          | Q3 2025  |
+| Accessibility Improvements  | High     | Medium | High   | None          | Q4 2025  |
+| Payment Integration         | Low      | High   | Medium | Reputation    | Q1 2026  |
 
 ---
 
@@ -310,6 +310,7 @@ Transform FoodShare into the world's leading community-driven food sharing platf
 | Version | Date       | Author | Changes                  |
 | ------- | ---------- | ------ | ------------------------ |
 | 1.0     | 2024-01-15 | Kiro   | Initial roadmap creation |
+| 1.1     | 2024-12-06 | Kiro   | Updated timelines to 2025-2026 |
 
 ---
 

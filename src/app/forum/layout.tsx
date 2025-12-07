@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { siteConfig } from '@/lib/metadata';
-import { ForumNavbarWrapper } from '@/components/forum/ForumNavbarWrapper';
+import { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
 
 export const metadata: Metadata = {
   title: {
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
 export default function ForumLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
-      <ForumNavbarWrapper />
+      <NavbarWrapper defaultProductType="forum" />
       {children}
     </div>
   );

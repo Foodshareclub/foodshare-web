@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { generatePageMetadata, categoryMetadata } from "@/lib/metadata";
+import { NavbarWrapper } from "@/components/header/navbar/NavbarWrapper";
 
 export const metadata: Metadata = generatePageMetadata({
   title: "Food Listings - Share & Discover Free Food",
@@ -18,5 +19,10 @@ export default function ProductsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <div className="min-h-screen bg-background">
+      <NavbarWrapper defaultProductType="food" />
+      {children}
+    </div>
+  );
 }

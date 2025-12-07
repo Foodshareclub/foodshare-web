@@ -7,7 +7,6 @@ import { useProfile } from '@/hooks/queries/useProfileQueries';
 import { useRooms, useMessages } from '@/hooks/queries/useChatQueries';
 import { useChatStore } from '@/store/zustand/useChatStore';
 import { chatAPI } from '@/api/chatAPI';
-import Navbar from '@/components/header/navbar/Navbar';
 import ContactsBlock from '@/components/chat/ContactsBlock';
 import { MessagesWindow } from '@/components/chat/MessagesWindow';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -107,20 +106,7 @@ export default function ChatPage() {
   const newMessageRoomId = newMessage?.room_id || '';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-      <Navbar
-        userId={user.id}
-        isAuth={true}
-        productType="food"
-        onRouteChange={() => { }}
-        onProductTypeChange={() => { }}
-        imgUrl={profile?.avatar_url || ''}
-        firstName={profile?.first_name || ''}
-        secondName={profile?.second_name || ''}
-        email={profile?.email || ''}
-        signalOfNewMessage={[]}
-      />
-
+    <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-6">
         <div className="flex gap-4 h-[calc(100vh-120px)]">
           {/* Contacts Sidebar */}
@@ -158,10 +144,9 @@ export default function ChatPage() {
 
 function ChatSkeleton() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-      <div className="h-16 bg-white/50 backdrop-blur" />
+    <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-6">
-        <div className="flex gap-4 h-[calc(100vh-120px)]">
+        <div className="flex gap-4 h-[calc(100vh-180px)]">
           <div className="hidden xl:block w-72">
             <Skeleton className="h-full rounded-2xl" />
           </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { generatePageMetadata } from "@/lib/metadata";
+import { NavbarWrapper } from "@/components/header/navbar/NavbarWrapper";
 
 export const metadata: Metadata = generatePageMetadata({
   title: "My Profile - Account Settings",
@@ -14,5 +15,10 @@ export default function ProfileLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <div className="min-h-screen bg-background">
+      <NavbarWrapper />
+      {children}
+    </div>
+  );
 }

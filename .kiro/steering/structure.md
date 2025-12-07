@@ -24,8 +24,8 @@ src/
 │   ├── supabase/           # Supabase clients (server/client)
 │   ├── data/               # Data fetching functions
 │   └── utils.ts            # cn() and helpers
-├── hooks/                  # Client-side hooks only
-├── store/zustand/          # UI state only (modals, preferences)
+├── hooks/                  # Client-side hooks (useMediaQuery, etc.)
+├── store/                  # Zustand stores - UI state only (modals, preferences)
 ├── types/                  # TypeScript definitions
 ├── i18n/                   # next-intl config
 ├── locales/                # Translation JSON files

@@ -1,4 +1,5 @@
 import { generateNoIndexMetadata } from '@/lib/metadata';
+import { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
 
 export const metadata = generateNoIndexMetadata(
     'Messages',
@@ -6,5 +7,10 @@ export const metadata = generateNoIndexMetadata(
 );
 
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
-    return children;
+    return (
+        <div className="min-h-screen bg-background">
+            <NavbarWrapper />
+            {children}
+        </div>
+    );
 }

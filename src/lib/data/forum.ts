@@ -135,23 +135,48 @@ export function getRecentActivityPosts(posts: ForumPost[], limit = FORUM_LIMITS.
 }
 
 /**
- * Calculate forum stats from posts
+ * Calculate forum stats from posts (for derived stats only)
  */
-export function calculateStats(posts: ForumPost[]): ForumStats {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const postsToday = posts.filter((p) => new Date(p.forum_post_created_at) >= today).length;
-  const totalComments = posts.reduce((acc, p) => acc + (Number(p.forum_comments_counter) || 0), 0);
+export function calculateStatsFromPosts(posts: ForumPost[]): Pick<ForumStats, 'activeUsers'> {
   const activeUsers = new Set(posts.map((p) => p.profile_id).filter(Boolean)).size;
-
-  return {
-    totalPosts: posts.length,
-    totalComments,
-    activeUsers,
-    postsToday,
-  };
+  return { activeUsers };
 }
+
+/**
+ * Get forum stats from database (accurate totals)
+ */
+export const getForumStats = unstable_cache(
+  async (): Promise<ForumStats> => {
+    const supabase = createCachedClient();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const [postsResult, commentsResult, postsTodayResult, activeUsersResult] = await Promise.all([
+      supabase.from('forum').select('id', { count: 'exact', head: true }).eq('forum_published', true),
+      supabase.from('comments').select('id', { count: 'exact', head: true }).not('forum_id', 'is', null),
+      supabase
+        .from('forum')
+        .select('id', { count: 'exact', head: true })
+        .eq('forum_published', true)
+        .gte('forum_post_created_at', today.toISOString()),
+      supabase.from('forum').select('profile_id').eq('forum_published', true),
+    ]);
+
+    const uniqueUsers = new Set(activeUsersResult.data?.map((p) => p.profile_id).filter(Boolean));
+
+    return {
+      totalPosts: postsResult.count ?? 0,
+      totalComments: commentsResult.count ?? 0,
+      postsToday: postsTodayResult.count ?? 0,
+      activeUsers: uniqueUsers.size,
+    };
+  },
+  ['forum-stats'],
+  {
+    revalidate: CACHE_DURATIONS.FORUM,
+    tags: [CACHE_TAGS.FORUM],
+  }
+);
 
 // ============================================================================
 // Cached Data Functions
@@ -276,13 +301,13 @@ export async function getForumPageData(options?: {
   categoryId?: number;
   sortBy?: SortOption;
 }): Promise<ForumPageData> {
-  const [posts, categories, tags] = await Promise.all([
+  const [posts, categories, tags, stats] = await Promise.all([
     getForumPosts(options),
     getForumCategories(),
     getForumTags(),
+    getForumStats(),
   ]);
 
-  const stats = calculateStats(posts);
   const leaderboard = computeLeaderboard(posts);
   const trendingPosts = getTrendingPosts(posts);
   const recentActivity = getRecentActivityPosts(posts);

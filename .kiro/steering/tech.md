@@ -25,9 +25,9 @@ inclusion: always
 
 ## State Management
 
-- **Server Components** - Primary data fetching (no client state)
-- **Zustand** - UI state only (modals, preferences)
-- **TanStack Query** - Only for realtime/optimistic updates
+- **Server Components** - Primary data fetching (no client state needed)
+- **Zustand** - UI state only (modals, preferences, filters)
+- **Supabase Realtime** - For live updates (chat, notifications)
 
 ## Internationalization
 

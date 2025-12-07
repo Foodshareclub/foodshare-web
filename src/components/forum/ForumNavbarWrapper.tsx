@@ -1,56 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Navbar from '@/components/header/navbar/Navbar';
-import { useAuth } from '@/hooks/useAuth';
-import { useCurrentProfile } from '@/hooks/queries/useProfileQueries';
-
-interface NavbarWrapperProps {
-  defaultProductType?: string;
-}
+/**
+ * Re-export NavbarWrapper from its canonical location
+ * @deprecated Import from '@/components/header/navbar/NavbarWrapper' instead
+ */
+export { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
 
 /**
- * Client-side wrapper for Navbar
- * Reusable across all pages that need the navbar
- * Keeps the layout as a server component for better SEO
+ * @deprecated Use NavbarWrapper with defaultProductType="forum" instead
  */
-export function NavbarWrapper({ defaultProductType = 'food' }: NavbarWrapperProps) {
-  const router = useRouter();
-  const [productType, setProductType] = useState(defaultProductType);
-
-  const { isAuthenticated, user } = useAuth();
-  const userId = user?.id || '';
-  const { profile, avatarUrl } = useCurrentProfile(userId);
-
-  const isAdmin = profile?.role?.admin === true;
-
-  const handleRouteChange = (route: string) => {
-    router.push(`/${route}`);
-  };
-
-  const handleProductTypeChange = (type: string) => {
-    setProductType(type);
-  };
-
-  return (
-    <Navbar
-      userId={userId}
-      isAuth={isAuthenticated}
-      isAdmin={isAdmin}
-      productType={productType}
-      onRouteChange={handleRouteChange}
-      onProductTypeChange={handleProductTypeChange}
-      imgUrl={avatarUrl || profile?.avatar_url || ''}
-      firstName={profile?.first_name || ''}
-      secondName={profile?.second_name || ''}
-      email={profile?.email || ''}
-      signalOfNewMessage={[]}
-    />
-  );
-}
-
-/**
- * @deprecated Use NavbarWrapper instead
- */
-export const ForumNavbarWrapper = () => <NavbarWrapper defaultProductType="forum" />;
+export const ForumNavbarWrapper = () => {
+  const { NavbarWrapper } = require('@/components/header/navbar/NavbarWrapper');
+  return <NavbarWrapper defaultProductType="forum" />;
+};

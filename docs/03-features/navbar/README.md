@@ -22,6 +22,7 @@ src/components/header/
 ├── HeaderRefactored.tsx          ← Use this!
 └── navbar/
     ├── Navbar.tsx                ← Main component
+    ├── NavbarWrapper.tsx         ← Client wrapper for Server Component layouts
     ├── NavbarLogo.tsx
     ├── SearchBar.tsx
     ├── NavbarActions.tsx
@@ -256,12 +257,41 @@ Client-side wrappers that allow parent layouts to remain Server Components for b
 
 | Wrapper | Location | Default productType | Use Case |
 |---------|----------|---------------------|----------|
-| `ForumNavbarWrapper` | `@/components/forum/` | `'forum'` | Forum pages |
+| `NavbarWrapper` | `@/components/header/navbar/` | `'food'` | General-purpose wrapper for any page (recommended) |
 | `SimpleNavbarWrapper` | `@/components/navigation/` | `'food'` | Static pages (donation, feedback, help, etc.) |
+
+> **Note:** `ForumNavbarWrapper` in `@/components/forum/` is deprecated. Use `NavbarWrapper` with `defaultProductType="forum"` instead.
 
 **Usage in layouts:**
 
 ```tsx
+// General-purpose NavbarWrapper (recommended for most pages)
+// app/products/layout.tsx
+import { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
+
+export default function ProductsLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <NavbarWrapper defaultProductType="food" />
+      <main className="flex-1">{children}</main>
+    </div>
+  );
+}
+
+// For forum pages - use NavbarWrapper with forum productType
+// app/forum/layout.tsx
+import { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
+
+export default function ForumLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <NavbarWrapper defaultProductType="forum" />
+      <main className="flex-1">{children}</main>
+    </div>
+  );
+}
+
+// SimpleNavbarWrapper for static pages
 // app/donation/layout.tsx
 import { SimpleNavbarWrapper } from '@/components/navigation/SimpleNavbarWrapper';
 

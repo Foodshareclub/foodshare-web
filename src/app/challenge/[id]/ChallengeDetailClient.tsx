@@ -107,7 +107,7 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
   const progressPercent = Math.min((Number(challenge.challenged_people) / 100) * 100, 100);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/95">
+    <div className="bg-gradient-to-b from-background to-background/95">
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div

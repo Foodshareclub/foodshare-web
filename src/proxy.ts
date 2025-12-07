@@ -100,10 +100,23 @@ export async function proxy(request: NextRequest) {
   );
 
   // Refresh session - this is critical for maintaining auth state
-  // Using getSession() instead of getUser() as it's more reliable for session refresh
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  // Wrap in try-catch to handle corrupted cookie errors gracefully
+  let session = null;
+  try {
+    const { data } = await supabase.auth.getSession();
+    session = data.session;
+  } catch (error) {
+    // If session loading fails (e.g., corrupted cookies), clear all sb- cookies
+    console.warn('Proxy: Session load failed, clearing auth cookies:', error);
+    const allCookies = request.cookies.getAll();
+    for (const cookie of allCookies) {
+      if (cookie.name.startsWith('sb-')) {
+        response.cookies.delete(cookie.name);
+      }
+    }
+    // Return response with cleared cookies - user will need to re-authenticate
+    return response;
+  }
 
   // Check if accessing admin routes
   if (request.nextUrl.pathname.startsWith('/admin')) {

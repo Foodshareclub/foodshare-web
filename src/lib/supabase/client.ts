@@ -13,6 +13,48 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 /**
+ * Clear corrupted Supabase cookies before client initialization
+ * This prevents "Invalid UTF-8 sequence" errors
+ */
+function clearCorruptedCookies(): void {
+  if (typeof document === 'undefined') return;
+  
+  try {
+    const cookies = document.cookie.split(';');
+    const base64urlRegex = /^[A-Za-z0-9_-]*$/;
+    
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name?.startsWith('sb-') && value) {
+        try {
+          // Check if cookie value has valid base64url characters
+          const decodedValue = decodeURIComponent(value);
+          const parts = decodedValue.split('.');
+          const isValid = parts.every(
+            (part) => base64urlRegex.test(part) || part === ''
+          );
+          
+          if (!isValid) {
+            // Delete corrupted cookie
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+            console.warn(`Cleared corrupted Supabase cookie: ${name}`);
+          }
+        } catch {
+          // If decoding fails, delete the cookie
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+          console.warn(`Cleared invalid Supabase cookie: ${name}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error clearing corrupted cookies:', error);
+  }
+}
+
+// Clear corrupted cookies before creating the client
+clearCorruptedCookies();
+
+/**
  * Singleton Supabase client instance for browser
  * Uses @supabase/ssr createBrowserClient for:
  * - Cookie-based session storage (works with server-side routes)

@@ -1,4 +1,4 @@
-import { NavbarWrapper } from '@/components/forum/ForumNavbarWrapper';
+import { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
 
 export default function FeedbackLayout({ children }: { children: React.ReactNode }) {
   return (
