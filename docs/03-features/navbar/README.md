@@ -250,6 +250,37 @@ Main orchestrator component.
 />
 ```
 
+### Navbar Wrappers
+
+Client-side wrappers that allow parent layouts to remain Server Components for better SEO.
+
+| Wrapper | Location | Default productType | Use Case |
+|---------|----------|---------------------|----------|
+| `ForumNavbarWrapper` | `@/components/forum/` | `'forum'` | Forum pages |
+| `SimpleNavbarWrapper` | `@/components/navigation/` | `'food'` | Static pages (donation, feedback, help, etc.) |
+
+**Usage in layouts:**
+
+```tsx
+// app/donation/layout.tsx
+import { SimpleNavbarWrapper } from '@/components/navigation/SimpleNavbarWrapper';
+
+export default function DonationLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <SimpleNavbarWrapper />
+      <main className="flex-1">{children}</main>
+    </div>
+  );
+}
+```
+
+**Why use wrappers?**
+- Keeps layout as Server Component (better SEO, faster initial load)
+- Encapsulates auth state and profile fetching
+- Provides consistent navbar behavior across pages
+- Handles routing and product type changes internally
+
 ### SearchBar
 
 Search with 2 states.

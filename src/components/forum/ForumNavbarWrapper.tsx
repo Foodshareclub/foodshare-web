@@ -6,13 +6,18 @@ import Navbar from '@/components/header/navbar/Navbar';
 import { useAuth } from '@/hooks/useAuth';
 import { useCurrentProfile } from '@/hooks/queries/useProfileQueries';
 
+interface NavbarWrapperProps {
+  defaultProductType?: string;
+}
+
 /**
- * Client-side wrapper for Navbar in forum pages
+ * Client-side wrapper for Navbar
+ * Reusable across all pages that need the navbar
  * Keeps the layout as a server component for better SEO
  */
-export function ForumNavbarWrapper() {
+export function NavbarWrapper({ defaultProductType = 'food' }: NavbarWrapperProps) {
   const router = useRouter();
-  const [productType, setProductType] = useState('forum');
+  const [productType, setProductType] = useState(defaultProductType);
 
   const { isAuthenticated, user } = useAuth();
   const userId = user?.id || '';
@@ -44,3 +49,8 @@ export function ForumNavbarWrapper() {
     />
   );
 }
+
+/**
+ * @deprecated Use NavbarWrapper instead
+ */
+export const ForumNavbarWrapper = () => <NavbarWrapper defaultProductType="forum" />;
