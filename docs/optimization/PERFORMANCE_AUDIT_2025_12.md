@@ -357,7 +357,19 @@ The `cache-keys.ts` implementation is solid:
 
 **Recommendation:** Review if this is intentional. If not, recreate as SECURITY INVOKER.
 
-### 8.4 Other Recommendations
+### 8.4 Cookie Resilience ✅ IMPLEMENTED
+
+**Status:** ✅ Complete
+
+The server Supabase client now includes a `getSafeCookies()` helper that:
+- Filters out corrupted Supabase auth cookies (prefix `sb-`)
+- Validates base64url encoding before passing to Supabase SSR
+- Prevents "Invalid UTF-8 sequence" errors from crashing the app
+- Logs warnings for debugging when cookies are filtered
+
+**File:** `src/lib/supabase/server.ts`
+
+### 8.5 Other Recommendations
 
 - Enable leaked password protection in Supabase Auth settings
 - Upgrade Postgres version to receive latest security patches

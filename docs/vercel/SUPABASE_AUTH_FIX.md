@@ -239,6 +239,17 @@ src/
 - **Client Components**: Use `supabase` from `@/lib/supabase/client`
 - **Proxy (Middleware)**: Creates its own client with cookie handlers in `proxy.ts`
 
+### Cookie Resilience
+
+The server client includes built-in protection against corrupted cookies:
+
+- **`getSafeCookies()` helper**: Filters out corrupted Supabase auth cookies (those starting with `sb-`)
+- **Validation**: Checks that cookie values contain valid base64url characters
+- **Graceful degradation**: Invalid cookies are filtered out with a warning, preventing "Invalid UTF-8 sequence" crashes
+- **Error handling**: If cookie reading fails entirely, returns empty array to allow the app to continue
+
+This prevents edge cases where browser storage corruption or malformed cookies could crash the entire application.
+
 ## Further Reading
 
 - [Supabase Auth with Next.js App Router](https://supabase.com/docs/guides/auth/server-side/nextjs)

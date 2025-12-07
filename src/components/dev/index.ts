@@ -5,3 +5,4 @@
 
 export { DevTools } from './DevTools';
 export { LogViewer } from './LogViewer';
+export { AccessibilityChecker } from './AccessibilityChecker';

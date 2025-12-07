@@ -265,6 +265,15 @@ function ClientComponent() {
 }
 ```
 
+### **Cookie Resilience**
+
+The server client (`@/lib/supabase/server`) includes built-in protection against corrupted cookies:
+
+- Filters out malformed Supabase auth cookies (prefix `sb-`) that could cause "Invalid UTF-8 sequence" errors
+- Validates base64url encoding of cookie values
+- Logs warnings for filtered cookies (useful for debugging)
+- Gracefully degrades if cookie reading fails entirely
+
 ---
 
 ## Routing
