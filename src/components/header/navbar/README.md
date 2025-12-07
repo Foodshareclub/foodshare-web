@@ -22,30 +22,25 @@ import { MobileMenu, DesktopMenu } from "@/components/header/navbar/organisms";
 
 Client-side wrapper that handles auth state and navigation, allowing parent layouts to remain Server Components for better SEO.
 
-```tsx
-import { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
+> **Note:** The `NavbarWrapper` is included in the **root layout** (`app/layout.tsx`). Most route-specific layouts should be simple pass-through components that just render `{children}`.
 
-// Basic usage in a layout file
-export default function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen">
-      <NavbarWrapper defaultProductType="food" />
-      <main>{children}</main>
-    </div>
-  );
+```tsx
+// Most route layouts should be simple pass-through:
+export default function MyRouteLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }
 ```
 
-### Preventing Avatar Loading Flicker
+### API Reference
 
-To prevent the avatar from flickering during hydration, pass the user data from the server:
+If you need to use NavbarWrapper directly (e.g., in the root layout):
 
 ```tsx
 import { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
 import { getUser } from '@/app/actions/auth';
 
-export default async function Layout({ children }: { children: React.ReactNode }) {
-  const user = await getUser(); // Fetch user on server
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const user = await getUser(); // Fetch user on server for immediate avatar display
   
   return (
     <div className="min-h-screen">

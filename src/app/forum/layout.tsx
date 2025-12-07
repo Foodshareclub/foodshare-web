@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
 import { siteConfig } from '@/lib/metadata';
-import { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
-import { getUser } from '@/app/actions/auth';
 
 export const metadata: Metadata = {
   title: {
@@ -52,13 +50,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function ForumLayout({ children }: { children: React.ReactNode }) {
-  const user = await getUser();
-  
-  return (
-    <div className="min-h-screen bg-background">
-      <NavbarWrapper defaultProductType="forum" initialUser={user} />
-      {children}
-    </div>
-  );
+export default function ForumLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }

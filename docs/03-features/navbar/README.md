@@ -269,52 +269,34 @@ Client-side wrappers that allow parent layouts to remain Server Components for b
 | `defaultProductType` | `string` | `'food'` | Initial product type for category filtering |
 | `initialUser` | `AuthUser \| null` | `undefined` | Server-fetched user data to prevent avatar loading flicker |
 
-**Usage in layouts:**
+**Architecture:**
+
+The `NavbarWrapper` is included in the **root layout** (`app/layout.tsx`), so most route-specific layouts don't need to include it. This prevents duplicate navbars and simplifies layout code.
 
 ```tsx
-// General-purpose NavbarWrapper (recommended for most pages)
-// app/products/layout.tsx
-import { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
-
-export default function ProductsLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <NavbarWrapper defaultProductType="food" />
-      <main className="flex-1">{children}</main>
-    </div>
-  );
+// Root layout (app/layout.tsx) - NavbarWrapper is already included here
+// Most route layouts should just pass through children:
+export default function MyRouteLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }
+```
 
-// With server-side user data to prevent avatar flicker
-// app/products/layout.tsx
-import { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
-import { getUser } from '@/app/actions/auth';
+**When to add NavbarWrapper in a route layout:**
 
-export default async function ProductsLayout({ children }: { children: React.ReactNode }) {
-  const user = await getUser(); // Fetch user on server
-  
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <NavbarWrapper defaultProductType="food" initialUser={user} />
-      <main className="flex-1">{children}</main>
-    </div>
-  );
-}
+In most cases, you **don't need to add NavbarWrapper** to route layouts. The root layout handles the navbar, and route layouts should be simple pass-through components:
 
-// For forum pages - use NavbarWrapper with forum productType
-// app/forum/layout.tsx
-import { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
-
+```tsx
+// app/forum/layout.tsx - Simple pass-through (recommended)
 export default function ForumLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <NavbarWrapper defaultProductType="forum" />
-      <main className="flex-1">{children}</main>
-    </div>
-  );
+  return <>{children}</>;
 }
+```
 
-// SimpleNavbarWrapper for static pages
+Only add `NavbarWrapper` to a route layout if you have a specific need to override the root layout's navbar configuration (this is rare).
+
+**SimpleNavbarWrapper for static pages:**
+
+```tsx
 // app/donation/layout.tsx
 import { SimpleNavbarWrapper } from '@/components/navigation/SimpleNavbarWrapper';
 
@@ -335,6 +317,8 @@ export default function DonationLayout({ children }: { children: React.ReactNode
 - Handles routing and product type changes internally
 - **Supports `initialUser` prop** to prevent avatar loading flicker during hydration
 - **Caches last known good avatar URL** to prevent flicker during navigation
+
+**Note:** Since `NavbarWrapper` is in the root layout, most route layouts should be simple pass-through components that just render `{children}`. Only override when you need a different `defaultProductType`.
 
 **Avatar URL Resolution Chain:**
 

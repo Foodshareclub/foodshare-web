@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import { generatePageMetadata } from "@/lib/metadata";
-import { NavbarWrapper } from "@/components/header/navbar/NavbarWrapper";
-import { getUser } from "@/app/actions/auth";
 
 export const metadata: Metadata = generatePageMetadata({
   title: "My Profile - Account Settings",
@@ -11,17 +9,10 @@ export const metadata: Metadata = generatePageMetadata({
   noIndex: true, // Private page, don't index
 });
 
-export default async function ProfileLayout({
+export default function ProfileLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getUser();
-  
-  return (
-    <div className="min-h-screen bg-background">
-      <NavbarWrapper initialUser={user} />
-      {children}
-    </div>
-  );
+  return <>{children}</>;
 }
