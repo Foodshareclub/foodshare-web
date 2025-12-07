@@ -89,17 +89,55 @@ export async function generateMetadata({ params }: PageProps) {
     return { title: 'Post Not Found | FoodShare Forum' };
   }
 
+  const title = post.forum_post_name || 'Forum Post';
   const description = post.forum_post_description
     ? post.forum_post_description.replace(/<[^>]*>/g, '').slice(0, 160)
     : 'Join the discussion on FoodShare Forum';
+  const pageUrl = `${siteConfig.url}/forum/${post.slug || post.id}`;
+  const imageUrl = post.forum_post_image || siteConfig.ogImage;
+  const authorName = post.profiles?.nickname || post.profiles?.first_name || 'FoodShare Member';
 
   return {
-    title: `${post.forum_post_name} | FoodShare Forum`,
+    title: `${title} | FoodShare Forum`,
     description,
+    alternates: {
+      canonical: pageUrl,
+    },
+    // OpenGraph: Facebook, LinkedIn, WhatsApp - Article type for content
     openGraph: {
-      title: post.forum_post_name,
+      type: 'article',
+      locale: 'en_US',
+      url: pageUrl,
+      siteName: 'FoodShare',
+      title,
       description,
-      images: post.forum_post_image ? [post.forum_post_image] : [],
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${title} - FoodShare Forum`,
+          type: 'image/jpeg',
+        },
+      ],
+      publishedTime: post.forum_post_created_at,
+      modifiedTime: post.forum_post_updated_at || undefined,
+      authors: [authorName],
+      section: 'Community',
+    },
+    // Twitter / X Cards
+    twitter: {
+      card: 'summary_large_image',
+      site: '@foodshareapp',
+      creator: '@foodshareapp',
+      title: `${title} | FoodShare Forum`,
+      description,
+      images: [
+        {
+          url: imageUrl,
+          alt: `${title} - FoodShare Forum`,
+        },
+      ],
     },
   };
 }

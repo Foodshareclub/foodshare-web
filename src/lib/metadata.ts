@@ -12,7 +12,24 @@ export const siteConfig = {
     "Join the FoodShare community to share surplus food, reduce waste, and help neighbors in need. Find free food, community fridges, food banks, and connect with local volunteers.",
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://foodshare.club",
   ogImage: `${process.env.NEXT_PUBLIC_SITE_URL || "https://foodshare.club"}/og-image.jpg`,
+
+  // Social handles
   twitterHandle: "@foodshareapp",
+  facebookAppId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || "",
+
+  // Locale configuration
+  locale: "en_NZ",
+  alternateLocales: ["en_US", "en_AU", "en_GB"],
+
+  // Contact info for structured data
+  email: "hello@foodshare.club",
+  phone: "",
+  address: {
+    country: "New Zealand",
+    region: "Auckland",
+  },
+
+  // Keywords
   keywords: [
     "food sharing",
     "reduce food waste",
@@ -55,6 +72,7 @@ export const defaultMetadata: Metadata = {
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
+  // OpenGraph: Facebook, LinkedIn, WhatsApp, Telegram, iMessage
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -68,16 +86,23 @@ export const defaultMetadata: Metadata = {
         width: 1200,
         height: 630,
         alt: `${siteConfig.name} - Share Food, Reduce Waste`,
+        type: "image/jpeg",
       },
     ],
   },
+  // Twitter / X Cards
   twitter: {
     card: "summary_large_image",
     site: siteConfig.twitterHandle,
     creator: siteConfig.twitterHandle,
     title: siteConfig.title,
     description: siteConfig.description,
-    images: [siteConfig.ogImage],
+    images: [
+      {
+        url: siteConfig.ogImage,
+        alt: `${siteConfig.name} - Share Food, Reduce Waste`,
+      },
+    ],
   },
   robots: {
     index: true,
@@ -92,6 +117,30 @@ export const defaultMetadata: Metadata = {
   },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+  },
+  // International SEO with hreflang alternates
+  alternates: {
+    canonical: siteConfig.url,
+    languages: {
+      "en-NZ": siteConfig.url,
+      "en-US": siteConfig.url,
+      "en-AU": siteConfig.url,
+      "en-GB": siteConfig.url,
+      "x-default": siteConfig.url,
+    },
+  },
+  // App Links for mobile deep linking
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "default",
+    "apple-mobile-web-app-title": siteConfig.name,
+    "mobile-web-app-capable": "yes",
+    "msapplication-TileColor": "#FF2D55",
+    "theme-color": "#FF2D55",
+    // Pinterest
+    "pinterest-rich-pin": "true",
+    // Facebook
+    "fb:app_id": siteConfig.facebookAppId,
   },
 };
 
@@ -159,6 +208,7 @@ export const categoryMetadata = {
 
 /**
  * Helper to generate page-specific metadata
+ * Supports both website and article types for proper social sharing
  */
 export function generatePageMetadata({
   title,
@@ -167,18 +217,46 @@ export function generatePageMetadata({
   path,
   images,
   noIndex = false,
+  type = "website",
+  article,
 }: {
   title: string;
   description: string;
   keywords?: string[];
   path?: string;
-  images?: { url: string; width?: number; height?: number; alt?: string }[];
+  images?: { url: string; width?: number; height?: number; alt?: string; type?: string }[];
   noIndex?: boolean;
+  /** OpenGraph type: 'website' for general pages, 'article' for blog/forum content */
+  type?: "website" | "article";
+  /** Article metadata for og:type='article' */
+  article?: {
+    publishedTime?: string;
+    modifiedTime?: string;
+    authors?: string[];
+    section?: string;
+    tags?: string[];
+  };
 }): Metadata {
   const pageUrl = path ? `${siteConfig.url}${path}` : siteConfig.url;
   const pageKeywords = keywords
     ? [...siteConfig.keywords, ...keywords]
     : siteConfig.keywords;
+
+  // Default image with type hint
+  const defaultImages = [
+    {
+      url: siteConfig.ogImage,
+      width: 1200,
+      height: 630,
+      alt: title,
+      type: "image/jpeg",
+    },
+  ];
+
+  const ogImages = images?.map((img) => ({
+    ...img,
+    type: img.type || "image/jpeg",
+  })) || defaultImages;
 
   return {
     title,
@@ -187,29 +265,33 @@ export function generatePageMetadata({
     alternates: {
       canonical: pageUrl,
     },
+    // OpenGraph: Facebook, LinkedIn, WhatsApp, Telegram, iMessage
     openGraph: {
-      type: "website",
+      type,
       locale: "en_US",
       url: pageUrl,
       siteName: siteConfig.name,
       title: `${title} | ${siteConfig.name}`,
       description,
-      images: images || [
-        {
-          url: siteConfig.ogImage,
-          width: 1200,
-          height: 630,
-          alt: title,
-        },
-      ],
+      images: ogImages,
+      ...(type === "article" && article
+        ? {
+          publishedTime: article.publishedTime,
+          modifiedTime: article.modifiedTime,
+          authors: article.authors,
+          section: article.section,
+          tags: article.tags,
+        }
+        : {}),
     },
+    // Twitter / X Cards
     twitter: {
       card: "summary_large_image",
       site: siteConfig.twitterHandle,
       creator: siteConfig.twitterHandle,
       title: `${title} | ${siteConfig.name}`,
       description,
-      images: images ? images.map((img) => img.url) : [siteConfig.ogImage],
+      images: ogImages.map((img) => ({ url: img.url, alt: img.alt })),
     },
     robots: noIndex
       ? {

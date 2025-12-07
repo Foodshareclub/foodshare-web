@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { getProducts } from '@/lib/data/products';
 import { HomeClient } from './HomeClient';
 import SkeletonCard from '@/components/productCard/SkeletonCard';
+import { generateOrganizationJsonLd, generateWebsiteJsonLd, generateSoftwareApplicationJsonLd } from '@/lib/jsonld';
 
 export const revalidate = 60;
 
@@ -70,10 +71,29 @@ export default async function Home() {
     // Only fetch user if products succeeded
     const user = await safeGetUser();
 
+    // Generate JSON-LD structured data for SEO
+    const organizationJsonLd = generateOrganizationJsonLd();
+    const websiteJsonLd = generateWebsiteJsonLd();
+    const softwareAppJsonLd = generateSoftwareApplicationJsonLd();
+
     return (
-      <Suspense fallback={<HomePageSkeleton />}>
-        <HomeClient initialProducts={products} user={user} productType="food" />
-      </Suspense>
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppJsonLd) }}
+        />
+        <Suspense fallback={<HomePageSkeleton />}>
+          <HomeClient initialProducts={products} user={user} productType="food" />
+        </Suspense>
+      </>
     );
   } catch {
     redirect('/maintenance');

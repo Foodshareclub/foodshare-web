@@ -5,6 +5,7 @@ import { getUser } from '@/app/actions/auth';
 import { hasAcceptedChallenge } from '@/app/actions/challenges';
 import { ChallengeDetailClient } from './ChallengeDetailClient';
 import { Skeleton } from '@/components/ui/skeleton';
+import { generateEventJsonLd, generateBreadcrumbJsonLd } from '@/lib/jsonld';
 
 export const revalidate = 120;
 
@@ -31,10 +32,34 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
     notFound();
   }
 
+  // Generate JSON-LD structured data
+  const eventJsonLd = generateEventJsonLd({
+    name: challenge.challenge_title || 'Community Challenge',
+    description: challenge.challenge_description || 'Join this challenge on FoodShare',
+    image: challenge.challenge_image || undefined,
+    url: `https://foodshare.club/challenge/${challengeId}`,
+  });
+
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: 'Home', url: 'https://foodshare.club' },
+    { name: 'Challenges', url: 'https://foodshare.club/challenge' },
+    { name: challenge.challenge_title || 'Challenge', url: `https://foodshare.club/challenge/${challengeId}` },
+  ]);
+
   return (
-    <Suspense fallback={<ChallengeDetailSkeleton />}>
-      <ChallengeDetailClient challenge={challenge} user={user} isAccepted={isAccepted} />
-    </Suspense>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <Suspense fallback={<ChallengeDetailSkeleton />}>
+        <ChallengeDetailClient challenge={challenge} user={user} isAccepted={isAccepted} />
+      </Suspense>
+    </>
   );
 }
 
@@ -52,13 +77,49 @@ export async function generateMetadata({ params }: PageProps) {
     return { title: 'Challenge Not Found' };
   }
 
+  const title = challenge.challenge_title || 'Community Challenge';
+  const description = challenge.challenge_description?.slice(0, 160) || 'Join this challenge on FoodShare';
+  const pageUrl = `https://foodshare.club/challenge/${challengeId}`;
+  const imageUrl = challenge.challenge_image || 'https://foodshare.club/og-image.jpg';
+
   return {
-    title: `${challenge.challenge_title} | FoodShare Challenges`,
-    description: challenge.challenge_description,
+    title: `${title} | FoodShare Challenges`,
+    description,
+    alternates: {
+      canonical: pageUrl,
+    },
+    // OpenGraph: Facebook, LinkedIn, WhatsApp
     openGraph: {
-      title: challenge.challenge_title,
-      description: challenge.challenge_description,
-      images: challenge.challenge_image ? [challenge.challenge_image] : [],
+      type: 'article',
+      locale: 'en_US',
+      url: pageUrl,
+      siteName: 'FoodShare',
+      title,
+      description,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${title} - FoodShare Challenge`,
+          type: 'image/jpeg',
+        },
+      ],
+      section: 'Challenges',
+    },
+    // Twitter / X Cards
+    twitter: {
+      card: 'summary_large_image',
+      site: '@foodshareapp',
+      creator: '@foodshareapp',
+      title: `${title} | FoodShare`,
+      description,
+      images: [
+        {
+          url: imageUrl,
+          alt: `${title} - FoodShare Challenge`,
+        },
+      ],
     },
   };
 }

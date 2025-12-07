@@ -47,14 +47,49 @@ export async function generateMetadata({ params }: PageProps) {
   }
 
   const fullName = [profile.first_name, profile.second_name].filter(Boolean).join(' ') || 'User';
+  const description = profile.about_me?.slice(0, 160) || `View ${fullName}'s profile on FoodShare`;
+  const pageUrl = `https://foodshare.club/profile/${id}`;
+  const imageUrl = profile.avatar_url || 'https://foodshare.club/og-image.jpg';
 
   return {
     title: `${fullName} | FoodShare`,
-    description: profile.about_me || `View ${fullName}'s profile on FoodShare`,
+    description,
+    alternates: {
+      canonical: pageUrl,
+    },
+    // OpenGraph: Facebook, LinkedIn, WhatsApp - Profile type
     openGraph: {
+      type: 'profile',
+      locale: 'en_US',
+      url: pageUrl,
+      siteName: 'FoodShare',
       title: `${fullName} on FoodShare`,
-      description: profile.about_me || `${fullName} is a member of FoodShare community`,
-      images: profile.avatar_url ? [profile.avatar_url] : [],
+      description,
+      images: [
+        {
+          url: imageUrl,
+          width: 400,
+          height: 400,
+          alt: `${fullName}'s profile photo`,
+          type: 'image/jpeg',
+        },
+      ],
+      firstName: profile.first_name || undefined,
+      lastName: profile.second_name || undefined,
+    },
+    // Twitter / X Cards
+    twitter: {
+      card: 'summary',
+      site: '@foodshareapp',
+      creator: '@foodshareapp',
+      title: `${fullName} | FoodShare`,
+      description,
+      images: [
+        {
+          url: imageUrl,
+          alt: `${fullName}'s profile photo`,
+        },
+      ],
     },
   };
 }

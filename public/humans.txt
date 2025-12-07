@@ -1,0 +1,14 @@
+/* TEAM */
+Name: FoodShare Team
+Site: https://foodshare.club
+Location: New Zealand
+
+/* SITE */
+Last update: 2024/12/06
+Language: English
+Standards: HTML5, CSS3, TypeScript, React, Next.js
+Platform: Vercel
+Components: Supabase, TailwindCSS
+
+/* THANKS */
+Thanks to all contributors and the open source community!

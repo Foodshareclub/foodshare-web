@@ -1,0 +1,24 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAMID.club.foodshare.app",
+        "paths": [
+          "/food/*",
+          "/forum/*",
+          "/challenge/*",
+          "/profile/*",
+          "/map/*",
+          "/s/*"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["TEAMID.club.foodshare.app"]
+  },
+  "activitycontinuation": {
+    "apps": ["TEAMID.club.foodshare.app"]
+  }
+}

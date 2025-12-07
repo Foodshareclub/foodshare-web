@@ -8,6 +8,7 @@ import type { Locale } from "@/i18n/config";
 import Footer from "@/components/footer/Footer";
 import { DevTools } from "@/components/dev";
 import { MaintenanceBanner } from "@/components/maintenance/MaintenanceBanner";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,7 +30,30 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
+      <head>
+        {/* OpenSearch - enables browser address bar search */}
+        <link
+          rel="search"
+          type="application/opensearchdescription+xml"
+          title="FoodShare Search"
+          href="/opensearch.xml"
+        />
+        {/* RSS Feed autodiscovery */}
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="FoodShare Forum Feed"
+          href="/forum/feed.xml"
+        />
+        {/* Preconnect to third-party origins for performance */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://ko-fi.com" />
+        <link rel="dns-prefetch" href="https://supabase.co" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+      </head>
       <body className={inter.className} suppressHydrationWarning>
+        <GoogleAnalytics />
         <Providers initialLocale={locale}>
           <MaintenanceBanner />
           {children}

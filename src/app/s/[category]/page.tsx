@@ -1,9 +1,11 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
 import { searchProducts, getProducts } from '@/lib/data/products';
 import { getUser } from '@/app/actions/auth';
 import { HomeClient } from '@/app/HomeClient';
 import SkeletonCard from '@/components/productCard/SkeletonCard';
+import { categoryMetadata, generatePageMetadata } from '@/lib/metadata';
 
 // Valid category URL paths (plural form for consistency)
 const CATEGORY_PATHS = ['all', 'food', 'things', 'borrow', 'wanted', 'fridges', 'foodbanks', 'organisations', 'volunteers', 'challenges', 'zerowaste', 'vegan', 'forum'];
@@ -24,9 +26,42 @@ const URL_TO_POST_TYPE: Record<string, string> = {
   'forum': 'forum',
 };
 
+// Map URL paths to categoryMetadata keys
+const categoryKeyMap: Record<string, keyof typeof categoryMetadata> = {
+  food: 'food',
+  things: 'things',
+  borrow: 'borrow',
+  wanted: 'wanted',
+  fridges: 'fridges',
+  foodbanks: 'foodbanks',
+  volunteers: 'volunteer',
+  organisations: 'business',
+};
+
 interface PageProps {
   params: Promise<{ category: string }>;
   searchParams: Promise<{ key_word?: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { category } = await params;
+  const categoryKey = categoryKeyMap[category];
+
+  if (categoryKey && categoryMetadata[categoryKey]) {
+    const meta = categoryMetadata[categoryKey];
+    return generatePageMetadata({
+      title: meta.title,
+      description: meta.description,
+      keywords: meta.keywords,
+      path: `/s/${category}`,
+    });
+  }
+
+  return generatePageMetadata({
+    title: 'Browse Listings',
+    description: 'Browse and discover food and items shared by your community.',
+    path: `/s/${category}`,
+  });
 }
 
 /**
@@ -38,12 +73,12 @@ export default async function SearchPage({ params, searchParams }: PageProps) {
 
   // Validate URL category path
   const urlCategory = CATEGORY_PATHS.includes(category) ? category : 'all';
-  
+
   // Challenges have a dedicated table and page - redirect there
   if (urlCategory === 'challenges') {
     redirect('/challenge');
   }
-  
+
   // Map URL path to database post_type
   const dbPostType = urlCategory === 'all' ? 'food' : (URL_TO_POST_TYPE[urlCategory] || 'food');
 

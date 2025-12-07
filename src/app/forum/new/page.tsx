@@ -3,6 +3,12 @@ import { createClient } from '@/lib/supabase/server';
 import { CreatePostForm } from '@/components/forum/CreatePostForm';
 import { BackButton } from '@/components/navigation/BackButton';
 import type { ForumCategory } from '@/api/forumAPI';
+import { generateNoIndexMetadata } from '@/lib/metadata';
+
+export const metadata = generateNoIndexMetadata(
+  'Create Forum Post',
+  'Share your thoughts with the FoodShare community'
+);
 
 async function getCategories(): Promise<ForumCategory[]> {
   const supabase = await createClient();
@@ -33,7 +39,7 @@ export default async function NewForumPostPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
       <BackButton className="mb-4" label="Back to Forum" />
-      
+
       <h1 className="text-3xl font-bold mb-2">Create New Post</h1>
       <p className="text-muted-foreground mb-8">Share your thoughts with the community</p>
 

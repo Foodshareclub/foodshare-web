@@ -1,10 +1,12 @@
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { MaintenanceStatus } from '@/components/maintenance/MaintenanceStatus';
+import { noIndexMetadata } from '@/lib/metadata';
 
 export const metadata: Metadata = {
   title: 'Maintenance | FoodShare',
   description: 'FoodShare is currently undergoing maintenance',
+  ...noIndexMetadata,
 };
 
 export default async function MaintenancePage(): Promise<React.ReactElement> {

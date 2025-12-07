@@ -1,0 +1,9 @@
+# FoodShare Security
+
+Contact: mailto:security@foodshare.club
+Expires: 2026-12-31T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://foodshare.club/.well-known/security.txt
+Policy: https://foodshare.club/privacy
+
+# If you find a security vulnerability, please report it responsibly.

@@ -4,7 +4,7 @@ import { getProductById, getPopularProductIds } from '@/lib/data/products';
 import { getChallengeById } from '@/lib/data/challenges';
 import { ProductDetailClient } from './ProductDetailClient';
 import type { InitialProductStateType } from '@/types/product.types';
-import { generateProductJsonLd } from '@/lib/jsonld';
+import { generateProductJsonLd, generateBreadcrumbJsonLd } from '@/lib/jsonld';
 
 export const revalidate = 120;
 
@@ -139,11 +139,21 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
       location: product.post_stripped_address,
     });
 
+    const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+      { name: 'Home', url: 'https://foodshare.club' },
+      { name: 'Food', url: 'https://foodshare.club/food' },
+      { name: product.post_name || 'Item', url: `https://foodshare.club/food/${product.id}` },
+    ]);
+
     return (
       <>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
         />
         <Suspense fallback={<ProductDetailSkeleton />}>
           <ProductDetailClient product={product} user={user} />
@@ -174,17 +184,50 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
       return { title: 'Not Found' };
     }
 
-    const title = isChallenge
-      ? `${product.post_name} Challenge | FoodShare`
-      : `${product.post_name} | FoodShare`;
+    const title = product.post_name || 'Food Item';
+    const description = product.post_description?.slice(0, 160) || `${product.post_type || 'Food'} available for sharing`;
+    const pageUrl = `https://foodshare.club/food/${productId}`;
+    const imageUrl = product.images?.[0] || 'https://foodshare.club/og-image.jpg';
 
     return {
-      title,
-      description: product.post_description || `${product.post_type} available`,
+      title: isChallenge ? `${title} Challenge` : title,
+      description,
+      alternates: {
+        canonical: pageUrl,
+      },
+      // OpenGraph: Facebook, LinkedIn, WhatsApp, Telegram, iMessage
       openGraph: {
-        title: product.post_name,
-        description: product.post_description || `${product.post_type} available`,
-        images: product.images?.[0] ? [product.images[0]] : [],
+        type: 'article',
+        locale: 'en_US',
+        url: pageUrl,
+        siteName: 'FoodShare',
+        title,
+        description,
+        images: [
+          {
+            url: imageUrl,
+            width: 1200,
+            height: 630,
+            alt: `${title} - Free on FoodShare`,
+            type: 'image/jpeg',
+          },
+        ],
+        publishedTime: product.created_at,
+        section: product.post_type || 'Food',
+      },
+      // Twitter / X Cards
+      twitter: {
+        card: 'summary_large_image',
+        site: '@foodshareapp',
+        creator: '@foodshareapp',
+        title: `${title} | FoodShare`,
+        description,
+        images: [
+          {
+            url: imageUrl,
+            alt: `${title} - Free on FoodShare`,
+          },
+        ],
       },
     };
   } catch {

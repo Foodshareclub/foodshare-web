@@ -2,6 +2,12 @@ import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { getUser } from '@/app/actions/auth';
 import { PersonalInfoClient } from './PersonalInfoClient';
+import { generateNoIndexMetadata } from '@/lib/metadata';
+
+export const metadata = generateNoIndexMetadata(
+  'Personal Info',
+  'Update your personal information'
+);
 
 /**
  * Personal Info Settings Page - Server Component

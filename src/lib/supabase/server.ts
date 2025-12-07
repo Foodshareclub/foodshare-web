@@ -23,8 +23,50 @@ export function createCachedClient() {
 }
 
 /**
+ * Safely get all cookies, filtering out corrupted ones
+ * This prevents "Invalid UTF-8 sequence" errors from crashing the app
+ */
+function getSafeCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
+  try {
+    const allCookies = cookieStore.getAll();
+    // Filter out potentially corrupted Supabase auth cookies
+    return allCookies.filter((cookie) => {
+      if (cookie.name.startsWith('sb-')) {
+        try {
+          // Test if the value can be safely decoded
+          // Supabase cookies are base64url encoded
+          if (cookie.value) {
+            // Simple validation - check for valid base64url characters
+            const base64urlRegex = /^[A-Za-z0-9_-]*$/;
+            const parts = cookie.value.split('.');
+            const isValid = parts.every(
+              (part) => base64urlRegex.test(part) || part === ''
+            );
+            if (!isValid) {
+              console.warn(
+                `Filtering corrupted Supabase cookie: ${cookie.name}`
+              );
+              return false;
+            }
+          }
+          return true;
+        } catch {
+          console.warn(`Filtering invalid cookie: ${cookie.name}`);
+          return false;
+        }
+      }
+      return true;
+    });
+  } catch (error) {
+    console.error('Error reading cookies:', error);
+    return [];
+  }
+}
+
+/**
  * Creates a Supabase client for Server Components and Server Actions
  * Uses cookies for session management (required for auth in App Router)
+ * Includes error handling for corrupted cookies
  */
 export async function createClient() {
   const cookieStore = await cookies();
@@ -32,7 +74,7 @@ export async function createClient() {
   return createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
-        return cookieStore.getAll();
+        return getSafeCookies(cookieStore);
       },
       setAll(cookiesToSet) {
         try {

@@ -3,13 +3,16 @@ import { getChallenges, getPopularChallenges } from '@/lib/data/challenges';
 import { getUser } from '@/app/actions/auth';
 import { ChallengesClient } from './ChallengesClient';
 import { Skeleton } from '@/components/ui/skeleton';
+import { generatePageMetadata } from '@/lib/metadata';
 
 export const revalidate = 60;
 
-export const metadata = {
-  title: 'Community Challenges | FoodShare',
+export const metadata = generatePageMetadata({
+  title: 'Community Challenges',
   description: 'Join challenges to reduce waste, live healthier, and make the world a better place.',
-};
+  keywords: ['challenges', 'sustainability', 'zero waste', 'community goals'],
+  path: '/challenge',
+});
 
 export default async function ChallengePage() {
   const [challenges, popularChallenges, user] = await Promise.all([

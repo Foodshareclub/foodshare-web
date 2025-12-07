@@ -2,6 +2,12 @@ import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { getUser, checkIsAdmin } from '@/app/actions/auth';
 import { LoginSecurityClient } from './LoginSecurityClient';
+import { generateNoIndexMetadata } from '@/lib/metadata';
+
+export const metadata = generateNoIndexMetadata(
+  'Login & Security',
+  'Manage your password and security settings'
+);
 
 /**
  * Login & Security Settings Page - Server Component

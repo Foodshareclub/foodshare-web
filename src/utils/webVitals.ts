@@ -40,26 +40,21 @@ export const logWebVitals = () => {
 
 /**
  * Send Web Vitals to analytics service
- * Replace with your analytics implementation (Google Analytics, Supabase, etc.)
+ * Sends metrics to Google Analytics 4 if configured
  */
 export const sendToAnalytics = (metric: Metric) => {
-  // Example: Send to Google Analytics
-  // gtag('event', metric.name, {
-  //   value: Math.round(metric.name === 'CLS' ? metric.value * 1000 : metric.value),
-  //   event_category: 'Web Vitals',
-  //   event_label: metric.id,
-  //   non_interaction: true,
-  // });
+  // Send to Google Analytics 4
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', metric.name, {
+      value: Math.round(metric.name === 'CLS' ? metric.value * 1000 : metric.value),
+      event_category: 'Web Vitals',
+      event_label: metric.id,
+      metric_rating: metric.rating,
+      non_interaction: true,
+    });
+  }
 
-  // Example: Send to Supabase
-  // supabase.from('web_vitals').insert({
-  //   metric_name: metric.name,
-  //   value: metric.value,
-  //   rating: metric.rating,
-  //   timestamp: new Date().toISOString(),
-  // });
-
-  // For now, just log in development
+  // Also log in development
   if (process.env.NODE_ENV !== 'production') {
     logger.debug("Web Vital", metric);
   }

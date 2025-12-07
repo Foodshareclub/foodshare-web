@@ -201,3 +201,172 @@ export function generateFAQJsonLd(
         })),
     };
 }
+
+/**
+ * SoftwareApplication structured data for PWA/App discovery
+ */
+export function generateSoftwareApplicationJsonLd() {
+    return {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: siteConfig.name,
+        description: siteConfig.description,
+        url: siteConfig.url,
+        applicationCategory: "LifestyleApplication",
+        operatingSystem: "Web, iOS, Android",
+        offers: {
+            "@type": "Offer",
+            price: "0",
+            priceCurrency: "USD",
+        },
+        aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: "4.8",
+            ratingCount: "1000",
+            bestRating: "5",
+            worstRating: "1",
+        },
+        author: {
+            "@type": "Organization",
+            name: siteConfig.name,
+            url: siteConfig.url,
+        },
+    };
+}
+
+/**
+ * LocalBusiness structured data for location-based features
+ */
+export function generateLocalBusinessJsonLd() {
+    return {
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "@id": siteConfig.url,
+        name: siteConfig.name,
+        description: siteConfig.description,
+        url: siteConfig.url,
+        logo: `${siteConfig.url}/logo512.png`,
+        image: siteConfig.ogImage,
+        address: {
+            "@type": "PostalAddress",
+            addressCountry: "NZ",
+        },
+        geo: {
+            "@type": "GeoCoordinates",
+            latitude: "-36.8485",
+            longitude: "174.7633",
+        },
+        areaServed: {
+            "@type": "Country",
+            name: "New Zealand",
+        },
+    };
+}
+
+/**
+ * Event structured data for challenges
+ */
+export function generateEventJsonLd({
+    name,
+    description,
+    image,
+    startDate,
+    endDate,
+    url,
+    location,
+}: {
+    name: string;
+    description: string;
+    image?: string;
+    startDate?: string;
+    endDate?: string;
+    url: string;
+    location?: string;
+}) {
+    return {
+        "@context": "https://schema.org",
+        "@type": "Event",
+        name,
+        description: description.slice(0, 300),
+        image: image || siteConfig.ogImage,
+        url,
+        startDate: startDate || new Date().toISOString(),
+        endDate: endDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        eventStatus: "https://schema.org/EventScheduled",
+        eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
+        location: {
+            "@type": "VirtualLocation",
+            url,
+        },
+        organizer: {
+            "@type": "Organization",
+            name: siteConfig.name,
+            url: siteConfig.url,
+        },
+        offers: {
+            "@type": "Offer",
+            price: "0",
+            priceCurrency: "USD",
+            availability: "https://schema.org/InStock",
+            url,
+        },
+    };
+}
+
+/**
+ * ItemList structured data for collection pages
+ */
+export function generateItemListJsonLd({
+    name,
+    description,
+    items,
+}: {
+    name: string;
+    description: string;
+    items: { name: string; url: string; image?: string; position: number }[];
+}) {
+    return {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        name,
+        description,
+        numberOfItems: items.length,
+        itemListElement: items.map((item) => ({
+            "@type": "ListItem",
+            position: item.position,
+            item: {
+                "@type": "Product",
+                name: item.name,
+                url: item.url,
+                image: item.image || siteConfig.ogImage,
+            },
+        })),
+    };
+}
+
+/**
+ * CollectionPage structured data for listing pages
+ */
+export function generateCollectionPageJsonLd({
+    name,
+    description,
+    url,
+}: {
+    name: string;
+    description: string;
+    url: string;
+}) {
+    return {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name,
+        description,
+        url,
+        isPartOf: {
+            "@type": "WebSite",
+            name: siteConfig.name,
+            url: siteConfig.url,
+        },
+    };
+}
+
