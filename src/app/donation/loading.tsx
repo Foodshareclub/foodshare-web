@@ -2,10 +2,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DonationLoading() {
   return (
-    <div className="min-h-screen pt-[8vh] pb-[8vw] relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 bottom-0 bg-gradient-to-br from-[#fef5f7] via-white to-[#f7f5fe] -z-10" />
+    <div className="min-h-screen bg-muted/30 dark:bg-background">
+      {/* Header Skeleton */}
+      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
+        <div className="container mx-auto max-w-4xl px-4 h-14 flex items-center gap-4">
+          <Skeleton className="h-8 w-8 rounded" />
+          <Skeleton className="h-5 w-40" />
+        </div>
+      </div>
 
-      <div className="container mx-auto max-w-7xl px-4 relative z-10">
+      <div className="relative overflow-hidden pb-16">
+        <div className="container mx-auto max-w-7xl px-4 relative z-10">
         {/* Hero Section Skeleton */}
         <div className="flex flex-col gap-12 text-center mb-24 pt-12">
           <div className="flex flex-col gap-6 items-center">

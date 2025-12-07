@@ -81,18 +81,18 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
         <div
           className={`mb-4 border-l-[3px] ${
             submitStatus === "success"
-              ? "border-green-500 bg-green-50"
-              : "border-red-500 bg-red-50"
-          } bg-white rounded-lg shadow-sm`}
+              ? "border-green-500 bg-green-50 dark:bg-green-950"
+              : "border-red-500 bg-red-50 dark:bg-red-950"
+          } rounded-lg shadow-sm`}
         >
           <div className="p-3">
             <div className="flex items-center gap-2">
               {submitStatus === "success" ? (
-                <MdCheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                <MdCheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
               ) : (
-                <MdError className="w-4 h-4 text-red-600 flex-shrink-0" />
+                <MdError className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
               )}
-              <span className="font-semibold text-sm">
+              <span className="font-semibold text-sm text-foreground">
                 {submitStatus === "success"
                   ? "Feedback sent successfully!"
                   : "Failed to send feedback"}
@@ -103,18 +103,18 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
       )}
 
       {/* Feedback Form */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div className="bg-card rounded-xl shadow-sm border border-border">
         <div className="p-4 md:p-5">
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="flex flex-col gap-4">
               {/* Feedback Type */}
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-gray-700">
+                <label className="block text-xs font-semibold mb-1.5 text-foreground">
                   Type
                 </label>
                 <select
                   {...register("feedback_type")}
-                  className="w-full h-10 px-3 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white cursor-pointer hover:border-gray-400 focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900"
+                  className="w-full h-10 px-3 border border-input rounded-lg text-sm text-foreground bg-background cursor-pointer hover:border-muted-foreground focus:outline-none focus:border-foreground focus:ring-1 focus:ring-foreground"
                 >
                   <option value="general">General Feedback</option>
                   <option value="bug">Bug Report</option>
@@ -126,7 +126,7 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
               {/* Name & Email - Two columns */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold mb-1.5 text-gray-700">
+                  <label className="block text-xs font-semibold mb-1.5 text-foreground">
                     Name
                   </label>
                   <Input
@@ -135,17 +135,17 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
                       minLength: { value: 2, message: "Too short" },
                     })}
                     placeholder="Your name"
-                    className={`h-10 rounded-lg border ${
-                      errors.name ? "border-red-400" : "border-gray-300"
-                    } hover:border-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900`}
+                    className={`h-10 rounded-lg ${
+                      errors.name ? "border-destructive" : ""
+                    }`}
                   />
                   {errors.name && (
-                    <p className="text-red-600 text-xs mt-0.5">{errors.name.message}</p>
+                    <p className="text-destructive text-xs mt-0.5">{errors.name.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold mb-1.5 text-gray-700">
+                  <label className="block text-xs font-semibold mb-1.5 text-foreground">
                     Email
                   </label>
                   <Input
@@ -158,19 +158,19 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
                     })}
                     type="email"
                     placeholder="your@email.com"
-                    className={`h-10 rounded-lg border ${
-                      errors.email ? "border-red-400" : "border-gray-300"
-                    } hover:border-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900`}
+                    className={`h-10 rounded-lg ${
+                      errors.email ? "border-destructive" : ""
+                    }`}
                   />
                   {errors.email && (
-                    <p className="text-red-600 text-xs mt-0.5">{errors.email.message}</p>
+                    <p className="text-destructive text-xs mt-0.5">{errors.email.message}</p>
                   )}
                 </div>
               </div>
 
               {/* Subject */}
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-gray-700">
+                <label className="block text-xs font-semibold mb-1.5 text-foreground">
                   Subject
                 </label>
                 <Input
@@ -179,18 +179,18 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
                     minLength: { value: 5, message: "Too short" },
                   })}
                   placeholder="Brief description"
-                  className={`h-10 rounded-lg border ${
-                    errors.subject ? "border-red-400" : "border-gray-300"
-                  } hover:border-gray-400 focus:border-gray-900 focus:ring-1 focus:ring-gray-900`}
+                  className={`h-10 rounded-lg ${
+                    errors.subject ? "border-destructive" : ""
+                  }`}
                 />
                 {errors.subject && (
-                  <p className="text-red-600 text-xs mt-0.5">{errors.subject.message}</p>
+                  <p className="text-destructive text-xs mt-0.5">{errors.subject.message}</p>
                 )}
               </div>
 
               {/* Message */}
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-gray-700">
+                <label className="block text-xs font-semibold mb-1.5 text-foreground">
                   Message
                 </label>
                 <textarea
@@ -200,12 +200,12 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
                   })}
                   placeholder="Tell us more..."
                   rows={5}
-                  className={`w-full px-3 py-2 rounded-lg border ${
-                    errors.message ? "border-red-400" : "border-gray-300"
-                  } resize-vertical text-sm hover:border-gray-400 focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900`}
+                  className={`w-full px-3 py-2 rounded-lg border bg-background text-foreground ${
+                    errors.message ? "border-destructive" : "border-input"
+                  } resize-vertical text-sm hover:border-muted-foreground focus:outline-none focus:border-foreground focus:ring-1 focus:ring-foreground`}
                 />
                 {errors.message && (
-                  <p className="text-red-600 text-xs mt-0.5">{errors.message.message}</p>
+                  <p className="text-destructive text-xs mt-0.5">{errors.message.message}</p>
                 )}
               </div>
 
@@ -213,7 +213,7 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-gray-900 text-white font-semibold rounded-lg h-[42px] hover:bg-gray-800 active:bg-gray-900"
+                className="font-semibold rounded-lg h-[42px]"
               >
                 {isSubmitting ? (
                   "Sending..."
