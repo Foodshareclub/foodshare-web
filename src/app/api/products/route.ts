@@ -159,7 +159,7 @@ export async function GET(request: NextRequest) {
         .order('challenge_created_at', { ascending: false });
 
       if (error) throw error;
-      return jsonWithCache(data ?? [], CACHE_DURATIONS.PRODUCTS);
+      return jsonWithCache(data ?? [], CACHE_DURATIONS.PRODUCTS_PAGINATED);
     }
 
     // Get products by type with cursor-based pagination
