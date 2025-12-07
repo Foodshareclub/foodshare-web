@@ -21,7 +21,7 @@ export function SearchField() {
 
   const onFindResultsHandler = () => {
     if (searchValue) {
-      router.push(`/s/${productType}?key_word=${searchValue}`);
+      router.push(`/${productType}?key_word=${searchValue}`);
       setProductType("all");
       setSearchValue("");
       setShowSearchParams(false);

@@ -30,7 +30,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     if (trimmedValue) {
       setIsSearching(true);
       // Navigate to search results page with proper URL encoding
-      router.push(`/s/${productType}?key_word=${encodeURIComponent(trimmedValue)}`);
+      router.push(`/${productType}?key_word=${encodeURIComponent(trimmedValue)}`);
       onClose();
       // Reset after navigation completes
       setTimeout(() => {

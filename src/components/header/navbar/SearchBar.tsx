@@ -83,7 +83,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
     const searchValue = term || searchTerm;
     if (searchValue && searchValue.trim()) {
       handleSearch(searchValue);
-      router.push(`/s/${selectedCategory}?key_word=${encodeURIComponent(searchValue.trim())}`);
+      router.push(`/${selectedCategory}?key_word=${encodeURIComponent(searchValue.trim())}`);
       setActiveSection(null);
       setSearchTerm("");
       setSelectedIndex(-1);
