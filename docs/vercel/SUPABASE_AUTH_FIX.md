@@ -22,15 +22,16 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 **Production**: Set this to your production domain (e.g., `https://yourapp.com`)
 
-### 2. Updated `/src/proxy.ts`
+### 2. Updated `/src/middleware.ts`
 
-**Important**: In Next.js 16, use `proxy.ts` directly (NOT `middleware.ts`). Next.js 16 automatically detects and uses `proxy.ts` as middleware.
+**Important**: The middleware handles session refresh and corrupted cookie cleanup on every request.
 
 Key improvements:
-- Changed from `getUser()` to `getSession()` for more reliable session refresh
-- Added comprehensive documentation
-- Improved cookie handling
-- Better error handling for admin routes
+- Uses `createServerClient` from `@supabase/ssr` for proper cookie handling
+- Validates and clears corrupted Supabase cookies before processing
+- Calls `getUser()` to refresh session tokens if expired
+- Properly propagates cookie changes to the response
+- Excludes static assets and public files from middleware processing
 
 ### 3. Fixed `/src/app/auth/callback/route.ts`
 
@@ -72,15 +73,19 @@ On every request:
 ```
 1. Request arrives
    ↓
-2. Middleware creates Supabase client with cookie handlers
+2. Middleware checks for corrupted sb-* cookies
    ↓
-3. supabase.auth.getSession() refreshes session if needed
+3. If corrupted cookies found → clear them and return early
    ↓
-4. Updated session cookies are set in response
+4. Middleware creates Supabase client with cookie handlers
    ↓
-5. Request continues to page/API route
+5. supabase.auth.getUser() refreshes session if needed
    ↓
-6. Server components have fresh session data
+6. Updated session cookies are set in response
+   ↓
+7. Request continues to page/API route
+   ↓
+8. Server components have fresh session data
 ```
 
 ## Testing the Fix
@@ -144,14 +149,15 @@ console.error('[Auth Callback] Error exchanging code for session:', error);
 
 ### Check Middleware Execution
 
-Add temporary logging to `/src/proxy.ts`:
+Add temporary logging to `/src/middleware.ts`:
 
 ```typescript
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   console.log('[Middleware] Request:', request.nextUrl.pathname);
 
-  const { data: { session } } = await supabase.auth.getSession();
-  console.log('[Middleware] Session:', session?.user?.id || 'No session');
+  // After creating supabase client...
+  const { data: { user } } = await supabase.auth.getUser();
+  console.log('[Middleware] User:', user?.id || 'No user');
 
   // ... rest of code
 }
@@ -219,7 +225,7 @@ Before deploying to production:
 
 ```
 src/
-├── proxy.ts                   # Session refresh (Next.js 16 automatically uses this)
+├── middleware.ts              # Session refresh + corrupted cookie cleanup
 ├── lib/
 │   └── supabase/
 │       ├── server.ts          # Server Supabase client (cookies)
@@ -237,7 +243,7 @@ src/
 - **Server Components**: Use `createClient()` from `@/lib/supabase/server`
 - **Server Actions**: Use `createClient()` from `@/lib/supabase/server`
 - **Client Components**: Use `supabase` from `@/lib/supabase/client`
-- **Proxy (Middleware)**: Creates its own client with cookie handlers in `proxy.ts`
+- **Middleware**: Creates its own client with `createServerClient` from `@supabase/ssr`
 
 ### Cookie Resilience
 

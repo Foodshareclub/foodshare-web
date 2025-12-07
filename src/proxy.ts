@@ -17,6 +17,39 @@ export async function proxy(request: NextRequest) {
     },
   });
 
+  // Check for corrupted Supabase cookies and clear them
+  const cookies = request.cookies.getAll();
+  const corruptedCookies: string[] = [];
+
+  for (const cookie of cookies) {
+    if (cookie.name.startsWith('sb-')) {
+      try {
+        if (cookie.value) {
+          const base64urlRegex = /^[A-Za-z0-9_-]*$/;
+          const parts = cookie.value.split('.');
+          const isValid = parts.every(
+            (part) => base64urlRegex.test(part) || part === ''
+          );
+          if (!isValid) {
+            corruptedCookies.push(cookie.name);
+          }
+        }
+      } catch {
+        corruptedCookies.push(cookie.name);
+      }
+    }
+  }
+
+  // Clear corrupted cookies before Supabase tries to read them
+  if (corruptedCookies.length > 0) {
+    for (const cookieName of corruptedCookies) {
+      response.cookies.delete(cookieName);
+      console.warn(`Proxy: Cleared corrupted cookie: ${cookieName}`);
+    }
+    // Return early to let cookies clear
+    return response;
+  }
+
   // Create Supabase client with cookie handling
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
