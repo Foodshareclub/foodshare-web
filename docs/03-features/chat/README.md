@@ -306,7 +306,9 @@ import { ChatPageClient } from './ChatPageClient';
 | `initialMessages` | `NormalizedMessage[]` | Pre-fetched messages for active room |
 
 **Layout Features:**
-- Calculated height layout (`h-[calc(100vh-4rem)]`) that respects navbar/footer
+- Chat layout wrapper uses `h-full` to fill the main container (viewport minus navbar)
+- `overflow-hidden` on wrapper prevents double scrollbars
+- Footer is hidden via `[data-chat-page]` attribute on the layout wrapper
 - Glassmorphism styling with decorative background gradients
 - Independently scrolling sidebar (340px on desktop) and message area
 - Responsive: sidebar overlays on mobile, side-by-side on desktop

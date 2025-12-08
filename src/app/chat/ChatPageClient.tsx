@@ -129,7 +129,7 @@ export function ChatPageClient({
   const foodChatsCount = chatRooms.length;
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 overflow-hidden relative">
+    <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 overflow-hidden relative">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
@@ -138,7 +138,7 @@ export function ChatPageClient({
       </div>
 
       {/* Main content - fills remaining space */}
-      <div className="flex-1 flex overflow-hidden relative z-10">
+      <div className="flex-1 min-h-0 flex overflow-hidden relative z-10">
         <div className={cn(
           'flex w-full h-full',
           isDesktop ? 'p-4 gap-4' : 'p-0'
@@ -280,7 +280,7 @@ function EmptyState({ hasChats, foodChatsCount, getText }: EmptyStateProps) {
 
 export function ChatPageSkeleton() {
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 overflow-hidden">
+    <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 overflow-hidden">
       <div className="flex-1 flex overflow-hidden p-4 gap-4">
         {/* Sidebar skeleton */}
         <div className="hidden lg:flex w-[340px] flex-shrink-0 flex-col rounded-2xl glass-card p-4">
