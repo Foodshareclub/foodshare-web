@@ -70,7 +70,7 @@ export { SearchMenu } from "./leaflet/SearchMenu";
 export { default as UserLocationMarker } from "./leaflet/UserLocationMarker";
 
 // Volunteer Components
-export { default as OneVolunteer } from "./volunteerCard/OneVolunteer";
+// Note: OneVolunteer is a Server Component - import directly from "./volunteerCard/OneVolunteer"
 export { VolunteerCards } from "./volunteerCard/VolonterCards";
 
 // Localization
