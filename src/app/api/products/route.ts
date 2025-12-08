@@ -82,6 +82,9 @@ export async function GET(request: NextRequest) {
   const locations = searchParams.get('locations') === 'true';
   const cursor = searchParams.get('cursor');
   const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
+  
+  // Get If-None-Match header for conditional requests
+  const ifNoneMatch = request.headers.get('If-None-Match');
 
   const supabase = await createClient();
 
@@ -192,6 +195,18 @@ export async function GET(request: NextRequest) {
       : null;
 
     const responseData = { data: resultItems, nextCursor, hasMore };
+    const etag = generateETag(responseData);
+    
+    // Return 304 Not Modified if ETag matches (saves bandwidth)
+    if (ifNoneMatch && ifNoneMatch === etag) {
+      return new NextResponse(null, {
+        status: 304,
+        headers: {
+          'ETag': etag,
+          'Cache-Control': `public, s-maxage=${CACHE_DURATIONS.PRODUCTS_FIRST_PAGE}, stale-while-revalidate=${CACHE_DURATIONS.PRODUCTS_FIRST_PAGE * SWR_MULTIPLIER}`,
+        },
+      });
+    }
     
     // First page gets longer cache (most frequently accessed)
     // Subsequent pages get shorter cache (less frequently re-accessed)
@@ -201,7 +216,7 @@ export async function GET(request: NextRequest) {
 
     return jsonWithCache(responseData, cacheDuration, {
       isFirstPage,
-      etag: generateETag(responseData),
+      etag,
     });
   } catch (error) {
     console.error('Products API error:', error);

@@ -44,9 +44,11 @@ export function NavbarWrapper({ defaultProductType = 'food', initialUser }: Navb
   
   // Use server-provided auth state as initial, then client state takes over
   const effectiveIsAuth = isAuthenticated || !!initialUser;
-  const isAdmin = profile?.role?.admin === true || 
-    serverProfile?.role === 'admin' || 
-    serverProfile?.role === 'superadmin';
+  const isAdmin = profile?.user_role === 'admin' || 
+    profile?.user_role === 'superadmin' ||
+    serverProfile?.user_role === 'admin' || 
+    serverProfile?.user_role === 'superadmin' ||
+    false;
 
   const handleRouteChange = (route: string) => {
     router.push(`/${route}`);

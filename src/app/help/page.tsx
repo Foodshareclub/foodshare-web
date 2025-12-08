@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { PageHeader } from '@/components/navigation/PageHeader'
 import { generatePageMetadata } from '@/lib/metadata'
-import { generateFAQJsonLd } from '@/lib/jsonld'
+import { generateFAQJsonLd, safeJsonLdStringify } from '@/lib/jsonld'
 
 export const metadata = generatePageMetadata({
   title: 'Help Center',
@@ -29,7 +29,7 @@ export default function HelpPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(faqJsonLd) }}
       />
       <div className="min-h-screen bg-muted/30 dark:bg-background">
         <PageHeader title="Help Center" />

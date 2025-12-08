@@ -65,7 +65,7 @@ export default function ProfileEditPage() {
       first_name: firstName,
       second_name: secondName,
       phone: phone,
-      updated_at: new Date(),
+      updated_at: new Date().toISOString(),
     }
 
     await updateProfileMutation(updates)

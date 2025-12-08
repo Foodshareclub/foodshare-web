@@ -63,15 +63,15 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
               <h1 className="text-3xl font-bold text-foreground mb-2">
                 {profile.first_name} {profile.second_name}
               </h1>
-              {profile.username && (
+              {profile.nickname && (
                 <p className="text-lg text-muted-foreground">
-                  @{profile.username}
+                  @{profile.nickname}
                 </p>
               )}
             </div>
 
             {/* Volunteer Badge */}
-            {profile.role?.volunteer && (
+            {profile.user_role === 'volunteer' && (
               <div className="flex justify-center mb-6">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
                   <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-sm">
@@ -113,7 +113,7 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
               </div>
 
               {/* Location */}
-              {profile.user_location && (
+              {profile.location && (
                 <div className="glass-subtle rounded-xl p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0 p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
@@ -124,7 +124,7 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
                         Location
                       </p>
                       <p className="text-foreground font-semibold">
-                        {profile.user_location}
+                        {String(profile.location)}
                       </p>
                     </div>
                   </div>

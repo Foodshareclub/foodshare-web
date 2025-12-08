@@ -30,6 +30,8 @@ export { InputSection } from "./chat/InputSection";
 export { MessagesWindow } from "./chat/MessagesWindow";
 export { default as ContactsBlock } from "./chat/ContactsBlock";
 export { default as ContainerForChat } from "./containerForChat/ContainerForChat";
+export { UnifiedChatContainer } from "./chat/UnifiedChatContainer";
+export { UnifiedChatList } from "./chat/UnifiedChatList";
 
 // Layout Components
 export { default as Header } from "./header/Header";

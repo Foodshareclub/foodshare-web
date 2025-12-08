@@ -109,3 +109,6 @@ export * from "./useProductDistanceCalculation";
 export * from "./useSearchSuggestions";
 export * from "./getAllCountries";
 export * from "./useMarkerIcon";
+
+// Unified Chat hooks
+export * from "./useUnifiedChat";

@@ -4,7 +4,7 @@ import { getProductById, getPopularProductIds } from '@/lib/data/products';
 import { getChallengeById } from '@/lib/data/challenges';
 import { ProductDetailClient } from './ProductDetailClient';
 import type { InitialProductStateType } from '@/types/product.types';
-import { generateProductJsonLd, generateBreadcrumbJsonLd } from '@/lib/jsonld';
+import { generateProductJsonLd, generateBreadcrumbJsonLd, safeJsonLdStringify } from '@/lib/jsonld';
 
 export const revalidate = 120;
 
@@ -149,11 +149,11 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
       <>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(jsonLd) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
         />
         <Suspense fallback={<ProductDetailSkeleton />}>
           <ProductDetailClient product={product} user={user} />

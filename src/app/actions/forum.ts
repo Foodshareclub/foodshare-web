@@ -124,11 +124,11 @@ export async function deleteForumPost(id: string): Promise<{ success: boolean; e
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('user_role')
     .eq('id', user.id)
     .single();
 
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin';
+  const isAdmin = profile?.user_role === 'admin' || profile?.user_role === 'superadmin';
 
   if (post?.author_id !== user.id && !isAdmin) {
     return { success: false, error: 'Not authorized to delete this post' };
@@ -219,14 +219,14 @@ export async function deleteComment(commentId: string): Promise<{ success: boole
       .single(),
     supabase
       .from('profiles')
-      .select('role')
+      .select('user_role')
       .eq('id', user.id)
       .single(),
   ]);
 
   const comment = commentResult.data;
   const profile = profileResult.data;
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin';
+  const isAdmin = profile?.user_role === 'admin' || profile?.user_role === 'superadmin';
 
   if (comment?.author_id !== user.id && !isAdmin) {
     return { success: false, error: 'Not authorized to delete this comment' };

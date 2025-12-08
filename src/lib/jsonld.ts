@@ -7,6 +7,17 @@
 import { siteConfig } from "./metadata";
 
 /**
+ * Safely stringify JSON-LD to prevent XSS and DOM parsing issues
+ * Escapes </script> tags and other problematic sequences
+ */
+export function safeJsonLdStringify(data: unknown): string {
+    return JSON.stringify(data)
+        .replace(/</g, '\\u003c')
+        .replace(/>/g, '\\u003e')
+        .replace(/&/g, '\\u0026');
+}
+
+/**
  * Organization structured data for site-wide info
  */
 export function generateOrganizationJsonLd() {

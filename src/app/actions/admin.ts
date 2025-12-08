@@ -19,10 +19,11 @@ export {
 
 export interface AdminUser {
   id: string;
-  name: string;
+  first_name: string | null;
+  second_name: string | null;
   email: string;
-  role: string;
-  created_at: string;
+  user_role: string | null;
+  created_time: string | null;
   is_active: boolean;
   products_count: number;
 }
@@ -46,11 +47,11 @@ async function requireAdmin(): Promise<void> {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('user_role')
     .eq('id', user.id)
     .single();
 
-  if (profile?.role !== 'admin' && profile?.role !== 'superadmin') {
+  if (profile?.user_role !== 'admin' && profile?.user_role !== 'superadmin') {
     throw new Error('Admin access required');
   }
 }
@@ -140,20 +141,20 @@ export async function getUsers(filters: UserFilters = {}): Promise<{
 
   let query = supabase
     .from('profiles')
-    .select('id, name, email, role, created_at, is_active', { count: 'exact' });
+    .select('id, first_name, second_name, email, user_role, created_time, is_active', { count: 'exact' });
 
   if (search) {
-    query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
+    query = query.or(`first_name.ilike.%${search}%,second_name.ilike.%${search}%,email.ilike.%${search}%`);
   }
   if (role) {
-    query = query.eq('role', role);
+    query = query.eq('user_role', role);
   }
   if (is_active !== undefined) {
     query = query.eq('is_active', is_active);
   }
 
   query = query
-    .order('created_at', { ascending: false })
+    .order('created_time', { ascending: false })
     .range(offset, offset + limit - 1);
 
   const { data, count, error } = await query;
@@ -200,7 +201,7 @@ export async function updateUserRole(
 
   const { error } = await supabase
     .from('profiles')
-    .update({ role })
+    .update({ user_role: role })
     .eq('id', userId);
 
   if (error) {

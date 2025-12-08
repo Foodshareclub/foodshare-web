@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import parse from 'html-react-parser';
 import { createClient } from '@/lib/supabase/server';
-import { generateArticleJsonLd } from '@/lib/jsonld';
+import { generateArticleJsonLd, safeJsonLdStringify } from '@/lib/jsonld';
 import { siteConfig } from '@/lib/metadata';
 import { ForumCategoryBadge, ForumTagBadge, RealtimeComments } from '@/components/forum';
 import { RichTextViewer } from '@/components/forum/RichTextViewer';
@@ -170,7 +170,7 @@ export default async function ForumPostPage({ params }: PageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(jsonLd) }}
       />
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <BackButton className="mb-6" label="Back to Forum" />

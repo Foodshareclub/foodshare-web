@@ -19,7 +19,11 @@ User profile information linked to `auth.users`.
 | `email` | text | Email address |
 | `avatar_url` | text | Profile picture URL |
 | `bio` | text | User biography |
-| `created_at` | timestamptz | Account creation date |
+| `phone` | text | Phone number |
+| `location` | jsonb | User location data |
+| `user_role` | text | User role (user, admin, etc.) |
+| `is_active` | boolean | Account active status |
+| `created_time` | timestamptz | Account creation date |
 | `updated_at` | timestamptz | Last update |
 
 **Rows**: ~4,328

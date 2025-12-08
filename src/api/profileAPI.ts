@@ -37,35 +37,42 @@ export type AddressType = {
   state_province: string;
 };
 
-export type RoleType = {
-  admin: boolean;
-  volunteer: boolean;
-  subscriber: boolean;
-  organization: boolean;
-  "fridge-coordinator": boolean;
-  "foodbank-coordinator": boolean;
-};
-
 export type ProfileType = {
-  created_time: string;
-  email?: string;
   id: string;
-  liked_post: string;
-  about_me: string;
-  avatar_url: string;
-  birth_date: string;
+  created_time: string;
+  updated_at: string | null;
+  email?: string;
   first_name: string;
-  last_name?: string; // Alias for second_name
-  nickname?: string;
-  phone: string;
   second_name: string;
-  updated_at: Date;
-  user_address: string;
-  user_location: string;
-  user_metro_station: string;
-  username: string;
-  role: RoleType;
-  is_volunteer?: boolean; // Derived from role.volunteer
+  nickname?: string;
+  avatar_url: string;
+  about_me: string;
+  bio?: string;
+  birth_date: string;
+  phone: string;
+  // Location is a PostGIS geography type, stored as unknown
+  location?: unknown;
+  // user_role is a simple string: 'admin', 'volunteer', 'user', etc.
+  user_role: string | null;
+  // Preferences stored as JSONB
+  dietary_preferences?: Record<string, unknown>;
+  notification_preferences?: Record<string, unknown>;
+  theme_preferences?: Record<string, unknown>;
+  search_radius_km?: number;
+  // Status flags
+  is_verified?: boolean;
+  is_active?: boolean;
+  email_verified?: boolean;
+  last_seen_at?: string;
+  // Social links
+  facebook?: string;
+  instagram?: string;
+  twitter?: string;
+  telegram_id?: number;
+  // Transportation preference
+  transportation?: string;
+  // Language preference
+  language?: string;
 };
 
 // Legacy type alias for backward compatibility

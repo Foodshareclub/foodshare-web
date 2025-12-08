@@ -130,12 +130,12 @@ export async function proxy(request: NextRequest) {
     // Check if user has admin role from profiles table
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('user_role')
       .eq('id', session.user.id)
       .single();
 
     // Redirect to home if not admin
-    if (!profile || (profile.role !== 'admin' && profile.role !== 'superadmin')) {
+    if (!profile || (profile.user_role !== 'admin' && profile.user_role !== 'superadmin')) {
       return NextResponse.redirect(new URL('/', request.url));
     }
   }

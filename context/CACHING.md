@@ -366,6 +366,8 @@ function InfiniteProductList() {
   // staleTime: 5 minutes
   // gcTime: 30 minutes
   // Uses cursor-based pagination via /api/products
+  // Automatically prefetches next page in background for smoother scrolling
+  // Structural sharing enabled for better performance with large datasets
   
   const products = data?.pages.flatMap(page => page.data) ?? [];
 }

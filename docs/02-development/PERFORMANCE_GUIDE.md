@@ -58,6 +58,8 @@ const { data } = useProducts(type);
 import { useInfiniteProducts } from '@/hooks/queries/useProductQueries';
 
 const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteProducts(type);
+// Automatically prefetches next page in background for smoother scrolling
+// Structural sharing enabled for better performance with large datasets
 
 // Flatten pages into single array
 const products = useMemo(() => {

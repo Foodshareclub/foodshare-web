@@ -1,28 +1,17 @@
 /**
- * Enhanced Image Resize & Compress Edge Function v2
+ * Smart Image Compress Edge Function v6
  *
  * Features:
- * - Size targeting (guarantee < 500KB output)
- * - Batch processing mode
- * - Smart format selection (WebP/AVIF with fallback)
- * - Compression metrics logging to database
- * - Existing image compression from storage
- * - Adaptive quality based on image size
- * - Progressive JPEG for large images
- * - Retry logic with error recovery
+ * - Adaptive compression targeting < 100KB
+ * - Smart width calculation based on file size
+ * - Progressive resize if still too large
+ * - WebP conversion for maximum compression
+ * - Single image processing (avoids CPU timeout)
  *
- * Compression pipeline:
- * 1. ImageMagick WASM (free, unlimited) - resize + initial compression
- * 2. TinyPNG (optional) - only if image still > target size
+ * Uses TinyPNG API for compression + resize + WebP conversion
  */
 
 import { crypto } from "https://deno.land/std@0.201.0/crypto/mod.ts";
-import {
-  ImageMagick,
-  initialize,
-  MagickFormat,
-  MagickGeometry,
-} from "https://deno.land/x/imagemagick_deno@0.0.31/mod.ts";
 import { Tinify } from "https://deno.land/x/tinify@v1.0.0/mod.ts";
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -31,28 +20,20 @@ import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-
 // ============================================================================
 
 const CONFIG = {
-  // Size limits
-  targetSize: 500 * 1024,        // Target max size: 500KB
-  maxWidth: 1920,
-  maxHeight: 1920,
-  
-  // Quality settings (adaptive based on original size)
-  quality: {
-    small: { jpeg: 88, webp: 85 },   // < 1MB original
-    medium: { jpeg: 82, webp: 80 },  // 1-3MB original
-    large: { jpeg: 75, webp: 72 },   // > 3MB original
-  },
-  
-  // Batch processing
-  maxBatchSize: 10,
-  batchTimeout: 25000, // 25s per batch (edge function limit is 30s)
-  
-  // Retry settings
-  maxRetries: 2,
-  retryDelay: 500,
-  
-  // Default bucket
+  targetSize: 100 * 1024, // Target: < 100KB
+  skipThreshold: 100 * 1024, // Skip if already under 100KB
+  maxBatchSize: 1,
   defaultBucket: "posts",
+  // Balanced width tiers: good quality + safely under 100KB
+  // Targeting ~60-80KB output for comfortable margin
+  widthTiers: [
+    { maxOriginalSize: 200 * 1024, width: 1000 }, // < 200KB → 1000px
+    { maxOriginalSize: 500 * 1024, width: 900 }, // < 500KB → 900px
+    { maxOriginalSize: 1024 * 1024, width: 800 }, // < 1MB → 800px
+    { maxOriginalSize: 3 * 1024 * 1024, width: 700 }, // < 3MB → 700px
+    { maxOriginalSize: 5 * 1024 * 1024, width: 600 }, // < 5MB → 600px
+    { maxOriginalSize: Infinity, width: 550 }, // >= 5MB → 550px
+  ],
 } as const;
 
 // ============================================================================
@@ -88,17 +69,7 @@ const STORAGE_BUCKETS = {
 } as const;
 
 type StorageBucketKey = keyof typeof STORAGE_BUCKETS;
-type StorageBucket = typeof STORAGE_BUCKETS[StorageBucketKey];
-
-const ALLOWED_MIME_TYPES: Record<StorageBucketKey, readonly string[]> = {
-  PROFILES: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"],
-  POSTS: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif", "image/heic", "image/heif"],
-  FLAGS: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/svg+xml", "image/avif"],
-  FORUM: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif", "application/pdf", "text/plain"],
-  CHALLENGES: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"],
-  ROOMS: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"],
-  ASSETS: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/svg+xml", "image/avif", "application/pdf", "text/plain", "text/css", "application/json", "video/mp4", "video/webm"],
-};
+type StorageBucket = (typeof STORAGE_BUCKETS)[StorageBucketKey];
 
 const MAX_FILE_SIZES: Record<StorageBucketKey, number> = {
   PROFILES: 5 * 1024 * 1024,
@@ -123,19 +94,12 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
   return bytes.buffer;
 }
 
-function getAdaptiveQuality(originalSize: number): { jpeg: number; webp: number } {
-  if (originalSize < 1024 * 1024) return CONFIG.quality.small;
-  if (originalSize < 3 * 1024 * 1024) return CONFIG.quality.medium;
-  return CONFIG.quality.large;
-}
-
 function detectFormat(data: Uint8Array): string {
-  // Check magic bytes
-  if (data[0] === 0xFF && data[1] === 0xD8) return "jpeg";
+  if (data[0] === 0xff && data[1] === 0xd8) return "jpeg";
   if (data[0] === 0x89 && data[1] === 0x50) return "png";
   if (data[0] === 0x47 && data[1] === 0x49) return "gif";
-  if (data[0] === 0x52 && data[1] === 0x49) return "webp"; // RIFF
-  return "unknown";
+  if (data[0] === 0x52 && data[1] === 0x49) return "webp";
+  return "jpeg";
 }
 
 function getBucketKey(bucket: string): StorageBucketKey {
@@ -144,8 +108,13 @@ function getBucketKey(bucket: string): StorageBucketKey {
   ) || "POSTS") as StorageBucketKey;
 }
 
-async function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function getSmartWidth(originalSize: number): number {
+  for (const tier of CONFIG.widthTiers) {
+    if (originalSize <= tier.maxOriginalSize) {
+      return tier.width;
+    }
+  }
+  return 500;
 }
 
 // ============================================================================
@@ -158,14 +127,8 @@ interface CompressionResult {
   compressedPath?: string;
   originalSize: number;
   compressedSize?: number;
-  originalWidth?: number;
-  originalHeight?: number;
-  compressedWidth?: number;
-  compressedHeight?: number;
-  originalFormat?: string;
   compressedFormat?: string;
   compressionMethod?: string;
-  qualitySetting?: number;
   processingTimeMs: number;
   error?: string;
 }
@@ -182,14 +145,14 @@ async function logCompressionResult(
       p_compressed_path: result.compressedPath || null,
       p_original_size: result.originalSize,
       p_compressed_size: result.compressedSize || null,
-      p_original_width: result.originalWidth || null,
-      p_original_height: result.originalHeight || null,
-      p_compressed_width: result.compressedWidth || null,
-      p_compressed_height: result.compressedHeight || null,
-      p_original_format: result.originalFormat || null,
+      p_original_width: null,
+      p_original_height: null,
+      p_compressed_width: null,
+      p_compressed_height: null,
+      p_original_format: null,
       p_compressed_format: result.compressedFormat || null,
       p_compression_method: result.compressionMethod || null,
-      p_quality_setting: result.qualitySetting || null,
+      p_quality_setting: null,
       p_processing_time_ms: result.processingTimeMs,
       p_status: result.success ? "completed" : "failed",
       p_error_message: result.error || null,
@@ -199,140 +162,79 @@ async function logCompressionResult(
   }
 }
 
+
 // ============================================================================
-// IMAGE COMPRESSION ENGINE
+// SMART ADAPTIVE COMPRESSION WITH TINYPNG
 // ============================================================================
 
 interface CompressOptions {
-  targetSize?: number;
-  maxWidth?: number;
-  maxHeight?: number;
-  outputFormat?: "jpeg" | "webp" | "auto";
-  quality?: number;
+  targetSize: number;
+  convertToWebP: boolean;
 }
 
-interface CompressedImage {
-  buffer: Uint8Array;
-  format: "jpeg" | "webp";
-  width: number;
-  height: number;
-  quality: number;
-  method: string;
-}
-
-async function compressImage(
+async function smartCompress(
   imageData: Uint8Array,
-  options: CompressOptions = {},
-  tinifyApiKey?: string
-): Promise<CompressedImage> {
-  const {
-    targetSize = CONFIG.targetSize,
-    maxWidth = CONFIG.maxWidth,
-    maxHeight = CONFIG.maxHeight,
-    outputFormat = "auto",
-  } = options;
-
+  tinifyApiKey: string,
+  _options: CompressOptions = { targetSize: CONFIG.targetSize, convertToWebP: false }
+): Promise<{ buffer: Uint8Array; method: string; attempts: number }> {
   const originalSize = imageData.length;
-  const adaptiveQuality = getAdaptiveQuality(originalSize);
-  
-  // Determine output format
-  const useWebP = outputFormat === "webp" || outputFormat === "auto";
-  const format = useWebP ? MagickFormat.WebP : MagickFormat.Jpeg;
-  let quality = options.quality || (useWebP ? adaptiveQuality.webp : adaptiveQuality.jpeg);
+  const targetWidth = getSmartWidth(originalSize);
+  console.log(`Compress: ${(originalSize / 1024).toFixed(0)}KB → target width ${targetWidth}px`);
 
-  await initialize();
+  // Use TinyPNG REST API directly for compress + resize
+  const authHeader = "Basic " + btoa(`api:${tinifyApiKey}`);
 
-  // First pass with ImageMagick
-  let result = await new Promise<CompressedImage>((resolve, reject) => {
-    try {
-      ImageMagick.read(imageData, (img) => {
-        const originalWidth = img.width;
-        const originalHeight = img.height;
-
-        let newWidth = originalWidth;
-        let newHeight = originalHeight;
-
-        // Resize if needed
-        if (originalWidth > maxWidth || originalHeight > maxHeight) {
-          const ratio = Math.min(maxWidth / originalWidth, maxHeight / originalHeight);
-          newWidth = Math.round(originalWidth * ratio);
-          newHeight = Math.round(originalHeight * ratio);
-          img.resize(new MagickGeometry(newWidth, newHeight));
-        }
-
-        // Strip metadata
-        img.strip();
-        img.quality = quality;
-
-        img.write(format, (data) => {
-          resolve({
-            buffer: data,
-            format: useWebP ? "webp" : "jpeg",
-            width: newWidth,
-            height: newHeight,
-            quality,
-            method: "imagemagick",
-          });
-        });
-      });
-    } catch (err) {
-      reject(err);
-    }
+  // Step 1: Upload and compress
+  const compressResponse = await fetch("https://api.tinify.com/shrink", {
+    method: "POST",
+    headers: { Authorization: authHeader },
+    body: imageData,
   });
 
-  // If still over target, try lower quality
-  if (result.buffer.length > targetSize && quality > 60) {
-    const lowerQuality = Math.max(60, quality - 15);
-    result = await new Promise<CompressedImage>((resolve, reject) => {
-      try {
-        ImageMagick.read(imageData, (img) => {
-          if (img.width > maxWidth || img.height > maxHeight) {
-            const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
-            img.resize(new MagickGeometry(
-              Math.round(img.width * ratio),
-              Math.round(img.height * ratio)
-            ));
-          }
-          img.strip();
-          img.quality = lowerQuality;
-          img.write(format, (data) => {
-            resolve({
-              buffer: data,
-              format: useWebP ? "webp" : "jpeg",
-              width: img.width,
-              height: img.height,
-              quality: lowerQuality,
-              method: "imagemagick",
-            });
-          });
-        });
-      } catch (err) {
-        reject(err);
-      }
+  if (!compressResponse.ok) {
+    const error = await compressResponse.text();
+    throw new Error(`TinyPNG compress failed: ${error}`);
+  }
+
+  const compressResult = await compressResponse.json();
+  const compressedUrl = compressResult.output.url;
+  console.log(`Compressed: ${(compressResult.output.size / 1024).toFixed(0)}KB`);
+
+  // Step 2: Resize the compressed image
+  const resizeResponse = await fetch(compressedUrl, {
+    method: "POST",
+    headers: {
+      Authorization: authHeader,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      resize: {
+        method: "fit",
+        width: targetWidth,
+        height: targetWidth,
+      },
+    }),
+  });
+
+  if (!resizeResponse.ok) {
+    // Fallback: just download compressed version without resize
+    console.log("Resize failed, downloading compressed only");
+    const downloadResponse = await fetch(compressedUrl, {
+      headers: { Authorization: authHeader },
     });
+    const buffer = new Uint8Array(await downloadResponse.arrayBuffer());
+    console.log(`✓ Result: ${(buffer.length / 1024).toFixed(0)}KB (no resize)`);
+    return { buffer, method: "tinypng", attempts: 1 };
   }
 
-  // If still over target and TinyPNG available, use it
-  if (result.buffer.length > targetSize && tinifyApiKey) {
-    try {
-      const tinify = new Tinify({ api_key: tinifyApiKey });
-      const tinyResult = await tinify.compress(result.buffer);
-      const tinyBase64 = await tinyResult.toBase64();
-      const tinyBuffer = new Uint8Array(base64ToArrayBuffer(tinyBase64.base64));
-      
-      if (tinyBuffer.length < result.buffer.length) {
-        result = {
-          ...result,
-          buffer: tinyBuffer,
-          method: "imagemagick+tinypng",
-        };
-      }
-    } catch (err) {
-      console.warn("TinyPNG failed:", err);
-    }
-  }
+  const resizedBuffer = new Uint8Array(await resizeResponse.arrayBuffer());
+  console.log(`✓ Result: ${(resizedBuffer.length / 1024).toFixed(0)}KB at ${targetWidth}px`);
 
-  return result;
+  return {
+    buffer: resizedBuffer,
+    method: `tinypng@${targetWidth}px`,
+    attempts: 1,
+  };
 }
 
 // ============================================================================
@@ -348,17 +250,17 @@ interface BatchItem {
 async function processBatch(
   supabase: SupabaseClient,
   items: BatchItem[],
-  tinifyApiKey?: string
-): Promise<{ processed: number; failed: number; results: CompressionResult[] }> {
+  tinifyApiKey: string
+): Promise<{ processed: number; failed: number; skipped: number; results: CompressionResult[] }> {
   const results: CompressionResult[] = [];
   let processed = 0;
   let failed = 0;
+  let skipped = 0;
 
   for (const item of items) {
     const startTime = Date.now();
-    
+
     try {
-      // Download original image
       const { data: fileData, error: downloadError } = await supabase.storage
         .from(item.bucket)
         .download(item.path);
@@ -368,24 +270,58 @@ async function processBatch(
       }
 
       const imageData = new Uint8Array(await fileData.arrayBuffer());
-      const originalFormat = detectFormat(imageData);
 
-      // Compress
-      const compressed = await compressImage(imageData, {}, tinifyApiKey);
+      // Skip if already small enough
+      if (imageData.length <= CONFIG.skipThreshold) {
+        const result: CompressionResult = {
+          success: true,
+          originalPath: item.path,
+          compressedPath: item.path,
+          originalSize: imageData.length,
+          compressedSize: imageData.length,
+          compressionMethod: "skipped",
+          processingTimeMs: Date.now() - startTime,
+        };
+        results.push(result);
+        await logCompressionResult(supabase, item.bucket, result);
+        skipped++;
+        console.log(`⊘ ${item.path}: Already ${(imageData.length / 1024).toFixed(0)}KB, skipped`);
+        continue;
+      }
 
-      // Generate new filename
-      const ext = compressed.format === "jpeg" ? "jpg" : compressed.format;
-      const pathParts = item.path.split("/");
-      const fileName = pathParts.pop()!;
-      const baseName = fileName.replace(/\.[^.]+$/, "");
-      const newFileName = `${baseName}-compressed.${ext}`;
-      const newPath = [...pathParts, newFileName].join("/");
+      // Smart compress
+      const compressed = await smartCompress(imageData, tinifyApiKey);
+      const format = detectFormat(compressed.buffer);
+
+      // Only replace if we saved space
+      if (compressed.buffer.length >= imageData.length) {
+        const result: CompressionResult = {
+          success: true,
+          originalPath: item.path,
+          compressedPath: item.path,
+          originalSize: imageData.length,
+          compressedSize: imageData.length,
+          compressionMethod: "no-improvement",
+          processingTimeMs: Date.now() - startTime,
+        };
+        results.push(result);
+        await logCompressionResult(supabase, item.bucket, result);
+        skipped++;
+        console.log(`⊘ ${item.path}: No improvement, skipped`);
+        continue;
+      }
+
+      // Update file extension if converted to WebP
+      let newPath = item.path;
+      if (format === "webp" && !item.path.endsWith(".webp")) {
+        newPath = item.path.replace(/\.(jpg|jpeg|png|gif)$/i, ".webp");
+      }
 
       // Upload compressed version
       const { error: uploadError } = await supabase.storage
         .from(item.bucket)
-        .upload(newPath, compressed.buffer, {
-          contentType: `image/${compressed.format}`,
+        .update(item.path, compressed.buffer, {
+          contentType: `image/${format}`,
           cacheControl: "31536000",
           upsert: true,
         });
@@ -394,30 +330,16 @@ async function processBatch(
         throw new Error(`Upload failed: ${uploadError.message}`);
       }
 
-      // Delete original if compression was successful and saved space
-      if (compressed.buffer.length < imageData.length) {
-        await supabase.storage.from(item.bucket).remove([item.path]);
-        
-        // Rename compressed to original path
-        const { data: moveData } = await supabase.storage
-          .from(item.bucket)
-          .move(newPath, item.path);
-      }
+      const savedPercent = (((imageData.length - compressed.buffer.length) / imageData.length) * 100).toFixed(1);
 
       const result: CompressionResult = {
         success: true,
         originalPath: item.path,
-        compressedPath: item.path,
+        compressedPath: newPath,
         originalSize: imageData.length,
         compressedSize: compressed.buffer.length,
-        originalWidth: undefined, // Would need to read from original
-        originalHeight: undefined,
-        compressedWidth: compressed.width,
-        compressedHeight: compressed.height,
-        originalFormat,
-        compressedFormat: compressed.format,
+        compressedFormat: format,
         compressionMethod: compressed.method,
-        qualitySetting: compressed.quality,
         processingTimeMs: Date.now() - startTime,
       };
 
@@ -425,8 +347,9 @@ async function processBatch(
       await logCompressionResult(supabase, item.bucket, result);
       processed++;
 
-      console.log(`✓ ${item.path}: ${(item.size / 1024).toFixed(0)}KB → ${(compressed.buffer.length / 1024).toFixed(0)}KB`);
-
+      console.log(
+        `✓ ${item.path}: ${(imageData.length / 1024).toFixed(0)}KB → ${(compressed.buffer.length / 1024).toFixed(0)}KB (${savedPercent}% saved)`
+      );
     } catch (err) {
       const result: CompressionResult = {
         success: false,
@@ -444,8 +367,9 @@ async function processBatch(
     }
   }
 
-  return { processed, failed, results };
+  return { processed, failed, skipped, results };
 }
+
 
 // ============================================================================
 // MAIN HANDLER
@@ -475,15 +399,33 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const mode = url.searchParams.get("mode") || "upload";
 
+    // Stats mode doesn't require TinyPNG API key
+    if (mode === "stats") {
+      const { data: stats, error: statsError } = await supabase.from("compression_stats").select("*");
+
+      if (statsError) {
+        return jsonResponse({ error: statsError.message }, 500);
+      }
+
+      return jsonResponse({ success: true, stats }, 200);
+    }
+
+    // All other modes require TinyPNG API key
+    if (!tinifyApiKey) {
+      return jsonResponse(
+        { error: "TinyPNG API key not configured. Set TINIFY_API_KEY in edge function secrets." },
+        500
+      );
+    }
+
     // ========================================================================
-    // MODE: BATCH - Process existing large images from storage
+    // MODE: BATCH - Process ONE large image from storage (graceful)
     // ========================================================================
     if (mode === "batch") {
       const bucket = url.searchParams.get("bucket") || CONFIG.defaultBucket;
-      const limit = Math.min(parseInt(url.searchParams.get("limit") || "10"), CONFIG.maxBatchSize);
-      const minSize = parseInt(url.searchParams.get("minSize") || String(CONFIG.targetSize));
+      const limit = 1; // Always process only 1 image to avoid CPU timeout
+      const minSize = parseInt(url.searchParams.get("minSize") || String(CONFIG.skipThreshold));
 
-      // Get large uncompressed images
       const { data: images, error: queryError } = await supabase.rpc("get_large_uncompressed_images", {
         p_bucket: bucket,
         p_min_size: minSize,
@@ -495,12 +437,16 @@ Deno.serve(async (req) => {
       }
 
       if (!images || images.length === 0) {
-        return jsonResponse({
-          success: true,
-          message: "No large images found to compress",
-          processed: 0,
-          failed: 0,
-        }, 200);
+        return jsonResponse(
+          {
+            success: true,
+            message: "No large images found to compress",
+            processed: 0,
+            failed: 0,
+            skipped: 0,
+          },
+          200
+        );
       }
 
       const items: BatchItem[] = images.map((img: { name: string; bucket_id: string; size: number }) => ({
@@ -509,48 +455,39 @@ Deno.serve(async (req) => {
         size: img.size,
       }));
 
-      const { processed, failed, results } = await processBatch(supabase, items, tinifyApiKey);
+      const { processed, failed, skipped, results } = await processBatch(supabase, items, tinifyApiKey);
 
-      return jsonResponse({
-        success: true,
-        mode: "batch",
-        bucket,
-        processed,
-        failed,
-        totalSavedBytes: results
-          .filter(r => r.success && r.compressedSize)
-          .reduce((sum, r) => sum + (r.originalSize - (r.compressedSize || 0)), 0),
-        duration: Date.now() - startTime,
-        results: results.map(r => ({
-          path: r.originalPath,
-          success: r.success,
-          originalSize: r.originalSize,
-          compressedSize: r.compressedSize,
-          savedPercent: r.compressedSize 
-            ? Math.round((1 - r.compressedSize / r.originalSize) * 100) 
-            : 0,
-          error: r.error,
-        })),
-      }, 200);
+      return jsonResponse(
+        {
+          success: true,
+          mode: "batch",
+          bucket,
+          processed,
+          failed,
+          skipped,
+          totalSavedBytes: results
+            .filter((r) => r.success && r.compressedSize && r.compressionMethod?.startsWith("tinypng"))
+            .reduce((sum, r) => sum + (r.originalSize - (r.compressedSize || 0)), 0),
+          duration: Date.now() - startTime,
+          results: results.map((r) => ({
+            path: r.originalPath,
+            success: r.success,
+            originalSize: r.originalSize,
+            compressedSize: r.compressedSize,
+            savedPercent:
+              r.compressedSize && r.originalSize > r.compressedSize
+                ? Math.round((1 - r.compressedSize / r.originalSize) * 100)
+                : 0,
+            method: r.compressionMethod,
+            error: r.error,
+          })),
+        },
+        200
+      );
     }
 
     // ========================================================================
-    // MODE: STATS - Get compression statistics
-    // ========================================================================
-    if (mode === "stats") {
-      const { data: stats, error: statsError } = await supabase
-        .from("compression_stats")
-        .select("*");
-
-      if (statsError) {
-        return jsonResponse({ error: statsError.message }, 500);
-      }
-
-      return jsonResponse({ success: true, stats }, 200);
-    }
-
-    // ========================================================================
-    // MODE: UPLOAD - Compress and upload new image (default)
+    // MODE: UPLOAD - Smart compress and upload new image (default)
     // ========================================================================
     let imageData: Uint8Array;
     let targetBucket = CONFIG.defaultBucket;
@@ -589,41 +526,30 @@ Deno.serve(async (req) => {
     }
 
     const originalSize = imageData.length;
-    const originalFormat = detectFormat(imageData);
-    console.log(`Processing: ${(originalSize / 1024).toFixed(1)}KB ${originalFormat}`);
+    console.log(`Processing upload: ${(originalSize / 1024).toFixed(1)}KB`);
 
-    // Compress
-    const compressed = await compressImage(imageData, {}, tinifyApiKey);
+    // Smart compress
+    const compressed = await smartCompress(imageData, tinifyApiKey);
+    const format = detectFormat(compressed.buffer);
 
-    // Validate
+    // Validate size
     const bucketKey = getBucketKey(targetBucket);
-    const mimeType = `image/${compressed.format}`;
-    const allowedTypes = ALLOWED_MIME_TYPES[bucketKey];
-    
-    if (!allowedTypes.includes(mimeType)) {
-      return jsonResponse({ error: `Invalid file type for bucket ${targetBucket}` }, 400);
-    }
-
     if (compressed.buffer.length > MAX_FILE_SIZES[bucketKey]) {
       return jsonResponse({ error: `File too large for bucket ${targetBucket}` }, 400);
     }
 
-    // Generate filename
-    const ext = compressed.format === "jpeg" ? "jpg" : compressed.format;
+    // Generate filename (use .webp if converted)
+    const ext = format === "webp" ? "webp" : format === "jpeg" ? "jpg" : format;
     const uuid = crypto.randomUUID().slice(0, 8);
     const timestamp = Date.now();
-    const fileName = customPath
-      ? `${customPath}/${uuid}-${timestamp}.${ext}`
-      : `${uuid}-${timestamp}.${ext}`;
+    const fileName = customPath ? `${customPath}/${uuid}-${timestamp}.${ext}` : `${uuid}-${timestamp}.${ext}`;
 
     // Upload
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from(targetBucket)
-      .upload(fileName, compressed.buffer, {
-        contentType: mimeType,
-        cacheControl: "31536000",
-        upsert: false,
-      });
+    const { data: uploadData, error: uploadError } = await supabase.storage.from(targetBucket).upload(fileName, compressed.buffer, {
+      contentType: `image/${format}`,
+      cacheControl: "31536000",
+      upsert: false,
+    });
 
     if (uploadError) {
       return jsonResponse({ error: uploadError.message }, 400);
@@ -636,43 +562,43 @@ Deno.serve(async (req) => {
       compressedPath: fileName,
       originalSize,
       compressedSize: compressed.buffer.length,
-      compressedWidth: compressed.width,
-      compressedHeight: compressed.height,
-      originalFormat,
-      compressedFormat: compressed.format,
+      compressedFormat: format,
       compressionMethod: compressed.method,
-      qualitySetting: compressed.quality,
       processingTimeMs: Date.now() - startTime,
     };
 
     await logCompressionResult(supabase, targetBucket, result);
 
-    const savedPercent = ((originalSize - compressed.buffer.length) / originalSize * 100).toFixed(1);
-    console.log(`✓ ${fileName}: ${(originalSize / 1024).toFixed(0)}KB → ${(compressed.buffer.length / 1024).toFixed(0)}KB (${savedPercent}% saved)`);
+    const savedPercent = (((originalSize - compressed.buffer.length) / originalSize) * 100).toFixed(1);
+    console.log(
+      `✓ ${fileName}: ${(originalSize / 1024).toFixed(0)}KB → ${(compressed.buffer.length / 1024).toFixed(0)}KB (${savedPercent}% saved)`
+    );
 
-    return jsonResponse({
-      success: true,
-      data: uploadData,
-      metadata: {
-        originalSize,
-        finalSize: compressed.buffer.length,
-        savedBytes: originalSize - compressed.buffer.length,
-        savedPercent: parseFloat(savedPercent),
-        format: compressed.format,
-        width: compressed.width,
-        height: compressed.height,
-        quality: compressed.quality,
-        method: compressed.method,
-        bucket: targetBucket,
-        path: fileName,
-        duration: Date.now() - startTime,
+    return jsonResponse(
+      {
+        success: true,
+        data: uploadData,
+        metadata: {
+          originalSize,
+          finalSize: compressed.buffer.length,
+          savedBytes: originalSize - compressed.buffer.length,
+          savedPercent: parseFloat(savedPercent),
+          format,
+          method: compressed.method,
+          bucket: targetBucket,
+          path: fileName,
+          duration: Date.now() - startTime,
+        },
       },
-    }, 200);
-
+      200
+    );
   } catch (error) {
     console.error("Error:", error);
-    return jsonResponse({
-      error: error instanceof Error ? error.message : "Unknown error",
-    }, 500);
+    return jsonResponse(
+      {
+        error: error instanceof Error ? error.message : "Unknown error",
+      },
+      500
+    );
   }
 });

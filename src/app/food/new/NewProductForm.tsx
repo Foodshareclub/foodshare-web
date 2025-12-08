@@ -43,7 +43,7 @@ export function NewProductForm({ userId }: NewProductFormProps) {
   // Auth and profile for navbar
   const { isAuthenticated } = useAuth()
   const { profile, avatarUrl } = useCurrentProfile(userId)
-  const isAdmin = profile?.role?.admin === true
+  const isAdmin = profile?.user_role === 'admin' || profile?.user_role === 'superadmin'
 
   // React Query mutation
   const createProduct = useCreateProduct()

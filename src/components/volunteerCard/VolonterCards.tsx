@@ -74,7 +74,7 @@ export function VolunteerCards({ volunteer, indicator }: VolunteerCardsProps) {
             </div>
             <div className="flex pt-3 justify-between items-center self-center">
               <p className="mt-1 text-sm text-muted-foreground uppercase">
-                "{volunteer.user_address}"
+                "{volunteer.location ? String(volunteer.location) : ''}"
               </p>
               <img className="cursor-pointer rounded-full" src={navIcon.src} alt="View on map" />
             </div>

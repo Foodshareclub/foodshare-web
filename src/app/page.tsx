@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { getProducts } from '@/lib/data/products';
 import { HomeClient } from './HomeClient';
 import SkeletonCard from '@/components/productCard/SkeletonCard';
-import { generateOrganizationJsonLd, generateWebsiteJsonLd, generateSoftwareApplicationJsonLd } from '@/lib/jsonld';
+import { generateOrganizationJsonLd, generateWebsiteJsonLd, generateSoftwareApplicationJsonLd, safeJsonLdStringify } from '@/lib/jsonld';
 
 export const revalidate = 60;
 
@@ -65,15 +65,15 @@ export default async function Home() {
       <>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(organizationJsonLd) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(websiteJsonLd) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(softwareAppJsonLd) }}
         />
         <Suspense fallback={<HomePageSkeleton />}>
           <HomeClient initialProducts={products} productType="food" />

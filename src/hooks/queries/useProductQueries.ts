@@ -40,12 +40,34 @@ interface PaginatedResponse {
 // API Fetch Functions (Client-safe)
 // ============================================================================
 
+// Request deduplication map - prevents duplicate in-flight requests
+const pendingRequests = new Map<string, Promise<unknown>>();
+
+/**
+ * Deduplicated fetch - prevents multiple identical requests
+ */
+async function deduplicatedFetch<T>(key: string, fetchFn: () => Promise<T>): Promise<T> {
+  const existing = pendingRequests.get(key);
+  if (existing) {
+    return existing as Promise<T>;
+  }
+  
+  const promise = fetchFn().finally(() => {
+    pendingRequests.delete(key);
+  });
+  
+  pendingRequests.set(key, promise);
+  return promise;
+}
+
 async function fetchProducts(type: string): Promise<InitialProductStateType[]> {
-  const res = await fetch(`/api/products?type=${encodeURIComponent(type)}`);
-  if (!res.ok) throw new Error('Failed to fetch products');
-  const json = await res.json();
-  // Handle both paginated and non-paginated responses
-  return json.data ?? json;
+  return deduplicatedFetch(`products-${type}`, async () => {
+    const res = await fetch(`/api/products?type=${encodeURIComponent(type)}`);
+    if (!res.ok) throw new Error('Failed to fetch products');
+    const json = await res.json();
+    // Handle both paginated and non-paginated responses
+    return json.data ?? json;
+  });
 }
 
 async function fetchProductsPaginated(
@@ -53,16 +75,20 @@ async function fetchProductsPaginated(
   cursor?: number | null,
   limit: number = PAGINATION.DEFAULT_PAGE_SIZE
 ): Promise<PaginatedResponse> {
-  const params = new URLSearchParams({
-    type,
-    limit: String(limit),
+  const cacheKey = `products-paginated-${type}-${cursor ?? 'first'}-${limit}`;
+  
+  return deduplicatedFetch(cacheKey, async () => {
+    const params = new URLSearchParams({
+      type,
+      limit: String(limit),
+    });
+    if (cursor) {
+      params.set('cursor', String(cursor));
+    }
+    const res = await fetch(`/api/products?${params}`);
+    if (!res.ok) throw new Error('Failed to fetch products');
+    return res.json();
   });
-  if (cursor) {
-    params.set('cursor', String(cursor));
-  }
-  const res = await fetch(`/api/products?${params}`);
-  if (!res.ok) throw new Error('Failed to fetch products');
-  return res.json();
 }
 
 async function fetchAllProducts(): Promise<InitialProductStateType[]> {
@@ -147,16 +173,32 @@ export function useProducts(
  * - gcTime: 30 min - keep in memory for instant back-navigation
  * - refetchOnMount: false when initialData provided (server already fetched)
  * - placeholderData: keepPreviousData for smooth transitions
+ * - Prefetches next page when current page loads
  */
 export function useInfiniteProducts(
   productType: string,
   initialData?: InitialProductStateType[]
 ) {
+  const queryClient = useQueryClient();
   const hasInitialData = initialData && initialData.length > 0;
   
-  return useInfiniteQuery({
+  const query = useInfiniteQuery({
     queryKey: productKeys.infinite(productType),
-    queryFn: ({ pageParam }) => fetchProductsPaginated(productType, pageParam),
+    queryFn: async ({ pageParam }) => {
+      const result = await fetchProductsPaginated(productType, pageParam);
+      
+      // Prefetch next page in background for smoother scrolling
+      if (result.hasMore && result.nextCursor) {
+        // Use setTimeout to not block current render
+        setTimeout(() => {
+          fetchProductsPaginated(productType, result.nextCursor).catch(() => {
+            // Silently fail prefetch - it's just an optimization
+          });
+        }, 100);
+      }
+      
+      return result;
+    },
     initialPageParam: null as number | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     
@@ -188,7 +230,12 @@ export function useInfiniteProducts(
       
     // Mark initial data as fresh to prevent immediate refetch
     initialDataUpdatedAt: hasInitialData ? Date.now() : undefined,
+    
+    // Structural sharing for better performance with large datasets
+    structuralSharing: true,
   });
+
+  return query;
 }
 
 /**
@@ -289,7 +336,7 @@ export function useProductImage(imagePath: string | undefined) {
 // ============================================================================
 
 /**
- * Create a new product
+ * Create a new product with optimistic updates for infinite scroll
  */
 export function useCreateProduct() {
   const queryClient = useQueryClient();
@@ -329,10 +376,33 @@ export function useCreateProduct() {
       }
       return result;
     },
-    onSuccess: (_, variables) => {
-      // Invalidate all product queries including infinite scroll
+    onSuccess: (result, variables) => {
+      // Optimistically add to infinite scroll cache if we have the new product data
+      if (result.data) {
+        const newProduct = result.data as InitialProductStateType;
+        
+        // Update infinite query cache - prepend new item to first page
+        queryClient.setQueriesData<{
+          pages: PaginatedResponse[];
+          pageParams: (number | null)[];
+        }>(
+          { queryKey: productKeys.infinite(variables.post_type) },
+          (oldData) => {
+            if (!oldData) return oldData;
+            return {
+              ...oldData,
+              pages: oldData.pages.map((page, index) => 
+                index === 0 
+                  ? { ...page, data: [newProduct, ...page.data] }
+                  : page
+              ),
+            };
+          }
+        );
+      }
+      
+      // Invalidate to ensure consistency
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: productKeys.all });
       queryClient.invalidateQueries({ queryKey: productKeys.locations() });
       if (variables.profile_id) {
         queryClient.invalidateQueries({
@@ -419,7 +489,7 @@ export function useUpdateProduct() {
 }
 
 /**
- * Delete a product with optimistic updates
+ * Delete a product with optimistic updates for both list and infinite queries
  */
 export function useDeleteProduct() {
   const queryClient = useQueryClient();
@@ -433,21 +503,53 @@ export function useDeleteProduct() {
       return productId;
     },
     onMutate: async (productId) => {
-      await queryClient.cancelQueries({ queryKey: productKeys.lists() });
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: productKeys.all });
 
+      // Snapshot previous values for rollback
       const previousLists = queryClient.getQueriesData<InitialProductStateType[]>({
         queryKey: productKeys.lists(),
       });
+      
+      const previousInfinite = queryClient.getQueriesData<{
+        pages: PaginatedResponse[];
+        pageParams: (number | null)[];
+      }>({
+        queryKey: ['products', 'infinite'],
+      });
 
+      // Optimistically remove from list queries
       queryClient.setQueriesData<InitialProductStateType[]>(
         { queryKey: productKeys.lists() },
         (old) => old?.filter((p) => p.id !== productId) ?? []
       );
+      
+      // Optimistically remove from infinite queries
+      queryClient.setQueriesData<{
+        pages: PaginatedResponse[];
+        pageParams: (number | null)[];
+      }>(
+        { queryKey: ['products', 'infinite'] },
+        (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page) => ({
+              ...page,
+              data: page.data.filter((p) => p.id !== productId),
+            })),
+          };
+        }
+      );
 
-      return { previousLists };
+      return { previousLists, previousInfinite };
     },
     onError: (_err, _productId, context) => {
+      // Rollback on error
       context?.previousLists.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+      context?.previousInfinite.forEach(([queryKey, data]) => {
         queryClient.setQueryData(queryKey, data);
       });
     },
@@ -457,7 +559,7 @@ export function useDeleteProduct() {
           queryKey: productKeys.detail(productId),
         });
       }
-      // Invalidate all product queries including infinite scroll
+      // Invalidate to ensure consistency with server
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
       queryClient.invalidateQueries({ queryKey: productKeys.all });
       queryClient.invalidateQueries({ queryKey: productKeys.locations() });

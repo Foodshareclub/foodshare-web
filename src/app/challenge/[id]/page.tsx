@@ -5,7 +5,7 @@ import { getUser } from '@/app/actions/auth';
 import { hasAcceptedChallenge } from '@/app/actions/challenges';
 import { ChallengeDetailClient } from './ChallengeDetailClient';
 import { Skeleton } from '@/components/ui/skeleton';
-import { generateEventJsonLd, generateBreadcrumbJsonLd } from '@/lib/jsonld';
+import { generateEventJsonLd, generateBreadcrumbJsonLd, safeJsonLdStringify } from '@/lib/jsonld';
 
 export const revalidate = 120;
 
@@ -50,11 +50,11 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(eventJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
       />
       <Suspense fallback={<ChallengeDetailSkeleton />}>
         <ChallengeDetailClient challenge={challenge} user={user} isAccepted={isAccepted} />

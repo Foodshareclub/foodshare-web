@@ -16,48 +16,50 @@ User profile information linked to Supabase Auth users.
 **Columns:**
 
 - `id` (uuid, PK) - User identifier (matches auth.users.id)
-- `nickname` (text) - Username/display name
+- `created_time` (timestamp) - Account creation time
+- `updated_at` (timestamp) - Last profile update
+- `email` (text) - User's email address
 - `first_name` (text) - User's first name
 - `second_name` (text) - User's last name
-- `email` (text) - User's email address
-- `phone` (text) - Phone number
+- `nickname` (text) - Username/display name
 - `avatar_url` (text) - Profile picture URL
 - `about_me` (text) - User biography
 - `bio` (text) - Short bio
+- `birth_date` (text) - User's birth date
+- `phone` (text) - Phone number
 - `location` (geography) - User's location (PostGIS point)
-- `language` (varchar) - Preferred language code
-- `user_role` (text) - Legacy role field (deprecated)
-- `role` (jsonb) - User roles object (see below)
-- `telegram_id` (bigint) - Linked Telegram account ID
+- `user_role` (text) - User role: 'admin', 'volunteer', 'user', etc.
+- `dietary_preferences` (jsonb) - User dietary preferences
+- `notification_preferences` (jsonb) - Notification settings
+- `theme_preferences` (jsonb) - UI theme settings
+- `search_radius_km` (numeric) - Default search radius in kilometers
 - `is_verified` (boolean) - Email verification status
 - `is_active` (boolean) - Account active status
-- `created_time` (timestamp) - Account creation time
-- `updated_at` (timestamp) - Last profile update
+- `email_verified` (boolean) - Email verified flag
 - `last_seen_at` (timestamp) - Last activity timestamp
+- `facebook` (text) - Facebook profile link
+- `instagram` (text) - Instagram profile link
+- `twitter` (text) - Twitter profile link
+- `telegram_id` (bigint) - Linked Telegram account ID
+- `transportation` (text) - Preferred transportation method
+- `language` (varchar) - Preferred language code
 
-**Role Object Structure:**
+**User Role Values:**
 
-The `role` field is a JSONB object with boolean flags:
-
-```json
-{
-  "admin": false,
-  "volunteer": false,
-  "subscriber": true,
-  "organization": false,
-  "fridge-coordinator": false,
-  "foodbank-coordinator": false
-}
-```
+The `user_role` field is a simple string with values like:
+- `'user'` - Standard user (default)
+- `'admin'` - Administrator
+- `'super_admin'` - Super administrator
+- `'volunteer'` - Volunteer
 
 **Checking Admin Status (TypeScript):**
 
 ```typescript
-// ✅ Correct - role is a JSONB object
-const isAdmin = profile?.role?.admin === true;
+// ✅ Correct - user_role is a string
+const isAdmin = profile?.user_role === 'admin' || profile?.user_role === 'super_admin';
 
-// ❌ Incorrect - role is not a string
-const isAdmin = profile?.role === 'admin';
+// For volunteer check
+const isVolunteer = profile?.user_role === 'volunteer';
 ```
 
 **Relationships:**

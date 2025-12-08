@@ -169,10 +169,12 @@ export default async function Image({ params }: { params: Promise<{ id: string }
 
 ### JSON-LD Structured Data
 
-Pages include JSON-LD for rich search results:
+Pages include JSON-LD for rich search results. All JSON-LD output uses `safeJsonLdStringify()` to prevent XSS attacks by escaping `<`, `>`, and `&` characters:
 
 ```typescript
-// Challenge pages use Event schema
+import { generateEventJsonLd, safeJsonLdStringify } from '@/lib/jsonld';
+
+// Generate structured data
 const eventJsonLd = generateEventJsonLd({
   name: challenge.challenge_title,
   description: challenge.challenge_description,
@@ -180,14 +182,25 @@ const eventJsonLd = generateEventJsonLd({
   url: `https://foodshare.club/challenge/${id}`,
 });
 
-// Forum posts use Article schema
-const articleJsonLd = generateArticleJsonLd({
-  title: post.forum_post_name,
-  description: post.forum_post_description,
-  datePublished: post.forum_post_created_at,
-  authorName: post.profiles?.nickname,
-});
+// Render safely in page
+<script
+  type="application/ld+json"
+  dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(eventJsonLd) }}
+/>
 ```
+
+Available generators in `src/lib/jsonld.ts`:
+- `generateOrganizationJsonLd()` - Site-wide organization info
+- `generateWebsiteJsonLd()` - Website with search action
+- `generateProductJsonLd()` - Food listings (Product schema)
+- `generateArticleJsonLd()` - Forum posts
+- `generateEventJsonLd()` - Challenges
+- `generateBreadcrumbJsonLd()` - Navigation breadcrumbs
+- `generateFAQJsonLd()` - Help pages
+- `generateItemListJsonLd()` - Collection pages
+- `generateCollectionPageJsonLd()` - Listing pages
+- `generateSoftwareApplicationJsonLd()` - PWA discovery
+- `generateLocalBusinessJsonLd()` - Location features
 
 ### Legacy Route Redirects
 

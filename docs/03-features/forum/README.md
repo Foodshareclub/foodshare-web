@@ -91,6 +91,7 @@ Features:
 
 ## Database Tables
 
+### Forum Posts & Content
 - `forum` - Posts
 - `forum_categories` - Categories
 - `forum_tags` - Tags
@@ -101,6 +102,13 @@ Features:
 - `forum_subscriptions` - Follow notifications
 - `forum_user_stats` - User reputation
 - `forum_polls` - Embedded polls
+
+### Forum Conversations (Direct Messaging)
+- `forum_conversations` - Conversation metadata (is_group, title, last_message_at)
+- `forum_conversation_participants` - Participants with roles and read status
+- `forum_messages` - Messages within conversations
+
+> **Note:** Forum conversations use separate database tables from the food sharing chat system. The food sharing chat is available at `/chat`. See [Chat Feature](../chat/README.md) for the food sharing chat API.
 
 ## Usage
 

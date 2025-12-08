@@ -4,7 +4,68 @@
 
 ## Overview
 
-FoodShare uses a client-side API layer that interfaces with Supabase backend services. All API functions are located in `src/api/` and return Supabase query builders.
+FoodShare uses a server-first architecture with Next.js 16. Data fetching is primarily done via Server Components using functions from `src/lib/data/`. Client-side API functions in `src/api/` are kept for backward compatibility and realtime subscriptions.
+
+---
+
+## Route Handlers
+
+Next.js Route Handlers for client-side data fetching when Server Components aren't suitable.
+
+### Chat Messages API
+
+**Endpoint:** `GET /api/chat/messages`
+
+**Location:** `src/app/api/chat/messages/route.ts`
+
+Fetches messages for food sharing rooms. Used by `ChatPageClient` when switching between chats client-side.
+
+**Authentication:** Required (returns 401 if not authenticated)
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `roomId` | `string` | Yes | Food sharing room ID |
+| `limit` | `number` | No | Messages to fetch (default: 50) |
+| `offset` | `number` | No | Pagination offset (default: 0) |
+
+**Success Response (200):**
+
+```typescript
+{
+  messages: Array<{
+    id: string;
+    text: string;
+    senderId: string;
+    timestamp: string;
+    image?: string;
+    isOwn: boolean;
+    senderName?: string;
+    senderAvatar?: string;
+  }>
+}
+```
+
+**Error Responses:**
+
+| Status | Body | Description |
+|--------|------|-------------|
+| 400 | `{ error: 'roomId is required' }` | Missing required parameter |
+| 401 | `{ error: 'Unauthorized' }` | User not authenticated |
+| 500 | `{ error: 'Failed to fetch messages' }` | Server error |
+
+**Example Usage:**
+
+```typescript
+// Fetch food sharing messages
+const response = await fetch(`/api/chat/messages?roomId=${roomId}`);
+const { messages } = await response.json();
+
+// Fetch forum messages with pagination
+const response = await fetch(`/api/chat/messages?conversationId=${convId}&limit=20&offset=40`);
+const { messages } = await response.json();
+```
 
 ---
 
@@ -857,11 +918,10 @@ interface SafeAuthUser {
   email: string | undefined;
   profile?: {
     id: string;
-    name: string;
     first_name: string | null;
     second_name: string | null;
     avatar_url: string | null;
-    role: string;
+    user_role: string | null;
     email: string | null;
   } | null;
 }
@@ -932,9 +992,272 @@ export async function checkAccess() {
 
 ---
 
+## Chat Data Layer
+
+Located: `src/lib/data/chat.ts`
+
+Server-side data fetching functions for the unified chat system. Supports both food sharing chats and forum conversations.
+
+> **Note:** Use these functions in Server Components. For client-side realtime subscriptions, use Supabase client directly.
+
+### Food Sharing Chat Functions
+
+#### Get User Chat Rooms
+
+```typescript
+import { getUserChatRooms } from '@/lib/data/chat';
+
+const rooms = await getUserChatRooms(userId);
+```
+
+Returns all chat rooms where the user is either sharer or requester, with related post and profile data.
+
+#### Get Chat Room
+
+```typescript
+import { getChatRoom } from '@/lib/data/chat';
+
+const room = await getChatRoom(roomId);
+```
+
+Returns a specific chat room by ID with all relations.
+
+#### Get or Create Chat Room
+
+```typescript
+import { getOrCreateChatRoom } from '@/lib/data/chat';
+
+const room = await getOrCreateChatRoom(postId, sharerId, requesterId);
+```
+
+Finds existing room or creates a new one for the given post and participants.
+
+#### Get Chat Messages
+
+```typescript
+import { getChatMessages } from '@/lib/data/chat';
+
+const messages = await getChatMessages(roomId, limit, offset);
+```
+
+Returns paginated messages for a room in chronological order.
+
+#### Get Unread Message Count
+
+```typescript
+import { getUnreadMessageCount } from '@/lib/data/chat';
+
+const count = await getUnreadMessageCount(userId);
+```
+
+Returns the number of unread conversations for the user.
+
+---
+
+### Forum Conversation Functions
+
+#### Get User Forum Conversations
+
+```typescript
+import { getUserForumConversations } from '@/lib/data/chat';
+
+const conversations = await getUserForumConversations(userId);
+```
+
+Returns all forum conversations where the user is a participant (not archived, not left).
+
+**Returns:** `ForumConversation[]` with participants and profiles
+
+#### Get Forum Conversation
+
+```typescript
+import { getForumConversation } from '@/lib/data/chat';
+
+const conversation = await getForumConversation(conversationId);
+```
+
+Returns a specific forum conversation by ID with participants and profiles.
+
+#### Get Forum Messages
+
+```typescript
+import { getForumMessages } from '@/lib/data/chat';
+
+const messages = await getForumMessages(conversationId, limit, offset);
+```
+
+**Parameters:**
+- `conversationId` - Forum conversation UUID
+- `limit` - Number of messages (default: 50)
+- `offset` - Pagination offset (default: 0)
+
+Returns paginated messages in chronological order (oldest first for display).
+
+#### Get or Create Forum Conversation
+
+```typescript
+import { getOrCreateForumConversation } from '@/lib/data/chat';
+
+const conversation = await getOrCreateForumConversation(userId, otherUserId);
+```
+
+Finds an existing 1:1 conversation between two users or creates a new one.
+
+**Behavior:**
+1. Searches for existing non-group conversation with exactly these two participants
+2. If found, returns the full conversation with profiles
+3. If not found, creates new conversation and adds both participants
+4. Returns the new conversation with profiles
+
+#### Get Unread Forum Message Count
+
+```typescript
+import { getUnreadForumMessageCount } from '@/lib/data/chat';
+
+const count = await getUnreadForumMessageCount(userId);
+```
+
+Returns the number of forum conversations with unread messages.
+
+---
+
+### Unified Chat Functions
+
+Functions that combine both food sharing and forum chat systems.
+
+#### Get All User Chats
+
+```typescript
+import { getAllUserChats, type UnifiedChatRoom } from '@/lib/data/chat';
+
+const chats = await getAllUserChats(userId);
+```
+
+Returns all chat rooms (both food sharing and forum) for a user, sorted by last message time.
+
+**Returns:** `UnifiedChatRoom[]`
+
+```typescript
+type UnifiedChatRoom = {
+  id: string;
+  type: 'food' | 'forum';
+  title: string;
+  lastMessage: string | null;
+  lastMessageTime: string | null;
+  hasUnread: boolean;
+  participants: Array<{
+    id: string;
+    firstName: string;
+    secondName: string;
+    avatarUrl: string | null;
+  }>;
+  // Food-specific
+  postId?: number;
+  postName?: string;
+  postImage?: string;
+  // Forum-specific
+  isGroup?: boolean;
+};
+```
+
+**Example (Server Component):**
+
+```typescript
+import { getAllUserChats } from '@/lib/data/chat';
+import { getUser } from '@/app/actions/auth';
+
+export default async function ChatPage() {
+  const user = await getUser();
+  if (!user) redirect('/auth/login');
+
+  const chats = await getAllUserChats(user.id);
+
+  return <ChatList chats={chats} />;
+}
+```
+
+#### Get Total Unread Count
+
+```typescript
+import { getTotalUnreadCount } from '@/lib/data/chat';
+
+const count = await getTotalUnreadCount(userId);
+```
+
+Returns the total unread message count across all chat systems (food + forum).
+
+**Example (Navbar badge):**
+
+```typescript
+import { getTotalUnreadCount } from '@/lib/data/chat';
+
+export async function ChatBadge({ userId }: { userId: string }) {
+  const unreadCount = await getTotalUnreadCount(userId);
+
+  if (unreadCount === 0) return null;
+
+  return <Badge>{unreadCount}</Badge>;
+}
+```
+
+---
+
+### Chat Types
+
+```typescript
+// Food sharing chat room
+type ChatRoom = {
+  id: string;
+  sharer: string;
+  requester: string;
+  post_id: number;
+  last_message: string;
+  last_message_sent_by: string;
+  last_message_seen_by: string;
+  last_message_time: string;
+  posts?: { id: number; post_name: string; images: string[]; post_type: string };
+  sharer_profile?: { id: string; first_name: string; second_name: string; avatar_url: string };
+  requester_profile?: { id: string; first_name: string; second_name: string; avatar_url: string };
+};
+
+// Forum conversation
+type ForumConversation = {
+  id: string;
+  is_group: boolean;
+  title: string | null;
+  last_message_at: string | null;
+  last_message_preview: string | null;
+  is_archived: boolean;
+  created_by: string;
+  participants?: Array<{
+    id: string;
+    profile_id: string;
+    role: string;
+    last_read_at: string | null;
+    is_muted: boolean;
+    profiles?: { id: string; first_name: string; second_name: string; avatar_url: string };
+  }>;
+};
+
+// Forum message
+type ForumMessage = {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string;
+  is_deleted: boolean;
+  created_at: string;
+  sender?: { id: string; first_name: string; second_name: string; avatar_url: string };
+};
+```
+
+---
+
 ## Chat API (`chatAPI`)
 
 Located: `src/api/chatAPI.ts`
+
+> ⚠️ **Note:** For server-side data fetching, prefer `@/lib/data/chat` functions. This client API is primarily for realtime subscriptions and client-side mutations.
 
 ### Get or Create Room
 
