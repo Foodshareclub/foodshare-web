@@ -554,19 +554,20 @@ body:has([data-chat-page]) footer {
 }
 
 /* Remove min-height and set proper height for chat page */
+/* The navbar spacer is 120px-170px, we use 170px to be safe */
 body:has([data-chat-page]) main {
   min-height: auto !important;
   /* Use dvh for mobile browsers that have dynamic address bars */
-  height: calc(100dvh - 4rem); /* 4rem = navbar height (64px) */
-  max-height: calc(100dvh - 4rem);
+  height: calc(100dvh - 170px); /* 170px = navbar spacer height */
+  max-height: calc(100dvh - 170px);
   overflow: hidden;
 }
 
 /* Fallback for browsers that don't support dvh */
 @supports not (height: 100dvh) {
   body:has([data-chat-page]) main {
-    height: calc(100vh - 4rem);
-    max-height: calc(100vh - 4rem);
+    height: calc(100vh - 170px);
+    max-height: calc(100vh - 170px);
   }
 }
 
