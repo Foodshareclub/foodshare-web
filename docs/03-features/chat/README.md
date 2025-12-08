@@ -310,6 +310,7 @@ import { ChatPageClient } from './ChatPageClient';
 - `overflow-hidden` on wrapper prevents double scrollbars
 - Footer is hidden via `[data-chat-page]` attribute on the layout wrapper
 - Glassmorphism styling with decorative background gradients
+- Dark/light theme support with automatic theme detection
 - Independently scrolling sidebar (340px on desktop) and message area
 - Responsive: sidebar overlays on mobile, side-by-side on desktop
 - Smooth Framer Motion transitions between views

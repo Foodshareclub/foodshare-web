@@ -93,18 +93,18 @@ export function UnifiedChatList({
   const totalUnread = chatRooms.filter((c) => c.hasUnread).length;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm">
+    <div className="flex flex-col h-full overflow-hidden bg-card">
       {/* Header */}
       <div className="px-4 pt-4 pb-3 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">{getText('messages')}</h2>
+          <h2 className="text-xl font-bold text-foreground">{getText('messages')}</h2>
           <div className="flex items-center gap-2">
             {totalUnread > 0 && (
               <Badge variant="destructive" className="h-6 min-w-6 px-2 font-semibold">
                 {totalUnread}
               </Badge>
             )}
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
               <FiPlus className="h-5 w-5" />
             </Button>
           </div>
@@ -112,12 +112,12 @@ export function UnifiedChatList({
         
         {/* Search */}
         <div className="relative">
-          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={getText('searchConversations')}
-            className="pl-9 pr-9 bg-slate-100 dark:bg-slate-800 border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
+            className="pl-9 pr-9 bg-muted border-0 focus-visible:ring-1 focus-visible:ring-primary/50"
           />
           {searchQuery && (
             <Button
@@ -139,7 +139,7 @@ export function UnifiedChatList({
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center py-16 text-slate-400"
+              className="flex flex-col items-center justify-center py-16 text-muted-foreground"
             >
               <FiMessageCircle className="h-12 w-12 mb-3 opacity-50" />
               <p className="text-sm">{getText('noConversations')}</p>
@@ -190,8 +190,8 @@ function ChatListItem({ chat, isActive, isOnline, onClick, formatTime, getText }
       onClick={onClick}
       className={cn(
         'w-full flex items-center gap-3 p-3 rounded-xl transition-all duration-200',
-        'hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-[0.98]',
-        isActive && 'bg-primary/10 dark:bg-primary/20 hover:bg-primary/15 dark:hover:bg-primary/25',
+        'hover:bg-muted active:scale-[0.98]',
+        isActive && 'bg-primary/10 hover:bg-primary/15',
         chat.hasUnread && 'font-medium'
       )}
     >
@@ -207,9 +207,9 @@ function ChatListItem({ chat, isActive, isOnline, onClick, formatTime, getText }
             />
           </div>
         ) : (
-          <Avatar className="h-12 w-12 ring-2 ring-slate-200/50 dark:ring-slate-700/50">
+          <Avatar className="h-12 w-12 ring-2 ring-border">
             <AvatarImage src={otherParticipant?.avatarUrl || ''} />
-            <AvatarFallback className="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 text-slate-600 dark:text-slate-300">
+            <AvatarFallback className="bg-muted text-muted-foreground">
               {otherParticipant?.firstName?.[0]}
               {otherParticipant?.secondName?.[0]}
             </AvatarFallback>
@@ -218,13 +218,13 @@ function ChatListItem({ chat, isActive, isOnline, onClick, formatTime, getText }
         
         {/* Online indicator */}
         {isOnline && (
-          <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-white dark:border-slate-900" />
+          <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-background" />
         )}
         
         {/* Food chat badge */}
         <div
           className={cn(
-            'absolute -bottom-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center shadow-sm border-2 border-white dark:border-slate-900 bg-green-500',
+            'absolute -bottom-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center shadow-sm border-2 border-background bg-green-500',
             isOnline && '-bottom-2 -right-2'
           )}
         >
@@ -237,13 +237,13 @@ function ChatListItem({ chat, isActive, isOnline, onClick, formatTime, getText }
         <div className="flex items-center justify-between gap-2">
           <span className={cn(
             'truncate text-sm',
-            chat.hasUnread ? 'font-semibold text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-200'
+            chat.hasUnread ? 'font-semibold text-foreground' : 'text-foreground/80'
           )}>
             {chat.title}
           </span>
           <span className={cn(
             'text-xs flex-shrink-0',
-            chat.hasUnread ? 'text-primary font-semibold' : 'text-slate-400'
+            chat.hasUnread ? 'text-primary font-semibold' : 'text-muted-foreground'
           )}>
             {formatTime(chat.lastMessageTime)}
           </span>
@@ -252,7 +252,7 @@ function ChatListItem({ chat, isActive, isOnline, onClick, formatTime, getText }
         <div className="flex items-center justify-between gap-2 mt-0.5">
           <p className={cn(
             'text-sm truncate',
-            chat.hasUnread ? 'text-slate-700 dark:text-slate-300' : 'text-slate-500 dark:text-slate-400'
+            chat.hasUnread ? 'text-foreground/80' : 'text-muted-foreground'
           )}>
             {chat.lastMessage || getText('noMessages')}
           </p>

@@ -135,8 +135,8 @@ export function DesktopMenu({
                   <MenuItem
                     label={
                       hasNotifications
-                        ? `You have ${notificationCount} unanswered messages`
-                        : "My messages"
+                        ? `Chat (${notificationCount} new)`
+                        : "Chat"
                     }
                     onClick={onNavigateToMyMessages}
                     variant={hasNotifications ? "accent" : "default"}
@@ -147,7 +147,7 @@ export function DesktopMenu({
                         </span>
                       ) : undefined
                     }
-                    testId="menu-messages"
+                    testId="menu-chat"
                   />
                   <MenuItem
                     label="Account settings"

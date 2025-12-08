@@ -43,14 +43,17 @@
 
 ### Chats page
 
-    - Further improve the existing chatting sysem for the sharers and the forum users etc: 
+    - Further improve the existing chatting sysem for the sharers, the forum users and everybody on the marketplace: 
         - Unify it into one beautiful and robust chat syetsm 
         - The char page don't have to be scrollable only the left and right segments. 
         - Apply the dark/ light themes as well.
         - Use Tailwind and Shadcn to to beautify the layout
         - Use the latest bleeding edge practices
         - Use the latest packages compatible with the stack
-        - A requester can't request its posts himself
+        - A requester can't request its posts for himself since they belong to that particular user
+        - A requester can't chat to itself
+        - A chat screen must a name of a post's owner on the left segment and on the top  of the right segment as well
+        - Improve the UI/UX logic for the chats
 
 
 ### Search ✅ COMPLETED

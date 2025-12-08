@@ -181,17 +181,17 @@ export function UnifiedChatContainer({
   const isOtherOnline = onlineUsers.some((u) => u.id === otherParticipant?.id);
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-gradient-to-b from-slate-50/80 to-white/90 dark:from-slate-900/90 dark:to-slate-950/95">
+    <div className="flex flex-col h-full overflow-hidden bg-card">
       {/* Header */}
-      <header className="flex items-center gap-3 px-4 py-3 border-b border-slate-200/60 dark:border-slate-700/40 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl flex-shrink-0 shadow-sm">
+      <header className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card/95 backdrop-blur-xl flex-shrink-0 shadow-sm">
         {onBack && (
           <Button 
             variant="ghost" 
             size="icon" 
-            className="lg:hidden -ml-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" 
+            className="lg:hidden -ml-2 hover:bg-muted transition-colors" 
             onClick={onBack}
           >
-            <FiArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+            <FiArrowLeft className="h-5 w-5 text-muted-foreground" />
           </Button>
         )}
         
@@ -205,13 +205,13 @@ export function UnifiedChatContainer({
         {/* Chat info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <h2 className="font-semibold truncate text-slate-900 dark:text-white">{chatRoom.title}</h2>
+            <h2 className="font-semibold truncate text-foreground">{chatRoom.title}</h2>
             <span className="px-1.5 py-0.5 text-[10px] font-medium bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 rounded-md">
               {getText('foodSharing')}
             </span>
           </div>
           {otherParticipant && (
-            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+            <p className="text-xs text-muted-foreground truncate">
               {otherParticipant.firstName} {otherParticipant.secondName}
             </p>
           )}
@@ -221,7 +221,7 @@ export function UnifiedChatContainer({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
                 <FiMoreVertical className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
@@ -231,7 +231,7 @@ export function UnifiedChatContainer({
       </header>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 scroll-smooth relative">
+      <div className="flex-1 overflow-y-auto px-4 py-4 scroll-smooth relative bg-muted/30">
         {isLoadingMessages ? (
           <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
@@ -242,11 +242,11 @@ export function UnifiedChatContainer({
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center py-12">
-            <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
-              <FiSend className="h-7 w-7 text-slate-400" />
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+              <FiSend className="h-7 w-7 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300 mb-1">Start the conversation</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs">
+            <h3 className="text-lg font-medium text-foreground mb-1">Start the conversation</h3>
+            <p className="text-sm text-muted-foreground max-w-xs">
               Send a message to begin chatting about this food item
             </p>
           </div>
@@ -255,7 +255,7 @@ export function UnifiedChatContainer({
             {Object.entries(groupedMessages).map(([date, dateMessages]) => (
               <div key={date}>
                 <div className="flex items-center justify-center my-4 sticky top-0 z-10">
-                  <span className="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-full shadow-sm border border-slate-200/50 dark:border-slate-700/50">
+                  <span className="px-3 py-1.5 text-xs font-medium text-muted-foreground bg-background/90 backdrop-blur-sm rounded-full shadow-sm border border-border">
                     {formatDateHeader(date)}
                   </span>
                 </div>
@@ -281,20 +281,20 @@ export function UnifiedChatContainer({
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   className="flex items-center gap-2 py-2"
                 >
-                  <Avatar className="h-7 w-7 ring-2 ring-slate-200 dark:ring-slate-700">
+                  <Avatar className="h-7 w-7 ring-2 ring-border">
                     <AvatarImage src={typingUsers[0]?.avatarUrl || otherParticipant?.avatarUrl || ''} />
-                    <AvatarFallback className="text-xs bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600">
+                    <AvatarFallback className="text-xs bg-muted text-muted-foreground">
                       {typingUsers[0]?.name?.[0] || '?'}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="bg-white dark:bg-slate-800 rounded-2xl px-4 py-2.5 shadow-sm border border-slate-200/50 dark:border-slate-700/50">
+                  <div className="bg-card rounded-2xl px-4 py-2.5 shadow-sm border border-border">
                     <div className="flex gap-1.5 items-center">
                       <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                       <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                       <span className="w-2 h-2 bg-primary/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                   </div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 italic">
+                  <span className="text-xs text-muted-foreground italic">
                     {typingUsers[0]?.name || 'Someone'} is typing...
                   </span>
                 </motion.div>
@@ -306,7 +306,7 @@ export function UnifiedChatContainer({
       </div>
 
       {/* Input Area */}
-      <div className="px-4 py-3 border-t border-slate-200/60 dark:border-slate-700/40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl flex-shrink-0">
+      <div className="px-4 py-3 border-t border-border bg-card/95 backdrop-blur-xl flex-shrink-0">
         <div className="flex items-center gap-2">
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={() => {}} />
           <TooltipProvider>
@@ -315,7 +315,7 @@ export function UnifiedChatContainer({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="flex-shrink-0 text-slate-500 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors"
+                  className="flex-shrink-0 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <FiImage className="h-5 w-5" />
@@ -328,7 +328,7 @@ export function UnifiedChatContainer({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="flex-shrink-0 text-slate-500 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors"
+                  className="flex-shrink-0 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                 >
                   <FiSmile className="h-5 w-5" />
@@ -345,7 +345,7 @@ export function UnifiedChatContainer({
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder={getText('typeMessage')}
-              className="w-full bg-slate-100 dark:bg-slate-800 border-0 rounded-xl py-2.5 px-4 focus-visible:ring-2 focus-visible:ring-primary/30 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all"
+              className="w-full bg-muted border-0 rounded-xl py-2.5 px-4 focus-visible:ring-2 focus-visible:ring-primary/30 placeholder:text-muted-foreground transition-all"
               disabled={isPending}
             />
             {/* Quick emoji picker */}
@@ -355,7 +355,7 @@ export function UnifiedChatContainer({
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute bottom-full mb-2 left-0 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200/50 dark:border-slate-700/50 p-2 flex gap-1 z-20"
+                  className="absolute bottom-full mb-2 left-0 bg-card rounded-xl shadow-xl border border-border p-2 flex gap-1 z-20"
                 >
                   {EMOJI_REACTIONS.map((emoji) => (
                     <button
@@ -365,7 +365,7 @@ export function UnifiedChatContainer({
                         setShowEmojiPicker(false);
                         inputRef.current?.focus();
                       }}
-                      className="hover:scale-125 transition-transform text-xl p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
+                      className="hover:scale-125 transition-transform text-xl p-1.5 rounded-lg hover:bg-muted"
                     >
                       {emoji}
                     </button>
@@ -386,7 +386,7 @@ export function UnifiedChatContainer({
                 'flex-shrink-0 rounded-xl transition-all duration-200',
                 inputValue.trim() 
                   ? 'bg-primary hover:bg-primary/90 shadow-md shadow-primary/25' 
-                  : 'bg-slate-200 dark:bg-slate-700'
+                  : 'bg-muted text-muted-foreground'
               )}
             >
               <FiSend className={cn('h-4 w-4 transition-transform', inputValue.trim() && 'translate-x-0.5')} />
@@ -414,7 +414,7 @@ function MessageBubble({ message, otherParticipant, getText }: MessageBubbleProp
       className={cn('flex gap-2 group py-1', message.isOwn ? 'justify-end' : 'justify-start')}
     >
       {!message.isOwn && (
-        <Avatar className="h-8 w-8 flex-shrink-0 mt-1 ring-2 ring-white dark:ring-slate-900 shadow-sm">
+        <Avatar className="h-8 w-8 flex-shrink-0 mt-1 ring-2 ring-background shadow-sm">
           <AvatarImage src={message.senderAvatar || otherParticipant?.avatarUrl || ''} />
           <AvatarFallback className="text-xs font-medium bg-gradient-to-br from-blue-500 to-purple-600 text-white">
             {message.senderName?.[0] || otherParticipant?.firstName?.[0] || '?'}
@@ -428,7 +428,7 @@ function MessageBubble({ message, otherParticipant, getText }: MessageBubbleProp
             'rounded-2xl px-4 py-2.5 relative transition-all duration-200',
             message.isOwn
               ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground rounded-br-md shadow-md shadow-primary/20'
-              : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-bl-md shadow-sm border border-slate-200/60 dark:border-slate-700/40'
+              : 'bg-card text-card-foreground rounded-bl-md shadow-sm border border-border'
           )}
         >
           {message.image && (
@@ -438,7 +438,7 @@ function MessageBubble({ message, otherParticipant, getText }: MessageBubbleProp
           )}
           <p className="break-words text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
           <div className={cn('flex items-center gap-1.5 mt-1.5', message.isOwn ? 'justify-end' : 'justify-start')}>
-            <span className={cn('text-[10px] font-medium', message.isOwn ? 'text-primary-foreground/70' : 'text-slate-400 dark:text-slate-500')}>
+            <span className={cn('text-[10px] font-medium', message.isOwn ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
               {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
             {message.isOwn && (

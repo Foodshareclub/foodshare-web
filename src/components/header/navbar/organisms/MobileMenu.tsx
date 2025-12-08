@@ -162,14 +162,14 @@ export function MobileMenu({
                     tabIndex={0}
                     aria-label={
                       hasNotifications
-                        ? `Messages (${signalOfNewMessage.length} unread)`
-                        : 'Messages'
+                        ? `Chat (${signalOfNewMessage.length} unread)`
+                        : 'Chat'
                     }
                   >
                     <p className="text-3xl">
                       {hasNotifications
-                        ? `You have ${signalOfNewMessage.length} unanswered messages`
-                        : 'My messages'}
+                        ? `Chat (${signalOfNewMessage.length} new)`
+                        : 'Chat'}
                     </p>
                   </div>
 
