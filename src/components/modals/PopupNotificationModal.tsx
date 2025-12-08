@@ -12,7 +12,7 @@ import strawberry from '@/assets/clubnika-min.webp';
 
 import { StarIcon } from '@/utils/icons';
 import { useAuth } from '@/hooks/useAuth';
-import { useWriteReview } from '@/hooks/queries/useChatQueries';
+import { writeReview } from '@/app/actions/chat';
 import {
   Dialog,
   DialogContent,
@@ -91,7 +91,7 @@ function StarRating({ value, onChange }: StarRatingProps) {
 /**
  * PopupNotificationModal Component
  * Modal for leaving feedback after a successful exchange
- * Uses React Query for review submission
+ * Uses Server Actions for review submission
  */
 const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
   const t = useTranslations();
@@ -99,7 +99,6 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
 
   const { user } = useAuth();
   const userID = user?.id;
-  const writeReview = useWriteReview();
 
   const sharerId = searchParams?.get('s') as string;
   const postId = searchParams?.get('p') as string;
@@ -108,6 +107,7 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
   const [step, setStep] = useState<ModalStep>('second');
   const [rating, setRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     if (step === 'second') {
@@ -116,18 +116,23 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
     }
 
     if (step === 'third') {
-      const feedback: FeedbackData = {
-        reviewed_rating: rating,
-        profile_id: sharerId === userID ? requesterId : sharerId,
-        post_id: Number(postId),
-        feedback: feedbackText,
-      };
-
+      setIsSubmitting(true);
       try {
-        await writeReview.mutateAsync(feedback);
+        const formData = new FormData();
+        formData.set('reviewed_rating', String(rating));
+        formData.set('profile_id', sharerId === userID ? requesterId : sharerId);
+        formData.set('post_id', postId);
+        formData.set('feedback', feedbackText);
+
+        const result = await writeReview(formData);
+        if (!result.success) {
+          throw new Error(result.error?.message || 'Failed to submit review');
+        }
         setStep('fourth');
       } catch {
-        // Error is handled by React Query - toast notification shown
+        // Error handling - could add toast notification here
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -253,9 +258,9 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
                 step === 'second' ? 'h-[55px] rounded-full' : 'h-10 rounded-lg'
               }`}
               onClick={handleSubmit}
-              disabled={writeReview.isPending}
+              disabled={isSubmitting}
             >
-              {writeReview.isPending
+              {isSubmitting
                 ? t('sending')
                 : step === 'second'
                   ? t('yes')

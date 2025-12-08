@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
-import { useDeleteProduct } from '@/hooks';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { deleteProduct } from '@/app/actions/products';
 import type { InitialProductStateType } from '@/types/product.types';
 import { DeleteConfirmationModal } from './ConfirmationModal';
 
@@ -14,14 +15,25 @@ type PropsType = {
 /**
  * DeleteCardModal Component
  * Modal for confirming product deletion
- * Uses unified DeleteConfirmationModal
+ * Uses Server Actions for mutations
  */
 const DeleteCardModal: React.FC<PropsType> = ({ isOpen, onClose, product }) => {
-  const deleteProduct = useDeleteProduct();
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
-    await deleteProduct.mutateAsync(product.id);
-    onClose();
+    setIsDeleting(true);
+    
+    const result = await deleteProduct(product.id);
+    
+    setIsDeleting(false);
+    
+    if (result.success) {
+      onClose();
+      router.refresh();
+    } else {
+      console.error('Failed to delete product:', result.error);
+    }
   };
 
   return (
@@ -31,7 +43,7 @@ const DeleteCardModal: React.FC<PropsType> = ({ isOpen, onClose, product }) => {
       onConfirm={handleDelete}
       itemName={product.post_name}
       itemType="product"
-      isLoading={deleteProduct.isPending}
+      isLoading={isDeleting}
     />
   );
 };

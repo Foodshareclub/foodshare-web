@@ -23,6 +23,7 @@ CACHE_TAGS.PRODUCT(id)                   // 'product-{id}'
 CACHE_TAGS.PRODUCTS_BY_TYPE(type)        // 'products-{type}'
 CACHE_TAGS.PRODUCT_LOCATIONS             // 'product-locations'
 CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(type) // 'product-locations-{type}'
+CACHE_TAGS.USER_PRODUCTS(userId)         // 'user-products-{userId}'
 CACHE_TAGS.PROFILES                      // 'profiles'
 CACHE_TAGS.PROFILE(id)                   // 'profile-{id}'
 CACHE_TAGS.CHALLENGES                    // 'challenges'
@@ -88,6 +89,30 @@ export async function createProduct(formData: FormData) {
   invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS);
   invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(post_type));
   invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(post_type));
+}
+
+export async function updateProduct(id: number, data: ProductData) {
+  // Fetch current product to get type and owner for cache invalidation
+  const { data: currentProduct } = await supabase
+    .from('posts')
+    .select('post_type, profile_id')
+    .eq('id', id)
+    .single();
+  
+  // ... update product
+  
+  // Invalidate product-specific and type-specific caches
+  invalidateTag(CACHE_TAGS.PRODUCT(id));
+  invalidateTag(CACHE_TAGS.PRODUCTS);
+  if (currentProduct?.post_type) {
+    invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(currentProduct.post_type));
+    invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(currentProduct.post_type));
+  }
+  
+  // Invalidate user-specific cache so their product list updates
+  if (currentProduct?.profile_id) {
+    invalidateTag(CACHE_TAGS.USER_PRODUCTS(currentProduct.profile_id));
+  }
 }
 ```
 
@@ -341,37 +366,39 @@ The API generates ETags for paginated responses to enable conditional requests:
 // Reduces bandwidth for unchanged data
 ```
 
-## Client-Side Caching (TanStack Query)
+## Client-Side Data (Server-First Pattern)
 
-For client components needing real-time updates:
+The app follows a **server-first architecture**. Data is fetched in Server Components and passed to Client Components as props:
 
 ```typescript
-import { useProducts, useInfiniteProducts } from '@/hooks/queries/useProductQueries';
+// ✅ Server Component fetches data
+// app/food/page.tsx
+import { getProducts } from '@/lib/data/products';
 
-// Standard query (all products at once)
-function ProductList() {
-  const { data, isLoading } = useProducts('food');
-  // staleTime: 5 minutes
-  // gcTime: 30 minutes
+export default async function FoodPage() {
+  const products = await getProducts('food');
+  return <HomeClient initialProducts={products} />;
 }
 
-// Infinite scroll with cursor-based pagination
-function InfiniteProductList() {
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteProducts('food');
-  // staleTime: 5 minutes
-  // gcTime: 30 minutes
-  // Uses cursor-based pagination via /api/products
-  // Automatically prefetches next page in background for smoother scrolling
-  // Structural sharing enabled for better performance with large datasets
+// ✅ Client Component receives data as props
+// Uses router.refresh() for updates instead of client-side fetching
+'use client';
+import { useRouter } from 'next/navigation';
+import { useTransition } from 'react';
+
+export function HomeClient({ initialProducts }: HomeClientProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   
-  const products = data?.pages.flatMap(page => page.data) ?? [];
+  const handleRefresh = () => {
+    startTransition(() => router.refresh());
+  };
+  
+  return <ProductGrid products={initialProducts} isLoading={isPending} />;
 }
 ```
+
+For real-time updates (chat, notifications), use Supabase Realtime subscriptions in Client Components.
 
 ## Image Caching
 

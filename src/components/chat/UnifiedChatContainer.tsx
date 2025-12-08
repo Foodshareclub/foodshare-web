@@ -206,14 +206,32 @@ export function UnifiedChatContainer({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <h2 className="font-semibold truncate text-foreground">{chatRoom.title}</h2>
-            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 rounded-md">
-              {getText('foodSharing')}
+            {/* Role badge - shows if user is the sharer or requester */}
+            <span className={cn(
+              'px-1.5 py-0.5 text-[10px] font-medium rounded-md flex-shrink-0',
+              chatRoom.isSharer 
+                ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400'
+                : 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400'
+            )}>
+              {chatRoom.isSharer ? 'Your listing' : 'Requested'}
             </span>
           </div>
+          {/* Other participant name - prominently displayed */}
           {otherParticipant && (
-            <p className="text-xs text-muted-foreground truncate">
-              {otherParticipant.firstName} {otherParticipant.secondName}
-            </p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-xs text-muted-foreground">
+                {chatRoom.isSharer ? 'Requester:' : 'Owner:'}
+              </span>
+              <span className="text-xs font-medium text-foreground truncate">
+                {otherParticipant.firstName} {otherParticipant.secondName}
+              </span>
+              {isOtherOnline && (
+                <span className="flex items-center gap-1 text-[10px] text-green-500 font-medium">
+                  <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                  {getText('online')}
+                </span>
+              )}
+            </div>
           )}
         </div>
 

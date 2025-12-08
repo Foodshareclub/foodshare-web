@@ -5,30 +5,24 @@ import React, { useRef, useState } from "react";
 import Image from "next/image";
 import cloud from "@/assets/cloud.svg";
 import { createPhotoUrl } from "@/utils";
-import { useAuth } from "@/hooks/useAuth";
-import { useCurrentProfile } from "@/hooks/queries/useProfileQueries";
 import { Button } from "@/components/ui/button";
 import { ALLOWED_MIME_TYPES } from "@/constants/mime-types";
 
 type PropsType = {
   size: number;
   onUpload: (filePath: string, file: File) => void;
-  /** Optional override for avatar URL (if not provided, uses current user's avatar) */
+  /** Avatar URL (passed from server or parent component) */
   avatarUrl?: string;
 };
 
 /**
  * Avatar Component
  * Displays user avatar with upload functionality
- * Uses useCurrentProfile hook (React Query) instead of Redux
+ * Receives avatar URL as prop from Server Component
  */
 const Avatar: React.FC<PropsType> = ({ size, onUpload, avatarUrl: propAvatarUrl }) => {
-  // Get current user's avatar from React Query
-  const { user } = useAuth();
-  const { avatarUrl: profileAvatarUrl } = useCurrentProfile(user?.id);
-
-  // Use prop avatar URL if provided, otherwise use profile avatar
-  const imgUrl = propAvatarUrl ?? profileAvatarUrl;
+  // Use prop avatar URL directly
+  const imgUrl = propAvatarUrl;
 
   const [pastUrl, setPastUrl] = useState<string | undefined>(imgUrl ?? undefined);
   const inputFileRef = useRef<HTMLInputElement | null>(null);

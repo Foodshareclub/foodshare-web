@@ -2,27 +2,46 @@
 
 ## 🚀 Quick Start
 
-### Replace Your Header (1 Line Change!)
+### Using the Header (Server-First Pattern)
+
+The Header uses a server-first architecture with two components:
 
 ```tsx
-// Change this:
-import Header from "@/components/header/Header";
+// HeaderServer.tsx - Server Component (fetches data)
+import HeaderServer from "@/components/header/HeaderServer";
 
-// To this:
-import HeaderRefactored from "@/components/header/HeaderRefactored";
+// Use in Server Component layouts:
+<HeaderServer
+  getRoute={getRoute}
+  setProductType={setProductType}
+  productType={productType}
+/>
+```
 
-// Usage stays the same:
-<HeaderRefactored getRoute={getRoute} setProductType={setProductType} productType={productType} />;
+```tsx
+// Header.tsx - Client Component (pure presentational)
+// Receives all data as props from HeaderServer
+// No TanStack Query or client-side data fetching
+```
+
+**Data Flow:**
+```
+HeaderServer (Server) → fetches auth, profile, chat data
+       ↓
+Header (Client) → receives props, renders Navbar
+       ↓
+Navbar → handles UI interactions
 ```
 
 ## 📁 File Locations
 
 ```
 src/components/header/
-├── HeaderRefactored.tsx          ← Use this!
+├── HeaderServer.tsx              ← Server Component (data fetching)
+├── Header.tsx                    ← Client Component (presentational)
 └── navbar/
-    ├── Navbar.tsx                ← Main component
-    ├── NavbarWrapper.tsx         ← Client wrapper for Server Component layouts
+    ├── Navbar.tsx                ← Main UI component
+    ├── NavbarWrapper.tsx         ← Client wrapper for layouts
     ├── NavbarLogo.tsx
     ├── SearchBar.tsx
     ├── NavbarActions.tsx
@@ -236,9 +255,51 @@ Smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1)
 
 ## 🔑 Key Components
 
+### HeaderServer (Server Component)
+
+Fetches auth, profile, and chat data on the server.
+
+```tsx
+// Props
+type HeaderServerProps = {
+  getRoute: (route: string) => void;
+  setProductType: (type: string) => void;
+  productType: string;
+};
+
+// Fetches in parallel:
+// - Auth session via getAuthSession()
+// - User profile via getProfile()
+// - Chat rooms via getUserChatRooms()
+```
+
+### Header (Client Component)
+
+Pure presentational component - receives all data as props.
+
+```tsx
+import type { CustomRoomType } from '@/api/chatAPI';
+
+type HeaderProps = {
+  // Auth data (from server)
+  userId?: string;
+  isAuth: boolean;
+  imgUrl?: string;
+  firstName?: string;
+  secondName?: string;
+  email?: string;
+  // Chat data (from server)
+  signalOfNewMessage?: CustomRoomType[];
+  // Route handlers
+  onRouteChange: (route: string) => void;
+  onProductTypeChange: (type: string) => void;
+  productType: string;
+};
+```
+
 ### Navbar
 
-Main orchestrator component.
+Main UI orchestrator component.
 
 ```tsx
 <Navbar

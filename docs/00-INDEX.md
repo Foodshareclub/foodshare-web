@@ -23,6 +23,7 @@
 - [Email](./03-features/email/README.md) - Email system
 - [Map](./03-features/map/README.md) - Leaflet and PostGIS
 - [Navbar](./03-features/navbar/README.md) - Navigation
+- [Posts](./03-features/posts/README.md) - User post management
 - [Security](./03-features/security/README.md) - Security features
 - [Storage](./03-features/storage/README.md) - File storage
 - [Telegram Bot](./03-features/telegram-bot/README.md) - Bot integration

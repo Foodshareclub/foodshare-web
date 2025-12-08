@@ -2,7 +2,8 @@
 
 import type { KeyboardEvent } from "react";
 import React, { useState } from "react";
-import { useSendMessage, useUpdateRoom } from "@/hooks";
+import { useRouter } from "next/navigation";
+import { sendFoodChatMessage } from "@/app/actions/chat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -14,27 +15,35 @@ type InputSectionType = {
 /**
  * InputSection Component
  * Chat message input with send functionality
- * Uses React Query instead of Redux for message operations
+ * Uses Server Actions for message operations
  */
 export function InputSection({ roomId, userID }: InputSectionType) {
-  // React Query mutations (replace Redux thunks)
-  const sendMessageMutation = useSendMessage();
-  const updateRoomMutation = useUpdateRoom();
+  const router = useRouter();
   const [val, setVal] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
   const sendMessage = async () => {
-    const oneNewMessage = { room_id: roomId, profile_id: userID };
-    const roomForUpdate = {
-      id: oneNewMessage.room_id,
-      last_message: val,
-      last_message_sent_by: userID,
-      last_message_seen_by: userID,
-    };
-    if (val.trim()) {
-      await sendMessageMutation.mutateAsync({ ...oneNewMessage, text: val });
+    if (!val.trim()) return;
+    
+    setIsSending(true);
+    try {
+      const formData = new FormData();
+      formData.set('roomId', roomId);
+      formData.set('text', val);
+
+      const result = await sendFoodChatMessage(formData);
+      if (result.error) {
+        console.error('Failed to send message:', result.error);
+        return;
+      }
+      
+      setVal("");
+      router.refresh();
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    } finally {
+      setIsSending(false);
     }
-    await updateRoomMutation.mutateAsync(roomForUpdate);
-    setVal("");
   };
 
   const keyDown = (e: KeyboardEvent<HTMLInputElement>) => {

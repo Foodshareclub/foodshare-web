@@ -6,9 +6,9 @@
  * Uses Zustand for state management (migrated from Redux)
  */
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useUIStore } from "@/store/zustand";
-import { useSession } from "@/hooks/queries";
+import { createClient } from "@/lib/supabase/client";
 import { themeAPI } from "@/api/themeAPI";
 import {
   triggerHaptic,
@@ -129,12 +129,31 @@ export const useTheme = (): UseThemeReturn => {
     setReducedMotion: setStoreReducedMotion,
   } = useUIStore();
 
-  // Auth state for Supabase sync
-  const { data: session } = useSession();
-  const userId = session?.user?.id;
-  const isAuthenticated = !!session?.user;
+  // Auth state for Supabase sync (using client-side Supabase)
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const hasSyncedRef = useRef(false);
   const isSyncingRef = useRef(false);
+
+  // Get auth state from Supabase client
+  useEffect(() => {
+    const supabase = createClient();
+    
+    const getSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUserId(session?.user?.id);
+      setIsAuthenticated(!!session?.user);
+    };
+
+    getSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id);
+      setIsAuthenticated(!!session?.user);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Local state for haptic and font scale (stored in localStorage)
   const hapticEnabledRef = useRef(

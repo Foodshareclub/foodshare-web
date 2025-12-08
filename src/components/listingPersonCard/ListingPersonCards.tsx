@@ -1,53 +1,47 @@
 'use client';
 
 import type { ChangeEvent, ReactNode } from 'react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import peak from '@/assets/peakpx-min.jpg';
-import { useAuth } from '@/hooks/useAuth';
-import { useCurrentProfile } from '@/hooks/queries/useProfileQueries';
 import { createPhotoUrl } from '@/utils';
 import { EditIcon } from '@/utils/icons';
-import type { AllValuesType } from '@/api/profileAPI';
 import { AvatarWithRipple } from '@/components';
-import { STORAGE_BUCKETS, getStorageUrl } from '@/constants/storage';
 import { ALLOWED_MIME_TYPES } from '@/constants/mime-types';
+import { uploadProfileAvatar } from '@/app/actions/profile';
 
 type PropsType = {
   children?: ReactNode;
   settings?: string;
+  /** Profile data passed from server */
+  profile?: {
+    id: string;
+    first_name?: string | null;
+    second_name?: string | null;
+    avatar_url?: string | null;
+  } | null;
 };
 
-const ListingPersonCards: React.FC<PropsType> = ({ children, settings }) => {
+/**
+ * ListingPersonCards Component
+ * Displays user profile card with avatar upload
+ * Receives profile data as props from Server Component
+ */
+const ListingPersonCards: React.FC<PropsType> = ({ children, settings, profile }) => {
   const [pastUrl, setPastUrl] = useState<string>('');
   const inputFileRef = useRef<HTMLInputElement | null>(null);
-
-  // Auth state from useAuth hook (TanStack Query + Zustand)
-  const { user } = useAuth();
-  const userId = user?.id;
-
-  // Profile data and mutations from React Query
-  const { profile, updateProfile, uploadAvatar } = useCurrentProfile(userId);
 
   const uploadAvatarHandler = async (event: ChangeEvent<HTMLInputElement>) => {
     if (!profile?.id) return;
 
-    const { file, filePath, url } = createPhotoUrl(event);
+    const { file, url } = createPhotoUrl(event);
     setPastUrl(url);
 
-    if (filePath && file) {
-      // Upload the avatar file first
-      await uploadAvatar({
-        userId: profile.id,
-        file,
-      });
-
-      // Update profile with new avatar URL (matches the path used in useUploadAvatar)
-      const avatarPath = `${profile.id}/avatar`;
-      const profileImgUrl = getStorageUrl(STORAGE_BUCKETS.AVATARS, avatarPath);
-      await updateProfile({
-        id: profile.id,
-        avatar_url: profileImgUrl,
-      });
+    if (file) {
+      // Upload avatar using Server Action
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('userId', profile.id);
+      await uploadProfileAvatar(formData);
     }
   };
 
@@ -62,7 +56,7 @@ const ListingPersonCards: React.FC<PropsType> = ({ children, settings }) => {
       />
 
       <div className="flex justify-center -mt-12">
-        <AvatarWithRipple img={pastUrl ? pastUrl : profile?.avatar_url} />
+        <AvatarWithRipple img={pastUrl || profile?.avatar_url || undefined} />
         {settings && (
           <button
             className="bg-muted hover:bg-green-200 dark:hover:bg-green-900 p-2 rounded-full absolute cursor-pointer transition-colors"

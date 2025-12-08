@@ -438,7 +438,7 @@ const product = await getProductById(42);
 
 - `productId` - Product ID (number)
 
-**Returns:** `InitialProductStateType | null` - Product with reviews, or null if not found
+**Returns:** `InitialProductStateType | null` - Active product with reviews, or null if not found or inactive
 
 **Caching:** Uses `CACHE_TAGS.PRODUCT(productId)` tag
 

@@ -34,8 +34,9 @@ import { IoMdClose } from "react-icons/io";
 import { useTranslations } from "next-intl";
 import { RequiredStar } from "@/components";
 import { useAuth } from "@/hooks/useAuth";
-import { useCreateProduct, useUpdateProduct } from "@/hooks";
+import { createProduct, updateProduct } from "@/app/actions/products";
 import { useUIStore } from "@/store/zustand/useUIStore";
+import { useRouter } from "next/navigation";
 import { storageAPI } from "@/api/storageAPI";
 import type { InitialProductStateType } from "@/types/product.types";
 import {
@@ -99,6 +100,7 @@ function PublishListingModal({
   value,
 }: PublishListingModalType) {
     const t = useTranslations();
+    const router = useRouter();
     const formRef = useRef<HTMLDivElement>(null);
 
     // Auth and location state
@@ -106,9 +108,6 @@ function PublishListingModal({
     const id = user?.id;
     const { userLocation } = useUIStore();
 
-    // React Query mutations
-    const createProduct = useCreateProduct();
-    const updateProduct = useUpdateProduct();
     const productId = product?.id || 0;
 
     // Image upload hook
@@ -257,25 +256,33 @@ function PublishListingModal({
           }
         }
 
-        // Create or update product
-        // Type assertion is safe here because form validation ensures required fields exist
-        const validatedProduct = productObj as {
-          post_name: string;
-          post_description: string;
-          post_type: string;
-          post_address: string;
-          available_hours?: string;
-          transportation?: string;
-          images?: string[];
-          profile_id: string;
-        };
+        // Create or update product using Server Actions
+        const formData = new FormData();
+        formData.set('post_name', productObj.post_name || '');
+        formData.set('post_description', productObj.post_description || '');
+        formData.set('post_type', productObj.post_type || '');
+        formData.set('post_address', productObj.post_stripped_address || '');
+        if (productObj.available_hours) formData.set('available_hours', productObj.available_hours);
+        if (productObj.transportation) formData.set('transportation', productObj.transportation);
+        if (productObj.condition) formData.set('condition', productObj.condition);
+        if (productObj.images) formData.set('images', JSON.stringify(productObj.images));
+        if (productObj.profile_id) formData.set('profile_id', productObj.profile_id);
 
+        let result;
         if (product) {
-          await updateProduct.mutateAsync({ ...productObj, id: productId, is_active: true });
+          formData.set('is_active', 'true');
+          result = await updateProduct(productId, formData);
         } else {
-          await createProduct.mutateAsync(validatedProduct);
-          form.clearDraft();
+          result = await createProduct(formData);
+          if (result.success) form.clearDraft();
         }
+
+        if (!result.success) {
+          throw new Error(result.error?.message || 'Failed to save listing');
+        }
+
+        // Refresh the page to show updated data
+        router.refresh();
 
         setPublishState("success");
         await new Promise((resolve) => setTimeout(resolve, 2000));

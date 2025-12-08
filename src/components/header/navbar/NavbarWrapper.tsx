@@ -4,49 +4,58 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/header/navbar/Navbar';
 import { useAuth } from '@/hooks/useAuth';
-import { useCurrentProfile } from '@/hooks/queries/useProfileQueries';
 import type { AuthUser } from '@/app/actions/auth';
+import type { CustomRoomType } from '@/api/chatAPI';
 
 interface NavbarWrapperProps {
   defaultProductType?: string;
-  /** Optional initial user data from server to prevent loading flicker */
+  /** Initial user data from server (required for SSR) */
   initialUser?: AuthUser | null;
+  /** Initial profile data from server */
+  initialProfile?: {
+    first_name?: string | null;
+    second_name?: string | null;
+    avatar_url?: string | null;
+    email?: string | null;
+    user_role?: string | null;
+  } | null;
+  /** Unread message rooms from server */
+  unreadRooms?: CustomRoomType[];
 }
 
 /**
  * Client-side wrapper for Navbar
- * Reusable across all pages that need the navbar with auth state
- * Keeps the layout as a server component for better SEO
- * 
- * Avatar component handles default fallback automatically
+ * Receives all data as props from Server Components
+ * No TanStack Query - data is fetched on the server
  */
-export function NavbarWrapper({ defaultProductType = 'food', initialUser }: NavbarWrapperProps) {
+export function NavbarWrapper({
+  defaultProductType = 'food',
+  initialUser,
+  initialProfile,
+  unreadRooms = [],
+}: NavbarWrapperProps) {
   const router = useRouter();
   const [productType, setProductType] = useState(defaultProductType);
 
+  // Client-side auth for real-time updates (login/logout)
   const { isAuthenticated, user } = useAuth();
-  
-  // Use server-provided user data as initial state, fall back to client-fetched data
+
+  // Prefer client auth state if available, fall back to server data
   const effectiveUser = user || (initialUser ? { id: initialUser.id } : null);
   const userId = effectiveUser?.id || '';
-  
-  const { profile } = useCurrentProfile(userId);
 
-  // Derive values with server data as fallback
-  const serverProfile = initialUser?.profile;
-  
-  // Avatar URL: Server data first (immediate), then client data (after query loads)
-  // Avatar component handles empty/invalid → default avatar fallback
-  const effectiveAvatarUrl = serverProfile?.avatar_url || profile?.avatar_url || '';
-  const effectiveFirstName = serverProfile?.first_name || profile?.first_name || '';
-  const effectiveSecondName = serverProfile?.second_name || profile?.second_name || '';
-  const effectiveEmail = serverProfile?.email || profile?.email || '';
-  
-  // Use server-provided auth state as initial, then client state takes over
+  // Use server-provided profile data
+  const serverProfile = initialUser?.profile || initialProfile;
+
+  const effectiveAvatarUrl = serverProfile?.avatar_url || '';
+  const effectiveFirstName = serverProfile?.first_name || '';
+  const effectiveSecondName = serverProfile?.second_name || '';
+  const effectiveEmail = serverProfile?.email || '';
+
+  // Auth state: client takes precedence for real-time updates
   const effectiveIsAuth = isAuthenticated || !!initialUser;
-  const isAdmin = profile?.user_role === 'admin' || 
-    profile?.user_role === 'superadmin' ||
-    serverProfile?.user_role === 'admin' || 
+  const isAdmin =
+    serverProfile?.user_role === 'admin' ||
     serverProfile?.user_role === 'superadmin' ||
     false;
 
@@ -70,7 +79,7 @@ export function NavbarWrapper({ defaultProductType = 'food', initialUser }: Navb
       firstName={effectiveFirstName}
       secondName={effectiveSecondName}
       email={effectiveEmail}
-      signalOfNewMessage={[]}
+      signalOfNewMessage={unreadRooms}
     />
   );
 }

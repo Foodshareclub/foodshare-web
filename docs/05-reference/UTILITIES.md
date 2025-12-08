@@ -1,10 +1,80 @@
 # FoodShare Utilities Reference
 
-**Last Updated:** November 30, 2024
+**Last Updated:** December 8, 2024
 
 ## Overview
 
-This document provides a comprehensive reference for utility functions available in the FoodShare codebase. All utilities are located in `src/utils/`.
+This document provides a comprehensive reference for utility functions and hooks available in the FoodShare codebase. Utilities are located in `src/utils/` and hooks in `src/hooks/`.
+
+---
+
+## React Hooks
+
+### useImageBlobUrl
+
+**Location:** `src/hooks/useImageBlobUrl.ts`
+
+A hook for managing image blob URLs with proper memory cleanup. Ensures that blob URLs created via `URL.createObjectURL()` are properly revoked to prevent memory leaks.
+
+**Signature:**
+
+```typescript
+function useImageBlobUrl(options: UseImageBlobUrlOptions): UseImageBlobUrlResult;
+
+interface UseImageBlobUrlOptions {
+  fetchFn: () => Promise<Blob | null>;
+  enabled?: boolean;
+  deps?: unknown[];
+}
+
+interface UseImageBlobUrlResult {
+  blobUrl: string | null;
+  data: string | null;  // Alias for blobUrl
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+}
+```
+
+**When to Use:**
+
+- Downloading and displaying images from Supabase Storage
+- Any scenario where you need to create blob URLs from fetched data
+- When you need automatic cleanup of blob URLs on unmount or refetch
+
+**Example:**
+
+```typescript
+'use client';
+
+import { useImageBlobUrl } from '@/hooks/useImageBlobUrl';
+import { storageAPI } from '@/api/storageAPI';
+
+function ProductImage({ imagePath }: { imagePath: string }) {
+  const { blobUrl, isLoading, error } = useImageBlobUrl({
+    fetchFn: async () => {
+      const { data } = await storageAPI.downloadImage({ path: imagePath });
+      return data ?? null;
+    },
+    enabled: !!imagePath,
+    deps: [imagePath],
+  });
+
+  if (isLoading) return <Skeleton className="h-48 w-full" />;
+  if (error || !blobUrl) return <div>Failed to load image</div>;
+
+  return <img src={blobUrl} alt="Product" />;
+}
+```
+
+**Memory Management:**
+
+The hook automatically revokes blob URLs when:
+- The component unmounts
+- A new blob URL replaces the old one
+- The fetch is triggered again (via deps change or refetch)
+
+**Note:** For most cases, prefer using Next.js `<Image>` component with direct URLs from Supabase Storage. Use this hook only when you need to download blobs directly (e.g., for private storage buckets or image processing).
 
 ---
 
@@ -631,5 +701,5 @@ const location = `POINT(${lat} ${lng})`; // Missing SRID, wrong order
 
 ---
 
-**Last Updated:** November 30, 2024  
+**Last Updated:** December 8, 2024  
 **Status:** ✅ Production Ready

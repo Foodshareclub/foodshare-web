@@ -3,19 +3,17 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { useCreateProduct } from '@/hooks'
+import { createProduct } from '@/app/actions/products'
 import { useUIStore } from '@/store/zustand/useUIStore'
 import { storageAPI } from '@/api/storageAPI'
 import Navbar from '@/components/header/navbar/Navbar'
 import { useAuth } from '@/hooks/useAuth'
-import { useCurrentProfile } from '@/hooks/queries/useProfileQueries'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { STORAGE_BUCKETS, getStorageUrl } from '@/constants/storage'
-import { toGeoJSON } from '@/types/postgis.types'
 
 const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif']
 const MAX_FILE_SIZE_MB = 10
@@ -33,20 +31,25 @@ type FormData = {
 
 interface NewProductFormProps {
   userId: string
+  /** Profile data passed from server */
+  profile?: {
+    first_name?: string | null
+    second_name?: string | null
+    avatar_url?: string | null
+    email?: string | null
+    user_role?: string | null
+  } | null
 }
 
-export function NewProductForm({ userId }: NewProductFormProps) {
+export function NewProductForm({ userId, profile }: NewProductFormProps) {
   const t = useTranslations()
   const router = useRouter()
   const { userLocation } = useUIStore()
 
-  // Auth and profile for navbar
+  // Auth for navbar (client-side for real-time updates)
   const { isAuthenticated } = useAuth()
-  const { profile, avatarUrl } = useCurrentProfile(userId)
   const isAdmin = profile?.user_role === 'admin' || profile?.user_role === 'superadmin'
-
-  // React Query mutation
-  const createProduct = useCreateProduct()
+  const avatarUrl = profile?.avatar_url
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -177,25 +180,25 @@ export function NewProductForm({ userId }: NewProductFormProps) {
     try {
       const imageUrls = await uploadImages()
 
-      const productData = {
-        post_name: formData.post_name.trim(),
-        post_description: formData.post_description.trim(),
-        post_type: formData.post_type,
-        available_hours: formData.available_hours.trim(),
-        transportation: formData.transportation,
-        post_address: formData.post_address.trim(),
-        post_stripped_address: formData.post_stripped_address.trim() || formData.post_address.trim(),
-        images: imageUrls,
-        profile_id: userId,
-        is_active: true,
-        is_arranged: false,
-        post_like_counter: 0,
-        post_views: 0,
-        location: userLocation ? toGeoJSON({ lat: userLocation.latitude, lng: userLocation.longitude }) : null,
+      // Build FormData for Server Action
+      const serverFormData = new FormData()
+      serverFormData.set('post_name', formData.post_name.trim())
+      serverFormData.set('post_description', formData.post_description.trim())
+      serverFormData.set('post_type', formData.post_type)
+      serverFormData.set('post_address', formData.post_address.trim())
+      serverFormData.set('available_hours', formData.available_hours.trim())
+      serverFormData.set('transportation', formData.transportation)
+      serverFormData.set('images', JSON.stringify(imageUrls))
+      serverFormData.set('profile_id', userId)
+
+      const result = await createProduct(serverFormData)
+      
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to create listing')
       }
 
-      await createProduct.mutateAsync(productData)
       router.push(`/food?type=${formData.post_type}`)
+      router.refresh()
     } catch (err) {
       console.error('Error creating product:', err)
       setError('Failed to create listing. Please try again.')

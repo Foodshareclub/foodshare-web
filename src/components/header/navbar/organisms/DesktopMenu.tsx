@@ -12,6 +12,19 @@ import { MenuItem, NavbarAvatar } from "../atoms";
 import { AuthenticationUserModal } from "@/components";
 import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
 
+// Airbnb-style icons from react-icons
+import {
+  HiOutlineClipboardList,
+  HiOutlineChatAlt2,
+  HiOutlineCog,
+  HiOutlineLogout,
+  HiOutlineLogin,
+  HiOutlineUserAdd,
+  HiOutlineQuestionMarkCircle,
+  HiOutlineInformationCircle,
+  HiOutlineViewGrid,
+} from "react-icons/hi";
+
 export interface DesktopMenuProps {
   /** User authentication status */
   isAuth: boolean;
@@ -121,6 +134,7 @@ export function DesktopMenu({
                   {isAdmin && onNavigateToDashboard && (
                     <MenuItem
                       label="Dashboard"
+                      icon={<HiOutlineViewGrid className="w-5 h-5" />}
                       onClick={onNavigateToDashboard}
                       variant="accent"
                       testId="menu-dashboard"
@@ -129,6 +143,7 @@ export function DesktopMenu({
 
                   <MenuItem
                     label="My listing's"
+                    icon={<HiOutlineClipboardList className="w-5 h-5" />}
                     onClick={onNavigateToMyLists}
                     testId="menu-my-listings"
                   />
@@ -138,6 +153,7 @@ export function DesktopMenu({
                         ? `Chat (${notificationCount} new)`
                         : "Chat"
                     }
+                    icon={<HiOutlineChatAlt2 className="w-5 h-5" />}
                     onClick={onNavigateToMyMessages}
                     variant={hasNotifications ? "accent" : "default"}
                     badge={
@@ -151,11 +167,13 @@ export function DesktopMenu({
                   />
                   <MenuItem
                     label="Account settings"
+                    icon={<HiOutlineCog className="w-5 h-5" />}
                     onClick={onNavigateToAccSettings}
                     testId="menu-account-settings"
                   />
                   <MenuItem
                     label="Log Out"
+                    icon={<HiOutlineLogout className="w-5 h-5" />}
                     onClick={onNavigateToLogout}
                     variant="danger"
                     testId="menu-logout"
@@ -165,11 +183,13 @@ export function DesktopMenu({
                 <>
                   <MenuItem
                     label={"Login"}
+                    icon={<HiOutlineLogin className="w-5 h-5" />}
                     onClick={() => setIsLoginOpen(true)}
                     testId="menu-login"
                   />
                   <MenuItem
                     label={"Registration"}
+                    icon={<HiOutlineUserAdd className="w-5 h-5" />}
                     onClick={() => setIsRegisterOpen(true)}
                     testId="menu-register"
                   />
@@ -179,9 +199,15 @@ export function DesktopMenu({
               {/* Divider */}
               <div className="my-1 h-px bg-border" role="separator" />
 
-              <MenuItem label={"Help"} onClick={onNavigateToHelp} testId="menu-help" />
+              <MenuItem
+                label={"Help"}
+                icon={<HiOutlineQuestionMarkCircle className="w-5 h-5" />}
+                onClick={onNavigateToHelp}
+                testId="menu-help"
+              />
               <MenuItem
                 label={"About Foodshare"}
+                icon={<HiOutlineInformationCircle className="w-5 h-5" />}
                 onClick={onNavigateToAboutUs}
                 testId="menu-about"
               />

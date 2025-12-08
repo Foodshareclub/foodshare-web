@@ -81,7 +81,7 @@ export const productAPI = {
    * @returns Promise with all products
    */
   getAllProducts(): PromiseLike<PostgrestResponse<InitialProductStateType>> {
-    return supabase.from("posts_with_location").select("*");
+    return supabase.from("posts_with_location").select("*").eq("is_active", true);
   },
 
   /**
@@ -118,7 +118,7 @@ export const productAPI = {
    * Get products created by a specific user
    * Uses posts_with_location view for proper GeoJSON coordinates
    * @param currentUserID - The user's profile ID
-   * @returns Promise with user's products
+   * @returns Promise with user's products (includes inactive for owner to manage)
    */
   getCurrentUserProduct(currentUserID: string): PromiseLike<PostgrestResponse<InitialProductStateType>> {
     return supabase.from("posts_with_location").select("*").eq("profile_id", currentUserID);
@@ -130,7 +130,7 @@ export const productAPI = {
    * @returns Promise with product and reviews
    */
   getOneProduct(productId: number): PromiseLike<PostgrestResponse<InitialProductStateType>> {
-    return supabase.from("posts_with_location").select(`*, reviews(*)`).eq("id", productId);
+    return supabase.from("posts_with_location").select(`*, reviews(*)`).eq("id", productId).eq("is_active", true);
   },
 
   /**

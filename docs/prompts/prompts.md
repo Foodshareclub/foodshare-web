@@ -29,6 +29,17 @@
         - Use the ReactJS expert to deeply modify and optimize the code base.
         - We use admin "role jsonb not null default '{"admin": false, "volunteer": false, "subscriber": true, "organization": false, "fridge-coordinator": false, "foodbank-coordinator": false}'::jsonb" in the profiles to be able to adit
 
+    - Implement a post management system for any user respectevely: 
+        - Allow them to edit their own posts
+        - Allow them to delete their own posts
+        - Allow them to create new posts
+        - Allow them to view all their posts
+        - Use Tailwind and Shadcn to to beautify the layout
+        - Improve the UI/UX logic for this post management system
+        - Add the Posts to the profile drop down menu
+        - Use the latest bleeding edge practices
+        - Use the latest packages compatible with this feauture
+
 ### Code-base
 
     - Deeply optimize and modify the existing code-base:
@@ -54,6 +65,8 @@
         - A requester can't chat to itself
         - A chat screen must a name of a post's owner on the left segment and on the top  of the right segment as well
         - Improve the UI/UX logic for the chats
+        - Allow a post owner to chat and choose any requester to pick up a requeted item
+        - Post very beautiful chat reminder as a first message for both the requester and the post owner with the rules to be polite, share time to pick up, an address, some important details etc
 
 
 ### Search ✅ COMPLETED

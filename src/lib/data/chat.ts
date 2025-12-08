@@ -243,10 +243,16 @@ export type UnifiedChatRoom = {
   postId?: number;
   postName?: string;
   postImage?: string;
+  postType?: string; // Category: food, thing, borrow, wanted, fridge, foodbank, etc.
+  // Role info - who is the current user in this chat
+  isSharer?: boolean;
+  sharerId?: string;
+  requesterId?: string;
 };
 
 /**
  * Get all chat rooms for a user
+ * Includes role information (sharer vs requester)
  */
 export async function getAllUserChats(userId: string): Promise<UnifiedChatRoom[]> {
   const foodRooms = await getUserChatRooms(userId);
@@ -255,7 +261,9 @@ export async function getAllUserChats(userId: string): Promise<UnifiedChatRoom[]
 
   // Transform food sharing rooms
   for (const room of foodRooms) {
-    const otherUser = room.sharer === userId ? room.requester_profile : room.sharer_profile;
+    const isSharer = room.sharer === userId;
+    const otherUser = isSharer ? room.requester_profile : room.sharer_profile;
+    
     unifiedRooms.push({
       id: room.id,
       type: 'food',
@@ -272,11 +280,20 @@ export async function getAllUserChats(userId: string): Promise<UnifiedChatRoom[]
       postId: room.post_id,
       postName: room.posts?.post_name,
       postImage: room.posts?.images?.[0],
+      postType: room.posts?.post_type || 'food', // Category of the listing
+      // Role info
+      isSharer,
+      sharerId: room.sharer,
+      requesterId: room.requester,
     });
   }
 
-  // Sort by last message time
+  // Sort by last message time (most recent first), then by unread status
   unifiedRooms.sort((a, b) => {
+    // Unread messages first
+    if (a.hasUnread && !b.hasUnread) return -1;
+    if (!a.hasUnread && b.hasUnread) return 1;
+    // Then by time
     const timeA = a.lastMessageTime ? new Date(a.lastMessageTime).getTime() : 0;
     const timeB = b.lastMessageTime ? new Date(b.lastMessageTime).getTime() : 0;
     return timeB - timeA;

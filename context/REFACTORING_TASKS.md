@@ -79,7 +79,7 @@ React Compiler handles memoization automatically. Remove manual `useMemo`/`useCa
 | `src/components/modals/publish-listing/components/ImageLightbox.tsx` | ✅ Removed `useCallback` | Simplified navigation |
 | `src/components/modals/publish-listing/components/VoiceInput.tsx` | ✅ Removed `useCallback` | Simplified toggleListening |
 | `src/components/alert/AlertComponent.tsx` | ✅ Removed `useCallback` | Inlined dismiss logic |
-| `src/components/admin/ListingDetailModal.tsx` | ✅ Removed `memo`, `useCallback`, `useMemo` | Simplified component |
+| `src/components/admin/ListingDetailModal.tsx` | ✅ Removed `memo`, `useCallback`, `useMemo`; migrated to Server Actions | Simplified component, uses local state for mutation pending states |
 | `src/components/theme/theme-customizer/PresetCard.tsx` | ✅ Removed `memo`, `useCallback` | Simplified handlers |
 | `src/components/theme/theme-customizer/AccentColorPicker.tsx` | ✅ Removed `forwardRef`, `displayName` | Simplified to plain function |
 | `src/components/carousel/Carousel.tsx` | ✅ Removed `memo`, `useCallback` | Simplified component |

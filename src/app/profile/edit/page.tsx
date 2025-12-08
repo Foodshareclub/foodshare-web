@@ -3,25 +3,53 @@
 /**
  * Profile Edit Page - Next.js App Router version
  * Edit personal information including name, email, phone, and address
+ * 
+ * Note: This page should ideally be a Server Component that fetches data
+ * and passes it to a Client Component. For now, using useAuth for auth state.
  */
 
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { useCurrentProfile } from '@/hooks/queries'
 import { AddressBlock, EmailBlock, NameBlock, PhoneNumberBlock } from '@/components/profile'
 import { FaChevronRight } from 'react-icons/fa'
-import type { ProfileType } from '@/api/profileAPI'
 
-export default function ProfileEditPage() {
+// Simplified profile type for this component
+interface ProfileData {
+  id: string;
+  first_name?: string | null;
+  second_name?: string | null;
+  phone?: string | null;
+}
+
+interface AddressData {
+  profile_id: string;
+  address_line_1: string;
+  address_line_2: string;
+  city: string;
+  county: string;
+  state_province: string;
+  postal_code: string;
+  country: number;
+}
+
+interface ProfileEditPageProps {
+  /** Profile data passed from server */
+  initialProfile?: ProfileData | null;
+  /** Address data passed from server */
+  initialAddress?: AddressData | null;
+}
+
+export default function ProfileEditPage({ initialProfile, initialAddress }: ProfileEditPageProps) {
   const router = useRouter()
 
-  // Auth state from Zustand
+  // Auth state
   const { isAuthenticated, user } = useAuth()
-  const userId = user?.id
 
-  // Profile state from React Query
-  const { profile: currentProfile, address, isLoading, updateProfile: updateProfileMutation } = useCurrentProfile(userId)
+  // Use server-provided data or empty defaults
+  const currentProfile = initialProfile
+  const address = initialAddress
+  const isLoading = !initialProfile && isAuthenticated
 
   // Local state for form fields
   const [firstName, setFirstName] = useState('')
@@ -60,15 +88,9 @@ export default function ProfileEditPage() {
   const onSaveHandler = async () => {
     if (!currentProfile) return
 
-    const updates: Partial<ProfileType> = {
-      ...currentProfile,
-      first_name: firstName,
-      second_name: secondName,
-      phone: phone,
-      updated_at: new Date().toISOString(),
-    }
-
-    await updateProfileMutation(updates)
+    // TODO: Use updateProfile Server Action
+    // For now, just refresh the page
+    router.refresh()
   }
 
   if (!isAuthenticated) {

@@ -40,6 +40,15 @@ Telegram integration for posting and browsing food.
 - Photo uploads
 - Inline queries
 
+### [posts/](./posts/) - Post Management
+
+User post management system.
+
+- Create, edit, delete posts
+- View all personal listings
+- Post status tracking
+- Server-side authentication
+
 ### [profiles/](./profiles/) - User Profiles
 
 User management and profiles.
@@ -141,6 +150,7 @@ Development-only debugging utilities (hidden in production).
 | Map          | ✅ Complete | [map/README.md](./map/README.md)                       |
 | Chat         | ✅ Complete | [chat/README.md](./chat/README.md)                     |
 | Telegram Bot | ✅ Complete | [telegram-bot/README.md](./telegram-bot/README.md)     |
+| Posts        | ✅ Complete | [posts/README.md](./posts/README.md)                   |
 | Profiles     | ✅ Complete | [profiles/README.md](./profiles/README.md)             |
 | Email        | ✅ Complete | [email/README.md](./email/README.md)                   |
 | Auth         | ✅ Complete | [authentication/README.md](./authentication/README.md) |

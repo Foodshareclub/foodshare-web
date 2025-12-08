@@ -85,3 +85,27 @@ export {
   getPopularChallenges,
   type Challenge,
 } from './challenges';
+
+// Auth data functions
+export {
+  getCurrentUser,
+  checkIsAdmin,
+  getAuthSession,
+  getCachedAuthSession,
+  type AuthUser,
+  type AuthSession,
+} from './auth';
+
+// Chat data functions
+export {
+  getUserChatRooms,
+  getChatRoom,
+  getOrCreateChatRoom,
+  getChatMessages,
+  getUnreadMessageCount,
+  getAllUserChats,
+  getTotalUnreadCount,
+  type ChatRoom,
+  type ChatMessage,
+  type UnifiedChatRoom,
+} from './chat';

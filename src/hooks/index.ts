@@ -1,114 +1,39 @@
 /**
  * Hooks Barrel Export
+ * 
+ * MIGRATION NOTE: TanStack Query has been removed.
+ * - For data fetching: Use Server Components with lib/data/* functions
+ * - For mutations: Use Server Actions from @/app/actions/*
+ * - For auth: Use useAuth hook (client) or getAuthSession (server)
+ * - For realtime: Use Supabase client subscriptions
  */
 
-// Main application hooks (using TanStack Query + Zustand)
-export * from "./useTheme";
+// Main auth hook (uses Server Actions + Supabase client for realtime)
+export { useAuth } from './useAuth';
 
-// TanStack Query hooks (all except useAuth which has a wrapper)
-export {
-  // Auth queries (individual hooks, not the combined useAuth)
-  authKeys,
-  useSession,
-  useIsAdmin,
-  useSignIn,
-  useSignUp,
-  useSignOut,
-  useSignInWithOtp,
-  useSignInWithProvider,
-  useRequestPasswordReset,
-  useUpdatePassword,
-  // Profile
-  profileKeys,
-  useProfile,
-  useOtherProfile,
-  useVolunteers,
-  useAddress,
-  useAvatar,
-  useUpdateProfile,
-  useUpdateAddress,
-  useUploadAvatar,
-  useCurrentProfile,
-  // Products
-  productKeys,
-  useProducts,
-  useProductsLocation,
-  useAllProducts,
-  useProduct,
-  useUserProducts,
-  useSearchProducts,
-  useProductImage,
-  useCreateProduct,
-  useUpdateProduct,
-  useDeleteProduct,
-  useProductsManager,
-  // Chat
-  chatKeys,
-  useRooms,
-  useRoom,
-  useMessages,
-  useRoomAvailability,
-  useCreateRoom,
-  useSendMessage,
-  useUpdateRoom,
-  useWriteReview,
-  useChatRealtime,
-  useChat,
-  // Forum
-  forumKeys,
-  useForumCategories,
-  useForumTags,
-  useReactionTypes,
-  useForumPosts,
-  useForumPost,
-  useForumPostBySlug,
-  useForumComments,
-  useForumNotifications,
-  useForumUserStats,
-  useCreateForumPost,
-  useUpdateForumPost,
-  useDeleteForumPost,
-  useCreateComment,
-  useAddReaction,
-  useRemoveReaction,
-  useMarkNotificationRead,
-  useForum,
-  // Admin
-  adminKeys,
-  useDashboardStats,
-  useAdminListings,
-  useAdminListing,
-  useFlaggedListings,
-  useAuditLogs,
-  useAdminUsers,
-  useApproveListing,
-  useRejectListing,
-  useFlagListing,
-  useUpdateListingStatus,
-  useDeleteListing,
-  useAdmin,
-} from "./queries";
-
-// Wrapper useAuth hook with backward-compatible API
-export { useAuth } from "./useAuth";
+// Theme hook
+export * from './useTheme';
 
 // Utility hooks
-export * from "./useDebounce";
-export * from "./useMediaQuery";
-export * from "./usePosition";
-export * from "./useCustomBoolean";
-export * from "./useEvent";
-export * from "./useLatest";
-export * from "./useGridSize";
-export * from "./useScrollCompact";
-export * from "./useAdvancedScroll";
-export * from "./useHighRefreshRate";
-export * from "./useRAFThrottle";
-export * from "./useDistanceWorker";
-export * from "./useProductDistanceCalculation";
-export * from "./useSearchSuggestions";
-export * from "./getAllCountries";
-export * from "./useMarkerIcon";
+export * from './useDebounce';
+export * from './useMediaQuery';
+export * from './usePosition';
+export * from './useCustomBoolean';
+export * from './useEvent';
+export * from './useLatest';
+export * from './useGridSize';
+export * from './useScrollCompact';
+export * from './useAdvancedScroll';
+export * from './useHighRefreshRate';
+export * from './useRAFThrottle';
+export * from './useDistanceWorker';
+export * from './useProductDistanceCalculation';
+export * from './useSearchSuggestions';
+export * from './getAllCountries';
+export * from './useMarkerIcon';
 
-// Unified Chat hooks
-export * from "./useUnifiedChat";
+// Unified Chat hooks (for realtime subscriptions)
+export * from './useUnifiedChat';
+
+// Image blob URL management (memory-safe blob URL handling)
+export * from './useImageBlobUrl';

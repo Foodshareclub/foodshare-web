@@ -2,11 +2,11 @@
 
 ## TL;DR - What Changed?
 
+✅ **Server-first architecture** - Data fetched in Server Components
 ✅ **Vite config optimized** - 25% smaller bundles, 30% faster builds
 ✅ **Redux selectors added** - 60% fewer re-renders
 ✅ **API cache layer** - 80% fewer API calls
 ✅ **Optimized search** - 90% faster search
-✅ **Infinite scroll** - Efficient pagination with TanStack Query
 
 ## 📝 Quick Reference
 
@@ -48,31 +48,37 @@ import { useProductSearch } from "@/hooks/useOptimizedSearch";
 const { results, search } = useProductSearch();
 ```
 
-### Use Infinite Scroll for Large Lists
+### Server-First Data Fetching
 
 ```typescript
-// ❌ DON'T - Load all products at once
-const { data } = useProducts(type);
+// ✅ DO - Fetch data in Server Components
+// app/food/page.tsx
+import { getProducts } from '@/lib/data/products';
 
-// ✅ DO - Use cursor-based pagination with infinite scroll
-import { useInfiniteProducts } from '@/hooks/queries/useProductQueries';
+export default async function FoodPage() {
+  const products = await getProducts('food');
+  return <ProductGrid products={products} />;
+}
 
-const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteProducts(type);
-// Automatically prefetches next page in background for smoother scrolling
-// Structural sharing enabled for better performance with large datasets
+// ✅ DO - Pass data to client components as props
+// HomeClient receives products from server
+export function HomeClient({ initialProducts }: { initialProducts: Product[] }) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  
+  // Use router.refresh() for updates
+  const handleRefresh = () => {
+    startTransition(() => router.refresh());
+  };
+  
+  return <ProductGrid products={initialProducts} />;
+}
 
-// Flatten pages into single array
-const products = useMemo(() => {
-  if (!data?.pages?.length) return initialProducts;
-  return data.pages.flatMap((page) => page.data);
-}, [data?.pages, initialProducts]);
-
-// Trigger load more
-const handleLoadMore = () => {
-  if (hasNextPage && !isFetchingNextPage) {
-    fetchNextPage();
-  }
-};
+// ❌ DON'T - Fetch in client components with useEffect
+'use client';
+useEffect(() => {
+  fetch('/api/products').then(setProducts);
+}, []);
 ```
 
 ## 🎯 Available Selectors

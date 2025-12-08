@@ -8,6 +8,17 @@ import { Button } from "@/components/ui/button";
 import { UniversalDrawer, MinifiedUserInfo, AuthenticationUserModal } from "@/components";
 import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
 
+// Airbnb-style icons from react-icons
+import {
+  HiOutlineClipboardList,
+  HiOutlineChatAlt2,
+  HiOutlineCog,
+  HiOutlineLogout,
+  HiOutlineQuestionMarkCircle,
+  HiOutlineInformationCircle,
+  HiOutlineViewGrid,
+} from "react-icons/hi";
+
 export interface MobileMenuProps {
   /** User authentication status */
   isAuth: boolean;
@@ -128,35 +139,38 @@ export function MobileMenu({
                   {/* Admin Dashboard Link */}
                   {isAdmin && onNavigateToDashboard && (
                     <div
-                      className="glass-accent-primary rounded-xl p-4 cursor-pointer gpu"
+                      className="glass-accent-primary rounded-xl p-4 cursor-pointer gpu flex items-center gap-4"
                       onClick={() => handleNavigation(onNavigateToDashboard)}
                       role="button"
                       tabIndex={0}
                     >
+                      <HiOutlineViewGrid className="w-8 h-8 flex-shrink-0" />
                       <p className="text-3xl font-semibold">Dashboard</p>
                     </div>
                   )}
 
                   <div
-                    className="glass-subtle rounded-xl p-4 cursor-pointer gpu"
+                    className="glass-subtle rounded-xl p-4 cursor-pointer gpu flex items-center gap-4"
                     onClick={() => handleNavigation(onNavigateToMyLists)}
                     role="button"
                     tabIndex={0}
                   >
+                    <HiOutlineClipboardList className="w-8 h-8 flex-shrink-0" />
                     <p className="text-3xl">My listing's</p>
                   </div>
 
                   <div
-                    className="glass-subtle rounded-xl p-4 cursor-pointer gpu"
+                    className="glass-subtle rounded-xl p-4 cursor-pointer gpu flex items-center gap-4"
                     onClick={() => handleNavigation(onNavigateToAccSettings)}
                     role="button"
                     tabIndex={0}
                   >
+                    <HiOutlineCog className="w-8 h-8 flex-shrink-0" />
                     <p className="text-3xl">Account settings</p>
                   </div>
 
                   <div
-                    className={`${hasNotifications ? 'glass-accent-primary' : 'glass-subtle'} rounded-xl p-4 cursor-pointer gpu`}
+                    className={`${hasNotifications ? 'glass-accent-primary' : 'glass-subtle'} rounded-xl p-4 cursor-pointer gpu flex items-center gap-4`}
                     onClick={() => handleNavigation(onNavigateToMyMessages)}
                     role="button"
                     tabIndex={0}
@@ -166,6 +180,7 @@ export function MobileMenu({
                         : 'Chat'
                     }
                   >
+                    <HiOutlineChatAlt2 className="w-8 h-8 flex-shrink-0" />
                     <p className="text-3xl">
                       {hasNotifications
                         ? `Chat (${signalOfNewMessage.length} new)`
@@ -174,11 +189,12 @@ export function MobileMenu({
                   </div>
 
                   <div
-                    className="glass-subtle rounded-xl p-4 cursor-pointer gpu"
+                    className="glass-subtle rounded-xl p-4 cursor-pointer gpu flex items-center gap-4"
                     onClick={() => handleNavigation(onNavigateToLogout)}
                     role="button"
                     tabIndex={0}
                   >
+                    <HiOutlineLogout className="w-8 h-8 flex-shrink-0" />
                     <p className="text-3xl">Log Out</p>
                   </div>
                 </div>
@@ -195,20 +211,22 @@ export function MobileMenu({
 
               {/* Common Links */}
               <div
-                className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3"
+                className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3 flex items-center gap-4"
                 onClick={() => handleNavigation(onNavigateToAboutUs)}
                 role="button"
                 tabIndex={0}
               >
+                <HiOutlineInformationCircle className="w-8 h-8 flex-shrink-0" />
                 <p className="text-3xl">About Us</p>
               </div>
 
               <div
-                className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3"
+                className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3 flex items-center gap-4"
                 onClick={() => handleNavigation(onNavigateToHelp)}
                 role="button"
                 tabIndex={0}
               >
+                <HiOutlineQuestionMarkCircle className="w-8 h-8 flex-shrink-0" />
                 <p className="text-3xl">Help</p>
               </div>
 

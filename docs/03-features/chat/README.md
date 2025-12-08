@@ -6,6 +6,11 @@ Real-time messaging system for coordinating food pickups between sharers and see
 
 The chat system enables direct communication between users about food listings. It uses Supabase Realtime for instant message delivery and supports both product-based and direct user conversations.
 
+**Key Safeguards:**
+- Users cannot chat with themselves about their own listings
+- Users cannot request their own posts
+- Duplicate room creation is prevented (returns existing room)
+
 ## Route
 
 | Route | Purpose |
@@ -372,6 +377,11 @@ type UnifiedChatRoom = {
   postId?: number;
   postName?: string;
   postImage?: string;
+  postType?: string; // Category: food, thing, borrow, wanted, fridge, foodbank, etc.
+  // Role info
+  isSharer?: boolean;
+  sharerId?: string;
+  requesterId?: string;
 };
 ```
 
@@ -538,6 +548,79 @@ const response = await fetch(`/api/chat/messages?roomId=${roomId}&limit=20&offse
 | 400 | Missing `roomId` |
 | 401 | User not authenticated |
 | 500 | Server error fetching messages |
+
+## Server Actions
+
+Server actions for chat mutations are located in `src/app/actions/chat.ts`.
+
+### createFoodChatRoom
+
+Creates a new food sharing chat room between a requester and a sharer.
+
+```typescript
+import { createFoodChatRoom } from '@/app/actions/chat';
+
+const result = await createFoodChatRoom(postId, sharerId);
+// Returns: { success: true, roomId: string } or { error: string }
+```
+
+**Validation Rules:**
+- User must be authenticated
+- User cannot chat with themselves (self-chat prevention)
+- User cannot request their own listings
+- If room already exists, returns existing room ID
+
+**Error Messages:**
+- `'You cannot chat with yourself about your own listing'` - When sharerId matches current user
+- `'You cannot request your own listing'` - When post belongs to current user
+
+### sendFoodChatMessage
+
+Sends a message in a food sharing chat room.
+
+```typescript
+import { sendFoodChatMessage } from '@/app/actions/chat';
+
+const formData = new FormData();
+formData.set('roomId', roomId);
+formData.set('text', 'Hello!');
+formData.set('image', imageUrl); // Optional
+
+const result = await sendFoodChatMessage(formData);
+```
+
+### markFoodChatAsRead
+
+Marks a chat room as read for the current user.
+
+```typescript
+import { markFoodChatAsRead } from '@/app/actions/chat';
+
+const result = await markFoodChatAsRead(roomId);
+```
+
+### updateRoom
+
+Updates a food sharing chat room with arrangement details (pickup time, assigned recipient).
+
+```typescript
+import { updateRoom } from '@/app/actions/chat';
+
+const formData = new FormData();
+formData.set('post_arranged_to', recipientUserId); // User ID who will pick up the item
+formData.set('post_arranged_at', '2025-12-15T14:00:00Z'); // Pickup date/time (ISO string)
+
+const result = await updateRoom(roomId, formData);
+// Returns: { success: true } or { success: false, error: { message: string } }
+```
+
+**Supported Fields:**
+- `post_arranged_to` - User ID of the person the item is arranged for
+- `post_arranged_at` - Timestamp when pickup is arranged (ISO 8601 format)
+
+**Use Cases:**
+- Post owner confirms a requester for pickup
+- Setting pickup date/time for food sharing arrangements
 
 ## Related Files
 

@@ -111,3 +111,61 @@ export async function uploadAvatar(
 
   return { success: true, url: publicUrl };
 }
+
+/**
+ * Upload profile avatar (alias for uploadAvatar with different form field name)
+ * Expects formData with 'file' and 'userId' fields
+ */
+export async function uploadProfileAvatar(
+  formData: FormData
+): Promise<{ success: boolean; url?: string; error?: string }> {
+  const supabase = await createClient();
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { success: false, error: 'Not authenticated' };
+  }
+
+  const file = formData.get('file') as File;
+  const userId = formData.get('userId') as string;
+
+  if (!file) {
+    return { success: false, error: 'No file provided' };
+  }
+
+  // Verify user is uploading their own avatar
+  if (userId && userId !== user.id) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const fileName = `${user.id}/avatar.${fileExt}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('profiles')
+    .upload(fileName, file, { upsert: true });
+
+  if (uploadError) {
+    return { success: false, error: uploadError.message };
+  }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from('profiles')
+    .getPublicUrl(fileName);
+
+  // Update profile with new avatar URL
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
+    .eq('id', user.id);
+
+  if (updateError) {
+    return { success: false, error: updateError.message };
+  }
+
+  // Invalidate profile caches
+  invalidateTag(CACHE_TAGS.PROFILES);
+  invalidateTag(CACHE_TAGS.PROFILE(user.id));
+
+  return { success: true, url: publicUrl };
+}

@@ -169,6 +169,7 @@ export const getAllProducts = unstable_cache(
 
 /**
  * Get single product by ID with caching
+ * Only returns active products
  */
 export async function getProductById(productId: number): Promise<InitialProductStateType | null> {
   return unstable_cache(
@@ -179,6 +180,7 @@ export async function getProductById(productId: number): Promise<InitialProductS
         .from('posts_with_location')
         .select('*, reviews(*)')
         .eq('id', productId)
+        .eq('is_active', true)
         .single();
 
       if (error) {

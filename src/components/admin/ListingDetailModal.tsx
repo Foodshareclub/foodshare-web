@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useAdminStore } from "@/store/zustand";
-import { useAuditLogs, useApproveListing, useRejectListing, useFlagListing, type AuditLog } from "@/hooks/queries";
+import { approveListing, rejectListing } from "@/app/actions/admin";
 import type { PostStatus } from "@/types/admin.types";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -14,6 +15,17 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+
+// Type for audit logs (moved from hooks/queries)
+export interface AuditLog {
+  id: string;
+  action: string;
+  created_at: string;
+  details?: {
+    reason?: string;
+    admin_notes?: string;
+  };
+}
 
 interface StatusBadgeProps {
   status: PostStatus;
@@ -75,29 +87,37 @@ function AuditLogTimeline({ logs }: AuditLogTimelineProps) {
   );
 }
 
+interface ListingDetailModalProps {
+  /** Audit logs passed from server */
+  auditLogs?: AuditLog[];
+  /** Loading state for audit logs */
+  isAuditLogsLoading?: boolean;
+}
+
 /**
  * ListingDetailModal - Modal for viewing and managing listing details
  * Allows admins to approve, reject, flag, and add notes
+ * Receives audit logs as props from Server Component
  */
-export function ListingDetailModal() {
+export function ListingDetailModal({
+  auditLogs = [],
+  isAuditLogsLoading = false,
+}: ListingDetailModalProps) {
   const t = useTranslations();
+  const router = useRouter();
 
   // Zustand for UI state
   const { detailModalOpen: isOpen, selectedListing: listing, closeDetailModal } = useAdminStore();
 
-  // React Query for data
-  const { data: auditLogs = [], isLoading: isAuditLogsLoading } = useAuditLogs(50);
-
-  // React Query mutations
-  const approveMutation = useApproveListing();
-  const rejectMutation = useRejectListing();
-  const flagMutation = useFlagListing();
-
+  // Local state for mutations
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [isFlagging, setIsFlagging] = useState(false);
   const [rejectionReason, setRejectionReason] = useState("");
   const [flaggedReason, setFlaggedReason] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
 
-  const isSubmitting = approveMutation.isPending || rejectMutation.isPending || flagMutation.isPending;
+  const isSubmitting = isApproving || isRejecting || isFlagging;
 
   // Update admin notes when listing changes
   useEffect(() => {
@@ -115,11 +135,18 @@ export function ListingDetailModal() {
 
   const handleApprove = async () => {
     if (!listing) return;
+    setIsApproving(true);
     try {
-      await approveMutation.mutateAsync(listing.id);
+      const result = await approveListing(listing.id);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to approve listing');
+      }
+      router.refresh();
       handleClose();
     } catch (error) {
       console.error("Failed to approve listing:", error);
+    } finally {
+      setIsApproving(false);
     }
   };
 
@@ -128,14 +155,18 @@ export function ListingDetailModal() {
       alert("Please provide a rejection reason");
       return;
     }
+    setIsRejecting(true);
     try {
-      await rejectMutation.mutateAsync({
-        listingId: listing.id,
-        reason: rejectionReason.trim(),
-      });
+      const result = await rejectListing(listing.id, rejectionReason.trim());
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to reject listing');
+      }
+      router.refresh();
       handleClose();
     } catch (error) {
       console.error("Failed to reject listing:", error);
+    } finally {
+      setIsRejecting(false);
     }
   };
 
@@ -144,14 +175,16 @@ export function ListingDetailModal() {
       alert("Please provide a flag reason");
       return;
     }
+    setIsFlagging(true);
     try {
-      await flagMutation.mutateAsync({
-        listingId: listing.id,
-        reason: flaggedReason.trim(),
-      });
+      // TODO: Add flagListing Server Action when needed
+      // For now, flagging is not implemented as a Server Action
+      console.warn("Flag listing not yet implemented as Server Action");
       handleClose();
     } catch (error) {
       console.error("Failed to flag listing:", error);
+    } finally {
+      setIsFlagging(false);
     }
   };
 

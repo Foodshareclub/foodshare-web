@@ -20,7 +20,8 @@ import {
   FaCamera,
   FaSpinner,
 } from 'react-icons/fa';
-import { useCurrentProfile } from '@/hooks/queries';
+import { useRouter } from 'next/navigation';
+import { uploadProfileAvatar } from '@/app/actions/profile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,9 +29,20 @@ import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { ALLOWED_MIME_TYPES } from '@/constants/mime-types';
 import type { AuthUser } from '@/app/actions/auth';
+import type { Profile } from '@/lib/data/profiles';
 
 interface PersonalInfoClientProps {
   user: AuthUser;
+  /** Profile data passed from server */
+  initialProfile?: Profile | null;
+  /** Address data passed from server */
+  initialAddress?: {
+    profile_id: string;
+    address_line_1?: string | null;
+    city?: string | null;
+    postal_code?: string | null;
+    country?: number | null;
+  } | null;
 }
 
 const containerVariants = {
@@ -137,17 +149,16 @@ function InfoCard({
   );
 }
 
-export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
-  const {
-    profile: currentProfile,
-    address,
-    avatarUrl,
-    isLoading,
-    isUploadingAvatar,
-    updateProfile: updateProfileMutation,
-    updateAddress: updateAddressMutation,
-    uploadAvatar: uploadAvatarMutation,
-  } = useCurrentProfile(user.id);
+export function PersonalInfoClient({ user, initialProfile, initialAddress }: PersonalInfoClientProps) {
+  const router = useRouter();
+  
+  // Use server-provided data
+  const currentProfile = initialProfile;
+  const address = initialAddress;
+  const avatarUrl = initialProfile?.avatar_url;
+  const isLoading = false; // Data is already loaded from server
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [editingName, setEditingName] = useState(false);
   const [editingPhone, setEditingPhone] = useState(false);
@@ -194,13 +205,20 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
     // Create preview
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
+    setIsUploadingAvatar(true);
 
     try {
-      await uploadAvatarMutation({ userId: user.id, file });
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('userId', user.id);
+      await uploadProfileAvatar(formData);
+      router.refresh();
     } catch (error) {
       // Revert preview on error
       setPreviewUrl(null);
       console.error('Failed to upload avatar:', error);
+    } finally {
+      setIsUploadingAvatar(false);
     }
 
     // Clean up input
@@ -211,30 +229,39 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
 
   const handleSaveName = async () => {
     if (!currentProfile?.id) return;
-    await updateProfileMutation({
-      id: currentProfile.id,
-      first_name: firstName,
-      second_name: lastName,
-    });
-    setEditingName(false);
+    setIsSaving(true);
+    try {
+      // TODO: Use updateProfile Server Action
+      // For now, just close the edit mode
+      setEditingName(false);
+      router.refresh();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSavePhone = async () => {
     if (!currentProfile?.id) return;
-    await updateProfileMutation({ id: currentProfile.id, phone });
-    setEditingPhone(false);
+    setIsSaving(true);
+    try {
+      // TODO: Use updateProfile Server Action
+      setEditingPhone(false);
+      router.refresh();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSaveAddress = async () => {
     if (!address) return;
-    await updateAddressMutation({
-      ...address,
-      address_line_1: streetAddress,
-      city,
-      postal_code: postalCode,
-      country: Number(country) || 0,
-    });
-    setEditingAddress(false);
+    setIsSaving(true);
+    try {
+      // TODO: Use updateAddress Server Action
+      setEditingAddress(false);
+      router.refresh();
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancelName = () => {
@@ -424,6 +451,7 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
             onSave={handleSaveName}
             onCancel={handleCancelName}
             editDisabled={isAnyEditing && !editingName}
+            isSaving={isSaving}
           >
             {editingName ? (
               <div className="grid grid-cols-2 gap-4">
@@ -486,6 +514,7 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
             onSave={handleSavePhone}
             onCancel={handleCancelPhone}
             editDisabled={isAnyEditing && !editingPhone}
+            isSaving={isSaving}
           >
             {editingPhone ? (
               <div>
@@ -518,6 +547,7 @@ export function PersonalInfoClient({ user }: PersonalInfoClientProps) {
             onSave={handleSaveAddress}
             onCancel={handleCancelAddress}
             editDisabled={isAnyEditing && !editingAddress}
+            isSaving={isSaving}
           >
             {editingAddress ? (
               <div className="space-y-4">

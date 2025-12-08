@@ -190,7 +190,6 @@ export function useAvatar(avatarPath: string | undefined): AvatarQueryResult {
 
   // For storage paths, download and create blob URL
   const blobUrlQuery = useImageBlobUrl({
-    queryKey: profileKeys.avatar(normalizedPath ?? ""),
     fetchFn: async () => {
       if (!normalizedPath) return null;
       const { data, error } = await storageAPI.downloadImage({ path: normalizedPath, bucket: "profiles" });
@@ -198,8 +197,7 @@ export function useAvatar(avatarPath: string | undefined): AvatarQueryResult {
       return data ?? null;
     },
     enabled: !!normalizedPath && !isPublicUrl,
-    staleTime: CACHE_TIMES.AVATAR,
-    gcTime: CACHE_TIMES.AVATAR_GC,
+    deps: [normalizedPath, isPublicUrl],
   });
 
   // Return the appropriate result based on URL type

@@ -131,6 +131,7 @@ export function useAdminListings(filters: AdminFilters = {}) {
           *,
           profiles:profile_id(id, first_name, second_name, email)
         `)
+        .eq("is_active", true)
         .order("created_at", { ascending: false });
 
       // Apply filters
@@ -176,6 +177,7 @@ export function useAdminListing(listingId: number | undefined) {
           reviews(*)
         `)
         .eq("id", listingId)
+        .eq("is_active", true)
         .single();
       if (error) throw error;
       return data as AdminListing;
@@ -199,6 +201,7 @@ export function useFlaggedListings() {
           *,
           profiles:profile_id(id, first_name, second_name, email)
         `)
+        .eq("is_active", true)
         .gt("reports_count", 0)
         .order("reports_count", { ascending: false })
         .limit(50);

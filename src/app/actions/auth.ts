@@ -112,6 +112,7 @@ export async function getUser(): Promise<AuthUser | null> {
 
 /**
  * Check if current user is admin
+ * Checks the user_roles junction table (source of truth)
  * Returns false if DB is unavailable (graceful degradation)
  */
 export async function checkIsAdmin(): Promise<boolean> {
@@ -121,13 +122,15 @@ export async function checkIsAdmin(): Promise<boolean> {
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) return false;
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('user_role')
-      .eq('id', user.id)
-      .single();
+    // Check user_roles table (source of truth for admin status)
+    const { data: userRole } = await supabase
+      .from('user_roles')
+      .select('roles!inner(name)')
+      .eq('profile_id', user.id)
+      .in('roles.name', ['admin', 'superadmin'])
+      .maybeSingle();
 
-    return profile?.user_role === 'admin' || profile?.user_role === 'superadmin';
+    return !!userRole;
   } catch {
     return false;
   }
@@ -168,14 +171,23 @@ export async function signUp(
 
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
-  const name = formData.get('name') as string;
+  const firstName = formData.get('firstName') as string | null;
+  const lastName = formData.get('lastName') as string | null;
+  const name = formData.get('name') as string | null;
+
+  // Build display name from firstName/lastName or use name directly
+  const displayName = firstName && lastName 
+    ? `${firstName} ${lastName}` 
+    : firstName || name || '';
 
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
-        name,
+        name: displayName,
+        first_name: firstName,
+        last_name: lastName,
       },
     },
   });
@@ -188,7 +200,8 @@ export async function signUp(
   if (data.user) {
     await supabase.from('profiles').insert({
       id: data.user.id,
-      name,
+      first_name: firstName || displayName,
+      second_name: lastName || '',
       email,
     });
   }
@@ -254,7 +267,7 @@ export async function updatePassword(
  * Get OAuth sign in URL
  */
 export async function getOAuthSignInUrl(
-  provider: 'google' | 'github' | 'facebook'
+  provider: 'google' | 'github' | 'facebook' | 'apple'
 ): Promise<{ url: string | null; error?: string }> {
   const supabase = await createClient();
 

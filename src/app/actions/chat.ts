@@ -103,6 +103,7 @@ export async function markFoodChatAsRead(roomId: string) {
 
 /**
  * Create a new food sharing chat room
+ * Prevents users from chatting with themselves or requesting their own posts
  */
 export async function createFoodChatRoom(postId: number, sharerId: string) {
   if (!postId || !sharerId) {
@@ -114,6 +115,22 @@ export async function createFoodChatRoom(postId: number, sharerId: string) {
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
     return { error: 'Not authenticated' };
+  }
+
+  // Prevent self-chat: user cannot chat with themselves
+  if (user.id === sharerId) {
+    return { error: 'You cannot chat with yourself about your own listing' };
+  }
+
+  // Verify the post belongs to the sharer (prevent requesting own posts)
+  const { data: post } = await supabase
+    .from('posts')
+    .select('profile_id')
+    .eq('id', postId)
+    .single();
+
+  if (post && post.profile_id === user.id) {
+    return { error: 'You cannot request your own listing' };
   }
 
   // Check if room already exists
@@ -151,4 +168,86 @@ export async function createFoodChatRoom(postId: number, sharerId: string) {
   invalidateTag(CACHE_TAGS.CHATS);
 
   return { success: true, roomId: newRoom.id };
+}
+
+
+/**
+ * Update a food sharing chat room
+ */
+export async function updateRoom(roomId: string, formData: FormData) {
+  if (!roomId) {
+    return { success: false, error: { message: 'Room ID is required' } };
+  }
+
+  const supabase = await createClient();
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return { success: false, error: { message: 'Not authenticated' } };
+  }
+
+  // Build update object from form data
+  const updateData: Record<string, unknown> = {};
+  
+  const postArrangedTo = formData.get('post_arranged_to');
+  if (postArrangedTo) updateData.post_arranged_to = postArrangedTo;
+  
+  const postArrangedAt = formData.get('post_arranged_at');
+  if (postArrangedAt) updateData.post_arranged_at = postArrangedAt;
+
+  const { error } = await supabase
+    .from('rooms')
+    .update(updateData)
+    .eq('id', roomId);
+
+  if (error) {
+    console.error('Error updating room:', error);
+    return { success: false, error: { message: 'Failed to update room' } };
+  }
+
+  invalidateTag(CACHE_TAGS.CHATS);
+  invalidateTag(CACHE_TAGS.CHAT(roomId));
+
+  return { success: true };
+}
+
+
+/**
+ * Write a review for a food sharing exchange
+ */
+export async function writeReview(formData: FormData) {
+  const profileId = formData.get('profile_id') as string;
+  const postId = formData.get('post_id') as string;
+  const rating = formData.get('reviewed_rating') as string;
+  const feedback = formData.get('feedback') as string;
+
+  if (!profileId || !postId || !rating) {
+    return { success: false, error: { message: 'Profile ID, post ID, and rating are required' } };
+  }
+
+  const supabase = await createClient();
+  
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return { success: false, error: { message: 'Not authenticated' } };
+  }
+
+  const { error } = await supabase
+    .from('reviews')
+    .insert({
+      profile_id: profileId,
+      post_id: Number(postId),
+      reviewed_rating: Number(rating),
+      feedback: feedback || '',
+      reviewer_id: user.id,
+    });
+
+  if (error) {
+    console.error('Error writing review:', error);
+    return { success: false, error: { message: 'Failed to submit review' } };
+  }
+
+  invalidateTag(CACHE_TAGS.PROFILES);
+
+  return { success: true };
 }

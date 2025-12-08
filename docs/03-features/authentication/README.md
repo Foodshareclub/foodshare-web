@@ -50,13 +50,15 @@ Located in `src/app/actions/auth.ts`:
 |--------|---------|
 | `getSession()` | Get current session |
 | `getUser()` | Get user with profile |
-| `checkIsAdmin()` | Check admin status |
+| `checkIsAdmin()` | Check admin status via `user_roles` table |
 | `signInWithPassword()` | Email/password login |
 | `signUp()` | Register new user |
 | `signOut()` | Sign out and redirect |
 | `resetPassword()` | Request password reset |
 | `updatePassword()` | Update password |
 | `getOAuthSignInUrl()` | Get OAuth redirect URL |
+
+> **Note on Admin Checking:** The `checkIsAdmin()` function queries the `user_roles` junction table (source of truth for role assignments) to check if the user has an `admin` or `superadmin` role. This is more flexible than the legacy JSONB `role` field in `profiles`.
 
 ### Password Reset Example (Server Action Pattern)
 
@@ -167,7 +169,7 @@ The following sections document the legacy `useAuth` hook pattern. Use this when
 - `loginWithOtp()` - Magic link login
 - `loginWithPhoneOtp()` - Phone OTP login
 - `verifyOtp()` - OTP verification
-- `loginWithProvider()` - OAuth (Google, Apple, etc.)
+- `loginWithProvider()` - OAuth (Google, GitHub, Facebook, Apple)
 - `getSession()` - Get current session
 - `getUser()` - Get current user
 - `refreshSession()` - Refresh auth token
@@ -408,6 +410,8 @@ const LoginForm = () => {
 
 ### Register New User
 
+The `register` function supports both object and positional argument patterns:
+
 ```tsx
 import { useAuth } from "@/hook";
 
@@ -417,12 +421,16 @@ const RegisterForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Recommended: Object pattern with firstName/lastName
     const result = await register({
       email,
       password,
       firstName,
       lastName,
     });
+
+    // Legacy: Positional arguments (still supported)
+    // const result = await register(email, password, name);
 
     if (result.success) {
       // Show success message
@@ -459,17 +467,23 @@ const MagicLinkForm = () => {
 
 ### OAuth Login
 
+Supported providers: `google`, `github`, `facebook`, `apple`
+
 ```tsx
 import { useAuth } from "@/hook";
 
 const SocialLogin = () => {
   const { loginWithProvider } = useAuth();
 
-  const handleGoogleLogin = async () => {
-    await loginWithProvider("google");
-  };
+  const handleGoogleLogin = () => loginWithProvider("google");
+  const handleAppleLogin = () => loginWithProvider("apple");
 
-  return <Button onClick={handleGoogleLogin}>Continue with Google</Button>;
+  return (
+    <>
+      <Button onClick={handleGoogleLogin}>Continue with Google</Button>
+      <Button onClick={handleAppleLogin}>Continue with Apple</Button>
+    </>
+  );
 };
 ```
 

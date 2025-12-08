@@ -205,7 +205,6 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
         const result = await loginWithPassword(email, password);
         logger.debug("Login result", {
           success: result.success,
-          hasUser: !!result.user,
         });
 
         if (result.success) {
@@ -224,7 +223,6 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
         });
         logger.debug("Registration result", {
           success: result.success,
-          hasUser: !!result.user,
         });
 
         if (result.success) {

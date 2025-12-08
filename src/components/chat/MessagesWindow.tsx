@@ -2,11 +2,8 @@
 
 import React, { memo, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import type { RoomParticipantsType } from "@/api/chatAPI";
+import type { RoomParticipantsType, CustomRoomType } from "@/api/chatAPI";
 import { useMediaQuery } from "@/hooks";
-import { useAuth } from "@/hooks/useAuth";
-import { useCurrentProfile } from "@/hooks/queries/useProfileQueries";
-import { useChatStore } from "@/store/zustand/useChatStore";
 import { InputSection } from "@/components";
 import MessageItem from "./MessageItem";
 
@@ -14,32 +11,28 @@ type MessagesWindowType = {
   messages: Array<RoomParticipantsType>;
   userID: string;
   roomId: string;
+  /** Current user's avatar URL (passed from server) */
+  userAvatarUrl?: string;
+  /** Current room data (passed from server or Zustand for realtime) */
+  currentRoom?: CustomRoomType | null;
 };
 
 /**
  * MessagesWindow Component
  * Displays the chat messages and input section
- * Uses React Query + Zustand instead of Redux
+ * Receives data as props from Server Component
  */
 export const MessagesWindow: React.FC<MessagesWindowType> = memo(
-  ({ messages, userID, roomId }) => {
+  ({ messages, userID, roomId, userAvatarUrl, currentRoom }) => {
     const messagesAnchorRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
     const isSmaller = useMediaQuery("(min-width:1200px)");
-
-    // Get current user's profile from React Query
-    const { user } = useAuth();
-    const { avatarUrl } = useCurrentProfile(user?.id);
-
-    // Get chat data from Zustand store (synced from React Query)
-    const rooms = useChatStore((state) => state.rooms);
-    const currentRoom = rooms.find((room) => room.id === roomId);
 
     // Get requester info from current room (the other person in the chat)
     const requesterImg = currentRoom?.profiles?.avatar_url;
     const requesterId = currentRoom?.profiles?.id;
     const requesterName = currentRoom?.profiles?.first_name;
-    const userImg = avatarUrl;
+    const userImg = userAvatarUrl;
 
     // Auto-scroll to latest message when messages change
     useEffect(() => {

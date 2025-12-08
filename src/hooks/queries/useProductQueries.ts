@@ -311,10 +311,10 @@ export function useSearchProducts(searchQuery: string, productType: string = 'al
 
 /**
  * Get product image with proper blob URL cleanup
+ * @deprecated Use Server Components with direct image URLs instead
  */
 export function useProductImage(imagePath: string | undefined) {
   return useImageBlobUrl({
-    queryKey: productKeys.image(imagePath ?? ''),
     fetchFn: async () => {
       if (!imagePath) return null;
       const { storageAPI } = await import('@/api/storageAPI');
@@ -326,8 +326,7 @@ export function useProductImage(imagePath: string | undefined) {
       return data ?? null;
     },
     enabled: !!imagePath,
-    staleTime: 30 * 60 * 1000, // 30 minutes
-    gcTime: 60 * 60 * 1000, // 1 hour
+    deps: [imagePath],
   });
 }
 

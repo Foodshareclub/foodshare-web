@@ -404,6 +404,113 @@ User Types Message
 
 ---
 
+## 🪝 Hooks & Data Patterns
+
+### Server-First Architecture
+
+FoodShare uses a **server-first architecture** with Next.js 16. Data fetching and mutations follow these patterns:
+
+| Operation | Approach | Location |
+|-----------|----------|----------|
+| **READ** (data fetching) | Server Components + `lib/data` functions | `src/lib/data/*.ts` |
+| **WRITE** (mutations) | Server Actions | `src/app/actions/*.ts` |
+| **Realtime** | Supabase client subscriptions | Client Components only |
+| **UI state** | Zustand or `useState` | `src/store/` |
+
+### Data Flow
+
+```text
+READ:  Server Component → lib/data function → Supabase → Render
+WRITE: form action → Server Action → Supabase → revalidate → Re-render
+REALTIME: Client Component → Supabase subscription → useState
+```
+
+### Usage Examples
+
+```typescript
+// ✅ Server Component for data fetching
+// app/products/page.tsx
+import { getProducts } from '@/lib/data/products';
+
+export default async function ProductsPage() {
+  const products = await getProducts();
+  return <ProductGrid products={products} />;
+}
+```
+
+```typescript
+// ✅ Server Action for mutations
+// app/actions/products.ts
+'use server';
+
+import { createClient } from '@/lib/supabase/server';
+import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
+
+export async function createProduct(formData: FormData) {
+  const supabase = await createClient();
+  await supabase.from('posts').insert({
+    post_name: formData.get('name') as string,
+  });
+  invalidateTag(CACHE_TAGS.PRODUCTS);
+}
+
+// In component:
+<form action={createProduct}>
+  <input name="title" />
+  <SubmitButton />
+</form>
+```
+
+```typescript
+// ✅ Client Component for realtime only
+'use client';
+
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+
+export function RealtimeMessages({ roomId }) {
+  const [messages, setMessages] = useState([]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase.channel('messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' },
+        (payload) => setMessages(prev => [...prev, payload.new]))
+      .subscribe();
+    return () => channel.unsubscribe();
+  }, [roomId]);
+
+  return <MessageList messages={messages} />;
+}
+```
+
+### Hooks Barrel Export
+
+The `src/hooks/index.ts` barrel export includes:
+
+- **Utility hooks** - `useDebounce`, `useMediaQuery`, `usePosition`, `useTheme`, etc.
+- **Legacy query/mutation hooks** - Kept for backwards compatibility only
+
+> **Important**: The legacy TanStack Query hooks in `src/hooks/queries/*` are kept for backwards compatibility during migration. **New code should use Server Components for data fetching and Server Actions for mutations.**
+
+### Patterns to Avoid
+
+```typescript
+// ❌ Don't fetch in useEffect
+'use client';
+useEffect(() => {
+  fetch('/api/data').then(setData);
+}, []);
+
+// ❌ Don't use TanStack Query for server data
+const { data } = useProducts('food');
+
+// ❌ Don't create Supabase server client without await
+const supabase = createClient(); // Missing await!
+```
+
+---
+
 ## 📁 Directory Structure
 
 ```

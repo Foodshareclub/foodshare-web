@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { profileAPI } from "@/api";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { getAllCountries } from "@/hooks";
-import type { AddressType, CountryType } from "@/api/profileAPI";
+import { profileAPI, type AddressType, type CountryType } from "@/api/profileAPI";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,12 +23,14 @@ type AddressBlockType = {
   setA: (value: boolean) => void;
   setB: (value: boolean) => void;
   setC: (value: boolean) => void;
+  /** Countries list passed from server */
+  countries?: CountryType[];
 };
 
 /**
  * AddressBlock Component
  * Displays and edits user address information
- * Uses React Query instead of Redux for countries data
+ * Receives countries as props from Server Component
  */
 export const AddressBlock: React.FC<AddressBlockType> = ({
   a,
@@ -40,13 +41,20 @@ export const AddressBlock: React.FC<AddressBlockType> = ({
   setC,
   setA,
   setB,
+  countries: propCountries,
 }) => {
-  // Fetch countries using React Query (replaces Redux selector)
-  const { data: allCountries = [] } = useQuery({
-    queryKey: ["countries"],
-    queryFn: getAllCountries,
-    staleTime: 60 * 60 * 1000, // 1 hour - countries rarely change
-  });
+  const router = useRouter();
+  
+  // Use prop countries or fetch client-side as fallback
+  const [allCountries, setAllCountries] = useState<CountryType[]>(propCountries || []);
+  
+  useEffect(() => {
+    if (!propCountries || propCountries.length === 0) {
+      getAllCountries().then((countries) => {
+        if (countries) setAllCountries(countries);
+      });
+    }
+  }, [propCountries]);
 
   const userCountry = (
     address.country ? { id: address.country, name: "" } : null
@@ -180,12 +188,13 @@ export const AddressBlock: React.FC<AddressBlockType> = ({
 
               <Button
                 variant="glass-accent"
-                onClick={() => {
-                  onSaveHandler();
+                onClick={async () => {
+                  await onSaveHandler();
                   setA(!a);
                   setB(!b);
                   setC(!c);
                   setEdit(!edit);
+                  router.refresh();
                 }}
                 className="my-3"
               >

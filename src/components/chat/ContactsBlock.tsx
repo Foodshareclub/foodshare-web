@@ -3,9 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
-import { useAuth } from "@/hooks/useAuth";
-import { useCurrentProfile } from "@/hooks/queries/useProfileQueries";
-import { useUpdateRoom } from "@/hooks/queries/useChatQueries";
+import { markFoodChatAsRead } from "@/app/actions/chat";
 import AvatarWithRipple from "@/components/listingPersonCard/AvatarWithRipple";
 import { SearchIcon } from "@/utils/icons";
 import { MinifiedUserInfo } from "@/components";
@@ -18,43 +16,49 @@ export type ContactsBlockType = {
   roomIDFromUrl: string;
   newMessageRoomId: string;
   allRooms: Array<CustomRoomType>;
+  /** User profile data (passed from server) */
+  userProfile?: {
+    avatar_url?: string | null;
+    first_name?: string | null;
+    second_name?: string | null;
+  } | null;
 };
 
 /**
  * ContactsBlock Component
  * Displays the user's chat contacts sidebar
- * Uses React Query + Zustand instead of Redux
+ * Receives profile data as props from Server Component
  */
-export default function ContactsBlock({ allRooms, roomIDFromUrl, newMessageRoomId, userID }: ContactsBlockType) {
+export default function ContactsBlock({
+  allRooms,
+  roomIDFromUrl,
+  newMessageRoomId,
+  userID,
+  userProfile,
+}: ContactsBlockType) {
     const t = useTranslations();
 
-    // Auth and profile from React Query hooks (replaces Redux selectors)
-    const { user } = useAuth();
-    const { profile, avatarUrl } = useCurrentProfile(user?.id);
-
-    // Room update mutation from React Query
-    const updateRoom = useUpdateRoom();
-
-    // Profile data
-    const imgUrl = avatarUrl ?? profile?.avatar_url ?? "";
-    const userFirstName = profile?.first_name ?? "";
-    const userSecondName = profile?.second_name ?? "";
+    // Profile data from props (server-fetched)
+    const imgUrl = userProfile?.avatar_url ?? "";
+    const userFirstName = userProfile?.first_name ?? "";
+    const userSecondName = userProfile?.second_name ?? "";
 
     const router = useRouter();
 
     const onGetCurrentUserMessages = async (
       post_id: number,
-      sharerId: string,
-      requesterId: string,
+      _sharerId: string,
+      _requesterId: string,
       roomId: string
     ) => {
       if (roomId === roomIDFromUrl) {
         return;
-      } else {
-        router.push(`/chat?food=${post_id}&room=${roomId}`);
       }
-      // Update room using React Query mutation
-      await updateRoom.mutateAsync({ last_message_seen_by: userID, id: roomId });
+      
+      router.push(`/chat?food=${post_id}&room=${roomId}`);
+      
+      // Mark room as read using Server Action
+      await markFoodChatAsRead(roomId);
     };
 
     return (

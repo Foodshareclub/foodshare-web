@@ -1,58 +1,44 @@
 'use client'
 
+/**
+ * App Providers
+ * 
+ * Provides:
+ * - NextIntlClientProvider for i18n
+ * - ThemeProvider for dark/light mode
+ * 
+ * Note: TanStack Query has been removed. Data fetching is done via:
+ * - Server Components with lib/data/* functions
+ * - Server Actions for mutations
+ * - Supabase client subscriptions for realtime (in individual components)
+ */
+
 import { useEffect, useState } from 'react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { NextIntlClientProvider } from 'next-intl'
 import { ThemeProvider } from 'next-themes'
 import { getBrowserLocale, type Locale } from '@/i18n/config'
 
-// Loading component
+// Loading component - renders before ThemeProvider, so we use inline styles
+// with CSS custom properties that respect the user's system preference
 const LoadingSpinner = () => (
-  <div className="min-h-screen flex flex-col justify-center">
-    <div className="m-auto w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+  <div 
+    className="min-h-screen flex flex-col justify-center"
+    style={{
+      // Use CSS variables from globals.css which respect prefers-color-scheme
+      backgroundColor: 'hsl(var(--background))',
+    }}
+  >
+    <div 
+      className="m-auto w-12 h-12 rounded-full animate-spin"
+      style={{
+        borderWidth: '4px',
+        borderStyle: 'solid',
+        borderColor: 'hsl(var(--primary))',
+        borderTopColor: 'transparent',
+      }}
+    />
   </div>
 )
-
-// Create QueryClient with optimized defaults
-function makeQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        // Data is fresh for 5 minutes
-        staleTime: 5 * 60 * 1000,
-        // Keep unused data in cache for 30 minutes
-        gcTime: 30 * 60 * 1000,
-        // Don't refetch on window focus by default
-        refetchOnWindowFocus: false,
-        // Retry failed requests once
-        retry: 1,
-        // Don't refetch on reconnect by default
-        refetchOnReconnect: false,
-      },
-      mutations: {
-        // Retry failed mutations once
-        retry: 1,
-      },
-    },
-  })
-}
-
-// Singleton for browser, new instance for server
-let browserQueryClient: QueryClient | undefined = undefined
-
-function getQueryClient() {
-  if (typeof window === 'undefined') {
-    // Server: always make a new query client
-    return makeQueryClient()
-  } else {
-    // Browser: reuse existing client or create new one
-    if (!browserQueryClient) {
-      browserQueryClient = makeQueryClient()
-    }
-    return browserQueryClient
-  }
-}
 
 // Message loading cache
 const messageCache = new Map<Locale, Record<string, string>>()
@@ -84,7 +70,6 @@ export function Providers({ children, initialLocale = 'en' }: ProvidersProps) {
   const [isClient, setIsClient] = useState(false)
   const [locale, setLocale] = useState<Locale>(initialLocale)
   const [messages, setMessages] = useState<Record<string, string> | null>(null)
-  const queryClient = getQueryClient()
 
   useEffect(() => {
     setIsClient(true)
@@ -101,17 +86,11 @@ export function Providers({ children, initialLocale = 'en' }: ProvidersProps) {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <NextIntlClientProvider locale={locale} messages={messages}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
-        </ThemeProvider>
-      </NextIntlClientProvider>
-      {/* React Query Devtools - only in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
-      )}
-    </QueryClientProvider>
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        {children}
+      </ThemeProvider>
+    </NextIntlClientProvider>
   )
 }
 

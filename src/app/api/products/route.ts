@@ -95,6 +95,7 @@ export async function GET(request: NextRequest) {
         .from('posts_with_location')
         .select('*, reviews(*)')
         .eq('id', parseInt(id))
+        .eq('is_active', true)
         .single();
 
       if (error) {
@@ -112,6 +113,7 @@ export async function GET(request: NextRequest) {
         .from('posts_with_location')
         .select('*')
         .eq('profile_id', userId)
+        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

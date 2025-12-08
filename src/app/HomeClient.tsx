@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 import { ProductGrid } from '@/components/productCard/ProductGrid';
 import NavigateButtons from '@/components/navigateButtons/NavigateButtons';
-import { useInfiniteProducts } from '@/hooks/queries/useProductQueries';
 import type { InitialProductStateType } from '@/types/product.types';
 
 interface HomeClientProps {
@@ -13,51 +13,30 @@ interface HomeClientProps {
 
 /**
  * HomeClient - Client wrapper for the home page
- * Uses React 19 patterns: useTransition for non-blocking updates
- * Uses infinite scroll with cursor-based pagination
- * React Compiler handles memoization automatically
+ * Receives products from Server Component
+ * Uses router.refresh() for category changes
  * 
  * Note: Navbar is rendered by root layout
  */
 export function HomeClient({ initialProducts, productType = 'food' }: HomeClientProps) {
-  const [currentProductType, setCurrentProductType] = useState(productType);
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  // Only use initialProducts for the original productType
-  const isOriginalType = currentProductType === productType;
+  // Products from server
+  const products = initialProducts;
 
-  // Infinite scroll query - uses server-fetched initialProducts as first page
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-  } = useInfiniteProducts(
-    currentProductType,
-    isOriginalType ? initialProducts : undefined
-  );
-
-  // Flatten pages into single array
-  const products = data?.pages?.length
-    ? data.pages.flatMap((page) => page.data)
-    : isOriginalType ? initialProducts : [];
-
-  // Use startTransition for non-blocking category changes
-  const _handleProductTypeChange = (type: string) => {
+  // Handle load more - triggers server-side fetch
+  const handleLoadMore = () => {
+    // For infinite scroll, we'd need to implement cursor-based pagination
+    // via URL params and server-side fetching
+    // For now, this is a placeholder
     startTransition(() => {
-      setCurrentProductType(type);
+      router.refresh();
     });
   };
 
-  const handleLoadMore = () => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  };
-
-  // Show loading state during category transition or initial load
-  const showLoading = (isLoading || isPending) && !products.length;
+  // Show loading state during transition
+  const showLoading = isPending && !products.length;
 
   return (
     <>
@@ -66,8 +45,8 @@ export function HomeClient({ initialProducts, productType = 'food' }: HomeClient
         products={products}
         isLoading={showLoading}
         onLoadMore={handleLoadMore}
-        isFetchingMore={isFetchingNextPage || isPending}
-        hasMore={hasNextPage ?? false}
+        isFetchingMore={isPending}
+        hasMore={false} // Server determines this
       />
     </>
   );

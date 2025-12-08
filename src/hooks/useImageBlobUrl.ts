@@ -1,26 +1,27 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { useEffect, useRef, useCallback, useState } from 'react';
 
 interface UseImageBlobUrlOptions {
-  /** Query key for React Query */
-  queryKey: readonly unknown[];
   /** Function to fetch the blob data */
   fetchFn: () => Promise<Blob | null>;
-  /** Whether the query is enabled */
+  /** Whether the fetch is enabled */
   enabled?: boolean;
-  /** Stale time in ms */
-  staleTime?: number;
-  /** Garbage collection time in ms */
-  gcTime?: number;
+  /** Dependencies that trigger refetch */
+  deps?: unknown[];
 }
 
-interface UseImageBlobUrlResult extends Omit<UseQueryResult<string | null, Error>, 'data'> {
+interface UseImageBlobUrlResult {
   /** The blob URL (properly managed with cleanup) */
   blobUrl: string | null;
   /** Alias for blobUrl for backward compatibility */
   data: string | null;
+  /** Loading state */
+  isLoading: boolean;
+  /** Error state */
+  error: Error | null;
+  /** Refetch function */
+  refetch: () => Promise<void>;
 }
 
 /**
@@ -30,27 +31,29 @@ interface UseImageBlobUrlResult extends Omit<UseQueryResult<string | null, Error
  * are properly revoked when:
  * - The component unmounts
  * - A new blob URL replaces the old one
- * - The query is refetched
+ * - The fetch is triggered again
  *
  * @example
  * ```tsx
  * const { blobUrl, isLoading } = useImageBlobUrl({
- *   queryKey: ['image', imagePath],
  *   fetchFn: async () => {
  *     const { data } = await storageAPI.downloadImage({ path: imagePath });
  *     return data;
  *   },
  *   enabled: !!imagePath,
+ *   deps: [imagePath],
  * });
  * ```
  */
 export function useImageBlobUrl({
-  queryKey,
   fetchFn,
   enabled = true,
-  staleTime = 30 * 60 * 1000, // 30 minutes
-  gcTime = 60 * 60 * 1000, // 1 hour
+  deps = [],
 }: UseImageBlobUrlOptions): UseImageBlobUrlResult {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  
   // Track the current blob URL for cleanup
   const blobUrlRef = useRef<string | null>(null);
 
@@ -62,10 +65,14 @@ export function useImageBlobUrl({
     }
   }, []);
 
-  // Query to fetch the blob and create URL
-  const queryResult = useQuery({
-    queryKey,
-    queryFn: async () => {
+  // Fetch function
+  const fetchBlob = useCallback(async () => {
+    if (!enabled) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
       // Clean up previous URL before creating new one
       cleanup();
 
@@ -73,14 +80,23 @@ export function useImageBlobUrl({
       if (blob) {
         const url = URL.createObjectURL(blob);
         blobUrlRef.current = url;
-        return url;
+        setBlobUrl(url);
+      } else {
+        setBlobUrl(null);
       }
-      return null;
-    },
-    enabled,
-    staleTime,
-    gcTime,
-  });
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch blob'));
+      setBlobUrl(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [enabled, fetchFn, cleanup]);
+
+  // Fetch on mount and when deps change
+  useEffect(() => {
+    fetchBlob();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, ...deps]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -89,22 +105,12 @@ export function useImageBlobUrl({
     };
   }, [cleanup]);
 
-  // Cleanup when data changes (e.g., on refetch)
-  useEffect(() => {
-    // If query data changed but ref doesn't match, update ref
-    if (queryResult.data && queryResult.data !== blobUrlRef.current) {
-      // The old URL was already cleaned up in queryFn
-      blobUrlRef.current = queryResult.data;
-    }
-  }, [queryResult.data]);
-
-  const { data, ...rest } = queryResult;
-  const blobUrl = data ?? null;
-
   return {
     blobUrl,
     data: blobUrl, // Backward compatibility alias
-    ...rest,
+    isLoading,
+    error,
+    refetch: fetchBlob,
   };
 }
 

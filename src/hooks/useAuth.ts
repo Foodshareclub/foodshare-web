@@ -1,306 +1,406 @@
 /**
  * useAuth Hook
- * Unified authentication hook using TanStack Query
- * Single source of truth: React Query handles data, Zustand only for UI state
+ * Client-side authentication hook using Server Actions
+ * 
+ * For Server Components, use getAuthSession() from '@/lib/data/auth' instead.
+ * This hook is for Client Components that need auth state and actions.
  */
 
-import { useCallback } from "react";
-import { useRouter } from "next/navigation";
+'use client';
+
+import { useCallback, useEffect, useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { useAuthStore } from '@/store/zustand';
 import {
-  useSession,
-  useIsAdmin,
-  useSignIn,
-  useSignUp,
-  useSignOut,
-  useSignInWithOtp,
-  useSignInWithProvider,
-  useRequestPasswordReset,
-  useUpdatePassword,
-} from "@/hooks/queries";
-import { useAuthStore } from "@/store/zustand";
-import type {
-  AuthPayload,
-  AuthProvider,
-  LoginResult,
-  AuthResult,
-  UseAuthReturn,
-} from "@/lib/auth/types";
-import { createLogger } from "@/lib/logger";
+  signInWithPassword,
+  signUp,
+  signOut,
+  resetPassword,
+  updatePassword,
+  getOAuthSignInUrl,
+} from '@/app/actions/auth';
+import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 
-const logger = createLogger("useAuth");
+// ============================================================================
+// Types
+// ============================================================================
 
-/**
- * Authentication Hook
- *
- * Single source of truth pattern:
- * - React Query: Handles all data fetching and caching (session, admin status)
- * - Zustand: Only used for mutation UI state (loading, errors) that React Query syncs
- *
- * @example
- * ```tsx
- * function LoginForm() {
- *   const { loginWithPassword, isLoading, error } = useAuth();
- *
- *   const handleLogin = async () => {
- *     const result = await loginWithPassword(email, password);
- *     if (result.success) {
- *       router.push('/dashboard');
- *     }
- *   };
- * }
- * ```
- */
+export interface AuthUser {
+  id: string;
+  email: string | undefined;
+}
+
+export interface UseAuthReturn {
+  // State
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  adminCheckStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+  user: AuthUser | null;
+  session: Session | null;
+  error: string | null;
+  isLoading: boolean;
+  roles: string[];
+
+  // Actions
+  loginWithPassword: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithOAuth: (provider: 'google' | 'github' | 'facebook' | 'apple') => Promise<{ success: boolean; error?: string }>;
+  loginWithMagicLink: (email: string) => Promise<{ success: boolean; error?: string }>;
+  register: (data: { email: string; password: string; firstName?: string; lastName?: string } | string, password?: string, name?: string) => Promise<{ success: boolean; error?: string; user?: AuthUser }>;
+  logout: () => Promise<void>;
+  recoverPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
+  updatePassword: (password: string) => Promise<{ success: boolean; error?: string }>;
+  clearError: () => void;
+  checkSession: () => Promise<void>;
+
+  // Backward compatibility aliases
+  isAuth: boolean;
+  authError: string | null;
+  loginWithProvider: (provider: 'google' | 'github' | 'facebook' | 'apple') => Promise<{ success: boolean; error?: string }>;
+}
+
+// ============================================================================
+// Hook Implementation
+// ============================================================================
+
 export function useAuth(): UseAuthReturn {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const supabase = createClient();
+
+  // Local state for auth
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Zustand for admin state (persisted across components)
+  const isAdmin = useAuthStore((state) => state.isAdmin);
+  const roles = useAuthStore((state) => state.roles);
+  const adminCheckStatus = useAuthStore((state) => state.adminCheckStatus);
+  const setAdmin = useAuthStore((state) => state.setAdmin);
+  const setAdminCheckStatus = useAuthStore((state) => state.setAdminCheckStatus);
+  const reset = useAuthStore((state) => state.reset);
 
   // ========================================================================
-  // TanStack Query - Single Source of Truth for Data
+  // Auth State Listener
   // ========================================================================
 
-  const {
-    data: sessionData,
-    isLoading: isSessionLoading,
-    error: sessionError,
-    refetch: refetchSession,
-  } = useSession();
+  useEffect(() => {
+    // Get initial session
+    const getInitialSession = async () => {
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+        
+        // Check admin status if user exists
+        if (initialSession?.user) {
+          await checkAdminStatus(initialSession.user.id);
+        }
+      } catch (err) {
+        console.error('Error getting initial session:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const { data: adminData, status: adminQueryStatus } = useIsAdmin(
-    sessionData?.user?.id
-  );
+    getInitialSession();
 
-  // Map TanStack Query status to legacy status format
-  const adminCheckStatus = (() => {
-    switch (adminQueryStatus) {
-      case "pending":
-        return "loading" as const;
-      case "error":
-        return "failed" as const;
-      case "success":
-        return "succeeded" as const;
-      default:
-        return "idle" as const;
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event: AuthChangeEvent, newSession: Session | null) => {
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+
+        if (newSession?.user) {
+          await checkAdminStatus(newSession.user.id);
+        } else {
+          reset();
+        }
+
+        // Refresh server components on auth change
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+          router.refresh();
+        }
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase, router, reset]);
+
+  // ========================================================================
+  // Admin Check
+  // ========================================================================
+
+  const checkAdminStatus = async (userId: string) => {
+    setAdminCheckStatus('loading');
+    try {
+      const { data, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role_id, roles!user_roles_role_id_fkey(name)')
+        .eq('profile_id', userId);
+
+      if (roleError) {
+        setAdminCheckStatus('failed');
+        return;
+      }
+
+      const userRoles = (data ?? []).flatMap((r) => {
+        const roleName = (r as { roles?: { name?: string } }).roles?.name;
+        return roleName ? [roleName] : [];
+      });
+
+      const isUserAdmin = userRoles.includes('admin') || userRoles.includes('superadmin');
+      setAdmin(isUserAdmin, userRoles);
+    } catch {
+      setAdminCheckStatus('failed');
     }
-  })();
-
-  const signInMutation = useSignIn();
-  const signUpMutation = useSignUp();
-  const signOutMutation = useSignOut();
-  const signInWithOtpMutation = useSignInWithOtp();
-  const signInWithProviderMutation = useSignInWithProvider();
-  const recoverPasswordMutation = useRequestPasswordReset();
-  const updatePasswordMutation = useUpdatePassword();
-
-  // ========================================================================
-  // Zustand - Only for UI state that mutations manage
-  // ========================================================================
-
-  const zustandRoles = useAuthStore((state) => state.roles);
-  const zustandError = useAuthStore((state) => state.error);
-  const zustandIsLoading = useAuthStore((state) => state.isLoading);
-  const clearZustandError = useAuthStore((state) => state.clearError);
-
-  // ========================================================================
-  // Derived State - React Query is primary source
-  // ========================================================================
-
-  const user = sessionData?.user ?? null;
-  const session = sessionData?.session ?? null;
-  const isAuthenticated = sessionData?.isAuthenticated ?? false;
-  const isAdmin = adminData?.isAdmin ?? false;
-  const roles = adminData?.roles ?? zustandRoles;
-
-  // Combine error sources (mutation errors take precedence)
-  const error =
-    signInMutation.error?.message ??
-    signUpMutation.error?.message ??
-    zustandError ??
-    sessionError?.message ??
-    null;
-
-  // Combine loading states
-  const isLoading =
-    zustandIsLoading ||
-    isSessionLoading ||
-    signInMutation.isPending ||
-    signUpMutation.isPending;
+  };
 
   // ========================================================================
   // Auth Actions
   // ========================================================================
 
-  /**
-   * Login with email and password
-   */
   const loginWithPassword = useCallback(
-    async (email: string, password: string): Promise<LoginResult> => {
-      logger.debug("loginWithPassword called", { email });
+    async (email: string, password: string) => {
+      setError(null);
+      setIsLoading(true);
 
       try {
-        const result = await signInMutation.mutateAsync({ email, password });
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('password', password);
 
-        if (result?.user) {
-          logger.info("Login successful");
-          return {
-            success: true,
-            user: result.user,
-            session: result.session,
-          };
+        const result = await signInWithPassword(formData);
+
+        if (!result.success) {
+          setError(result.error || 'Login failed');
+          return { success: false, error: result.error };
         }
 
-        return { success: false, error: "Login failed" };
+        startTransition(() => {
+          router.refresh();
+        });
+
+        return { success: true };
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Login failed";
-        logger.error("Login failed", new Error(errorMessage));
+        const errorMessage = err instanceof Error ? err.message : 'Login failed';
+        setError(errorMessage);
         return { success: false, error: errorMessage };
+      } finally {
+        setIsLoading(false);
       }
     },
-    [signInMutation]
+    [router]
   );
 
-  /**
-   * Login with OAuth provider (Google, Facebook, Apple)
-   */
   const loginWithOAuth = useCallback(
-    async (provider: AuthProvider): Promise<AuthResult> => {
-      try {
-        await signInWithProviderMutation.mutateAsync(provider);
-        return { success: true };
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "OAuth login failed";
-        return { success: false, error: errorMessage };
-      }
-    },
-    [signInWithProviderMutation]
-  );
+    async (provider: 'google' | 'github' | 'facebook' | 'apple') => {
+      setError(null);
 
-  /**
-   * Login with magic link (OTP)
-   */
-  const loginWithMagicLink = useCallback(
-    async (email: string): Promise<AuthResult> => {
       try {
-        await signInWithOtpMutation.mutateAsync({ email });
-        return { success: true };
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Magic link failed";
-        return { success: false, error: errorMessage };
-      }
-    },
-    [signInWithOtpMutation]
-  );
+        const result = await getOAuthSignInUrl(provider);
 
-  /**
-   * Register new user
-   */
-  const registerUser = useCallback(
-    async (payload: AuthPayload): Promise<LoginResult> => {
-      try {
-        const result = await signUpMutation.mutateAsync(payload);
-
-        if (result?.user) {
-          return {
-            success: true,
-            user: result.user,
-            session: result.session,
-          };
+        if (result.error || !result.url) {
+          setError(result.error || 'OAuth login failed');
+          return { success: false, error: result.error };
         }
 
-        return { success: false, error: "Registration failed" };
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Registration failed";
-        return { success: false, error: errorMessage };
-      }
-    },
-    [signUpMutation]
-  );
-
-  /**
-   * Logout user
-   */
-  const logoutUser = useCallback(async () => {
-    await signOutMutation.mutateAsync();
-    router.push("/");
-  }, [signOutMutation, router]);
-
-  /**
-   * Request password recovery email
-   */
-  const recoverPassword = useCallback(
-    async (email: string): Promise<AuthResult> => {
-      try {
-        await recoverPasswordMutation.mutateAsync(email);
+        // Redirect to OAuth provider
+        window.location.href = result.url;
         return { success: true };
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Password recovery failed";
+        const errorMessage = err instanceof Error ? err.message : 'OAuth login failed';
+        setError(errorMessage);
         return { success: false, error: errorMessage };
       }
     },
-    [recoverPasswordMutation]
+    []
   );
 
-  /**
-   * Update password
-   */
-  const setNewPassword = useCallback(
-    async (password: string): Promise<AuthResult> => {
+  const loginWithMagicLink = useCallback(
+    async (email: string) => {
+      setError(null);
+
       try {
-        await updatePasswordMutation.mutateAsync(password);
+        const { error: otpError } = await supabase.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+
+        if (otpError) {
+          setError(otpError.message);
+          return { success: false, error: otpError.message };
+        }
+
         return { success: true };
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Password update failed";
+        const errorMessage = err instanceof Error ? err.message : 'Magic link failed';
+        setError(errorMessage);
         return { success: false, error: errorMessage };
       }
     },
-    [updatePasswordMutation]
+    [supabase]
   );
 
-  /**
-   * Check session on mount
-   */
+  const register = useCallback(
+    async (
+      dataOrEmail: { email: string; password: string; firstName?: string; lastName?: string } | string,
+      passwordArg?: string,
+      nameArg?: string
+    ) => {
+      setError(null);
+      setIsLoading(true);
+
+      try {
+        // Support both object and positional arguments for backward compatibility
+        let email: string;
+        let password: string;
+        let firstName: string | undefined;
+        let lastName: string | undefined;
+
+        if (typeof dataOrEmail === 'object') {
+          email = dataOrEmail.email;
+          password = dataOrEmail.password;
+          firstName = dataOrEmail.firstName;
+          lastName = dataOrEmail.lastName;
+        } else {
+          email = dataOrEmail;
+          password = passwordArg!;
+          // If nameArg is provided, use it as firstName
+          firstName = nameArg;
+        }
+
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('password', password);
+        if (firstName) formData.append('firstName', firstName);
+        if (lastName) formData.append('lastName', lastName);
+        // Also support legacy 'name' field
+        if (firstName && lastName) {
+          formData.append('name', `${firstName} ${lastName}`);
+        } else if (firstName) {
+          formData.append('name', firstName);
+        }
+
+        const result = await signUp(formData);
+
+        if (!result.success) {
+          setError(result.error || 'Registration failed');
+          return { success: false, error: result.error };
+        }
+
+        startTransition(() => {
+          router.refresh();
+        });
+
+        return { success: true, user: user ? { id: user.id, email: user.email } : undefined };
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Registration failed';
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [router, user]
+  );
+
+  const logout = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await signOut();
+      reset();
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [reset]);
+
+  const recoverPassword = useCallback(async (email: string) => {
+    setError(null);
+
+    try {
+      const result = await resetPassword(email);
+
+      if (!result.success) {
+        setError(result.error || 'Password recovery failed');
+        return { success: false, error: result.error };
+      }
+
+      return { success: true };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Password recovery failed';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  }, []);
+
+  const handleUpdatePassword = useCallback(async (password: string) => {
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('password', password);
+
+      const result = await updatePassword(formData);
+
+      if (!result.success) {
+        setError(result.error || 'Password update failed');
+        return { success: false, error: result.error };
+      }
+
+      return { success: true };
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Password update failed';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    }
+  }, []);
+
   const checkSession = useCallback(async () => {
-    await refetchSession();
-  }, [refetchSession]);
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    setSession(currentSession);
+    setUser(currentSession?.user ?? null);
+  }, [supabase]);
 
-  /**
-   * Clear error state
-   * Note: Using .reset directly avoids dependency on the full mutation object
-   */
-  const clearAuthError = useCallback(() => {
-    clearZustandError();
-    signInMutation.reset();
-    signUpMutation.reset();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clearZustandError]);
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
 
   // ========================================================================
   // Return Interface
   // ========================================================================
 
+  const authUser: AuthUser | null = user ? { id: user.id, email: user.email } : null;
+  const isAuthenticated = !!session;
+
   return {
-    // State (React Query as source of truth)
+    // State
     isAuthenticated,
     isAdmin,
     adminCheckStatus,
-    user,
+    user: authUser,
     session,
     error,
-    isLoading,
+    isLoading: isLoading || isPending,
     roles,
 
     // Actions
     loginWithPassword,
     loginWithOAuth,
     loginWithMagicLink,
-    register: registerUser,
-    logout: logoutUser,
+    register,
+    logout,
     recoverPassword,
-    updatePassword: setNewPassword,
-    clearError: clearAuthError,
+    updatePassword: handleUpdatePassword,
+    clearError,
     checkSession,
 
     // Backward compatibility aliases

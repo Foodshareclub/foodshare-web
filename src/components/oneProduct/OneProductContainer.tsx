@@ -1,50 +1,45 @@
-import React from "react";
+'use client';
+
+import React, { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { useRoomAvailability, useCreateRoom } from "@/hooks";
+import { createFoodChatRoom } from "@/app/actions/chat";
 import { PATH } from "@/utils";
-import type { RoomType } from "@/api/chatAPI";
 import { OneProduct } from "@/components/oneProduct/OneProduct";
 import type { InitialProductStateType } from "@/types/product.types";
 
 type OneProductContainerType = {
   product: InitialProductStateType;
+  /** Room availability data passed from server */
+  roomData?: {
+    exists: boolean;
+    room?: { id: string } | null;
+  } | null;
 };
 
 /**
  * OneProductContainer Component
  * Handles chat room creation and navigation logic for product detail page
- * Uses React Query instead of Redux for room availability and creation
+ * Receives room availability as props from Server Component
  */
-export const OneProductContainer: React.FC<OneProductContainerType> = ({ product }) => {
+export const OneProductContainer: React.FC<OneProductContainerType> = ({ 
+  product,
+  roomData,
+}) => {
   const params = useParams();
   const id = params?.id as string;
-  const postId = Array.isArray(id) ? id[0] : id;
   const router = useRouter();
 
-  // Auth state from React Query + Zustand (replaces Redux)
+  // Auth state
   const { user } = useAuth();
   const userID = user?.id;
 
-  // React Query for room availability (replaces Redux selector + thunk)
-  const { data: roomData } = useRoomAvailability(userID, postId);
+  // Room availability from props
   const isRoomExist = roomData?.exists ?? false;
   const existingRoom = roomData?.room;
 
-  // React Query mutation for room creation (replaces Redux thunk)
-  const createRoomMutation = useCreateRoom();
-
-  const createRoom = async () => {
-    const room = {
-      requester: userID,
-      sharer: product.profile_id,
-      post_id: product.id,
-      last_message_sent_by: userID,
-      last_message_seen_by: userID,
-      last_message: "Initial message",
-    } as RoomType;
-    return await createRoomMutation.mutateAsync(room);
-  };
+  // Local state for loading
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
 
   const navigateHandler = async () => {
     if (product.profile_id === userID) {
@@ -52,9 +47,20 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({ product
       return;
     }
     if (!isRoomExist) {
-      const newRoom = await createRoom();
-      // Navigate to chat with newly created room
-      router.push(`/chat?food=${product.id}&room=${newRoom.id}`);
+      setIsCreatingRoom(true);
+      try {
+        const result = await createFoodChatRoom(product.id, product.profile_id);
+        if (result.error) {
+          console.error('Failed to create room:', result.error);
+          return;
+        }
+        router.push(`/chat?food=${product.id}&room=${result.roomId}`);
+        router.refresh();
+      } catch (error) {
+        console.error('Failed to create room:', error);
+      } finally {
+        setIsCreatingRoom(false);
+      }
       return;
     }
     // Navigate to existing chat room
@@ -66,7 +72,13 @@ export const OneProductContainer: React.FC<OneProductContainerType> = ({ product
       navigateHandler={navigateHandler}
       product={product}
       buttonValue={
-        product.profile_id === userID ? "go to my listings" : isRoomExist ? "go to chat" : "request"
+        isCreatingRoom 
+          ? "creating..." 
+          : product.profile_id === userID 
+            ? "go to my listings" 
+            : isRoomExist 
+              ? "go to chat" 
+              : "request"
       }
       key={Array.isArray(id) ? id[0] : id}
     />

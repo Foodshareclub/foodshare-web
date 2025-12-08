@@ -73,6 +73,11 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(validation.data.post_type));
     invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(validation.data.post_type));
 
+    // Invalidate user-specific cache
+    if (validation.data.profile_id) {
+      invalidateTag(CACHE_TAGS.USER_PRODUCTS(validation.data.profile_id));
+    }
+
     return { id: data.id };
   }, 'createProduct');
 }
@@ -112,10 +117,10 @@ export async function updateProduct(
   return withErrorHandling(async () => {
     const supabase = await createClient();
 
-    // Get current product type for cache invalidation
+    // Get current product info for cache invalidation
     const { data: currentProduct } = await supabase
       .from('posts')
-      .select('post_type')
+      .select('post_type, profile_id')
       .eq('id', id)
       .single();
 
@@ -141,6 +146,11 @@ export async function updateProduct(
       invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(validation.data.post_type));
     }
 
+    // Invalidate user-specific cache
+    if (currentProduct?.profile_id) {
+      invalidateTag(CACHE_TAGS.USER_PRODUCTS(currentProduct.profile_id));
+    }
+
     return undefined;
   }, 'updateProduct');
 }
@@ -152,10 +162,10 @@ export async function deleteProduct(id: number): Promise<ActionResult<undefined>
   return withErrorHandling(async () => {
     const supabase = await createClient();
 
-    // Get product type before deletion for cache invalidation
+    // Get product info before deletion for cache invalidation
     const { data: product } = await supabase
       .from('posts')
-      .select('post_type')
+      .select('post_type, profile_id')
       .eq('id', id)
       .single();
 
@@ -175,6 +185,11 @@ export async function deleteProduct(id: number): Promise<ActionResult<undefined>
     if (product?.post_type) {
       invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(product.post_type));
       invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(product.post_type));
+    }
+
+    // Invalidate user-specific cache
+    if (product?.profile_id) {
+      invalidateTag(CACHE_TAGS.USER_PRODUCTS(product.profile_id));
     }
 
     return undefined;

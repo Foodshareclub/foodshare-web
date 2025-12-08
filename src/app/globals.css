@@ -93,6 +93,27 @@
    - Coral/terracotta accent tones
    ============================================================================ */
 
+/* ============================================================================
+   System Preference Fallback (for initial paint before JS loads)
+   ============================================================================
+   This ensures the loading spinner and initial content respect system theme
+   preference immediately, before next-themes applies the .dark class.
+   ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --background: 20 10% 15%;
+    --foreground: 35 25% 90%;
+    --card: 22 10% 17%;
+    --card-foreground: 35 25% 90%;
+    --primary: 345 85% 60%;
+    --primary-foreground: 0 0% 100%;
+    --muted: 22 10% 20%;
+    --muted-foreground: 25 12% 55%;
+    --border: 25 10% 24%;
+  }
+}
+
 .dark {
   /* Claude AI warm charcoal background - #2a2520 */
   --background: 20 10% 15%;

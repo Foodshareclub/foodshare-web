@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { FiFileText, FiMessageSquare, FiSettings, FiLogOut, FiHelpCircle, FiInfo, FiList } from "react-icons/fi";
 
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -9,6 +11,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { ProfileSettingsProps } from "@/components/header/navbar/types";
@@ -25,8 +28,13 @@ export default function ProfileSettings({
   imgUrl,
   isAuth,
 }: ProfileSettingsProps) {
+    const router = useRouter();
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+
+    const navigateToMyPosts = () => {
+      router.push('/my-posts');
+    };
 
     return (
       <>
@@ -56,46 +64,65 @@ export default function ProfileSettings({
                 </div>
               )}
             </DropdownMenuTrigger>
-            <DropdownMenuContent variant="glass" className="rounded-xl">
+            <DropdownMenuContent variant="glass" className="rounded-xl w-56">
               {isAuth ? (
                 <>
-                  <DropdownMenuItem onClick={() => navigateToMyLists()}>
-                    "My listing's"
+                  <DropdownMenuItem onClick={navigateToMyPosts} className="gap-2 cursor-pointer">
+                    <FiFileText className="h-4 w-4" />
+                    My Posts
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigateToMyMessages()}>
+                  <DropdownMenuItem onClick={() => navigateToMyLists()} className="gap-2 cursor-pointer">
+                    <FiList className="h-4 w-4" />
+                    My Listings
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigateToMyMessages()} className="gap-2 cursor-pointer">
+                    <FiMessageSquare className="h-4 w-4" />
                     {signalOfNewMessage.length ? (
-                      "You have {signalOfNewMessage.length} unanswered messages"
+                      <span className="flex items-center gap-2">
+                        Messages
+                        <span className="bg-emerald-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                          {signalOfNewMessage.length}
+                        </span>
+                      </span>
                     ) : (
-                      "My messages"
+                      "Messages"
                     )}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigateToAccSettings()}>
-                    "Account settings"
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigateToAccSettings()} className="gap-2 cursor-pointer">
+                    <FiSettings className="h-4 w-4" />
+                    Account Settings
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigateToLogout()}>
-                    "Log Out"
+                  <DropdownMenuItem onClick={() => navigateToLogout()} className="gap-2 cursor-pointer text-destructive">
+                    <FiLogOut className="h-4 w-4" />
+                    Log Out
                   </DropdownMenuItem>
                 </>
               ) : (
                 <>
                   <DropdownMenuItem
                     onClick={() => setIsLoginOpen(true)}
+                    className="cursor-pointer"
                   >
-                    "Login"
+                    Login
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setIsRegisterOpen(true)}
+                    className="cursor-pointer"
                   >
-                    "Registration"
+                    Registration
                   </DropdownMenuItem>
                 </>
               )}
 
-              <DropdownMenuItem onClick={() => navigateToHelp()}>
-                "Help"
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigateToHelp()} className="gap-2 cursor-pointer">
+                <FiHelpCircle className="h-4 w-4" />
+                Help
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigateToAboutUs()}>
-                "About Foodshare"
+              <DropdownMenuItem onClick={() => navigateToAboutUs()} className="gap-2 cursor-pointer">
+                <FiInfo className="h-4 w-4" />
+                About FoodShare
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

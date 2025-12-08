@@ -62,6 +62,18 @@ async function safeGetUser() {
   }
 }
 
+/**
+ * Safely check if user is admin
+ */
+async function safeCheckIsAdmin() {
+  try {
+    const { checkIsAdmin } = await import('@/app/actions/auth');
+    return await checkIsAdmin();
+  } catch {
+    return false;
+  }
+}
+
 function transformChallengeToProduct(
   challenge: NonNullable<Awaited<ReturnType<typeof getChallengeById>>>
 ): InitialProductStateType {
@@ -125,8 +137,11 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
       notFound();
     }
 
-    // Only fetch user if product succeeded
-    const user = await safeGetUser();
+    // Only fetch user and admin status if product succeeded
+    const [user, isAdmin] = await Promise.all([
+      safeGetUser(),
+      safeCheckIsAdmin(),
+    ]);
 
     // Generate JSON-LD structured data for SEO
     const jsonLd = generateProductJsonLd({
@@ -156,7 +171,7 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
           dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
         />
         <Suspense fallback={<ProductDetailSkeleton />}>
-          <ProductDetailClient product={product} user={user} />
+          <ProductDetailClient product={product} user={user} isAdmin={isAdmin} />
         </Suspense>
       </>
     );

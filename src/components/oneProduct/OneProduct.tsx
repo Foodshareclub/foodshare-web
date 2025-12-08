@@ -6,7 +6,9 @@ import loc from "@/assets/location-red.svg";
 import likes from "@/assets/likes.svg";
 import bus from "@/assets/busIcon.png";
 import { useAuth } from "@/hooks/useAuth";
-import { useUpdateProduct, useUpdateRoom } from "@/hooks";
+import { useRouter } from "next/navigation";
+import { updateProduct } from "@/app/actions/products";
+import { updateRoom } from "@/app/actions/chat";
 import { AuthenticationUserModal, PopupNotificationModal } from "@/components";
 import TopTips from "@/components/topTips/TopTips";
 import type { InitialProductStateType } from "@/types/product.types";
@@ -30,34 +32,43 @@ export type OneProductType = {
  * Uses React Query instead of Redux for mutations
  */
 export function OneProduct({ chat, product, buttonValue, navigateHandler, size, requesterId, roomId }: OneProductType) {
+  const router = useRouter();
   const [rating, setRating] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  // Auth state from React Query + Zustand (replaces Redux)
+  // Auth state from Zustand
   const { isAuthenticated } = useAuth();
 
-  // React Query mutations (replaces Redux thunks)
-  const updateProduct = useUpdateProduct();
-  const updateRoom = useUpdateRoom();
-
-  // React Compiler optimizes these handlers automatically
+  // Handler using Server Actions
   const onClick = async () => {
-    if (buttonValue === "completed") return;
+    if (buttonValue === "completed" || isUpdating) return;
 
     if (navigateHandler) {
       navigateHandler();
     }
 
     if (buttonValue === "approval pending") {
-      await updateProduct.mutateAsync({
-        images: product.images,
-        id: product.id,
-        is_active: false,
-      });
-      await updateRoom.mutateAsync({
-        post_arranged_to: requesterId,
-        id: roomId as string,
-      });
+      setIsUpdating(true);
+      try {
+        const formData = new FormData();
+        formData.set('is_active', 'false');
+        if (product.images) formData.set('images', JSON.stringify(product.images));
+        
+        await updateProduct(product.id, formData);
+        
+        if (roomId && requesterId) {
+          const roomFormData = new FormData();
+          roomFormData.set('post_arranged_to', requesterId);
+          await updateRoom(roomId, roomFormData);
+        }
+        
+        router.refresh();
+      } catch (error) {
+        console.error('Failed to update:', error);
+      } finally {
+        setIsUpdating(false);
+      }
     }
 
     if (buttonValue === "leave a feedBack") {
