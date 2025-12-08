@@ -548,12 +548,20 @@
    Chat Page Layout - Hide footer, full height chat
    ============================================================================ */
 
-/* When chat page is active, hide the footer */
+/* When chat page is active, hide the footer and adjust main */
 body:has([data-chat-page]) footer {
-  display: none;
+  display: none !important;
 }
 
-/* Ensure main content doesn't have min-height when on chat page */
+/* Remove min-height and set proper height for chat page */
 body:has([data-chat-page]) main {
-  min-height: auto;
+  min-height: auto !important;
+  height: calc(100vh - 4rem); /* 4rem = navbar height */
+  overflow: hidden;
+}
+
+/* Ensure the chat wrapper fills the main area */
+body:has([data-chat-page]) main > [data-chat-page] {
+  height: 100%;
+  overflow: hidden;
 }
