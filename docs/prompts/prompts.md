@@ -41,6 +41,18 @@
         - Update the all packages respectively
         - MCP Foodshare if needed
 
+### Chats page
+
+    - Further improve the existing chatting sysem for the sharers and the forum users etc: 
+        - Unify it into one beautiful and robust chat syetsm 
+        - The char page don't have to be scrollable only the left and right segments. 
+        - Apply the dark/ light themes as well.
+        - Use Tailwind and Shadcn to to beautify the layout
+        - Use the latest bleeding edge practices
+        - Use the latest packages compatible with the stack
+        - A requester can't request its posts himself
+
+
 ### Search ✅ COMPLETED
 
     - ✅ **Phase 1.2 Complete** - Enhanced search system fully implemented
