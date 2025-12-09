@@ -1,4 +1,4 @@
-use crate::checks::{complexity, import_check, no_console, security};
+use crate::checks::{complexity, import_check, nextjs_security, no_console, security};
 use crate::utils::{filter_files_by_extension, get_staged_files, print_header, print_error, print_success};
 use anyhow::Result;
 
@@ -23,6 +23,12 @@ pub fn run(files: &[String]) -> Result<()> {
     // Run security check (critical - can fail)
     println!();
     if security::run(&files).is_err() {
+        failed = true;
+    }
+
+    // Run Next.js/React/Vercel security check (critical - can fail)
+    println!();
+    if nextjs_security::run(&ts_files).is_err() {
         failed = true;
     }
 

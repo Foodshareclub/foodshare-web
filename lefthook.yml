@@ -22,6 +22,12 @@ pre-commit:
       run: ./scripts/lefthook/target/release/lefthook-rs security
       priority: 1
 
+    nextjs-security:
+      tags: security critical
+      glob: "*.{ts,tsx,js,jsx,json}"
+      run: ./scripts/lefthook/target/release/lefthook-rs nextjs-security {staged_files}
+      priority: 1
+
     lint:
       tags: lint quality
       glob: "*.{ts,tsx,js,jsx}"

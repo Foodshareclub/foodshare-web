@@ -70,6 +70,12 @@ enum Commands {
     TestCoverage,
     /// Check for unused exports / dead code
     UnusedExports,
+    /// Next.js/React/Vercel security vulnerabilities check
+    NextjsSecurity {
+        /// Files to check
+        #[arg(trailing_var_arg = true)]
+        files: Vec<String>,
+    },
     /// Run all pre-commit checks
     PreCommit {
         /// Files to check
@@ -97,6 +103,7 @@ fn main() -> Result<()> {
         Commands::BundleSize => checks::bundle_size::run(),
         Commands::TestCoverage => checks::test_coverage::run(),
         Commands::UnusedExports => checks::unused_exports::run(),
+        Commands::NextjsSecurity { files } => checks::nextjs_security::run(&files),
         Commands::PreCommit { files } => checks::pre_commit::run(&files),
     };
 

@@ -5,6 +5,7 @@ pub mod conventional_commit;
 pub mod dependency_audit;
 pub mod import_check;
 pub mod large_files;
+pub mod nextjs_security;
 pub mod no_console;
 pub mod pre_commit;
 pub mod protected_branch;
