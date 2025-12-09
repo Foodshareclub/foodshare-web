@@ -28,97 +28,59 @@ pub fn run(files: &[String]) -> Result<()> {
     let mut warnings = 0;
 
     // =========================================================================
-    // CRITICAL: Server Action Security
+    // FOODSHARE: Supabase Client - await createClient() on server
     // =========================================================================
-    print_verbose("Checking Server Action security...");
-
-    // Unvalidated input in Server Actions
-    let server_action_pattern = Regex::new(r#"['"]use server['"]"#).unwrap();
-    let form_data_direct = Regex::new(r"formData\.get\([^)]+\)\s*as\s+").unwrap();
+    print_verbose("Checking Supabase client patterns...");
 
     for file in &files {
         if let Ok(content) = fs::read_to_string(file) {
-            if server_action_pattern.is_match(&content) {
-                // Check for direct formData casting without validation
-                if form_data_direct.is_match(&content) && !content.contains("zod") && !content.contains("yup") {
-                    print_warning(&format!(
-                        "{}: Server Action uses direct formData casting without schema validation",
+            // Server component must await createClient
+            if !content.contains("use client") {
+                if content.contains("createClient()")
+                    && !content.contains("await createClient()")
+                    && content.contains("supabase/server")
+                {
+                    print_error(&format!(
+                        "{}: Missing await on server createClient()",
                         file
                     ));
-                    print_info("Consider using Zod or similar for input validation");
-                    warnings += 1;
+                    errors += 1;
                 }
+            }
 
-                // Check for missing auth checks in server actions
-                if !content.contains("getUser") && !content.contains("auth()") && !content.contains("session") {
-                    if content.contains("insert") || content.contains("update") || content.contains("delete") {
-                        print_warning(&format!(
-                            "{}: Server Action performs mutations without apparent auth check",
-                            file
-                        ));
-                        warnings += 1;
-                    }
-                }
+            // Client component should not import server client
+            if content.contains("use client") && content.contains("supabase/server") {
+                print_error(&format!(
+                    "{}: Server Supabase client in client component",
+                    file
+                ));
+                errors += 1;
             }
         }
     }
 
     // =========================================================================
-    // CRITICAL: XSS Vulnerabilities
+    // FOODSHARE: Server Actions must use invalidateTag after mutations
     // =========================================================================
-    print_verbose("Checking for XSS vulnerabilities...");
+    print_verbose("Checking Server Action cache invalidation...");
 
-    // dangerouslySetInnerHTML usage
-    let dangerous_html = Regex::new(r"dangerouslySetInnerHTML").unwrap();
-    let dangerous_count = count_in_diff(&diff, &dangerous_html, Some(&["DOMPurify", "sanitize"]));
-    if dangerous_count > 0 {
-        print_error(&format!(
-            "Found {} dangerouslySetInnerHTML usage without sanitization",
-            dangerous_count
-        ));
-        print_info("Use DOMPurify.sanitize() before rendering HTML");
-        errors += 1;
-    }
+    let server_action_re = Regex::new(r#"use server"#).unwrap();
 
-    // Unescaped user input in href
-    let href_interpolation = Regex::new(r#"href=\{[`'"]?\$?\{[^}]+\}"#).unwrap();
-    if count_in_diff(&diff, &href_interpolation, Some(&["encodeURIComponent"])) > 0 {
-        print_warning("Dynamic href detected - ensure URL is validated to prevent javascript: XSS");
-        warnings += 1;
-    }
-
-    // =========================================================================
-    // CRITICAL: SSRF & Open Redirect
-    // =========================================================================
-    print_verbose("Checking for SSRF/Open Redirect...");
-
-    // Unvalidated redirects
-    let redirect_pattern = Regex::new(r"redirect\([^)]*\$\{|redirect\([^)]*\+").unwrap();
-    if count_in_diff(&diff, &redirect_pattern, None) > 0 {
-        print_error("Dynamic redirect detected - validate destination to prevent open redirect");
-        errors += 1;
-    }
-
-    // Unvalidated fetch URLs
-    let fetch_dynamic = Regex::new(r"fetch\([^)]*\+").unwrap();
-    if count_in_diff(&diff, &fetch_dynamic, Some(&["NEXT_PUBLIC_", "process.env"])) > 0 {
-        print_warning("Dynamic fetch URL - ensure URL is validated to prevent SSRF");
-        warnings += 1;
-    }
-
-    // =========================================================================
-    // CRITICAL: Authentication & Authorization
-    // =========================================================================
-    print_verbose("Checking auth patterns...");
-
-    // Exposed API routes without auth
     for file in &files {
-        if file.contains("/api/") && file.ends_with(".ts") {
+        if file.contains("/actions/") {
             if let Ok(content) = fs::read_to_string(file) {
-                if !content.contains("auth") && !content.contains("session") && !content.contains("getUser") {
-                    if content.contains("POST") || content.contains("PUT") || content.contains("DELETE") {
+                if server_action_re.is_match(&content) {
+                    let has_mutation = content.contains(".insert(")
+                        || content.contains(".update(")
+                        || content.contains(".delete(")
+                        || content.contains(".upsert(");
+
+                    if has_mutation
+                        && !content.contains("invalidateTag")
+                        && !content.contains("revalidatePath")
+                    {
                         print_warning(&format!(
-                            "{}: API route handles mutations without apparent auth check",
+                            "{}: Server Action mutates without cache invalidation",
                             file
                         ));
                         warnings += 1;
@@ -129,47 +91,101 @@ pub fn run(files: &[String]) -> Result<()> {
     }
 
     // =========================================================================
-    // CRITICAL: Environment Variable Exposure
+    // FOODSHARE: No Redux/TanStack Query for server data
+    // =========================================================================
+    print_verbose("Checking state management patterns...");
+
+    let tanstack_re = Regex::new(r"useQuery|useMutation|QueryClient").unwrap();
+    let redux_re = Regex::new(r"useSelector|useDispatch|createSlice").unwrap();
+
+    for file in &files {
+        if let Ok(content) = fs::read_to_string(file) {
+            if tanstack_re.is_match(&content) {
+                print_warning(&format!(
+                    "{}: TanStack Query - use Server Components instead",
+                    file
+                ));
+                warnings += 1;
+            }
+            if redux_re.is_match(&content) {
+                print_warning(&format!(
+                    "{}: Redux detected - use Zustand for UI state only",
+                    file
+                ));
+                warnings += 1;
+            }
+        }
+    }
+
+    // =========================================================================
+    // FOODSHARE: Hooks require 'use client' directive
+    // =========================================================================
+    print_verbose("Checking component directives...");
+
+    let hooks_re = Regex::new(r"\b(useState|useEffect|useRef|useCallback)\s*\(").unwrap();
+
+    for file in &files {
+        if (file.ends_with(".tsx") || file.ends_with(".jsx")) && !file.contains("/hooks/") {
+            if let Ok(content) = fs::read_to_string(file) {
+                if !content.contains("use client") && hooks_re.is_match(&content) {
+                    print_error(&format!(
+                        "{}: React hooks used without 'use client'",
+                        file
+                    ));
+                    errors += 1;
+                }
+            }
+        }
+    }
+
+    // =========================================================================
+    // CRITICAL: XSS - dangerouslySetInnerHTML
+    // =========================================================================
+    print_verbose("Checking XSS vulnerabilities...");
+
+    let dangerous_re = Regex::new(r"dangerouslySetInnerHTML").unwrap();
+    let dangerous_count = count_in_diff(&diff, &dangerous_re, Some(&["DOMPurify", "sanitize"]));
+    if dangerous_count > 0 {
+        print_error("dangerouslySetInnerHTML without sanitization");
+        errors += 1;
+    }
+
+    // =========================================================================
+    // CRITICAL: Server env vars in client components
     // =========================================================================
     print_verbose("Checking environment variable exposure...");
 
-    // Server secrets exposed to client
-    let server_env_client = Regex::new(
-        r"(?i)(SUPABASE_SERVICE_ROLE|DATABASE_URL|SECRET_KEY|PRIVATE_KEY|API_SECRET)[^_]",
-    ).unwrap();
+    let server_env_re = Regex::new(
+        r"(?i)(SUPABASE_SERVICE_ROLE|DATABASE_URL|SECRET_KEY|PRIVATE_KEY|API_SECRET)",
+    )
+    .unwrap();
 
     for file in &files {
-        if file.contains("/components/") || file.contains("/app/") {
-            if let Ok(content) = fs::read_to_string(file) {
-                let is_client = content.contains("use client");
-                if is_client {
-                    if server_env_client.is_match(&content) {
-                        print_error(&format!(
-                            "{}: Server-only env var referenced in client component",
-                            file
-                        ));
-                        errors += 1;
-                    }
-                }
+        if let Ok(content) = fs::read_to_string(file) {
+            if content.contains("use client") && server_env_re.is_match(&content) {
+                print_error(&format!(
+                    "{}: Server env var in client component",
+                    file
+                ));
+                errors += 1;
             }
         }
     }
 
-    // Missing NEXT_PUBLIC_ prefix for client vars
-    let client_env_pattern = Regex::new(r"process\.env\.([A-Z_]+)").unwrap();
+    // Check NEXT_PUBLIC_ prefix
+    let env_re = Regex::new(r"process\.env\.([A-Z][A-Z0-9_]*)").unwrap();
     for file in &files {
         if let Ok(content) = fs::read_to_string(file) {
             if content.contains("use client") {
-                for cap in client_env_pattern.captures_iter(&content) {
-                    if let Some(env_var) = cap.get(1) {
-                        let var_name = env_var.as_str();
-                        if !var_name.starts_with("NEXT_PUBLIC_") && var_name != "NODE_ENV" {
-                            print_warning(&format!(
-                                "{}: Client component accessing non-NEXT_PUBLIC_ env var: process.env.{}",
-                                file,
-                                var_name
+                for cap in env_re.captures_iter(&content) {
+                    if let Some(var) = cap.get(1) {
+                        let name = var.as_str();
+                        if !name.starts_with("NEXT_PUBLIC_") && name != "NODE_ENV" {
+                            print_error(&format!(
+                                "{}: process.env.{} needs NEXT_PUBLIC_ prefix",
+                                file, name
                             ));
-                            warnings += 1;
+                            errors += 1;
                         }
                     }
                 }
@@ -178,114 +194,63 @@ pub fn run(files: &[String]) -> Result<()> {
     }
 
     // =========================================================================
-    // CRITICAL: SQL Injection (Supabase)
+    // CRITICAL: Server Action authentication
     // =========================================================================
-    print_verbose("Checking for SQL injection patterns...");
+    print_verbose("Checking Server Action auth...");
 
-    // Raw SQL with string interpolation
-    let raw_sql = Regex::new(r#"\.rpc\([^,]+,\s*\{[^}]*\$\{|\.sql\([`'"].*\$\{"#).unwrap();
-    if count_in_diff(&diff, &raw_sql, None) > 0 {
-        print_error("Potential SQL injection - use parameterized queries");
-        errors += 1;
-    }
-
-    // =========================================================================
-    // HIGH: React Security Patterns
-    // =========================================================================
-    print_verbose("Checking React security patterns...");
-
-    // useEffect with unvalidated external data
-    let use_effect_fetch = Regex::new(r"useEffect\([^)]*fetch\(").unwrap();
-    if count_in_diff(&diff, &use_effect_fetch, None) > 0 {
-        print_warning("Client-side fetch in useEffect - prefer Server Components for data fetching");
-        warnings += 1;
-    }
-
-    // Storing sensitive data in localStorage/sessionStorage
-    let storage_sensitive = Regex::new(
-        r#"(?i)(localStorage|sessionStorage)\.(setItem|getItem)\([^)]*(?:token|password|secret|key)"#,
-    ).unwrap();
-    if count_in_diff(&diff, &storage_sensitive, None) > 0 {
-        print_error("Storing sensitive data in browser storage - use httpOnly cookies instead");
-        errors += 1;
-    }
-
-    // =========================================================================
-    // HIGH: Vercel/Deployment Security
-    // =========================================================================
-    print_verbose("Checking Vercel deployment security...");
-
-    // Exposed vercel.json secrets
     for file in &files {
-        if file == "vercel.json" {
+        if file.contains("/actions/") {
             if let Ok(content) = fs::read_to_string(file) {
-                if content.contains("env") && (content.contains("secret") || content.contains("key")) {
-                    print_warning("vercel.json may contain sensitive values - use Vercel dashboard for secrets");
-                    warnings += 1;
+                if server_action_re.is_match(&content) {
+                    let has_mutation = content.contains(".insert(")
+                        || content.contains(".update(")
+                        || content.contains(".delete(");
+
+                    let has_auth = content.contains("getUser")
+                        || content.contains("getCurrentUser")
+                        || content.contains("session")
+                        || content.contains("auth(");
+
+                    if has_mutation && !has_auth {
+                        print_warning(&format!(
+                            "{}: Server Action mutates without auth check",
+                            file
+                        ));
+                        warnings += 1;
+                    }
                 }
             }
         }
     }
 
-    // next.config with security issues
+    // =========================================================================
+    // HIGH: Sensitive data in browser storage
+    // =========================================================================
+    print_verbose("Checking browser storage...");
+
+    let storage_re = Regex::new(r"(?i)(localStorage|sessionStorage)\.setItem").unwrap();
+    let sensitive_re = Regex::new(r"(?i)(token|password|secret|key|auth)").unwrap();
+
+    for line in diff.lines().filter(|l| l.starts_with('+')) {
+        if storage_re.is_match(line) && sensitive_re.is_match(line) {
+            print_error("Sensitive data in browser storage - use httpOnly cookies");
+            errors += 1;
+            break;
+        }
+    }
+
+    // =========================================================================
+    // HIGH: Use next/image instead of <img>
+    // =========================================================================
+    print_verbose("Checking image usage...");
+
+    let img_re = Regex::new(r"<img\s").unwrap();
     for file in &files {
-        if file == "next.config.ts" || file == "next.config.js" || file == "next.config.mjs" {
+        if file.ends_with(".tsx") || file.ends_with(".jsx") {
             if let Ok(content) = fs::read_to_string(file) {
-                // Disabled security headers
-                if content.contains("poweredByHeader: true") {
-                    print_warning("X-Powered-By header enabled - consider disabling");
+                if img_re.is_match(&content) && !content.contains("next/image") {
+                    print_warning(&format!("{}: Use next/image instead of <img>", file));
                     warnings += 1;
-                }
-
-                // Overly permissive CORS
-                if content.contains("Access-Control-Allow-Origin") && content.contains("*") {
-                    print_error("Wildcard CORS origin - restrict to specific domains");
-                    errors += 1;
-                }
-
-                // Disabled strict mode
-                if content.contains("reactStrictMode: false") {
-                    print_warning("React Strict Mode disabled - enable for better error detection");
-                    warnings += 1;
-                }
-            }
-        }
-    }
-
-    // =========================================================================
-    // MEDIUM: Component Security
-    // =========================================================================
-    print_verbose("Checking component security...");
-
-    // Uncontrolled file uploads
-    let file_input = Regex::new(r#"<input[^>]*type=["']file["'][^>]*>"#).unwrap();
-    for file in &files {
-        if let Ok(content) = fs::read_to_string(file) {
-            if file_input.is_match(&content) {
-                if !content.contains("accept=") {
-                    print_warning(&format!(
-                        "{}: File input without accept attribute - restrict file types",
-                        file
-                    ));
-                    warnings += 1;
-                }
-            }
-        }
-    }
-
-    // Iframe without sandbox
-    let iframe_pattern = Regex::new(r"<iframe[^>]*>").unwrap();
-    let sandbox_pattern = Regex::new(r"sandbox=").unwrap();
-    for file in &files {
-        if let Ok(content) = fs::read_to_string(file) {
-            for iframe_match in iframe_pattern.find_iter(&content) {
-                if !sandbox_pattern.is_match(iframe_match.as_str()) {
-                    print_warning(&format!(
-                        "{}: iframe without sandbox attribute",
-                        file
-                    ));
-                    warnings += 1;
-                    break;
                 }
             }
         }
@@ -301,15 +266,13 @@ pub fn run(files: &[String]) -> Result<()> {
         print_success("No security issues detected");
         Ok(())
     } else if errors == 0 {
-        print_warning(&format!("{} warning(s) found - review recommended", warnings));
+        print_warning(&format!("{} warning(s) - review recommended", warnings));
         Ok(())
     } else {
-        print_error(&format!("{} critical security issue(s) found!", errors));
+        print_error(&format!("{} critical issue(s) found!", errors));
         if warnings > 0 {
             print_warning(&format!("{} warning(s) also detected", warnings));
         }
-        println!();
-        print_info("Fix critical issues before committing");
         Err(anyhow::anyhow!("Security check failed"))
     }
 }
