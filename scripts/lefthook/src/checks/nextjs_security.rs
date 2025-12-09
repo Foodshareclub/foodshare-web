@@ -1,6 +1,6 @@
 use crate::utils::{
     filter_files_by_extension, get_staged_diff, get_staged_files, print_error, print_header,
-    print_info, print_success, print_verbose, print_warning,
+    print_success, print_verbose, print_warning,
 };
 use anyhow::Result;
 use regex::Regex;
