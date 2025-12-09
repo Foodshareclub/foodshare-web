@@ -7,59 +7,73 @@
 # Skip all: LEFTHOOK=0 git commit
 # Quick push: SKIP_TESTS=1 SKIP_BUILD=1 git push
 # Full validation: ENABLE_ALL=1 git push
+# No auto-fix: NO_FIX=1 git commit
 
 # ============================================================================
-# PRE-COMMIT: Fast checks before commit
+# PRE-COMMIT: Fast checks with auto-fix
 # ============================================================================
 pre-commit:
-  parallel: true
+  piped: true # Run in sequence for proper auto-fix staging
   skip:
     - merge
 
   commands:
+    # PHASE 1: Auto-fixable checks (run first, fix, then re-stage)
+    format:
+      tags: format quality autofix
+      glob: "*.{ts,tsx,js,jsx,json,css,scss,md,yaml,yml}"
+      run: npx prettier --write --cache {staged_files}
+      stage_fixed: true
+      priority: 1
+
+    lint:
+      tags: lint quality autofix
+      glob: "*.{ts,tsx,js,jsx}"
+      run: npx eslint {staged_files} --fix --max-warnings=0 --no-warn-ignored --cache --cache-location .eslintcache
+      stage_fixed: true
+      priority: 1
+
+    # PHASE 2: Security checks (after formatting)
     security-check:
       tags: security critical
       run: ./scripts/lefthook/target/release/lefthook-rs security
-      priority: 1
+      priority: 2
 
     nextjs-security:
       tags: security critical
       glob: "*.{ts,tsx,js,jsx,json}"
       run: ./scripts/lefthook/target/release/lefthook-rs nextjs-security {staged_files}
-      priority: 1
-
-    lint:
-      tags: lint quality
-      glob: "*.{ts,tsx,js,jsx}"
-      run: npx eslint {staged_files} --fix --max-warnings=0 --no-warn-ignored --cache --cache-location .eslintcache
-      stage_fixed: true
       priority: 2
 
-    format:
-      tags: format quality
-      glob: "*.{ts,tsx,js,jsx,json,css,scss,md}"
-      run: npx prettier --write --cache {staged_files}
-      stage_fixed: true
-      priority: 2
-
+    # PHASE 3: Type checking (after lint fixes)
     type-check:
       tags: typescript
       run: npx tsc --noEmit --incremental
-      priority: 2
+      priority: 3
 
     complexity-check:
       tags: quality optional
       glob: "*.{ts,tsx,js,jsx}"
       run: ./scripts/lefthook/target/release/lefthook-rs complexity {staged_files}
-      priority: 3
+      priority: 4
       skip:
         - run: test -z "$ENABLE_COMPLEXITY" && test -z "$ENABLE_ALL"
+
+    # Auto-sort imports (optional but auto-fixes)
+    sort-imports:
+      tags: quality autofix optional
+      glob: "*.{ts,tsx,js,jsx}"
+      run: npx eslint {staged_files} --fix --rule 'import/order:error' --no-warn-ignored
+      stage_fixed: true
+      priority: 3
+      skip:
+        - run: test -z "$ENABLE_IMPORT_SORT" && test -z "$ENABLE_ALL"
 
     import-check:
       tags: quality optional
       glob: "*.{ts,tsx,js,jsx}"
       run: ./scripts/lefthook/target/release/lefthook-rs import-check {staged_files}
-      priority: 3
+      priority: 4
       skip:
         - run: test -z "$ENABLE_IMPORT_CHECK" && test -z "$ENABLE_ALL"
 
@@ -67,14 +81,14 @@ pre-commit:
       tags: quality optional
       glob: "*.{ts,tsx,js,jsx}"
       run: ./scripts/lefthook/target/release/lefthook-rs no-console {staged_files}
-      priority: 4
+      priority: 5
       skip:
         - run: test -z "$ENABLE_NO_CONSOLE" && test -z "$ENABLE_ALL"
 
     large-files:
       tags: files optional
       run: ./scripts/lefthook/target/release/lefthook-rs large-files
-      priority: 4
+      priority: 5
       skip:
         - run: test -z "$ENABLE_LARGE_FILES" && test -z "$ENABLE_ALL"
 
@@ -82,7 +96,7 @@ pre-commit:
       tags: a11y optional
       glob: "*.{tsx,jsx}"
       run: ./scripts/lefthook/target/release/lefthook-rs accessibility {staged_files}
-      priority: 4
+      priority: 5
       skip:
         - run: test -z "$ENABLE_A11Y" && test -z "$ENABLE_ALL"
 
