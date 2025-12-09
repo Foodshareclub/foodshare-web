@@ -65,6 +65,25 @@ ENABLE_NO_CONSOLE=1 git commit   # Run console statement check
 CHECK_BUNDLE_SIZE=1 git push     # Check bundle size on push
 ```
 
+## OWASP Security Coverage
+
+The `nextjs-security` command provides comprehensive security scanning:
+
+| OWASP    | Category                  | Checks                                    |
+| -------- | ------------------------- | ----------------------------------------- |
+| A01:2021 | Broken Access Control     | Auth on mutations, IDOR, CSRF protection  |
+| A02:2021 | Cryptographic Failures    | Weak crypto, secrets, JWT, timing attacks |
+| A03:2021 | Injection                 | SQL, command, prototype pollution, ReDoS  |
+| A04:2021 | Insecure Design           | Path traversal, open redirect             |
+| A05:2021 | Security Misconfiguration | Headers, CSP, dangerous configs           |
+| A06:2021 | Vulnerable Components     | Supply chain, typosquatting               |
+| A07:2021 | XSS                       | dangerouslySetInnerHTML, innerHTML        |
+| A08:2021 | Software Integrity        | SRI hashes for CDN resources              |
+| A09:2021 | Security Logging          | Auth event logging                        |
+| A10:2021 | SSRF                      | User-controlled URLs                      |
+
+Additional checks: Input validation (zod/yup), JWT security, password hashing (bcrypt/argon2).
+
 ## Performance
 
 The Rust implementation is significantly faster than bash scripts:
