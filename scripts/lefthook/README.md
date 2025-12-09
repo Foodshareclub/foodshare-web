@@ -1,6 +1,6 @@
 # lefthook-rs
 
-Fast git hooks for FoodShare, written in Rust.
+Fast git hooks for FoodShare, written in Rust with OWASP security coverage.
 
 ## Build
 
@@ -27,6 +27,7 @@ The binary will be at `target/release/lefthook-rs`.
 | `bundle-size`                | Analyze build bundle size                        |
 | `test-coverage`              | Check test coverage thresholds                   |
 | `unused-exports`             | Find dead code / unused exports                  |
+| `nextjs-security`            | OWASP security scanner for Next.js/React/Vercel  |
 | `pre-commit`                 | Run all pre-commit checks                        |
 
 ## Usage
