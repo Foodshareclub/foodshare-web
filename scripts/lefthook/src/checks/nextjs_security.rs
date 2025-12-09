@@ -131,6 +131,48 @@ pub fn run(files: &[String]) -> Result<()> {
     check_foodshare_patterns(&files, &mut issues);
 
     // =========================================================================
+    // OWASP A08:2021 - Software and Data Integrity (SRI)
+    // =========================================================================
+    print_verbose("🔍 OWASP A08: Checking software integrity...");
+    check_software_integrity(&files, &diff, &mut issues);
+
+    // =========================================================================
+    // OWASP A09:2021 - Security Logging and Monitoring
+    // =========================================================================
+    print_verbose("🔍 OWASP A09: Checking security logging...");
+    check_security_logging(&files, &mut issues);
+
+    // =========================================================================
+    // CSRF PROTECTION
+    // =========================================================================
+    print_verbose("🔍 Checking CSRF protection...");
+    check_csrf_protection(&files, &mut issues);
+
+    // =========================================================================
+    // INPUT VALIDATION
+    // =========================================================================
+    print_verbose("🔍 Checking input validation...");
+    check_input_validation(&files, &mut issues);
+
+    // =========================================================================
+    // JWT SECURITY
+    // =========================================================================
+    print_verbose("🔍 Checking JWT security...");
+    check_jwt_security(&files, &diff, &mut issues);
+
+    // =========================================================================
+    // REDOS (Regex Denial of Service)
+    // =========================================================================
+    print_verbose("🔍 Checking ReDoS patterns...");
+    check_redos_patterns(&files, &diff, &mut issues);
+
+    // =========================================================================
+    // TIMING ATTACKS
+    // =========================================================================
+    print_verbose("🔍 Checking timing attack vulnerabilities...");
+    check_timing_attacks(&files, &diff, &mut issues);
+
+    // =========================================================================
     // SUMMARY
     // =========================================================================
     print_summary(&issues)
@@ -1194,6 +1236,405 @@ fn check_foodshare_patterns(files: &[String], issues: &mut Vec<SecurityIssue>) {
                     owasp: None,
                 });
             }
+        }
+    }
+}
+
+
+// =============================================================================
+// OWASP A08:2021 - Software and Data Integrity (SRI)
+// =============================================================================
+fn check_software_integrity(files: &[String], diff: &str, issues: &mut Vec<SecurityIssue>) {
+    for file in files {
+        if file.ends_with(".tsx") || file.ends_with(".jsx") || file.ends_with(".html") {
+            if let Ok(content) = fs::read_to_string(file) {
+                // Check for external scripts without SRI
+                let script_re = Regex::new(r#"<script[^>]+src\s*=\s*["']https?://"#).unwrap();
+                let integrity_re = Regex::new(r#"integrity\s*=\s*["']sha"#).unwrap();
+                
+                if script_re.is_match(&content) && !integrity_re.is_match(&content) {
+                    issues.push(SecurityIssue {
+                        severity: Severity::Medium,
+                        file: file.clone(),
+                        message: "External script without SRI (Subresource Integrity) hash".to_string(),
+                        owasp: Some("A08:2021"),
+                    });
+                }
+
+                // Check for external stylesheets without SRI
+                let link_re = Regex::new(r#"<link[^>]+href\s*=\s*["']https?://"#).unwrap();
+                if link_re.is_match(&content) && !integrity_re.is_match(&content) {
+                    issues.push(SecurityIssue {
+                        severity: Severity::Low,
+                        file: file.clone(),
+                        message: "External stylesheet without SRI hash".to_string(),
+                        owasp: Some("A08:2021"),
+                    });
+                }
+            }
+        }
+
+        // Check next.config for unsafe CDN usage
+        if file.contains("next.config") {
+            if let Ok(content) = fs::read_to_string(file) {
+                if content.contains("remotePatterns") && content.contains("*") {
+                    issues.push(SecurityIssue {
+                        severity: Severity::Medium,
+                        file: file.clone(),
+                        message: "Wildcard in remotePatterns - restrict to specific domains".to_string(),
+                        owasp: Some("A08:2021"),
+                    });
+                }
+            }
+        }
+    }
+
+    // Check diff for new CDN dependencies
+    for line in diff.lines().filter(|l| l.starts_with('+')) {
+        if line.contains("cdn.") || line.contains("unpkg.com") || line.contains("jsdelivr") {
+            if !line.contains("integrity") {
+                issues.push(SecurityIssue {
+                    severity: Severity::Medium,
+                    file: "diff".to_string(),
+                    message: "CDN resource added without integrity hash".to_string(),
+                    owasp: Some("A08:2021"),
+                });
+                break;
+            }
+        }
+    }
+}
+
+
+// =============================================================================
+// OWASP A09:2021 - Security Logging and Monitoring
+// =============================================================================
+fn check_security_logging(files: &[String], issues: &mut Vec<SecurityIssue>) {
+    let auth_patterns = ["login", "signin", "signout", "logout", "password", "auth"];
+    
+    for file in files {
+        if file.contains("/actions/") || file.contains("/api/") {
+            if let Ok(content) = fs::read_to_string(file) {
+                let content_lower = content.to_lowercase();
+                let is_auth_file = auth_patterns.iter().any(|p| content_lower.contains(p));
+                
+                if is_auth_file {
+                    // Check for logging on auth events
+                    let has_logging = content.contains("console.") 
+                        || content.contains("logger.")
+                        || content.contains("log(")
+                        || content.contains("audit");
+                    
+                    if !has_logging {
+                        issues.push(SecurityIssue {
+                            severity: Severity::Low,
+                            file: file.clone(),
+                            message: "Auth-related code without security logging".to_string(),
+                            owasp: Some("A09:2021"),
+                        });
+                    }
+                }
+
+                // Check for error handling without logging
+                if content.contains("catch") && !content.contains("console.error") && !content.contains("logger") {
+                    if file.contains("/api/") || file.contains("/actions/") {
+                        issues.push(SecurityIssue {
+                            severity: Severity::Low,
+                            file: file.clone(),
+                            message: "Error catch block without logging - security events may be missed".to_string(),
+                            owasp: Some("A09:2021"),
+                        });
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+// =============================================================================
+// CSRF PROTECTION
+// =============================================================================
+fn check_csrf_protection(files: &[String], issues: &mut Vec<SecurityIssue>) {
+    for file in files {
+        // Check API routes for CSRF protection
+        if file.contains("/api/") && file.ends_with("route.ts") {
+            if let Ok(content) = fs::read_to_string(file) {
+                let has_mutation = content.contains("POST") 
+                    || content.contains("PUT") 
+                    || content.contains("DELETE")
+                    || content.contains("PATCH");
+                
+                let has_csrf = content.contains("csrf")
+                    || content.contains("CSRF")
+                    || content.contains("x-csrf-token")
+                    || content.contains("csrfToken");
+                
+                // Server Actions have built-in CSRF, but API routes don't
+                if has_mutation && !has_csrf && !content.contains("use server") {
+                    issues.push(SecurityIssue {
+                        severity: Severity::Medium,
+                        file: file.clone(),
+                        message: "API route handles mutations without CSRF protection".to_string(),
+                        owasp: Some("A01:2021"),
+                    });
+                }
+            }
+        }
+
+        // Check forms for CSRF tokens (non-Server Action forms)
+        if file.ends_with(".tsx") || file.ends_with(".jsx") {
+            if let Ok(content) = fs::read_to_string(file) {
+                // Forms with method="post" that don't use Server Actions
+                let form_post_re = Regex::new(r#"<form[^>]+method\s*=\s*["']post["']"#).unwrap();
+                if form_post_re.is_match(&content.to_lowercase()) {
+                    if !content.contains("action={") && !content.contains("csrf") {
+                        issues.push(SecurityIssue {
+                            severity: Severity::Medium,
+                            file: file.clone(),
+                            message: "Form POST without Server Action or CSRF token".to_string(),
+                            owasp: Some("A01:2021"),
+                        });
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+// =============================================================================
+// INPUT VALIDATION
+// =============================================================================
+fn check_input_validation(files: &[String], issues: &mut Vec<SecurityIssue>) {
+    for file in files {
+        if file.contains("/actions/") || file.contains("/api/") {
+            if let Ok(content) = fs::read_to_string(file) {
+                let has_user_input = content.contains("formData")
+                    || content.contains("req.body")
+                    || content.contains("request.json")
+                    || content.contains("searchParams");
+                
+                let has_validation = content.contains("zod")
+                    || content.contains("yup")
+                    || content.contains("joi")
+                    || content.contains("validate")
+                    || content.contains("schema")
+                    || content.contains("parse(")
+                    || content.contains("safeParse");
+                
+                if has_user_input && !has_validation {
+                    issues.push(SecurityIssue {
+                        severity: Severity::Medium,
+                        file: file.clone(),
+                        message: "User input without schema validation (use zod/yup)".to_string(),
+                        owasp: Some("A03:2021"),
+                    });
+                }
+
+                // Check for type coercion without validation
+                if content.contains("as string") || content.contains("as number") {
+                    if !has_validation {
+                        issues.push(SecurityIssue {
+                            severity: Severity::Low,
+                            file: file.clone(),
+                            message: "Type assertion without validation - use schema validation".to_string(),
+                            owasp: Some("A03:2021"),
+                        });
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+// =============================================================================
+// JWT SECURITY
+// =============================================================================
+fn check_jwt_security(files: &[String], diff: &str, issues: &mut Vec<SecurityIssue>) {
+    let weak_algorithms = [
+        ("none", "JWT 'none' algorithm is insecure"),
+        (r#"algorithm.*["']none["']"#, "JWT 'none' algorithm allows unsigned tokens"),
+        (r#"alg.*["']HS256["'].*public"#, "HS256 with public key is vulnerable to key confusion"),
+    ];
+
+    for file in files {
+        if let Ok(content) = fs::read_to_string(file) {
+            let content_lower = content.to_lowercase();
+            
+            // Check for JWT usage
+            if content_lower.contains("jwt") || content_lower.contains("jsonwebtoken") {
+                // Check for weak algorithms
+                for (pattern, msg) in &weak_algorithms {
+                    if let Ok(re) = Regex::new(&format!("(?i){}", pattern)) {
+                        if re.is_match(&content) {
+                            issues.push(SecurityIssue {
+                                severity: Severity::Critical,
+                                file: file.clone(),
+                                message: msg.to_string(),
+                                owasp: Some("A02:2021"),
+                            });
+                        }
+                    }
+                }
+
+                // Check for JWT in URL
+                if content.contains("token=") && content.contains("jwt") {
+                    issues.push(SecurityIssue {
+                        severity: Severity::Medium,
+                        file: file.clone(),
+                        message: "JWT in URL query parameter - use Authorization header".to_string(),
+                        owasp: Some("A02:2021"),
+                    });
+                }
+
+                // Check for JWT without expiration
+                if content.contains("sign(") && !content.contains("expiresIn") && !content.contains("exp") {
+                    issues.push(SecurityIssue {
+                        severity: Severity::High,
+                        file: file.clone(),
+                        message: "JWT created without expiration - tokens should expire".to_string(),
+                        owasp: Some("A02:2021"),
+                    });
+                }
+            }
+        }
+    }
+
+    // Check diff for JWT issues
+    for line in diff.lines().filter(|l| l.starts_with('+')) {
+        if line.to_lowercase().contains("jwt") && line.contains("localStorage") {
+            issues.push(SecurityIssue {
+                severity: Severity::High,
+                file: "diff".to_string(),
+                message: "JWT stored in localStorage - use httpOnly cookies".to_string(),
+                owasp: Some("A02:2021"),
+            });
+            break;
+        }
+    }
+}
+
+
+// =============================================================================
+// REDOS (Regex Denial of Service)
+// =============================================================================
+fn check_redos_patterns(files: &[String], diff: &str, issues: &mut Vec<SecurityIssue>) {
+    // Patterns that can cause catastrophic backtracking
+    let redos_patterns = [
+        (r"\(\.\*\)\+", "Nested quantifiers (.*)+  can cause ReDoS"),
+        (r"\(\[.*\]\+\)\+", "Nested quantifiers ([...]+)+ can cause ReDoS"),
+        (r"\(\.\+\)\+", "Nested quantifiers (.+)+ can cause ReDoS"),
+        (r"\(\.\*\)\*", "Nested quantifiers (.*)* can cause ReDoS"),
+        (r"\(\[^\]]*\]\*\)\+", "Nested quantifiers with negation can cause ReDoS"),
+    ];
+
+    for file in files {
+        if let Ok(content) = fs::read_to_string(file) {
+            // Check for regex usage
+            if content.contains("new RegExp") || content.contains("Regex::new") || content.contains(".match(") {
+                for (pattern, msg) in &redos_patterns {
+                    if content.contains(pattern) {
+                        issues.push(SecurityIssue {
+                            severity: Severity::Medium,
+                            file: file.clone(),
+                            message: msg.to_string(),
+                            owasp: Some("A03:2021"),
+                        });
+                    }
+                }
+
+                // Check for user input in regex
+                let user_regex_re = Regex::new(r"new\s+RegExp\s*\(\s*(?:req|params|query|body|input)").unwrap();
+                if user_regex_re.is_match(&content) {
+                    issues.push(SecurityIssue {
+                        severity: Severity::High,
+                        file: file.clone(),
+                        message: "User input in RegExp constructor - sanitize or use literal".to_string(),
+                        owasp: Some("A03:2021"),
+                    });
+                }
+            }
+        }
+    }
+
+    // Check diff for new regex patterns
+    for line in diff.lines().filter(|l| l.starts_with('+')) {
+        if line.contains("new RegExp") {
+            for (pattern, _) in &redos_patterns {
+                if line.contains(pattern) {
+                    issues.push(SecurityIssue {
+                        severity: Severity::Medium,
+                        file: "diff".to_string(),
+                        message: "Potentially vulnerable regex pattern added".to_string(),
+                        owasp: Some("A03:2021"),
+                    });
+                    break;
+                }
+            }
+        }
+    }
+}
+
+
+// =============================================================================
+// TIMING ATTACKS
+// =============================================================================
+fn check_timing_attacks(files: &[String], diff: &str, issues: &mut Vec<SecurityIssue>) {
+    for file in files {
+        if let Ok(content) = fs::read_to_string(file) {
+            // Check for string comparison of secrets
+            let secret_compare_patterns = [
+                (r#"===\s*(?:password|secret|token|key|hash)"#, "Direct comparison of secret - use constant-time comparison"),
+                (r#"(?:password|secret|token|key|hash)\s*==="#, "Direct comparison of secret - use constant-time comparison"),
+                (r#"\.equals\s*\(\s*(?:password|secret|token)"#, "String equals on secret - use constant-time comparison"),
+            ];
+
+            for (pattern, msg) in &secret_compare_patterns {
+                if let Ok(re) = Regex::new(&format!("(?i){}", pattern)) {
+                    if re.is_match(&content) {
+                        // Check if they're using crypto.timingSafeEqual
+                        if !content.contains("timingSafeEqual") && !content.contains("constantTimeCompare") {
+                            issues.push(SecurityIssue {
+                                severity: Severity::Medium,
+                                file: file.clone(),
+                                message: msg.to_string(),
+                                owasp: Some("A02:2021"),
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Check for bcrypt/argon2 usage (good practice)
+            if content.contains("password") && content.contains("===") {
+                if !content.contains("bcrypt") && !content.contains("argon2") && !content.contains("scrypt") {
+                    issues.push(SecurityIssue {
+                        severity: Severity::High,
+                        file: file.clone(),
+                        message: "Password comparison without bcrypt/argon2 - use proper hashing".to_string(),
+                        owasp: Some("A02:2021"),
+                    });
+                }
+            }
+        }
+    }
+
+    // Check diff for timing-vulnerable patterns
+    for line in diff.lines().filter(|l| l.starts_with('+')) {
+        let line_lower = line.to_lowercase();
+        if (line_lower.contains("password") || line_lower.contains("secret") || line_lower.contains("token"))
+            && (line.contains("===") || line.contains("=="))
+            && !line.contains("timingSafeEqual")
+        {
+            issues.push(SecurityIssue {
+                severity: Severity::Medium,
+                file: "diff".to_string(),
+                message: "Secret comparison added - consider constant-time comparison".to_string(),
+                owasp: Some("A02:2021"),
+            });
+            break;
         }
     }
 }
