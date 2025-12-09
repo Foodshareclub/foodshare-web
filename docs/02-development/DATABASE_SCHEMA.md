@@ -44,22 +44,38 @@ User profile information linked to Supabase Auth users.
 - `transportation` (text) - Preferred transportation method
 - `language` (varchar) - Preferred language code
 
-**User Role Values:**
+**User Role System:**
 
-The `user_role` field is a simple string with values like:
-- `'user'` - Standard user (default)
-- `'admin'` - Administrator
-- `'super_admin'` - Super administrator
-- `'volunteer'` - Volunteer
+FoodShare supports multiple role sources for backwards compatibility:
+
+1. **JSONB `role` field** (recommended) - Flexible role object in `profiles.role`:
+
+   ```json
+   { "admin": true, "volunteer": false, "subscriber": true }
+   ```
+
+2. **Legacy `user_role` field** - Simple string in `profiles.user_role`:
+   - `'user'` - Standard user (default)
+   - `'admin'` - Administrator
+   - `'superadmin'` - Super administrator
+   - `'volunteer'` - Volunteer
+
+3. **`user_roles` junction table** - Role assignments linking profiles to roles
 
 **Checking Admin Status (TypeScript):**
 
 ```typescript
-// ✅ Correct - user_role is a string
-const isAdmin = profile?.user_role === 'admin' || profile?.user_role === 'super_admin';
+// ✅ Recommended - Use checkIsAdmin() from lib/data/auth.ts
+import { checkIsAdmin } from "@/lib/data/auth";
 
-// For volunteer check
-const isVolunteer = profile?.user_role === 'volunteer';
+const { isAdmin, roles, jsonbRoles } = await checkIsAdmin(userId);
+// isAdmin: true if admin in ANY source
+// roles: ['admin', 'volunteer'] - all roles from all sources
+// jsonbRoles: { admin: true, volunteer: true } - raw JSONB role object
+
+// Manual check (if needed)
+const isJsonbAdmin = profile?.role?.admin === true;
+const isLegacyAdmin = profile?.user_role === "admin" || profile?.user_role === "superadmin";
 ```
 
 **Relationships:**

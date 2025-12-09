@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { FaMagic } from "react-icons/fa";
+import { Wand2 } from "lucide-react";
 import { titleSuggestions } from "../constants";
 
 interface TitleSuggestionsProps {
@@ -42,7 +42,7 @@ export const TitleSuggestions: React.FC<TitleSuggestionsProps> = ({
         className="p-2 rounded-lg bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-all"
         title="Title suggestions"
       >
-        <FaMagic className="h-4 w-4" />
+        <Wand2 className="h-4 w-4" />
       </button>
 
       {showSuggestions && (

@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { FaRedo } from "react-icons/fa";
-import { MdFlip } from "react-icons/md";
+import { RotateCw, FlipHorizontal, FlipVertical } from "lucide-react";
 
 interface ImageEditControlsProps {
   onRotate: () => void;
@@ -25,7 +24,7 @@ export const ImageEditControls: React.FC<ImageEditControlsProps> = ({
       className="p-1 bg-black/60 rounded hover:bg-black/80 transition-colors"
       title="Rotate"
     >
-      <FaRedo className="h-3 w-3 text-white" />
+      <RotateCw className="h-3 w-3 text-white" />
     </button>
     <button
       type="button"
@@ -36,7 +35,7 @@ export const ImageEditControls: React.FC<ImageEditControlsProps> = ({
       className="p-1 bg-black/60 rounded hover:bg-black/80 transition-colors"
       title="Flip horizontal"
     >
-      <MdFlip className="h-3 w-3 text-white" />
+      <FlipHorizontal className="h-3 w-3 text-white" />
     </button>
     <button
       type="button"
@@ -47,7 +46,7 @@ export const ImageEditControls: React.FC<ImageEditControlsProps> = ({
       className="p-1 bg-black/60 rounded hover:bg-black/80 transition-colors"
       title="Flip vertical"
     >
-      <MdFlip className="h-3 w-3 text-white rotate-90" />
+      <FlipVertical className="h-3 w-3 text-white" />
     </button>
   </div>
 );

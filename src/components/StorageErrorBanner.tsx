@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
 import React, { useEffect, useState } from "react";
 import { isStorageHealthy } from "@/lib/supabase/client";
 import { testStorageAvailability, clearSupabaseStorage } from "@/utils/storageErrorHandler";
 import { Button } from "@/components/ui/button";
-import { FaExclamationCircle } from 'react-icons/fa';
+import { AlertCircle } from "lucide-react";
 
 /**
  * StorageErrorBanner - Shows a persistent warning when browser storage is unavailable
@@ -118,7 +118,7 @@ export const StorageErrorBanner: React.FC = () => {
                       animation: "warningPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
                     }}
                   >
-                    <FaExclamationCircle className="w-5 h-5 text-orange-600" />
+                    <AlertCircle className="w-5 h-5 text-orange-600" />
                   </div>
 
                   {/* Text Content */}

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Admin MFA Guard Component
@@ -12,12 +12,12 @@
  * - Session activity tracking
  */
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
-import { MFAVerification } from './MFAVerification';
-import { checkAdminMFARequired, MFAService } from '@/lib/security/mfa';
-import { AiOutlineLoading3Quarters } from 'react-icons/ai';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { MFAVerification } from "./MFAVerification";
+import { checkAdminMFARequired, MFAService } from "@/lib/security/mfa";
+import { Loader2 } from "lucide-react";
 
 interface AdminMFAGuardProps {
   children: React.ReactNode;
@@ -40,7 +40,7 @@ export const AdminMFAGuard: React.FC<AdminMFAGuardProps> = ({ children }) => {
 
   const [isChecking, setIsChecking] = useState(true);
   const [requiresMFA, setRequiresMFA] = useState(false);
-  const [currentAAL, setCurrentAAL] = useState<'aal1' | 'aal2'>('aal1');
+  const [currentAAL, setCurrentAAL] = useState<"aal1" | "aal2">("aal1");
 
   // Check MFA requirement on mount and when auth changes
   useEffect(() => {
@@ -78,8 +78,8 @@ export const AdminMFAGuard: React.FC<AdminMFAGuardProps> = ({ children }) => {
       setCurrentAAL(result.currentAAL);
     } catch (error) {
       // Log error in development only
-      if (process.env.NODE_ENV === 'development') {
-        console.error('[AdminMFAGuard] Error checking MFA requirement:', error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("[AdminMFAGuard] Error checking MFA requirement:", error);
       }
       setRequiresMFA(false);
     } finally {
@@ -89,21 +89,21 @@ export const AdminMFAGuard: React.FC<AdminMFAGuardProps> = ({ children }) => {
 
   const handleMFAVerified = () => {
     setRequiresMFA(false);
-    setCurrentAAL('aal2');
+    setCurrentAAL("aal2");
     // Refresh to update UI
     window.location.reload();
   };
 
   const handleMFACancel = () => {
     // Log user out and redirect to login
-    window.location.href = '/login';
+    window.location.href = "/login";
   };
 
   // Show loading state while checking
   if (isChecking) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <AiOutlineLoading3Quarters className="w-12 h-12 animate-spin text-green-600" />
+        <Loader2 className="w-12 h-12 animate-spin text-green-600" />
       </div>
     );
   }
@@ -111,14 +111,14 @@ export const AdminMFAGuard: React.FC<AdminMFAGuardProps> = ({ children }) => {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!isChecking && !isAuthenticated) {
-      router.push('/login');
+      router.push("/login");
     }
   }, [isChecking, isAuthenticated, router]);
 
   if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <AiOutlineLoading3Quarters className="w-12 h-12 animate-spin text-green-600" />
+        <Loader2 className="w-12 h-12 animate-spin text-green-600" />
       </div>
     );
   }

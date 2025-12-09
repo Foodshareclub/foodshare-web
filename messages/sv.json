@@ -1,5 +1,19 @@
 {
   "0": "{0}",
+  "categories": {
+    "food": "Mat",
+    "things": "Saker",
+    "borrow": "Låna",
+    "wanted": "Efterlyst",
+    "foodbanks": "Matbanker",
+    "fridges": "Kylskåp",
+    "organisations": "Organisationer",
+    "volunteers": "Volontärer",
+    "zerowaste": "Zero Waste",
+    "vegan": "Veganskt",
+    "challenges": "Utmaningar",
+    "forum": "Forum"
+  },
   "0_views": "{0} views",
   "buttonvalue": "{buttonValue}",
   "text": "{text}",

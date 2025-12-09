@@ -83,7 +83,7 @@ import { t } from '@lingui/macro';
 
 ```typescript
 import { i18n } from "@lingui/core";
-import { dynamicActivate } from "@/utils/i18n";
+import { dynamicActivate, isLocaleLoaded } from "@/utils/i18n";
 
 // Switch language
 await dynamicActivate("es");
@@ -92,8 +92,21 @@ await dynamicActivate("es");
 const currentLocale = i18n.locale; // 'es'
 
 // Check if locale is loaded
-import { isLocaleLoaded } from "@/utils/i18n";
 const loaded = isLocaleLoaded("es"); // true/false
+```
+
+### Using next-intl (Recommended)
+
+```typescript
+// Import from centralized config
+import { locales, localeMetadata, type Locale } from "@/i18n/config";
+
+// Get all supported locales
+console.log(locales); // ['en', 'cs', 'de', ...]
+
+// Get locale metadata
+const info = localeMetadata["es"];
+// { name: "Spanish", nativeName: "Español", flag: "🇪🇸", ... }
 ```
 
 ---
@@ -102,8 +115,10 @@ const loaded = isLocaleLoaded("es"); // true/false
 
 ```
 src/
+├── i18n/
+│   └── config.ts                  # Centralized i18n config (next-intl)
 ├── utils/
-│   ├── i18n.ts                    # Main i18n configuration
+│   ├── i18n.ts                    # Legacy i18n utilities (Lingui)
 │   ├── i18n-backend.ts            # Backend integration
 │   ├── i18n-mobile.ts             # Mobile-specific
 │   └── i18n-universal-sdk.ts      # Universal SDK
@@ -133,8 +148,11 @@ src/
 ## Locale Metadata
 
 ```typescript
-// Get locale info
-import { localeMetadata } from "@/utils/i18n";
+// Recommended: Use centralized config
+import { localeMetadata, type Locale } from "@/i18n/config";
+
+// Or legacy import (still works)
+// import { localeMetadata } from "@/utils/i18n";
 
 const info = localeMetadata["es"];
 // {
@@ -152,7 +170,11 @@ const info = localeMetadata["es"];
 ## RTL Support (Arabic)
 
 ```typescript
-import { getLocaleDirection } from '@/utils/i18n';
+// Recommended: Use centralized config
+import { getLocaleDirection } from '@/i18n/config';
+
+// Or legacy import
+// import { getLocaleDirection } from '@/utils/i18n';
 
 // Get text direction
 const direction = getLocaleDirection('ar'); // 'rtl'

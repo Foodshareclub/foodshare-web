@@ -1,5 +1,19 @@
 {
   "0": "{0}",
+  "categories": {
+    "food": "음식",
+    "things": "물건",
+    "borrow": "빌리기",
+    "wanted": "구함",
+    "foodbanks": "푸드뱅크",
+    "fridges": "냉장고",
+    "organisations": "단체",
+    "volunteers": "자원봉사",
+    "zerowaste": "제로웨이스트",
+    "vegan": "비건",
+    "challenges": "챌린지",
+    "forum": "포럼"
+  },
   "0_views": "{0} views",
   "buttonvalue": "{buttonValue}",
   "text": "{text}",

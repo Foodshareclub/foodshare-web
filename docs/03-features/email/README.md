@@ -44,10 +44,19 @@ src/components/admin/
 ### Admin Pages
 
 ```
-src/pages/admin/
-├── AdminEmailCRMPage.tsx            # Main email CRM dashboard
-└── (existing admin pages)
+src/app/admin/email/
+└── page.tsx                         # Server Component with Suspense streaming
+    └── EmailCRMClient               # Client component for interactive features
+
+src/components/admin/
+└── EmailCRMClient.tsx               # Main email CRM dashboard (client component)
 ```
+
+**Architecture Note:** The email CRM page uses Next.js 16 server-first architecture:
+
+- `page.tsx` is a Server Component that handles translations and layout
+- `EmailCRMClient` is a Client Component wrapped in Suspense for streaming
+- Skeleton loading state provides instant feedback while data loads
 
 ### API Functions
 

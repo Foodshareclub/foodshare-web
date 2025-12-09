@@ -1,15 +1,18 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { ForumCommentCard } from './ForumCommentCard';
-import { RichTextEditor } from './RichTextEditor';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/hooks/useAuth';
-import type { ForumComment } from '@/api/forumAPI';
-import { FaPaperPlane } from 'react-icons/fa';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { ForumCommentCard } from "./ForumCommentCard";
+import { RichTextEditor } from "./RichTextEditor";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/useAuth";
+import type { ForumComment } from "@/api/forumAPI";
+import { Send } from "lucide-react";
+
+// Icon alias for consistency
+const FaPaperPlane = Send;
+import { motion, AnimatePresence } from "framer-motion";
 
 type RealtimeCommentsProps = {
   forumId: number;
@@ -17,12 +20,16 @@ type RealtimeCommentsProps = {
   initialComments?: ForumComment[];
 };
 
-export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }: RealtimeCommentsProps) {
+export function RealtimeComments({
+  forumId,
+  postAuthorId,
+  initialComments = [],
+}: RealtimeCommentsProps) {
   const { user } = useAuth();
   const [comments, setComments] = useState<ForumComment[]>(initialComments);
   const [loading, setLoading] = useState(!initialComments.length);
   const [submitting, setSubmitting] = useState(false);
-  const [commentContent, setCommentContent] = useState('');
+  const [commentContent, setCommentContent] = useState("");
   const [commentJson, setCommentJson] = useState<Record<string, unknown>>({});
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [replies, setReplies] = useState<Record<number, ForumComment[]>>({});
@@ -34,13 +41,15 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
     const fetchComments = async () => {
       const supabase = createClient();
       const { data } = await supabase
-        .from('comments')
-        .select('*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)')
-        .eq('forum_id', forumId)
-        .is('parent_id', null)
-        .order('is_pinned', { ascending: false })
-        .order('is_best_answer', { ascending: false })
-        .order('comment_created_at', { ascending: true });
+        .from("comments")
+        .select(
+          "*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)"
+        )
+        .eq("forum_id", forumId)
+        .is("parent_id", null)
+        .order("is_pinned", { ascending: false })
+        .order("is_best_answer", { ascending: false })
+        .order("comment_created_at", { ascending: true });
 
       if (data) setComments(data as ForumComment[]);
       setLoading(false);
@@ -56,14 +65,16 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
     const channel = supabase
       .channel(`forum-comments-${forumId}`)
       .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'comments', filter: `forum_id=eq.${forumId}` },
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "comments", filter: `forum_id=eq.${forumId}` },
         async (payload) => {
           // Fetch the full comment with profile
           const { data } = await supabase
-            .from('comments')
-            .select('*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)')
-            .eq('id', payload.new.id)
+            .from("comments")
+            .select(
+              "*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)"
+            )
+            .eq("id", payload.new.id)
             .single();
 
           if (data) {
@@ -82,13 +93,15 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
         }
       )
       .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'comments', filter: `forum_id=eq.${forumId}` },
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "comments", filter: `forum_id=eq.${forumId}` },
         async (payload) => {
           const { data } = await supabase
-            .from('comments')
-            .select('*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)')
-            .eq('id', payload.new.id)
+            .from("comments")
+            .select(
+              "*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)"
+            )
+            .eq("id", payload.new.id)
             .single();
 
           if (data) {
@@ -96,7 +109,8 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
             if (updated.parent_id) {
               setReplies((prev) => ({
                 ...prev,
-                [updated.parent_id!]: prev[updated.parent_id!]?.map((c) => (c.id === updated.id ? updated : c)) || [],
+                [updated.parent_id!]:
+                  prev[updated.parent_id!]?.map((c) => (c.id === updated.id ? updated : c)) || [],
               }));
             } else {
               setComments((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
@@ -105,8 +119,8 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
         }
       )
       .on(
-        'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'comments', filter: `forum_id=eq.${forumId}` },
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "comments", filter: `forum_id=eq.${forumId}` },
         (payload) => {
           const deletedId = payload.old.id;
           setComments((prev) => prev.filter((c) => c.id !== deletedId));
@@ -132,7 +146,7 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
     setSubmitting(true);
     const supabase = createClient();
 
-    const { error } = await supabase.from('comments').insert({
+    const { error } = await supabase.from("comments").insert({
       forum_id: forumId,
       user_id: user.id,
       comment: commentContent,
@@ -142,7 +156,7 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
     });
 
     if (!error) {
-      setCommentContent('');
+      setCommentContent("");
       setCommentJson({});
       setReplyingTo(null);
     }
@@ -152,10 +166,12 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
   const handleLoadReplies = async (commentId: number) => {
     const supabase = createClient();
     const { data } = await supabase
-      .from('comments')
-      .select('*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)')
-      .eq('parent_id', commentId)
-      .order('comment_created_at', { ascending: true });
+      .from("comments")
+      .select(
+        "*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)"
+      )
+      .eq("parent_id", commentId)
+      .order("comment_created_at", { ascending: true });
 
     if (data) {
       setReplies((prev) => ({ ...prev, [commentId]: data as ForumComment[] }));
@@ -164,7 +180,7 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
 
   const handleDelete = async (commentId: number) => {
     const supabase = createClient();
-    await supabase.from('comments').delete().eq('id', commentId);
+    await supabase.from("comments").delete().eq("id", commentId);
   };
 
   if (loading) {
@@ -208,7 +224,7 @@ export function RealtimeComments({ forumId, postAuthorId, initialComments = [] }
           <div className="flex justify-end">
             <Button onClick={handleSubmit} disabled={submitting || !commentContent.trim()}>
               <FaPaperPlane className="mr-2 h-4 w-4" />
-              {submitting ? 'Posting...' : 'Post Comment'}
+              {submitting ? "Posting..." : "Post Comment"}
             </Button>
           </div>
         </div>

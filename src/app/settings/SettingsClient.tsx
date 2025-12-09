@@ -1,28 +1,40 @@
-'use client';
+"use client";
 
 /**
  * Settings Client Component
  * Premium settings hub with glass morphism and modern design
  */
 
-import React from 'react';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
+import React from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
 import {
-  FaUser,
-  FaShieldAlt,
-  FaBell,
-  FaGlobe,
-  FaPalette,
-  FaQuestionCircle,
-  FaChevronRight,
-  FaHeart,
-  FaLeaf,
-  FaCog,
-} from 'react-icons/fa';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
+  User,
+  Shield,
+  Bell,
+  Globe,
+  Palette,
+  HelpCircle,
+  ChevronRight,
+  Heart,
+  Leaf,
+  Settings,
+} from "lucide-react";
+
+// Icon aliases for consistency
+const FaUser = User;
+const FaShieldAlt = Shield;
+const FaBell = Bell;
+const FaGlobe = Globe;
+const FaPalette = Palette;
+const FaQuestionCircle = HelpCircle;
+const FaChevronRight = ChevronRight;
+const FaHeart = Heart;
+const FaLeaf = Leaf;
+const FaCog = Settings;
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 interface SettingsCard {
   icon: React.ReactNode;
@@ -32,58 +44,58 @@ interface SettingsCard {
   description: string;
   route: string;
   badge?: string;
-  badgeVariant?: 'default' | 'secondary' | 'outline';
+  badgeVariant?: "default" | "secondary" | "outline";
 }
 
 const accountCards: SettingsCard[] = [
   {
     icon: <FaUser className="w-5 h-5" />,
-    gradient: 'from-blue-500 to-cyan-500',
-    iconColor: 'text-white',
-    title: 'Personal info',
-    description: 'Update your name, phone number, and address',
-    route: '/settings/personal-info',
+    gradient: "from-blue-500 to-cyan-500",
+    iconColor: "text-white",
+    title: "Personal info",
+    description: "Update your name, phone number, and address",
+    route: "/settings/personal-info",
   },
   {
     icon: <FaShieldAlt className="w-5 h-5" />,
-    gradient: 'from-emerald-500 to-teal-500',
-    iconColor: 'text-white',
-    title: 'Login & security',
-    description: 'Manage your password and account security',
-    route: '/settings/login-and-security',
+    gradient: "from-emerald-500 to-teal-500",
+    iconColor: "text-white",
+    title: "Login & security",
+    description: "Manage your password and account security",
+    route: "/settings/login-and-security",
   },
 ];
 
 const preferenceCards: SettingsCard[] = [
   {
     icon: <FaBell className="w-5 h-5" />,
-    gradient: 'from-amber-500 to-orange-500',
-    iconColor: 'text-white',
-    title: 'Notifications',
-    description: 'Choose what updates you want to receive',
-    route: '#',
-    badge: 'Coming soon',
-    badgeVariant: 'secondary',
+    gradient: "from-amber-500 to-orange-500",
+    iconColor: "text-white",
+    title: "Notifications",
+    description: "Choose what updates you want to receive",
+    route: "#",
+    badge: "Coming soon",
+    badgeVariant: "secondary",
   },
   {
     icon: <FaGlobe className="w-5 h-5" />,
-    gradient: 'from-purple-500 to-violet-500',
-    iconColor: 'text-white',
-    title: 'Language & region',
-    description: 'Set your preferred language and timezone',
-    route: '#',
-    badge: 'Coming soon',
-    badgeVariant: 'secondary',
+    gradient: "from-purple-500 to-violet-500",
+    iconColor: "text-white",
+    title: "Language & region",
+    description: "Set your preferred language and timezone",
+    route: "#",
+    badge: "Coming soon",
+    badgeVariant: "secondary",
   },
   {
     icon: <FaPalette className="w-5 h-5" />,
-    gradient: 'from-pink-500 to-rose-500',
-    iconColor: 'text-white',
-    title: 'Appearance',
-    description: 'Customize how FoodShare looks for you',
-    route: '#',
-    badge: 'Coming soon',
-    badgeVariant: 'secondary',
+    gradient: "from-pink-500 to-rose-500",
+    iconColor: "text-white",
+    title: "Appearance",
+    description: "Customize how FoodShare looks for you",
+    route: "#",
+    badge: "Coming soon",
+    badgeVariant: "secondary",
   },
 ];
 
@@ -101,25 +113,19 @@ const itemVariants = {
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: { type: 'spring' as const, stiffness: 300, damping: 24 },
+    transition: { type: "spring" as const, stiffness: 300, damping: 24 },
   },
 };
 
-function SettingsCardItem({
-  card,
-  disabled = false,
-}: {
-  card: SettingsCard;
-  disabled?: boolean;
-}) {
+function SettingsCardItem({ card, disabled = false }: { card: SettingsCard; disabled?: boolean }) {
   const content = (
     <div
       className={cn(
-        'group relative flex items-start gap-4 p-5 rounded-2xl border bg-card/80 backdrop-blur-sm',
-        'transition-all duration-300 ease-out',
+        "group relative flex items-start gap-4 p-5 rounded-2xl border bg-card/80 backdrop-blur-sm",
+        "transition-all duration-300 ease-out",
         disabled
-          ? 'opacity-50 cursor-not-allowed border-border'
-          : 'border-border/50 hover:border-transparent hover:bg-card hover:shadow-xl hover:shadow-black/5 dark:hover:shadow-black/20 hover:-translate-y-0.5'
+          ? "opacity-50 cursor-not-allowed border-border"
+          : "border-border/50 hover:border-transparent hover:bg-card hover:shadow-xl hover:shadow-black/5 dark:hover:shadow-black/20 hover:-translate-y-0.5"
       )}
     >
       {/* Gradient border on hover */}
@@ -130,10 +136,10 @@ function SettingsCardItem({
       {/* Icon with gradient background */}
       <div
         className={cn(
-          'relative flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center',
-          'bg-gradient-to-br shadow-lg',
-          'transition-transform duration-300',
-          !disabled && 'group-hover:scale-110 group-hover:rotate-3',
+          "relative flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center",
+          "bg-gradient-to-br shadow-lg",
+          "transition-transform duration-300",
+          !disabled && "group-hover:scale-110 group-hover:rotate-3",
           card.gradient
         )}
       >
@@ -145,9 +151,7 @@ function SettingsCardItem({
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <h3 className="text-base font-semibold text-foreground truncate">
-            {card.title}
-          </h3>
+          <h3 className="text-base font-semibold text-foreground truncate">{card.title}</h3>
           {card.badge && (
             <Badge variant={card.badgeVariant} className="text-[10px] px-2 py-0">
               {card.badge}
@@ -190,9 +194,7 @@ function SectionHeader({
 }) {
   return (
     <motion.div variants={itemVariants} className="flex items-center gap-3 mb-5">
-      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-        {icon}
-      </div>
+      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">{icon}</div>
       <div>
         <h2 className="text-lg font-semibold text-foreground">{title}</h2>
         <p className="text-sm text-muted-foreground">{description}</p>
@@ -217,7 +219,7 @@ export function SettingsClient() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
             className="max-w-3xl"
           >
             <div className="flex items-center gap-3 mb-4">
@@ -225,14 +227,11 @@ export function SettingsClient() {
                 <FaCog className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl lg:text-4xl font-bold text-foreground">
-                  Settings
-                </h1>
+                <h1 className="text-3xl lg:text-4xl font-bold text-foreground">Settings</h1>
               </div>
             </div>
             <p className="text-muted-foreground text-lg max-w-xl">
-              Manage your account, security preferences, and personalize your
-              FoodShare experience
+              Manage your account, security preferences, and personalize your FoodShare experience
             </p>
           </motion.div>
         </div>
@@ -242,11 +241,7 @@ export function SettingsClient() {
       <main className="relative container mx-auto px-6 lg:px-8 py-10">
         <div className="max-w-4xl mx-auto space-y-10">
           {/* Account Section */}
-          <motion.section
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
+          <motion.section variants={containerVariants} initial="hidden" animate="visible">
             <SectionHeader
               icon={<FaUser className="w-4 h-4 text-muted-foreground" />}
               title="Account"
@@ -262,11 +257,7 @@ export function SettingsClient() {
           <Separator className="bg-border/50" />
 
           {/* Preferences Section */}
-          <motion.section
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
+          <motion.section variants={containerVariants} initial="hidden" animate="visible">
             <SectionHeader
               icon={<FaPalette className="w-4 h-4 text-muted-foreground" />}
               title="Preferences"
@@ -282,11 +273,7 @@ export function SettingsClient() {
           <Separator className="bg-border/50" />
 
           {/* Quick Links Section */}
-          <motion.section
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
+          <motion.section variants={containerVariants} initial="hidden" animate="visible">
             <SectionHeader
               icon={<FaHeart className="w-4 h-4 text-muted-foreground" />}
               title="Support & Community"
@@ -303,12 +290,8 @@ export function SettingsClient() {
                     <FaQuestionCircle className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-base font-semibold text-foreground">
-                      Help Center
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      FAQs, guides, and support
-                    </p>
+                    <h3 className="text-base font-semibold text-foreground">Help Center</h3>
+                    <p className="text-sm text-muted-foreground">FAQs, guides, and support</p>
                   </div>
                   <FaChevronRight className="w-4 h-4 text-muted-foreground/50 transition-all duration-300 group-hover:text-emerald-500 group-hover:translate-x-1" />
                 </Link>
@@ -324,9 +307,7 @@ export function SettingsClient() {
                     <FaLeaf className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-base font-semibold text-foreground">
-                      About FoodShare
-                    </h3>
+                    <h3 className="text-base font-semibold text-foreground">About FoodShare</h3>
                     <p className="text-sm text-muted-foreground">
                       Our mission to reduce food waste
                     </p>
@@ -345,9 +326,8 @@ export function SettingsClient() {
             className="pt-6 text-center"
           >
             <p className="text-xs text-muted-foreground">
-              FoodShare v1.0 · Made with{' '}
-              <FaHeart className="inline w-3 h-3 text-rose-500 mx-0.5" /> for the
-              community
+              FoodShare v1.0 · Made with <FaHeart className="inline w-3 h-3 text-rose-500 mx-0.5" />{" "}
+              for the community
             </p>
           </motion.div>
         </div>

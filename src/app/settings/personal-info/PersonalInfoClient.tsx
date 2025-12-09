@@ -1,35 +1,36 @@
-'use client';
+"use client";
 
 /**
  * Personal Info Client Component
  * Premium profile editing with avatar upload and modern design
  */
 
-import React, { useEffect, useState, useRef } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
-import {
-  FaUser,
-  FaEnvelope,
-  FaPhone,
-  FaMapMarkerAlt,
-  FaChevronRight,
-  FaCheck,
-  FaTimes,
-  FaCamera,
-  FaSpinner,
-} from 'react-icons/fa';
-import { useRouter } from 'next/navigation';
-import { uploadProfileAvatar } from '@/app/actions/profile';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
-import { ALLOWED_MIME_TYPES } from '@/constants/mime-types';
-import type { AuthUser } from '@/app/actions/auth';
-import type { Profile } from '@/lib/data/profiles';
+import React, { useEffect, useState, useRef } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { User, Mail, Phone, MapPin, ChevronRight, Check, X, Camera, Loader2 } from "lucide-react";
+
+// Icon aliases for consistency
+const FaUser = User;
+const FaEnvelope = Mail;
+const FaPhone = Phone;
+const FaMapMarkerAlt = MapPin;
+const FaChevronRight = ChevronRight;
+const FaCheck = Check;
+const FaTimes = X;
+const FaCamera = Camera;
+const FaSpinner = Loader2;
+import { useRouter } from "next/navigation";
+import { uploadProfileAvatar } from "@/app/actions/profile";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import { ALLOWED_MIME_TYPES } from "@/constants/mime-types";
+import type { AuthUser } from "@/app/actions/auth";
+import type { Profile } from "@/lib/data/profiles";
 
 interface PersonalInfoClientProps {
   user: AuthUser;
@@ -58,7 +59,7 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring' as const, stiffness: 300, damping: 24 },
+    transition: { type: "spring" as const, stiffness: 300, damping: 24 },
   },
 };
 
@@ -97,8 +98,8 @@ function InfoCard({
       <div className="flex items-start gap-4">
         <div
           className={cn(
-            'relative flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center',
-            'bg-gradient-to-br shadow-lg',
+            "relative flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center",
+            "bg-gradient-to-br shadow-lg",
             gradient
           )}
         >
@@ -135,7 +136,7 @@ function InfoCard({
                 ) : (
                   <FaCheck className="w-3 h-3 mr-1.5" />
                 )}
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSaving ? "Saving..." : "Save"}
               </Button>
               <Button onClick={onCancel} variant="outline" size="sm" disabled={isSaving}>
                 <FaTimes className="w-3 h-3 mr-1.5" />
@@ -149,9 +150,13 @@ function InfoCard({
   );
 }
 
-export function PersonalInfoClient({ user, initialProfile, initialAddress }: PersonalInfoClientProps) {
+export function PersonalInfoClient({
+  user,
+  initialProfile,
+  initialAddress,
+}: PersonalInfoClientProps) {
   const router = useRouter();
-  
+
   // Use server-provided data
   const currentProfile = initialProfile;
   const address = initialAddress;
@@ -165,30 +170,30 @@ export function PersonalInfoClient({ user, initialProfile, initialAddress }: Per
   const [editingAddress, setEditingAddress] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [streetAddress, setStreetAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [postalCode, setPostalCode] = useState('');
-  const [country, setCountry] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [streetAddress, setStreetAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+  const [country, setCountry] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (currentProfile) {
-      setFirstName(currentProfile.first_name || '');
-      setLastName(currentProfile.second_name || '');
-      setPhone(currentProfile.phone || '');
+      setFirstName(currentProfile.first_name || "");
+      setLastName(currentProfile.second_name || "");
+      setPhone(currentProfile.phone || "");
     }
   }, [currentProfile]);
 
   useEffect(() => {
     if (address) {
-      setStreetAddress(address.address_line_1 || '');
-      setCity(address.city || '');
-      setPostalCode(address.postal_code || '');
-      setCountry(String(address.country || ''));
+      setStreetAddress(address.address_line_1 || "");
+      setCity(address.city || "");
+      setPostalCode(address.postal_code || "");
+      setCountry(String(address.country || ""));
     }
   }, [address]);
 
@@ -209,21 +214,21 @@ export function PersonalInfoClient({ user, initialProfile, initialAddress }: Per
 
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('userId', user.id);
+      formData.append("file", file);
+      formData.append("userId", user.id);
       await uploadProfileAvatar(formData);
       router.refresh();
     } catch (error) {
       // Revert preview on error
       setPreviewUrl(null);
-      console.error('Failed to upload avatar:', error);
+      console.error("Failed to upload avatar:", error);
     } finally {
       setIsUploadingAvatar(false);
     }
 
     // Clean up input
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -265,21 +270,21 @@ export function PersonalInfoClient({ user, initialProfile, initialAddress }: Per
   };
 
   const handleCancelName = () => {
-    setFirstName(currentProfile?.first_name || '');
-    setLastName(currentProfile?.second_name || '');
+    setFirstName(currentProfile?.first_name || "");
+    setLastName(currentProfile?.second_name || "");
     setEditingName(false);
   };
 
   const handleCancelPhone = () => {
-    setPhone(currentProfile?.phone || '');
+    setPhone(currentProfile?.phone || "");
     setEditingPhone(false);
   };
 
   const handleCancelAddress = () => {
-    setStreetAddress(address?.address_line_1 || '');
-    setCity(address?.city || '');
-    setPostalCode(address?.postal_code || '');
-    setCountry(String(address?.country || ''));
+    setStreetAddress(address?.address_line_1 || "");
+    setCity(address?.city || "");
+    setPostalCode(address?.postal_code || "");
+    setCountry(String(address?.country || ""));
     setEditingAddress(false);
   };
 
@@ -361,9 +366,9 @@ export function PersonalInfoClient({ user, initialProfile, initialAddress }: Per
               <div className="relative group">
                 <div
                   className={cn(
-                    'relative w-24 h-24 rounded-full overflow-hidden',
-                    'ring-4 ring-background shadow-xl',
-                    'transition-transform duration-300 group-hover:scale-105'
+                    "relative w-24 h-24 rounded-full overflow-hidden",
+                    "ring-4 ring-background shadow-xl",
+                    "transition-transform duration-300 group-hover:scale-105"
                   )}
                 >
                   {displayAvatarUrl ? (
@@ -377,7 +382,7 @@ export function PersonalInfoClient({ user, initialProfile, initialAddress }: Per
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
                       <span className="text-3xl text-white font-semibold">
-                        {firstName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || '?'}
+                        {firstName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || "?"}
                       </span>
                     </div>
                   )}
@@ -387,9 +392,9 @@ export function PersonalInfoClient({ user, initialProfile, initialAddress }: Per
                     onClick={handleAvatarClick}
                     disabled={isUploadingAvatar}
                     className={cn(
-                      'absolute inset-0 bg-black/50 flex items-center justify-center',
-                      'opacity-0 group-hover:opacity-100 transition-opacity duration-200',
-                      'cursor-pointer'
+                      "absolute inset-0 bg-black/50 flex items-center justify-center",
+                      "opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+                      "cursor-pointer"
                     )}
                   >
                     {isUploadingAvatar ? (
@@ -404,7 +409,7 @@ export function PersonalInfoClient({ user, initialProfile, initialAddress }: Per
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept={ALLOWED_MIME_TYPES.PROFILES.join(',')}
+                  accept={ALLOWED_MIME_TYPES.PROFILES.join(",")}
                   onChange={handleAvatarChange}
                   className="hidden"
                 />
@@ -482,7 +487,7 @@ export function PersonalInfoClient({ user, initialProfile, initialAddress }: Per
               </div>
             ) : (
               <p className="text-foreground">
-                {firstName && lastName ? `${firstName} ${lastName}` : 'Not provided'}
+                {firstName && lastName ? `${firstName} ${lastName}` : "Not provided"}
               </p>
             )}
           </InfoCard>
@@ -531,7 +536,7 @@ export function PersonalInfoClient({ user, initialProfile, initialAddress }: Per
                 />
               </div>
             ) : (
-              <p className="text-foreground">{phone || 'Not provided'}</p>
+              <p className="text-foreground">{phone || "Not provided"}</p>
             )}
           </InfoCard>
 
@@ -608,7 +613,7 @@ export function PersonalInfoClient({ user, initialProfile, initialAddress }: Per
                   <>
                     <p>{streetAddress}</p>
                     <p className="text-muted-foreground">
-                      {[city, postalCode].filter(Boolean).join(', ')}
+                      {[city, postalCode].filter(Boolean).join(", ")}
                     </p>
                     {country && <p className="text-muted-foreground">{country}</p>}
                   </>

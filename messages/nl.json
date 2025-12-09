@@ -1,5 +1,19 @@
 {
   "0": "{0}",
+  "categories": {
+    "food": "Eten",
+    "things": "Spullen",
+    "borrow": "Lenen",
+    "wanted": "Gezocht",
+    "foodbanks": "Voedselbanken",
+    "fridges": "Koelkasten",
+    "organisations": "Organisaties",
+    "volunteers": "Vrijwilligers",
+    "zerowaste": "Zero Waste",
+    "vegan": "Veganistisch",
+    "challenges": "Uitdagingen",
+    "forum": "Forum"
+  },
   "0_views": "{0} views",
   "buttonvalue": "{buttonValue}",
   "text": "{text}",

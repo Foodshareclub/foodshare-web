@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Navbar } from '@/components/header/navbar';
+import React from "react";
+import { Navbar } from "@/components/header/navbar";
 
-import type { CustomRoomType } from '@/api/chatAPI';
+import type { CustomRoomType } from "@/api/chatAPI";
 
 type HeaderProps = {
   // Auth data (passed from server)
@@ -15,6 +15,8 @@ type HeaderProps = {
   email?: string;
   // Chat data (passed from server)
   signalOfNewMessage?: Array<CustomRoomType>;
+  // Notification data (passed from server)
+  initialUnreadCount?: number;
   // Route handlers
   onRouteChange: (route: string) => void;
   onProductTypeChange: (type: string) => void;
@@ -29,11 +31,12 @@ type HeaderProps = {
 export default function Header({
   userId,
   isAuth,
-  imgUrl = '',
+  imgUrl = "",
   firstName,
   secondName,
   email,
   signalOfNewMessage = [],
+  initialUnreadCount = 0,
   onRouteChange,
   onProductTypeChange,
   productType,
@@ -50,6 +53,7 @@ export default function Header({
       secondName={secondName}
       email={email}
       signalOfNewMessage={signalOfNewMessage}
+      initialUnreadCount={initialUnreadCount}
     />
   );
 }

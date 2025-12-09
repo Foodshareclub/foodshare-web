@@ -1,25 +1,16 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useTranslations } from 'next-intl';
-import {
-  FiTarget,
-  FiUsers,
-  FiTrendingUp,
-  FiZap,
-  FiAward,
-  FiChevronRight,
-  FiStar,
-} from 'react-icons/fi';
-import { HiOutlineFire } from 'react-icons/hi';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import type { InitialProductStateType } from '@/types/product.types';
-import type { Challenge } from '@/lib/data/challenges';
-import type { AuthUser } from '@/app/actions/auth';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Target, Users, TrendingUp, Zap, Award, ChevronRight, Star, Flame } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import type { InitialProductStateType } from "@/types/product.types";
+import type { Challenge } from "@/lib/data/challenges";
+import type { AuthUser } from "@/app/actions/auth";
 
 interface ChallengesClientProps {
   challenges: InitialProductStateType[];
@@ -28,12 +19,12 @@ interface ChallengesClientProps {
   stats: { totalChallenges: number; totalParticipants: number };
 }
 
-type Difficulty = 'all' | 'Easy' | 'Medium' | 'Hard';
+type Difficulty = "all" | "Easy" | "Medium" | "Hard";
 
 const DIFFICULTY_CONFIG = {
-  Easy: { color: 'bg-green-500', text: 'text-green-500', icon: FiStar, xp: 10 },
-  Medium: { color: 'bg-yellow-500', text: 'text-yellow-500', icon: HiOutlineFire, xp: 25 },
-  Hard: { color: 'bg-red-500', text: 'text-red-500', icon: FiZap, xp: 50 },
+  Easy: { color: "bg-green-500", text: "text-green-500", icon: Star, xp: 10 },
+  Medium: { color: "bg-yellow-500", text: "text-yellow-500", icon: Flame, xp: 25 },
+  Hard: { color: "bg-red-500", text: "text-red-500", icon: Zap, xp: 50 },
 } as const;
 
 export function ChallengesClient({
@@ -42,11 +33,11 @@ export function ChallengesClient({
   user,
   stats,
 }: ChallengesClientProps) {
-  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>('all');
-  const t = useTranslations('Common');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>("all");
+  const t = useTranslations("Common");
 
   const filteredChallenges =
-    selectedDifficulty === 'all'
+    selectedDifficulty === "all"
       ? challenges
       : challenges.filter((c) => c.condition === selectedDifficulty);
 
@@ -60,9 +51,7 @@ export function ChallengesClient({
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Featured Challenges */}
-        {popularChallenges.length > 0 && (
-          <FeaturedSection challenges={popularChallenges} />
-        )}
+        {popularChallenges.length > 0 && <FeaturedSection challenges={popularChallenges} />}
 
         {/* Filter Bar */}
         <FilterBar
@@ -70,17 +59,14 @@ export function ChallengesClient({
           onSelect={setSelectedDifficulty}
           counts={{
             all: challenges.length,
-            Easy: challenges.filter((c) => c.condition === 'Easy').length,
-            Medium: challenges.filter((c) => c.condition === 'Medium').length,
-            Hard: challenges.filter((c) => c.condition === 'Hard').length,
+            Easy: challenges.filter((c) => c.condition === "Easy").length,
+            Medium: challenges.filter((c) => c.condition === "Medium").length,
+            Hard: challenges.filter((c) => c.condition === "Hard").length,
           }}
         />
 
         {/* Challenge Grid */}
-        <motion.div
-          layout
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8"
-        >
+        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
           <AnimatePresence mode="popLayout">
             {filteredChallenges.map((challenge, index) => (
               <ChallengeCard
@@ -93,14 +79,11 @@ export function ChallengesClient({
           </AnimatePresence>
         </motion.div>
 
-        {filteredChallenges.length === 0 && (
-          <EmptyState difficulty={selectedDifficulty} />
-        )}
+        {filteredChallenges.length === 0 && <EmptyState difficulty={selectedDifficulty} />}
       </div>
     </>
   );
 }
-
 
 // ============================================================================
 // Hero Section
@@ -136,42 +119,34 @@ function HeroSection({
           className="text-center"
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-6">
-            <FiTarget className="w-4 h-4" />
+            <Target className="w-4 h-4" />
             <span className="text-sm font-medium">Community Challenges</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-4">
-            Make the World{' '}
+            Make the World{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-500">
               Better
             </span>
           </h1>
 
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            Join challenges, earn XP, compete with the community, and create positive impact.
-            Every action counts!
+            Join challenges, earn XP, compete with the community, and create positive impact. Every
+            action counts!
           </p>
 
           {/* Stats */}
           <div className="flex flex-wrap justify-center gap-3 mb-8">
-            <StatCard
-              icon={FiTarget}
-              value={stats.totalChallenges}
-              label="Active Challenges"
-            />
-            <StatCard
-              icon={FiUsers}
-              value={stats.totalParticipants}
-              label="Participants"
-            />
-            <StatCard icon={FiTrendingUp} value="2.5K" label="XP Earned" />
+            <StatCard icon={Target} value={stats.totalChallenges} label="Active Challenges" />
+            <StatCard icon={Users} value={stats.totalParticipants} label="Participants" />
+            <StatCard icon={TrendingUp} value="2.5K" label="XP Earned" />
           </div>
 
           {!isAuth && (
             <Link href="/auth/login">
               <Button size="lg" className="gap-2">
                 Join the Movement
-                <FiChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4" />
               </Button>
             </Link>
           )}
@@ -206,7 +181,6 @@ function StatCard({
   );
 }
 
-
 // ============================================================================
 // Featured Section
 // ============================================================================
@@ -215,7 +189,7 @@ function FeaturedSection({ challenges }: { challenges: Challenge[] }) {
   return (
     <div className="mb-12">
       <div className="flex items-center gap-2 mb-6">
-        <HiOutlineFire className="w-5 h-5 text-orange-500" />
+        <Flame className="w-5 h-5 text-orange-500" />
         <h2 className="text-xl font-semibold text-foreground">Trending Now</h2>
       </div>
 
@@ -240,7 +214,7 @@ function FeaturedSection({ challenges }: { challenges: Challenge[] }) {
                 {/* Rank badge */}
                 <div className="absolute top-3 left-3">
                   <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-orange-500 text-white text-xs font-bold">
-                    <FiTrendingUp className="w-3 h-3" />#{index + 1}
+                    <TrendingUp className="w-3 h-3" />#{index + 1}
                   </div>
                 </div>
 
@@ -251,11 +225,11 @@ function FeaturedSection({ challenges }: { challenges: Challenge[] }) {
                   </h3>
                   <div className="flex items-center gap-3 text-white/80 text-sm">
                     <span className="flex items-center gap-1">
-                      <FiUsers className="w-3 h-3" />
+                      <Users className="w-3 h-3" />
                       {challenge.challenged_people}
                     </span>
                     <span className="flex items-center gap-1">
-                      <FiZap className="w-3 h-3" />
+                      <Zap className="w-3 h-3" />
                       {challenge.challenge_score} XP
                     </span>
                   </div>
@@ -283,17 +257,17 @@ function FilterBar({
   counts: Record<Difficulty, number>;
 }) {
   const filters: { key: Difficulty; label: string }[] = [
-    { key: 'all', label: 'All Challenges' },
-    { key: 'Easy', label: 'Easy' },
-    { key: 'Medium', label: 'Medium' },
-    { key: 'Hard', label: 'Hard' },
+    { key: "all", label: "All Challenges" },
+    { key: "Easy", label: "Easy" },
+    { key: "Medium", label: "Medium" },
+    { key: "Hard", label: "Hard" },
   ];
 
   return (
     <div className="flex flex-wrap gap-2">
       {filters.map(({ key, label }) => {
         const isActive = selected === key;
-        const config = key !== 'all' ? DIFFICULTY_CONFIG[key] : null;
+        const config = key !== "all" ? DIFFICULTY_CONFIG[key] : null;
 
         return (
           <motion.button
@@ -302,18 +276,18 @@ function FilterBar({
             whileTap={{ scale: 0.98 }}
             onClick={() => onSelect(key)}
             className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all',
+              "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all",
               isActive
-                ? 'bg-primary text-primary-foreground shadow-lg'
-                : 'bg-card hover:bg-accent text-foreground border border-border'
+                ? "bg-primary text-primary-foreground shadow-lg"
+                : "bg-card hover:bg-accent text-foreground border border-border"
             )}
           >
             {config && <config.icon className="w-4 h-4" />}
             {label}
             <span
               className={cn(
-                'px-2 py-0.5 rounded-full text-xs',
-                isActive ? 'bg-white/20' : 'bg-muted'
+                "px-2 py-0.5 rounded-full text-xs",
+                isActive ? "bg-white/20" : "bg-muted"
               )}
             >
               {counts[key]}
@@ -324,7 +298,6 @@ function FilterBar({
     </div>
   );
 }
-
 
 // ============================================================================
 // Challenge Card
@@ -339,11 +312,11 @@ function ChallengeCard({
   index: number;
   isAuth: boolean;
 }) {
-  const difficulty = (challenge.condition as keyof typeof DIFFICULTY_CONFIG) || 'Easy';
+  const difficulty = (challenge.condition as keyof typeof DIFFICULTY_CONFIG) || "Easy";
   const config = DIFFICULTY_CONFIG[difficulty] || DIFFICULTY_CONFIG.Easy;
   const DifficultyIcon = config.icon;
 
-  const imageUrl = challenge.images?.[0] || '/placeholder-challenge.webp';
+  const imageUrl = challenge.images?.[0] || "/placeholder-challenge.webp";
 
   return (
     <motion.div
@@ -373,7 +346,7 @@ function ChallengeCard({
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-sm text-white text-sm font-bold"
               >
-                <FiZap className="w-4 h-4 text-yellow-400" />
+                <Zap className="w-4 h-4 text-yellow-400" />
                 {config.xp} XP
               </motion.div>
             </div>
@@ -382,7 +355,7 @@ function ChallengeCard({
             <div className="absolute top-3 left-3">
               <div
                 className={cn(
-                  'flex items-center gap-1 px-2 py-1 rounded-full text-white text-xs font-medium',
+                  "flex items-center gap-1 px-2 py-1 rounded-full text-white text-xs font-medium",
                   config.color
                 )}
               >
@@ -406,11 +379,11 @@ function ChallengeCard({
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <FiUsers className="w-4 h-4" />
+                  <Users className="w-4 h-4" />
                   {challenge.post_like_counter || 0}
                 </span>
                 <span className="flex items-center gap-1">
-                  <FiAward className="w-4 h-4" />
+                  <Award className="w-4 h-4" />
                   {challenge.post_views || 0} views
                 </span>
               </div>
@@ -420,14 +393,18 @@ function ChallengeCard({
             <div className="mb-4">
               <div className="flex justify-between text-xs text-muted-foreground mb-1">
                 <span>Community Progress</span>
-                <span>{Math.min(((challenge.post_like_counter || 0) / 100) * 100, 100).toFixed(0)}%</span>
+                <span>
+                  {Math.min(((challenge.post_like_counter || 0) / 100) * 100, 100).toFixed(0)}%
+                </span>
               </div>
               <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(((challenge.post_like_counter || 0) / 100) * 100, 100)}%` }}
+                  animate={{
+                    width: `${Math.min(((challenge.post_like_counter || 0) / 100) * 100, 100)}%`,
+                  }}
                   transition={{ duration: 1, delay: index * 0.1 }}
-                  className={cn('h-full rounded-full', config.color)}
+                  className={cn("h-full rounded-full", config.color)}
                 />
               </div>
             </div>
@@ -437,9 +414,9 @@ function ChallengeCard({
               className="w-full gap-2 group-hover:bg-primary group-hover:text-primary-foreground"
               variant="outline"
             >
-              <FiTarget className="w-4 h-4" />
-              {isAuth ? 'Accept Challenge' : 'View Challenge'}
-              <FiChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+              <Target className="w-4 h-4" />
+              {isAuth ? "Accept Challenge" : "View Challenge"}
+              <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Button>
           </div>
         </div>
@@ -454,20 +431,14 @@ function ChallengeCard({
 
 function EmptyState({ difficulty }: { difficulty: Difficulty }) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="text-center py-16"
-    >
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
       <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-        <FiTarget className="w-8 h-8 text-muted-foreground" />
+        <Target className="w-8 h-8 text-muted-foreground" />
       </div>
       <h3 className="text-lg font-semibold text-foreground mb-2">
-        No {difficulty !== 'all' ? difficulty : ''} Challenges Yet
+        No {difficulty !== "all" ? difficulty : ""} Challenges Yet
       </h3>
-      <p className="text-muted-foreground">
-        Check back soon for new challenges to conquer!
-      </p>
+      <p className="text-muted-foreground">Check back soon for new challenges to conquer!</p>
     </motion.div>
   );
 }

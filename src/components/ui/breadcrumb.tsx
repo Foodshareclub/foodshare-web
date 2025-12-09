@@ -1,5 +1,5 @@
 import * as React from "react";
-import { FaChevronRight } from "react-icons/fa";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const Breadcrumb = React.forwardRef<
@@ -44,11 +44,7 @@ const BreadcrumbLink = React.forwardRef<
   }
 
   return (
-    <a
-      ref={ref}
-      className={cn("transition-colors hover:text-foreground", className)}
-      {...props}
-    />
+    <a ref={ref} className={cn("transition-colors hover:text-foreground", className)} {...props} />
   );
 });
 BreadcrumbLink.displayName = "BreadcrumbLink";
@@ -74,7 +70,7 @@ const BreadcrumbSeparator = ({ children, className, ...props }: React.ComponentP
     className={cn("[&>svg]:size-3.5", className)}
     {...props}
   >
-    {children ?? <FaChevronRight className="w-3.5 h-3.5" />}
+    {children ?? <ChevronRight className="w-3.5 h-3.5" />}
   </li>
 );
 BreadcrumbSeparator.displayName = "BreadcrumbSeparator";

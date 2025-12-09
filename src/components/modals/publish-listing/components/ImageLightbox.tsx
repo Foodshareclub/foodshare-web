@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { IoMdClose } from "react-icons/io";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { ImageItem } from "../types";
 
 interface ImageLightboxProps {
@@ -27,7 +26,8 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, initialInd
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
       if (e.key === "ArrowRight") setCurrentIndex((prev) => (prev + 1) % images.length);
-      if (e.key === "ArrowLeft") setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+      if (e.key === "ArrowLeft")
+        setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -62,7 +62,7 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, initialInd
         onClick={onClose}
         className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
       >
-        <IoMdClose className="h-6 w-6" />
+        <X className="h-6 w-6" />
       </button>
 
       <div
@@ -78,14 +78,14 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, initialInd
               onClick={goPrev}
               className="absolute left-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
             >
-              <FaChevronLeft className="h-6 w-6" />
+              <ChevronLeft className="h-6 w-6" />
             </button>
             <button
               type="button"
               onClick={goNext}
               className="absolute right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors z-10"
             >
-              <FaChevronRight className="h-6 w-6" />
+              <ChevronRight className="h-6 w-6" />
             </button>
           </>
         )}

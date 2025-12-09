@@ -1,10 +1,15 @@
-'use client';
+"use client";
 
 import { Circle, FeatureGroup, Marker, Popup, useMapEvents } from "react-leaflet";
 import type { FC } from "react";
 import { useState, useEffect } from "react";
 import type { Icon, IconOptions, LatLng } from "leaflet";
-import { FaMapMarkerAlt, FaTimes, FaSpinner } from 'react-icons/fa';
+import { MapPin, X, Loader2 } from "lucide-react";
+
+// Icon aliases for consistency
+const FaMapMarkerAlt = MapPin;
+const FaTimes = X;
+const FaSpinner = Loader2;
 
 type LocationMarkerType = {
   icon: Icon<IconOptions>;

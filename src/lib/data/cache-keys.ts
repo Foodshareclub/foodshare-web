@@ -9,25 +9,35 @@
 // Development Cache Logging
 // ============================================================================
 
-const IS_DEV = process.env.NODE_ENV === 'development';
+const IS_DEV = process.env.NODE_ENV === "development";
 
 /**
  * Log cache operations in development
  */
 function logCacheOperation(
-  operation: 'hit' | 'miss' | 'set' | 'invalidate',
+  operation: "hit" | "miss" | "set" | "invalidate",
   key: string,
   metadata?: Record<string, unknown>
 ): void {
   if (!IS_DEV) return;
-  
-  const emoji = operation === 'hit' ? '✅' : operation === 'miss' ? '❌' : operation === 'set' ? '💾' : '🗑️';
-  const color = operation === 'hit' ? '\x1b[32m' : operation === 'miss' ? '\x1b[33m' : operation === 'set' ? '\x1b[36m' : '\x1b[35m';
-  const reset = '\x1b[0m';
-  const time = new Date().toISOString().split('T')[1].slice(0, 12);
-  
-  const metaStr = metadata ? ` ${JSON.stringify(metadata)}` : '';
-  console.log(`${emoji} ${color}[${time}] CACHE ${operation.toUpperCase()}${reset} ${key}${metaStr}`);
+
+  const emoji =
+    operation === "hit" ? "✅" : operation === "miss" ? "❌" : operation === "set" ? "💾" : "🗑️";
+  const color =
+    operation === "hit"
+      ? "\x1b[32m"
+      : operation === "miss"
+        ? "\x1b[33m"
+        : operation === "set"
+          ? "\x1b[36m"
+          : "\x1b[35m";
+  const reset = "\x1b[0m";
+  const time = new Date().toISOString().split("T")[1].slice(0, 12);
+
+  const metaStr = metadata ? ` ${JSON.stringify(metadata)}` : "";
+  console.log(
+    `${emoji} ${color}[${time}] CACHE ${operation.toUpperCase()}${reset} ${key}${metaStr}`
+  );
 }
 
 // ============================================================================
@@ -36,45 +46,50 @@ function logCacheOperation(
 
 export const CACHE_TAGS = {
   // Products
-  PRODUCTS: 'products',
+  PRODUCTS: "products",
   PRODUCTS_BY_TYPE: (type: string) => `products-${type}`,
   PRODUCT: (id: number) => `product-${id}`,
-  PRODUCT_LOCATIONS: 'product-locations',
+  PRODUCT_LOCATIONS: "product-locations",
   PRODUCT_LOCATIONS_BY_TYPE: (type: string) => `product-locations-${type}`,
   USER_PRODUCTS: (userId: string) => `user-products-${userId}`,
-  PRODUCT_SEARCH: 'product-search',
+  PRODUCT_SEARCH: "product-search",
 
   // Profiles
-  PROFILES: 'profiles',
+  PROFILES: "profiles",
   PROFILE: (id: string) => `profile-${id}`,
   PROFILE_STATS: (id: string) => `profile-stats-${id}`,
   PROFILE_REVIEWS: (id: string) => `profile-reviews-${id}`,
-  VOLUNTEERS: 'volunteers',
+  VOLUNTEERS: "volunteers",
 
   // Challenges
-  CHALLENGES: 'challenges',
+  CHALLENGES: "challenges",
   CHALLENGE: (id: number) => `challenge-${id}`,
   USER_CHALLENGES: (userId: string) => `user-challenges-${userId}`,
 
   // Forum
-  FORUM: 'forum',
+  FORUM: "forum",
   FORUM_POST: (id: number) => `forum-post-${id}`,
   FORUM_COMMENTS: (postId: number) => `forum-comments-${postId}`,
 
   // Chat
-  CHATS: 'chats',
+  CHATS: "chats",
   CHAT: (id: string) => `chat-${id}`,
   CHAT_MESSAGES: (chatId: string) => `chat-messages-${chatId}`,
 
   // Admin
-  ADMIN: 'admin',
-  ADMIN_STATS: 'admin-stats',
-  ADMIN_LISTINGS: 'admin-listings',
-  AUDIT_LOGS: 'audit-logs',
+  ADMIN: "admin",
+  ADMIN_STATS: "admin-stats",
+  ADMIN_LISTINGS: "admin-listings",
+  AUDIT_LOGS: "audit-logs",
 
   // Auth
-  AUTH: 'auth',
-  SESSION: 'session',
+  AUTH: "auth",
+  SESSION: "session",
+
+  // Notifications
+  NOTIFICATIONS: "notifications",
+  NOTIFICATIONS_UNREAD: "notifications-unread",
+  USER_NOTIFICATIONS: (userId: string) => `user-notifications-${userId}`,
 } as const;
 
 // ============================================================================
@@ -84,13 +99,13 @@ export const CACHE_TAGS = {
 export const CACHE_DURATIONS = {
   // Short-lived (frequently changing data)
   SHORT: 60, // 1 minute
-  
+
   // Medium (moderately changing data)
   MEDIUM: 300, // 5 minutes
-  
+
   // Long (rarely changing data)
   LONG: 3600, // 1 hour
-  
+
   // Very long (static-ish data)
   VERY_LONG: 86400, // 24 hours
 
@@ -113,7 +128,7 @@ export const CACHE_DURATIONS = {
 // ============================================================================
 
 export const CACHE_PROFILES = {
-  DEFAULT: 'default',
+  DEFAULT: "default",
   INSTANT: { expire: 0 },
 } as const;
 
@@ -121,14 +136,14 @@ export const CACHE_PROFILES = {
 // Helper function for revalidation (Next.js 16 requires profile)
 // ============================================================================
 
-import { revalidateTag as nextRevalidateTag } from 'next/cache';
+import { revalidateTag as nextRevalidateTag } from "next/cache";
 
 /**
  * Revalidate a cache tag with default profile
  * Wrapper around Next.js 16's revalidateTag which requires a profile
  */
 export function invalidateTag(tag: string): void {
-  logCacheOperation('invalidate', tag);
+  logCacheOperation("invalidate", tag);
   nextRevalidateTag(tag, CACHE_PROFILES.DEFAULT);
 }
 
@@ -171,6 +186,14 @@ export function getChallengeTags(challengeId?: number): string[] {
   const tags: string[] = [CACHE_TAGS.CHALLENGES];
   if (challengeId) {
     tags.push(CACHE_TAGS.CHALLENGE(challengeId));
+  }
+  return tags;
+}
+
+export function getNotificationTags(userId?: string): string[] {
+  const tags: string[] = [CACHE_TAGS.NOTIFICATIONS, CACHE_TAGS.NOTIFICATIONS_UNREAD];
+  if (userId) {
+    tags.push(CACHE_TAGS.USER_NOTIFICATIONS(userId));
   }
   return tags;
 }

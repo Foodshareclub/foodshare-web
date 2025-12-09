@@ -1,5 +1,19 @@
 {
   "0": "{0}",
+  "categories": {
+    "food": "食べ物",
+    "things": "もの",
+    "borrow": "借りる",
+    "wanted": "探しています",
+    "foodbanks": "フードバンク",
+    "fridges": "冷蔵庫",
+    "organisations": "組織",
+    "volunteers": "ボランティア",
+    "zerowaste": "ゼロウェイスト",
+    "vegan": "ビーガン",
+    "challenges": "チャレンジ",
+    "forum": "フォーラム"
+  },
   "0_views": "{0} 回表示",
   "buttonvalue": "{buttonValue}",
   "text": "{text}",

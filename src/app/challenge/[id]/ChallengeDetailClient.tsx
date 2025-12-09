@@ -1,34 +1,35 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
-  FiArrowLeft,
-  FiTarget,
-  FiUsers,
-  FiZap,
-  FiAward,
-  FiClock,
-  FiCheckCircle,
-  FiShare2,
-  FiHeart,
-  FiStar,
-  FiTrendingUp,
-  FiGift,
-  FiShield,
-  FiFlag,
-} from 'react-icons/fi';
-import { HiOutlineFire, HiOutlineSparkles } from 'react-icons/hi';
-import confetti from 'canvas-confetti';
-import { acceptChallenge } from '@/app/actions/challenges';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import type { Challenge } from '@/lib/data/challenges';
-import type { AuthUser } from '@/app/actions/auth';
+  ArrowLeft,
+  Target,
+  Users,
+  Zap,
+  Award,
+  Clock,
+  CheckCircle,
+  Share2,
+  Heart,
+  Star,
+  TrendingUp,
+  Gift,
+  Shield,
+  Flag,
+  Flame,
+  Sparkles,
+} from "lucide-react";
+import confetti from "canvas-confetti";
+import { acceptChallenge } from "@/app/actions/challenges";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import type { Challenge } from "@/lib/data/challenges";
+import type { AuthUser } from "@/app/actions/auth";
 
 interface ChallengeDetailClientProps {
   challenge: Challenge;
@@ -37,46 +38,71 @@ interface ChallengeDetailClientProps {
 }
 
 const DIFFICULTY_CONFIG = {
-  Easy: { color: 'bg-green-500', gradient: 'from-green-500 to-emerald-600', text: 'text-green-500', icon: FiStar, xp: 10, badge: '🌱' },
-  Medium: { color: 'bg-yellow-500', gradient: 'from-yellow-500 to-orange-500', text: 'text-yellow-500', icon: HiOutlineFire, xp: 25, badge: '🔥' },
-  Hard: { color: 'bg-red-500', gradient: 'from-red-500 to-pink-600', text: 'text-red-500', icon: FiZap, xp: 50, badge: '⚡' },
+  Easy: {
+    color: "bg-green-500",
+    gradient: "from-green-500 to-emerald-600",
+    text: "text-green-500",
+    icon: Star,
+    xp: 10,
+    badge: "🌱",
+  },
+  Medium: {
+    color: "bg-yellow-500",
+    gradient: "from-yellow-500 to-orange-500",
+    text: "text-yellow-500",
+    icon: Flame,
+    xp: 25,
+    badge: "🔥",
+  },
+  Hard: {
+    color: "bg-red-500",
+    gradient: "from-red-500 to-pink-600",
+    text: "text-red-500",
+    icon: Zap,
+    xp: 50,
+    badge: "⚡",
+  },
 } as const;
 
 const REWARDS = [
-  { icon: '🏆', name: 'Challenge Champion', description: 'Complete this challenge' },
-  { icon: '🌟', name: 'Community Hero', description: 'Join 100+ participants' },
-  { icon: '💚', name: 'Eco Warrior', description: 'Make a positive impact' },
+  { icon: "🏆", name: "Challenge Champion", description: "Complete this challenge" },
+  { icon: "🌟", name: "Community Hero", description: "Join 100+ participants" },
+  { icon: "💚", name: "Eco Warrior", description: "Make a positive impact" },
 ];
 
-export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAccepted }: ChallengeDetailClientProps) {
+export function ChallengeDetailClient({
+  challenge,
+  user,
+  isAccepted: initialIsAccepted,
+}: ChallengeDetailClientProps) {
   const router = useRouter();
   const [isAccepted, setIsAccepted] = useState(initialIsAccepted);
   const [isAccepting, setIsAccepting] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
 
-  const difficulty = (challenge.challenge_difficulty as keyof typeof DIFFICULTY_CONFIG) || 'Easy';
+  const difficulty = (challenge.challenge_difficulty as keyof typeof DIFFICULTY_CONFIG) || "Easy";
   const config = DIFFICULTY_CONFIG[difficulty] || DIFFICULTY_CONFIG.Easy;
   const DifficultyIcon = config.icon;
 
   const handleAccept = async () => {
     if (!user) {
-      router.push('/auth/login');
+      router.push("/auth/login");
       return;
     }
-    
+
     setIsAccepting(true);
     const result = await acceptChallenge(challenge.id);
     setIsAccepting(false);
-    
+
     if (result.success) {
       setIsAccepted(true);
-      
+
       // Trigger confetti
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#FF2D55', '#00A699', '#FFD700'],
+        colors: ["#FF2D55", "#00A699", "#FFD700"],
       });
     }
   };
@@ -87,7 +113,7 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
       text: `Join me in the "${challenge.challenge_title}" challenge on FoodShare! 🌍`,
       url: window.location.href,
     };
-    
+
     try {
       if (navigator.share) {
         await navigator.share(shareData);
@@ -96,7 +122,7 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
       }
     } catch (error) {
       // User cancelled share dialog - this is expected, not an error
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (error instanceof Error && error.name === "AbortError") {
         return;
       }
       // Fallback to clipboard for other errors
@@ -134,14 +160,14 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
             priority
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
-          
+
           {/* Floating particles effect */}
           <div className="absolute inset-0">
             {[...Array(6)].map((_, i) => (
               <motion.div
                 key={i}
                 className="absolute w-2 h-2 bg-white/30 rounded-full"
-                style={{ left: `${15 + i * 15}%`, top: '60%' }}
+                style={{ left: `${15 + i * 15}%`, top: "60%" }}
                 animate={{ y: [-20, -60, -20], opacity: [0, 1, 0] }}
                 transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }}
               />
@@ -152,8 +178,12 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
         {/* Back Button */}
         <div className="absolute top-4 left-4 z-10">
           <Link href="/challenge">
-            <Button variant="ghost" size="sm" className="bg-black/30 backdrop-blur-md text-white hover:bg-black/50 border border-white/10">
-              <FiArrowLeft className="w-4 h-4 mr-2" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="bg-black/30 backdrop-blur-md text-white hover:bg-black/50 border border-white/10"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Challenges
             </Button>
           </Link>
@@ -163,18 +193,20 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
           animate={{ scale: 1, rotate: 0 }}
-          transition={{ type: 'spring', stiffness: 200, delay: 0.3 }}
+          transition={{ type: "spring", stiffness: 200, delay: 0.3 }}
           className="absolute top-4 right-4"
         >
-          <div className={cn(
-            'flex items-center gap-2 px-5 py-3 rounded-2xl text-white shadow-2xl',
-            `bg-gradient-to-r ${config.gradient}`
-          )}>
+          <div
+            className={cn(
+              "flex items-center gap-2 px-5 py-3 rounded-2xl text-white shadow-2xl",
+              `bg-gradient-to-r ${config.gradient}`
+            )}
+          >
             <motion.div
               animate={{ rotate: [0, 10, -10, 0] }}
               transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 2 }}
             >
-              <FiZap className="w-6 h-6" />
+              <Zap className="w-6 h-6" />
             </motion.div>
             <div>
               <div className="text-2xl font-black">{config.xp}</div>
@@ -192,12 +224,12 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
           >
             {/* Badges */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
-              <Badge className={cn('text-white text-sm px-3 py-1', config.color)}>
+              <Badge className={cn("text-white text-sm px-3 py-1", config.color)}>
                 <DifficultyIcon className="w-4 h-4 mr-1" />
                 {difficulty}
               </Badge>
               <Badge variant="outline" className="text-sm px-3 py-1">
-                <FiFlag className="w-3 h-3 mr-1" />
+                <Flag className="w-3 h-3 mr-1" />
                 {challenge.challenge_action}
               </Badge>
               <Badge variant="secondary" className="text-sm px-3 py-1">
@@ -214,17 +246,19 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
             {/* Quick Stats */}
             <div className="flex flex-wrap gap-6 text-muted-foreground">
               <div className="flex items-center gap-2">
-                <FiUsers className="w-5 h-5 text-primary" />
+                <Users className="w-5 h-5 text-primary" />
                 <span className="font-semibold text-foreground">{challenge.challenged_people}</span>
                 <span>joined</span>
               </div>
               <div className="flex items-center gap-2">
-                <FiHeart className="w-5 h-5 text-red-500" />
-                <span className="font-semibold text-foreground">{challenge.challenge_likes_counter}</span>
+                <Heart className="w-5 h-5 text-red-500" />
+                <span className="font-semibold text-foreground">
+                  {challenge.challenge_likes_counter}
+                </span>
                 <span>likes</span>
               </div>
               <div className="flex items-center gap-2">
-                <FiTrendingUp className="w-5 h-5 text-green-500" />
+                <TrendingUp className="w-5 h-5 text-green-500" />
                 <span className="font-semibold text-foreground">{challenge.challenge_views}</span>
                 <span>views</span>
               </div>
@@ -233,10 +267,8 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
         </div>
       </div>
 
-
       {/* Main Content */}
       <div className="relative max-w-4xl mx-auto px-4 py-8 space-y-8">
-        
         {/* Accept Challenge CTA - Prominent */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -254,19 +286,21 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 200 }}
+                  transition={{ type: "spring", stiffness: 200 }}
                   className="mb-4"
                 >
                   <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm">
-                    <FiCheckCircle className="w-10 h-10" />
+                    <CheckCircle className="w-10 h-10" />
                   </div>
                 </motion.div>
                 <h2 className="text-2xl font-bold mb-2">Challenge Accepted! 🎉</h2>
-                <p className="text-white/80">You&apos;re now part of the movement. Let&apos;s make a difference!</p>
-                
+                <p className="text-white/80">
+                  You&apos;re now part of the movement. Let&apos;s make a difference!
+                </p>
+
                 {/* Sparkles */}
-                <HiOutlineSparkles className="absolute top-4 left-4 w-6 h-6 text-white/40" />
-                <HiOutlineSparkles className="absolute bottom-4 right-4 w-8 h-8 text-white/40" />
+                <Sparkles className="absolute top-4 left-4 w-6 h-6 text-white/40" />
+                <Sparkles className="absolute bottom-4 right-4 w-8 h-8 text-white/40" />
               </motion.div>
             ) : (
               <motion.div
@@ -275,14 +309,16 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className={cn(
-                  'relative overflow-hidden rounded-3xl p-8 text-white',
+                  "relative overflow-hidden rounded-3xl p-8 text-white",
                   `bg-gradient-to-r ${config.gradient}`
                 )}
               >
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
                   <div>
                     <h2 className="text-2xl font-bold mb-2">Ready to make an impact?</h2>
-                    <p className="text-white/80">Join {challenge.challenged_people} others and earn {config.xp} XP!</p>
+                    <p className="text-white/80">
+                      Join {challenge.challenged_people} others and earn {config.xp} XP!
+                    </p>
                   </div>
                   <Button
                     size="lg"
@@ -290,11 +326,11 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
                     disabled={isAccepting}
                     className="bg-white text-foreground hover:bg-white/90 font-bold px-8 py-6 text-lg shadow-xl disabled:opacity-70"
                   >
-                    <FiTarget className="w-5 h-5 mr-2" />
-                    {isAccepting ? 'Accepting...' : user ? 'Accept Challenge' : 'Login to Accept'}
+                    <Target className="w-5 h-5 mr-2" />
+                    {isAccepting ? "Accepting..." : user ? "Accept Challenge" : "Login to Accept"}
                   </Button>
                 </div>
-                
+
                 {/* Decorative elements */}
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
                 <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-black/10 rounded-full blur-2xl" />
@@ -312,28 +348,28 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-              <FiTrendingUp className="w-5 h-5 text-primary" />
+              <TrendingUp className="w-5 h-5 text-primary" />
               Community Progress
             </h3>
             <span className="text-2xl font-black text-primary">{progressPercent.toFixed(0)}%</span>
           </div>
-          
+
           <div className="relative h-4 bg-muted rounded-full overflow-hidden mb-4">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progressPercent}%` }}
-              transition={{ duration: 1.5, ease: 'easeOut', delay: 0.5 }}
-              className={cn('h-full rounded-full relative', `bg-gradient-to-r ${config.gradient}`)}
+              transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+              className={cn("h-full rounded-full relative", `bg-gradient-to-r ${config.gradient}`)}
             >
               {/* Shimmer effect */}
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                animate={{ x: ['-100%', '100%'] }}
+                animate={{ x: ["-100%", "100%"] }}
                 transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
               />
             </motion.div>
           </div>
-          
+
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>{challenge.challenged_people} participants</span>
             <span>Goal: 100 participants</span>
@@ -348,7 +384,7 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
           className="bg-card rounded-3xl p-6 border border-border shadow-lg"
         >
           <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-            <FiShield className="w-5 h-5 text-primary" />
+            <Shield className="w-5 h-5 text-primary" />
             About This Challenge
           </h3>
           <p className="text-muted-foreground leading-relaxed text-lg">
@@ -364,10 +400,10 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
           className="bg-card rounded-3xl p-6 border border-border shadow-lg"
         >
           <h3 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
-            <FiGift className="w-5 h-5 text-primary" />
+            <Gift className="w-5 h-5 text-primary" />
             Rewards & Achievements
           </h3>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {REWARDS.map((reward, index) => (
               <motion.div
@@ -381,7 +417,7 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
                 <div className="text-4xl mb-2">{reward.icon}</div>
                 <h4 className="font-semibold text-foreground text-sm">{reward.name}</h4>
                 <p className="text-xs text-muted-foreground mt-1">{reward.description}</p>
-                
+
                 {/* Lock overlay for non-accepted */}
                 {!isAccepted && (
                   <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] rounded-2xl flex items-center justify-center">
@@ -406,14 +442,22 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
             className="gap-2 flex-1 sm:flex-none"
             onClick={() => setIsLiked(!isLiked)}
           >
-            <motion.div animate={isLiked ? { scale: [1, 1.3, 1] } : {}} transition={{ duration: 0.3 }}>
-              <FiHeart className={cn('w-5 h-5', isLiked && 'fill-red-500 text-red-500')} />
+            <motion.div
+              animate={isLiked ? { scale: [1, 1.3, 1] } : {}}
+              transition={{ duration: 0.3 }}
+            >
+              <Heart className={cn("w-5 h-5", isLiked && "fill-red-500 text-red-500")} />
             </motion.div>
-            {isLiked ? 'Liked!' : 'Like'}
+            {isLiked ? "Liked!" : "Like"}
           </Button>
 
-          <Button size="lg" variant="outline" className="gap-2 flex-1 sm:flex-none" onClick={handleShare}>
-            <FiShare2 className="w-5 h-5" />
+          <Button
+            size="lg"
+            variant="outline"
+            className="gap-2 flex-1 sm:flex-none"
+            onClick={handleShare}
+          >
+            <Share2 className="w-5 h-5" />
             Share Challenge
           </Button>
         </motion.div>
@@ -426,11 +470,11 @@ export function ChallengeDetailClient({ challenge, user, isAccepted: initialIsAc
           className="flex items-center justify-between pt-6 border-t border-border text-sm text-muted-foreground"
         >
           <div className="flex items-center gap-2">
-            <FiClock className="w-4 h-4" />
+            <Clock className="w-4 h-4" />
             <span>Created {new Date(challenge.challenge_created_at).toLocaleDateString()}</span>
           </div>
           <div className="flex items-center gap-2">
-            <FiAward className="w-4 h-4" />
+            <Award className="w-4 h-4" />
             <span>{challenge.challenge_score} points available</span>
           </div>
         </motion.div>

@@ -1,5 +1,19 @@
 {
   "0": "{0}",
+  "categories": {
+    "food": "Thực phẩm",
+    "things": "Đồ vật",
+    "borrow": "Mượn",
+    "wanted": "Cần tìm",
+    "foodbanks": "Ngân hàng thực phẩm",
+    "fridges": "Tủ lạnh",
+    "organisations": "Tổ chức",
+    "volunteers": "Tình nguyện viên",
+    "zerowaste": "Zero Waste",
+    "vegan": "Thuần chay",
+    "challenges": "Thử thách",
+    "forum": "Diễn đàn"
+  },
   "0_views": "{0} lượt xem",
   "buttonvalue": "{buttonValue}",
   "text": "{text}",
@@ -46,8 +60,7 @@
   "autoselect_smart_routing": "Tự động chọn (Định tuyến Thông minh)",
   "autoselect_uses_smart_routing_to_choose_the_best_available_provider": "Tự động chọn sử dụng định tuyến thông minh để chọn nhà cung cấp tốt nhất",
   "autoswitch_at_specific_times": "Tự động chuyển vào thời điểm cụ thể",
-  "automatically_selects_best_provider_based_on_email_type_and_availability": "Tự động chọn nhà cung cấp tốt nhất dựa trên loại email và khả dụng"
-,
+  "automatically_selects_best_provider_based_on_email_type_and_availability": "Tự động chọn nhà cung cấp tốt nhất dựa trên loại email và khả dụng",
   "available": "Có sẵn",
   "available_hours": "Giờ Có Sẵn",
   "available_time": "Thời Gian Có Sẵn",
@@ -94,8 +107,7 @@
   "click_to_use_suggestion": "Nhấp để sử dụng gợi ý",
   "close": "Đóng",
   "code_expires_in_5_minutes": "Mã hết hạn sau 5 phút",
-  "color_vision": "Thị Lực Màu"
-,
+  "color_vision": "Thị Lực Màu",
   "coming_soon_manage_users_and_permissions": "Sắp ra mắt - quản lý người dùng và quyền",
   "coming_soon_view_reports_and_analytics": "Sắp ra mắt - xem báo cáo và phân tích",
   "comments": "Bình luận",
@@ -143,8 +155,7 @@
   "distance_filter": "Lọc Khoảng Cách",
   "doe": "Doe",
   "download": "Tải xuống",
-  "download_backup_codes": "Tải Mã Dự Phòng"
-,
+  "download_backup_codes": "Tải Mã Dự Phòng",
   "drag_to_reorder_first_image_will_be_the_cover": "Kéo để sắp xếp lại. Ảnh đầu tiên sẽ là ảnh bìa.",
   "drop_images_or_click": "Thả ảnh hoặc nhấp",
   "eg_3_portions": "ví dụ: 3 phần",
@@ -193,8 +204,7 @@
   "forgot_password": "Quên mật khẩu?",
   "frequently_asked_questions": "Câu Hỏi Thường Gặp",
   "full": "Đầy đủ",
-  "full_name": "Họ và Tên"
-,
+  "full_name": "Họ và Tên",
   "get_in_touch": "Liên Hệ",
   "get_started": "Bắt Đầu",
   "go_back": "Quay Lại",
@@ -248,8 +258,7 @@
   "monitor_queue_processing": "Giám sát xử lý hàng đợi",
   "more": "thêm",
   "my_listings": "Tin đăng của tôi",
-  "my_messages": "Tin nhắn của tôi"
-,
+  "my_messages": "Tin nhắn của tôi",
   "name": "Tên",
   "nearest_station": "Ga gần nhất",
   "new_post": "Bài Đăng Mới",
@@ -301,8 +310,7 @@
   "quick_response_time": "Thời Gian Phản Hồi Nhanh",
   "quick_templates": "Mẫu Nhanh",
   "quota_check": "Kiểm Tra Hạn Mức",
-  "quota_status": "Trạng Thái Hạn Mức"
-,
+  "quota_status": "Trạng Thái Hạn Mức",
   "realtime_circuit_breaker_status_and_health_metrics": "Trạng thái bộ ngắt mạch và số liệu sức khỏe thời gian thực",
   "reason_for_flagging_required": "Lý do đánh dấu (bắt buộc)...",
   "reason_for_rejection_required": "Lý do từ chối (bắt buộc)...",
@@ -356,8 +364,7 @@
   "msgsearch_1": "Tìm kiếm...",
   "seasonal_themes": "Giao Diện Theo Mùa",
   "select_a_category": "Chọn danh mục",
-  "select_a_file_or_drag_and_drop_here": "Chọn tệp hoặc kéo thả vào đây"
-,
+  "select_a_file_or_drag_and_drop_here": "Chọn tệp hoặc kéo thả vào đây",
   "select_category": "Chọn danh mục",
   "select_distance_range": "Chọn phạm vi khoảng cách",
   "send_email": "Gửi Email",
@@ -407,8 +414,7 @@
   "templates": "Mẫu",
   "text_size": "Cỡ Chữ",
   "thank_you_for_your_feedback_its_very_important_for_us": "Cảm ơn phản hồi của bạn, nó rất quan trọng với chúng tôi!",
-  "thank_you_for_your_feedback": "Cảm ơn phản hồi của bạn!"
-,
+  "thank_you_for_your_feedback": "Cảm ơn phản hồi của bạn!",
   "the_email_crm_encountered_an_error_please_try_refreshing_the_page_or_contact_support_if_the_problem_": "Email CRM gặp lỗi. Vui lòng thử làm mới trang hoặc liên hệ hỗ trợ nếu vấn đề vẫn tiếp tục.",
   "these_backup_codes_allow_you_to_access_your_account_if_you_lose_access_to_your_phone_or_email_keep_t": "Các mã dự phòng này cho phép bạn truy cập tài khoản nếu mất quyền truy cập điện thoại hoặc email. Hãy giữ chúng an toàn!",
   "this_discussion_is_locked_new_comments_are_not_allowed": "Thảo luận này đã bị khóa. Không cho phép bình luận mới.",
@@ -459,8 +465,7 @@
   "warning": "Cảnh báo",
   "warning_only_attemptsremaining_attempts_remaining": "Cảnh báo: Chỉ còn {attemptsRemaining} lần thử!",
   "we_typically_respond_within_2448_hours": "Chúng tôi thường phản hồi trong 24-48 giờ",
-  "wed_love_to_hear_from_you_share_your_thoughts_report_bugs_or_suggest_new_features": "Chúng tôi rất muốn nghe từ bạn! Chia sẻ suy nghĩ, báo lỗi hoặc đề xuất tính năng mới."
-,
+  "wed_love_to_hear_from_you_share_your_thoughts_report_bugs_or_suggest_new_features": "Chúng tôi rất muốn nghe từ bạn! Chia sẻ suy nghĩ, báo lỗi hoặc đề xuất tính năng mới.",
   "wed_love_to_hear_from_you_whether_you_have_a_question_feedback_or_just_want_to_say_hello_were_here_t": "Chúng tôi rất muốn nghe từ bạn! Dù bạn có câu hỏi, phản hồi hay chỉ muốn chào hỏi, chúng tôi luôn sẵn sàng giúp đỡ.",
   "well_review_your_message_and_get_back_to_you_soon": "Chúng tôi sẽ xem xét tin nhắn và phản hồi sớm.",
   "well_send_a_verification_code_to_this_number": "Chúng tôi sẽ gửi mã xác minh đến số này",
@@ -513,8 +518,7 @@
   "forum_sort_latest": "Mới nhất",
   "forum_sort_hot": "Nổi bật",
   "forum_sort_top": "Hàng đầu",
-  "forum_sort_unanswered": "Chưa trả lời"
-,
+  "forum_sort_unanswered": "Chưa trả lời",
   "forum_active_filters": "Bộ lọc đang hoạt động:",
   "forum_clear_all": "Xóa tất cả",
   "forum_no_posts": "Không tìm thấy bài đăng",

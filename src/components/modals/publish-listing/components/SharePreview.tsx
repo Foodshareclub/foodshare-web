@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { FaCheckCircle, FaFacebookF, FaLink, FaShareAlt, FaTwitter } from "react-icons/fa";
-import { IoMdClose } from "react-icons/io";
+import { CheckCircle, Facebook, Link, Share2, Twitter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface SharePreviewProps {
@@ -30,7 +29,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
     <div className="p-4 rounded-lg bg-muted/50 space-y-3 animate-in slide-in-from-top-2 duration-300">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium flex items-center gap-2">
-          <FaShareAlt className="h-4 w-4 text-muted-foreground" />
+          <Share2 className="h-4 w-4 text-muted-foreground" />
           Share Preview
         </p>
         <button
@@ -38,7 +37,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
           onClick={onClose}
           className="p-1 rounded hover:bg-muted transition-colors"
         >
-          <IoMdClose className="h-4 w-4 text-muted-foreground" />
+          <X className="h-4 w-4 text-muted-foreground" />
         </button>
       </div>
 
@@ -69,21 +68,21 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
         <Button type="button" variant="outline" size="sm" className="flex-1" onClick={copyLink}>
           {copied ? (
             <>
-              <FaCheckCircle className="h-4 w-4 mr-1.5 text-green-500" />
+              <CheckCircle className="h-4 w-4 mr-1.5 text-green-500" />
               Copied!
             </>
           ) : (
             <>
-              <FaLink className="h-4 w-4 mr-1.5" />
+              <Link className="h-4 w-4 mr-1.5" />
               Copy Link
             </>
           )}
         </Button>
         <Button type="button" variant="outline" size="sm" className="p-2" title="Share on Facebook">
-          <FaFacebookF className="h-4 w-4" />
+          <Facebook className="h-4 w-4" />
         </Button>
         <Button type="button" variant="outline" size="sm" className="p-2" title="Share on Twitter">
-          <FaTwitter className="h-4 w-4" />
+          <Twitter className="h-4 w-4" />
         </Button>
       </div>
     </div>

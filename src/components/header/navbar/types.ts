@@ -62,6 +62,8 @@ export interface NavbarProps {
   signalOfNewMessage?: CustomRoomType[];
   /** Enable map mode - category clicks navigate to /map/{category} instead of /{category} */
   mapMode?: boolean;
+  /** Initial unread notification count (from server) */
+  initialUnreadCount?: number;
 }
 
 /**

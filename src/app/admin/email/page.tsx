@@ -1,22 +1,39 @@
-'use client'
+import { Suspense } from "react";
+import { getTranslations } from "next-intl/server";
+import { EmailCRMClient } from "@/components/admin/EmailCRMClient";
+import { Skeleton } from "@/components/ui/skeleton";
 
-import React from 'react'
-import { useTranslations } from 'next-intl'
-
-/**
- * AdminEmailCRM - Email CRM management page
- * TODO: Implement email CRM features
- */
-export default function AdminEmailCRM() {
-  const t = useTranslations()
+function EmailSkeleton() {
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-800">
-        {t('email_management_crm')}
-      </h1>
-      <p className="text-gray-600 mt-2">
-        {t('smart_routing_quota_monitoring_and_complete_email_control')}
-      </p>
+    <div className="space-y-6">
+      <div className="grid grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <Skeleton key={i} className="h-24 rounded-lg" />
+        ))}
+      </div>
+      <Skeleton className="h-64 w-full rounded-lg" />
+      <Skeleton className="h-96 w-full rounded-lg" />
     </div>
-  )
+  );
+}
+
+export default async function AdminEmailCRMPage() {
+  const t = await getTranslations();
+
+  return (
+    <div className="p-6 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+          {t("email_management_crm")}
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">
+          {t("smart_routing_quota_monitoring_and_complete_email_control")}
+        </p>
+      </div>
+
+      <Suspense fallback={<EmailSkeleton />}>
+        <EmailCRMClient />
+      </Suspense>
+    </div>
+  );
 }

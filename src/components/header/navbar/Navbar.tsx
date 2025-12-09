@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -32,6 +32,7 @@ function Navbar({
   email = "",
   signalOfNewMessage = [],
   mapMode = false,
+  initialUnreadCount = 0,
 }: NavbarProps) {
   const t = useTranslations();
   const { logout } = useAuth();
@@ -45,15 +46,19 @@ function Navbar({
   const router = useRouter();
   const activeCategory = productType.toLowerCase() || "food";
 
+  // Get category translations
+  const tCategories = useTranslations("categories");
+
   // Translate category labels
   const translatedCategories = useMemo(
     () =>
       CATEGORIES.map((cat) => ({
         id: cat.id,
-        label: t(cat.labelKey),
+        // Extract key from "categories.food" -> "food"
+        label: tCategories(cat.labelKey.replace("categories.", "")),
         icon: cat.icon,
       })),
-    [t]
+    [tCategories]
   );
 
   // Navigation handlers - React Compiler optimizes these
@@ -67,8 +72,8 @@ function Navbar({
     onRouteChange(routeName);
     onProductTypeChange(categoryId);
     // Forum is a special case - it's not a product type filter
-    if (routeName === 'forum') {
-      router.push('/forum');
+    if (routeName === "forum") {
+      router.push("/forum");
       return;
     }
     // Use /[category] route for all category pages
@@ -84,22 +89,20 @@ function Navbar({
   const handleNavigateToAccountSettings = () => router.push(PATH.settingsPage);
   const handleNavigateToMyMessages = () => router.push("/chat");
   const handleNavigateToAboutUs = () => router.push(PATH.aboutUsPage);
-  const handleNavigateToHelp = () => router.push('/help');
+  const handleNavigateToHelp = () => router.push("/help");
   const handleNavigateToLogout = async () => await logout();
-  const handleNavigateToDashboard = () => router.push('/admin');
+  const handleNavigateToDashboard = () => router.push("/admin");
 
-  const navbarShadow = scrollY > 10
-    ? "0 1px 2px hsl(var(--foreground) / 0.08), 0 4px 12px hsl(var(--foreground) / 0.05)"
-    : "0 1px 2px hsl(var(--foreground) / 0.08)";
+  const navbarShadow =
+    scrollY > 10
+      ? "0 1px 2px hsl(var(--foreground) / 0.08), 0 4px 12px hsl(var(--foreground) / 0.05)"
+      : "0 1px 2px hsl(var(--foreground) / 0.08)";
 
   return (
     <>
       {/* SINGLE MERGED NAVBAR - Always Visible */}
       <div
-        className={cn(
-          "bg-background w-full fixed top-0 z-[100]",
-          "border-b border-border"
-        )}
+        className={cn("bg-background w-full fixed top-0 z-[100]", "border-b border-border")}
         style={{
           boxShadow: navbarShadow,
           backfaceVisibility: "hidden" as const,
@@ -139,6 +142,7 @@ function Navbar({
               secondName={secondName}
               email={email}
               signalOfNewMessage={signalOfNewMessage}
+              initialUnreadCount={initialUnreadCount}
               onNavigateToMyLists={handleNavigateToMyLists}
               onNavigateToLogout={handleNavigateToLogout}
               onNavigateToAccSettings={handleNavigateToAccountSettings}

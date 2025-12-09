@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
 import type { FC } from "react";
 import { useState } from "react";
 import type { PositionError, AccuracyLevel } from "@/hooks/usePosition";
 import { Button } from "@/components/ui/button";
-import { FaExclamationCircle, FaInfoCircle, FaMapMarkerAlt } from 'react-icons/fa';
+import { AlertCircle, Info, MapPin } from "lucide-react";
 
 interface LocationPermissionBannerProps {
   error: PositionError | null;
@@ -27,7 +27,7 @@ export const LocationPermissionBanner: FC<LocationPermissionBannerProps> = ({
   if (isLoading) {
     return (
       <div className="flex items-center gap-3 p-4 rounded-md border border-blue-500/20 bg-blue-500/10 dark:bg-blue-500/5">
-        <FaInfoCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+        <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
         <p className="text-sm text-foreground">Detecting your location...</p>
       </div>
     );
@@ -37,7 +37,7 @@ export const LocationPermissionBanner: FC<LocationPermissionBannerProps> = ({
   if (error) {
     return (
       <div className="flex items-start gap-3 p-4 rounded-md border border-orange-500/20 bg-orange-500/10 dark:bg-orange-500/5">
-        <FaExclamationCircle className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
+        <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5" />
         <div className="flex-1">
           <h4 className="font-semibold text-foreground mb-1">Location Access</h4>
           <p className="text-sm text-muted-foreground mb-2">{error.userFriendlyMessage}</p>
@@ -83,7 +83,7 @@ export const LocationPermissionBanner: FC<LocationPermissionBannerProps> = ({
 
     return (
       <div className="flex items-start gap-3 p-4 rounded-md border border-blue-500/20 bg-blue-500/10 dark:bg-blue-500/5">
-        <FaInfoCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+        <Info className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
         <div className="flex-1 space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-foreground">

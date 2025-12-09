@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { FaFileAlt } from "react-icons/fa";
-import { IoMdClose } from "react-icons/io";
+import { FileText, X } from "lucide-react";
 import { templatePresets } from "../constants";
 
 interface TemplatePickerProps {
@@ -23,7 +22,7 @@ export const TemplatePicker: React.FC<TemplatePickerProps> = ({ category, onSele
     <div className="p-3 rounded-lg bg-muted/50 space-y-2 animate-in slide-in-from-top-2 duration-300">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium flex items-center gap-2">
-          <FaFileAlt className="h-4 w-4 text-muted-foreground" />
+          <FileText className="h-4 w-4 text-muted-foreground" />
           Quick Templates
         </p>
         <button
@@ -31,7 +30,7 @@ export const TemplatePicker: React.FC<TemplatePickerProps> = ({ category, onSele
           onClick={onClose}
           className="p-1 rounded hover:bg-muted transition-colors"
         >
-          <IoMdClose className="h-4 w-4 text-muted-foreground" />
+          <X className="h-4 w-4 text-muted-foreground" />
         </button>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

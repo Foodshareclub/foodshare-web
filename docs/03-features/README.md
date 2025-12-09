@@ -114,6 +114,16 @@ Community discussion forum.
 - Reactions and bookmarks
 - User reputation system
 
+### [notifications/](./notifications/) - Notification System
+
+Real-time notification system.
+
+- Server-side data fetching
+- Server Actions for mutations
+- Supabase Realtime for live updates
+- Cache invalidation with centralized tags
+- Notification preferences
+
 ### SEO & Social Sharing
 
 Dynamic metadata and OpenGraph images for social sharing.
@@ -144,21 +154,22 @@ Development-only debugging utilities (hidden in production).
 
 ## 🎯 Feature Status
 
-| Feature      | Status      | Documentation                                          |
-| ------------ | ----------- | ------------------------------------------------------ |
-| Navbar       | ✅ Complete | [navbar/README.md](./navbar/README.md)                 |
-| Map          | ✅ Complete | [map/README.md](./map/README.md)                       |
-| Chat         | ✅ Complete | [chat/README.md](./chat/README.md)                     |
-| Telegram Bot | ✅ Complete | [telegram-bot/README.md](./telegram-bot/README.md)     |
-| Posts        | ✅ Complete | [posts/README.md](./posts/README.md)                   |
-| Profiles     | ✅ Complete | [profiles/README.md](./profiles/README.md)             |
-| Email        | ✅ Complete | [email/README.md](./email/README.md)                   |
-| Auth         | ✅ Complete | [authentication/README.md](./authentication/README.md) |
-| Security     | ✅ Complete | [security/README.md](./security/README.md)             |
-| Storage      | ✅ Complete | [storage/README.md](./storage/README.md)               |
-| Admin        | ✅ Complete | [admin/README.md](./admin/README.md)                   |
-| Forum        | ✅ Complete | [forum/README.md](./forum/README.md)                   |
-| SEO/OG Images| ✅ Complete | [Architecture - SEO](../02-development/ARCHITECTURE.md#-seo--metadata) |
+| Feature       | Status      | Documentation                                                          |
+| ------------- | ----------- | ---------------------------------------------------------------------- |
+| Navbar        | ✅ Complete | [navbar/README.md](./navbar/README.md)                                 |
+| Map           | ✅ Complete | [map/README.md](./map/README.md)                                       |
+| Chat          | ✅ Complete | [chat/README.md](./chat/README.md)                                     |
+| Telegram Bot  | ✅ Complete | [telegram-bot/README.md](./telegram-bot/README.md)                     |
+| Posts         | ✅ Complete | [posts/README.md](./posts/README.md)                                   |
+| Profiles      | ✅ Complete | [profiles/README.md](./profiles/README.md)                             |
+| Email         | ✅ Complete | [email/README.md](./email/README.md)                                   |
+| Auth          | ✅ Complete | [authentication/README.md](./authentication/README.md)                 |
+| Security      | ✅ Complete | [security/README.md](./security/README.md)                             |
+| Storage       | ✅ Complete | [storage/README.md](./storage/README.md)                               |
+| Admin         | ✅ Complete | [admin/README.md](./admin/README.md)                                   |
+| Forum         | ✅ Complete | [forum/README.md](./forum/README.md)                                   |
+| Notifications | ✅ Complete | [notifications/README.md](./notifications/README.md)                   |
+| SEO/OG Images | ✅ Complete | [Architecture - SEO](../02-development/ARCHITECTURE.md#-seo--metadata) |
 
 ## 🚀 Adding a New Feature
 

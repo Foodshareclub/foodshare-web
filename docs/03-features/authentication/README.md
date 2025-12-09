@@ -46,38 +46,44 @@ src/
 
 Located in `src/app/actions/auth.ts`:
 
-| Action | Purpose |
-|--------|---------|
-| `getSession()` | Get current session |
-| `getUser()` | Get user with profile |
-| `checkIsAdmin()` | Check admin status via `user_roles` table |
-| `signInWithPassword()` | Email/password login |
-| `signUp()` | Register new user |
-| `signOut()` | Sign out and redirect |
-| `resetPassword()` | Request password reset |
-| `updatePassword()` | Update password |
-| `getOAuthSignInUrl()` | Get OAuth redirect URL |
+| Action                 | Purpose                           |
+| ---------------------- | --------------------------------- |
+| `getSession()`         | Get current session               |
+| `getUser()`            | Get user with profile             |
+| `checkIsAdmin()`       | Check admin status (multi-source) |
+| `signInWithPassword()` | Email/password login              |
+| `signUp()`             | Register new user                 |
+| `signOut()`            | Sign out and redirect             |
+| `resetPassword()`      | Request password reset            |
+| `updatePassword()`     | Update password                   |
+| `getOAuthSignInUrl()`  | Get OAuth redirect URL            |
 
-> **Note on Admin Checking:** The `checkIsAdmin()` function queries the `user_roles` junction table (source of truth for role assignments) to check if the user has an `admin` or `superadmin` role. This is more flexible than the legacy JSONB `role` field in `profiles`.
+> **Note on Admin Checking:** The `checkIsAdmin()` function checks multiple role sources for backwards compatibility:
+>
+> 1. **JSONB `role` field** (new system) - Checks `profiles.role` for `{ admin: true }`
+> 2. **Legacy `user_role` field** - Checks `profiles.user_role` for `'admin'` or `'superadmin'`
+> 3. **`user_roles` junction table** - Queries role assignments for `admin` or `superadmin` roles
+>
+> Returns `{ isAdmin: boolean, roles: string[], jsonbRoles: Record<string, boolean> }` combining all sources.
 
 ### Password Reset Example (Server Action Pattern)
 
 ```tsx
 // src/app/auth/forgot-password/page.tsx
-'use client';
+"use client";
 
-import { useState, useTransition } from 'react';
-import { useTranslations } from 'next-intl';
-import { resetPassword } from '@/app/actions/auth';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
+import { resetPassword } from "@/app/actions/auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function ForgotPasswordPage() {
   const t = useTranslations();
   const [isPending, startTransition] = useTransition();
-  
-  const [email, setEmail] = useState('');
+
+  const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -90,7 +96,7 @@ export default function ForgotPasswordPage() {
       if (result.success) {
         setIsSuccess(true);
       } else {
-        setError(result.error || t('ForgotPassword.error_generic'));
+        setError(result.error || t("ForgotPassword.error_generic"));
       }
     });
   };
@@ -106,14 +112,9 @@ export default function ForgotPasswordPage() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <Input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
+      <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
       <Button type="submit" disabled={isPending || !email}>
-        {isPending ? 'Sending...' : t('ForgotPassword.send_reset_link')}
+        {isPending ? "Sending..." : t("ForgotPassword.send_reset_link")}
       </Button>
     </form>
   );

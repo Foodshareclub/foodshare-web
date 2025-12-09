@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState } from "react";
 
@@ -12,18 +12,18 @@ import { MenuItem, NavbarAvatar } from "../atoms";
 import { AuthenticationUserModal } from "@/components";
 import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
 
-// Airbnb-style icons from react-icons
+// Lucide icons
 import {
-  HiOutlineClipboardList,
-  HiOutlineChatAlt2,
-  HiOutlineCog,
-  HiOutlineLogout,
-  HiOutlineLogin,
-  HiOutlineUserAdd,
-  HiOutlineQuestionMarkCircle,
-  HiOutlineInformationCircle,
-  HiOutlineViewGrid,
-} from "react-icons/hi";
+  ClipboardList,
+  MessageCircle,
+  Settings,
+  LogOut,
+  LogIn,
+  UserPlus,
+  HelpCircle,
+  Info,
+  LayoutGrid,
+} from "lucide-react";
 
 export interface DesktopMenuProps {
   /** User authentication status */
@@ -82,157 +82,155 @@ export function DesktopMenu({
   isAuth,
   isAdmin = false,
 }: DesktopMenuProps) {
-    const [isLoginOpen, setIsLoginOpen] = useState(false);
-    const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
-    const hasNotifications = signalOfNewMessage.length > 0;
-    const notificationCount = signalOfNewMessage.length;
+  const hasNotifications = signalOfNewMessage.length > 0;
+  const notificationCount = signalOfNewMessage.length;
 
-    // Build display name with fallback chain: full name -> first name -> email username -> 'User'
-    const fullName = [firstName, secondName].filter(Boolean).join(' ');
-    const emailUsername = email?.split('@')[0];
-    const displayName = fullName || emailUsername || 'User';
+  // Build display name with fallback chain: full name -> first name -> email username -> 'User'
+  const fullName = [firstName, secondName].filter(Boolean).join(" ");
+  const emailUsername = email?.split("@")[0];
+  const displayName = fullName || emailUsername || "User";
 
-    return (
-      <>
-        <div className="self-center p-0 text-foreground">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div>
-                <NavbarAvatar
-                  src={imgUrl}
-                  alt="User profile"
-                  firstName={firstName}
-                  secondName={secondName}
-                  hasNotification={hasNotifications}
-                  size="md"
-                />
-              </div>
-            </DropdownMenuTrigger>
+  return (
+    <>
+      <div className="self-center p-0 text-foreground">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div>
+              <NavbarAvatar
+                src={imgUrl}
+                alt="User profile"
+                firstName={firstName}
+                secondName={secondName}
+                hasNotification={hasNotifications}
+                size="md"
+              />
+            </div>
+          </DropdownMenuTrigger>
 
-            <DropdownMenuContent variant="glass" className="glass-strong rounded-xl min-w-[220px]" align="end">
-              {isAuth ? (
-                <>
-                  {/* User Profile Info Header */}
-                  <div className="px-3 py-3 border-b border-border/50 mb-1 flex items-center gap-3">
-                    <NavbarAvatar
-                      src={imgUrl}
-                      alt="User profile"
-                      firstName={firstName}
-                      secondName={secondName}
-                      size="md"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-foreground truncate">{displayName}</p>
-                      {email && (
-                        <p className="text-xs text-muted-foreground truncate">{email}</p>
-                      )}
-                    </div>
+          <DropdownMenuContent
+            variant="glass"
+            className="glass-strong rounded-xl min-w-[220px]"
+            align="end"
+          >
+            {isAuth ? (
+              <>
+                {/* User Profile Info Header */}
+                <div className="px-3 py-3 border-b border-border/50 mb-1 flex items-center gap-3">
+                  <NavbarAvatar
+                    src={imgUrl}
+                    alt="User profile"
+                    firstName={firstName}
+                    secondName={secondName}
+                    size="md"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm text-foreground truncate">{displayName}</p>
+                    {email && <p className="text-xs text-muted-foreground truncate">{email}</p>}
                   </div>
+                </div>
 
-                  {/* Admin Dashboard Link */}
-                  {isAdmin && onNavigateToDashboard && (
-                    <MenuItem
-                      label="Dashboard"
-                      icon={<HiOutlineViewGrid className="w-5 h-5" />}
-                      onClick={onNavigateToDashboard}
-                      variant="accent"
-                      testId="menu-dashboard"
-                    />
-                  )}
+                {/* Admin Dashboard Link */}
+                {isAdmin && onNavigateToDashboard && (
+                  <MenuItem
+                    label="Dashboard"
+                    icon={<LayoutGrid className="w-5 h-5" />}
+                    onClick={onNavigateToDashboard}
+                    variant="accent"
+                    testId="menu-dashboard"
+                  />
+                )}
 
-                  <MenuItem
-                    label="My listing's"
-                    icon={<HiOutlineClipboardList className="w-5 h-5" />}
-                    onClick={onNavigateToMyLists}
-                    testId="menu-my-listings"
-                  />
-                  <MenuItem
-                    label={
-                      hasNotifications
-                        ? `Chat (${notificationCount} new)`
-                        : "Chat"
-                    }
-                    icon={<HiOutlineChatAlt2 className="w-5 h-5" />}
-                    onClick={onNavigateToMyMessages}
-                    variant={hasNotifications ? "accent" : "default"}
-                    badge={
-                      hasNotifications ? (
-                        <span className="flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-green-500 text-white text-xs font-semibold">
-                          {notificationCount > 9 ? "9+" : notificationCount}
-                        </span>
-                      ) : undefined
-                    }
-                    testId="menu-chat"
-                  />
-                  <MenuItem
-                    label="Account settings"
-                    icon={<HiOutlineCog className="w-5 h-5" />}
-                    onClick={onNavigateToAccSettings}
-                    testId="menu-account-settings"
-                  />
-                  <MenuItem
-                    label="Log Out"
-                    icon={<HiOutlineLogout className="w-5 h-5" />}
-                    onClick={onNavigateToLogout}
-                    variant="danger"
-                    testId="menu-logout"
-                  />
-                </>
-              ) : (
-                <>
-                  <MenuItem
-                    label={"Login"}
-                    icon={<HiOutlineLogin className="w-5 h-5" />}
-                    onClick={() => setIsLoginOpen(true)}
-                    testId="menu-login"
-                  />
-                  <MenuItem
-                    label={"Registration"}
-                    icon={<HiOutlineUserAdd className="w-5 h-5" />}
-                    onClick={() => setIsRegisterOpen(true)}
-                    testId="menu-register"
-                  />
-                </>
-              )}
+                <MenuItem
+                  label="My listing's"
+                  icon={<ClipboardList className="w-5 h-5" />}
+                  onClick={onNavigateToMyLists}
+                  testId="menu-my-listings"
+                />
+                <MenuItem
+                  label={hasNotifications ? `Chat (${notificationCount} new)` : "Chat"}
+                  icon={<MessageCircle className="w-5 h-5" />}
+                  onClick={onNavigateToMyMessages}
+                  variant={hasNotifications ? "accent" : "default"}
+                  badge={
+                    hasNotifications ? (
+                      <span className="flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-green-500 text-white text-xs font-semibold">
+                        {notificationCount > 9 ? "9+" : notificationCount}
+                      </span>
+                    ) : undefined
+                  }
+                  testId="menu-chat"
+                />
+                <MenuItem
+                  label="Account settings"
+                  icon={<Settings className="w-5 h-5" />}
+                  onClick={onNavigateToAccSettings}
+                  testId="menu-account-settings"
+                />
+                <MenuItem
+                  label="Log Out"
+                  icon={<LogOut className="w-5 h-5" />}
+                  onClick={onNavigateToLogout}
+                  variant="danger"
+                  testId="menu-logout"
+                />
+              </>
+            ) : (
+              <>
+                <MenuItem
+                  label={"Login"}
+                  icon={<LogIn className="w-5 h-5" />}
+                  onClick={() => setIsLoginOpen(true)}
+                  testId="menu-login"
+                />
+                <MenuItem
+                  label={"Registration"}
+                  icon={<UserPlus className="w-5 h-5" />}
+                  onClick={() => setIsRegisterOpen(true)}
+                  testId="menu-register"
+                />
+              </>
+            )}
 
-              {/* Divider */}
-              <div className="my-1 h-px bg-border" role="separator" />
+            {/* Divider */}
+            <div className="my-1 h-px bg-border" role="separator" />
 
-              <MenuItem
-                label={"Help"}
-                icon={<HiOutlineQuestionMarkCircle className="w-5 h-5" />}
-                onClick={onNavigateToHelp}
-                testId="menu-help"
-              />
-              <MenuItem
-                label={"About Foodshare"}
-                icon={<HiOutlineInformationCircle className="w-5 h-5" />}
-                onClick={onNavigateToAboutUs}
-                testId="menu-about"
-              />
+            <MenuItem
+              label={"Help"}
+              icon={<HelpCircle className="w-5 h-5" />}
+              onClick={onNavigateToHelp}
+              testId="menu-help"
+            />
+            <MenuItem
+              label={"About Foodshare"}
+              icon={<Info className="w-5 h-5" />}
+              onClick={onNavigateToAboutUs}
+              testId="menu-about"
+            />
 
-              {/* Theme Switcher */}
-              <div className="my-1 h-px bg-border" role="separator" />
-              <div className="px-2 py-2">
-                <p className="text-xs text-muted-foreground mb-2 px-1">Appearance</p>
-                <ThemeToggleInline className="w-full" />
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+            {/* Theme Switcher */}
+            <div className="my-1 h-px bg-border" role="separator" />
+            <div className="px-2 py-2">
+              <p className="text-xs text-muted-foreground mb-2 px-1">Appearance</p>
+              <ThemeToggleInline className="w-full" />
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
-        {/* Auth Modals - Rendered outside dropdown */}
-        <AuthenticationUserModal
-          buttonValue="Login"
-          isOpen={isLoginOpen}
-          onClose={() => setIsLoginOpen(false)}
-        />
-        <AuthenticationUserModal
-          buttonValue="Registration"
-          isOpen={isRegisterOpen}
-          onClose={() => setIsRegisterOpen(false)}
-        />
-      </>
-    );
+      {/* Auth Modals - Rendered outside dropdown */}
+      <AuthenticationUserModal
+        buttonValue="Login"
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+      />
+      <AuthenticationUserModal
+        buttonValue="Registration"
+        isOpen={isRegisterOpen}
+        onClose={() => setIsRegisterOpen(false)}
+      />
+    </>
+  );
 }

@@ -1,14 +1,12 @@
-# Lefthook Configuration for FoodShare - Optimized Enterprise Edition
-# Fast, intelligent git hooks with comprehensive code quality checks
-# Documentation: https://github.com/evilmartians/lefthook
+# Lefthook Configuration for FoodShare - Rust Edition
+# Fast, intelligent git hooks powered by lefthook-rs
+# Build: cd scripts/lefthook && cargo build --release
 
-# USAGE EXAMPLES:
+# USAGE:
 # Fast commit: LEFTHOOK_EXCLUDE=type-check git commit
-# Very fast: LEFTHOOK_EXCLUDE=type-check,lint,format git commit
 # Skip all: LEFTHOOK=0 git commit
 # Quick push: SKIP_TESTS=1 SKIP_BUILD=1 git push
-# Full validation: CHECK_BUNDLE_SIZE=1 ENABLE_ALL=1 git push
-# Enable optional: ENABLE_COMPLEXITY=1 ENABLE_A11Y=1 git commit
+# Full validation: ENABLE_ALL=1 git push
 
 # ============================================================================
 # PRE-COMMIT: Fast checks before commit
@@ -17,42 +15,12 @@ pre-commit:
   parallel: true
   skip:
     - merge
-    - ref: HEAD
-      name: Skip for docs-only commits
 
   commands:
-    # ------------------------------------------------------------------------
-    # CRITICAL CHECKS (Priority 1) - Always run, fast execution
-    # ------------------------------------------------------------------------
-
-    block-env-files:
-      tags: security critical
-      run: |
-        if git diff --cached --name-only | grep -E '^\.env(\.|$)' | grep -v '\.example$'; then
-          echo "ERROR: Attempting to commit .env files with potential secrets!"
-          echo "Please remove .env files from staging: git reset HEAD .env*"
-          exit 1
-        fi
-      priority: 1
-
     security-check:
       tags: security critical
-      run: bash scripts/lefthook/security-check-improved.sh
-      stage_fixed: true
+      run: ./scripts/lefthook/target/release/lefthook-rs security
       priority: 1
-      files: git diff --cached --name-only | grep -qE '\.(ts|tsx|js|jsx|json|env|yml|yaml)$'
-
-    dependency-audit:
-      tags: security critical
-      run: bash scripts/lefthook/dependency-audit.sh
-      priority: 1
-      skip:
-        - name: Skip unless ENABLE_AUDIT=1
-          run: test -z "$ENABLE_AUDIT" && test -z "$ENABLE_ALL"
-
-    # ------------------------------------------------------------------------
-    # CODE QUALITY (Priority 2) - Run in parallel
-    # ------------------------------------------------------------------------
 
     lint:
       tags: lint quality
@@ -60,9 +28,6 @@ pre-commit:
       run: npx eslint {staged_files} --fix --max-warnings=0 --no-warn-ignored --cache --cache-location .eslintcache
       stage_fixed: true
       priority: 2
-      skip:
-        - name: Skip if only test files changed
-          run: git diff --cached --name-only | grep -qvE '\.test\.(ts|tsx|js|jsx)$'
 
     format:
       tags: format quality
@@ -74,77 +39,46 @@ pre-commit:
     type-check:
       tags: typescript
       run: npx tsc --noEmit --incremental
-      env:
-        NODE_ENV: development
       priority: 2
-      skip:
-        - name: Skip if no TS files changed
-          run: git diff --cached --name-only | grep -qvE '\.(ts|tsx)$'
-
-    # ------------------------------------------------------------------------
-    # QUALITY CHECKS (Priority 3) - Optional, enable as needed
-    # ------------------------------------------------------------------------
 
     complexity-check:
       tags: quality optional
       glob: "*.{ts,tsx,js,jsx}"
-      run: bash scripts/lefthook/complexity-check.sh {staged_files}
+      run: ./scripts/lefthook/target/release/lefthook-rs complexity {staged_files}
       priority: 3
       skip:
-        - name: Skip unless enabled
-          run: test -z "$ENABLE_COMPLEXITY" && test -z "$ENABLE_ALL"
-
-    unused-code:
-      tags: quality optional
-      run: bash scripts/lefthook/unused-code-check.sh
-      priority: 3
-      skip:
-        - name: Skip unless enabled
-          run: test -z "$ENABLE_UNUSED_CODE" && test -z "$ENABLE_ALL"
+        - run: test -z "$ENABLE_COMPLEXITY" && test -z "$ENABLE_ALL"
 
     import-check:
       tags: quality optional
       glob: "*.{ts,tsx,js,jsx}"
-      run: bash scripts/lefthook/import-check.sh {staged_files}
+      run: ./scripts/lefthook/target/release/lefthook-rs import-check {staged_files}
       priority: 3
       skip:
-        - name: Skip unless enabled
-          run: test -z "$ENABLE_IMPORT_CHECK" && test -z "$ENABLE_ALL"
-
-    # ------------------------------------------------------------------------
-    # ACCESSIBILITY & STANDARDS (Priority 4) - Optional
-    # ------------------------------------------------------------------------
-
-    accessibility-check:
-      tags: accessibility optional
-      glob: "*.{tsx,jsx}"
-      run: bash scripts/lefthook/accessibility-check.sh {staged_files}
-      priority: 4
-      skip:
-        - name: Skip unless enabled
-          run: test -z "$ENABLE_A11Y" && test -z "$ENABLE_ALL"
-
-    # ------------------------------------------------------------------------
-    # FILE & SIZE CHECKS (Priority 4) - Optional
-    # ------------------------------------------------------------------------
-
-    large-files:
-      tags: files optional
-      run: bash scripts/lefthook/large-files-check.sh
-      priority: 4
-      skip:
-        - name: Skip unless enabled
-          run: test -z "$ENABLE_LARGE_FILES" && test -z "$ENABLE_ALL"
+        - run: test -z "$ENABLE_IMPORT_CHECK" && test -z "$ENABLE_ALL"
 
     no-console:
       tags: quality optional
       glob: "*.{ts,tsx,js,jsx}"
-      exclude: "*.test.{ts,tsx,js,jsx}|*.spec.{ts,tsx,js,jsx}"
-      run: bash scripts/lefthook/no-console-check.sh {staged_files}
+      run: ./scripts/lefthook/target/release/lefthook-rs no-console {staged_files}
       priority: 4
       skip:
-        - name: Skip unless enabled
-          run: test -z "$ENABLE_NO_CONSOLE" && test -z "$ENABLE_ALL"
+        - run: test -z "$ENABLE_NO_CONSOLE" && test -z "$ENABLE_ALL"
+
+    large-files:
+      tags: files optional
+      run: ./scripts/lefthook/target/release/lefthook-rs large-files
+      priority: 4
+      skip:
+        - run: test -z "$ENABLE_LARGE_FILES" && test -z "$ENABLE_ALL"
+
+    accessibility:
+      tags: a11y optional
+      glob: "*.{tsx,jsx}"
+      run: ./scripts/lefthook/target/release/lefthook-rs accessibility {staged_files}
+      priority: 4
+      skip:
+        - run: test -z "$ENABLE_A11Y" && test -z "$ENABLE_ALL"
 
 # ============================================================================
 # COMMIT-MSG: Validates commit message format
@@ -153,16 +87,7 @@ commit-msg:
   commands:
     conventional-commits:
       tags: commit-format
-      run: bash scripts/lefthook/conventional-commits.sh {1}
-      priority: 1
-
-    commit-quality:
-      tags: commit-format optional
-      run: bash scripts/lefthook/commit-quality-check.sh {1}
-      priority: 2
-      skip:
-        - name: Skip unless enabled
-          run: test -z "$ENABLE_COMMIT_QUALITY" && test -z "$ENABLE_ALL"
+      run: ./scripts/lefthook/target/release/lefthook-rs conventional-commit {1}
 
 # ============================================================================
 # PRE-PUSH: Comprehensive checks before push
@@ -171,31 +96,17 @@ pre-push:
   parallel: false
   skip:
     - ref: wip/*
-      name: Skip pre-push for WIP branches
 
   commands:
-    # ------------------------------------------------------------------------
-    # CRITICAL (Priority 1) - Must pass
-    # ------------------------------------------------------------------------
-
     protected-branch:
       tags: branch critical
-      run: bash scripts/lefthook/protected-branch-check.sh
+      run: ./scripts/lefthook/target/release/lefthook-rs protected-branch
       priority: 1
-
-    # ------------------------------------------------------------------------
-    # BUILD VALIDATION (Priority 2)
-    # ------------------------------------------------------------------------
 
     type-check-strict:
       tags: typescript
       run: npx tsc --noEmit --strict --incremental
-      env:
-        NODE_ENV: production
       priority: 2
-      skip:
-        - name: Skip if no TS changes
-          run: git diff origin/$(git rev-parse --abbrev-ref HEAD) --name-only 2>/dev/null | grep -qvE '\.(ts|tsx)$'
 
     test:
       tags: test
@@ -204,16 +115,7 @@ pre-push:
         CI: true
       priority: 2
       skip:
-        - name: Skip with SKIP_TESTS=1
-          run: test -n "$SKIP_TESTS"
-
-    test-coverage:
-      tags: test optional
-      run: bash scripts/lefthook/test-coverage-check.sh
-      priority: 2
-      skip:
-        - name: Skip unless enabled
-          run: test -z "$ENABLE_COVERAGE" && test -z "$ENABLE_ALL" && test -z "$SKIP_TESTS"
+        - run: test -n "$SKIP_TESTS"
 
     build:
       tags: build
@@ -222,52 +124,35 @@ pre-push:
         NODE_ENV: production
       priority: 3
       skip:
-        - name: Skip with SKIP_BUILD=1
-          run: test -n "$SKIP_BUILD"
+        - run: test -n "$SKIP_BUILD"
 
-    # ------------------------------------------------------------------------
-    # PERFORMANCE & QUALITY CHECKS (Priority 3-4) - Optional
-    # ------------------------------------------------------------------------
+    dependency-audit:
+      tags: security optional
+      run: ./scripts/lefthook/target/release/lefthook-rs dependency-audit
+      priority: 4
+      skip:
+        - run: test -z "$ENABLE_AUDIT" && test -z "$ENABLE_ALL"
 
     bundle-size:
       tags: performance optional
-      run: bash scripts/lefthook/bundle-size-check.sh
-      priority: 3
-      skip:
-        - name: Skip unless enabled
-          run: test -z "$CHECK_BUNDLE_SIZE" && test -z "$ENABLE_ALL"
-
-    security-audit:
-      tags: security optional
-      run: npm audit --audit-level=moderate || true
+      run: ./scripts/lefthook/target/release/lefthook-rs bundle-size
       priority: 4
       skip:
-        - name: Skip unless enabled
-          run: test -z "$ENABLE_SECURITY_AUDIT" && test -z "$ENABLE_ALL"
+        - run: test -z "$CHECK_BUNDLE_SIZE" && test -z "$ENABLE_ALL"
 
-    duplicate-code:
+    test-coverage:
+      tags: test optional
+      run: ./scripts/lefthook/target/release/lefthook-rs test-coverage
+      priority: 4
+      skip:
+        - run: test -z "$ENABLE_COVERAGE" && test -z "$ENABLE_ALL"
+
+    unused-exports:
       tags: quality optional
-      run: bash scripts/lefthook/duplicate-code-check.sh
-      priority: 4
-      skip:
-        - name: Skip unless enabled
-          run: test -z "$ENABLE_DUPLICATE_CHECK" && test -z "$ENABLE_ALL"
-
-    dead-code:
-      tags: quality optional
-      run: bash scripts/lefthook/dead-code-check.sh
-      priority: 4
-      skip:
-        - name: Skip unless enabled
-          run: test -z "$ENABLE_DEAD_CODE" && test -z "$ENABLE_ALL"
-
-    license-check:
-      tags: legal optional
-      run: bash scripts/lefthook/license-check.sh
+      run: ./scripts/lefthook/target/release/lefthook-rs unused-exports
       priority: 5
       skip:
-        - name: Skip unless enabled
-          run: test -z "$ENABLE_LICENSE_CHECK" && test -z "$ENABLE_ALL"
+        - run: test -z "$ENABLE_DEAD_CODE" && test -z "$ENABLE_ALL"
 
 # ============================================================================
 # POST-CHECKOUT: Auto-maintenance after branch switch
@@ -275,18 +160,11 @@ pre-push:
 post-checkout:
   commands:
     dependencies-check:
-      tags: dependencies
-      run: bash scripts/lefthook/dependencies-check.sh {1} {2} {3}
-      skip:
-        - name: Skip if same branch
-          run: test "{1}" = "{2}"
-
-    clean-artifacts:
-      tags: cleanup
       run: |
-        if [ -d "dist" ] || [ -d "build" ] || [ -d ".next" ]; then
-          echo "🧹 Cleaning build artifacts..."
-          rm -rf dist build .next
+        if [ "{1}" != "{2}" ]; then
+          if git diff --name-only {1} {2} 2>/dev/null | grep -qE "^(package.json|package-lock.json)$"; then
+            echo "📦 Dependencies may have changed, consider running npm install"
+          fi
         fi
 
 # ============================================================================
@@ -295,84 +173,20 @@ post-checkout:
 post-merge:
   commands:
     dependencies-install:
-      tags: dependencies
       run: |
-        if git diff-tree -r --name-only --no-commit-id HEAD@{1} HEAD | grep -qE "^(package.json|package-lock.json|yarn.lock)$"; then
+        if git diff-tree -r --name-only --no-commit-id HEAD@{1} HEAD | grep -qE "^(package.json|package-lock.json)$"; then
           echo "📦 Dependencies changed, running npm install..."
           npm install
         fi
 
-    migrations-check:
-      tags: database optional
-      run: bash scripts/lefthook/migrations-check.sh
-      skip:
-        - name: Skip unless enabled
-          run: test -z "$ENABLE_MIGRATIONS_CHECK"
-
 # ============================================================================
-# PREPARE-COMMIT-MSG: Auto-add ticket numbers
-# ============================================================================
-prepare-commit-msg:
-  commands:
-    ticket-integration:
-      tags: commit-format optional
-      run: bash scripts/lefthook/ticket-integration.sh {1}
-      skip:
-        - name: Skip unless enabled
-          run: test -z "$ENABLE_TICKET_INTEGRATION"
-
-# ============================================================================
-# PRE-REBASE: Safety checks before rebasing
+# PRE-REBASE: Safety checks
 # ============================================================================
 pre-rebase:
   commands:
     uncommitted-changes:
-      tags: safety
       run: |
         if ! git diff --quiet || ! git diff --cached --quiet; then
-          echo "⚠️  Warning: You have uncommitted changes"
-          echo "Please commit or stash them before rebasing"
+          echo "⚠️  You have uncommitted changes - commit or stash before rebasing"
           exit 1
         fi
-
-# ============================================================================
-# CONFIGURATION GUIDE
-# ============================================================================
-#
-# QUICK WORKFLOWS:
-# ----------------
-# Fast commit (skip type checking):
-#   LEFTHOOK_EXCLUDE=type-check git commit -m "fix: quick fix"
-#
-# Very fast commit (only security):
-#   LEFTHOOK_EXCLUDE=type-check,lint,format git commit -m "docs: update"
-#
-# Skip all hooks (emergency only):
-#   LEFTHOOK=0 git commit -m "hotfix: critical"
-#
-# Quick push (skip tests & build):
-#   SKIP_TESTS=1 SKIP_BUILD=1 git push
-#
-# Full validation push (all checks):
-#   ENABLE_ALL=1 git push
-#
-# ENABLE OPTIONAL CHECKS:
-# -----------------------
-# Individual checks:
-#   ENABLE_COMPLEXITY=1 git commit
-#   ENABLE_A11Y=1 git commit
-#   ENABLE_UNUSED_CODE=1 git commit
-#   CHECK_BUNDLE_SIZE=1 git push
-#
-# All optional checks:
-#   ENABLE_ALL=1 git commit
-#   ENABLE_ALL=1 git push
-#
-# PRIORITY LEVELS:
-# ----------------
-# 1 = Critical (security, branch protection) - Always run
-# 2 = High (type checking, linting, tests) - Run by default
-# 3 = Medium (build, bundle size) - Run by default or skippable
-# 4 = Low (quality, duplicate checks) - Optional, enable as needed
-# 5 = Optional (documentation, licenses) - Enable explicitly
-#

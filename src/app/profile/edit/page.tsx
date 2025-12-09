@@ -1,18 +1,21 @@
-'use client'
+"use client";
 
 /**
  * Profile Edit Page - Next.js App Router version
  * Edit personal information including name, email, phone, and address
- * 
+ *
  * Note: This page should ideally be a Server Component that fetches data
  * and passes it to a Client Component. For now, using useAuth for auth state.
  */
 
-import React, { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
-import { AddressBlock, EmailBlock, NameBlock, PhoneNumberBlock } from '@/components/profile'
-import { FaChevronRight } from 'react-icons/fa'
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { AddressBlock, EmailBlock, NameBlock, PhoneNumberBlock } from "@/components/profile";
+import { ChevronRight } from "lucide-react";
+
+// Icon alias for consistency
+const FaChevronRight = ChevronRight;
 
 // Simplified profile type for this component
 interface ProfileData {
@@ -41,60 +44,60 @@ interface ProfileEditPageProps {
 }
 
 export default function ProfileEditPage({ initialProfile, initialAddress }: ProfileEditPageProps) {
-  const router = useRouter()
+  const router = useRouter();
 
   // Auth state
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user } = useAuth();
 
   // Use server-provided data or empty defaults
-  const currentProfile = initialProfile
-  const address = initialAddress
-  const isLoading = !initialProfile && isAuthenticated
+  const currentProfile = initialProfile;
+  const address = initialAddress;
+  const isLoading = !initialProfile && isAuthenticated;
 
   // Local state for form fields
-  const [firstName, setFirstName] = useState('')
-  const [secondName, setSecondName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
+  const [firstName, setFirstName] = useState("");
+  const [secondName, setSecondName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
 
   // State for controlling which block is being edited
-  const [a, setA] = useState(false)
-  const [b, setB] = useState(false)
-  const [c, setC] = useState(false)
-  const [d, setD] = useState(false)
+  const [a, setA] = useState(false);
+  const [b, setB] = useState(false);
+  const [c, setC] = useState(false);
+  const [d, setD] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push('/auth/login?from=/profile/edit')
+      router.push("/auth/login?from=/profile/edit");
     }
-  }, [isAuthenticated, router])
+  }, [isAuthenticated, router]);
 
   // React Query handles fetching automatically via useCurrentProfile
 
   // Update local state when profile loads
   useEffect(() => {
     if (currentProfile) {
-      setFirstName(currentProfile.first_name || '')
-      setSecondName(currentProfile.second_name || '')
-      setPhone(currentProfile.phone || '')
+      setFirstName(currentProfile.first_name || "");
+      setSecondName(currentProfile.second_name || "");
+      setPhone(currentProfile.phone || "");
     }
     if (user?.email) {
-      setEmail(user.email)
+      setEmail(user.email);
     }
-  }, [currentProfile, user])
+  }, [currentProfile, user]);
 
   // Handle profile save
   const onSaveHandler = async () => {
-    if (!currentProfile) return
+    if (!currentProfile) return;
 
     // TODO: Use updateProfile Server Action
     // For now, just refresh the page
-    router.refresh()
-  }
+    router.refresh();
+  };
 
   if (!isAuthenticated) {
-    return null
+    return null;
   }
 
   return (
@@ -103,24 +106,20 @@ export default function ProfileEditPage({ initialProfile, initialAddress }: Prof
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 mb-8">
           <button
-            onClick={() => router.push('/profile')}
+            onClick={() => router.push("/profile")}
             className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             Account settings
           </button>
           <FaChevronRight className="text-muted-foreground text-xs" />
-          <span className="text-sm font-medium text-foreground">
-            Personal info
-          </span>
+          <span className="text-sm font-medium text-foreground">Personal info</span>
         </nav>
 
         {/* Loading State */}
         {isLoading || !address || !currentProfile ? (
           <>
             <div className="mt-8">
-              <h1 className="text-4xl font-bold mb-4 text-foreground">
-                Personal info
-              </h1>
+              <h1 className="text-4xl font-bold mb-4 text-foreground">Personal info</h1>
               <div className="h-[50px] bg-muted animate-pulse rounded-lg mb-5" />
             </div>
             <div className="h-[50px] bg-muted animate-pulse rounded-lg mb-5" />
@@ -130,9 +129,7 @@ export default function ProfileEditPage({ initialProfile, initialAddress }: Prof
         ) : (
           <>
             <div className="mt-8">
-              <h1 className="text-4xl font-bold mb-6 text-foreground">
-                Personal info
-              </h1>
+              <h1 className="text-4xl font-bold mb-6 text-foreground">Personal info</h1>
 
               {/* Name Block */}
               <NameBlock
@@ -200,5 +197,5 @@ export default function ProfileEditPage({ initialProfile, initialAddress }: Prof
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -1,6 +1,7 @@
 import type { CustomRoomType } from "@/api/chatAPI";
 import { BecomeSharerBlock } from "@/components/becomeSharerBlock/BecomeSharerBlock";
 import { BecomeSharerButton } from "@/components/becomeSharerBlock/BecomeSharerButton";
+import { NotificationCenter } from "@/components/notifications";
 import { useMediaQuery } from "@/hooks";
 import { MobileMenu } from "./MobileMenu";
 import { DesktopMenu } from "./DesktopMenu";
@@ -12,6 +13,8 @@ export interface NavbarActionsProps {
   isAdmin?: boolean;
   /** User ID (optional) */
   userId?: string;
+  /** Initial unread notification count (from server) */
+  initialUnreadCount?: number;
   /** User avatar URL */
   imgUrl?: string;
   /** User first name */
@@ -52,11 +55,13 @@ export interface NavbarActionsProps {
 export function NavbarActions({
   isAuth,
   isAdmin = false,
+  userId,
   imgUrl = "",
   firstName,
   secondName,
   email,
   signalOfNewMessage,
+  initialUnreadCount = 0,
   onNavigateToMyLists,
   onNavigateToLogout,
   onNavigateToAccSettings,
@@ -65,37 +70,38 @@ export function NavbarActions({
   onNavigateToMyMessages,
   onNavigateToDashboard,
 }: NavbarActionsProps) {
-    // Breakpoint: 800px (mobile vs desktop menu)
-    const isDesktop = useMediaQuery("(min-width:800px)");
+  // Breakpoint: 800px (mobile vs desktop menu)
+  const isDesktop = useMediaQuery("(min-width:800px)");
 
-    const menuProps = {
-      isAuth,
-      isAdmin,
-      imgUrl,
-      firstName,
-      secondName,
-      email,
-      signalOfNewMessage,
-      onNavigateToMyLists,
-      onNavigateToLogout,
-      onNavigateToAccSettings,
-      onNavigateToHelp,
-      onNavigateToAboutUs,
-      onNavigateToMyMessages,
-      onNavigateToDashboard,
-    };
+  const menuProps = {
+    isAuth,
+    isAdmin,
+    imgUrl,
+    firstName,
+    secondName,
+    email,
+    signalOfNewMessage,
+    onNavigateToMyLists,
+    onNavigateToLogout,
+    onNavigateToAccSettings,
+    onNavigateToHelp,
+    onNavigateToAboutUs,
+    onNavigateToMyMessages,
+    onNavigateToDashboard,
+  };
 
-    return (
-      <div className="flex items-center gap-3">
-        {/* Add Listing / Login - next to profile */}
-        {!isAuth ? (
-          <BecomeSharerButton />
-        ) : (
-          <BecomeSharerBlock />
-        )}
+  return (
+    <div className="flex items-center gap-3">
+      {/* Add Listing / Login - next to profile */}
+      {!isAuth ? <BecomeSharerButton /> : <BecomeSharerBlock />}
 
-        {/* User Menu - Responsive (theme toggle inside dropdown) */}
-        {isDesktop ? <DesktopMenu {...menuProps} /> : <MobileMenu {...menuProps} size="md" />}
-      </div>
-    );
+      {/* Notifications - only for authenticated users */}
+      {isAuth && userId && (
+        <NotificationCenter userId={userId} initialUnreadCount={initialUnreadCount} />
+      )}
+
+      {/* User Menu - Responsive (theme toggle inside dropdown) */}
+      {isDesktop ? <DesktopMenu {...menuProps} /> : <MobileMenu {...menuProps} size="md" />}
+    </div>
+  );
 }

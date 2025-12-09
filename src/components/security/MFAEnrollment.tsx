@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * MFA Enrollment Component
@@ -14,8 +14,24 @@
 import React, { useState } from "react";
 
 import { MFAService, type MFAMethod } from "@/lib/security/mfa";
-import { AiOutlineLoading3Quarters } from 'react-icons/ai';
-import { FaCheckCircle, FaDownload, FaEnvelope, FaExclamationCircle, FaMobileAlt, FaShieldAlt } from 'react-icons/fa';
+import {
+  Loader2,
+  CheckCircle,
+  Download,
+  Mail,
+  AlertCircle,
+  Smartphone,
+  Shield,
+} from "lucide-react";
+
+// Icon aliases for consistency
+const FaShieldAlt = Shield;
+const FaEnvelope = Mail;
+const FaMobileAlt = Smartphone;
+const FaExclamationCircle = AlertCircle;
+const AiOutlineLoading3Quarters = Loader2;
+const FaCheckCircle = CheckCircle;
+const FaDownload = Download;
 
 interface MFAEnrollmentProps {
   profileId: string;
@@ -166,9 +182,7 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
         <h2 className="text-2xl font-bold text-foreground mb-2">
           "Enable Two-Factor Authentication"
         </h2>
-        <p className="text-muted-foreground">
-          "Choose your preferred verification method"
-        </p>
+        <p className="text-muted-foreground">"Choose your preferred verification method"</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -178,12 +192,8 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
           className="p-6 border-2 border-border rounded-lg hover:border-green-500 hover:bg-green-500/10 transition-all group text-left"
         >
           <FaEnvelope className="w-8 h-8 text-green-600 dark:text-green-400 mb-3" />
-          <h3 className="font-bold text-foreground mb-2">
-            "Email Verification"
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            "Receive verification codes via email"
-          </p>
+          <h3 className="font-bold text-foreground mb-2">"Email Verification"</h3>
+          <p className="text-sm text-muted-foreground">"Receive verification codes via email"</p>
         </button>
 
         {/* SMS Method */}
@@ -192,18 +202,17 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
           className="p-6 border-2 border-border rounded-lg hover:border-green-500 hover:bg-green-500/10 transition-all group text-left"
         >
           <FaMobileAlt className="w-8 h-8 text-green-600 dark:text-green-400 mb-3" />
-          <h3 className="font-bold text-foreground mb-2">
-            "SMS Verification"
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            "Receive verification codes via SMS"
-          </p>
+          <h3 className="font-bold text-foreground mb-2">"SMS Verification"</h3>
+          <p className="text-sm text-muted-foreground">"Receive verification codes via SMS"</p>
         </button>
       </div>
 
       {onCancelled && (
         <div className="text-center">
-          <button onClick={onCancelled} className="text-muted-foreground hover:text-foreground underline">
+          <button
+            onClick={onCancelled}
+            className="text-muted-foreground hover:text-foreground underline"
+          >
             "Cancel"
           </button>
         </div>
@@ -216,12 +225,8 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
     <div className="space-y-6">
       <div className="text-center">
         <FaMobileAlt className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          "Enter Phone Number"
-        </h2>
-        <p className="text-muted-foreground">
-          "We'll send a verification code to this number"
-        </p>
+        <h2 className="text-2xl font-bold text-foreground mb-2">"Enter Phone Number"</h2>
+        <p className="text-muted-foreground">"We'll send a verification code to this number"</p>
       </div>
 
       {error && (
@@ -232,9 +237,7 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
       )}
 
       <div>
-        <label className="block text-sm font-medium text-foreground/80 mb-2">
-          "Phone Number"
-        </label>
+        <label className="block text-sm font-medium text-foreground/80 mb-2">"Phone Number"</label>
         <input
           type="tel"
           value={phoneNumber}
@@ -277,15 +280,11 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
     <div className="space-y-6">
       <div className="text-center">
         <FaShieldAlt className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          "Enter Verification Code"
-        </h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">"Enter Verification Code"</h2>
         <p className="text-muted-foreground">
-          {selectedMethod === "email" ? (
-            "Check your email for the 6-digit code"
-          ) : (
-            "Check your phone for the 6-digit code"
-          )}
+          {selectedMethod === "email"
+            ? "Check your email for the 6-digit code"
+            : "Check your phone for the 6-digit code"}
         </p>
       </div>
 
@@ -345,9 +344,7 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
     <div className="space-y-6">
       <div className="text-center">
         <FaCheckCircle className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          "Save Your Backup Codes"
-        </h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">"Save Your Backup Codes"</h2>
         <p className="text-muted-foreground">
           "Store these codes in a safe place. Each code can only be used once."
         </p>
@@ -355,10 +352,8 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
 
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <p className="text-sm text-yellow-800">
-          
-            These backup codes allow you to access your account if you lose access to your phone or
-            email. Keep them safe!
-          
+          These backup codes allow you to access your account if you lose access to your phone or
+          email. Keep them safe!
         </p>
       </div>
 

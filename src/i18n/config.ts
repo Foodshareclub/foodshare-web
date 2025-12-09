@@ -3,12 +3,30 @@
  * Centralized i18n configuration for FoodShare
  */
 
-export const defaultLocale = 'en' as const;
+export const defaultLocale = "en" as const;
 
 export const locales = [
-  'en', 'cs', 'de', 'es', 'fr', 'pt', 'ru', 'uk',
-  'zh', 'hi', 'ar', 'it', 'pl', 'nl', 'ja', 'ko', 'tr',
-  'vi', 'id', 'th', 'sv'
+  "en",
+  "cs",
+  "de",
+  "es",
+  "fr",
+  "pt",
+  "ru",
+  "uk",
+  "zh",
+  "hi",
+  "ar",
+  "it",
+  "pl",
+  "nl",
+  "ja",
+  "ko",
+  "tr",
+  "vi",
+  "id",
+  "th",
+  "sv",
 ] as const;
 
 export type Locale = (typeof locales)[number];
@@ -20,32 +38,179 @@ export const localeMetadata: Record<
     name: string;
     nativeName: string;
     flag: string;
-    direction: 'ltr' | 'rtl';
+    direction: "ltr" | "rtl";
     code: string;
     region: string;
   }
 > = {
-  en: { name: 'English', nativeName: 'English', flag: '🇬🇧', direction: 'ltr', code: 'en-US', region: 'global' },
-  cs: { name: 'Czech', nativeName: 'Čeština', flag: '🇨🇿', direction: 'ltr', code: 'cs-CZ', region: 'europe' },
-  de: { name: 'German', nativeName: 'Deutsch', flag: '🇩🇪', direction: 'ltr', code: 'de-DE', region: 'europe' },
-  es: { name: 'Spanish', nativeName: 'Español', flag: '🇪🇸', direction: 'ltr', code: 'es-ES', region: 'global' },
-  fr: { name: 'French', nativeName: 'Français', flag: '🇫🇷', direction: 'ltr', code: 'fr-FR', region: 'global' },
-  pt: { name: 'Portuguese', nativeName: 'Português', flag: '🇵🇹', direction: 'ltr', code: 'pt-PT', region: 'global' },
-  ru: { name: 'Russian', nativeName: 'Русский', flag: '🇷🇺', direction: 'ltr', code: 'ru-RU', region: 'europe' },
-  uk: { name: 'Ukrainian', nativeName: 'Українська', flag: '🇺🇦', direction: 'ltr', code: 'uk-UA', region: 'europe' },
-  zh: { name: 'Chinese', nativeName: '中文', flag: '🇨🇳', direction: 'ltr', code: 'zh-CN', region: 'asia' },
-  hi: { name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳', direction: 'ltr', code: 'hi-IN', region: 'asia' },
-  ar: { name: 'Arabic', nativeName: 'العربية', flag: '🇸🇦', direction: 'rtl', code: 'ar-SA', region: 'mena' },
-  it: { name: 'Italian', nativeName: 'Italiano', flag: '🇮🇹', direction: 'ltr', code: 'it-IT', region: 'europe' },
-  pl: { name: 'Polish', nativeName: 'Polski', flag: '🇵🇱', direction: 'ltr', code: 'pl-PL', region: 'europe' },
-  nl: { name: 'Dutch', nativeName: 'Nederlands', flag: '🇳🇱', direction: 'ltr', code: 'nl-NL', region: 'europe' },
-  ja: { name: 'Japanese', nativeName: '日本語', flag: '🇯🇵', direction: 'ltr', code: 'ja-JP', region: 'asia' },
-  ko: { name: 'Korean', nativeName: '한국어', flag: '🇰🇷', direction: 'ltr', code: 'ko-KR', region: 'asia' },
-  tr: { name: 'Turkish', nativeName: 'Türkçe', flag: '🇹🇷', direction: 'ltr', code: 'tr-TR', region: 'mena' },
-  vi: { name: 'Vietnamese', nativeName: 'Tiếng Việt', flag: '🇻🇳', direction: 'ltr', code: 'vi-VN', region: 'asia' },
-  id: { name: 'Indonesian', nativeName: 'Bahasa Indonesia', flag: '🇮🇩', direction: 'ltr', code: 'id-ID', region: 'asia' },
-  th: { name: 'Thai', nativeName: 'ไทย', flag: '🇹🇭', direction: 'ltr', code: 'th-TH', region: 'asia' },
-  sv: { name: 'Swedish', nativeName: 'Svenska', flag: '🇸🇪', direction: 'ltr', code: 'sv-SE', region: 'europe' },
+  en: {
+    name: "English",
+    nativeName: "English",
+    flag: "🇬🇧",
+    direction: "ltr",
+    code: "en-US",
+    region: "global",
+  },
+  cs: {
+    name: "Czech",
+    nativeName: "Čeština",
+    flag: "🇨🇿",
+    direction: "ltr",
+    code: "cs-CZ",
+    region: "europe",
+  },
+  de: {
+    name: "German",
+    nativeName: "Deutsch",
+    flag: "🇩🇪",
+    direction: "ltr",
+    code: "de-DE",
+    region: "europe",
+  },
+  es: {
+    name: "Spanish",
+    nativeName: "Español",
+    flag: "🇪🇸",
+    direction: "ltr",
+    code: "es-ES",
+    region: "global",
+  },
+  fr: {
+    name: "French",
+    nativeName: "Français",
+    flag: "🇫🇷",
+    direction: "ltr",
+    code: "fr-FR",
+    region: "global",
+  },
+  pt: {
+    name: "Portuguese",
+    nativeName: "Português",
+    flag: "🇵🇹",
+    direction: "ltr",
+    code: "pt-PT",
+    region: "global",
+  },
+  ru: {
+    name: "Russian",
+    nativeName: "Русский",
+    flag: "🇷🇺",
+    direction: "ltr",
+    code: "ru-RU",
+    region: "europe",
+  },
+  uk: {
+    name: "Ukrainian",
+    nativeName: "Українська",
+    flag: "🇺🇦",
+    direction: "ltr",
+    code: "uk-UA",
+    region: "europe",
+  },
+  zh: {
+    name: "Chinese",
+    nativeName: "中文",
+    flag: "🇨🇳",
+    direction: "ltr",
+    code: "zh-CN",
+    region: "asia",
+  },
+  hi: {
+    name: "Hindi",
+    nativeName: "हिन्दी",
+    flag: "🇮🇳",
+    direction: "ltr",
+    code: "hi-IN",
+    region: "asia",
+  },
+  ar: {
+    name: "Arabic",
+    nativeName: "العربية",
+    flag: "🇸🇦",
+    direction: "rtl",
+    code: "ar-SA",
+    region: "mena",
+  },
+  it: {
+    name: "Italian",
+    nativeName: "Italiano",
+    flag: "🇮🇹",
+    direction: "ltr",
+    code: "it-IT",
+    region: "europe",
+  },
+  pl: {
+    name: "Polish",
+    nativeName: "Polski",
+    flag: "🇵🇱",
+    direction: "ltr",
+    code: "pl-PL",
+    region: "europe",
+  },
+  nl: {
+    name: "Dutch",
+    nativeName: "Nederlands",
+    flag: "🇳🇱",
+    direction: "ltr",
+    code: "nl-NL",
+    region: "europe",
+  },
+  ja: {
+    name: "Japanese",
+    nativeName: "日本語",
+    flag: "🇯🇵",
+    direction: "ltr",
+    code: "ja-JP",
+    region: "asia",
+  },
+  ko: {
+    name: "Korean",
+    nativeName: "한국어",
+    flag: "🇰🇷",
+    direction: "ltr",
+    code: "ko-KR",
+    region: "asia",
+  },
+  tr: {
+    name: "Turkish",
+    nativeName: "Türkçe",
+    flag: "🇹🇷",
+    direction: "ltr",
+    code: "tr-TR",
+    region: "mena",
+  },
+  vi: {
+    name: "Vietnamese",
+    nativeName: "Tiếng Việt",
+    flag: "🇻🇳",
+    direction: "ltr",
+    code: "vi-VN",
+    region: "asia",
+  },
+  id: {
+    name: "Indonesian",
+    nativeName: "Bahasa Indonesia",
+    flag: "🇮🇩",
+    direction: "ltr",
+    code: "id-ID",
+    region: "asia",
+  },
+  th: {
+    name: "Thai",
+    nativeName: "ไทย",
+    flag: "🇹🇭",
+    direction: "ltr",
+    code: "th-TH",
+    region: "asia",
+  },
+  sv: {
+    name: "Swedish",
+    nativeName: "Svenska",
+    flag: "🇸🇪",
+    direction: "ltr",
+    code: "sv-SE",
+    region: "europe",
+  },
 };
 
 // Backward compatibility exports
@@ -72,15 +237,50 @@ export function isValidLocale(locale: string): locale is Locale {
  * Normalizes a locale string to a supported locale
  */
 export function normalizeLocale(locale: string): Locale {
-  const normalized = locale.split('-')[0].toLowerCase();
+  const normalized = locale.split("-")[0].toLowerCase();
   return isValidLocale(normalized) ? normalized : defaultLocale;
 }
 
 /**
+ * Gets the saved locale from localStorage or cookies
+ */
+export function getSavedLocale(): Locale | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  // Check localStorage first
+  const localStorageLocale = localStorage.getItem("locale");
+  if (localStorageLocale && isValidLocale(localStorageLocale)) {
+    return localStorageLocale;
+  }
+
+  // Check cookies
+  const cookieMatch = document.cookie.match(/(?:^|;\s*)locale=([^;]*)/);
+  if (cookieMatch && isValidLocale(cookieMatch[1])) {
+    return cookieMatch[1] as Locale;
+  }
+
+  return null;
+}
+
+/**
  * Gets the best matching locale from browser preferences
+ * Priority: saved preference > browser language > default
  */
 export function getBrowserLocale(): Locale {
-  if (typeof navigator === 'undefined') {
+  if (typeof window === "undefined") {
+    return defaultLocale;
+  }
+
+  // First check for saved user preference
+  const savedLocale = getSavedLocale();
+  if (savedLocale) {
+    return savedLocale;
+  }
+
+  // Fall back to browser language
+  if (typeof navigator === "undefined") {
     return defaultLocale;
   }
 
@@ -88,7 +288,7 @@ export function getBrowserLocale(): Locale {
 
   for (const browserLocale of browserLocales) {
     const locale = normalizeLocale(browserLocale);
-    if (locale !== defaultLocale || browserLocale.startsWith('en')) {
+    if (locale !== defaultLocale || browserLocale.startsWith("en")) {
       return locale;
     }
   }
@@ -99,7 +299,7 @@ export function getBrowserLocale(): Locale {
 /**
  * Gets locale direction (LTR/RTL)
  */
-export function getLocaleDirection(locale: Locale): 'ltr' | 'rtl' {
+export function getLocaleDirection(locale: Locale): "ltr" | "rtl" {
   return localeMetadata[locale].direction;
 }
 

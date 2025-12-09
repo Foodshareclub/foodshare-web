@@ -1,5 +1,19 @@
 {
   "0": "{0}",
+  "categories": {
+    "food": "Yiyecek",
+    "things": "Eşyalar",
+    "borrow": "Ödünç",
+    "wanted": "Aranan",
+    "foodbanks": "Gıda bankaları",
+    "fridges": "Buzdolapları",
+    "organisations": "Kuruluşlar",
+    "volunteers": "Gönüllüler",
+    "zerowaste": "Sıfır Atık",
+    "vegan": "Vegan",
+    "challenges": "Meydan okumalar",
+    "forum": "Forum"
+  },
   "0_views": "{0} views",
   "buttonvalue": "{buttonValue}",
   "text": "{text}",

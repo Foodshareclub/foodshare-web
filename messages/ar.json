@@ -1,5 +1,19 @@
 {
   "0": "{0}",
+  "categories": {
+    "food": "طعام",
+    "things": "أشياء",
+    "borrow": "استعارة",
+    "wanted": "مطلوب",
+    "foodbanks": "بنوك الطعام",
+    "fridges": "ثلاجات",
+    "organisations": "منظمات",
+    "volunteers": "متطوعون",
+    "zerowaste": "صفر نفايات",
+    "vegan": "نباتي",
+    "challenges": "تحديات",
+    "forum": "منتدى"
+  },
   "0_views": "{0} views",
   "buttonvalue": "{buttonValue}",
   "text": "{text}",

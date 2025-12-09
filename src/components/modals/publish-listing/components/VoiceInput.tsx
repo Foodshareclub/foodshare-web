@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
+import { Mic, MicOff } from "lucide-react";
 
 interface VoiceInputProps {
   onTranscript: (text: string) => void;
@@ -16,7 +16,6 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscript, disabled }
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
-     
     const SpeechRecognitionAPI =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognitionAPI) {
@@ -87,11 +86,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscript, disabled }
       `}
       title={isListening ? "Stop recording" : "Start voice input"}
     >
-      {isListening ? (
-        <FaMicrophoneSlash className="h-4 w-4" />
-      ) : (
-        <FaMicrophone className="h-4 w-4" />
-      )}
+      {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
     </button>
   );
 };

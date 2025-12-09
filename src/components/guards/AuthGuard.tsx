@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Auth Guard Component (Unified)
@@ -16,7 +16,7 @@
 import React, { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { AiOutlineLoading3Quarters } from 'react-icons/ai';
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // ============================================================================
@@ -111,7 +111,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
     // Redirect unauthenticated users to login
     if (requireAuth && !isAuthenticated) {
       setIsRedirecting(true);
-      const loginUrl = `${redirectPath}?from=${encodeURIComponent(pathname || '/')}`;
+      const loginUrl = `${redirectPath}?from=${encodeURIComponent(pathname || "/")}`;
       router.push(loginUrl);
       return;
     }
@@ -134,14 +134,14 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
     }
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4">
-        <AiOutlineLoading3Quarters className="w-12 h-12 animate-spin text-primary" />
+        <Loader2 className="w-12 h-12 animate-spin text-primary" />
         {showLoadingMessage && <p className="text-muted-foreground text-sm">Loading...</p>}
       </div>
     );
   };
 
   // Show loading while checking admin status
-  if (requireAdmin && adminCheckStatus === 'loading') {
+  if (requireAdmin && adminCheckStatus === "loading") {
     return renderLoading();
   }
 
@@ -226,7 +226,11 @@ RequireGuest.displayName = "RequireGuest";
  * ```
  */
 export const RequireAdmin: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  return <AuthGuard requireAuth={true} requireAdmin={true}>{children}</AuthGuard>;
+  return (
+    <AuthGuard requireAuth={true} requireAdmin={true}>
+      {children}
+    </AuthGuard>
+  );
 };
 
 RequireAdmin.displayName = "RequireAdmin";

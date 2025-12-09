@@ -1,9 +1,7 @@
-'use client';
+"use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { FaPaperPlane, FaUsers, FaEnvelope } from "react-icons/fa";
-import { HiSparkles } from "react-icons/hi";
-import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { Send, Users, Sparkles, Loader2 } from "lucide-react";
 import { getGrokInsights, getSuggestedQuestions } from "@/api/admin/grokInsights";
 
 interface Message {
@@ -86,9 +84,9 @@ export const GrokAssistant: React.FC = () => {
 
   const getMessageIcon = (role: string) => {
     if (role === "assistant") {
-      return <HiSparkles className="w-5 h-5 text-purple-600" />;
+      return <Sparkles className="w-5 h-5 text-purple-600" />;
     }
-    return <FaUsers className="w-5 h-5 text-blue-600" />;
+    return <Users className="w-5 h-5 text-blue-600" />;
   };
 
   return (
@@ -96,7 +94,7 @@ export const GrokAssistant: React.FC = () => {
       {/* Header */}
       <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-blue-600">
         <div className="flex items-center gap-3">
-          <HiSparkles className="w-6 h-6 text-white" />
+          <Sparkles className="w-6 h-6 text-white" />
           <div>
             <h2 className="text-xl font-bold text-white">Grok AI Assistant</h2>
             <p className="text-sm text-purple-100">
@@ -139,7 +137,7 @@ export const GrokAssistant: React.FC = () => {
         {isLoading && (
           <div className="flex gap-3 justify-start">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-              <AiOutlineLoading3Quarters className="w-5 h-5 text-purple-600 animate-spin" />
+              <Loader2 className="w-5 h-5 text-purple-600 animate-spin" />
             </div>
             <div className="bg-gray-100 rounded-lg p-4">
               <p className="text-gray-600">Analyzing your data...</p>
@@ -187,9 +185,9 @@ export const GrokAssistant: React.FC = () => {
             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isLoading ? (
-              <AiOutlineLoading3Quarters className="w-5 h-5 animate-spin" />
+              <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
-              <FaPaperPlane className="w-5 h-5" />
+              <Send className="w-5 h-5" />
             )}
           </button>
         </div>

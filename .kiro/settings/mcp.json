@@ -46,15 +46,12 @@
     },
     "Vercel": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@robinson_ai_systems/vercel-mcp"
-      ],
+      "args": ["-y", "@robinson_ai_systems/vercel-mcp"],
       "env": {
         "VERCEL_TOKEN": "yKoDl2rrVyW1tRrfHR4SKqYa",
         "VERCEL_TEAM_ID": "foodshare"
       },
-      "disabled": false,
+      "disabled": true,
       "autoApprove": [
         "list_projects",
         "get_project",

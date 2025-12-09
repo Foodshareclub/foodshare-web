@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React from "react";
 import { useLocale } from "next-intl";
@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supportedLocales, localeMetadata } from "@/utils/i18n";
+import { locales, localeMetadata, type Locale } from "@/i18n/config";
 
 /**
  * LanguageSelector Component
@@ -20,22 +20,27 @@ import { supportedLocales, localeMetadata } from "@/utils/i18n";
 const LanguageSelector = () => {
   // Get current locale from next-intl
   const locale = useLocale();
-  const { changeLocale } = useChangeLocale();
+  const { changeLocale, locale: contextLocale } = useChangeLocale();
 
-  const handleChange = (value: string) => {
-    changeLocale(value as 'en' | 'cs' | 'de' | 'es' | 'fr' | 'pt' | 'ru' | 'uk' | 'zh' | 'hi' | 'ar' | 'it' | 'pl' | 'nl' | 'ja' | 'ko' | 'tr');
+  const handleChange = async (value: string) => {
+    if (value && value !== locale) {
+      await changeLocale(value as Locale);
+    }
   };
 
+  // Use context locale for consistency (it updates immediately on change)
+  const currentLocale = contextLocale || locale;
+
   return (
-    <Select value={locale} onValueChange={handleChange}>
+    <Select value={currentLocale} onValueChange={handleChange}>
       <SelectTrigger variant="glass" className="w-[140px] h-8">
         <SelectValue placeholder="Language" />
       </SelectTrigger>
       <SelectContent variant="glass">
-        {supportedLocales.map((locale) => {
-          const { flag, nativeName } = localeMetadata[locale];
+        {locales.map((loc) => {
+          const { flag, nativeName } = localeMetadata[loc];
           return (
-            <SelectItem key={locale} value={locale}>
+            <SelectItem key={loc} value={loc}>
               <span className="flex items-center gap-2">
                 <span>{flag}</span>
                 <span>{nativeName}</span>

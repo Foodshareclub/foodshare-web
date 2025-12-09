@@ -1,26 +1,33 @@
-'use client';
+"use client";
 
 /**
  * Reset Password Page - Next.js App Router version
  * Allows users to set a new password after clicking the reset link
  */
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { AiOutlineLoading3Quarters } from 'react-icons/ai';
-import { FaLock, FaEye, FaEyeSlash, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Loader2, Lock, Eye, EyeOff, CheckCircle, AlertTriangle } from "lucide-react";
+
+// Icon aliases for consistency
+const AiOutlineLoading3Quarters = Loader2;
+const FaLock = Lock;
+const FaEye = Eye;
+const FaEyeSlash = EyeOff;
+const FaCheckCircle = CheckCircle;
+const FaExclamationTriangle = AlertTriangle;
 
 export default function ResetPasswordPage() {
   const router = useRouter();
   const { updatePassword, isAuthenticated } = useAuth();
 
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +41,7 @@ export default function ResetPasswordPage() {
     // If they're authenticated (session exists from reset link), they can reset
     const checkSession = async () => {
       // Give a moment for the session to be established from the URL hash
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       setIsValidSession(isAuthenticated);
     };
     checkSession();
@@ -42,10 +49,10 @@ export default function ResetPasswordPage() {
 
   const validatePassword = (): string | null => {
     if (password.length < 8) {
-      return 'Password must be at least 8 characters long';
+      return "Password must be at least 8 characters long";
     }
     if (password !== confirmPassword) {
-      return 'Passwords do not match';
+      return "Passwords do not match";
     }
     return null;
   };
@@ -68,13 +75,13 @@ export default function ResetPasswordPage() {
         setIsSuccess(true);
         // Redirect to home after 3 seconds
         setTimeout(() => {
-          router.push('/');
+          router.push("/");
         }, 3000);
       } else {
-        setError(result.error || 'Failed to reset password. Please try again.');
+        setError(result.error || "Failed to reset password. Please try again.");
       }
     } catch {
-      setError('An unexpected error occurred. Please try again.');
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -82,7 +89,7 @@ export default function ResetPasswordPage() {
 
   // Password strength indicator
   const getPasswordStrength = () => {
-    if (!password) return { strength: 0, label: '', color: '' };
+    if (!password) return { strength: 0, label: "", color: "" };
 
     let strength = 0;
     if (password.length >= 8) strength++;
@@ -91,10 +98,10 @@ export default function ResetPasswordPage() {
     if (/[0-9]/.test(password)) strength++;
     if (/[^A-Za-z0-9]/.test(password)) strength++;
 
-    if (strength <= 2) return { strength: 1, label: 'Weak', color: 'bg-red-500' };
-    if (strength <= 3) return { strength: 2, label: 'Fair', color: 'bg-yellow-500' };
-    if (strength <= 4) return { strength: 3, label: 'Good', color: 'bg-[#FF2D55]/70' };
-    return { strength: 4, label: 'Strong', color: 'bg-[#FF2D55]' };
+    if (strength <= 2) return { strength: 1, label: "Weak", color: "bg-red-500" };
+    if (strength <= 3) return { strength: 2, label: "Fair", color: "bg-yellow-500" };
+    if (strength <= 4) return { strength: 3, label: "Good", color: "bg-[#FF2D55]/70" };
+    return { strength: 4, label: "Strong", color: "bg-[#FF2D55]" };
   };
 
   const passwordStrength = getPasswordStrength();
@@ -105,8 +112,8 @@ export default function ResetPasswordPage() {
       <div
         className="absolute top-0 left-0 right-0 bottom-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none"
         style={{
-          backgroundImage: 'radial-gradient(circle, #FF2D55 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
+          backgroundImage: "radial-gradient(circle, #FF2D55 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
         }}
       />
 
@@ -166,11 +173,10 @@ export default function ResetPasswordPage() {
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FF2D55]/10 rounded-full mb-6">
                   <FaCheckCircle className="w-8 h-8 text-[#FF2D55]" />
                 </div>
-                <h1 className="text-[28px] font-bold mb-3 text-foreground">
-                  Password updated!
-                </h1>
+                <h1 className="text-[28px] font-bold mb-3 text-foreground">Password updated!</h1>
                 <p className="text-base text-muted-foreground leading-relaxed mb-6">
-                  Your password has been successfully reset. You can now log in with your new password.
+                  Your password has been successfully reset. You can now log in with your new
+                  password.
                 </p>
                 <p className="text-sm text-muted-foreground mb-6">
                   Redirecting you to the homepage...
@@ -191,9 +197,7 @@ export default function ResetPasswordPage() {
                   <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FF2D55]/10 rounded-full mb-6">
                     <FaLock className="w-7 h-7 text-[#FF2D55]" />
                   </div>
-                  <h1 className="text-[28px] font-bold mb-3 text-foreground">
-                    Set new password
-                  </h1>
+                  <h1 className="text-[28px] font-bold mb-3 text-foreground">Set new password</h1>
                   <p className="text-base text-muted-foreground leading-relaxed">
                     Create a strong password that you don&apos;t use elsewhere.
                   </p>
@@ -209,7 +213,11 @@ export default function ResetPasswordPage() {
                     <div className="rounded-xl bg-red-50 border border-red-200 p-4">
                       <div className="flex items-center gap-3">
                         <div className="flex-shrink-0">
-                          <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                          <svg
+                            className="w-5 h-5 text-red-600"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
                             <path
                               fillRule="evenodd"
                               d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
@@ -233,7 +241,7 @@ export default function ResetPasswordPage() {
                       </label>
                       <div className="relative">
                         <Input
-                          type={showPassword ? 'text' : 'password'}
+                          type={showPassword ? "text" : "password"}
                           placeholder="Enter new password"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
@@ -245,7 +253,7 @@ export default function ResetPasswordPage() {
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
-                          aria-label={showPassword ? 'Hide password' : 'Show password'}
+                          aria-label={showPassword ? "Hide password" : "Show password"}
                         >
                           {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
                         </button>
@@ -261,16 +269,20 @@ export default function ResetPasswordPage() {
                                 className={`h-1 flex-1 rounded-full ${
                                   level <= passwordStrength.strength
                                     ? passwordStrength.color
-                                    : 'bg-gray-200'
+                                    : "bg-gray-200"
                                 }`}
                               />
                             ))}
                           </div>
-                          <p className={`text-xs ${
-                            passwordStrength.strength <= 1 ? 'text-red-600' :
-                            passwordStrength.strength <= 2 ? 'text-yellow-600' :
-                            'text-[#FF2D55]'
-                          }`}>
+                          <p
+                            className={`text-xs ${
+                              passwordStrength.strength <= 1
+                                ? "text-red-600"
+                                : passwordStrength.strength <= 2
+                                  ? "text-yellow-600"
+                                  : "text-[#FF2D55]"
+                            }`}
+                          >
                             {passwordStrength.label}
                           </p>
                         </div>
@@ -284,7 +296,7 @@ export default function ResetPasswordPage() {
                       </label>
                       <div className="relative">
                         <Input
-                          type={showConfirmPassword ? 'text' : 'password'}
+                          type={showConfirmPassword ? "text" : "password"}
                           placeholder="Confirm new password"
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
@@ -295,7 +307,7 @@ export default function ResetPasswordPage() {
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
-                          aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                          aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                         >
                           {showConfirmPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
                         </button>
@@ -320,7 +332,7 @@ export default function ResetPasswordPage() {
                           Updating...
                         </span>
                       ) : (
-                        'Reset password'
+                        "Reset password"
                       )}
                     </Button>
                   </div>
@@ -328,19 +340,29 @@ export default function ResetPasswordPage() {
 
                 {/* Password Requirements */}
                 <div className="mt-6 p-4 bg-muted/50 rounded-xl">
-                  <p className="text-sm font-medium text-foreground/80 mb-2">Password requirements:</p>
+                  <p className="text-sm font-medium text-foreground/80 mb-2">
+                    Password requirements:
+                  </p>
                   <ul className="text-sm text-muted-foreground space-y-1">
-                    <li className={`flex items-center gap-2 ${password.length >= 8 ? 'text-[#FF2D55]' : ''}`}>
-                      {password.length >= 8 ? '✓' : '•'} At least 8 characters
+                    <li
+                      className={`flex items-center gap-2 ${password.length >= 8 ? "text-[#FF2D55]" : ""}`}
+                    >
+                      {password.length >= 8 ? "✓" : "•"} At least 8 characters
                     </li>
-                    <li className={`flex items-center gap-2 ${/[A-Z]/.test(password) ? 'text-[#FF2D55]' : ''}`}>
-                      {/[A-Z]/.test(password) ? '✓' : '•'} One uppercase letter
+                    <li
+                      className={`flex items-center gap-2 ${/[A-Z]/.test(password) ? "text-[#FF2D55]" : ""}`}
+                    >
+                      {/[A-Z]/.test(password) ? "✓" : "•"} One uppercase letter
                     </li>
-                    <li className={`flex items-center gap-2 ${/[0-9]/.test(password) ? 'text-[#FF2D55]' : ''}`}>
-                      {/[0-9]/.test(password) ? '✓' : '•'} One number
+                    <li
+                      className={`flex items-center gap-2 ${/[0-9]/.test(password) ? "text-[#FF2D55]" : ""}`}
+                    >
+                      {/[0-9]/.test(password) ? "✓" : "•"} One number
                     </li>
-                    <li className={`flex items-center gap-2 ${/[^A-Za-z0-9]/.test(password) ? 'text-[#FF2D55]' : ''}`}>
-                      {/[^A-Za-z0-9]/.test(password) ? '✓' : '•'} One special character
+                    <li
+                      className={`flex items-center gap-2 ${/[^A-Za-z0-9]/.test(password) ? "text-[#FF2D55]" : ""}`}
+                    >
+                      {/[^A-Za-z0-9]/.test(password) ? "✓" : "•"} One special character
                     </li>
                   </ul>
                 </div>

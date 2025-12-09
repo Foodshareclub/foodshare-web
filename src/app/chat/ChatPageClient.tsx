@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * ChatPageClient - Unified Chat Interface
@@ -7,26 +7,26 @@
  * The page itself doesn't scroll - only the left (chat list) and right (messages) segments scroll independently
  */
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import { motion, AnimatePresence } from 'framer-motion';
-import { UnifiedChatList } from '@/components/chat/UnifiedChatList';
-import { UnifiedChatContainer } from '@/components/chat/UnifiedChatContainer';
-import { useMediaQuery } from '@/hooks';
-import { useOnlineStatus } from '@/hooks/useUnifiedChat';
-import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-import { FiMessageCircle, FiUsers } from 'react-icons/fi';
-import type { UnifiedChatRoom } from '@/lib/data/chat';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { motion, AnimatePresence } from "framer-motion";
+import { UnifiedChatList } from "@/components/chat/UnifiedChatList";
+import { UnifiedChatContainer } from "@/components/chat/UnifiedChatContainer";
+import { useMediaQuery } from "@/hooks";
+import { useOnlineStatus } from "@/hooks/useUnifiedChat";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+import { MessageCircle, Users } from "lucide-react";
+import type { UnifiedChatRoom } from "@/lib/data/chat";
 
 const FALLBACK = {
-  selectConversation: 'Select a conversation',
-  selectConversationDesc: 'Choose a chat from the sidebar to start messaging',
-  noConversationsYet: 'No conversations yet',
-  startNewChat: 'Start sharing food to begin chatting with others',
-  welcomeToChat: 'Welcome to Chat',
-  foodChats: 'Food Sharing Chats',
+  selectConversation: "Select a conversation",
+  selectConversationDesc: "Choose a chat from the sidebar to start messaging",
+  noConversationsYet: "No conversations yet",
+  startNewChat: "Start sharing food to begin chatting with others",
+  welcomeToChat: "Welcome to Chat",
+  foodChats: "Food Sharing Chats",
 };
 
 type Message = {
@@ -51,25 +51,29 @@ type ChatPageClientProps = {
 
 export function ChatPageClient({
   userId,
-  userName = '',
-  userAvatar = '',
+  userName = "",
+  userAvatar = "",
   chatRooms,
   activeChatRoom,
   initialMessages,
 }: ChatPageClientProps) {
-  const t = useTranslations('Chat');
+  const t = useTranslations("Chat");
   const router = useRouter();
-  const isDesktop = useMediaQuery('(min-width: 1024px)');
-  
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
+
   const [selectedChat, setSelectedChat] = useState<UnifiedChatRoom | null>(activeChatRoom);
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [showList, setShowList] = useState(!activeChatRoom);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
-  
+
   useOnlineStatus(userId);
 
   const getText = (key: keyof typeof FALLBACK) => {
-    try { return t(key); } catch { return FALLBACK[key]; }
+    try {
+      return t(key);
+    } catch {
+      return FALLBACK[key];
+    }
   };
 
   // Sync with URL params
@@ -91,7 +95,7 @@ export function ChatPageClient({
         setMessages(data.messages || []);
       }
     } catch (error) {
-      console.error('Failed to load messages:', error);
+      console.error("Failed to load messages:", error);
     } finally {
       setIsLoadingMessages(false);
     }
@@ -100,15 +104,15 @@ export function ChatPageClient({
   const handleSelectChat = async (chat: UnifiedChatRoom) => {
     setSelectedChat(chat);
     if (!isDesktop) setShowList(false);
-    
+
     // Update URL
     const params = new URLSearchParams();
     if (chat.postId) {
-      params.set('food', chat.postId.toString());
+      params.set("food", chat.postId.toString());
     }
-    params.set('room', chat.id);
+    params.set("room", chat.id);
     router.push(`/chat?${params.toString()}`, { scroll: false });
-    
+
     // Load messages if not already loaded
     if (chat.id !== activeChatRoom?.id) {
       await loadMessages(chat);
@@ -118,7 +122,7 @@ export function ChatPageClient({
   const handleBackToList = () => {
     setShowList(true);
     setSelectedChat(null);
-    router.push('/chat', { scroll: false });
+    router.push("/chat", { scroll: false });
   };
 
   // Collect online user IDs
@@ -137,11 +141,7 @@ export function ChatPageClient({
 
       {/* Main content - fills available space, no page scroll */}
       <div className="flex-1 min-h-0 flex overflow-hidden relative z-10">
-        <div className={cn(
-          'flex w-full h-full',
-          isDesktop ? 'p-4 gap-4' : 'p-0'
-        )}>
-          
+        <div className={cn("flex w-full h-full", isDesktop ? "p-4 gap-4" : "p-0")}>
           {/* Left Sidebar - Chat List (independently scrollable) */}
           <AnimatePresence mode="wait" initial={false}>
             {(isDesktop || showList) && (
@@ -150,18 +150,20 @@ export function ChatPageClient({
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 className={cn(
-                  'flex flex-col min-h-0',
-                  isDesktop 
-                    ? 'w-[340px] lg:w-[380px] flex-shrink-0' 
-                    : 'w-full absolute inset-0 z-20 bg-background'
+                  "flex flex-col min-h-0",
+                  isDesktop
+                    ? "w-[340px] lg:w-[380px] flex-shrink-0"
+                    : "w-full absolute inset-0 z-20 bg-background"
                 )}
               >
-                <div className={cn(
-                  'flex-1 min-h-0 flex flex-col overflow-hidden',
-                  isDesktop && 'rounded-2xl border border-border bg-card shadow-sm'
-                )}>
+                <div
+                  className={cn(
+                    "flex-1 min-h-0 flex flex-col overflow-hidden",
+                    isDesktop && "rounded-2xl border border-border bg-card shadow-sm"
+                  )}
+                >
                   <UnifiedChatList
                     chatRooms={chatRooms}
                     activeChatId={selectedChat?.id}
@@ -182,10 +184,10 @@ export function ChatPageClient({
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
                 className={cn(
-                  'flex-1 min-h-0 flex flex-col overflow-hidden min-w-0',
-                  isDesktop && 'rounded-2xl border border-border bg-card shadow-sm'
+                  "flex-1 min-h-0 flex flex-col overflow-hidden min-w-0",
+                  isDesktop && "rounded-2xl border border-border bg-card shadow-sm"
                 )}
               >
                 {selectedChat ? (
@@ -226,32 +228,34 @@ function EmptyState({ hasChats, foodChatsCount, getText }: EmptyStateProps) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: 'easeOut' }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
         className="text-center max-w-sm"
       >
         {/* Icon */}
         <div className="relative mx-auto w-24 h-24 mb-6">
           <div className="absolute inset-0 bg-primary/10 rounded-3xl animate-pulse" />
           <div className="relative flex items-center justify-center w-full h-full bg-primary/5 rounded-3xl border border-primary/20">
-            <FiMessageCircle className="h-10 w-10 text-primary" />
+            <MessageCircle className="h-10 w-10 text-primary" />
           </div>
         </div>
 
         {/* Title */}
         <h2 className="text-2xl font-bold text-foreground mb-3">
-          {hasChats ? getText('selectConversation') : getText('noConversationsYet')}
+          {hasChats ? getText("selectConversation") : getText("noConversationsYet")}
         </h2>
-        
+
         {/* Description */}
         <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-          {hasChats ? getText('selectConversationDesc') : getText('startNewChat')}
+          {hasChats ? getText("selectConversationDesc") : getText("startNewChat")}
         </p>
 
         {/* Stats badge */}
         {hasChats && foodChatsCount > 0 && (
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-            <FiUsers className="h-4 w-4" />
-            <span>{foodChatsCount} {getText('foodChats')}</span>
+            <Users className="h-4 w-4" />
+            <span>
+              {foodChatsCount} {getText("foodChats")}
+            </span>
           </div>
         )}
       </motion.div>
@@ -280,7 +284,7 @@ export function ChatPageSkeleton() {
             ))}
           </div>
         </div>
-        
+
         {/* Main area skeleton */}
         <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-border bg-card overflow-hidden">
           {/* Header */}
@@ -291,16 +295,16 @@ export function ChatPageSkeleton() {
               <Skeleton className="h-3 w-28" />
             </div>
           </div>
-          
+
           {/* Messages */}
           <div className="flex-1 min-h-0 p-4 space-y-3 overflow-hidden">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className={cn('flex', i % 2 === 0 ? 'justify-start' : 'justify-end')}>
-                <Skeleton className={cn('h-14 rounded-2xl', i % 2 === 0 ? 'w-48' : 'w-56')} />
+              <div key={i} className={cn("flex", i % 2 === 0 ? "justify-start" : "justify-end")}>
+                <Skeleton className={cn("h-14 rounded-2xl", i % 2 === 0 ? "w-48" : "w-56")} />
               </div>
             ))}
           </div>
-          
+
           {/* Input */}
           <div className="p-4 border-t border-border">
             <Skeleton className="h-10 w-full rounded-xl" />

@@ -1,4 +1,16 @@
-# Admin CRM Visual Guide
+# Admin CRM System
+
+Comprehensive admin dashboard for managing the FoodShare platform.
+
+## Documentation
+
+- [Listings Management](#-interface-overview) - Bulk operations, filtering, moderation
+- [User Management](./USER_MANAGEMENT.md) - User roles, search, statistics
+- [AI Moderation](./AI_MODERATION.md) - Automated content moderation
+
+---
+
+# Listings Management Visual Guide
 
 A visual walkthrough of the enhanced admin listings management interface.
 

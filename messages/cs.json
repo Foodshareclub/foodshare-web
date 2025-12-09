@@ -1,5 +1,19 @@
 {
   "0": "{0}",
+  "categories": {
+    "food": "Jídlo",
+    "things": "Věci",
+    "borrow": "Půjčit",
+    "wanted": "Hledám",
+    "foodbanks": "Potravinové banky",
+    "fridges": "Lednice",
+    "organisations": "Organizace",
+    "volunteers": "Dobrovolníci",
+    "zerowaste": "Zero Waste",
+    "vegan": "Vegan",
+    "challenges": "Výzvy",
+    "forum": "Fórum"
+  },
   "0_views": "{0} zobrazení",
   "buttonvalue": "{buttonValue}",
   "text": "{text}",

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { IoMdClose } from "react-icons/io";
+import { X } from "lucide-react";
 
 interface TagInputProps {
   tags: string[];
@@ -59,7 +59,7 @@ export const TagInput: React.FC<TagInputProps> = ({ tags, onTagsChange, maxTags 
               onClick={() => removeTag(tag)}
               className="hover:text-destructive transition-colors"
             >
-              <IoMdClose className="h-3 w-3" />
+              <X className="h-3 w-3" />
             </button>
           </span>
         ))}

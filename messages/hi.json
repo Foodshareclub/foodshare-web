@@ -1,5 +1,19 @@
 {
   "0": "{0}",
+  "categories": {
+    "food": "भोजन",
+    "things": "चीज़ें",
+    "borrow": "उधार",
+    "wanted": "चाहिए",
+    "foodbanks": "खाद्य बैंक",
+    "fridges": "फ्रिज",
+    "organisations": "संगठन",
+    "volunteers": "स्वयंसेवक",
+    "zerowaste": "शून्य अपशिष्ट",
+    "vegan": "शाकाहारी",
+    "challenges": "चुनौतियाँ",
+    "forum": "फोरम"
+  },
   "0_views": "{0} views",
   "buttonvalue": "{buttonValue}",
   "text": "{text}",

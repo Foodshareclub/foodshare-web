@@ -1,32 +1,43 @@
-'use client';
+"use client";
 
 /**
  * Login & Security Client Component
  * Premium security settings with modern design
  */
 
-import React, { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
-import { motion } from 'framer-motion';
+import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
 import {
-  FaShieldAlt,
-  FaKey,
-  FaChevronRight,
-  FaCheck,
-  FaTimes,
-  FaCheckCircle,
-  FaExclamationCircle,
-  FaLock,
-  FaFingerprint,
-} from 'react-icons/fa';
-import { auth } from '@/lib/auth';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { MFAEnrollment } from '@/components/security/MFAEnrollment';
-import { cn } from '@/lib/utils';
-import type { AuthUser } from '@/app/actions/auth';
+  Shield,
+  Key,
+  ChevronRight,
+  Check,
+  X,
+  CheckCircle,
+  AlertCircle,
+  Lock,
+  Fingerprint,
+} from "lucide-react";
+
+// Icon aliases for consistency
+const FaShieldAlt = Shield;
+const FaKey = Key;
+const FaChevronRight = ChevronRight;
+const FaCheck = Check;
+const FaTimes = X;
+const FaCheckCircle = CheckCircle;
+const FaExclamationCircle = AlertCircle;
+const FaLock = Lock;
+const FaFingerprint = Fingerprint;
+import { auth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { MFAEnrollment } from "@/components/security/MFAEnrollment";
+import { cn } from "@/lib/utils";
+import type { AuthUser } from "@/app/actions/auth";
 
 interface LoginSecurityClientProps {
   user: AuthUser;
@@ -46,13 +57,13 @@ const itemVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { type: 'spring' as const, stiffness: 300, damping: 24 },
+    transition: { type: "spring" as const, stiffness: 300, damping: 24 },
   },
 };
 
 export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps) {
   const [editingPassword, setEditingPassword] = useState(false);
-  const [email, setEmail] = useState(user.email || '');
+  const [email, setEmail] = useState(user.email || "");
   const [isEmailSent, setIsEmailSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +77,7 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
 
   const handleSendResetEmail = async () => {
     if (!email) {
-      setError('Please enter your email address');
+      setError("Please enter your email address");
       return;
     }
     setIsLoading(true);
@@ -75,7 +86,7 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
     try {
       const { error: resetError } = await auth.resetPassword(email);
       if (resetError) {
-        setError(resetError.message || 'Failed to send reset email');
+        setError(resetError.message || "Failed to send reset email");
       } else {
         setIsEmailSent(true);
         timerRef.current = setTimeout(() => {
@@ -84,7 +95,7 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
         }, 5000);
       }
     } catch {
-      setError('An unexpected error occurred. Please try again.');
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -94,14 +105,14 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
     setEditingPassword(false);
     setIsEmailSent(false);
     setError(null);
-    setEmail(user.email || '');
+    setEmail(user.email || "");
   };
 
   const securityTips = [
-    'Use a unique password that you don\'t use for other accounts',
-    'Make your password at least 12 characters with letters, numbers, and symbols',
-    'Never share your password with anyone, even FoodShare support',
-    'Enable two-factor authentication for additional security',
+    "Use a unique password that you don't use for other accounts",
+    "Make your password at least 12 characters with letters, numbers, and symbols",
+    "Never share your password with anyone, even FoodShare support",
+    "Enable two-factor authentication for additional security",
   ];
 
   return (
@@ -239,7 +250,7 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
                         className="bg-emerald-600 hover:bg-emerald-700"
                       >
                         {isLoading ? (
-                          'Sending...'
+                          "Sending..."
                         ) : (
                           <>
                             <FaCheck className="w-3 h-3 mr-1.5" />
@@ -282,9 +293,7 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
                     <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-white/20 to-transparent" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      Admin Security
-                    </h3>
+                    <h3 className="text-lg font-semibold text-foreground">Admin Security</h3>
                     <p className="text-sm text-muted-foreground">
                       Multi-factor authentication for administrator access
                     </p>
@@ -295,8 +304,8 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
                   <div className="flex items-start gap-3">
                     <FaLock className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5" />
                     <p className="text-sm text-blue-900 dark:text-blue-100">
-                      <strong>Admin Access Protection:</strong> As an administrator, MFA adds
-                      an extra layer of security to protect sensitive features and the CMS.
+                      <strong>Admin Access Protection:</strong> As an administrator, MFA adds an
+                      extra layer of security to protect sensitive features and the CMS.
                     </p>
                   </div>
                 </div>

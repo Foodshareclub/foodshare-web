@@ -25,11 +25,16 @@
 
 ### CRM
 
-    - Help me implement admin role functionality to edit any listings through an advanced CRM system. Let me first explore the current codebase to understand the existing structure around posts/listings and any admin functionality.
-        - Use the ReactJS expert to deeply modify and optimize the code base.
+    - Help me implement admin role functionality to edit any listings through an advanced CRM system. Let's first explore the current codebase to understand the existing structure around posts/listings and any admin functionality.
+        - Use the Next.js expert to deeply modify and optimize the code base.
         - We use admin "role jsonb not null default '{"admin": false, "volunteer": false, "subscriber": true, "organization": false, "fridge-coordinator": false, "foodbank-coordinator": false}'::jsonb" in the profiles to be able to adit
+        - Improve the email CRM expirience to be able to use 3 email providers we implemented
+        - Improve the UI/UX logic for the CRM
+        - Use the clean next.js 16 arcitecture with Supabase integration
+        - Reuse the existing code, the db, edge functions etc wherever and whenever you can
 
-    - Implement a post management system for any user respectevely: 
+
+    - Implement a post management system for any user respectevely:
         - Allow them to edit their own posts
         - Allow them to delete their own posts
         - Allow them to create new posts
@@ -54,9 +59,9 @@
 
 ### Chats page
 
-    - Further improve the existing chatting sysem for the sharers, the forum users and everybody on the marketplace: 
-        - Unify it into one beautiful and robust chat syetsm 
-        - The char page don't have to be scrollable only the left and right segments. 
+    - Further improve the existing chatting sysem for the sharers, the forum users and everybody on the marketplace:
+        - Unify it into one beautiful and robust chat syetsm
+        - The char page don't have to be scrollable only the left and right segments.
         - Apply the dark/ light themes as well.
         - Use Tailwind and Shadcn to to beautify the layout
         - Use the latest bleeding edge practices
@@ -67,7 +72,6 @@
         - Improve the UI/UX logic for the chats
         - Allow a post owner to chat and choose any requester to pick up a requeted item
         - Post very beautiful chat reminder as a first message for both the requester and the post owner with the rules to be polite, share time to pick up, an address, some important details etc
-
 
 ### Search ✅ COMPLETED
 
@@ -117,7 +121,7 @@
     - Improve the Supabase auth system to ensure robust user authentication:
         - Use an appropriate subagent
         - Use the Supabase Foodshare MCP server
-        - Include all 3 auth operators Resend, 
+        - Include all 3 auth operators Resend,
         - Explore the current implementation
         - Use the best bleeding edge practices
         - Use the latest packages compatible with the stack
@@ -254,3 +258,13 @@
         subagent-auditor - Expert subagent configuration auditor
 
     -  /taches-cc-resources:create-prompt impoove the CRM implementation for the admin role functionality.
+
+### Notifications
+
+    - This approach keeps data fetching server-side, uses realtime only for live updates, and integrates cleanly with your existing Supabase infrastructure:
+    - Use Supabase Realtime for live updates - already in your stack
+    - Database triggers for automatic notification creation on events
+    - Server Actions for mutations (mark read, delete)
+    - Edge Functions for push notifications to mobile
+    - Toast component (shadcn) for immediate UI feedback
+    - Batch operations - mark all read, bulk delete old notifications

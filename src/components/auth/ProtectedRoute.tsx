@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Protected Route Component (DEPRECATED)
@@ -9,10 +9,10 @@
  * Uses useAuth hook (TanStack Query + Zustand) instead of Redux
  */
 
-import React, { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
-import { AiOutlineLoading3Quarters } from 'react-icons/ai';
+import React, { useEffect } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -30,15 +30,15 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push(`/login?from=${encodeURIComponent(pathname || '/')}`);
+      router.push(`/login?from=${encodeURIComponent(pathname || "/")}`);
     }
   }, [isAuthenticated, pathname, router]);
 
   // Show loading spinner while checking auth status
-  if (adminCheckStatus === 'loading') {
+  if (adminCheckStatus === "loading") {
     return (
       <div className="flex items-center justify-center h-screen">
-        <AiOutlineLoading3Quarters className="w-12 h-12 animate-spin text-rausch-500" />
+        <Loader2 className="w-12 h-12 animate-spin text-rausch-500" />
       </div>
     );
   }
@@ -47,7 +47,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <AiOutlineLoading3Quarters className="w-12 h-12 animate-spin text-rausch-500" />
+        <Loader2 className="w-12 h-12 animate-spin text-rausch-500" />
       </div>
     );
   }
@@ -57,9 +57,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return (
       <div className="p-8 text-center">
         <h1 className="text-2xl font-bold mb-4 text-foreground">Access Denied</h1>
-        <p className="text-muted-foreground">
-          You don&apos;t have permission to access this page.
-        </p>
+        <p className="text-muted-foreground">You don&apos;t have permission to access this page.</p>
       </div>
     );
   }

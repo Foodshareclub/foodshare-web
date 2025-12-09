@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { FaChartLine, FaLightbulb } from "react-icons/fa";
-import { IoMdClose } from "react-icons/io";
+import { BarChart3, Lightbulb, X } from "lucide-react";
 
 interface QualityScoreProps {
   score: number;
@@ -59,7 +58,7 @@ export const QualityScore: React.FC<QualityScoreProps> = ({ score, suggestions, 
           </div>
           <div>
             <p className="font-medium flex items-center gap-1.5">
-              <FaChartLine className="h-4 w-4" />
+              <BarChart3 className="h-4 w-4" />
               Listing Quality
             </p>
             <p className={`text-sm ${getScoreColor()}`}>{getScoreLabel()}</p>
@@ -70,7 +69,7 @@ export const QualityScore: React.FC<QualityScoreProps> = ({ score, suggestions, 
           onClick={onClose}
           className="p-1 rounded hover:bg-muted transition-colors"
         >
-          <IoMdClose className="h-4 w-4 text-muted-foreground" />
+          <X className="h-4 w-4 text-muted-foreground" />
         </button>
       </div>
 
@@ -80,7 +79,7 @@ export const QualityScore: React.FC<QualityScoreProps> = ({ score, suggestions, 
           <ul className="space-y-1">
             {suggestions.slice(0, 3).map((suggestion, i) => (
               <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-                <FaLightbulb className="h-3 w-3 mt-0.5 text-yellow-500 flex-shrink-0" />
+                <Lightbulb className="h-3 w-3 mt-0.5 text-yellow-500 flex-shrink-0" />
                 {suggestion}
               </li>
             ))}

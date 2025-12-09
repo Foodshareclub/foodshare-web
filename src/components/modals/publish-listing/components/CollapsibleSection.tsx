@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface CollapsibleSectionProps {
   title: string;
@@ -37,9 +37,9 @@ export const CollapsibleSection: React.FC<CollapsibleSectionProps> = ({
           )}
         </span>
         {isOpen ? (
-          <FaChevronUp className="h-4 w-4 text-muted-foreground" />
+          <ChevronUp className="h-4 w-4 text-muted-foreground" />
         ) : (
-          <FaChevronDown className="h-4 w-4 text-muted-foreground" />
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
         )}
       </button>
       <div

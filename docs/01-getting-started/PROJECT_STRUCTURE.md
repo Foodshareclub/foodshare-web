@@ -155,7 +155,7 @@ public/
 
 ### Build & Development
 
-- **vite.config.ts** - Vite build configuration (port 3000, path aliases)
+- **next.config.ts** - Next.js configuration (Turbopack, path aliases)
 - **vitest.config.ts** - Testing configuration
 - **tsconfig.json** - TypeScript compiler settings
 - **postcss.config.js** - PostCSS configuration

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -6,10 +6,32 @@ import { motion } from "framer-motion";
 import type { ForumPost } from "@/api/forumAPI";
 import { ForumCategoryBadge } from "./ForumCategoryBadge";
 import { ForumTagBadge } from "./ForumTagBadge";
-import { 
-  FaArrowUp, FaChartLine, FaCheckCircle, FaClock, FaCommentDots, 
-  FaEye, FaHeart, FaLock, FaThumbtack, FaBookmark, FaShare 
-} from 'react-icons/fa';
+import {
+  ArrowUp,
+  TrendingUp,
+  CheckCircle,
+  Clock,
+  MessageCircle,
+  Eye,
+  Heart,
+  Lock,
+  Pin,
+  Bookmark,
+  Share2,
+} from "lucide-react";
+
+// Icon aliases for consistency
+const FaArrowUp = ArrowUp;
+const FaChartLine = TrendingUp;
+const FaCheckCircle = CheckCircle;
+const FaClock = Clock;
+const FaCommentDots = MessageCircle;
+const FaEye = Eye;
+const FaHeart = Heart;
+const FaLock = Lock;
+const FaThumbtack = Pin;
+const FaBookmark = Bookmark;
+const FaShare = Share2;
 
 const MODULE_LOAD_TIME = Date.now();
 
@@ -18,10 +40,16 @@ type ForumPostCardProps = {
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
   index?: number;
-  variant?: 'default' | 'compact' | 'featured';
+  variant?: "default" | "compact" | "featured";
 };
 
-export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0, variant = 'default' }: ForumPostCardProps) {
+export function ForumPostCard({
+  post,
+  onMouseEnter,
+  onMouseLeave,
+  index = 0,
+  variant = "default",
+}: ForumPostCardProps) {
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -48,16 +76,38 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0, var
   const isHot = (post.views_count || 0) > 100 || (post.forum_likes_counter || 0) > 10;
   const isNew = Date.now() - new Date(post.forum_post_created_at).getTime() < 86400000;
   const hasActivity = useMemo(() => {
-    const lastActivityTime = new Date(post.last_activity_at || post.forum_post_created_at).getTime();
+    const lastActivityTime = new Date(
+      post.last_activity_at || post.forum_post_created_at
+    ).getTime();
     const oneHourAgo = MODULE_LOAD_TIME - 3600000;
     return lastActivityTime > oneHourAgo;
   }, [post.last_activity_at, post.forum_post_created_at]);
 
   const postTypeStyles = {
-    discussion: { bg: "bg-slate-100 dark:bg-slate-800", text: "text-slate-700 dark:text-slate-300", icon: null, gradient: "from-slate-500 to-slate-600" },
-    question: { bg: "bg-amber-50 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400", icon: "?", gradient: "from-amber-500 to-orange-500" },
-    announcement: { bg: "bg-blue-50 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400", icon: "!", gradient: "from-blue-500 to-indigo-500" },
-    guide: { bg: "bg-emerald-50 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400", icon: "📖", gradient: "from-emerald-500 to-teal-500" },
+    discussion: {
+      bg: "bg-slate-100 dark:bg-slate-800",
+      text: "text-slate-700 dark:text-slate-300",
+      icon: null,
+      gradient: "from-slate-500 to-slate-600",
+    },
+    question: {
+      bg: "bg-amber-50 dark:bg-amber-900/30",
+      text: "text-amber-700 dark:text-amber-400",
+      icon: "?",
+      gradient: "from-amber-500 to-orange-500",
+    },
+    announcement: {
+      bg: "bg-blue-50 dark:bg-blue-900/30",
+      text: "text-blue-700 dark:text-blue-400",
+      icon: "!",
+      gradient: "from-blue-500 to-indigo-500",
+    },
+    guide: {
+      bg: "bg-emerald-50 dark:bg-emerald-900/30",
+      text: "text-emerald-700 dark:text-emerald-400",
+      icon: "📖",
+      gradient: "from-emerald-500 to-teal-500",
+    },
   };
 
   const typeStyle = postTypeStyles[post.post_type] || postTypeStyles.discussion;
@@ -92,10 +142,11 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0, var
               isHovered ? "opacity-100" : "opacity-0"
             }`}
             style={{
-              background: "linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05))",
+              background:
+                "linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05))",
             }}
           />
-          
+
           {/* New badge */}
           {isNew && !post.is_pinned && (
             <div className="absolute top-3 left-3 z-20">
@@ -109,7 +160,10 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0, var
           {post.forum_post_image ? (
             <div className="relative overflow-hidden">
               {!imageLoaded && (
-                <div className="absolute inset-0 bg-gradient-to-r from-muted via-muted/50 to-muted animate-pulse" style={{ aspectRatio: "16/9" }} />
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-muted via-muted/50 to-muted animate-pulse"
+                  style={{ aspectRatio: "16/9" }}
+                />
               )}
               <motion.img
                 className="w-full object-cover"
@@ -186,7 +240,9 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0, var
             <div className="flex items-center gap-2 mb-3 flex-wrap">
               {post.forum_categories && <ForumCategoryBadge category={post.forum_categories} />}
               {post.post_type !== "discussion" && (
-                <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${typeStyle.bg} ${typeStyle.text} flex items-center gap-1`}>
+                <span
+                  className={`px-2.5 py-1 rounded-full text-xs font-semibold ${typeStyle.bg} ${typeStyle.text} flex items-center gap-1`}
+                >
                   {typeStyle.icon && <span>{typeStyle.icon}</span>}
                   {post.post_type === "question" && "Question"}
                   {post.post_type === "announcement" && "Announcement"}
@@ -209,7 +265,7 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0, var
             {/* Description preview */}
             {post.forum_post_description && (
               <p className="text-sm text-muted-foreground line-clamp-2 mb-4 leading-relaxed">
-                {post.forum_post_description.replace(/<[^>]*>/g, '').slice(0, 200)}
+                {post.forum_post_description.replace(/<[^>]*>/g, "").slice(0, 200)}
               </p>
             )}
 
@@ -217,7 +273,11 @@ export function ForumPostCard({ post, onMouseEnter, onMouseLeave, index = 0, var
             {post.forum_post_tags && post.forum_post_tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-4">
                 {post.forum_post_tags.slice(0, 3).map((tagRelation) => (
-                  <ForumTagBadge key={tagRelation.forum_tags.id} tag={tagRelation.forum_tags} size="sm" />
+                  <ForumTagBadge
+                    key={tagRelation.forum_tags.id}
+                    tag={tagRelation.forum_tags}
+                    size="sm"
+                  />
                 ))}
                 {post.forum_post_tags.length > 3 && (
                   <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded-full">

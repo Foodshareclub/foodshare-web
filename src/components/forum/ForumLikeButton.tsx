@@ -1,10 +1,14 @@
-'use client';
+"use client";
 
-import { useState, useTransition } from 'react';
-import { FaHeart, FaRegHeart } from 'react-icons/fa';
-import { Button } from '@/components/ui/button';
-import { toggleForumLike } from '@/app/actions/forum';
-import { cn } from '@/lib/utils';
+import { useState, useTransition } from "react";
+import { Heart } from "lucide-react";
+
+// Icon aliases for consistency
+const FaHeart = Heart;
+const FaRegHeart = Heart;
+import { Button } from "@/components/ui/button";
+import { toggleForumLike } from "@/app/actions/forum";
+import { cn } from "@/lib/utils";
 
 type ForumLikeButtonProps = {
   forumId: number;
@@ -52,17 +56,13 @@ export function ForumLikeButton({
       onClick={handleLike}
       disabled={isPending || !isAuthenticated}
       className={cn(
-        'flex items-center gap-1.5 transition-colors',
-        isLiked && 'text-red-500 hover:text-red-600',
+        "flex items-center gap-1.5 transition-colors",
+        isLiked && "text-red-500 hover:text-red-600",
         className
       )}
-      title={isAuthenticated ? (isLiked ? 'Unlike' : 'Like') : 'Sign in to like'}
+      title={isAuthenticated ? (isLiked ? "Unlike" : "Like") : "Sign in to like"}
     >
-      {isLiked ? (
-        <FaHeart className="w-4 h-4" />
-      ) : (
-        <FaRegHeart className="w-4 h-4" />
-      )}
+      {isLiked ? <FaHeart className="w-4 h-4" /> : <FaRegHeart className="w-4 h-4" />}
       <span>{likeCount}</span>
     </Button>
   );

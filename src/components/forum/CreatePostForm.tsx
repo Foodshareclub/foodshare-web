@@ -1,15 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { RichTextEditor } from './RichTextEditor';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { ForumCategory, ForumPostType } from '@/api/forumAPI';
-import { createClient } from '@/lib/supabase/client';
-import { FaPaperPlane, FaImage } from 'react-icons/fa';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { RichTextEditor } from "./RichTextEditor";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { ForumCategory, ForumPostType } from "@/api/forumAPI";
+import { createClient } from "@/lib/supabase/client";
+import { Send, ImageIcon } from "lucide-react";
+
+// Icon aliases for consistency
+const FaPaperPlane = Send;
+const FaImage = ImageIcon;
 
 type CreatePostFormProps = {
   categories: ForumCategory[];
@@ -17,9 +27,9 @@ type CreatePostFormProps = {
 };
 
 const POST_TYPES: { value: ForumPostType; label: string }[] = [
-  { value: 'discussion', label: 'Discussion' },
-  { value: 'question', label: 'Question' },
-  { value: 'guide', label: 'Guide' },
+  { value: "discussion", label: "Discussion" },
+  { value: "question", label: "Question" },
+  { value: "guide", label: "Guide" },
 ];
 
 export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
@@ -27,17 +37,17 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
   const [richContent, setRichContent] = useState<Record<string, unknown>>({});
-  const [categoryId, setCategoryId] = useState<string>('');
-  const [postType, setPostType] = useState<ForumPostType>('discussion');
-  const [imageUrl, setImageUrl] = useState('');
+  const [categoryId, setCategoryId] = useState<string>("");
+  const [postType, setPostType] = useState<ForumPostType>("discussion");
+  const [imageUrl, setImageUrl] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim() || !categoryId) {
-      setError('Please fill in all required fields');
+      setError("Please fill in all required fields");
       return;
     }
 
@@ -46,13 +56,16 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
 
     const supabase = createClient();
 
-    const slug = title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/(^-|-$)/g, '') + '-' + Date.now();
+    const slug =
+      title
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "") +
+      "-" +
+      Date.now();
 
     const { data, error: insertError } = await supabase
-      .from('forum')
+      .from("forum")
       .insert({
         profile_id: userId,
         forum_post_name: title,
@@ -64,7 +77,7 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
         slug,
         forum_published: true,
       })
-      .select('slug')
+      .select("slug")
       .single();
 
     if (insertError) {
@@ -79,9 +92,7 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="p-4 bg-destructive/10 text-destructive rounded-lg text-sm">
-          {error}
-        </div>
+        <div className="p-4 bg-destructive/10 text-destructive rounded-lg text-sm">{error}</div>
       )}
 
       {/* Title */}
@@ -168,7 +179,7 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
         </Button>
         <Button type="submit" disabled={submitting}>
           <FaPaperPlane className="mr-2 h-4 w-4" />
-          {submitting ? 'Publishing...' : 'Publish Post'}
+          {submitting ? "Publishing..." : "Publish Post"}
         </Button>
       </div>
     </form>

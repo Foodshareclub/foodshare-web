@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import React, { Component } from "react";
 import { detectStorageError, clearSupabaseStorage } from "@/utils/storageErrorHandler";
 import { Button } from "@/components/ui/button";
-import { FaExclamationCircle } from 'react-icons/fa';
+import { AlertCircle } from "lucide-react";
 
 interface Props {
   children: ReactNode;
@@ -83,7 +83,7 @@ export class StorageErrorBoundary extends Component<Props, State> {
         <div className="flex items-center justify-center min-h-screen bg-background p-4">
           <div className="max-w-[600px] w-full p-6 rounded-lg border-2 border-red-500/30 bg-red-500/10 dark:bg-red-500/5">
             <div className="flex items-start gap-4">
-              <FaExclamationCircle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-1" />
+              <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-1" />
               <div className="flex flex-col gap-3 flex-1">
                 <h2 className="text-xl font-bold text-foreground">Application Storage Error</h2>
                 <div className="space-y-3">

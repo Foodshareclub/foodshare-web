@@ -1,5 +1,19 @@
 {
   "0": "{0}",
+  "categories": {
+    "food": "Nourriture",
+    "things": "Objets",
+    "borrow": "Emprunter",
+    "wanted": "Recherché",
+    "foodbanks": "Banques alimentaires",
+    "fridges": "Frigos",
+    "organisations": "Organisations",
+    "volunteers": "Bénévoles",
+    "zerowaste": "Zéro déchet",
+    "vegan": "Végan",
+    "challenges": "Défis",
+    "forum": "Forum"
+  },
   "0_views": "{0} vues",
   "buttonvalue": "{buttonValue}",
   "text": "{text}",

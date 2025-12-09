@@ -1,5 +1,19 @@
 {
   "0": "{0}",
+  "categories": {
+    "food": "Їжа",
+    "things": "Речі",
+    "borrow": "Позичити",
+    "wanted": "Шукаю",
+    "foodbanks": "Банки їжі",
+    "fridges": "Холодильники",
+    "organisations": "Організації",
+    "volunteers": "Волонтери",
+    "zerowaste": "Zero Waste",
+    "vegan": "Веганське",
+    "challenges": "Виклики",
+    "forum": "Форум"
+  },
   "0_views": "{0} переглядів",
   "buttonvalue": "{buttonValue}",
   "text": "{text}",

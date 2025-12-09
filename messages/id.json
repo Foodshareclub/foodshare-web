@@ -1,5 +1,19 @@
 {
   "0": "{0}",
+  "categories": {
+    "food": "Makanan",
+    "things": "Barang",
+    "borrow": "Pinjam",
+    "wanted": "Dicari",
+    "foodbanks": "Bank Makanan",
+    "fridges": "Kulkas",
+    "organisations": "Organisasi",
+    "volunteers": "Relawan",
+    "zerowaste": "Zero Waste",
+    "vegan": "Vegan",
+    "challenges": "Tantangan",
+    "forum": "Forum"
+  },
   "0_views": "{0} tampilan",
   "buttonvalue": "{buttonValue}",
   "text": "{text}",
@@ -46,8 +60,7 @@
   "autoselect_smart_routing": "Pilih otomatis (Routing Cerdas)",
   "autoselect_uses_smart_routing_to_choose_the_best_available_provider": "Pilih otomatis menggunakan routing cerdas untuk memilih penyedia terbaik yang tersedia",
   "autoswitch_at_specific_times": "Beralih otomatis pada waktu tertentu",
-  "automatically_selects_best_provider_based_on_email_type_and_availability": "Secara otomatis memilih penyedia terbaik berdasarkan jenis email dan ketersediaan"
-,
+  "automatically_selects_best_provider_based_on_email_type_and_availability": "Secara otomatis memilih penyedia terbaik berdasarkan jenis email dan ketersediaan",
   "available": "Tersedia",
   "available_hours": "Jam Tersedia",
   "available_time": "Waktu Tersedia",
@@ -100,8 +113,7 @@
   "comments": "Komentar",
   "community_hub": "Pusat Komunitas",
   "complete_setup": "Selesaikan Pengaturan",
-  "completing_sign_in": "Menyelesaikan masuk..."
-,
+  "completing_sign_in": "Menyelesaikan masuk...",
   "condition": "Kondisi",
   "congratulations_you_guys_made_it": "Selamat, kalian berhasil!",
   "connect_share_tips_and_discuss_with_fellow_food_sharers_ask_questions_share_guides_and_help_build_a_": "Terhubung, berbagi tips dan diskusi dengan sesama pembagi makanan. Ajukan pertanyaan, bagikan panduan, dan bantu membangun komunitas berkelanjutan.",
@@ -298,8 +310,7 @@
   "quick_response_time": "Waktu Respons Cepat",
   "quick_templates": "Template Cepat",
   "quota_check": "Pemeriksaan Kuota",
-  "quota_status": "Status Kuota"
-,
+  "quota_status": "Status Kuota",
   "realtime_circuit_breaker_status_and_health_metrics": "Status circuit breaker dan metrik kesehatan real-time",
   "reason_for_flagging_required": "Alasan penandaan (wajib)...",
   "reason_for_rejection_required": "Alasan penolakan (wajib)...",
@@ -403,8 +414,7 @@
   "templates": "Template",
   "text_size": "Ukuran Teks",
   "thank_you_for_your_feedback_its_very_important_for_us": "Terima kasih atas umpan balik Anda, sangat penting bagi kami!",
-  "thank_you_for_your_feedback": "Terima kasih atas umpan balik Anda!"
-,
+  "thank_you_for_your_feedback": "Terima kasih atas umpan balik Anda!",
   "the_email_crm_encountered_an_error_please_try_refreshing_the_page_or_contact_support_if_the_problem_": "Email CRM mengalami error. Silakan coba refresh halaman atau hubungi dukungan jika masalah berlanjut.",
   "these_backup_codes_allow_you_to_access_your_account_if_you_lose_access_to_your_phone_or_email_keep_t": "Kode cadangan ini memungkinkan Anda mengakses akun jika kehilangan akses ke ponsel atau email. Simpan dengan aman!",
   "this_discussion_is_locked_new_comments_are_not_allowed": "Diskusi ini dikunci. Komentar baru tidak diizinkan.",

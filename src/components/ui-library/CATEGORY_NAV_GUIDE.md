@@ -4,11 +4,39 @@
 
 The category navigation component provides a clean, Airbnb-style horizontal navigation bar with categories, search, and filter buttons.
 
+## Centralized Categories
+
+Categories are defined in `@/constants/categories.ts` and use i18n translation keys for labels:
+
+```typescript
+import { CATEGORIES, CategoryId, getCategoryById, DEFAULT_CATEGORY } from "@/constants/categories";
+
+// CATEGORIES structure:
+// { id: 'food', labelKey: 'categories.food', icon: '🍎' }
+```
+
+**Built-in Categories (Order: Food basics → Community resources → Lifestyle → Engagement → Forum):**
+
+| ID            | Icon | Translation Key          |
+| ------------- | ---- | ------------------------ |
+| food          | 🍎   | categories.food          |
+| things        | 🎁   | categories.things        |
+| borrow        | 🔧   | categories.borrow        |
+| wanted        | 📦   | categories.wanted        |
+| foodbanks     | 🏠   | categories.foodbanks     |
+| fridges       | ❄️   | categories.fridges       |
+| zerowaste     | ♻️   | categories.zerowaste     |
+| vegan         | 🌱   | categories.vegan         |
+| organisations | 🏛️   | categories.organisations |
+| volunteers    | 🙌🏻   | categories.volunteers    |
+| challenges    | 🏆   | categories.challenges    |
+| forum         | 💬   | categories.forum         |
+
 ## Components
 
 ### 1. FoodShareCategoryNav (Pre-configured)
 
-Ready-to-use component with FoodShare categories.
+Ready-to-use component with FoodShare categories. Uses centralized `CATEGORIES` constant and `next-intl` for translations.
 
 ```tsx
 import { FoodShareCategoryNav } from "@/components/airbnb";
@@ -26,23 +54,6 @@ function MyPage() {
   );
 }
 ```
-
-**Built-in Categories:**
-
-Order: Food basics → Community resources → Special interests → Challenges → Forum
-
-- Food 🍎
-- Things 🎁
-- Borrow 🔧
-- Wanted 📦
-- FoodBanks 🏠
-- Fridges ❄️
-- Organisations 🏛️
-- Volunteers 🙌🏻
-- Challenges 🏆
-- Zero Waste ♻️
-- Vegan 🌱
-- Community 🌐
 
 ### 2. AirbnbCategoryNav (Customizable)
 
@@ -96,9 +107,17 @@ function MyPage() {
 ### Category Type
 
 ```typescript
+// Centralized category type (from @/constants/categories)
 interface Category {
+  id: CategoryId; // Unique identifier (type-safe)
+  labelKey: string; // i18n translation key (e.g., 'categories.food')
+  icon: string; // Emoji icon
+}
+
+// For custom categories with AirbnbCategoryNav
+interface CustomCategory {
   id: string; // Unique identifier
-  label: string; // Display text
+  label: string; // Display text (direct, not i18n key)
   icon: React.ReactNode | string; // Icon (emoji or component)
 }
 ```
@@ -283,10 +302,12 @@ const handleCategoryChange = useCallback((id: string) => {
 const MemoizedNav = React.memo(FoodShareCategoryNav);
 ```
 
-3. **Lazy load categories** if you have many:
+3. **Categories are centralized** - no need to memoize:
 
 ```tsx
-const categories = useMemo(() => loadCategories(), []);
+// Categories are imported from @/constants/categories
+// They're defined as `const` and don't need useMemo
+import { CATEGORIES } from "@/constants/categories";
 ```
 
 ## Troubleshooting

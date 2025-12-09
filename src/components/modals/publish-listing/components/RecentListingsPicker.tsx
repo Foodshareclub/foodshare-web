@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FaCopy, FaHistory } from "react-icons/fa";
-import { IoMdClose } from "react-icons/io";
+import { Copy, History, X } from "lucide-react";
 import { RECENT_LISTINGS_KEY } from "../constants";
 import type { RecentListing } from "../types";
 
@@ -11,7 +10,10 @@ interface RecentListingsPickerProps {
   onClose: () => void;
 }
 
-export const RecentListingsPicker: React.FC<RecentListingsPickerProps> = ({ onSelect, onClose }) => {
+export const RecentListingsPicker: React.FC<RecentListingsPickerProps> = ({
+  onSelect,
+  onClose,
+}) => {
   const [recentListings, setRecentListings] = useState<RecentListing[]>([]);
 
   useEffect(() => {
@@ -28,11 +30,9 @@ export const RecentListingsPicker: React.FC<RecentListingsPickerProps> = ({ onSe
   if (recentListings.length === 0) {
     return (
       <div className="p-3 rounded-lg bg-muted/50 text-center">
-        <FaHistory className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
+        <History className="h-8 w-8 mx-auto text-muted-foreground/50 mb-2" />
         <p className="text-sm text-muted-foreground">No recent listings</p>
-        <p className="text-xs text-muted-foreground/70">
-          Your published listings will appear here
-        </p>
+        <p className="text-xs text-muted-foreground/70">Your published listings will appear here</p>
       </div>
     );
   }
@@ -41,7 +41,7 @@ export const RecentListingsPicker: React.FC<RecentListingsPickerProps> = ({ onSe
     <div className="p-3 rounded-lg bg-muted/50 space-y-2 animate-in slide-in-from-top-2 duration-300">
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium flex items-center gap-2">
-          <FaHistory className="h-4 w-4 text-muted-foreground" />
+          <History className="h-4 w-4 text-muted-foreground" />
           Copy from Recent
         </p>
         <button
@@ -49,7 +49,7 @@ export const RecentListingsPicker: React.FC<RecentListingsPickerProps> = ({ onSe
           onClick={onClose}
           className="p-1 rounded hover:bg-muted transition-colors"
         >
-          <IoMdClose className="h-4 w-4 text-muted-foreground" />
+          <X className="h-4 w-4 text-muted-foreground" />
         </button>
       </div>
       <div className="space-y-1.5 max-h-40 overflow-y-auto">
@@ -66,7 +66,7 @@ export const RecentListingsPicker: React.FC<RecentListingsPickerProps> = ({ onSe
                 {listing.description.slice(0, 50)}...
               </p>
             </div>
-            <FaCopy className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <Copy className="h-4 w-4 text-muted-foreground flex-shrink-0" />
           </button>
         ))}
       </div>

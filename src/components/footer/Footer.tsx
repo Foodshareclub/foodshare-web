@@ -10,7 +10,7 @@ import feedback from "@/assets/feedbackIcon.svg";
 
 import { PATH } from "@/utils";
 import LanguageSelector from "@/components/languageSelector/LanguageSelector";
-import { FaGlobe } from 'react-icons/fa';
+import { Globe } from "lucide-react";
 
 type SocialButtonProps = {
   children: ReactNode;
@@ -44,16 +44,14 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer
-      className="fixed bottom-0 z-[1] w-full border-t border-border/30 text-foreground py-1 px-7 xl:px-20 gpu glass"
-    >
+    <footer className="fixed bottom-0 z-[1] w-full border-t border-border/30 text-foreground py-1 px-7 xl:px-20 gpu glass">
       <div className="flex flex-col md:flex-row justify-center md:justify-between items-center gap-2">
         <div className="flex items-center gap-4">
           <p className="text-base md:text-[16px] text-[10px]">
             © {currentYear} Foodshare Club, Limited. All rights reserved
           </p>
           <div className="hidden md:flex items-center gap-1.5">
-            <FaGlobe className="w-4 h-4 text-muted-foreground" />
+            <Globe className="w-4 h-4 text-muted-foreground" />
             <LanguageSelector />
           </div>
         </div>

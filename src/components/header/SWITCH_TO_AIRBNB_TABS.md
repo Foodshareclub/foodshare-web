@@ -98,18 +98,26 @@ const USE_AIRBNB_TABS = true; // Change to false to use old tabs
 
 ## Customization
 
-If you want to use your existing SVG icons instead of emojis, you can modify `FoodShareCategoryNav.tsx`:
+Categories are now centralized in `@/constants/categories.ts` and use i18n translation keys. To customize icons, modify the centralized constant:
 
 ```tsx
-// Replace emoji icons with your SVG imports
-import FoodIcon from "@/assets/food.svg";
-import ThingsIcon from "@/assets/things.svg";
-// ... etc
-
-const categories = [
-  { id: "food", label: "Food", icon: <Image src={FoodIcon} />, ariaLabel: "Browse food items" },
+// In @/constants/categories.ts
+export const CATEGORIES = [
+  { id: "food", labelKey: "categories.food", icon: "🍎" },
   // ... etc
-];
+] as const;
+```
+
+For custom SVG icons, create a wrapper component that maps the centralized categories:
+
+```tsx
+import { CATEGORIES } from "@/constants/categories";
+import FoodIcon from "@/assets/food.svg";
+
+const categoryIcons: Record<string, React.ReactNode> = {
+  food: <Image src={FoodIcon} alt="" />,
+  // ... etc
+};
 ```
 
 ## Rollback

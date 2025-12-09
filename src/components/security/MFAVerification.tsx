@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * MFA Verification Component
@@ -14,8 +14,7 @@
 import React, { useState, useEffect } from "react";
 
 import { MFAService } from "@/lib/security/mfa";
-import { AiOutlineLoading3Quarters } from 'react-icons/ai';
-import { FaExclamationCircle, FaShieldAlt, FaSyncAlt } from 'react-icons/fa';
+import { Loader2, AlertCircle, Shield, RefreshCw } from "lucide-react";
 
 interface MFAVerificationProps {
   profileId: string;
@@ -159,10 +158,8 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
       <div className="max-w-md mx-auto p-6 bg-card rounded-lg shadow-lg">
         <div className="space-y-6">
           <div className="text-center">
-            <FaShieldAlt className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
-            <h2 className="text-2xl font-bold text-foreground mb-2">
-              "Enter Backup Code"
-            </h2>
+            <Shield className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
+            <h2 className="text-2xl font-bold text-foreground mb-2">"Enter Backup Code"</h2>
             <p className="text-muted-foreground">
               "Use one of your backup codes to verify your identity"
             </p>
@@ -170,7 +167,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
 
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-              <FaExclamationCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-red-800">{error}</p>
             </div>
           )}
@@ -202,7 +199,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
             >
               {isLoading ? (
                 <>
-                  <AiOutlineLoading3Quarters className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   "Verifying..."
                 </>
               ) : (
@@ -220,20 +217,16 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
     <div className="max-w-md mx-auto p-6 bg-card rounded-lg shadow-lg">
       <div className="space-y-6">
         <div className="text-center">
-          <FaShieldAlt className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
-          <h2 className="text-2xl font-bold text-foreground mb-2">
-            "Two-Factor Authentication"
-          </h2>
+          <Shield className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
+          <h2 className="text-2xl font-bold text-foreground mb-2">"Two-Factor Authentication"</h2>
           <p className="text-muted-foreground">
-            
-              Enter the verification code sent to your {method === "email" ? "email" : "phone"}
-            
+            Enter the verification code sent to your {method === "email" ? "email" : "phone"}
           </p>
         </div>
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-            <FaExclamationCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm text-red-800">{error}</p>
               {attemptsRemaining <= 2 && attemptsRemaining > 0 && (
@@ -270,7 +263,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
         >
           {isLoading ? (
             <>
-              <AiOutlineLoading3Quarters className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
               "Verifying..."
             </>
           ) : (
@@ -284,7 +277,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
             disabled={!canResend || isLoading}
             className="text-primary hover:text-primary/80 disabled:text-muted-foreground disabled:cursor-not-allowed flex items-center gap-1"
           >
-            <FaSyncAlt className="w-4 h-4" />
+            <RefreshCw className="w-4 h-4" />
             {canResend ? "Resend Code" : "Resend in {resendCountdown}s"}
           </button>
 

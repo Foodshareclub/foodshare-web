@@ -1,13 +1,9 @@
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { z } from 'zod';
-import {
-  type ActionResult,
-  withErrorHandling,
-  validateWithSchema,
-} from '@/lib/errors';
-import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
+import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
+import { type ActionResult, withErrorHandling, validateWithSchema } from "@/lib/errors";
+import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 
 // NOTE: Data functions (getProducts, getAllProducts, etc.) should be imported
 // directly from '@/lib/data/products' - they cannot be re-exported from a
@@ -18,15 +14,15 @@ import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 // ============================================================================
 
 const createProductSchema = z.object({
-  post_name: z.string().min(1, 'Name is required').max(200),
-  post_description: z.string().min(1, 'Description is required').max(5000),
-  post_type: z.string().min(1, 'Type is required'),
-  post_address: z.string().min(1, 'Address is required'),
+  post_name: z.string().min(1, "Name is required").max(200),
+  post_description: z.string().min(1, "Description is required").max(5000),
+  post_type: z.string().min(1, "Type is required"),
+  post_address: z.string().min(1, "Address is required"),
   available_hours: z.string().optional(),
   transportation: z.string().optional(),
   condition: z.string().optional(),
   images: z.array(z.string()).optional().default([]),
-  profile_id: z.string().uuid('Invalid user ID'),
+  profile_id: z.string().uuid("Invalid user ID"),
 });
 
 const updateProductSchema = createProductSchema.partial().extend({
@@ -39,15 +35,15 @@ const updateProductSchema = createProductSchema.partial().extend({
 export async function createProduct(formData: FormData): Promise<ActionResult<{ id: number }>> {
   // Parse form data
   const rawData = {
-    post_name: formData.get('post_name') as string,
-    post_description: formData.get('post_description') as string,
-    post_type: formData.get('post_type') as string,
-    post_address: formData.get('post_address') as string,
-    available_hours: formData.get('available_hours') as string,
-    transportation: formData.get('transportation') as string,
-    condition: formData.get('condition') as string,
-    images: JSON.parse(formData.get('images') as string || '[]'),
-    profile_id: formData.get('profile_id') as string,
+    post_name: formData.get("post_name") as string,
+    post_description: formData.get("post_description") as string,
+    post_type: formData.get("post_type") as string,
+    post_address: formData.get("post_address") as string,
+    available_hours: formData.get("available_hours") as string,
+    transportation: formData.get("transportation") as string,
+    condition: formData.get("condition") as string,
+    images: JSON.parse((formData.get("images") as string) || "[]"),
+    profile_id: formData.get("profile_id") as string,
   };
 
   // Validate with Zod
@@ -60,9 +56,9 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     const supabase = await createClient();
 
     const { data, error } = await supabase
-      .from('posts')
+      .from("posts")
       .insert({ ...validation.data, is_active: true })
-      .select('id')
+      .select("id")
       .single();
 
     if (error) throw new Error(error.message);
@@ -79,7 +75,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     }
 
     return { id: data.id };
-  }, 'createProduct');
+  }, "createProduct");
 }
 
 /**
@@ -92,18 +88,24 @@ export async function updateProduct(
   // Parse form data
   const rawData: Record<string, unknown> = {};
   const fields = [
-    'post_name', 'post_description', 'post_type', 'post_address',
-    'available_hours', 'transportation', 'condition', 'is_active'
+    "post_name",
+    "post_description",
+    "post_type",
+    "post_address",
+    "available_hours",
+    "transportation",
+    "condition",
+    "is_active",
   ];
 
   for (const field of fields) {
     const value = formData.get(field);
     if (value !== null) {
-      rawData[field] = field === 'is_active' ? value === 'true' : value;
+      rawData[field] = field === "is_active" ? value === "true" : value;
     }
   }
 
-  const images = formData.get('images');
+  const images = formData.get("images");
   if (images) {
     rawData.images = JSON.parse(images as string);
   }
@@ -119,15 +121,12 @@ export async function updateProduct(
 
     // Get current product info for cache invalidation
     const { data: currentProduct } = await supabase
-      .from('posts')
-      .select('post_type, profile_id')
-      .eq('id', id)
+      .from("posts")
+      .select("post_type, profile_id")
+      .eq("id", id)
       .single();
 
-    const { error } = await supabase
-      .from('posts')
-      .update(validation.data)
-      .eq('id', id);
+    const { error } = await supabase.from("posts").update(validation.data).eq("id", id);
 
     if (error) throw new Error(error.message);
 
@@ -152,7 +151,7 @@ export async function updateProduct(
     }
 
     return undefined;
-  }, 'updateProduct');
+  }, "updateProduct");
 }
 
 /**
@@ -164,15 +163,12 @@ export async function deleteProduct(id: number): Promise<ActionResult<undefined>
 
     // Get product info before deletion for cache invalidation
     const { data: product } = await supabase
-      .from('posts')
-      .select('post_type, profile_id')
-      .eq('id', id)
+      .from("posts")
+      .select("post_type, profile_id")
+      .eq("id", id)
       .single();
 
-    const { error } = await supabase
-      .from('posts')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from("posts").delete().eq("id", id);
 
     if (error) throw new Error(error.message);
 
@@ -193,7 +189,20 @@ export async function deleteProduct(id: number): Promise<ActionResult<undefined>
     }
 
     return undefined;
-  }, 'deleteProduct');
+  }, "deleteProduct");
+}
+
+/**
+ * Refresh user listings cache
+ * Call this to force a cache refresh for the current user's listings
+ */
+export async function refreshUserListingsCache(userId: string): Promise<ActionResult<undefined>> {
+  return withErrorHandling(async () => {
+    // Invalidate user-specific cache
+    invalidateTag(CACHE_TAGS.USER_PRODUCTS(userId));
+    invalidateTag(CACHE_TAGS.PRODUCTS);
+    return undefined;
+  }, "refreshUserListingsCache");
 }
 
 /**
@@ -208,29 +217,26 @@ export async function toggleProductFavorite(
 
     // Check if already favorited
     const { data: existing } = await supabase
-      .from('favorites')
-      .select('id')
-      .eq('product_id', productId)
-      .eq('user_id', userId)
+      .from("favorites")
+      .select("id")
+      .eq("product_id", productId)
+      .eq("user_id", userId)
       .single();
 
     if (existing) {
       // Remove favorite
-      const { error } = await supabase
-        .from('favorites')
-        .delete()
-        .eq('id', existing.id);
+      const { error } = await supabase.from("favorites").delete().eq("id", existing.id);
 
       if (error) throw new Error(error.message);
       return { isFavorited: false };
     } else {
       // Add favorite
       const { error } = await supabase
-        .from('favorites')
+        .from("favorites")
         .insert({ product_id: productId, user_id: userId });
 
       if (error) throw new Error(error.message);
       return { isFavorited: true };
     }
-  }, 'toggleProductFavorite');
+  }, "toggleProductFavorite");
 }

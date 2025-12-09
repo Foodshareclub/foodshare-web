@@ -339,8 +339,8 @@ If port 5173 is in use:
 # Kill process on port 5173
 npx kill-port 5173
 
-# Or use a different port
-npm run dev -- --port 3000
+# Or use a different port (default is 3000)
+npm run dev -- --port 3001
 ```
 
 ### Hooks Not Running

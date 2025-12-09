@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useRef } from 'react';
-import { cn } from '@/lib/utils';
+import { useEffect, useState, useRef } from "react";
+import { cn } from "@/lib/utils";
 
 interface HealthStatus {
-  status: 'healthy' | 'degraded' | 'maintenance';
+  status: "healthy" | "degraded" | "maintenance";
   database: boolean;
   message?: string;
   retryAfter?: number;
 }
 
-const INITIAL_POLL_INTERVAL = 30000; // 30s between checks
-const MAX_POLL_INTERVAL = 60000;
-const CONSECUTIVE_FAILURES_THRESHOLD = 2; // Only show banner after 2 consecutive failures
+const INITIAL_POLL_INTERVAL = 60000; // 60s between checks (was 30s)
+const MAX_POLL_INTERVAL = 120000; // 2 minutes max
+const CONSECUTIVE_FAILURES_THRESHOLD = 3; // Only show banner after 3 consecutive failures (was 2)
 
 export function MaintenanceBanner(): React.ReactElement | null {
   const [status, setStatus] = useState<HealthStatus | null>(null);
@@ -26,10 +26,10 @@ export function MaintenanceBanner(): React.ReactElement | null {
     setIsChecking(true);
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s timeout for slow cold starts
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout to allow for retries in health API
 
-      const res = await fetch('/api/health', {
-        cache: 'no-store',
+      const res = await fetch("/api/health", {
+        cache: "no-store",
         signal: controller.signal,
       });
 
@@ -38,19 +38,19 @@ export function MaintenanceBanner(): React.ReactElement | null {
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         consecutiveFailures.current += 1;
-        
+
         setStatus({
-          status: 'maintenance',
+          status: "maintenance",
           database: false,
           message: data.message,
           retryAfter: data.retryAfter || 30,
         });
-        
+
         // Only show banner after consecutive failures
         if (consecutiveFailures.current >= CONSECUTIVE_FAILURES_THRESHOLD) {
           setShowBanner(true);
         }
-        
+
         setPollInterval(Math.min(pollInterval * 1.5, MAX_POLL_INTERVAL));
         return;
       }
@@ -58,7 +58,7 @@ export function MaintenanceBanner(): React.ReactElement | null {
       const data: HealthStatus = await res.json();
       setStatus(data);
 
-      if (data.status === 'healthy') {
+      if (data.status === "healthy") {
         consecutiveFailures.current = 0;
         setShowBanner(false);
         setDismissed(false);
@@ -75,17 +75,17 @@ export function MaintenanceBanner(): React.ReactElement | null {
       }
     } catch {
       consecutiveFailures.current += 1;
-      
+
       // Only show banner after consecutive failures (not on first timeout)
       if (consecutiveFailures.current >= CONSECUTIVE_FAILURES_THRESHOLD) {
         setStatus({
-          status: 'maintenance',
+          status: "maintenance",
           database: false,
           retryAfter: 30,
         });
         setShowBanner(true);
       }
-      
+
       setPollInterval(Math.min(pollInterval * 1.5, MAX_POLL_INTERVAL));
     } finally {
       setIsChecking(false);
@@ -117,20 +117,20 @@ export function MaintenanceBanner(): React.ReactElement | null {
   }, [pollInterval]);
 
   // Don't show if healthy, dismissed, or not enough consecutive failures
-  if (!showBanner || !status || status.status === 'healthy' || dismissed) {
+  if (!showBanner || !status || status.status === "healthy" || dismissed) {
     return null;
   }
 
-  const isMaintenance = status.status === 'maintenance';
+  const isMaintenance = status.status === "maintenance";
 
   return (
     <div
       role="alert"
       aria-live="polite"
       className={cn(
-        'fixed top-0 left-0 right-0 z-50',
-        'bg-gradient-to-r from-amber-400 via-orange-400 to-amber-400',
-        'shadow-lg'
+        "fixed top-0 left-0 right-0 z-50",
+        "bg-gradient-to-r from-amber-400 via-orange-400 to-amber-400",
+        "shadow-lg"
       )}
     >
       <div className="max-w-4xl mx-auto px-4 py-3">
@@ -151,7 +151,7 @@ export function MaintenanceBanner(): React.ReactElement | null {
                 </>
               ) : (
                 <>
-                  Things might be a bit slow right now.{' '}
+                  Things might be a bit slow right now.{" "}
                   <span className="opacity-90"> We&apos;re on it! 🚀</span>
                 </>
               )}
@@ -165,14 +165,14 @@ export function MaintenanceBanner(): React.ReactElement | null {
               onClick={checkHealth}
               disabled={isChecking}
               className={cn(
-                'p-2 rounded-full transition-all duration-200',
-                'hover:bg-white/20 active:scale-95',
-                'text-white/90 hover:text-white'
+                "p-2 rounded-full transition-all duration-200",
+                "hover:bg-white/20 active:scale-95",
+                "text-white/90 hover:text-white"
               )}
               aria-label="Check status"
             >
               <svg
-                className={cn('w-4 h-4', isChecking && 'animate-spin')}
+                className={cn("w-4 h-4", isChecking && "animate-spin")}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -190,9 +190,9 @@ export function MaintenanceBanner(): React.ReactElement | null {
             <button
               onClick={() => setDismissed(true)}
               className={cn(
-                'p-2 rounded-full transition-all duration-200',
-                'hover:bg-white/20 active:scale-95',
-                'text-white/90 hover:text-white'
+                "p-2 rounded-full transition-all duration-200",
+                "hover:bg-white/20 active:scale-95",
+                "text-white/90 hover:text-white"
               )}
               aria-label="Dismiss"
             >
@@ -213,7 +213,7 @@ export function MaintenanceBanner(): React.ReactElement | null {
           <div className="mt-2 h-1 bg-white/20 rounded-full overflow-hidden">
             <div
               className="h-full bg-white/60 rounded-full animate-pulse"
-              style={{ width: '60%' }}
+              style={{ width: "60%" }}
             />
           </div>
         )}

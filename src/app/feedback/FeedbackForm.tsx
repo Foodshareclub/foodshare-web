@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { MdCheckCircle, MdError, MdSend } from "react-icons/md";
+import { CheckCircle, AlertCircle, Send } from "lucide-react";
 import { submitFeedback, type FeedbackType } from "@/app/actions/feedback";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,9 +88,9 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
           <div className="p-3">
             <div className="flex items-center gap-2">
               {submitStatus === "success" ? (
-                <MdCheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+                <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 flex-shrink-0" />
               ) : (
-                <MdError className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
+                <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0" />
               )}
               <span className="font-semibold text-sm text-foreground">
                 {submitStatus === "success"
@@ -109,9 +109,7 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
             <div className="flex flex-col gap-4">
               {/* Feedback Type */}
               <div>
-                <label className="block text-xs font-semibold mb-1.5 text-foreground">
-                  Type
-                </label>
+                <label className="block text-xs font-semibold mb-1.5 text-foreground">Type</label>
                 <select
                   {...register("feedback_type")}
                   className="w-full h-10 px-3 border border-input rounded-lg text-sm text-foreground bg-background cursor-pointer hover:border-muted-foreground focus:outline-none focus:border-foreground focus:ring-1 focus:ring-foreground"
@@ -126,18 +124,14 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
               {/* Name & Email - Two columns */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold mb-1.5 text-foreground">
-                    Name
-                  </label>
+                  <label className="block text-xs font-semibold mb-1.5 text-foreground">Name</label>
                   <Input
                     {...register("name", {
                       required: "Required",
                       minLength: { value: 2, message: "Too short" },
                     })}
                     placeholder="Your name"
-                    className={`h-10 rounded-lg ${
-                      errors.name ? "border-destructive" : ""
-                    }`}
+                    className={`h-10 rounded-lg ${errors.name ? "border-destructive" : ""}`}
                   />
                   {errors.name && (
                     <p className="text-destructive text-xs mt-0.5">{errors.name.message}</p>
@@ -158,9 +152,7 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
                     })}
                     type="email"
                     placeholder="your@email.com"
-                    className={`h-10 rounded-lg ${
-                      errors.email ? "border-destructive" : ""
-                    }`}
+                    className={`h-10 rounded-lg ${errors.email ? "border-destructive" : ""}`}
                   />
                   {errors.email && (
                     <p className="text-destructive text-xs mt-0.5">{errors.email.message}</p>
@@ -179,9 +171,7 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
                     minLength: { value: 5, message: "Too short" },
                   })}
                   placeholder="Brief description"
-                  className={`h-10 rounded-lg ${
-                    errors.subject ? "border-destructive" : ""
-                  }`}
+                  className={`h-10 rounded-lg ${errors.subject ? "border-destructive" : ""}`}
                 />
                 {errors.subject && (
                   <p className="text-destructive text-xs mt-0.5">{errors.subject.message}</p>
@@ -220,7 +210,7 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
                 ) : (
                   <>
                     Send feedback
-                    <MdSend className="ml-2 w-4 h-4" />
+                    <Send className="ml-2 w-4 h-4" />
                   </>
                 )}
               </Button>

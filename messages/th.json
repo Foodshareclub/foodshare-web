@@ -1,5 +1,19 @@
 {
   "0": "{0}",
+  "categories": {
+    "food": "อาหาร",
+    "things": "สิ่งของ",
+    "borrow": "ยืม",
+    "wanted": "ต้องการ",
+    "foodbanks": "ธนาคารอาหาร",
+    "fridges": "ตู้เย็น",
+    "organisations": "องค์กร",
+    "volunteers": "อาสาสมัคร",
+    "zerowaste": "Zero Waste",
+    "vegan": "วีแกน",
+    "challenges": "ความท้าทาย",
+    "forum": "ฟอรัม"
+  },
   "0_views": "{0} views",
   "buttonvalue": "{buttonValue}",
   "text": "{text}",

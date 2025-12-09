@@ -1,5 +1,19 @@
 {
   "0": "{0}",
+  "categories": {
+    "food": "Essen",
+    "things": "Sachen",
+    "borrow": "Ausleihen",
+    "wanted": "Gesucht",
+    "foodbanks": "Tafeln",
+    "fridges": "Kühlschränke",
+    "organisations": "Organisationen",
+    "volunteers": "Freiwillige",
+    "zerowaste": "Zero Waste",
+    "vegan": "Vegan",
+    "challenges": "Challenges",
+    "forum": "Forum"
+  },
   "0_views": "{0} Aufrufe",
   "buttonvalue": "{buttonValue}",
   "text": "{text}",

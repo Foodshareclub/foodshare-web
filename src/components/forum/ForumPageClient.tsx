@@ -1,13 +1,13 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { useTranslations } from 'next-intl';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ForumPostCard } from '@/components/forum';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import { useState } from "react";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { motion, AnimatePresence } from "framer-motion";
+import { ForumPostCard } from "@/components/forum";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 import {
   Select,
@@ -15,39 +15,60 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import type { ForumPost, ForumCategory, ForumTag } from '@/api/forumAPI';
-import type { ForumStats, LeaderboardUser, SortOption } from '@/lib/data/forum';
+} from "@/components/ui/select";
+import type { ForumPost, ForumCategory, ForumTag } from "@/api/forumAPI";
+import type { ForumStats, LeaderboardUser, SortOption } from "@/lib/data/forum";
 import {
-  FaPlus,
-  FaSearch,
-  FaFire,
-  FaClock,
-  FaCommentDots,
-  FaHeart,
-  FaChartLine,
-  FaFilter,
-  FaTimes,
-  FaUsers,
-  FaLightbulb,
-  FaQuestion,
-  FaTrophy,
-  FaStar,
-  FaMedal,
-  FaCrown,
-  FaArrowUp,
-  FaArrowRight,
-  FaHashtag,
-} from 'react-icons/fa';
+  Plus,
+  Search,
+  Flame,
+  Clock,
+  MessageCircle,
+  Heart,
+  TrendingUp,
+  Filter,
+  X,
+  Users,
+  Lightbulb,
+  HelpCircle,
+  Trophy,
+  Star,
+  Medal,
+  Crown,
+  ArrowUp,
+  ArrowRight,
+  Hash,
+} from "lucide-react";
+
+// Icon aliases for consistency
+const FaPlus = Plus;
+const FaSearch = Search;
+const FaFire = Flame;
+const FaClock = Clock;
+const FaCommentDots = MessageCircle;
+const FaHeart = Heart;
+const FaChartLine = TrendingUp;
+const FaFilter = Filter;
+const FaTimes = X;
+const FaUsers = Users;
+const FaLightbulb = Lightbulb;
+const FaQuestion = HelpCircle;
+const FaTrophy = Trophy;
+const FaStar = Star;
+const FaMedal = Medal;
+const FaCrown = Crown;
+const FaArrowUp = ArrowUp;
+const FaArrowRight = ArrowRight;
+const FaHashtag = Hash;
 
 // ============================================================================
 // Constants
 // ============================================================================
 
 const LEADERBOARD_BADGES = [
-  { icon: FaCrown, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
-  { icon: FaMedal, color: 'text-gray-400', bg: 'bg-gray-400/10' },
-  { icon: FaMedal, color: 'text-amber-600', bg: 'bg-amber-600/10' },
+  { icon: FaCrown, color: "text-yellow-500", bg: "bg-yellow-500/10" },
+  { icon: FaMedal, color: "text-gray-400", bg: "bg-gray-400/10" },
+  { icon: FaMedal, color: "text-amber-600", bg: "bg-amber-600/10" },
 ] as const;
 
 // ============================================================================
@@ -92,7 +113,9 @@ function StatCard({
           <Icon className="w-5 h-5 text-white" />
         </div>
         <div>
-          <p className="text-2xl font-bold text-white">{typeof value === 'number' ? value.toLocaleString() : value}</p>
+          <p className="text-2xl font-bold text-white">
+            {typeof value === "number" ? value.toLocaleString() : value}
+          </p>
           <div className="flex items-center gap-2">
             <p className="text-sm text-white/70">{label}</p>
             {trend !== undefined && trend > 0 && (
@@ -109,10 +132,10 @@ function StatCard({
 
 function TrendingPost({ post, rank }: { post: ForumPost; rank: number }) {
   const getRankStyle = (r: number): string => {
-    if (r === 1) return 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white';
-    if (r === 2) return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white';
-    if (r === 3) return 'bg-gradient-to-r from-amber-600 to-amber-700 text-white';
-    return 'bg-muted text-muted-foreground';
+    if (r === 1) return "bg-gradient-to-r from-yellow-500 to-amber-500 text-white";
+    if (r === 2) return "bg-gradient-to-r from-gray-400 to-gray-500 text-white";
+    if (r === 3) return "bg-gradient-to-r from-amber-600 to-amber-700 text-white";
+    return "bg-muted text-muted-foreground";
   };
 
   return (
@@ -120,7 +143,9 @@ function TrendingPost({ post, rank }: { post: ForumPost; rank: number }) {
       whileHover={{ x: 4 }}
       className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent/50 transition-colors cursor-pointer group"
     >
-      <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${getRankStyle(rank)}`}>
+      <span
+        className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${getRankStyle(rank)}`}
+      >
         {rank}
       </span>
       <div className="flex-1 min-w-0">
@@ -145,17 +170,30 @@ function TrendingPost({ post, rank }: { post: ForumPost; rank: number }) {
 }
 
 function LeaderboardCard({ user, rank }: { user: LeaderboardUser; rank: number }) {
-  const badge = LEADERBOARD_BADGES[rank - 1] || { icon: FaStar, color: 'text-primary', bg: 'bg-primary/10' };
+  const badge = LEADERBOARD_BADGES[rank - 1] || {
+    icon: FaStar,
+    color: "text-primary",
+    bg: "bg-primary/10",
+  };
   const BadgeIcon = badge.icon;
 
   return (
-    <motion.div whileHover={{ scale: 1.02 }} className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent/50 transition-all">
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent/50 transition-all"
+    >
       <div className={`relative ${badge.bg} p-1 rounded-full`}>
         {user.avatar_url ? (
-          <img src={user.avatar_url} alt={user.nickname || 'User'} className="w-10 h-10 rounded-full object-cover" />
+          <img
+            src={user.avatar_url}
+            alt={user.nickname || "User"}
+            className="w-10 h-10 rounded-full object-cover"
+          />
         ) : (
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
-            <span className="text-sm font-bold text-white">{user.nickname?.charAt(0).toUpperCase() || '?'}</span>
+            <span className="text-sm font-bold text-white">
+              {user.nickname?.charAt(0).toUpperCase() || "?"}
+            </span>
           </div>
         )}
         {rank <= 3 && (
@@ -165,7 +203,9 @@ function LeaderboardCard({ user, rank }: { user: LeaderboardUser; rank: number }
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold truncate">{user.nickname || user.first_name || 'Anonymous'}</p>
+        <p className="text-sm font-semibold truncate">
+          {user.nickname || user.first_name || "Anonymous"}
+        </p>
         <p className="text-xs text-muted-foreground">
           {user.postCount} posts · {user.likesReceived} likes
         </p>
@@ -189,19 +229,28 @@ function ActivityItem({ post }: { post: ForumPost }) {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-start gap-3 py-2">
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="flex items-start gap-3 py-2"
+    >
       {post.profiles?.avatar_url ? (
         <img src={post.profiles.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
       ) : (
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
-          <span className="text-xs font-bold text-white">{post.profiles?.nickname?.charAt(0) || '?'}</span>
+          <span className="text-xs font-bold text-white">
+            {post.profiles?.nickname?.charAt(0) || "?"}
+          </span>
         </div>
       )}
       <div className="flex-1 min-w-0">
         <p className="text-sm">
-          <span className="font-medium">{post.profiles?.nickname || 'Someone'}</span>
+          <span className="font-medium">{post.profiles?.nickname || "Someone"}</span>
           <span className="text-muted-foreground"> posted </span>
-          <Link href={`/forum/${post.slug || post.id}`} className="font-medium hover:text-primary truncate">
+          <Link
+            href={`/forum/${post.slug || post.id}`}
+            className="font-medium hover:text-primary truncate"
+          >
             {post.forum_post_name?.slice(0, 30)}...
           </Link>
         </p>
@@ -231,16 +280,19 @@ function CategoryCard({
       aria-label={`Filter by category: ${category.name}`}
       className={`w-full text-left p-3 rounded-xl transition-all ${
         isSelected
-          ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/25'
-          : 'glass hover:bg-accent'
+          ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/25"
+          : "glass hover:bg-accent"
       }`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: category.color || '#4CAF50' }} />
+          <div
+            className="w-3 h-3 rounded-full shadow-sm"
+            style={{ backgroundColor: category.color || "#4CAF50" }}
+          />
           <span className="font-medium">{category.name}</span>
         </div>
-        <Badge variant={isSelected ? 'secondary' : 'outline'} className="text-xs">
+        <Badge variant={isSelected ? "secondary" : "outline"} className="text-xs">
           {postCount ?? category.posts_count ?? 0}
         </Badge>
       </div>
@@ -248,7 +300,15 @@ function CategoryCard({
   );
 }
 
-function TagPill({ tag, isSelected, onClick }: { tag: ForumTag; isSelected: boolean; onClick: () => void }) {
+function TagPill({
+  tag,
+  isSelected,
+  onClick,
+}: {
+  tag: ForumTag;
+  isSelected: boolean;
+  onClick: () => void;
+}) {
   return (
     <motion.button
       whileHover={{ scale: 1.05 }}
@@ -258,8 +318,8 @@ function TagPill({ tag, isSelected, onClick }: { tag: ForumTag; isSelected: bool
       aria-label={`Filter by tag: ${tag.name}`}
       className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
         isSelected
-          ? 'bg-primary text-primary-foreground shadow-md'
-          : 'bg-muted hover:bg-accent border border-transparent hover:border-primary/20'
+          ? "bg-primary text-primary-foreground shadow-md"
+          : "bg-muted hover:bg-accent border border-transparent hover:border-primary/20"
       }`}
       style={!isSelected ? { borderLeft: `3px solid ${tag.color}` } : {}}
     >
@@ -299,7 +359,6 @@ function QuickActionCard({
   );
 }
 
-
 // ============================================================================
 // Main Component
 // ============================================================================
@@ -314,8 +373,8 @@ export function ForumPageClient({
   recentActivity,
 }: ForumPageClientProps) {
   const t = useTranslations();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortOption>('latest');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("latest");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [selectedPostType, setSelectedPostType] = useState<string | null>(null);
@@ -349,30 +408,35 @@ export function ForumPageClient({
   // Sort filtered posts
   const sortedPosts = [...filteredPosts].sort((a, b) => {
     switch (sortBy) {
-      case 'hot':
+      case "hot":
         return (b.hot_score || 0) - (a.hot_score || 0);
-      case 'top':
+      case "top":
         return (b.forum_likes_counter || 0) - (a.forum_likes_counter || 0);
-      case 'unanswered':
-        if (a.post_type === 'question' && !a.best_answer_id) return -1;
-        if (b.post_type === 'question' && !b.best_answer_id) return 1;
+      case "unanswered":
+        if (a.post_type === "question" && !a.best_answer_id) return -1;
+        if (b.post_type === "question" && !b.best_answer_id) return 1;
         return 0;
       default:
-        return new Date(b.forum_post_created_at).getTime() - new Date(a.forum_post_created_at).getTime();
+        return (
+          new Date(b.forum_post_created_at).getTime() - new Date(a.forum_post_created_at).getTime()
+        );
     }
   });
 
-  const hasActiveFilters = selectedCategory || selectedTags.length > 0 || selectedPostType || searchQuery;
+  const hasActiveFilters =
+    selectedCategory || selectedTags.length > 0 || selectedPostType || searchQuery;
 
   const clearFilters = () => {
     setSelectedCategory(null);
     setSelectedTags([]);
     setSelectedPostType(null);
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   const toggleTag = (tagId: number) => {
-    setSelectedTags((prev) => (prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]));
+    setSelectedTags((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
+    );
   };
 
   return (
@@ -383,13 +447,19 @@ export function ForumPageClient({
         <div className="container mx-auto px-4 py-12 relative z-10">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div>
-              <h1 className="text-4xl font-bold mb-2">{t('forum_title', { defaultValue: 'Community Forum' })}</h1>
-              <p className="text-white/80 text-lg">{t('forum_subtitle', { defaultValue: 'Share ideas, ask questions, connect with the community' })}</p>
+              <h1 className="text-4xl font-bold mb-2">
+                {t("forum_title", { defaultValue: "Community Forum" })}
+              </h1>
+              <p className="text-white/80 text-lg">
+                {t("forum_subtitle", {
+                  defaultValue: "Share ideas, ask questions, connect with the community",
+                })}
+              </p>
             </div>
             <Link href="/forum/new">
               <Button size="lg" variant="secondary" className="gap-2 shadow-lg">
                 <FaPlus className="w-4 h-4" />
-                {t('forum_new_post', { defaultValue: 'New Post' })}
+                {t("forum_new_post", { defaultValue: "New Post" })}
               </Button>
             </Link>
           </div>
@@ -405,15 +475,17 @@ export function ForumPageClient({
             <div className="grid grid-cols-2 gap-3">
               <QuickActionCard
                 icon={FaLightbulb}
-                title={t('forum_quick_actions_idea', { defaultValue: 'Share Idea' })}
-                description={t('forum_quick_actions_idea_desc', { defaultValue: 'Start a discussion' })}
+                title={t("forum_quick_actions_idea", { defaultValue: "Share Idea" })}
+                description={t("forum_quick_actions_idea_desc", {
+                  defaultValue: "Start a discussion",
+                })}
                 href="/forum/new?type=discussion"
                 gradient="from-amber-500 to-orange-500"
               />
               <QuickActionCard
                 icon={FaQuestion}
-                title={t('forum_quick_actions_question', { defaultValue: 'Ask Question' })}
-                description={t('forum_quick_actions_question_desc', { defaultValue: 'Get help' })}
+                title={t("forum_quick_actions_question", { defaultValue: "Ask Question" })}
+                description={t("forum_quick_actions_question_desc", { defaultValue: "Get help" })}
                 href="/forum/new?type=question"
                 gradient="from-blue-500 to-indigo-500"
               />
@@ -423,11 +495,18 @@ export function ForumPageClient({
             <div className="bg-card rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
                 <FaFilter className="w-4 h-4 text-primary" />
-                {t('forum_categories', { defaultValue: 'Categories' })}
+                {t("forum_categories", { defaultValue: "Categories" })}
               </h3>
               <div className="space-y-2">
                 <CategoryCard
-                  category={{ id: 0, name: t('forum_all_categories', { defaultValue: 'All Categories' }), slug: 'all', color: '#6B7280' } as ForumCategory}
+                  category={
+                    {
+                      id: 0,
+                      name: t("forum_all_categories", { defaultValue: "All Categories" }),
+                      slug: "all",
+                      color: "#6B7280",
+                    } as ForumCategory
+                  }
                   isSelected={selectedCategory === null}
                   onClick={() => setSelectedCategory(null)}
                   postCount={posts.length}
@@ -447,11 +526,16 @@ export function ForumPageClient({
             <div className="bg-card rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
                 <FaHashtag className="w-4 h-4 text-primary" />
-                {t('forum_popular_tags', { defaultValue: 'Popular Tags' })}
+                {t("forum_popular_tags", { defaultValue: "Popular Tags" })}
               </h3>
               <div className="flex flex-wrap gap-2">
                 {tags.slice(0, 10).map((tag) => (
-                  <TagPill key={tag.id} tag={tag} isSelected={selectedTags.includes(tag.id)} onClick={() => toggleTag(tag.id)} />
+                  <TagPill
+                    key={tag.id}
+                    tag={tag}
+                    isSelected={selectedTags.includes(tag.id)}
+                    onClick={() => toggleTag(tag.id)}
+                  />
                 ))}
               </div>
             </div>
@@ -460,7 +544,7 @@ export function ForumPageClient({
             <div className="bg-card rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
                 <FaTrophy className="w-4 h-4 text-yellow-500" />
-                {t('forum_leaderboard', { defaultValue: 'Top Contributors' })}
+                {t("forum_leaderboard", { defaultValue: "Top Contributors" })}
               </h3>
               <div className="space-y-1">
                 {leaderboard.map((user, idx) => (
@@ -478,7 +562,7 @@ export function ForumPageClient({
                 <div className="relative flex-1">
                   <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
-                    placeholder={t('forum_search_placeholder', { defaultValue: 'Search posts...' })}
+                    placeholder={t("forum_search_placeholder", { defaultValue: "Search posts..." })}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10"
@@ -492,27 +576,36 @@ export function ForumPageClient({
                     <SelectContent>
                       <SelectItem value="latest">
                         <span className="flex items-center gap-2">
-                          <FaClock className="w-3 h-3" /> {t('forum_sort_latest', { defaultValue: 'Latest' })}
+                          <FaClock className="w-3 h-3" />{" "}
+                          {t("forum_sort_latest", { defaultValue: "Latest" })}
                         </span>
                       </SelectItem>
                       <SelectItem value="hot">
                         <span className="flex items-center gap-2">
-                          <FaFire className="w-3 h-3" /> {t('forum_sort_hot', { defaultValue: 'Hot' })}
+                          <FaFire className="w-3 h-3" />{" "}
+                          {t("forum_sort_hot", { defaultValue: "Hot" })}
                         </span>
                       </SelectItem>
                       <SelectItem value="top">
                         <span className="flex items-center gap-2">
-                          <FaHeart className="w-3 h-3" /> {t('forum_sort_top', { defaultValue: 'Top' })}
+                          <FaHeart className="w-3 h-3" />{" "}
+                          {t("forum_sort_top", { defaultValue: "Top" })}
                         </span>
                       </SelectItem>
                       <SelectItem value="unanswered">
                         <span className="flex items-center gap-2">
-                          <FaQuestion className="w-3 h-3" /> {t('forum_sort_unanswered', { defaultValue: 'Unanswered' })}
+                          <FaQuestion className="w-3 h-3" />{" "}
+                          {t("forum_sort_unanswered", { defaultValue: "Unanswered" })}
                         </span>
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button variant="outline" size="icon" onClick={() => setShowFilters(!showFilters)} className="lg:hidden">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="lg:hidden"
+                  >
                     <FaFilter className="w-4 h-4" />
                   </Button>
                 </div>
@@ -521,11 +614,16 @@ export function ForumPageClient({
               {/* Active Filters */}
               {hasActiveFilters && (
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t">
-                  <span className="text-sm text-muted-foreground">{t('forum_active_filters', { defaultValue: 'Active filters:' })}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t("forum_active_filters", { defaultValue: "Active filters:" })}
+                  </span>
                   {selectedCategory && (
                     <Badge variant="secondary" className="gap-1">
                       {categories.find((c) => c.id === selectedCategory)?.name}
-                      <FaTimes className="w-3 h-3 cursor-pointer" onClick={() => setSelectedCategory(null)} />
+                      <FaTimes
+                        className="w-3 h-3 cursor-pointer"
+                        onClick={() => setSelectedCategory(null)}
+                      />
                     </Badge>
                   )}
                   {selectedTags.map((tagId) => {
@@ -533,12 +631,15 @@ export function ForumPageClient({
                     return tag ? (
                       <Badge key={tagId} variant="secondary" className="gap-1">
                         #{tag.name}
-                        <FaTimes className="w-3 h-3 cursor-pointer" onClick={() => toggleTag(tagId)} />
+                        <FaTimes
+                          className="w-3 h-3 cursor-pointer"
+                          onClick={() => toggleTag(tagId)}
+                        />
                       </Badge>
                     ) : null;
                   })}
                   <Button variant="ghost" size="sm" onClick={clearFilters}>
-                    {t('forum_clear_all', { defaultValue: 'Clear all' })}
+                    {t("forum_clear_all", { defaultValue: "Clear all" })}
                   </Button>
                 </div>
               )}
@@ -547,10 +648,7 @@ export function ForumPageClient({
             {/* Posts Grid */}
             <AnimatePresence mode="popLayout">
               {sortedPosts.length > 0 ? (
-                <motion.div
-                  layout
-                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                >
+                <motion.div layout className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {sortedPosts.map((post) => (
                     <motion.div
                       key={post.id}
@@ -566,14 +664,18 @@ export function ForumPageClient({
               ) : (
                 <div className="text-center py-16">
                   <FaCommentDots className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">{t('forum_no_posts', { defaultValue: 'No posts found' })}</h3>
+                  <h3 className="text-xl font-semibold mb-2">
+                    {t("forum_no_posts", { defaultValue: "No posts found" })}
+                  </h3>
                   <p className="text-muted-foreground mb-4">
-                    {t('forum_no_posts_desc', { defaultValue: 'Try adjusting your filters or be the first to post!' })}
+                    {t("forum_no_posts_desc", {
+                      defaultValue: "Try adjusting your filters or be the first to post!",
+                    })}
                   </p>
                   <Link href="/forum/new">
                     <Button>
                       <FaPlus className="w-4 h-4 mr-2" />
-                      {t('forum_create_first', { defaultValue: 'Create First Post' })}
+                      {t("forum_create_first", { defaultValue: "Create First Post" })}
                     </Button>
                   </Link>
                 </div>
@@ -587,7 +689,7 @@ export function ForumPageClient({
             <div className="bg-card rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
                 <FaFire className="w-4 h-4 text-orange-500" />
-                {t('forum_trending', { defaultValue: 'Trending' })}
+                {t("forum_trending", { defaultValue: "Trending" })}
               </h3>
               <div className="space-y-1">
                 {trendingPosts.map((post, idx) => (
@@ -600,7 +702,7 @@ export function ForumPageClient({
             <div className="bg-card rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
                 <FaClock className="w-4 h-4 text-blue-500" />
-                {t('forum_recent_activity', { defaultValue: 'Recent Activity' })}
+                {t("forum_recent_activity", { defaultValue: "Recent Activity" })}
               </h3>
               <div className="divide-y">
                 {recentActivity.map((post) => (

@@ -24,11 +24,11 @@ Fetches messages for food sharing rooms. Used by `ChatPageClient` when switching
 
 **Query Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `roomId` | `string` | Yes | Food sharing room ID |
-| `limit` | `number` | No | Messages to fetch (default: 50) |
-| `offset` | `number` | No | Pagination offset (default: 0) |
+| Parameter | Type     | Required | Description                     |
+| --------- | -------- | -------- | ------------------------------- |
+| `roomId`  | `string` | Yes      | Food sharing room ID            |
+| `limit`   | `number` | No       | Messages to fetch (default: 50) |
+| `offset`  | `number` | No       | Pagination offset (default: 0)  |
 
 **Success Response (200):**
 
@@ -43,17 +43,17 @@ Fetches messages for food sharing rooms. Used by `ChatPageClient` when switching
     isOwn: boolean;
     senderName?: string;
     senderAvatar?: string;
-  }>
+  }>;
 }
 ```
 
 **Error Responses:**
 
-| Status | Body | Description |
-|--------|------|-------------|
-| 400 | `{ error: 'roomId is required' }` | Missing required parameter |
-| 401 | `{ error: 'Unauthorized' }` | User not authenticated |
-| 500 | `{ error: 'Failed to fetch messages' }` | Server error |
+| Status | Body                                    | Description                |
+| ------ | --------------------------------------- | -------------------------- |
+| 400    | `{ error: 'roomId is required' }`       | Missing required parameter |
+| 401    | `{ error: 'Unauthorized' }`             | User not authenticated     |
+| 500    | `{ error: 'Failed to fetch messages' }` | Server error               |
 
 **Example Usage:**
 
@@ -76,6 +76,7 @@ Located: `src/api/productAPI.ts`
 > ⚠️ **Deprecated:** This API layer is deprecated. Use `@/lib/data/products` for server-side data fetching instead. This file is kept for backward compatibility with client-side TanStack Query hooks.
 >
 > **Migration guide:**
+>
 > - Server Components: `import { getProducts } from '@/lib/data/products'`
 > - Server Actions: `import { createClient } from '@/lib/supabase/server'`
 > - Client (realtime only): Keep using this file
@@ -332,8 +333,8 @@ interface PaginatedResult<T> {
 }
 
 interface PaginationOptions {
-  cursor?: number | null;  // Last seen ID for cursor-based pagination
-  limit?: number;          // Items per page (default: 20, max: 100)
+  cursor?: number | null; // Last seen ID for cursor-based pagination
+  limit?: number; // Items per page (default: 20, max: 100)
 }
 ```
 
@@ -342,16 +343,16 @@ interface PaginationOptions {
 ### Get Products by Type
 
 ```typescript
-import { getProducts } from '@/lib/data/products';
+import { getProducts } from "@/lib/data/products";
 
 // First page (cached)
-const products = await getProducts('food');
+const products = await getProducts("food");
 
 // With pagination
-const products = await getProducts('food', { limit: 10 });
+const products = await getProducts("food", { limit: 10 });
 
 // Subsequent pages (cursor-based)
-const nextPage = await getProducts('food', { cursor: lastProductId, limit: 10 });
+const nextPage = await getProducts("food", { cursor: lastProductId, limit: 10 });
 ```
 
 **Parameters:**
@@ -368,15 +369,15 @@ const nextPage = await getProducts('food', { cursor: lastProductId, limit: 10 })
 ### Get Products Paginated (Infinite Scroll)
 
 ```typescript
-import { getProductsPaginated } from '@/lib/data/products';
+import { getProductsPaginated } from "@/lib/data/products";
 
-const result = await getProductsPaginated('food', { limit: 20 });
+const result = await getProductsPaginated("food", { limit: 20 });
 // { data: [...], nextCursor: 42, hasMore: true }
 
 // Load more
-const nextResult = await getProductsPaginated('food', { 
-  cursor: result.nextCursor, 
-  limit: 20 
+const nextResult = await getProductsPaginated("food", {
+  cursor: result.nextCursor,
+  limit: 20,
 });
 ```
 
@@ -400,8 +401,8 @@ export default async function FoodPage() {
   const { data, nextCursor, hasMore } = await getProductsPaginated('food', { limit: 20 });
 
   return (
-    <ProductGrid 
-      initialProducts={data} 
+    <ProductGrid
+      initialProducts={data}
       initialCursor={nextCursor}
       hasMore={hasMore}
       productType="food"
@@ -415,7 +416,7 @@ export default async function FoodPage() {
 ### Get All Products
 
 ```typescript
-import { getAllProducts } from '@/lib/data/products';
+import { getAllProducts } from "@/lib/data/products";
 
 const products = await getAllProducts();
 ```
@@ -429,7 +430,7 @@ const products = await getAllProducts();
 ### Get Product by ID
 
 ```typescript
-import { getProductById } from '@/lib/data/products';
+import { getProductById } from "@/lib/data/products";
 
 const product = await getProductById(42);
 ```
@@ -447,10 +448,10 @@ const product = await getProductById(42);
 ### Get Product Locations (Map)
 
 ```typescript
-import { getProductLocations, getAllProductLocations } from '@/lib/data/products';
+import { getProductLocations, getAllProductLocations } from "@/lib/data/products";
 
 // By type
-const foodLocations = await getProductLocations('food');
+const foodLocations = await getProductLocations("food");
 
 // All types
 const allLocations = await getAllProductLocations();
@@ -465,7 +466,7 @@ const allLocations = await getAllProductLocations();
 ### Get User Products
 
 ```typescript
-import { getUserProducts } from '@/lib/data/products';
+import { getUserProducts } from "@/lib/data/products";
 
 const userProducts = await getUserProducts(userId);
 ```
@@ -483,13 +484,13 @@ const userProducts = await getUserProducts(userId);
 ### Search Products
 
 ```typescript
-import { searchProducts } from '@/lib/data/products';
+import { searchProducts } from "@/lib/data/products";
 
 // Search all types
-const results = await searchProducts('apple', 'all');
+const results = await searchProducts("apple", "all");
 
 // Search specific type
-const foodResults = await searchProducts('apple', 'food');
+const foodResults = await searchProducts("apple", "food");
 ```
 
 **Parameters:**
@@ -506,7 +507,7 @@ const foodResults = await searchProducts('apple', 'food');
 ### Get Popular Product IDs
 
 ```typescript
-import { getPopularProductIds } from '@/lib/data/products';
+import { getPopularProductIds } from "@/lib/data/products";
 
 const ids = await getPopularProductIds(50);
 ```
@@ -545,7 +546,7 @@ Server-side data fetching functions for challenges with caching. Uses `unstable_
 ### Get All Challenges
 
 ```typescript
-import { getChallenges } from '@/lib/data/challenges';
+import { getChallenges } from "@/lib/data/challenges";
 
 const challenges = await getChallenges();
 ```
@@ -596,7 +597,7 @@ export default async function ChallengePage() {
 ### Get Challenge by ID
 
 ```typescript
-import { getChallengeById } from '@/lib/data/challenges';
+import { getChallengeById } from "@/lib/data/challenges";
 
 const challenge = await getChallengeById(42);
 ```
@@ -612,9 +613,9 @@ const challenge = await getChallengeById(42);
 ### Get Challenges by Difficulty
 
 ```typescript
-import { getChallengesByDifficulty } from '@/lib/data/challenges';
+import { getChallengesByDifficulty } from "@/lib/data/challenges";
 
-const challenges = await getChallengesByDifficulty('easy');
+const challenges = await getChallengesByDifficulty("easy");
 ```
 
 **Parameters:**
@@ -628,7 +629,7 @@ const challenges = await getChallengesByDifficulty('easy');
 ### Get User Challenges
 
 ```typescript
-import { getUserChallenges } from '@/lib/data/challenges';
+import { getUserChallenges } from "@/lib/data/challenges";
 
 const challenges = await getUserChallenges(userId);
 ```
@@ -644,7 +645,7 @@ const challenges = await getUserChallenges(userId);
 ### Get Popular Challenges
 
 ```typescript
-import { getPopularChallenges } from '@/lib/data/challenges';
+import { getPopularChallenges } from "@/lib/data/challenges";
 
 const popular = await getPopularChallenges(10);
 ```
@@ -689,7 +690,7 @@ Server actions for challenge interactions. These handle user participation and e
 ### Accept Challenge
 
 ```typescript
-import { acceptChallenge } from '@/app/actions/challenges';
+import { acceptChallenge } from "@/app/actions/challenges";
 
 const result = await acceptChallenge(challengeId);
 ```
@@ -731,7 +732,7 @@ export function AcceptChallengeButton({ challengeId }: { challengeId: number }) 
 ### Check Challenge Acceptance
 
 ```typescript
-import { hasAcceptedChallenge } from '@/app/actions/challenges';
+import { hasAcceptedChallenge } from "@/app/actions/challenges";
 
 const isAccepted = await hasAcceptedChallenge(challengeId);
 ```
@@ -756,7 +757,7 @@ if (hasAccepted) {
 ### Toggle Challenge Like
 
 ```typescript
-import { toggleChallengeLike } from '@/app/actions/challenges';
+import { toggleChallengeLike } from "@/app/actions/challenges";
 
 const result = await toggleChallengeLike(challengeId);
 ```
@@ -798,7 +799,7 @@ Server actions for authentication and user data. These provide graceful degradat
 ### Get Current User
 
 ```typescript
-import { getUser } from '@/app/actions/auth';
+import { getUser } from "@/app/actions/auth";
 
 const user = await getUser();
 ```
@@ -824,6 +825,7 @@ interface AuthUser {
 **Graceful Degradation:**
 
 Returns `null` (instead of throwing) when:
+
 - User is not authenticated
 - Auth service returns an error
 - Database is unavailable (maintenance mode)
@@ -856,13 +858,13 @@ export default async function ChallengeDetailPage({ params }: PageProps) {
 
 **Behavior During Maintenance:**
 
-| Scenario | Result |
-|----------|--------|
-| User authenticated, DB healthy | Returns full `AuthUser` with profile |
+| Scenario                                | Result                                  |
+| --------------------------------------- | --------------------------------------- |
+| User authenticated, DB healthy          | Returns full `AuthUser` with profile    |
 | User authenticated, profile fetch fails | Returns `AuthUser` with `profile: null` |
-| User not authenticated | Returns `null` |
-| Auth service error | Returns `null` |
-| Database unavailable | Returns `null` |
+| User not authenticated                  | Returns `null`                          |
+| Auth service error                      | Returns `null`                          |
+| Database unavailable                    | Returns `null`                          |
 
 **Note:** Components should handle `null` user gracefully, showing login prompts or limited functionality rather than assuming an error occurred.
 
@@ -877,7 +879,7 @@ Low-level auth wrappers that gracefully handle database unavailability during ma
 ### Safe Get Session
 
 ```typescript
-import { safeGetSession } from '@/lib/supabase/safe-auth';
+import { safeGetSession } from "@/lib/supabase/safe-auth";
 
 const session = await safeGetSession();
 ```
@@ -891,7 +893,7 @@ Returns `null` if DB is unavailable or auth fails.
 ### Safe Get User
 
 ```typescript
-import { safeGetUser } from '@/lib/supabase/safe-auth';
+import { safeGetUser } from "@/lib/supabase/safe-auth";
 
 const user = await safeGetUser();
 ```
@@ -905,7 +907,7 @@ Returns `null` if DB is unavailable or auth fails.
 ### Safe Get User With Profile
 
 ```typescript
-import { safeGetUserWithProfile } from '@/lib/supabase/safe-auth';
+import { safeGetUserWithProfile } from "@/lib/supabase/safe-auth";
 
 const user = await safeGetUserWithProfile();
 ```
@@ -934,7 +936,7 @@ Returns user with profile data. If profile fetch fails, returns user with `profi
 ### Safe Check Is Admin
 
 ```typescript
-import { safeCheckIsAdmin } from '@/lib/supabase/safe-auth';
+import { safeCheckIsAdmin } from "@/lib/supabase/safe-auth";
 
 const isAdmin = await safeCheckIsAdmin();
 ```
@@ -948,7 +950,7 @@ Returns `false` if DB is unavailable, user not authenticated, or user is not adm
 ### Is Database Available
 
 ```typescript
-import { isDatabaseAvailable } from '@/lib/supabase/safe-auth';
+import { isDatabaseAvailable } from "@/lib/supabase/safe-auth";
 
 const available = await isDatabaseAvailable();
 ```
@@ -961,29 +963,29 @@ Quick check if database is reachable. Useful for conditional rendering or featur
 
 ### When to Use Safe Auth vs Regular Auth
 
-| Use Case | Recommended |
-|----------|-------------|
-| Server Components (pages) | User auth handled by Navbar in root layout |
-| Server Actions requiring user | `getUser()` from `@/app/actions/auth` |
-| Middleware auth checks | `safeGetSession()` |
-| Admin route protection | `safeCheckIsAdmin()` |
-| Feature flags based on DB status | `isDatabaseAvailable()` |
-| Custom auth flows | `safeGetUser()` or `safeGetUserWithProfile()` |
+| Use Case                         | Recommended                                   |
+| -------------------------------- | --------------------------------------------- |
+| Server Components (pages)        | User auth handled by Navbar in root layout    |
+| Server Actions requiring user    | `getUser()` from `@/app/actions/auth`         |
+| Middleware auth checks           | `safeGetSession()`                            |
+| Admin route protection           | `safeCheckIsAdmin()`                          |
+| Feature flags based on DB status | `isDatabaseAvailable()`                       |
+| Custom auth flows                | `safeGetUser()` or `safeGetUserWithProfile()` |
 
 **Example (Middleware-style check):**
 
 ```typescript
-import { safeGetSession, isDatabaseAvailable } from '@/lib/supabase/safe-auth';
+import { safeGetSession, isDatabaseAvailable } from "@/lib/supabase/safe-auth";
 
 export async function checkAccess() {
   // First check if DB is even available
-  if (!await isDatabaseAvailable()) {
-    return { allowed: false, reason: 'maintenance' };
+  if (!(await isDatabaseAvailable())) {
+    return { allowed: false, reason: "maintenance" };
   }
 
   const session = await safeGetSession();
   if (!session) {
-    return { allowed: false, reason: 'unauthenticated' };
+    return { allowed: false, reason: "unauthenticated" };
   }
 
   return { allowed: true, userId: session.user.id };
@@ -1005,7 +1007,7 @@ Server-side data fetching functions for the unified chat system. Supports both f
 #### Get User Chat Rooms
 
 ```typescript
-import { getUserChatRooms } from '@/lib/data/chat';
+import { getUserChatRooms } from "@/lib/data/chat";
 
 const rooms = await getUserChatRooms(userId);
 ```
@@ -1015,7 +1017,7 @@ Returns all chat rooms where the user is either sharer or requester, with relate
 #### Get Chat Room
 
 ```typescript
-import { getChatRoom } from '@/lib/data/chat';
+import { getChatRoom } from "@/lib/data/chat";
 
 const room = await getChatRoom(roomId);
 ```
@@ -1025,7 +1027,7 @@ Returns a specific chat room by ID with all relations.
 #### Get or Create Chat Room
 
 ```typescript
-import { getOrCreateChatRoom } from '@/lib/data/chat';
+import { getOrCreateChatRoom } from "@/lib/data/chat";
 
 const room = await getOrCreateChatRoom(postId, sharerId, requesterId);
 ```
@@ -1035,7 +1037,7 @@ Finds existing room or creates a new one for the given post and participants.
 #### Get Chat Messages
 
 ```typescript
-import { getChatMessages } from '@/lib/data/chat';
+import { getChatMessages } from "@/lib/data/chat";
 
 const messages = await getChatMessages(roomId, limit, offset);
 ```
@@ -1045,7 +1047,7 @@ Returns paginated messages for a room in chronological order.
 #### Get Unread Message Count
 
 ```typescript
-import { getUnreadMessageCount } from '@/lib/data/chat';
+import { getUnreadMessageCount } from "@/lib/data/chat";
 
 const count = await getUnreadMessageCount(userId);
 ```
@@ -1059,7 +1061,7 @@ Returns the number of unread conversations for the user.
 #### Get User Forum Conversations
 
 ```typescript
-import { getUserForumConversations } from '@/lib/data/chat';
+import { getUserForumConversations } from "@/lib/data/chat";
 
 const conversations = await getUserForumConversations(userId);
 ```
@@ -1071,7 +1073,7 @@ Returns all forum conversations where the user is a participant (not archived, n
 #### Get Forum Conversation
 
 ```typescript
-import { getForumConversation } from '@/lib/data/chat';
+import { getForumConversation } from "@/lib/data/chat";
 
 const conversation = await getForumConversation(conversationId);
 ```
@@ -1081,12 +1083,13 @@ Returns a specific forum conversation by ID with participants and profiles.
 #### Get Forum Messages
 
 ```typescript
-import { getForumMessages } from '@/lib/data/chat';
+import { getForumMessages } from "@/lib/data/chat";
 
 const messages = await getForumMessages(conversationId, limit, offset);
 ```
 
 **Parameters:**
+
 - `conversationId` - Forum conversation UUID
 - `limit` - Number of messages (default: 50)
 - `offset` - Pagination offset (default: 0)
@@ -1096,7 +1099,7 @@ Returns paginated messages in chronological order (oldest first for display).
 #### Get or Create Forum Conversation
 
 ```typescript
-import { getOrCreateForumConversation } from '@/lib/data/chat';
+import { getOrCreateForumConversation } from "@/lib/data/chat";
 
 const conversation = await getOrCreateForumConversation(userId, otherUserId);
 ```
@@ -1104,6 +1107,7 @@ const conversation = await getOrCreateForumConversation(userId, otherUserId);
 Finds an existing 1:1 conversation between two users or creates a new one.
 
 **Behavior:**
+
 1. Searches for existing non-group conversation with exactly these two participants
 2. If found, returns the full conversation with profiles
 3. If not found, creates new conversation and adds both participants
@@ -1112,7 +1116,7 @@ Finds an existing 1:1 conversation between two users or creates a new one.
 #### Get Unread Forum Message Count
 
 ```typescript
-import { getUnreadForumMessageCount } from '@/lib/data/chat';
+import { getUnreadForumMessageCount } from "@/lib/data/chat";
 
 const count = await getUnreadForumMessageCount(userId);
 ```
@@ -1128,7 +1132,7 @@ Functions that combine both food sharing and forum chat systems.
 #### Get All User Chats
 
 ```typescript
-import { getAllUserChats, type UnifiedChatRoom } from '@/lib/data/chat';
+import { getAllUserChats, type UnifiedChatRoom } from "@/lib/data/chat";
 
 const chats = await getAllUserChats(userId);
 ```
@@ -1140,7 +1144,7 @@ Returns all chat rooms (both food sharing and forum) for a user, sorted by last 
 ```typescript
 type UnifiedChatRoom = {
   id: string;
-  type: 'food' | 'forum';
+  type: "food" | "forum";
   title: string;
   lastMessage: string | null;
   lastMessageTime: string | null;
@@ -1179,7 +1183,7 @@ export default async function ChatPage() {
 #### Get Total Unread Count
 
 ```typescript
-import { getTotalUnreadCount } from '@/lib/data/chat';
+import { getTotalUnreadCount } from "@/lib/data/chat";
 
 const count = await getTotalUnreadCount(userId);
 ```
@@ -1820,6 +1824,198 @@ const { data, error } = await adminAPI.getDashboardStats();
 
 ---
 
+## Admin Listings Data Layer
+
+Located: `src/lib/data/admin-listings.ts`
+
+Server-side data fetching functions for admin CRM listings management. Uses `unstable_cache` for optimal performance with tag-based invalidation.
+
+### Types
+
+```typescript
+interface AdminListing {
+  id: number;
+  profile_id: string;
+  post_name: string;
+  post_description: string | null;
+  post_type: string;
+  pickup_time: string | null;
+  available_hours: string | null;
+  post_address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  gif_url: string | null;
+  gif_url_2: string | null;
+  gif_url_3: string | null;
+  is_active: boolean;
+  post_arranged: boolean;
+  post_arranged_to: string | null;
+  post_arranged_at: string | null;
+  post_views: number;
+  post_like_counter: number;
+  created_at: string;
+  updated_at: string;
+  admin_notes: string | null;
+  status: "pending" | "approved" | "rejected" | "flagged";
+  profile: {
+    id: string;
+    first_name: string | null;
+    second_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+  } | null;
+}
+
+interface AdminListingsFilter {
+  status?: "all" | "pending" | "approved" | "rejected" | "flagged";
+  category?: string;
+  search?: string;
+  sortBy?: "created_at" | "updated_at" | "post_name" | "post_views";
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  limit?: number;
+}
+
+interface AdminListingsResult {
+  listings: AdminListing[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+interface ListingStats {
+  total: number;
+  active: number;
+  inactive: number;
+  arranged: number;
+  byCategory: Record<string, number>;
+}
+```
+
+---
+
+### Get Admin Listings
+
+```typescript
+import { getAdminListings, getCachedAdminListings } from "@/lib/data/admin-listings";
+
+// Direct fetch (no cache)
+const result = await getAdminListings({
+  status: "pending",
+  category: "food",
+  search: "apple",
+  sortBy: "created_at",
+  sortOrder: "desc",
+  page: 1,
+  limit: 20,
+});
+
+// Cached fetch (60s TTL)
+const cachedResult = await getCachedAdminListings({ status: "pending" });
+```
+
+**Parameters:** `AdminListingsFilter` (all optional)
+
+**Returns:** `AdminListingsResult`
+
+**Caching:** `getCachedAdminListings` uses `CACHE_TAGS.ADMIN_LISTINGS` and `CACHE_TAGS.ADMIN` with 60s TTL
+
+---
+
+### Get Admin Listing by ID
+
+```typescript
+import { getAdminListingById } from "@/lib/data/admin-listings";
+
+const listing = await getAdminListingById(42);
+```
+
+**Parameters:**
+
+- `id` - Listing ID (number)
+
+**Returns:** `AdminListing | null`
+
+**Caching:** None (direct fetch)
+
+---
+
+### Get Listing Stats
+
+```typescript
+import { getListingStats } from "@/lib/data/admin-listings";
+
+const stats = await getListingStats();
+// { total: 150, active: 120, inactive: 30, arranged: 25, byCategory: { food: 80, ... } }
+```
+
+**Returns:** `ListingStats`
+
+**Caching:** Uses `CACHE_TAGS.ADMIN_STATS` and `CACHE_TAGS.ADMIN` with 300s TTL
+
+---
+
+### Check Admin Role
+
+```typescript
+import { checkAdminRole } from "@/lib/data/admin-listings";
+
+const { isAdmin, roles } = await checkAdminRole(userId);
+// { isAdmin: true, roles: ['admin', 'volunteer'], jsonbRoles: { admin: true, volunteer: true } }
+```
+
+**Parameters:**
+
+- `userId` - User's profile ID (UUID)
+
+**Returns:** `{ isAdmin: boolean; roles: string[]; jsonbRoles: Record<string, boolean> }`
+
+**Behavior:**
+
+The function checks multiple role sources for backwards compatibility:
+
+1. **JSONB `role` field** (new system) - Checks `profiles.role` for `{ admin: true }`
+2. **Legacy `user_role` field** - Checks `profiles.user_role` for `'admin'` or `'superadmin'`
+3. **`user_roles` junction table** - Queries role assignments for `admin` or `superadmin` roles
+
+- `isAdmin` is `true` if any source indicates admin status
+- `roles` is a deduplicated array of all role names from all sources
+- `jsonbRoles` contains the raw JSONB role object from `profiles.role`
+- Returns `{ isAdmin: false, roles: [], jsonbRoles: {} }` on error
+
+**Example (Server Component):**
+
+```typescript
+// app/admin/listings/page.tsx
+import { getAdminListings, getListingStats, checkAdminRole } from '@/lib/data/admin-listings';
+import { getUser } from '@/app/actions/auth';
+import { redirect } from 'next/navigation';
+
+export default async function AdminListingsPage() {
+  const user = await getUser();
+  if (!user) redirect('/auth/login');
+
+  const { isAdmin } = await checkAdminRole(user.id);
+  if (!isAdmin) redirect('/');
+
+  const [{ listings, total, totalPages }, stats] = await Promise.all([
+    getAdminListings({ status: 'pending', limit: 20 }),
+    getListingStats(),
+  ]);
+
+  return (
+    <AdminListingsClient
+      initialListings={listings}
+      total={total}
+      totalPages={totalPages}
+      stats={stats}
+    />
+  );
+}
+```
+
+---
+
 ## Best Practices
 
 1. **Always handle errors**: Check `error` before using `data`
@@ -2099,7 +2295,7 @@ postgis.parsePostGISPoint(location: unknown)
 
 ```typescript
 interface PostGISPoint {
-  latitude: number;  // -90 to 90
+  latitude: number; // -90 to 90
   longitude: number; // -180 to 180
 }
 ```
@@ -2275,6 +2471,7 @@ await supabase.from("posts").insert({
 Located: `src/app/api/health/route.ts`
 
 Edge runtime endpoint that performs comprehensive health monitoring by checking:
+
 1. Direct database connectivity
 2. Supabase project health via Management API
 3. Supabase upgrade status (detects ongoing Postgres upgrades)
@@ -2290,6 +2487,7 @@ GET /api/health
 **Caching:** Disabled (`revalidate = 0`, `dynamic = 'force-dynamic'`)
 
 **Timeouts:**
+
 - Database check: 8 seconds (increased for cold-start on free tier)
 - Management API checks: 5 seconds
 
@@ -2297,19 +2495,19 @@ GET /api/health
 
 ```typescript
 interface HealthStatus {
-  status: 'healthy' | 'degraded' | 'maintenance';
+  status: "healthy" | "degraded" | "maintenance";
   database: boolean;
   timestamp: string;
   message?: string;
   retryAfter?: number; // seconds until next check recommended
   services: {
-    database: 'up' | 'down' | 'degraded';
-    auth: 'up' | 'down' | 'unknown';
-    storage: 'up' | 'down' | 'unknown';
+    database: "up" | "down" | "degraded";
+    auth: "up" | "down" | "unknown";
+    storage: "up" | "down" | "unknown";
   };
   upgradeStatus?: {
-    status: string;      // e.g., 'upgrading', 'COMPLETED', 'FAILED'
-    progress?: string;   // upgrade progress indicator
+    status: string; // e.g., 'upgrading', 'COMPLETED', 'FAILED'
+    progress?: string; // upgrade progress indicator
     targetVersion?: string; // target Postgres version
   };
 }
@@ -2317,14 +2515,15 @@ interface HealthStatus {
 
 **Response Codes:**
 
-| Status | Code | Description |
-|--------|------|-------------|
-| `healthy` | 200 | Database reachable, all services operational |
-| `maintenance` | 503 | Database unreachable, upgrade in progress, or services unhealthy |
+| Status        | Code | Description                                                      |
+| ------------- | ---- | ---------------------------------------------------------------- |
+| `healthy`     | 200  | Database reachable, all services operational                     |
+| `maintenance` | 503  | Database unreachable, upgrade in progress, or services unhealthy |
 
 **How It Works:**
 
 The endpoint performs three checks in parallel:
+
 1. **Direct DB connectivity** - REST API call to Supabase (`/rest/v1/profiles?select=id&limit=1`)
 2. **Project health** - Supabase Management API (`/v1/projects/{ref}/health?services=db,auth,storage`)
 3. **Upgrade status** - Supabase Management API (`/v1/projects/{ref}/upgrade/status`)
@@ -2332,6 +2531,7 @@ The endpoint performs three checks in parallel:
 **Maintenance Detection:**
 
 Returns maintenance status when:
+
 - Postgres upgrade is in progress (detected via upgrade status API)
 - Project health API reports unhealthy services
 - Database connection times out (8s limit)
@@ -2343,6 +2543,7 @@ Returns maintenance status when:
 **Note:** 4xx errors (except 5xx) are treated as "healthy" since they indicate the database is reachable but there's a configuration or query issue.
 
 **Required Environment Variables:**
+
 - `NEXT_PUBLIC_SUPABASE_URL` - Used to extract project reference
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - For direct DB connectivity check
 - `SUPABASE_ACCESS_TOKEN` - Personal Access Token (PAT) for Management API calls (project health & upgrade status). Generate at: https://supabase.com/dashboard/account/tokens. Note: This is NOT the service role key.
@@ -2421,9 +2622,10 @@ Returns maintenance status when:
 **Usage Example (Client-side polling):**
 
 The `MaintenanceBanner` component (`src/components/maintenance/MaintenanceBanner.tsx`) is integrated into the root layout (`src/app/layout.tsx`) and automatically displays on all pages when maintenance is detected. Features:
-- Adaptive polling interval (30s initial, exponential backoff up to 60s max)
+
+- Adaptive polling interval (60s initial, exponential backoff up to 2 minutes max)
 - 12-second fetch timeout with `AbortController` (accommodates slow cold starts)
-- **Consecutive failures threshold** - banner only shows after 2 consecutive failures (reduces false positives)
+- **Consecutive failures threshold** - banner only shows after 3 consecutive failures (reduces false positives)
 - **Initial delay** - first health check delayed by 2s to let page load first
 - Respects `retryAfter` from server response for polling interval
 - Dismissible banner with close button
@@ -2437,16 +2639,16 @@ The `MaintenanceBanner` component (`src/components/maintenance/MaintenanceBanner
 ```typescript
 // Client-side interface matching the health API response
 interface HealthStatus {
-  status: 'healthy' | 'degraded' | 'maintenance';
+  status: "healthy" | "degraded" | "maintenance";
   database: boolean;
   message?: string;
   retryAfter?: number;
 }
 
 // Polling with adaptive interval and exponential backoff
-const INITIAL_POLL_INTERVAL = 30000; // 30 seconds between checks
-const MAX_POLL_INTERVAL = 60000;     // 60 seconds max
-const CONSECUTIVE_FAILURES_THRESHOLD = 2; // Only show banner after 2 consecutive failures
+const INITIAL_POLL_INTERVAL = 60000; // 60 seconds between checks
+const MAX_POLL_INTERVAL = 120000; // 2 minutes max
+const CONSECUTIVE_FAILURES_THRESHOLD = 3; // Only show banner after 3 consecutive failures
 const [pollInterval, setPollInterval] = useState(INITIAL_POLL_INTERVAL);
 const [isChecking, setIsChecking] = useState(false);
 const consecutiveFailures = useRef(0);
@@ -2457,8 +2659,8 @@ const checkHealth = async () => {
   const fetchTimeout = setTimeout(() => controller.abort(), 12000); // 12s for slow cold starts
 
   try {
-    const res = await fetch('/api/health', {
-      cache: 'no-store',
+    const res = await fetch("/api/health", {
+      cache: "no-store",
       signal: controller.signal,
     });
     clearTimeout(fetchTimeout);
@@ -2467,20 +2669,18 @@ const checkHealth = async () => {
     setStatus(data);
 
     // Adjust polling interval based on status
-    if (data.status === 'healthy') {
+    if (data.status === "healthy") {
       pollIntervalRef.current = MAX_POLL_INTERVAL;
     } else {
-      pollIntervalRef.current = data.retryAfter
-        ? data.retryAfter * 1000
-        : INITIAL_POLL_INTERVAL;
+      pollIntervalRef.current = data.retryAfter ? data.retryAfter * 1000 : INITIAL_POLL_INTERVAL;
     }
   } catch {
     // Network error or timeout = assume maintenance
     setStatus({
-      status: 'maintenance',
+      status: "maintenance",
       database: false,
       timestamp: new Date().toISOString(),
-      message: 'Unable to reach server',
+      message: "Unable to reach server",
     });
     pollIntervalRef.current = INITIAL_POLL_INTERVAL;
   }
@@ -2559,13 +2759,13 @@ export default async function ProductsPage() {
 
 **Key Points:**
 
-| Aspect | Recommendation |
-|--------|----------------|
-| Timeout | 3 seconds (aggressive, fail fast) |
-| Health check | Direct REST call to Supabase (no client library) |
-| User auth | Handled by Navbar in root layout, not in page components |
-| Order | Health → Data (sequential with early exit) |
-| Failure | Redirect to `/maintenance` page |
+| Aspect       | Recommendation                                           |
+| ------------ | -------------------------------------------------------- |
+| Timeout      | 3 seconds (aggressive, fail fast)                        |
+| Health check | Direct REST call to Supabase (no client library)         |
+| User auth    | Handled by Navbar in root layout, not in page components |
+| Order        | Health → Data (sequential with early exit)               |
+| Failure      | Redirect to `/maintenance` page                          |
 
 **When to Use:**
 
@@ -2591,25 +2791,25 @@ Server actions for post reporting with AI-powered content analysis. Provides use
 
 ```typescript
 type ReportReason =
-  | 'spam'
-  | 'inappropriate'
-  | 'misleading'
-  | 'expired'
-  | 'wrong_location'
-  | 'safety_concern'
-  | 'duplicate'
-  | 'other';
+  | "spam"
+  | "inappropriate"
+  | "misleading"
+  | "expired"
+  | "wrong_location"
+  | "safety_concern"
+  | "duplicate"
+  | "other";
 ```
 
 ### Create Post Report
 
 ```typescript
-import { createPostReport } from '@/app/actions/reports';
+import { createPostReport } from "@/app/actions/reports";
 
 const result = await createPostReport({
   post_id: 42,
-  reason: 'spam',
-  description: 'This listing appears to be advertising',
+  reason: "spam",
+  description: "This listing appears to be advertising",
 });
 ```
 
@@ -2617,9 +2817,9 @@ const result = await createPostReport({
 
 ```typescript
 interface CreateReportInput {
-  post_id: number;           // Post ID to report
-  reason: ReportReason;      // Report category
-  description?: string;      // Optional details (max 1000 chars)
+  post_id: number; // Post ID to report
+  reason: ReportReason; // Report category
+  description?: string; // Optional details (max 1000 chars)
 }
 ```
 
@@ -2691,12 +2891,12 @@ export function ReportButton({ postId }: { postId: number }) {
 ### Resolve Post Report (Admin)
 
 ```typescript
-import { resolvePostReport } from '@/app/actions/reports';
+import { resolvePostReport } from "@/app/actions/reports";
 
 const result = await resolvePostReport({
-  report_id: 'uuid',
-  action: 'post_hidden',
-  notes: 'Confirmed spam content',
+  report_id: "uuid",
+  action: "post_hidden",
+  notes: "Confirmed spam content",
 });
 ```
 
@@ -2704,9 +2904,9 @@ const result = await resolvePostReport({
 
 ```typescript
 interface ResolveReportInput {
-  report_id: string;  // Report UUID
-  action: 'dismissed' | 'warning_sent' | 'post_hidden' | 'post_removed' | 'user_banned';
-  notes?: string;     // Optional moderator notes (max 500 chars)
+  report_id: string; // Report UUID
+  action: "dismissed" | "warning_sent" | "post_hidden" | "post_removed" | "user_banned";
+  notes?: string; // Optional moderator notes (max 500 chars)
 }
 ```
 
@@ -2775,11 +2975,11 @@ export function ReportActions({ reportId }: { reportId: string }) {
 
 ```typescript
 interface AIAnalysis {
-  summary: string;           // Brief summary of the report
-  categories: string[];      // Detected content categories
-  reasoning: string;         // AI reasoning for assessment
-  suggestedAction: string;   // Recommended moderation action
-  riskFactors: string[];     // Identified risk factors
+  summary: string; // Brief summary of the report
+  categories: string[]; // Detected content categories
+  reasoning: string; // AI reasoning for assessment
+  suggestedAction: string; // Recommended moderation action
+  riskFactors: string[]; // Identified risk factors
 }
 ```
 

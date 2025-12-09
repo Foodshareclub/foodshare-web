@@ -1,16 +1,24 @@
-import { cache } from 'react';
-import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
-import parse from 'html-react-parser';
-import { createClient } from '@/lib/supabase/server';
-import { generateArticleJsonLd, safeJsonLdStringify } from '@/lib/jsonld';
-import { siteConfig } from '@/lib/metadata';
-import { ForumCategoryBadge, ForumTagBadge, RealtimeComments } from '@/components/forum';
-import { RichTextViewer } from '@/components/forum/RichTextViewer';
-import { BackButton } from '@/components/navigation/BackButton';
-import { Skeleton } from '@/components/ui/skeleton';
-import { FaEye, FaHeart, FaClock, FaCheckCircle, FaThumbtack, FaLock } from 'react-icons/fa';
-import type { ForumPost, ForumComment } from '@/api/forumAPI';
+import { cache } from "react";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import parse from "html-react-parser";
+import { createClient } from "@/lib/supabase/server";
+import { generateArticleJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
+import { siteConfig } from "@/lib/metadata";
+import { ForumCategoryBadge, ForumTagBadge, RealtimeComments } from "@/components/forum";
+import { RichTextViewer } from "@/components/forum/RichTextViewer";
+import { BackButton } from "@/components/navigation/BackButton";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Eye, Heart, Clock, CheckCircle, Pin, Lock } from "lucide-react";
+
+// Icon aliases for consistency
+const FaEye = Eye;
+const FaHeart = Heart;
+const FaClock = Clock;
+const FaCheckCircle = CheckCircle;
+const FaThumbtack = Pin;
+const FaLock = Lock;
+import type { ForumPost, ForumComment } from "@/api/forumAPI";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -23,9 +31,7 @@ const getForumPost = cache(async (slugOrId: string): Promise<ForumPost | null> =
   // Check if it's a numeric ID
   const isNumericId = /^\d+$/.test(slugOrId);
 
-  const query = supabase
-    .from('forum')
-    .select(`
+  const query = supabase.from("forum").select(`
       *,
       profiles!forum_profile_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url),
       forum_categories!forum_category_id_fkey (*),
@@ -33,8 +39,8 @@ const getForumPost = cache(async (slugOrId: string): Promise<ForumPost | null> =
     `);
 
   const { data, error } = isNumericId
-    ? await query.eq('id', parseInt(slugOrId, 10)).single()
-    : await query.eq('slug', slugOrId).single();
+    ? await query.eq("id", parseInt(slugOrId, 10)).single()
+    : await query.eq("slug", slugOrId).single();
 
   if (error || !data) return null;
   return data as ForumPost;
@@ -44,23 +50,25 @@ async function getInitialComments(forumId: number): Promise<ForumComment[]> {
   const supabase = await createClient();
 
   const { data } = await supabase
-    .from('comments')
-    .select('*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)')
-    .eq('forum_id', forumId)
-    .is('parent_id', null)
-    .order('is_pinned', { ascending: false })
-    .order('is_best_answer', { ascending: false })
-    .order('comment_created_at', { ascending: true });
+    .from("comments")
+    .select(
+      "*, profiles!comments_user_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url)"
+    )
+    .eq("forum_id", forumId)
+    .is("parent_id", null)
+    .order("is_pinned", { ascending: false })
+    .order("is_best_answer", { ascending: false })
+    .order("comment_created_at", { ascending: true });
 
   return (data ?? []) as ForumComment[];
 }
 
 function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 }
 
@@ -86,16 +94,16 @@ export async function generateMetadata({ params }: PageProps) {
   const post = await getForumPost(slug);
 
   if (!post) {
-    return { title: 'Post Not Found | FoodShare Forum' };
+    return { title: "Post Not Found | FoodShare Forum" };
   }
 
-  const title = post.forum_post_name || 'Forum Post';
+  const title = post.forum_post_name || "Forum Post";
   const description = post.forum_post_description
-    ? post.forum_post_description.replace(/<[^>]*>/g, '').slice(0, 160)
-    : 'Join the discussion on FoodShare Forum';
+    ? post.forum_post_description.replace(/<[^>]*>/g, "").slice(0, 160)
+    : "Join the discussion on FoodShare Forum";
   const pageUrl = `${siteConfig.url}/forum/${post.slug || post.id}`;
   const imageUrl = post.forum_post_image || siteConfig.ogImage;
-  const authorName = post.profiles?.nickname || post.profiles?.first_name || 'FoodShare Member';
+  const authorName = post.profiles?.nickname || post.profiles?.first_name || "FoodShare Member";
 
   return {
     title: `${title} | FoodShare Forum`,
@@ -105,10 +113,10 @@ export async function generateMetadata({ params }: PageProps) {
     },
     // OpenGraph: Facebook, LinkedIn, WhatsApp - Article type for content
     openGraph: {
-      type: 'article',
-      locale: 'en_US',
+      type: "article",
+      locale: "en_US",
       url: pageUrl,
-      siteName: 'FoodShare',
+      siteName: "FoodShare",
       title,
       description,
       images: [
@@ -117,19 +125,19 @@ export async function generateMetadata({ params }: PageProps) {
           width: 1200,
           height: 630,
           alt: `${title} - FoodShare Forum`,
-          type: 'image/jpeg',
+          type: "image/jpeg",
         },
       ],
       publishedTime: post.forum_post_created_at,
       modifiedTime: post.forum_post_updated_at || undefined,
       authors: [authorName],
-      section: 'Community',
+      section: "Community",
     },
     // Twitter / X Cards
     twitter: {
-      card: 'summary_large_image',
-      site: '@foodshareapp',
-      creator: '@foodshareapp',
+      card: "summary_large_image",
+      site: "@foodshareapp",
+      creator: "@foodshareapp",
       title: `${title} | FoodShare Forum`,
       description,
       images: [
@@ -152,17 +160,17 @@ export default async function ForumPostPage({ params }: PageProps) {
 
   // Generate JSON-LD Article structured data for SEO
   const description = post.forum_post_description
-    ? post.forum_post_description.replace(/<[^>]*>/g, '').slice(0, 160)
-    : 'Join the discussion on FoodShare Forum';
+    ? post.forum_post_description.replace(/<[^>]*>/g, "").slice(0, 160)
+    : "Join the discussion on FoodShare Forum";
 
   const jsonLd = generateArticleJsonLd({
-    title: post.forum_post_name || 'Forum Post',
+    title: post.forum_post_name || "Forum Post",
     description,
     url: `${siteConfig.url}/forum/${post.slug || post.id}`,
     image: post.forum_post_image || undefined,
     datePublished: post.forum_post_created_at,
     dateModified: post.forum_post_updated_at || undefined,
-    authorName: post.profiles?.nickname || post.profiles?.first_name || 'FoodShare Member',
+    authorName: post.profiles?.nickname || post.profiles?.first_name || "FoodShare Member",
     authorUrl: post.profiles?.id ? `${siteConfig.url}/profile/${post.profiles.id}` : undefined,
   });
 
@@ -209,19 +217,19 @@ export default async function ForumPostPage({ params }: PageProps) {
               {post.profiles?.avatar_url ? (
                 <img
                   src={post.profiles.avatar_url}
-                  alt={post.profiles.nickname || 'User'}
+                  alt={post.profiles.nickname || "User"}
                   className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-sm"
                 />
               ) : (
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center ring-2 ring-white shadow-sm">
                   <span className="text-lg font-semibold text-white">
-                    {post.profiles?.nickname?.charAt(0).toUpperCase() || '?'}
+                    {post.profiles?.nickname?.charAt(0).toUpperCase() || "?"}
                   </span>
                 </div>
               )}
               <div>
                 <p className="font-semibold">
-                  {post.profiles?.nickname || post.profiles?.first_name || 'Anonymous'}
+                  {post.profiles?.nickname || post.profiles?.first_name || "Anonymous"}
                 </p>
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
                   <FaClock className="w-3 h-3" />
@@ -248,7 +256,7 @@ export default async function ForumPostPage({ params }: PageProps) {
             <div className="mb-6 rounded-xl overflow-hidden">
               <img
                 src={post.forum_post_image}
-                alt={post.forum_post_name || 'Post image'}
+                alt={post.forum_post_name || "Post image"}
                 className="w-full object-cover max-h-96"
               />
             </div>
@@ -259,9 +267,7 @@ export default async function ForumPostPage({ params }: PageProps) {
             {post.rich_content ? (
               <RichTextViewer content={post.rich_content} />
             ) : post.forum_post_description ? (
-              <div className="forum-content">
-                {parse(post.forum_post_description)}
-              </div>
+              <div className="forum-content">{parse(post.forum_post_description)}</div>
             ) : null}
           </div>
 

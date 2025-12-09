@@ -1,6 +1,10 @@
-import Link from 'next/link';
-import { FaHome, FaChevronRight } from 'react-icons/fa';
-import type { ForumCategory } from '@/api/forumAPI';
+import Link from "next/link";
+import { Home, ChevronRight } from "lucide-react";
+
+// Icon aliases for consistency
+const FaHome = Home;
+const FaChevronRight = ChevronRight;
+import type { ForumCategory } from "@/api/forumAPI";
 
 interface ForumBreadcrumbProps {
   category?: ForumCategory | null;
@@ -43,11 +47,7 @@ export function ForumBreadcrumb({ category, postTitle }: ForumBreadcrumbProps) {
           itemScope
           itemType="https://schema.org/ListItem"
         >
-          <Link
-            href="/forum"
-            className="hover:text-foreground transition-colors"
-            itemProp="item"
-          >
+          <Link href="/forum" className="hover:text-foreground transition-colors" itemProp="item">
             <span itemProp="name">Forum</span>
           </Link>
           <meta itemProp="position" content="2" />
@@ -85,7 +85,7 @@ export function ForumBreadcrumb({ category, postTitle }: ForumBreadcrumbProps) {
               aria-current="page"
             >
               <span itemProp="name">{postTitle}</span>
-              <meta itemProp="position" content={category ? '4' : '3'} />
+              <meta itemProp="position" content={category ? "4" : "3"} />
             </li>
           </>
         )}
