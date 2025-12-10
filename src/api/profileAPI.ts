@@ -52,8 +52,8 @@ export type ProfileType = {
   phone: string;
   // Location is a PostGIS geography type, stored as unknown
   location?: unknown;
-  // user_role is a simple string: 'admin', 'volunteer', 'user', etc.
-  user_role: string | null;
+  // JSONB role field - single source of truth for roles
+  role?: Record<string, boolean> | null;
   // Preferences stored as JSONB
   dietary_preferences?: Record<string, unknown>;
   notification_preferences?: Record<string, unknown>;

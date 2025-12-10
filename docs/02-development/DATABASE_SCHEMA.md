@@ -78,6 +78,23 @@ const isJsonbAdmin = profile?.role?.admin === true;
 const isLegacyAdmin = profile?.user_role === "admin" || profile?.user_role === "superadmin";
 ```
 
+**Querying by JSONB Role (Supabase):**
+
+```typescript
+// ✅ Query users with a specific role using JSONB arrow operator
+const { data: volunteers } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('role->>volunteer', 'true')  // JSONB text extraction
+  .order('first_name');
+
+// ❌ Legacy approach (deprecated)
+const { data } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('user_role', 'volunteer');
+```
+
 **Relationships:**
 
 - One-to-many with `posts` (user's listings)

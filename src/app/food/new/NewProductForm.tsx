@@ -37,7 +37,7 @@ interface NewProductFormProps {
     second_name?: string | null
     avatar_url?: string | null
     email?: string | null
-    user_role?: string | null
+    role?: Record<string, boolean> | null
   } | null
 }
 
@@ -48,7 +48,7 @@ export function NewProductForm({ userId, profile }: NewProductFormProps) {
 
   // Auth for navbar (client-side for real-time updates)
   const { isAuthenticated } = useAuth()
-  const isAdmin = profile?.user_role === 'admin' || profile?.user_role === 'superadmin'
+  const isAdmin = profile?.role?.admin === true || profile?.role?.superadmin === true
   const avatarUrl = profile?.avatar_url
 
   const [isSubmitting, setIsSubmitting] = useState(false)

@@ -330,6 +330,9 @@ Client-side wrappers that allow parent layouts to remain Server Components for b
 |------|------|---------|-------------|
 | `defaultProductType` | `string` | `'food'` | Initial product type for category filtering |
 | `initialUser` | `AuthUser \| null` | `undefined` | Server-fetched user data to prevent avatar loading flicker |
+| `initialIsAdmin` | `boolean` | `false` | Server-fetched admin status (checks JSONB role field) |
+| `initialProfile` | `object \| null` | `undefined` | Server-fetched profile data (first_name, second_name, nickname, avatar_url, email) |
+| `unreadRooms` | `CustomRoomType[]` | `[]` | Unread message rooms from server for notification badges |
 
 **Architecture:**
 

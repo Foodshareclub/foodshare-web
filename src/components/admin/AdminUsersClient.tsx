@@ -132,19 +132,20 @@ export function AdminUsersClient({
       });
     }
 
-    // Fallback to legacy user_role
-    if (badges.length === 0 && user.user_role) {
-      if (user.user_role === "admin" || user.user_role === "superadmin") {
-        badges.push({
-          label: user.user_role,
-          color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-        });
-      } else {
-        badges.push({
-          label: user.user_role,
-          color: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
-        });
-      }
+    // Check superadmin role
+    if (user.role?.superadmin) {
+      badges.push({
+        label: "Superadmin",
+        color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+      });
+    }
+
+    // Default user badge if no roles
+    if (badges.length === 0) {
+      badges.push({
+        label: "User",
+        color: "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400",
+      });
     }
 
     return badges;

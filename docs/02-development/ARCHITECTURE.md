@@ -290,10 +290,8 @@ The `src/middleware.ts` provides defense-in-depth security:
 | Session Refresh | Automatically refreshes expired sessions on every request |
 | Admin Protection | Multi-source role checking for `/admin/*` routes |
 
-Admin role checking uses three sources (consistent with `checkIsAdmin()`):
-1. **JSONB role field** - `profiles.role` with `{ admin: true }`
-2. **Legacy user_role** - `profiles.user_role` = `'admin'` or `'superadmin'`
-3. **user_roles table** - Junction table with role name `'admin'` or `'superadmin'`
+Admin role checking uses the JSONB role field as single source of truth (consistent with `checkIsAdmin()`):
+- **JSONB role field** - `profiles.role` with `{ admin: true }` or `{ superadmin: true }`
 
 ---
 

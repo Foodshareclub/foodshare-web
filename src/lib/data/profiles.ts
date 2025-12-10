@@ -22,7 +22,7 @@ export interface Profile {
   bio: string | null;
   phone: string | null;
   location: unknown | null;
-  user_role: string | null;
+  role: Record<string, boolean> | null;
   is_active: boolean;
   created_time: string | null;
   updated_at: string | null;
@@ -38,7 +38,7 @@ export interface PublicProfile {
   // PostGIS geography type - can be object with coordinates or string representation
   location: Record<string, unknown> | string | null;
   created_time: string | null;
-  user_role: string | null;
+  role: Record<string, boolean> | null;
 }
 
 export interface ProfileStats {
@@ -99,7 +99,7 @@ export async function getPublicProfile(userId: string): Promise<PublicProfile | 
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, first_name, second_name, nickname, avatar_url, about_me, location, created_time, user_role')
+        .select('id, first_name, second_name, nickname, avatar_url, about_me, location, created_time, role')
         .eq('id', userId)
         .single();
 
@@ -166,7 +166,7 @@ export const getVolunteers = unstable_cache(
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('user_role', 'volunteer')
+      .eq('role->>volunteer', 'true')
       .order('first_name');
 
     if (error) throw new Error(error.message);

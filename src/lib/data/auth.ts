@@ -21,7 +21,6 @@ export interface AuthUser {
     second_name: string | null;
     nickname: string | null;
     avatar_url: string | null;
-    user_role: string | null;
     email: string | null;
   } | null;
 }
@@ -78,7 +77,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id, first_name, second_name, nickname, avatar_url, user_role, email")
+        .select("id, first_name, second_name, nickname, avatar_url, email")
         .eq("id", user.id)
         .single();
 
@@ -110,7 +109,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
 /**
  * Check if current user is admin
- * Supports both JSONB role field and legacy user_role/user_roles table
+ * Uses JSONB role field as single source of truth
  */
 export async function checkIsAdmin(userId: string): Promise<{
   isAdmin: boolean;
@@ -120,49 +119,20 @@ export async function checkIsAdmin(userId: string): Promise<{
   try {
     const supabase = await createClient();
 
-    // Get profile with JSONB role field and legacy user_role
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role, user_role")
+      .select("role")
       .eq("id", userId)
       .single();
 
-    // Check JSONB role field first (new system)
     const jsonbRoles = (profile?.role as Record<string, boolean>) || {};
-    const isJsonbAdmin = jsonbRoles.admin === true;
+    const isAdmin = jsonbRoles.admin === true || jsonbRoles.superadmin === true;
 
-    // Check legacy user_role field
-    const isLegacyAdmin = profile?.user_role === "admin" || profile?.user_role === "superadmin";
+    const roles = Object.entries(jsonbRoles)
+      .filter(([_, v]) => v === true)
+      .map(([k]) => k);
 
-    // Also check user_roles junction table for backwards compatibility
-    const { data: userRolesData } = await supabase
-      .from("user_roles")
-      .select("role_id, roles!user_roles_role_id_fkey(name)")
-      .eq("profile_id", userId);
-
-    const tableRoles = (userRolesData ?? []).flatMap((r) => {
-      const roleName = (r as { roles?: { name?: string } }).roles?.name;
-      return roleName ? [roleName] : [];
-    });
-
-    const isTableAdmin = tableRoles.includes("admin") || tableRoles.includes("superadmin");
-
-    // Combine all role sources
-    const allRoles = [
-      ...new Set([
-        ...tableRoles,
-        ...Object.entries(jsonbRoles)
-          .filter(([_, v]) => v === true)
-          .map(([k]) => k),
-        ...(isLegacyAdmin ? [profile?.user_role as string] : []),
-      ]),
-    ];
-
-    return {
-      isAdmin: isJsonbAdmin || isLegacyAdmin || isTableAdmin,
-      roles: allRoles,
-      jsonbRoles,
-    };
+    return { isAdmin, roles, jsonbRoles };
   } catch {
     return { isAdmin: false, roles: [], jsonbRoles: {} };
   }

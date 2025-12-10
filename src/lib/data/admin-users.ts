@@ -17,7 +17,6 @@ export interface AdminUserProfile {
   second_name: string | null;
   email: string | null;
   avatar_url: string | null;
-  user_role: string | null;
   role: Record<string, boolean> | null;
   is_active: boolean;
   is_verified: boolean;
@@ -79,7 +78,6 @@ export async function getAdminUsers(filters: AdminUsersFilter = {}): Promise<Adm
       second_name,
       email,
       avatar_url,
-      user_role,
       role,
       is_active,
       is_verified,
@@ -96,9 +94,9 @@ export async function getAdminUsers(filters: AdminUsersFilter = {}): Promise<Adm
     );
   }
 
-  // Apply role filter (legacy user_role)
+  // Apply role filter using JSONB
   if (role && role !== "all") {
-    query = query.eq("user_role", role);
+    query = query.eq(`role->>${role}`, "true");
   }
 
   // Apply active filter
@@ -153,7 +151,6 @@ export async function getAdminUserById(id: string): Promise<AdminUserProfile | n
       second_name,
       email,
       avatar_url,
-      user_role,
       role,
       is_active,
       is_verified,
@@ -192,7 +189,7 @@ export const getUserStats = unstable_cache(
       supabase
         .from("profiles")
         .select("*", { count: "exact", head: true })
-        .in("user_role", ["admin", "superadmin"]),
+        .or("role->>admin.eq.true,role->>superadmin.eq.true"),
       supabase
         .from("profiles")
         .select("*", { count: "exact", head: true })

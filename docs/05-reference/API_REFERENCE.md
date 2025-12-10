@@ -923,13 +923,21 @@ interface SafeAuthUser {
     first_name: string | null;
     second_name: string | null;
     avatar_url: string | null;
-    user_role: string | null;
+    role: Record<string, boolean> | null; // JSONB role object: { admin: true, volunteer: false, ... }
     email: string | null;
   } | null;
 }
 ```
 
 Returns user with profile data. If profile fetch fails, returns user with `profile: null`.
+
+**Checking Admin Status:**
+
+```typescript
+const user = await safeGetUserWithProfile();
+const isAdmin = user?.profile?.role?.admin === true;
+const isSuperAdmin = user?.profile?.role?.superadmin === true;
+```
 
 ---
 
@@ -1972,14 +1980,11 @@ const { isAdmin, roles } = await checkAdminRole(userId);
 
 **Behavior:**
 
-The function checks multiple role sources for backwards compatibility:
+The function uses the JSONB role field as single source of truth:
 
-1. **JSONB `role` field** (new system) - Checks `profiles.role` for `{ admin: true }`
-2. **Legacy `user_role` field** - Checks `profiles.user_role` for `'admin'` or `'superadmin'`
-3. **`user_roles` junction table** - Queries role assignments for `admin` or `superadmin` roles
-
-- `isAdmin` is `true` if any source indicates admin status
-- `roles` is a deduplicated array of all role names from all sources
+- Checks `profiles.role` for `{ admin: true }` or `{ superadmin: true }`
+- `isAdmin` is `true` if `admin` or `superadmin` is set to `true` in the JSONB role
+- `roles` is an array of role names where the value is `true`
 - `jsonbRoles` contains the raw JSONB role object from `profiles.role`
 - Returns `{ isAdmin: false, roles: [], jsonbRoles: {} }` on error
 

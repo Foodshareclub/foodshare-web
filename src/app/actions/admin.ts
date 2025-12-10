@@ -22,7 +22,7 @@ export interface AdminUser {
   first_name: string | null;
   second_name: string | null;
   email: string;
-  user_role: string | null;
+  role: Record<string, boolean> | null;
   created_time: string | null;
   is_active: boolean;
   products_count: number;
@@ -47,11 +47,11 @@ async function requireAdmin(): Promise<void> {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('user_role')
+    .select('role')
     .eq('id', user.id)
     .single();
 
-  if (profile?.user_role !== 'admin' && profile?.user_role !== 'superadmin') {
+  if (profile?.role?.admin !== true && profile?.role?.superadmin !== true) {
     throw new Error('Admin access required');
   }
 }
@@ -141,13 +141,13 @@ export async function getUsers(filters: UserFilters = {}): Promise<{
 
   let query = supabase
     .from('profiles')
-    .select('id, first_name, second_name, email, user_role, created_time, is_active', { count: 'exact' });
+    .select('id, first_name, second_name, email, role, created_time, is_active', { count: 'exact' });
 
   if (search) {
     query = query.or(`first_name.ilike.%${search}%,second_name.ilike.%${search}%,email.ilike.%${search}%`);
   }
   if (role) {
-    query = query.eq('user_role', role);
+    query = query.eq(`role->>${role}`, 'true');
   }
   if (is_active !== undefined) {
     query = query.eq('is_active', is_active);
@@ -199,9 +199,18 @@ export async function updateUserRole(
     return { success: false, error: 'Cannot change your own role' };
   }
 
+  // Update JSONB role field - set the specified role to true
+  const { data: currentProfile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single();
+
+  const updatedRole = { ...(currentProfile?.role || {}), [role]: true };
+
   const { error } = await supabase
     .from('profiles')
-    .update({ user_role: role })
+    .update({ role: updatedRole })
     .eq('id', userId);
 
   if (error) {
@@ -210,7 +219,7 @@ export async function updateUserRole(
 
   // Log the action
   await supabase.from('audit_logs').insert({
-    action: 'update_user_role',
+    action: 'update_user_roles',
     entity_type: 'profile',
     entity_id: userId,
     user_id: user?.id,

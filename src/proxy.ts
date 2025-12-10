@@ -124,34 +124,18 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Check admin status from multiple sources (consistent with checkIsAdmin in auth.ts)
+    // Check admin status from JSONB role field
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, user_role')
+      .select('role')
       .eq('id', session.user.id)
       .single();
 
-    // Check JSONB role field (new system)
     const jsonbRoles = (profile?.role as Record<string, boolean>) || {};
-    const isJsonbAdmin = jsonbRoles.admin === true;
+    const isAdmin = jsonbRoles.admin === true || jsonbRoles.superadmin === true;
 
-    // Check legacy user_role field
-    const isLegacyAdmin = profile?.user_role === 'admin' || profile?.user_role === 'superadmin';
-
-    // Check user_roles junction table
-    const { data: userRolesData } = await supabase
-      .from('user_roles')
-      .select('role_id, roles!user_roles_role_id_fkey(name)')
-      .eq('profile_id', session.user.id);
-
-    const tableRoles = (userRolesData ?? []).flatMap((r) => {
-      const roleName = (r as { roles?: { name?: string } }).roles?.name;
-      return roleName ? [roleName] : [];
-    });
-    const isTableAdmin = tableRoles.includes('admin') || tableRoles.includes('superadmin');
-
-    // Redirect to home if not admin (any source)
-    if (!isJsonbAdmin && !isLegacyAdmin && !isTableAdmin) {
+    // Redirect to home if not admin
+    if (!isAdmin) {
       return NextResponse.redirect(new URL('/', request.url));
     }
   }

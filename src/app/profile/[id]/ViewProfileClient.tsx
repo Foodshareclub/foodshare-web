@@ -72,7 +72,7 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
             </div>
 
             {/* Volunteer Badge */}
-            {profile.user_role === "volunteer" && (
+            {profile.role?.volunteer && (
               <div className="flex justify-center mb-6">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
                   <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-sm">

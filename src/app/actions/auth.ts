@@ -14,7 +14,7 @@ export interface AuthUser {
     first_name: string | null;
     second_name: string | null;
     avatar_url: string | null;
-    user_role: string | null;
+    role: Record<string, boolean> | null;
     email: string | null;
   } | null;
 }
@@ -79,7 +79,7 @@ export async function getUser(): Promise<AuthUser | null> {
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, first_name, second_name, avatar_url, user_role, email')
+        .select('id, first_name, second_name, avatar_url, role, email')
         .eq('id', user.id)
         .single();
 

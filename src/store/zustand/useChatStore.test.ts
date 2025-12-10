@@ -27,7 +27,7 @@ const mockRoom: RoomType = {
     created_time: '',
     phone: '',
     updated_at: '2024-01-01T00:00:00Z',
-    user_role: null,
+    role: null,
   },
   post_arranged_to: '',
 };
@@ -71,7 +71,7 @@ const mockCustomRoom: CustomRoomType = {
     created_time: '',
     phone: '',
     updated_at: '2024-01-01T00:00:00Z',
-    user_role: null,
+    role: null,
   },
   requester: 'user-1',
   room_participants: [],

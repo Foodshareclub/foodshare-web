@@ -27,7 +27,7 @@ export default async function OneVolunteer({ id }: OneVolunteerProps) {
     about_me: volunteer.about_me || '',
     location: volunteer.location,
     created_time: volunteer.created_time || '',
-    user_role: volunteer.user_role,
+    role: volunteer.role,
     updated_at: null,
     birth_date: '',
     phone: '',

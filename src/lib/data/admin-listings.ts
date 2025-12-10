@@ -304,7 +304,7 @@ export async function checkAdminRole(userId: string): Promise<{
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("role, user_role")
+    .select("role")
     .eq("id", userId)
     .single();
 
@@ -313,8 +313,7 @@ export async function checkAdminRole(userId: string): Promise<{
   }
 
   const roles = (data.role as Record<string, boolean>) || {};
-  const isAdmin =
-    roles.admin === true || data.user_role === "admin" || data.user_role === "superadmin";
+  const isAdmin = roles.admin === true || roles.superadmin === true;
 
   return { isAdmin, roles };
 }

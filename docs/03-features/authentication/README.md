@@ -65,13 +65,11 @@ export async function middleware(request: NextRequest) {
 
 ### Admin Route Protection
 
-The middleware checks admin status from multiple sources (consistent with `checkIsAdmin()` in auth.ts):
+The middleware checks admin status using the JSONB role field (consistent with `checkIsAdmin()` in auth.ts):
 
 | Source | Field | Values |
 |--------|-------|--------|
-| JSONB role field | `profiles.role` | `{ admin: true }` |
-| Legacy user_role | `profiles.user_role` | `'admin'` or `'superadmin'` |
-| user_roles table | Junction table | Role name `'admin'` or `'superadmin'` |
+| JSONB role field | `profiles.role` | `{ admin: true }` or `{ superadmin: true }` |
 
 If a user accesses `/admin/*` without admin privileges, they are redirected to the home page.
 
@@ -103,20 +101,10 @@ Located in `src/app/actions/auth.ts`:
 | `updatePassword()`     | Update password                   |
 | `getOAuthSignInUrl()`  | Get OAuth redirect URL            |
 
-> **Note on Admin Checking:** There are two `checkIsAdmin()` functions:
+> **Note on Admin Checking:** The `checkIsAdmin()` function in `src/lib/data/auth.ts`:
 >
-> **Server Action** (`src/app/actions/auth.ts`):
->
-> - Checks only the `user_roles` junction table (source of truth)
-> - Returns `boolean`
-> - Use for simple admin guards in Server Actions
->
-> **Data Function** (`src/lib/data/auth.ts`):
->
-> - Checks all three role sources for backwards compatibility:
->   1. **JSONB `role` field** - Checks `profiles.role` for `{ admin: true }`
->   2. **Legacy `user_role` field** - Checks `profiles.user_role` for `'admin'` or `'superadmin'`
->   3. **`user_roles` junction table** - Queries role assignments
+> - Uses the **JSONB `role` field** as single source of truth
+> - Checks `profiles.role` for `{ admin: true }` or `{ superadmin: true }`
 > - Returns `{ isAdmin: boolean, roles: string[], jsonbRoles: Record<string, boolean> }`
 > - Use when you need detailed role information
 

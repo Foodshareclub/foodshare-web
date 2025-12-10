@@ -12,10 +12,10 @@ const mockState = {
     first_name: string;
     second_name: string;
     avatar_url: string | null;
-    user_role: string;
+    role: Record<string, boolean> | null;
     email: string;
   } | null,
-  userRole: null as { roles: { name: string } } | null, // For user_roles table
+  userRole: null as { roles: { name: string } } | null, // For user_roles junction table
   authError: null as { message: string } | null,
   dbError: null as { message: string; code?: string } | null,
 };
@@ -199,7 +199,7 @@ describe("Auth Server Actions", () => {
         first_name: "Test",
         second_name: "User",
         avatar_url: null,
-        user_role: "user",
+        role: null,
         email: "test@example.com",
       };
 
@@ -213,7 +213,7 @@ describe("Auth Server Actions", () => {
           first_name: "Test",
           second_name: "User",
           avatar_url: null,
-          user_role: "user",
+          role: null,
           email: "test@example.com",
         },
       });
@@ -253,7 +253,7 @@ describe("Auth Server Actions", () => {
 
     it("should return false for regular user", async () => {
       mockState.user = { id: "user-123", email: "user@example.com" };
-      mockState.userRole = null; // No admin role in user_roles table
+      mockState.userRole = null; // No admin role in user_roles junction table
 
       const result = await checkIsAdmin();
 

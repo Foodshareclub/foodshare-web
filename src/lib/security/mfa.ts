@@ -526,11 +526,12 @@ export async function checkAdminMFARequired(): Promise<{
     // Check if user is admin
     const { data: profile } = await supabase
       .from('profiles')
-      .select('user_role')
+      .select('role')
       .eq('id', user.id)
       .single();
 
-    const isAdmin = profile?.user_role === 'admin' || profile?.user_role === 'super_admin';
+    const roles = (profile?.role as Record<string, boolean>) || {};
+    const isAdmin = roles.admin === true || roles.superadmin === true;
 
     if (!isAdmin) {
       return { required: false, currentAAL: 'aal1', isAdmin: false };

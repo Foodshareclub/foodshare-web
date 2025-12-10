@@ -35,7 +35,7 @@ interface ProfileData {
   twitter?: string;
   is_verified?: boolean;
   is_active?: boolean;
-  user_role?: string;
+  role?: Record<string, boolean>;
   created_time: string;
   updated_at?: string;
 }
@@ -145,8 +145,13 @@ function formatUserMessage(profile: ProfileData): string {
   // Status badges
   const badges = [];
   if (profile.is_verified) badges.push("✅ Verified");
-  if (profile.user_role && profile.user_role !== "user") {
-    badges.push(`👑 ${profile.user_role.charAt(0).toUpperCase() + profile.user_role.slice(1)}`);
+  if (profile.role) {
+    const roleNames = Object.entries(profile.role)
+      .filter(([_, value]) => value === true)
+      .map(([key]) => key.charAt(0).toUpperCase() + key.slice(1));
+    if (roleNames.length > 0) {
+      badges.push(`👑 ${roleNames.join(", ")}`);
+    }
   }
   if (badges.length > 0) {
     message += `\n\n${badges.join(" • ")}`;

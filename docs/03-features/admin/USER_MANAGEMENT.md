@@ -93,8 +93,7 @@ interface AdminUserProfile {
   second_name: string | null;
   email: string | null;
   avatar_url: string | null;
-  user_role: string | null; // Legacy role field
-  role: Record<string, boolean>; // JSONB roles
+  role: Record<string, boolean> | null; // JSONB roles
   is_active: boolean;
   is_verified: boolean;
   created_time: string;

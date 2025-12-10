@@ -181,11 +181,11 @@ export async function resolvePostReport(
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('user_role')
+      .select('role')
       .eq('id', user.id)
       .single();
 
-    if (!profile || !['admin', 'super_admin'].includes(profile.user_role || '')) {
+    if (!profile || (profile.role?.admin !== true && profile.role?.superadmin !== true)) {
       throw new Error('Admin access required');
     }
 
