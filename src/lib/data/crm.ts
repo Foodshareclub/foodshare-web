@@ -239,10 +239,11 @@ export async function getCustomerTags(): Promise<CRMCustomerTag[]> {
     .order('name');
 
   if (error) {
-    throw new Error(`Failed to fetch customer tags: ${error.message}`);
+    console.error('Failed to fetch customer tags:', error.message);
+    return [];
   }
 
-  return data as CRMCustomerTag[];
+  return (data ?? []) as CRMCustomerTag[];
 }
 
 /**

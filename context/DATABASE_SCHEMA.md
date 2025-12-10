@@ -16,13 +16,15 @@ User profile information linked to Supabase Auth users.
 **Columns:**
 
 - `id` (uuid, PK) - User identifier (matches auth.users.id)
-- `full_name` (text) - User's full name
+- `first_name` (text) - User's first name
+- `second_name` (text) - User's last name
+- `nickname` (text) - Username/display name
 - `email` (text) - User's email address
 - `phone` (text) - Phone number
 - `avatar_url` (text) - Profile picture URL
 - `bio` (text) - User biography
-- `address` (text) - User's location
-- `created_at` (timestamp) - Account creation time
+- `about_me` (text) - Extended user description
+- `created_time` (timestamp) - Account creation time
 - `updated_at` (timestamp) - Last profile update
 
 **Relationships:**

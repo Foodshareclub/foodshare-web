@@ -115,7 +115,10 @@ export const getAuditLogs = unstable_cache(
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error('Failed to fetch audit logs:', error.message);
+      return [];
+    }
 
     return (data ?? []).map(log => {
       const admin = extractFirst(log.admin as Array<{ first_name: string; second_name: string; email: string }>);
@@ -123,12 +126,12 @@ export const getAuditLogs = unstable_cache(
       return {
         id: log.id,
         action: log.action,
-        entity_type: log.resource_type,
-        entity_id: log.resource_id,
+        entity_type: log.resource_type || '',
+        entity_id: log.resource_id || '',
         user_id: log.admin_id,
         details: (log.metadata as Record<string, unknown>) || {},
         created_at: log.created_at,
-        user: admin ? { name: fullName || 'Unknown', email: admin.email } : null,
+        user: admin ? { name: fullName || 'Unknown', email: admin.email || '' } : null,
       };
     });
   },
@@ -158,17 +161,20 @@ export const getPendingListings = unstable_cache(
       .eq('is_active', false)
       .order('created_at', { ascending: false });
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error('Failed to fetch pending listings:', error.message);
+      return [];
+    }
 
     return (data ?? []).map(listing => {
       const profile = extractFirst(listing.profile as Array<{ first_name: string; second_name: string; email: string }>);
       const fullName = profile ? [profile.first_name, profile.second_name].filter(Boolean).join(' ') : null;
       return {
         id: listing.id,
-        post_name: listing.post_name,
-        post_type: listing.post_type,
+        post_name: listing.post_name || '',
+        post_type: listing.post_type || '',
         created_at: listing.created_at,
-        profile: profile ? { name: fullName || 'Unknown', email: profile.email } : null,
+        profile: profile ? { name: fullName || 'Unknown', email: profile.email || '' } : null,
       };
     });
   },

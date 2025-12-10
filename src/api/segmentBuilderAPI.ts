@@ -58,7 +58,8 @@ export async function getSampleMembers(filters: SegmentFilters, limit: number = 
         total_interactions,
         last_interaction_at,
         profiles:profile_id (
-          full_name,
+          first_name,
+          second_name,
           email,
           avatar_url
         ),
@@ -102,7 +103,7 @@ export async function getSampleMembers(filters: SegmentFilters, limit: number = 
       ltv_score: number | null;
       total_interactions: number | null;
       last_interaction_at: string | null;
-      profiles: { full_name: string | null; email: string | null; avatar_url: string | null }[];
+      profiles: { first_name: string | null; second_name: string | null; email: string | null; avatar_url: string | null }[];
       profile_stats: { items_shared: number | null; items_received: number | null; rating_average: number | null }[];
       crm_customer_tag_assignments: Array<{ tag: { id: string; name: string; color: string }[] }>;
     }
@@ -111,7 +112,7 @@ export async function getSampleMembers(filters: SegmentFilters, limit: number = 
       (data as unknown as RawCustomerData[] | null)?.map((customer) => ({
         customer_id: customer.id,
         profile_id: customer.profile_id,
-        full_name: customer.profiles?.[0]?.full_name || "Unknown",
+        full_name: [customer.profiles?.[0]?.first_name, customer.profiles?.[0]?.second_name].filter(Boolean).join(' ') || "Unknown",
         email: customer.profiles?.[0]?.email || "",
         avatar_url: customer.profiles?.[0]?.avatar_url || null,
         customer_type: customer.customer_type,

@@ -276,12 +276,13 @@ export function renderWithProviders(
 export const mockUser = (overrides = {}) => ({
   id: 'test-user-123',
   email: 'test@foodshare.com',
-  full_name: 'Test User',
+  first_name: 'Test',
+  second_name: 'User',
+  nickname: 'testuser',
   avatar_url: 'https://example.com/avatar.jpg',
   phone: '+1234567890',
   bio: 'Test bio',
-  address: '123 Test Street, Test City',
-  created_at: '2025-01-01T00:00:00Z',
+  created_time: '2025-01-01T00:00:00Z',
   updated_at: '2025-01-01T00:00:00Z',
   ...overrides,
 });

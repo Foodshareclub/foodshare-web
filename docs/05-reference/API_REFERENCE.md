@@ -1438,18 +1438,20 @@ profileAPI.updateProfile(userId: string, updates: Partial<AllValuesType>)
 
 **Updatable Fields:**
 
-- `full_name`
+- `first_name`
+- `second_name`
+- `nickname`
 - `email`
 - `phone`
 - `avatar_url`
 - `bio`
-- `address`
 
 **Example:**
 
 ```typescript
 const { data, error } = await profileAPI.updateProfile(userId, {
-  full_name: "John Doe",
+  first_name: "John",
+  second_name: "Doe",
   bio: "Food sharing enthusiast",
 });
 ```
@@ -1471,7 +1473,8 @@ profileAPI.createProfile(profileData: Partial<AllValuesType>)
 ```typescript
 const { data, error } = await profileAPI.createProfile({
   id: authUserId,
-  full_name: "Jane Smith",
+  first_name: "Jane",
+  second_name: "Smith",
   email: "jane@example.com",
 });
 ```

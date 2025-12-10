@@ -420,7 +420,8 @@ export async function previewSegment(filters: SegmentFilters) {
         lifecycle_stage,
         engagement_score,
         profiles:profile_id (
-          full_name,
+          first_name,
+          second_name,
           email
         ),
         profile_stats:profile_id (
@@ -485,7 +486,7 @@ export async function previewSegment(filters: SegmentFilters) {
       profile_id: string;
       lifecycle_stage: string;
       engagement_score: number | null;
-      profiles: { full_name: string | null; email: string | null }[];
+      profiles: { first_name: string | null; second_name: string | null; email: string | null }[];
       profile_stats: { items_shared: number | null }[];
     }
 
@@ -494,7 +495,7 @@ export async function previewSegment(filters: SegmentFilters) {
       sample_members:
         (data as unknown as RawPreviewCustomer[] | null)?.map((customer) => ({
           customer_id: customer.id,
-          full_name: customer.profiles?.[0]?.full_name || "Unknown",
+          full_name: [customer.profiles?.[0]?.first_name, customer.profiles?.[0]?.second_name].filter(Boolean).join(' ') || "Unknown",
           email: customer.profiles?.[0]?.email || "",
           lifecycle_stage: customer.lifecycle_stage,
           engagement_score: customer.engagement_score || 0,
@@ -789,7 +790,7 @@ export async function fetchWorkflowExecutions(workflowId: string) {
       workflow:workflow_id (name),
       customer:customer_id (
         profile_id,
-        profiles:profile_id (full_name, email)
+        profiles:profile_id (first_name, second_name, email)
       )
     `
     )
@@ -815,7 +816,7 @@ export async function fetchWorkflowExecutions(workflowId: string) {
     error_message: string | null;
     metadata: Record<string, unknown> | null;
     workflow: { name: string } | null;
-    customer: { profile_id: string; profiles: { full_name: string | null; email: string | null } | null } | null;
+    customer: { profile_id: string; profiles: { first_name: string | null; second_name: string | null; email: string | null } | null } | null;
   }
 
   const executions: WorkflowExecutionWithDetails[] =
@@ -832,7 +833,7 @@ export async function fetchWorkflowExecutions(workflowId: string) {
       error_message: execution.error_message,
       metadata: execution.metadata || {},
       workflow_name: execution.workflow?.name || "Unknown",
-      customer_name: execution.customer?.profiles?.full_name || "Unknown",
+      customer_name: [execution.customer?.profiles?.first_name, execution.customer?.profiles?.second_name].filter(Boolean).join(' ') || "Unknown",
       customer_email: execution.customer?.profiles?.email || "",
       total_steps: 0, // Would need to fetch from workflow template
     })) || [];

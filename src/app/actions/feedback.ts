@@ -71,12 +71,12 @@ export async function getCurrentUserInfo(): Promise<{
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name")
+    .select("first_name, second_name")
     .eq("id", user.id)
     .single();
 
   return {
     email: user.email || null,
-    name: profile?.full_name || null,
+    name: profile ? [profile.first_name, profile.second_name].filter(Boolean).join(' ') || null : null,
   };
 }

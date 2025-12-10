@@ -354,7 +354,7 @@ export async function notifyAdminsOfFeedback(params: {
     // Fetch all admin users
     const { data: admins, error } = await supabase
       .from("profiles")
-      .select("id, email, full_name")
+      .select("id, email, first_name, second_name")
       .eq("is_admin", true);
 
     if (error) {
@@ -370,14 +370,15 @@ export async function notifyAdminsOfFeedback(params: {
     // Send notification to each admin
     interface AdminProfile {
       email: string;
-      full_name: string | null;
+      first_name: string | null;
+      second_name: string | null;
     }
 
     const results = await Promise.allSettled(
       (admins as AdminProfile[]).map((admin) =>
         sendFeedbackNotification({
           adminEmail: admin.email,
-          adminName: admin.full_name || undefined,
+          adminName: [admin.first_name, admin.second_name].filter(Boolean).join(' ') || undefined,
           ...params,
         })
       )
