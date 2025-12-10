@@ -124,7 +124,7 @@ export async function checkIsAdmin(userId: string): Promise<{
       .select("roles!inner(name)")
       .eq("profile_id", userId);
 
-    const roles = (userRoles || []).map((r) => (r.roles as { name: string }).name);
+    const roles = (userRoles || []).map((r) => (r.roles as unknown as { name: string }).name);
     const isAdmin = roles.includes("admin") || roles.includes("superadmin");
 
     // Build jsonbRoles for backward compatibility
