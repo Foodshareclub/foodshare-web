@@ -40,6 +40,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Rust
-scripts/lefthook/target/
+# Rust build artifacts
 tools/target/
