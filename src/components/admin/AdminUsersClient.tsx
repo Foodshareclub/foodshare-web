@@ -40,7 +40,7 @@ const FiEye = Eye;
 
 interface Props {
   initialUsers: AdminUserProfile[];
-  _initialTotal: number;
+  initialTotal: number;
   initialPage: number;
   totalPages: number;
   stats: UserStats;
@@ -49,7 +49,7 @@ interface Props {
 
 export function AdminUsersClient({
   initialUsers,
-  _initialTotal,
+  initialTotal: _initialTotal,
   initialPage,
   totalPages,
   stats,
