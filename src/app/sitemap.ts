@@ -192,28 +192,28 @@ async function getForumCategoriesForSitemap() {
 }
 
 /**
- * Fetch active food products for sitemap
- * Returns top 100 most viewed active products
+ * Fetch active food posts for sitemap
+ * Returns top 100 most viewed active posts
  */
 async function getFoodProductsForSitemap() {
   try {
     const supabase = createCachedClient();
 
     const { data, error } = await supabase
-      .from("products")
+      .from("posts")
       .select("id, created_at, updated_at")
       .eq("is_active", true)
-      .order("post_views", { ascending: false })
-      .limit(100);
+      .order("id", { ascending: false })
+      .limit(50);
 
     if (error) {
-      console.error("Failed to fetch food products for sitemap:", error);
+      console.error("Failed to fetch food posts for sitemap:", error);
       return [];
     }
 
     return data || [];
   } catch {
-    console.error("Error fetching food products for sitemap");
+    console.error("Error fetching food posts for sitemap");
     return [];
   }
 }
