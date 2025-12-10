@@ -112,7 +112,8 @@ export async function getAdminUsers(filters: AdminUsersFilter = {}): Promise<Adm
 
   // Transform data to extract roles from user_roles join
   const users: AdminUserProfile[] = (data ?? []).map((user) => {
-    const userRoles = (user.user_roles as Array<{ roles: { name: string } | null }> | null) ?? [];
+    // Supabase returns user_roles as array with nested roles object
+    const userRoles = (user.user_roles as unknown as Array<{ roles: { name: string } | null }>) ?? [];
     const roles = userRoles.map((ur) => ur.roles?.name).filter((name): name is string => !!name);
 
     return {
