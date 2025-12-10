@@ -73,8 +73,8 @@ export const getDashboardStats = unstable_cache(
       supabase.from('posts').select('*', { count: 'exact', head: true }),
       supabase.from('posts').select('*', { count: 'exact', head: true }).eq('is_active', true),
       supabase.from('posts').select('*', { count: 'exact', head: true }).eq('is_active', false),
-      supabase.from('chats').select('*', { count: 'exact', head: true }),
-      supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_at', oneWeekAgo.toISOString()),
+      supabase.from('rooms').select('*', { count: 'exact', head: true }),
+      supabase.from('profiles').select('*', { count: 'exact', head: true }).gte('created_time', oneWeekAgo.toISOString()),
     ]);
 
     return {
@@ -101,32 +101,36 @@ export const getAuditLogs = unstable_cache(
     const supabase = await createClient();
 
     const { data, error } = await supabase
-      .from('audit_logs')
+      .from('admin_audit_log')
       .select(`
         id,
         action,
-        entity_type,
-        entity_id,
-        user_id,
-        details,
+        resource_type,
+        resource_id,
+        admin_id,
+        metadata,
         created_at,
-        user:profiles!user_id(name, email)
+        admin:profiles!admin_id(first_name, second_name, email)
       `)
       .order('created_at', { ascending: false })
       .limit(limit);
 
     if (error) throw new Error(error.message);
 
-    return (data ?? []).map(log => ({
-      id: log.id,
-      action: log.action,
-      entity_type: log.entity_type,
-      entity_id: log.entity_id,
-      user_id: log.user_id,
-      details: log.details as Record<string, unknown>,
-      created_at: log.created_at,
-      user: extractFirst(log.user as Array<{ name: string; email: string }>),
-    }));
+    return (data ?? []).map(log => {
+      const admin = extractFirst(log.admin as Array<{ first_name: string; second_name: string; email: string }>);
+      const fullName = admin ? [admin.first_name, admin.second_name].filter(Boolean).join(' ') : null;
+      return {
+        id: log.id,
+        action: log.action,
+        entity_type: log.resource_type,
+        entity_id: log.resource_id,
+        user_id: log.admin_id,
+        details: (log.metadata as Record<string, unknown>) || {},
+        created_at: log.created_at,
+        user: admin ? { name: fullName || 'Unknown', email: admin.email } : null,
+      };
+    });
   },
   ['admin-audit-logs'],
   {
@@ -149,20 +153,24 @@ export const getPendingListings = unstable_cache(
         post_name,
         post_type,
         created_at,
-        profile:profiles!profile_id(name, email)
+        profile:profiles!profile_id(first_name, second_name, email)
       `)
       .eq('is_active', false)
       .order('created_at', { ascending: false });
 
     if (error) throw new Error(error.message);
 
-    return (data ?? []).map(listing => ({
-      id: listing.id,
-      post_name: listing.post_name,
-      post_type: listing.post_type,
-      created_at: listing.created_at,
-      profile: extractFirst(listing.profile as Array<{ name: string; email: string }>),
-    }));
+    return (data ?? []).map(listing => {
+      const profile = extractFirst(listing.profile as Array<{ first_name: string; second_name: string; email: string }>);
+      const fullName = profile ? [profile.first_name, profile.second_name].filter(Boolean).join(' ') : null;
+      return {
+        id: listing.id,
+        post_name: listing.post_name,
+        post_type: listing.post_type,
+        created_at: listing.created_at,
+        profile: profile ? { name: fullName || 'Unknown', email: profile.email } : null,
+      };
+    });
   },
   ['admin-pending-listings'],
   {

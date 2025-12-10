@@ -34,14 +34,14 @@ export const CRM_CACHE_TAGS = {
 // ============================================================================
 
 interface RawCustomer extends CRMCustomer {
-  profiles?: { id: string; full_name: string; email: string; avatar_url: string | null };
+  profiles?: { id: string; first_name: string; second_name: string; email: string; avatar_url: string | null };
   profile_stats?: { items_shared: number; items_received: number; rating_average: number | null };
   forum_user_stats?: { reputation_score: number; trust_level: number };
   crm_customer_tag_assignments?: Array<{ tag: CRMCustomerTag }>;
 }
 
 interface RawNote extends CRMCustomerNote {
-  admin?: { id: string; full_name: string; email: string; avatar_url: string | null };
+  admin?: { id: string; first_name: string; second_name: string; email: string; avatar_url: string | null };
 }
 
 // ============================================================================
@@ -60,7 +60,8 @@ export async function getCRMCustomers(
     *,
     profiles:profile_id (
       id,
-      full_name,
+      first_name,
+      second_name,
       email,
       avatar_url
     ),
@@ -129,7 +130,7 @@ export async function getCRMCustomers(
   const customers: CRMCustomerWithProfile[] =
     data?.map((customer: RawCustomer) => ({
       ...customer,
-      full_name: customer.profiles?.full_name || '',
+      full_name: [customer.profiles?.first_name, customer.profiles?.second_name].filter(Boolean).join(' ') || '',
       email: customer.profiles?.email || '',
       avatar_url: customer.profiles?.avatar_url || null,
       items_shared: customer.profile_stats?.items_shared || 0,
@@ -198,7 +199,8 @@ export async function getCustomerNotes(customerId: string): Promise<CRMCustomerN
       *,
       admin:admin_id (
         id,
-        full_name,
+        first_name,
+        second_name,
         email,
         avatar_url
       )
@@ -214,7 +216,7 @@ export async function getCustomerNotes(customerId: string): Promise<CRMCustomerN
   return (
     data?.map((note: RawNote) => ({
       ...note,
-      admin_name: note.admin?.full_name || '',
+      admin_name: [note.admin?.first_name, note.admin?.second_name].filter(Boolean).join(' ') || '',
       admin_email: note.admin?.email || '',
       admin_avatar_url: note.admin?.avatar_url || null,
     })) || []
@@ -394,7 +396,7 @@ export async function getCRMDashboardStats(): Promise<CRMDashboardStats> {
       id,
       profile_id,
       ltv_score,
-      profiles:profile_id (full_name)
+      profiles:profile_id (first_name, second_name)
     `)
     .eq('lifecycle_stage', 'champion')
     .order('ltv_score', { ascending: false })
@@ -404,13 +406,13 @@ export async function getCRMDashboardStats(): Promise<CRMDashboardStats> {
     id: string;
     profile_id: string;
     ltv_score: number;
-    profiles: { full_name: string }[];
+    profiles: { first_name: string; second_name: string }[];
   }
 
   const topChampions =
     (championsData as unknown as ChampionData[] | null)?.map((item) => ({
       customer_id: item.id,
-      full_name: item.profiles?.[0]?.full_name || 'Unknown',
+      full_name: [item.profiles?.[0]?.first_name, item.profiles?.[0]?.second_name].filter(Boolean).join(' ') || 'Unknown',
       ltv_score: item.ltv_score,
     })) || [];
 
