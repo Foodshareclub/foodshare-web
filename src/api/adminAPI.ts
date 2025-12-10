@@ -644,13 +644,13 @@ export const getAllUsers = () => {
 
 /**
  * Get admin users only
+ * Uses user_roles table (source of truth for admin status)
  */
 export const getAdminUsers = () => {
   return supabase
-    .from("admin")
-    .select("*")
-    .eq("is_admin", true)
-    .order("created_at", { ascending: false });
+    .from("user_roles")
+    .select("profiles!inner(id, email, first_name, second_name, avatar_url, created_time), roles!inner(name)")
+    .in("roles.name", ["admin", "superadmin"]);
 };
 
 // =============================================================================

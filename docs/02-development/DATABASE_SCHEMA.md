@@ -48,19 +48,19 @@ User profile information linked to Supabase Auth users.
 
 FoodShare supports multiple role sources for backwards compatibility:
 
-1. **JSONB `role` field** (recommended) - Flexible role object in `profiles.role`:
+1. **`user_roles` junction table** (source of truth for admin status) - Role assignments linking profiles to roles via the `roles` table. This is the authoritative source for admin/superadmin checks.
+
+2. **JSONB `role` field** - Flexible role object in `profiles.role` for other roles:
 
    ```json
    { "admin": true, "volunteer": false, "subscriber": true }
    ```
 
-2. **Legacy `user_role` field** - Simple string in `profiles.user_role`:
+3. **Legacy `user_role` field** - Simple string in `profiles.user_role`:
    - `'user'` - Standard user (default)
    - `'admin'` - Administrator
    - `'superadmin'` - Super administrator
    - `'volunteer'` - Volunteer
-
-3. **`user_roles` junction table** - Role assignments linking profiles to roles
 
 **Checking Admin Status (TypeScript):**
 
@@ -78,21 +78,27 @@ const isJsonbAdmin = profile?.role?.admin === true;
 const isLegacyAdmin = profile?.user_role === "admin" || profile?.user_role === "superadmin";
 ```
 
-**Querying by JSONB Role (Supabase):**
+**Querying Admin Users (Supabase):**
 
 ```typescript
-// ✅ Query users with a specific role using JSONB arrow operator
+// ✅ Recommended - Query via user_roles table (source of truth)
+const { data: admins } = await supabase
+  .from('user_roles')
+  .select('profiles!inner(id, email, first_name, second_name), roles!inner(name)')
+  .in('roles.name', ['admin', 'superadmin']);
+
+// ✅ Query users with other roles using JSONB arrow operator
 const { data: volunteers } = await supabase
   .from('profiles')
   .select('*')
   .eq('role->>volunteer', 'true')  // JSONB text extraction
   .order('first_name');
 
-// ❌ Legacy approach (deprecated)
+// ❌ Legacy approach (deprecated for admin checks)
 const { data } = await supabase
   .from('profiles')
   .select('*')
-  .eq('user_role', 'volunteer');
+  .eq('role->>admin', 'true');
 ```
 
 **Relationships:**

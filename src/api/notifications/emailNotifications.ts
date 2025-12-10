@@ -349,13 +349,14 @@ export async function notifyAdminsOfFeedback(params: {
     // For now, we'll use a placeholder implementation
     // You should replace this with actual admin fetching logic
 
-    const { supabase } = await import("@/lib/supabase/client");
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
 
-    // Fetch all admin users
+    // Fetch all admin users using user_roles table (source of truth for admin status)
     const { data: admins, error } = await supabase
-      .from("profiles")
-      .select("id, email, first_name, second_name")
-      .eq("is_admin", true);
+      .from("user_roles")
+      .select("profiles!inner(id, email, first_name, second_name), roles!inner(name)")
+      .in("roles.name", ["admin", "superadmin"]);
 
     if (error) {
       logger.error("Failed to fetch admins", error as Error);
@@ -368,17 +369,23 @@ export async function notifyAdminsOfFeedback(params: {
     }
 
     // Send notification to each admin
-    interface AdminProfile {
-      email: string;
-      first_name: string | null;
-      second_name: string | null;
+    interface AdminUserRole {
+      profiles: {
+        id: string;
+        email: string;
+        first_name: string | null;
+        second_name: string | null;
+      };
+      roles: {
+        name: string;
+      };
     }
 
     const results = await Promise.allSettled(
-      (admins as AdminProfile[]).map((admin) =>
+      (admins as unknown as AdminUserRole[]).map((adminRole) =>
         sendFeedbackNotification({
-          adminEmail: admin.email,
-          adminName: [admin.first_name, admin.second_name].filter(Boolean).join(' ') || undefined,
+          adminEmail: adminRole.profiles.email,
+          adminName: [adminRole.profiles.first_name, adminRole.profiles.second_name].filter(Boolean).join(' ') || undefined,
           ...params,
         })
       )

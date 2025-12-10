@@ -27,7 +27,7 @@
 
     - Help me implement admin role functionality to edit any listings through an advanced CRM system. Let's first explore the current codebase to understand the existing structure around posts/listings and any admin functionality.
         - Use the Next.js expert to deeply modify and optimize the code base.
-        - We use admin "role jsonb not null default '{"admin": false, "volunteer": false, "subscriber": true, "organization": false, "fridge-coordinator": false, "foodbank-coordinator": false}'::jsonb" in the profiles to be able to adit
+        - Admin status is determined via `user_roles` table (source of truth) joining profiles to roles. The JSONB `role` field in profiles is used for other roles like volunteer, subscriber, etc.
         - Improve the email CRM expirience to be able to use 3 email providers we implemented
         - Improve the UI/UX logic for the CRM
         - Use the clean next.js 16 arcitecture with Supabase integration
