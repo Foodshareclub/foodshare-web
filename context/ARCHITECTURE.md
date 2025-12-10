@@ -441,7 +441,12 @@ export function useRealtimeMessages(chatId: string) {
 ### Auth Flow (PKCE)
 
 ```
-User Login
+User Request
+    ↓
+Middleware (src/middleware.ts)
+    ├── Validates/clears corrupted cookies
+    ├── Refreshes session automatically
+    └── Protects /admin routes (defense-in-depth)
     ↓
 Supabase Auth (PKCE OAuth)
     ↓
@@ -451,6 +456,14 @@ Server Components read session
     ↓
 Server Actions validate session before mutations
 ```
+
+### Middleware Protection
+
+The middleware (`src/middleware.ts`) provides edge-level authentication:
+
+- **Cookie Validation** - Detects and clears corrupted Supabase cookies
+- **Session Refresh** - Automatically refreshes expired sessions on every request
+- **Admin Protection** - Multi-source role checking for `/admin/*` routes (JSONB role, legacy user_role, user_roles table)
 
 ### Server-Side Auth Check
 

@@ -160,9 +160,25 @@ const supabase = createClient();
 
 ## Commits
 
+Enforced by `lefthook-rs conventional-commit`:
+
 ```text
 feat: add user profile page
 fix: resolve chat message duplication
 refactor: simplify product card
 docs: update API documentation
+test: add product card tests
+perf: optimize image loading
+chore: update dependencies
 ```
+
+With scope: `feat(auth): add OAuth login`
+
+## Code Quality (Auto-enforced)
+
+Pre-commit hooks automatically:
+- Format code (Prettier)
+- Fix lint issues (ESLint)
+- Sort imports alphabetically
+- Check for secrets/credentials
+- Run security scans (OWASP)

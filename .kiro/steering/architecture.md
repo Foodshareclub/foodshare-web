@@ -16,6 +16,7 @@ The codebase uses a **server-first architecture** with Next.js 16. No Redux.
 | UI state | Zustand (minimal - modals, preferences) |
 | Caching | `unstable_cache` with centralized cache keys |
 | Realtime | Supabase client subscriptions (client-only) |
+| Git hooks | Rust-based `lefthook-rs` (security, quality, format) |
 
 ## Data Flow
 
@@ -42,6 +43,11 @@ REALTIME: Client Component → Supabase subscription → useState
 
 - `src/store/` - Zustand stores for UI state only (modals, preferences)
 - No Redux, no TanStack Query for data fetching
+
+### Developer Tooling
+
+- `tools/` - Rust-based git hooks binary (`lefthook-rs`)
+- `lefthook.yml` - Hook orchestration config
 
 ## When to Use What
 

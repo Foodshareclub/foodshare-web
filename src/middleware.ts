@@ -2,14 +2,16 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
 /**
- * Supabase Auth Proxy
+ * Next.js Middleware for Supabase Auth
  *
- * This proxy handles session refresh on every request, ensuring:
+ * This middleware handles session refresh on every request, ensuring:
  * 1. Supabase auth cookies are properly synced
  * 2. Expired sessions are refreshed automatically
- * 3. Admin routes are protected with role-based access
+ * 3. Admin routes are protected with role-based access (defense-in-depth)
+ *
+ * Security: Admin check uses multiple role sources for consistency with checkIsAdmin()
  */
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // Create response that will be returned
   let response = NextResponse.next({
     request: {
@@ -44,7 +46,7 @@ export async function proxy(request: NextRequest) {
   if (corruptedCookies.length > 0) {
     for (const cookieName of corruptedCookies) {
       response.cookies.delete(cookieName);
-      console.warn(`Proxy: Cleared corrupted cookie: ${cookieName}`);
+      console.warn(`Middleware: Cleared corrupted cookie: ${cookieName}`);
     }
     // Return early to let cookies clear
     return response;
@@ -60,7 +62,6 @@ export async function proxy(request: NextRequest) {
           return request.cookies.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          // Update both request and response cookies
           request.cookies.set({
             name,
             value,
@@ -78,7 +79,6 @@ export async function proxy(request: NextRequest) {
           });
         },
         remove(name: string, options: CookieOptions) {
-          // Remove from both request and response cookies
           request.cookies.set({
             name,
             value: '',
@@ -99,26 +99,23 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Refresh session - this is critical for maintaining auth state
-  // Wrap in try-catch to handle corrupted cookie errors gracefully
+  // Refresh session - critical for maintaining auth state
   let session = null;
   try {
     const { data } = await supabase.auth.getSession();
     session = data.session;
   } catch (error) {
-    // If session loading fails (e.g., corrupted cookies), clear all sb- cookies
-    console.warn('Proxy: Session load failed, clearing auth cookies:', error);
+    console.warn('Middleware: Session load failed, clearing auth cookies:', error);
     const allCookies = request.cookies.getAll();
     for (const cookie of allCookies) {
       if (cookie.name.startsWith('sb-')) {
         response.cookies.delete(cookie.name);
       }
     }
-    // Return response with cleared cookies - user will need to re-authenticate
     return response;
   }
 
-  // Check if accessing admin routes
+  // Admin route protection
   if (request.nextUrl.pathname.startsWith('/admin')) {
     // Redirect to login if not authenticated
     if (!session?.user) {
@@ -127,15 +124,34 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Check if user has admin role from profiles table
+    // Check admin status from multiple sources (consistent with checkIsAdmin in auth.ts)
     const { data: profile } = await supabase
       .from('profiles')
-      .select('user_role')
+      .select('role, user_role')
       .eq('id', session.user.id)
       .single();
 
-    // Redirect to home if not admin
-    if (!profile || (profile.user_role !== 'admin' && profile.user_role !== 'superadmin')) {
+    // Check JSONB role field (new system)
+    const jsonbRoles = (profile?.role as Record<string, boolean>) || {};
+    const isJsonbAdmin = jsonbRoles.admin === true;
+
+    // Check legacy user_role field
+    const isLegacyAdmin = profile?.user_role === 'admin' || profile?.user_role === 'superadmin';
+
+    // Check user_roles junction table
+    const { data: userRolesData } = await supabase
+      .from('user_roles')
+      .select('role_id, roles!user_roles_role_id_fkey(name)')
+      .eq('profile_id', session.user.id);
+
+    const tableRoles = (userRolesData ?? []).flatMap((r) => {
+      const roleName = (r as { roles?: { name?: string } }).roles?.name;
+      return roleName ? [roleName] : [];
+    });
+    const isTableAdmin = tableRoles.includes('admin') || tableRoles.includes('superadmin');
+
+    // Redirect to home if not admin (any source)
+    if (!isJsonbAdmin && !isLegacyAdmin && !isTableAdmin) {
       return NextResponse.redirect(new URL('/', request.url));
     }
   }

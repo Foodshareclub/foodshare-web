@@ -32,6 +32,19 @@ src/
 ├── utils/                  # Helper functions
 ├── assets/                 # Static images
 └── workers/                # Web Workers
+
+tools/                      # Rust-based git hooks (lefthook-rs)
+├── src/
+│   ├── main.rs             # CLI entry point
+│   ├── utils.rs            # Shared utilities
+│   └── checks/             # Individual check modules
+│       ├── security.rs     # Secrets/credentials detection
+│       ├── nextjs_security.rs  # OWASP security scanner
+│       ├── complexity.rs   # Code complexity analysis
+│       ├── accessibility.rs    # A11y checks for JSX/TSX
+│       └── ...             # Other checks
+├── Cargo.toml              # Rust dependencies
+└── target/release/         # Compiled binary (lefthook-rs)
 ```
 
 ## File Conventions

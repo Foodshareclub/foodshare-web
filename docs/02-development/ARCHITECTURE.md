@@ -227,49 +227,73 @@ All application routes are defined in `src/utils/ROUTES.ts` for consistent navig
 │    User     │
 └──────┬──────┘
        │
-       │ 1. Access Protected Route
+       │ 1. Any Request
        ▼
 ┌─────────────────┐
-│   AuthGuard     │ ◄─── Checks authentication
+│   Middleware    │ ◄─── Edge-level auth (src/middleware.ts)
+│                 │      • Validates/clears corrupted cookies
+│                 │      • Refreshes session automatically
+│                 │      • Protects /admin routes
 └──────┬──────────┘
        │
-       │ 2. Not Authenticated
+       │ 2. Access Protected Route
+       ▼
+┌─────────────────┐
+│   AuthGuard     │ ◄─── Component-level checks
+└──────┬──────────┘
+       │
+       │ 3. Not Authenticated
        ▼
 ┌─────────────────┐
 │  Login Page     │
 └──────┬──────────┘
        │
-       │ 3. Submit Credentials
+       │ 4. Submit Credentials
        ▼
 ┌─────────────────┐
 │  AuthProvider   │ ◄─── Centralized auth logic
 └──────┬──────────┘
        │
-       │ 4. Call Supabase Auth
+       │ 5. Call Supabase Auth
        ▼
 ┌─────────────────┐
 │   Supabase      │
 │   Auth API      │
 └──────┬──────────┘
        │
-       │ 5. Return Session
+       │ 6. Return Session
        ▼
 ┌─────────────────┐
 │ Session Manager │ ◄─── Auto-refresh, health checks
 └──────┬──────────┘
        │
-       │ 6. Update Context
+       │ 7. Update Context
        ▼
 ┌─────────────────┐
 │  AuthProvider   │ ◄─── Broadcast to all components
 └──────┬──────────┘
        │
-       │ 7. Redirect to Original Route
+       │ 8. Redirect to Original Route
        ▼
 ┌─────────────────┐
 │ Protected Page  │
 └─────────────────┘
 ```
+
+### Middleware (Edge-Level Protection)
+
+The `src/middleware.ts` provides defense-in-depth security:
+
+| Feature | Description |
+|---------|-------------|
+| Cookie Validation | Detects corrupted `sb-*` cookies and clears them |
+| Session Refresh | Automatically refreshes expired sessions on every request |
+| Admin Protection | Multi-source role checking for `/admin/*` routes |
+
+Admin role checking uses three sources (consistent with `checkIsAdmin()`):
+1. **JSONB role field** - `profiles.role` with `{ admin: true }`
+2. **Legacy user_role** - `profiles.user_role` = `'admin'` or `'superadmin'`
+3. **user_roles table** - Junction table with role name `'admin'` or `'superadmin'`
 
 ---
 

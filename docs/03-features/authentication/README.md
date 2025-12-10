@@ -17,6 +17,7 @@ New features should use Server Actions with `useTransition` for pending states.
 
 ```
 src/
+├── middleware.ts                  # Auth middleware (session refresh, admin protection)
 ├── app/
 │   └── actions/
 │       └── auth.ts                # Server Actions (recommended)
@@ -37,6 +38,50 @@ src/
     └── slices/
         └── userReducer.ts         # Legacy auth state management
 ```
+
+---
+
+## Middleware (Session & Route Protection)
+
+The `src/middleware.ts` file handles authentication at the edge, running on every request:
+
+### Features
+
+1. **Corrupted Cookie Detection** - Validates Supabase cookies and clears corrupted ones
+2. **Session Refresh** - Automatically refreshes expired sessions
+3. **Admin Route Protection** - Defense-in-depth protection for `/admin/*` routes
+
+### How It Works
+
+```typescript
+// Middleware runs on every request (except static files)
+export async function middleware(request: NextRequest) {
+  // 1. Check for corrupted Supabase cookies (sb-*) and clear them
+  // 2. Create Supabase client with cookie handling
+  // 3. Refresh session (critical for auth state)
+  // 4. Protect /admin routes with multi-source role checking
+}
+```
+
+### Admin Route Protection
+
+The middleware checks admin status from multiple sources (consistent with `checkIsAdmin()` in auth.ts):
+
+| Source | Field | Values |
+|--------|-------|--------|
+| JSONB role field | `profiles.role` | `{ admin: true }` |
+| Legacy user_role | `profiles.user_role` | `'admin'` or `'superadmin'` |
+| user_roles table | Junction table | Role name `'admin'` or `'superadmin'` |
+
+If a user accesses `/admin/*` without admin privileges, they are redirected to the home page.
+
+### Matcher Configuration
+
+The middleware runs on all paths except:
+- `_next/static` (static files)
+- `_next/image` (image optimization)
+- `favicon.ico`
+- Image files (`.svg`, `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`)
 
 ---
 

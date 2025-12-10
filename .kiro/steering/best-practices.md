@@ -69,6 +69,20 @@ const supabase = createClient(); // from @/lib/supabase/client
 | Hydration mismatch | Use `useEffect` for client-only |
 | Re-exporting from `'use server'` file | Only async actions allowed; import data from `@/lib/data/*` |
 
+## Security (OWASP)
+
+Git hooks automatically check for:
+
+| Category | Checks |
+|----------|--------|
+| A01 Broken Access Control | Auth on mutations, IDOR, CSRF |
+| A02 Cryptographic Failures | Weak crypto, secrets, JWT |
+| A03 Injection | SQL, command injection, ReDoS |
+| A07 XSS | dangerouslySetInnerHTML, innerHTML |
+| A10 SSRF | User-controlled URLs |
+
+Run manually: `./tools/target/release/lefthook-rs nextjs-security src/**/*.tsx`
+
 ## Checklist
 
 - [ ] Server/Client separation correct
@@ -79,3 +93,5 @@ const supabase = createClient(); // from @/lib/supabase/client
 - [ ] No console.log in production
 - [ ] TypeScript types explicit
 - [ ] Use `invalidateTag` from `@/lib/data/cache-keys` for cache invalidation
+- [ ] No secrets/credentials in code (checked by hooks)
+- [ ] Input validation with zod/yup for user data

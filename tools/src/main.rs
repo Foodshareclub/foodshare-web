@@ -76,6 +76,8 @@ enum Commands {
         #[arg(trailing_var_arg = true)]
         files: Vec<String>,
     },
+    /// Verify project structure and organization
+    ProjectStructure,
     /// Run all pre-commit checks
     PreCommit {
         /// Files to check
@@ -104,6 +106,7 @@ fn main() -> Result<()> {
         Commands::TestCoverage => checks::test_coverage::run(),
         Commands::UnusedExports => checks::unused_exports::run(),
         Commands::NextjsSecurity { files } => checks::nextjs_security::run(&files),
+        Commands::ProjectStructure => checks::project_structure::run(),
         Commands::PreCommit { files } => checks::pre_commit::run(&files),
     };
 

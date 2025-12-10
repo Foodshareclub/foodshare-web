@@ -74,6 +74,7 @@ export default async function HeaderServer({
     <Header
       userId={userId}
       isAuth={authSession.isAuthenticated}
+      isAdmin={authSession.isAdmin}
       productType={productType}
       onRouteChange={getRoute}
       onProductTypeChange={setProductType}

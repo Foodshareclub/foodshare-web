@@ -105,6 +105,32 @@ git push origin feat/my-feature
 
 Commit format: `feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `perf:`
 
+## Git Hooks (lefthook-rs)
+
+Rust-based hooks run automatically on commit/push:
+
+```bash
+# Build Rust tools (one-time)
+cd tools && cargo build --release
+
+# Normal commit - auto-fix runs (format, lint, imports)
+git commit -m "feat: add feature"
+
+# Skip type-check for faster commits
+LEFTHOOK_EXCLUDE=type-check git commit -m "wip: progress"
+
+# Skip all hooks
+LEFTHOOK=0 git commit -m "wip: quick save"
+
+# Enable optional checks
+ENABLE_ALL=1 git commit           # All optional checks
+ENABLE_COMPLEXITY=1 git commit    # Complexity analysis
+ENABLE_A11Y=1 git commit          # Accessibility check
+
+# Quick push (skip tests/build)
+SKIP_TESTS=1 SKIP_BUILD=1 git push
+```
+
 ## Testing
 
 ```bash
@@ -129,3 +155,5 @@ npm run test:coverage # Coverage report
 | Supabase error | Check env vars, await `createClient()` |
 | Import not found | Use `@/` alias |
 | Component not updating | Check revalidation in Server Action |
+| Hook failed | Check `tools/target/release/lefthook-rs` exists |
+| Security check failed | Review flagged patterns, fix or allowlist |

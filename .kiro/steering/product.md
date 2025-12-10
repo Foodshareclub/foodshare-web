@@ -51,3 +51,4 @@ FoodShare is a community-driven food sharing platform that connects people with 
 - Backend powered by Supabase (PostgreSQL, Auth, Realtime, Storage)
 - Deployed on Vercel with global CDN
 - Mobile-responsive, progressive web app
+- Rust-based git hooks for security and code quality (OWASP coverage)

@@ -37,6 +37,12 @@ inclusion: always
 
 - **Leaflet + React Leaflet** - Interactive maps (client-only, dynamic import)
 
+## Developer Tooling
+
+- **lefthook-rs** - Rust-based git hooks (fast, OWASP security coverage)
+- **Lefthook** - Git hooks orchestration
+- **ESLint + Prettier** - Code quality with auto-fix
+
 ## Commands
 
 ```bash
@@ -45,6 +51,9 @@ npm run build        # Production build
 npm run lint         # ESLint
 npm run type-check   # TypeScript check
 npm test             # Jest tests
+
+# Rust tools (build once)
+cd tools && cargo build --release
 ```
 
 ## Key Points
@@ -53,3 +62,4 @@ npm test             # Jest tests
 - **Server-first** - Fetch in Server Components, mutate with Server Actions
 - **Path alias** - Use `@/` for imports from `src/`
 - **Env vars** - `NEXT_PUBLIC_` prefix for client-side
+- **Git hooks** - Auto-format, lint, security checks on commit

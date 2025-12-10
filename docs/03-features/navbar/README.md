@@ -284,6 +284,7 @@ type HeaderProps = {
   // Auth data (from server)
   userId?: string;
   isAuth: boolean;
+  isAdmin?: boolean;
   imgUrl?: string;
   firstName?: string;
   secondName?: string;

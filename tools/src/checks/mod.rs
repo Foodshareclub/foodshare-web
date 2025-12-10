@@ -8,6 +8,7 @@ pub mod large_files;
 pub mod nextjs_security;
 pub mod no_console;
 pub mod pre_commit;
+pub mod project_structure;
 pub mod protected_branch;
 pub mod security;
 pub mod test_coverage;

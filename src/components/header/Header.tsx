@@ -9,6 +9,7 @@ type HeaderProps = {
   // Auth data (passed from server)
   userId?: string;
   isAuth: boolean;
+  isAdmin?: boolean;
   imgUrl?: string;
   firstName?: string;
   secondName?: string;
@@ -31,6 +32,7 @@ type HeaderProps = {
 export default function Header({
   userId,
   isAuth,
+  isAdmin = false,
   imgUrl = "",
   firstName,
   secondName,
@@ -45,6 +47,7 @@ export default function Header({
     <Navbar
       userId={userId}
       isAuth={isAuth}
+      isAdmin={isAdmin}
       productType={productType}
       onRouteChange={onRouteChange}
       onProductTypeChange={onProductTypeChange}

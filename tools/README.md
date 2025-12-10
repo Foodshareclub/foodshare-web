@@ -5,11 +5,11 @@ Fast git hooks for FoodShare, written in Rust with OWASP security coverage.
 ## Build
 
 ```bash
-cd scripts/lefthook
+cd tools
 cargo build --release
 ```
 
-The binary will be at `target/release/lefthook-rs`.
+The binary will be at `tools/target/release/lefthook-rs`.
 
 ## Commands
 
@@ -28,6 +28,7 @@ The binary will be at `target/release/lefthook-rs`.
 | `test-coverage`              | Check test coverage thresholds                   |
 | `unused-exports`             | Find dead code / unused exports                  |
 | `nextjs-security`            | OWASP security scanner for Next.js/React/Vercel  |
+| `project-structure`          | Verify project directory organization            |
 | `pre-commit`                 | Run all pre-commit checks                        |
 
 ## Usage
