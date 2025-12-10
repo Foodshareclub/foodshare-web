@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { importProfilesAsCRMCustomers } from "@/app/actions/crm";
-import type { DashboardStats, AuditLog } from "@/app/actions/admin";
+import type { DashboardStats, AuditLog } from "@/lib/data/admin";
 
 // ============================================================================
 // Types

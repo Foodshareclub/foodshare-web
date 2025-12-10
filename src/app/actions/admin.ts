@@ -3,12 +3,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 
-// Re-export types from data layer for backwards compatibility
-export type { DashboardStats, AuditLog, PendingListing } from "@/lib/data/admin";
-
-// Re-export cached data functions for backwards compatibility
-export { getDashboardStats, getAuditLogs, getPendingListings } from "@/lib/data/admin";
-
 export interface AdminUser {
   id: string;
   first_name: string | null;
