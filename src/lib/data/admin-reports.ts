@@ -145,7 +145,9 @@ export async function getReportsData(): Promise<ReportsData> {
   };
 
   const listingsByDay = aggregateByDay(recentListings);
-  const usersByDay = aggregateByDay(recentUsers?.map((u) => ({ created_at: u.created_time })));
+  const usersByDay = aggregateByDay(
+    recentUsers?.map((u) => ({ created_at: u.created_time })) ?? null
+  );
 
   return {
     overview: {
