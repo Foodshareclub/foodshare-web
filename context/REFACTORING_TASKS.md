@@ -18,6 +18,14 @@ The role system has been consolidated to use `user_roles` junction table as the 
   - `docs/02-development/ARCHITECTURE.md` - Updated admin role checking description
   - `docs/05-reference/API_REFERENCE.md` - Removed role from AuthUser interface
   - `docs/02-development/DATABASE_SCHEMA.md` - Clarified user_roles as source of truth
+- ✅ **Database functions migrated** (migration: `migrate_role_functions_to_user_roles`):
+  - `is_admin()` - Now uses `user_roles` table
+  - `is_admin_jsonb()` - Now uses `user_roles` table
+  - `has_role(uuid, text)` - Now uses `user_roles` table
+  - `get_secret_audited()` - Now uses `user_roles` table
+  - `reset_circuit_breaker()` - Now uses `user_roles` table
+  - `requires_mfa()` - Now uses `user_roles` table
+  - `notify_new_user()` - Removed reference to non-existent `user_role` column
 
 **Migration Pattern:**
 
