@@ -12,7 +12,7 @@ The codebase uses a **server-first architecture** with Next.js 16. No Redux.
 |------|----------------|
 | Data fetching | Server Components + `lib/data` functions |
 | Mutations | Server Actions with `revalidatePath`/`invalidateTag` |
-| Auth | Middleware + server-side session |
+| Auth | Proxy + server-side session |
 | UI state | Zustand (minimal - modals, preferences) |
 | Caching | `unstable_cache` with centralized cache keys |
 | Realtime | Supabase client subscriptions (client-only) |
