@@ -26,6 +26,7 @@ The role system has been consolidated to use `user_roles` junction table as the 
   - `reset_circuit_breaker()` - Now uses `user_roles` table
   - `requires_mfa()` - Now uses `user_roles` table
   - `notify_new_user()` - Removed reference to non-existent `user_role` column
+  - `notify_new_feedback()` - Fixed to use `user_roles` table instead of deprecated `is_admin` column (migration: `fix_notify_new_feedback_use_user_roles`)
 
 **Migration Pattern:**
 
