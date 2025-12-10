@@ -1,15 +1,15 @@
 /**
- * Admin Dashboard Page (Server Component)
- * Fetches data server-side and passes to client component
- * Uses Suspense for streaming
+ * Unified Admin Dashboard Page (Server Component)
+ * Industry-standard CRM with tabbed interface
  */
 
-import { Suspense } from 'react';
-import { getDashboardStats, getAuditLogs } from '@/lib/data/admin';
-import { AdminDashboardClient } from './AdminDashboardClient';
+import { Suspense } from "react";
+import { AdminUnifiedClient } from "./AdminUnifiedClient";
+import { getDashboardStats, getAuditLogs } from "@/lib/data/admin";
+import { getCustomerTagsCached } from "@/lib/data/crm";
+import { createClient } from "@/lib/supabase/server";
 
-// Route segment config for caching
-export const revalidate = 300; // Revalidate every 5 minutes
+export const revalidate = 300;
 
 // ============================================================================
 // Loading Skeleton
@@ -17,14 +17,12 @@ export const revalidate = 300; // Revalidate every 5 minutes
 
 function DashboardSkeleton() {
   return (
-    <div className="flex flex-col gap-6 animate-pulse">
-      {/* Header Skeleton */}
+    <div className="flex flex-col gap-6 p-6 animate-pulse">
       <div>
         <div className="h-8 bg-muted rounded w-48 mb-2" />
         <div className="h-4 bg-muted rounded w-64" />
       </div>
-
-      {/* Stats Grid Skeleton */}
+      <div className="h-12 bg-muted rounded w-full" />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
           <div key={i} className="bg-background p-6 rounded-lg border border-border">
@@ -33,56 +31,116 @@ function DashboardSkeleton() {
           </div>
         ))}
       </div>
-
-      {/* Additional Stats Skeleton */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-background p-6 rounded-lg border border-border">
-            <div className="h-4 bg-muted rounded w-24 mb-2" />
-            <div className="h-8 bg-muted rounded w-16" />
-          </div>
-        ))}
-      </div>
-
-      {/* Quick Actions and Activity Skeleton */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-background p-6 rounded-lg border border-border">
-          <div className="h-6 bg-muted rounded w-32 mb-4" />
-          <div className="flex flex-col gap-3">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-12 bg-muted rounded" />
-            ))}
-          </div>
-        </div>
-        <div className="bg-background p-6 rounded-lg border border-border">
-          <div className="h-6 bg-muted rounded w-32 mb-4" />
-          <div className="flex flex-col gap-2">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-10 bg-muted rounded" />
-            ))}
-          </div>
-        </div>
+        {[...Array(2)].map((_, i) => (
+          <div key={i} className="bg-background p-6 rounded-lg border border-border h-64" />
+        ))}
       </div>
     </div>
   );
 }
 
 // ============================================================================
-// Data Fetching Component
+// Data Fetching
 // ============================================================================
 
 async function AdminDashboardData() {
-  // Fetch data in parallel
-  const [stats, auditLogs] = await Promise.all([
+  const supabase = await createClient();
+
+  // Fetch all data in parallel
+  const [dashboardStats, auditLogs, tags, customersResult] = await Promise.all([
     getDashboardStats(),
     getAuditLogs(10),
+    getCustomerTagsCached(),
+    supabase
+      .from("crm_customers")
+      .select(
+        `
+        id,
+        profile_id,
+        status,
+        lifecycle_stage,
+        engagement_score,
+        churn_risk_score,
+        total_transactions,
+        last_interaction_at,
+        created_at,
+        profiles:profile_id (
+          first_name,
+          second_name,
+          email,
+          img_url
+        )
+      `
+      )
+      .eq("is_archived", false)
+      .order("created_at", { ascending: false })
+      .limit(100),
   ]);
 
-  return <AdminDashboardClient stats={stats} auditLogs={auditLogs} />;
+  const customers = (customersResult.data || []).map((c) => {
+    const profile = c.profiles as {
+      first_name?: string;
+      second_name?: string;
+      email?: string;
+      img_url?: string;
+    } | null;
+    return {
+      id: c.id,
+      profile_id: c.profile_id,
+      status: c.status || "active",
+      lifecycle_stage: c.lifecycle_stage || "lead",
+      engagement_score: c.engagement_score || 50,
+      churn_risk_score: c.churn_risk_score || 0,
+      total_transactions: c.total_transactions || 0,
+      last_interaction_at: c.last_interaction_at,
+      created_at: c.created_at,
+      full_name: [profile?.first_name, profile?.second_name].filter(Boolean).join(" ") || "Unknown",
+      email: profile?.email || "",
+      avatar_url: profile?.img_url || null,
+    };
+  });
+
+  // CRM stats
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+  const [totalRes, activeRes, atRiskRes, newRes] = await Promise.all([
+    supabase.from("crm_customers").select("*", { count: "exact", head: true }),
+    supabase
+      .from("crm_customers")
+      .select("*", { count: "exact", head: true })
+      .in("lifecycle_stage", ["active", "champion"]),
+    supabase
+      .from("crm_customers")
+      .select("*", { count: "exact", head: true })
+      .eq("lifecycle_stage", "at_risk"),
+    supabase
+      .from("crm_customers")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", oneWeekAgo.toISOString()),
+  ]);
+
+  const crmStats = {
+    totalCustomers: totalRes.count || 0,
+    activeCustomers: activeRes.count || 0,
+    atRiskCustomers: atRiskRes.count || 0,
+    newThisWeek: newRes.count || 0,
+  };
+
+  return (
+    <AdminUnifiedClient
+      dashboardStats={dashboardStats}
+      auditLogs={auditLogs}
+      customers={customers}
+      tags={tags}
+      crmStats={crmStats}
+    />
+  );
 }
 
 // ============================================================================
-// Page Component (Server Component)
+// Page Component
 // ============================================================================
 
 export default function AdminDashboardPage() {

@@ -2,13 +2,6 @@
 
 import { useState } from "react";
 
-import type { CustomRoomType } from "@/api/chatAPI";
-import { DragHandleIcon } from "@/utils/icons";
-import { Button } from "@/components/ui/button";
-import { UniversalDrawer, MinifiedUserInfo, AuthenticationUserModal } from "@/components";
-import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
-
-// Lucide icons
 import {
   ClipboardList,
   MessageCircle,
@@ -18,6 +11,13 @@ import {
   Info,
   LayoutGrid,
 } from "lucide-react";
+import type { CustomRoomType } from "@/api/chatAPI";
+import { DragHandleIcon } from "@/utils/icons";
+import { Button } from "@/components/ui/button";
+import { UniversalDrawer, MinifiedUserInfo, AuthenticationUserModal } from "@/components";
+import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
+
+// Lucide icons
 
 export interface MobileMenuProps {
   /** User authentication status */
@@ -145,7 +145,7 @@ export function MobileMenu({
                     tabIndex={0}
                   >
                     <LayoutGrid className="w-8 h-8 flex-shrink-0" />
-                    <p className="text-3xl font-semibold">Dashboard</p>
+                    <p className="text-3xl font-semibold">Admin</p>
                   </div>
                 )}
 
@@ -156,7 +156,7 @@ export function MobileMenu({
                   tabIndex={0}
                 >
                   <ClipboardList className="w-8 h-8 flex-shrink-0" />
-                  <p className="text-3xl">My listing's</p>
+                  <p className="text-3xl">My listings</p>
                 </div>
 
                 <div

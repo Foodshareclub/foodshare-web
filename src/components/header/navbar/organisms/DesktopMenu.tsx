@@ -2,17 +2,6 @@
 
 import { useState } from "react";
 
-import type { CustomRoomType } from "@/api/chatAPI";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MenuItem, NavbarAvatar } from "../atoms";
-import { AuthenticationUserModal } from "@/components";
-import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
-
-// Lucide icons
 import {
   ClipboardList,
   MessageCircle,
@@ -24,6 +13,17 @@ import {
   Info,
   LayoutGrid,
 } from "lucide-react";
+import { MenuItem, NavbarAvatar } from "../atoms";
+import type { CustomRoomType } from "@/api/chatAPI";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { AuthenticationUserModal } from "@/components";
+import { ThemeToggleInline } from "@/components/theme/ThemeToggle";
+
+// Lucide icons
 
 export interface DesktopMenuProps {
   /** User authentication status */
@@ -135,16 +135,16 @@ export function DesktopMenu({
                 {/* Admin Dashboard Link */}
                 {isAdmin && onNavigateToDashboard && (
                   <MenuItem
-                    label="Dashboard"
+                    label="Admin"
                     icon={<LayoutGrid className="w-5 h-5" />}
                     onClick={onNavigateToDashboard}
                     variant="accent"
-                    testId="menu-dashboard"
+                    testId="menu-admin"
                   />
                 )}
 
                 <MenuItem
-                  label="My listing's"
+                  label="My listings"
                   icon={<ClipboardList className="w-5 h-5" />}
                   onClick={onNavigateToMyLists}
                   testId="menu-my-listings"
