@@ -3,14 +3,14 @@
  * Industry-standard CRM with tabbed interface
  */
 
-import { Suspense } from 'react';
-import { AdminUnifiedClient } from './AdminUnifiedClient';
-import { getDashboardStats, getAuditLogs } from '@/lib/data/admin';
+import { Suspense } from "react";
+import { AdminUnifiedClient } from "./AdminUnifiedClient";
+import { getDashboardStats, getAuditLogs } from "@/lib/data/admin";
 import {
   getCustomerTagsCached,
   getAdminCustomersCached,
   getAdminCRMStatsCached,
-} from '@/lib/data/crm';
+} from "@/lib/data/crm";
 
 export const revalidate = 300;
 
@@ -39,14 +39,46 @@ function DashboardSkeleton() {
   );
 }
 
+const defaultStats = {
+  totalUsers: 0,
+  totalProducts: 0,
+  activeProducts: 0,
+  pendingProducts: 0,
+  totalChats: 0,
+  newUsersThisWeek: 0,
+};
+
+const defaultCRMStats = {
+  totalCustomers: 0,
+  activeCustomers: 0,
+  atRiskCustomers: 0,
+  newThisWeek: 0,
+};
+
+async function fetchAdminData() {
+  try {
+    const [dashboardStats, auditLogs, tags, customers, crmStats] = await Promise.all([
+      getDashboardStats(),
+      getAuditLogs(10),
+      getCustomerTagsCached(),
+      getAdminCustomersCached(100),
+      getAdminCRMStatsCached(),
+    ]);
+    return { dashboardStats, auditLogs, tags, customers, crmStats };
+  } catch (error) {
+    console.error("[Admin] Dashboard data fetch error:", error);
+    return {
+      dashboardStats: defaultStats,
+      auditLogs: [],
+      tags: [],
+      customers: [],
+      crmStats: defaultCRMStats,
+    };
+  }
+}
+
 async function AdminDashboardData() {
-  const [dashboardStats, auditLogs, tags, customers, crmStats] = await Promise.all([
-    getDashboardStats(),
-    getAuditLogs(10),
-    getCustomerTagsCached(),
-    getAdminCustomersCached(100),
-    getAdminCRMStatsCached(),
-  ]);
+  const { dashboardStats, auditLogs, tags, customers, crmStats } = await fetchAdminData();
 
   return (
     <AdminUnifiedClient
