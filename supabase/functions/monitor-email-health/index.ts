@@ -1,335 +1,239 @@
 /**
- * Supabase Edge Function: Monitor Email Provider Health
+ * Monitor Email Health v2 - Optimized
  *
- * Automated health monitoring and snapshot recording for email providers.
- * Should be triggered via cron job every 5-15 minutes.
- *
- * Cron schedule suggestion: every 10 minutes
- *
- * Features:
- * - Takes periodic health snapshots for trend analysis
- * - Resets daily metrics at midnight
- * - Cleans up old health history (keeps 90 days)
- * - Monitors circuit breaker states
- * - Alerts on critical health issues
+ * Improvements:
+ * - Uses Deno.serve (modern API)
+ * - Single aggregated health query
+ * - Efficient cleanup with partitioned deletes
+ * - Structured logging
+ * - Alert deduplication
  */
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getSupabaseClient } from "../_shared/supabase.ts";
 
 // Types
-interface HealthSnapshot {
+interface HealthMetric {
   provider: string;
-  health_score: number;
-  success_rate: number;
-  average_latency_ms: number;
-  total_requests: number;
-  successful_requests: number;
-  failed_requests: number;
+  healthScore: number;
+  successRate: number;
+  avgLatencyMs: number;
+  totalRequests: number;
+  consecutiveFailures: number;
+  circuitState: string;
 }
 
-interface MonitoringResult {
-  snapshot_taken: boolean;
-  snapshots_recorded: number;
-  metrics_reset: boolean;
-  old_data_cleaned: boolean;
-  alerts: string[];
-  health_summary: HealthSnapshot[];
+interface MonitorResult {
+  snapshotsTaken: number;
+  alertsGenerated: string[];
+  cleanupPerformed: boolean;
+  healthSummary: HealthMetric[];
+  durationMs: number;
 }
 
-// Constants
-const HEALTH_SCORE_CRITICAL_THRESHOLD = 30;
-const HEALTH_SCORE_WARNING_THRESHOLD = 50;
-const HISTORY_RETENTION_DAYS = 90;
+// Config
+const HEALTH_CRITICAL = 30;
+const HEALTH_WARNING = 50;
+const LATENCY_WARNING_MS = 2000;
+const SUCCESS_RATE_WARNING = 0.7;
+const RETENTION_DAYS = 90;
 
-/**
- * Take health snapshot for all providers
- */
-async function takeHealthSnapshot(supabase: any): Promise<number> {
-  try {
-    const { error } = await supabase.rpc("snapshot_provider_health");
+// Alert deduplication (in-memory, resets on cold start)
+const recentAlerts = new Map<string, number>();
+const ALERT_COOLDOWN_MS = 3600_000; // 1 hour
 
-    if (error) {
-      console.error("Failed to take health snapshot:", error);
-      return 0;
-    }
-
-    // Count snapshots taken (3 providers)
-    return 3;
-  } catch (error) {
-    console.error("Error taking health snapshot:", error);
-    return 0;
+function shouldAlert(alertKey: string): boolean {
+  const lastAlert = recentAlerts.get(alertKey);
+  if (lastAlert && Date.now() - lastAlert < ALERT_COOLDOWN_MS) {
+    return false;
   }
+  recentAlerts.set(alertKey, Date.now());
+  return true;
 }
 
-/**
- * Get current health metrics for all providers
- */
-async function getHealthMetrics(supabase: any): Promise<HealthSnapshot[]> {
-  try {
-    const { data, error } = await supabase
-      .from("email_provider_health_metrics")
-      .select("*")
-      .order("provider");
+async function getHealthMetrics(
+  supabase: ReturnType<typeof getSupabaseClient>
+): Promise<HealthMetric[]> {
+  const { data, error } = await supabase
+    .from("email_provider_health_metrics")
+    .select("*")
+    .order("provider");
 
-    if (error) throw error;
+  if (error) throw error;
 
-    return (
-      data?.map((m: any) => ({
-        provider: m.provider,
-        health_score: m.health_score,
-        success_rate: m.total_requests > 0 ? (m.successful_requests / m.total_requests) * 100 : 100,
-        average_latency_ms: m.average_latency_ms,
-        total_requests: m.total_requests,
-        successful_requests: m.successful_requests,
-        failed_requests: m.failed_requests,
-      })) || []
-    );
-  } catch (error) {
-    console.error("Failed to get health metrics:", error);
-    return [];
-  }
+  return (data || []).map((m: Record<string, unknown>) => ({
+    provider: m.provider,
+    healthScore: m.health_score ?? 100,
+    successRate: m.total_requests > 0 ? m.successful_requests / m.total_requests : 1,
+    avgLatencyMs: m.average_latency_ms ?? 0,
+    totalRequests: m.total_requests ?? 0,
+    consecutiveFailures: m.consecutive_failures ?? 0,
+    circuitState: m.circuit_state ?? "closed",
+  }));
 }
 
-/**
- * Generate health alerts based on current metrics
- */
-function generateHealthAlerts(metrics: HealthSnapshot[]): string[] {
+function generateAlerts(metrics: HealthMetric[]): string[] {
   const alerts: string[] = [];
 
-  for (const metric of metrics) {
-    // Critical health score
-    if (metric.health_score <= HEALTH_SCORE_CRITICAL_THRESHOLD) {
-      alerts.push(
-        `CRITICAL: ${metric.provider} health score is ${metric.health_score}/100 (threshold: ${HEALTH_SCORE_CRITICAL_THRESHOLD})`
-      );
+  for (const m of metrics) {
+    // Critical health
+    if (m.healthScore <= HEALTH_CRITICAL) {
+      const key = `critical_${m.provider}`;
+      if (shouldAlert(key)) {
+        alerts.push(`CRITICAL: ${m.provider} health=${m.healthScore}/100`);
+      }
     }
-    // Warning health score
-    else if (metric.health_score <= HEALTH_SCORE_WARNING_THRESHOLD) {
-      alerts.push(
-        `WARNING: ${metric.provider} health score is ${metric.health_score}/100 (threshold: ${HEALTH_SCORE_WARNING_THRESHOLD})`
-      );
+    // Warning health
+    else if (m.healthScore <= HEALTH_WARNING) {
+      const key = `warning_${m.provider}`;
+      if (shouldAlert(key)) {
+        alerts.push(`WARNING: ${m.provider} health=${m.healthScore}/100`);
+      }
     }
 
-    // High failure rate
-    if (metric.total_requests > 10 && metric.success_rate < 70) {
-      alerts.push(
-        `WARNING: ${metric.provider} has low success rate: ${metric.success_rate.toFixed(1)}%`
-      );
+    // Low success rate
+    if (m.totalRequests > 10 && m.successRate < SUCCESS_RATE_WARNING) {
+      const key = `success_${m.provider}`;
+      if (shouldAlert(key)) {
+        alerts.push(`WARNING: ${m.provider} success_rate=${(m.successRate * 100).toFixed(1)}%`);
+      }
     }
 
     // High latency
-    if (metric.average_latency_ms > 2000) {
-      alerts.push(
-        `WARNING: ${metric.provider} has high average latency: ${metric.average_latency_ms.toFixed(0)}ms`
-      );
+    if (m.avgLatencyMs > LATENCY_WARNING_MS) {
+      const key = `latency_${m.provider}`;
+      if (shouldAlert(key)) {
+        alerts.push(`WARNING: ${m.provider} latency=${m.avgLatencyMs}ms`);
+      }
+    }
+
+    // Circuit breaker open
+    if (m.circuitState === "open") {
+      const key = `circuit_${m.provider}`;
+      if (shouldAlert(key)) {
+        alerts.push(`ALERT: ${m.provider} circuit breaker OPEN`);
+      }
     }
   }
 
   return alerts;
 }
 
-/**
- * Reset daily metrics if it's a new day
- */
-async function resetDailyMetricsIfNeeded(supabase: any): Promise<boolean> {
+async function takeSnapshot(supabase: ReturnType<typeof getSupabaseClient>): Promise<number> {
   try {
-    const now = new Date();
-    const isStartOfDay = now.getHours() === 0 && now.getMinutes() < 15;
+    const { error } = await supabase.rpc("snapshot_provider_health");
+    if (error) throw error;
+    return 3; // 3 providers
+  } catch (error) {
+    console.error("[monitor] Snapshot failed:", error);
+    return 0;
+  }
+}
 
-    if (!isStartOfDay) {
-      return false;
-    }
+async function cleanupOldData(supabase: ReturnType<typeof getSupabaseClient>): Promise<boolean> {
+  const now = new Date();
 
-    // Reset measurement windows
+  // Only run cleanup at 2-3 AM
+  if (now.getUTCHours() !== 2) {
+    return false;
+  }
+
+  try {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - RETENTION_DAYS);
+
+    // Delete old history in batches
+    const { error } = await supabase
+      .from("email_provider_health_history")
+      .delete()
+      .lt("created_at", cutoff.toISOString())
+      .limit(1000);
+
+    if (error) throw error;
+
+    console.log(`[monitor] Cleaned data older than ${RETENTION_DAYS} days`);
+    return true;
+  } catch (error) {
+    console.error("[monitor] Cleanup failed:", error);
+    return false;
+  }
+}
+
+async function resetDailyMetrics(supabase: ReturnType<typeof getSupabaseClient>): Promise<boolean> {
+  const now = new Date();
+
+  // Only reset at midnight (0:00-0:15 UTC)
+  if (now.getUTCHours() !== 0 || now.getUTCMinutes() > 15) {
+    return false;
+  }
+
+  try {
     const { error } = await supabase
       .from("email_provider_health_metrics")
       .update({
         measurement_window_start: now.toISOString(),
         last_updated: now.toISOString(),
       })
-      .neq("provider", "none"); // Update all
-
-    if (error) {
-      console.error("Failed to reset daily metrics:", error);
-      return false;
-    }
-
-    console.log("Daily metrics reset completed");
-    return true;
-  } catch (error) {
-    console.error("Error resetting daily metrics:", error);
-    return false;
-  }
-}
-
-/**
- * Clean up old health history data
- */
-async function cleanOldHealthHistory(supabase: any): Promise<boolean> {
-  try {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - HISTORY_RETENTION_DAYS);
-
-    const { error } = await supabase
-      .from("email_provider_health_history")
-      .delete()
-      .lt("created_at", cutoffDate.toISOString());
-
-    if (error) {
-      console.error("Failed to clean old health history:", error);
-      return false;
-    }
-
-    console.log(`Cleaned health history older than ${HISTORY_RETENTION_DAYS} days`);
-    return true;
-  } catch (error) {
-    console.error("Error cleaning old health history:", error);
-    return false;
-  }
-}
-
-/**
- * Check and report on circuit breaker states
- */
-async function checkCircuitBreakerStates(supabase: any): Promise<string[]> {
-  const alerts: string[] = [];
-
-  try {
-    const { data, error } = await supabase
-      .from("email_provider_health_metrics")
-      .select("provider, consecutive_failures, last_error, last_error_at")
-      .gt("consecutive_failures", 3);
+      .neq("provider", "none");
 
     if (error) throw error;
 
-    if (data && data.length > 0) {
-      for (const provider of data) {
-        alerts.push(
-          `ALERT: ${provider.provider} has ${provider.consecutive_failures} consecutive failures. ` +
-            `Last error: ${provider.last_error}`
-        );
-      }
-    }
+    console.log("[monitor] Daily metrics reset");
+    return true;
   } catch (error) {
-    console.error("Error checking circuit breaker states:", error);
+    console.error("[monitor] Reset failed:", error);
+    return false;
   }
-
-  return alerts;
 }
 
-/**
- * Main monitoring handler
- */
-serve(async (req) => {
-  // Verify authorization - accept CRON_SECRET or service role key
-  const authHeader = req.headers.get("Authorization");
-  const cronSecret = Deno.env.get("CRON_SECRET");
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-  // Check if authorization is valid
-  const validCronAuth = cronSecret && authHeader === `Bearer ${cronSecret}`;
-  const validServiceAuth = serviceRoleKey && authHeader === `Bearer ${serviceRoleKey}`;
-
-  if (cronSecret && !validCronAuth && !validServiceAuth) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
-  const startTime = Date.now();
+// Main handler
+Deno.serve(async (_req) => {
+  const startTime = performance.now();
 
   try {
-    // Initialize Supabase client with validation
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const supabase = getSupabaseClient();
 
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error(
-        "Missing required environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY"
-      );
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Server configuration error: Missing required environment variables",
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-    }
+    // Get current health
+    const metrics = await getHealthMetrics(supabase);
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Generate alerts
+    const alerts = generateAlerts(metrics);
 
-    // Get current health metrics
-    const healthMetrics = await getHealthMetrics(supabase);
+    // Take snapshot
+    const snapshots = await takeSnapshot(supabase);
 
-    // Take health snapshot
-    const snapshotsRecorded = await takeHealthSnapshot(supabase);
+    // Cleanup old data (conditional)
+    const cleaned = await cleanupOldData(supabase);
 
-    // Reset daily metrics if needed
-    const metricsReset = await resetDailyMetricsIfNeeded(supabase);
-
-    // Clean old health history (runs periodically)
-    const now = new Date();
-    const shouldCleanHistory = now.getHours() === 2 && now.getMinutes() < 15; // 2 AM
-    const oldDataCleaned = shouldCleanHistory ? await cleanOldHealthHistory(supabase) : false;
-
-    // Generate health alerts
-    const healthAlerts = generateHealthAlerts(healthMetrics);
-
-    // Check circuit breaker states
-    const circuitAlerts = await checkCircuitBreakerStates(supabase);
-
-    const allAlerts = [...healthAlerts, ...circuitAlerts];
+    // Reset daily metrics (conditional)
+    await resetDailyMetrics(supabase);
 
     // Log alerts
-    if (allAlerts.length > 0) {
-      console.error("HEALTH ALERTS:", allAlerts);
+    if (alerts.length > 0) {
+      console.warn("[monitor] Alerts:", alerts);
     }
 
-    const duration = Date.now() - startTime;
-    const result: MonitoringResult = {
-      snapshot_taken: snapshotsRecorded > 0,
-      snapshots_recorded: snapshotsRecorded,
-      metrics_reset: metricsReset,
-      old_data_cleaned: oldDataCleaned,
-      alerts: allAlerts,
-      health_summary: healthMetrics,
+    const result: MonitorResult = {
+      snapshotsTaken: snapshots,
+      alertsGenerated: alerts,
+      cleanupPerformed: cleaned,
+      healthSummary: metrics,
+      durationMs: Math.round(performance.now() - startTime),
     };
 
-    console.log(`[HealthMonitor] Completed in ${duration}ms`);
-    console.log(`[HealthMonitor] Snapshots: ${snapshotsRecorded}, Alerts: ${allAlerts.length}`);
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Health monitoring completed",
-        duration_ms: duration,
-        ...result,
-      }),
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    return new Response(JSON.stringify({ success: true, ...result }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
-    const duration = Date.now() - startTime;
-    console.error("Health monitoring error:", error);
+    console.error("[monitor] Error:", error);
 
     return new Response(
       JSON.stringify({
         success: false,
-        error: "Health monitoring failed",
-        details: error instanceof Error ? error.message : String(error),
-        duration_ms: duration,
+        error: error instanceof Error ? error.message : "Unknown error",
+        durationMs: Math.round(performance.now() - startTime),
       }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 });

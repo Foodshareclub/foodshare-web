@@ -1,19 +1,21 @@
 /**
  * Email module exports
- * Uses EnhancedEmailService as the primary implementation
+ *
+ * v2: Uses UnifiedEmailService as primary (optimized)
+ * v1: EnhancedEmailService kept for backward compatibility
  */
 
-// Enhanced service (primary)
-export {
-  EnhancedEmailService,
-  createEnhancedEmailService,
-} from "./enhanced-service";
+// Unified service v2 (recommended)
+export { UnifiedEmailService, createUnifiedEmailService } from "./unified-service";
 
-// Backward-compatible aliases
+// Enhanced service v1 (legacy)
+export { EnhancedEmailService, createEnhancedEmailService } from "./enhanced-service";
+
+// Default export: Use unified service
 export {
-  EnhancedEmailService as EmailService,
-  createEnhancedEmailService as createEmailService,
-} from "./enhanced-service";
+  UnifiedEmailService as EmailService,
+  createUnifiedEmailService as createEmailService,
+} from "./unified-service";
 
 // Providers
 export { ResendProvider, BrevoProvider, AWSSESProvider, type IEmailProvider } from "./providers";

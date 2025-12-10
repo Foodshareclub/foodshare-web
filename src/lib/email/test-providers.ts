@@ -199,7 +199,6 @@ export async function testAWSSES(
     }
 
     const provider = new AWSSESProvider({
-      apiKey: "", // Not used for AWS SES
       fromEmail: fromEmail,
       fromName: "FoodShare Test",
       region: AWS_REGION,

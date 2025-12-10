@@ -4,6 +4,45 @@ Beautiful, comprehensive email management system for FoodShare admins with smart
 
 ---
 
+## 📧 Email Service Architecture
+
+FoodShare uses a dual-service architecture for email delivery:
+
+### UnifiedEmailService (v2) - Default
+
+The recommended service for all new code. Key improvements:
+
+- **Single source of truth** for provider selection (no Edge Function calls)
+- **Database-first health scoring** with request coalescing
+- **Lazy provider initialization** (tree-shaking friendly)
+- **Non-blocking metrics** via buffered writes
+- **Automatic retry queue** when all providers fail
+
+```typescript
+import { createEmailService } from "@/lib/email";
+
+// Returns UnifiedEmailService (v2)
+const emailService = createEmailService();
+await emailService.sendEmail(request);
+```
+
+### EnhancedEmailService (v1) - Legacy
+
+Kept for backward compatibility. Uses Edge Function for smart routing.
+
+```typescript
+import { createEnhancedEmailService } from "@/lib/email";
+
+// Returns EnhancedEmailService (v1)
+const emailService = createEnhancedEmailService();
+```
+
+### Migration Note
+
+The default export `createEmailService()` now returns `UnifiedEmailService`. Existing code using `createEmailService()` will automatically use v2. If you need the legacy behavior, explicitly import `createEnhancedEmailService`.
+
+---
+
 ## 🎉 What's Been Built
 
 You now have a **production-ready Admin Email CRM** with:
@@ -267,6 +306,8 @@ PRIORITY = {
   food_listing: ["brevo", "aws_ses", "resend"],
   feedback: ["brevo", "aws_ses", "resend"],
   review_reminder: ["brevo", "aws_ses", "resend"],
+  newsletter: ["brevo", "aws_ses", "resend"],
+  announcement: ["brevo", "aws_ses", "resend"],
 };
 ```
 
@@ -726,6 +767,6 @@ Your Admin Email CRM provides:
 
 ---
 
-**Last Updated:** 2025-11-28
+**Last Updated:** 2025-12-10
 **Status:** ✅ Production Ready
 **URL:** `/admin/email`

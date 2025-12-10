@@ -178,15 +178,13 @@ import { createEmailService } from "@/lib/email";
 
 async function testEmailService() {
   try {
+    // createEmailService() returns UnifiedEmailService (v2) by default
+    // For legacy EnhancedEmailService, use createEnhancedEmailService()
     const emailService = createEmailService();
 
-    // Test provider verification
-    const verifications = await emailService.verifyProviders();
-    console.log("Provider Verifications:", verifications);
-
-    // Test quota status
-    const quotas = await emailService.getQuotaStatus();
-    console.log("Provider Quotas:", quotas);
+    // Test health status (includes provider availability and metrics)
+    const health = await emailService.getHealthStatus();
+    console.log("Service Health:", health);
 
     console.log("✅ Email service initialized successfully!");
   } catch (error) {
@@ -265,22 +263,22 @@ SELECT vault.create_secret('XAI_API_KEY', 'xai-your-api-key-here');
 ```typescript
 // Example: Get secret with caching
 const supabase = await createClient();
-const { data, error } = await supabase.rpc('get_secrets', {
-  secret_names: ['XAI_API_KEY'],
+const { data, error } = await supabase.rpc("get_secrets", {
+  secret_names: ["XAI_API_KEY"],
 });
 
-const apiKey = data?.find(s => s.name === 'XAI_API_KEY')?.value;
+const apiKey = data?.find((s) => s.name === "XAI_API_KEY")?.value;
 ```
 
 ### When to Use Vault vs Environment Variables
 
-| Use Case | Recommendation |
-|----------|----------------|
-| Local development | Environment variables (`.env.local`) |
-| Vercel deployment | Vercel environment variables |
-| Shared secrets across services | Supabase Vault |
-| Secrets that need rotation | Supabase Vault |
-| Edge Functions needing secrets | Supabase Vault |
+| Use Case                       | Recommendation                       |
+| ------------------------------ | ------------------------------------ |
+| Local development              | Environment variables (`.env.local`) |
+| Vercel deployment              | Vercel environment variables         |
+| Shared secrets across services | Supabase Vault                       |
+| Secrets that need rotation     | Supabase Vault                       |
+| Edge Functions needing secrets | Supabase Vault                       |
 
 See [AI Moderation docs](../03-features/admin/AI_MODERATION.md) for a complete implementation example.
 

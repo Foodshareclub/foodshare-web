@@ -7,6 +7,8 @@
 
 import React, { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { Send, Mail, Users, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { EmailStatsDashboard } from "./EmailStatsDashboard";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,14 +22,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { EmailStatsDashboard } from "./EmailStatsDashboard";
-import { sendAdminEmail } from "@/app/actions/email";
+import { sendAdminEmail, sendTestEmailDirect } from "@/app/actions/email";
 import type { EmailType } from "@/lib/email/types";
 
-// Icons
-import { Send, Mail, Users, AlertCircle, CheckCircle, Clock } from "lucide-react";
-
-// Icon aliases for minimal code changes
+/**
+ * Icon aliases for minimal code changes
+ * @security-ignore A03:2021 - Static icon component references, not dynamic rendering
+ */
 const FiSend = Send;
 const FiMail = Mail;
 const FiUsers = Users;
@@ -45,7 +46,7 @@ interface EmailFormData {
   useHtml: boolean;
 }
 
-interface SendResult {
+interface _SendResult {
   success: boolean;
   message: string;
 }
@@ -68,7 +69,7 @@ const PROVIDERS = [
 ];
 
 export function EmailCRMClient() {
-  const t = useTranslations();
+  const _t = useTranslations();
   const [activeTab, setActiveTab] = useState<"compose" | "stats" | "templates">("stats");
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
@@ -330,6 +331,44 @@ export function EmailCRMClient() {
                 <Button type="submit" disabled={isPending} className="flex-1">
                   <FiSend className="h-4 w-4 mr-2" />
                   {isPending ? "Sending..." : "Send Email"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={isPending}
+                  onClick={async () => {
+                    if (!formData.to || !formData.subject || !formData.message) {
+                      setResult({ success: false, message: "Please fill in all required fields" });
+                      return;
+                    }
+                    setResult(null);
+                    startTransition(async () => {
+                      const html = formData.useHtml
+                        ? formData.message
+                        : `<p>${formData.message.replace(/\n/g, "<br/>")}</p>`;
+                      const response = await sendTestEmailDirect(
+                        formData.to,
+                        formData.subject,
+                        html
+                      );
+                      if (response.success && response.data?.success) {
+                        setResult({
+                          success: true,
+                          message: `Direct Resend test: Email sent! ID: ${response.data.messageId}`,
+                        });
+                      } else {
+                        const errorMessage = !response.success
+                          ? response.error.message
+                          : response.data?.error || "Failed to send";
+                        setResult({
+                          success: false,
+                          message: `Direct Resend test failed: ${errorMessage}`,
+                        });
+                      }
+                    });
+                  }}
+                >
+                  Test Direct (Resend)
                 </Button>
                 <Button type="button" variant="outline" onClick={clearForm}>
                   Clear

@@ -172,6 +172,98 @@ export interface SendEmailResult {
  * Send an email immediately (admin only)
  * Uses the enhanced email service with smart routing and fallback
  */
+/**
+ * Send a test email directly via Resend (bypasses smart routing)
+ * For debugging purposes
+ */
+export async function sendTestEmailDirect(
+  to: string,
+  subject: string,
+  html: string
+): Promise<ServerActionResult<SendEmailResult>> {
+  try {
+    const supabase = await createClient();
+
+    // Verify user is authenticated and is admin
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      return serverActionError("You must be logged in to send emails", "UNAUTHORIZED");
+    }
+
+    // Check if user is admin
+    const { data: userRole } = await supabase
+      .from("user_roles")
+      .select("roles!inner(name)")
+      .eq("profile_id", user.id)
+      .in("roles.name", ["admin", "superadmin"])
+      .single();
+
+    if (!userRole) {
+      return serverActionError("Admin access required", "FORBIDDEN");
+    }
+
+    // Import Resend directly
+    const { Resend } = await import("resend");
+
+    const apiKey = process.env.RESEND_API_KEY;
+    const fromEmail = process.env.EMAIL_FROM || "contact@foodshare.club";
+    const fromName = process.env.EMAIL_FROM_NAME || "FoodShare";
+
+    console.log("[sendTestEmailDirect] Config:", {
+      hasApiKey: !!apiKey,
+      apiKeyPrefix: apiKey?.substring(0, 10) + "...",
+      fromEmail,
+      fromName,
+      to,
+    });
+
+    if (!apiKey) {
+      return serverActionError("RESEND_API_KEY not configured", "INTERNAL_ERROR");
+    }
+
+    const resend = new Resend(apiKey);
+
+    const response = await resend.emails.send({
+      from: `${fromName} <${fromEmail}>`,
+      to: [to],
+      subject,
+      html,
+    });
+
+    console.log("[sendTestEmailDirect] Response:", response);
+
+    if (response.error) {
+      return {
+        success: true,
+        data: {
+          success: false,
+          error: response.error.message || "Resend API error",
+          provider: "resend",
+        },
+      };
+    }
+
+    return {
+      success: true,
+      data: {
+        success: true,
+        messageId: response.data?.id || "unknown",
+        provider: "resend",
+      },
+    };
+  } catch (error) {
+    console.error("[sendTestEmailDirect] Error:", error);
+    return serverActionError(
+      error instanceof Error ? error.message : "Failed to send email",
+      "UNKNOWN_ERROR"
+    );
+  }
+}
+
 export async function sendAdminEmail(
   request: SendEmailRequest
 ): Promise<ServerActionResult<SendEmailResult>> {
@@ -206,6 +298,21 @@ export async function sendAdminEmail(
       return serverActionError("Invalid email address", "VALIDATION_ERROR");
     }
 
+    // Log configuration for debugging
+    const fromEmail = process.env.EMAIL_FROM || "noreply@foodshare.app";
+    const fromName = process.env.EMAIL_FROM_NAME || "FoodShare";
+    const hasResendKey = !!process.env.RESEND_API_KEY;
+    const hasBrevoKey = !!process.env.BREVO_API_KEY;
+
+    console.log("[sendAdminEmail] Config:", {
+      fromEmail,
+      fromName,
+      hasResendKey,
+      hasBrevoKey,
+      emailType: request.emailType,
+      to: request.to,
+    });
+
     // Create email service and send
     const emailService = createEmailService();
 
@@ -217,11 +324,18 @@ export async function sendAdminEmail(
       options: {
         to: { email: request.to },
         from: {
-          email: process.env.EMAIL_FROM || "noreply@foodshare.app",
-          name: process.env.EMAIL_FROM_NAME || "FoodShare",
+          email: fromEmail,
+          name: fromName,
         },
       },
       emailType: request.emailType,
+    });
+
+    console.log("[sendAdminEmail] Result:", {
+      success: result.success,
+      provider: result.provider,
+      messageId: result.messageId,
+      error: result.error,
     });
 
     if (result.success) {

@@ -4,7 +4,14 @@
 
 export type EmailProvider = "resend" | "brevo" | "aws_ses";
 
-export type EmailType = "auth" | "chat" | "food_listing" | "feedback" | "review_reminder";
+export type EmailType =
+  | "auth"
+  | "chat"
+  | "food_listing"
+  | "feedback"
+  | "review_reminder"
+  | "newsletter"
+  | "announcement";
 
 export type EmailStatus = "pending" | "sent" | "delivered" | "failed" | "bounced";
 
@@ -63,7 +70,8 @@ export interface EmailProviderConfig {
   fromName: string;
 }
 
-export interface ResendConfig extends EmailProviderConfig {}
+// ResendConfig uses base EmailProviderConfig directly
+export type ResendConfig = EmailProviderConfig;
 
 export interface BrevoConfig extends EmailProviderConfig {
   smtpHost?: string;
@@ -71,8 +79,10 @@ export interface BrevoConfig extends EmailProviderConfig {
   smtpUser?: string;
 }
 
-export interface AWSSESConfig extends EmailProviderConfig {
+export interface AWSSESConfig {
   region: string;
   accessKeyId: string;
   secretAccessKey: string;
+  fromEmail: string;
+  fromName?: string;
 }

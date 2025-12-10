@@ -35,6 +35,8 @@ export const EMAIL_TYPE_NAMES: Record<EmailType, string> = {
   food_listing: "Food Listing",
   feedback: "Feedback",
   review_reminder: "Review Reminder",
+  newsletter: "Newsletter",
+  announcement: "Announcement",
 } as const;
 
 // Quota Thresholds
@@ -74,6 +76,8 @@ export const PROVIDER_PRIORITY: Record<EmailType, EmailProvider[]> = {
   food_listing: ["brevo", "aws_ses", "resend"],
   feedback: ["brevo", "aws_ses", "resend"],
   review_reminder: ["brevo", "aws_ses", "resend"],
+  newsletter: ["brevo", "aws_ses", "resend"],
+  announcement: ["brevo", "aws_ses", "resend"],
 } as const;
 
 // Error Messages
