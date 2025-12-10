@@ -116,9 +116,13 @@ export function EmailCRMClient() {
           useHtml: false,
         });
       } else {
+        // Handle both server action errors and email send failures
+        const errorMessage = !response.success
+          ? response.error.message
+          : response.data?.error || "Failed to send email";
         setResult({
           success: false,
-          message: response.data?.error || response.error || "Failed to send email",
+          message: errorMessage,
         });
       }
     });
