@@ -336,9 +336,9 @@ export function AdminListingsClient({
                 </td>
                 <td className="p-3">
                   <div className="flex items-center gap-3">
-                    {listing.gif_url && (
+                    {listing.images?.[0] && (
                       <Image
-                        src={listing.gif_url}
+                        src={listing.images[0]}
                         alt={listing.post_name}
                         width={48}
                         height={48}

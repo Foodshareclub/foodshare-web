@@ -21,13 +21,9 @@ export interface AdminListing {
   pickup_time: string | null;
   available_hours: string | null;
   post_address: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  gif_url: string | null;
-  gif_url_2: string | null;
-  gif_url_3: string | null;
+  images: string[] | null;
   is_active: boolean;
-  post_arranged: boolean;
+  is_arranged: boolean;
   post_arranged_to: string | null;
   post_arranged_at: string | null;
   post_views: number;
@@ -86,10 +82,10 @@ function extractFirst<T>(data: T[] | T | null | undefined): T | null {
  */
 function deriveStatus(listing: {
   is_active: boolean;
-  post_arranged: boolean;
+  is_arranged: boolean;
 }): AdminListing["status"] {
   if (!listing.is_active) return "pending";
-  if (listing.post_arranged) return "approved";
+  if (listing.is_arranged) return "approved";
   return "approved";
 }
 
@@ -127,13 +123,9 @@ export async function getAdminListings(
       pickup_time,
       available_hours,
       post_address,
-      latitude,
-      longitude,
-      gif_url,
-      gif_url_2,
-      gif_url_3,
+      images,
       is_active,
-      post_arranged,
+      is_arranged,
       post_arranged_to,
       post_arranged_at,
       post_views,
@@ -221,13 +213,9 @@ export async function getAdminListingById(id: number): Promise<AdminListing | nu
       pickup_time,
       available_hours,
       post_address,
-      latitude,
-      longitude,
-      gif_url,
-      gif_url_2,
-      gif_url_3,
+      images,
       is_active,
-      post_arranged,
+      is_arranged,
       post_arranged_to,
       post_arranged_at,
       post_views,
@@ -267,7 +255,7 @@ export const getListingStats = unstable_cache(
       supabase.from("posts").select("*", { count: "exact", head: true }),
       supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_active", true),
       supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_active", false),
-      supabase.from("posts").select("*", { count: "exact", head: true }).eq("post_arranged", true),
+      supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_arranged", true),
       supabase.from("posts").select("post_type"),
     ]);
 

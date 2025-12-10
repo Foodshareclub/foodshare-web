@@ -5,7 +5,7 @@
  * Combines email stats, manual sending, and email logs
  */
 
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -20,8 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { EmailStatsDashboard } from "./EmailStatsDashboard";
+import { sendAdminEmail } from "@/app/actions/email";
+import type { EmailType } from "@/lib/email/types";
 
 // Icons
 import { Send, Mail, Users, AlertCircle, CheckCircle, Clock } from "lucide-react";
@@ -69,8 +70,8 @@ const PROVIDERS = [
 export function EmailCRMClient() {
   const t = useTranslations();
   const [activeTab, setActiveTab] = useState<"compose" | "stats" | "templates">("stats");
-  const [sending, setSending] = useState(false);
-  const [result, setResult] = useState<SendResult | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
 
   const [formData, setFormData] = useState<EmailFormData>({
     to: "",
@@ -87,35 +88,40 @@ export function EmailCRMClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSending(true);
     setResult(null);
 
-    try {
-      // Simulate API call - replace with actual email sending
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      setResult({
-        success: true,
-        message: `Email sent successfully to ${formData.to}`,
+    startTransition(async () => {
+      // Send email using server action
+      const response = await sendAdminEmail({
+        to: formData.to,
+        subject: formData.subject,
+        html: formData.useHtml
+          ? formData.message
+          : `<p>${formData.message.replace(/\n/g, "<br/>")}</p>`,
+        emailType: formData.emailType as EmailType,
       });
 
-      // Reset form on success
-      setFormData({
-        to: "",
-        subject: "",
-        message: "",
-        emailType: "chat",
-        provider: "auto",
-        useHtml: false,
-      });
-    } catch {
-      setResult({
-        success: false,
-        message: "Failed to send email. Please try again.",
-      });
-    } finally {
-      setSending(false);
-    }
+      if (response.success && response.data?.success) {
+        setResult({
+          success: true,
+          message: `Email sent successfully via ${response.data.provider}! Message ID: ${response.data.messageId}`,
+        });
+        // Reset form on success
+        setFormData({
+          to: "",
+          subject: "",
+          message: "",
+          emailType: "chat",
+          provider: "auto",
+          useHtml: false,
+        });
+      } else {
+        setResult({
+          success: false,
+          message: response.data?.error || response.error || "Failed to send email",
+        });
+      }
+    });
   };
 
   const clearForm = () => {
@@ -317,9 +323,9 @@ export function EmailCRMClient() {
 
               {/* Actions */}
               <div className="flex gap-3 pt-4">
-                <Button type="submit" disabled={sending} className="flex-1">
+                <Button type="submit" disabled={isPending} className="flex-1">
                   <FiSend className="h-4 w-4 mr-2" />
-                  {sending ? "Sending..." : "Send Email"}
+                  {isPending ? "Sending..." : "Send Email"}
                 </Button>
                 <Button type="button" variant="outline" onClick={clearForm}>
                   Clear

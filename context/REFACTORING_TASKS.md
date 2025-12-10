@@ -73,13 +73,13 @@ Replace `any` types with proper TypeScript types across the codebase.
 
 Convert client pages to Server Components where possible for better performance.
 
-| Page                              | Current   | Action                                                        |
-| --------------------------------- | --------- | ------------------------------------------------------------- |
-| `src/app/admin/listings/page.tsx` | Client    | Migrate to Server Component with data fetching                |
-| `src/app/admin/users/page.tsx`    | Client    | Migrate to Server Component                                   |
-| `src/app/admin/reports/page.tsx`  | Client    | Migrate to Server Component                                   |
-| `src/app/admin/email/page.tsx`    | ✅ Server | Migrated to Server Component with `EmailCRMClient` + Suspense |
-| `src/app/profile/edit/page.tsx`   | Client    | Migrate to Server Component with client form                  |
+| Page                              | Current   | Action                                                            |
+| --------------------------------- | --------- | ----------------------------------------------------------------- |
+| `src/app/admin/listings/page.tsx` | Client    | Migrate to Server Component with data fetching                    |
+| `src/app/admin/users/page.tsx`    | Client    | Migrate to Server Component                                       |
+| `src/app/admin/reports/page.tsx`  | ✅ Server | Migrated to Server Component with `AdminReportsClient` + Suspense |
+| `src/app/admin/email/page.tsx`    | ✅ Server | Migrated to Server Component with `EmailCRMClient` + Suspense     |
+| `src/app/profile/edit/page.tsx`   | Client    | Migrate to Server Component with client form                      |
 
 ### 3. Remove Direct Supabase Client Usage in Components
 

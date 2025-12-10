@@ -20,8 +20,6 @@ export interface UpdateListingData {
   pickup_time?: string;
   available_hours?: string;
   post_address?: string;
-  latitude?: number;
-  longitude?: number;
   is_active?: boolean;
   admin_notes?: string;
 }

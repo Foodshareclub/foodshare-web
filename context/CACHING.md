@@ -162,10 +162,13 @@ export async function updateProduct(id: number, data: ProductData) {
 
 ### Admin (`@/lib/data/admin`)
 
-| Function               | Cache Duration | Tags                   |
-| ---------------------- | -------------- | ---------------------- |
-| `getDashboardStats()`  | 300s           | `admin-stats`, `admin` |
-| `getAuditLogs(limit?)` | 60s            | `audit-logs`, `admin`  |
+| Function               | Cache Duration | Tags                   | Notes                                        |
+| ---------------------- | -------------- | ---------------------- | -------------------------------------------- |
+| `getDashboardStats()`  | None           | -                      | Cannot cache - uses `cookies()` via Supabase |
+| `getAuditLogs(limit?)` | None           | -                      | Cannot cache - uses `cookies()` via Supabase |
+| `getPendingListings()` | None           | -                      | Cannot cache - uses `cookies()` via Supabase |
+
+> **Note:** Admin data functions cannot use `unstable_cache` because `createClient()` uses `cookies()` which is incompatible with caching. These functions make direct database queries on each request.
 
 ### Admin Listings (`@/lib/data/admin-listings`)
 
@@ -179,15 +182,17 @@ export async function updateProduct(id: number, data: ProductData) {
 
 ### CRM (`@/lib/data/crm`)
 
-| Function                          | Cache Duration | Tags            |
-| --------------------------------- | -------------- | --------------- |
-| `getCRMCustomersCached(filters?)` | 300s           | `crm-customers` |
-| `getCustomerSummary(customerId)`  | None           | -               |
-| `getCustomerNotes(customerId)`    | None           | -               |
-| `getCustomerTagsCached()`         | 3600s          | `crm-tags`      |
-| `getCRMDashboardStatsCached()`    | 300s           | `crm-dashboard` |
+| Function                          | Cache Duration | Tags | Notes                                        |
+| --------------------------------- | -------------- | ---- | -------------------------------------------- |
+| `getCRMCustomersCached(filters?)` | None           | -    | Cannot cache - uses `cookies()` via Supabase |
+| `getCustomerSummary(customerId)`  | None           | -    | Cannot cache - uses `cookies()` via Supabase |
+| `getCustomerNotes(customerId)`    | None           | -    | Cannot cache - uses `cookies()` via Supabase |
+| `getCustomerTagsCached()`         | None           | -    | Cannot cache - uses `cookies()` via Supabase |
+| `getCRMDashboardStatsCached()`    | None           | -    | Cannot cache - uses `cookies()` via Supabase |
+| `getAdminCustomersCached(limit?)` | None           | -    | Cannot cache - uses `cookies()` via Supabase |
+| `getAdminCRMStatsCached()`        | None           | -    | Cannot cache - uses `cookies()` via Supabase |
 
-> **Note:** CRM cache tags are defined in `@/lib/data/crm.ts` as `CRM_CACHE_TAGS` for module-specific organization.
+> **Note:** CRM data functions cannot use `unstable_cache` because `createClient()` uses `cookies()` which is incompatible with caching. These functions make direct database queries on each request. The `CRM_CACHE_TAGS` constants are still defined in `@/lib/data/crm.ts` for potential future use with cache invalidation.
 
 ### Email Preferences (`@/lib/data/email-preferences`)
 

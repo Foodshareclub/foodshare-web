@@ -1,10 +1,12 @@
-import { redirect } from 'next/navigation';
-import { getAuthSession } from '@/lib/data/auth';
-import { generateNoIndexMetadata } from '@/lib/metadata';
+import { redirect } from "next/navigation";
+import { getAuthSession } from "@/lib/data/auth";
+import { generateNoIndexMetadata } from "@/lib/metadata";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 
 export const metadata = generateNoIndexMetadata(
-  'Admin Dashboard',
-  'FoodShare administration panel'
+  "Admin Dashboard",
+  "FoodShare administration panel"
 );
 
 /**
@@ -16,13 +18,23 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   // Redirect to login if not authenticated
   if (!session.isAuthenticated) {
-    redirect('/auth/login?next=/admin');
+    redirect("/auth/login?next=/admin");
   }
 
   // Redirect to home if not admin
   if (!session.isAdmin) {
-    redirect('/');
+    redirect("/");
   }
 
-  return children;
+  return (
+    <div className="flex min-h-screen bg-muted/30">
+      <AdminSidebar />
+      <main className="flex-1 overflow-auto">
+        <div className="p-6">
+          <AdminBreadcrumb />
+          {children}
+        </div>
+      </main>
+    </div>
+  );
 }

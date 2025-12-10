@@ -73,6 +73,17 @@ src/api/admin/
     └── resetProviderQuota()
 ```
 
+### Server Actions
+
+```
+src/app/actions/
+└── email.ts                         # Email server actions
+    ├── getEmailPreferences()        # Get user's email preferences
+    ├── updateEmailPreferences()     # Update user's email preferences
+    ├── resetEmailPreferences()      # Reset to defaults
+    └── sendAdminEmail()             # Send email immediately (admin only)
+```
+
 ### Edge Functions
 
 ```

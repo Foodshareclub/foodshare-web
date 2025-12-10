@@ -75,8 +75,6 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
     pickup_time: listing.pickup_time || "",
     available_hours: listing.available_hours || "",
     post_address: listing.post_address || "",
-    latitude: listing.latitude || 0,
-    longitude: listing.longitude || 0,
     is_active: listing.is_active,
     admin_notes: listing.admin_notes || "",
   });
@@ -97,8 +95,6 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
       pickup_time: formData.pickup_time || undefined,
       available_hours: formData.available_hours || undefined,
       post_address: formData.post_address || undefined,
-      latitude: formData.latitude || undefined,
-      longitude: formData.longitude || undefined,
       is_active: formData.is_active,
       admin_notes: formData.admin_notes || undefined,
     };
@@ -115,7 +111,7 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
     setSaving(false);
   };
 
-  const images = [listing.gif_url, listing.gif_url_2, listing.gif_url_3].filter(Boolean);
+  const images = listing.images?.filter(Boolean) || [];
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -256,29 +252,6 @@ export function ListingEditModal({ listing, open, onClose }: Props) {
                 value={formData.post_address}
                 onChange={(e) => handleChange("post_address", e.target.value)}
               />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="latitude">Latitude</Label>
-                <Input
-                  id="latitude"
-                  type="number"
-                  step="any"
-                  value={formData.latitude}
-                  onChange={(e) => handleChange("latitude", parseFloat(e.target.value) || 0)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="longitude">Longitude</Label>
-                <Input
-                  id="longitude"
-                  type="number"
-                  step="any"
-                  value={formData.longitude}
-                  onChange={(e) => handleChange("longitude", parseFloat(e.target.value) || 0)}
-                />
-              </div>
             </div>
           </div>
 

@@ -1,22 +1,46 @@
-'use client'
+import { Suspense } from "react";
+import { getTranslations } from "next-intl/server";
+import { AdminReportsClient } from "@/components/admin/AdminReportsClient";
+import { getReportsData } from "@/lib/data/admin-reports";
+import { Skeleton } from "@/components/ui/skeleton";
 
-import React from 'react'
-import { useTranslations } from 'next-intl'
+async function ReportsContent() {
+  const data = await getReportsData();
+  return <AdminReportsClient data={data} />;
+}
 
-/**
- * AdminReportsPage - Reports and analytics page
- * TODO: Implement reports and analytics features
- */
-export default function AdminReportsPage() {
-  const t = useTranslations()
+function ReportsSkeleton() {
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-800">
-        {t('reports_analytics')}
-      </h1>
-      <p className="text-gray-600 mt-2">
-        {t('coming_soon_view_reports_and_analytics')}
-      </p>
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <Skeleton key={i} className="h-28 rounded-lg" />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Skeleton className="h-80 rounded-lg" />
+        <Skeleton className="h-80 rounded-lg" />
+      </div>
+      <Skeleton className="h-64 rounded-lg" />
     </div>
-  )
+  );
+}
+
+export default async function AdminReportsPage() {
+  const t = await getTranslations();
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">{t("reports_analytics")}</h1>
+        <p className="text-muted-foreground mt-1">
+          Platform insights, trends, and performance metrics
+        </p>
+      </div>
+
+      <Suspense fallback={<ReportsSkeleton />}>
+        <ReportsContent />
+      </Suspense>
+    </div>
+  );
 }

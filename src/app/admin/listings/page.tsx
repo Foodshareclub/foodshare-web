@@ -65,14 +65,10 @@ export default async function AdminListingsPage({ searchParams }: PageProps) {
   const t = await getTranslations();
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-          {t("listings_management")}
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
-          {t("review_approve_and_manage_all_listings")}
-        </p>
+        <h1 className="text-2xl font-bold text-foreground">{t("listings_management")}</h1>
+        <p className="text-muted-foreground mt-1">{t("review_approve_and_manage_all_listings")}</p>
       </div>
 
       <Suspense fallback={<ListingsSkeleton />}>

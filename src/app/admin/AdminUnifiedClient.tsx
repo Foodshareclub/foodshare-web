@@ -140,9 +140,9 @@ function OverviewTab({
     <div className="flex flex-col gap-6">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Products" value={stats.totalProducts} color="text-blue-600" />
+        <StatCard label="Total Listings" value={stats.totalProducts} color="text-blue-600" />
         <StatCard label="Pending Review" value={stats.pendingProducts} color="text-orange-600" />
-        <StatCard label="Active Products" value={stats.activeProducts} color="text-green-600" />
+        <StatCard label="Active Listings" value={stats.activeProducts} color="text-green-600" />
         <StatCard label="Total Chats" value={stats.totalChats} color="text-purple-600" />
       </div>
 
@@ -443,7 +443,7 @@ export function AdminUnifiedClient({
   };
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
