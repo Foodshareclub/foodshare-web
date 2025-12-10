@@ -124,15 +124,15 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Check admin status from JSONB role field
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
+    // Check admin status from user_roles table
+    const { data: userRole } = await supabase
+      .from('user_roles')
+      .select('roles!inner(name)')
+      .eq('profile_id', session.user.id)
+      .in('roles.name', ['admin', 'superadmin'])
+      .maybeSingle();
 
-    const jsonbRoles = (profile?.role as Record<string, boolean>) || {};
-    const isAdmin = jsonbRoles.admin === true || jsonbRoles.superadmin === true;
+    const isAdmin = !!userRole;
 
     // Redirect to home if not admin
     if (!isAdmin) {

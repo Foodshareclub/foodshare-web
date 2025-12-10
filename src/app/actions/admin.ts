@@ -45,13 +45,14 @@ async function requireAdmin(): Promise<void> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
+  const { data: userRole } = await supabase
+    .from('user_roles')
+    .select('roles!inner(name)')
+    .eq('profile_id', user.id)
+    .in('roles.name', ['admin', 'superadmin'])
+    .maybeSingle();
 
-  if (profile?.role?.admin !== true && profile?.role?.superadmin !== true) {
+  if (!userRole) {
     throw new Error('Admin access required');
   }
 }
@@ -141,7 +142,7 @@ export async function getUsers(filters: UserFilters = {}): Promise<{
 
   let query = supabase
     .from('profiles')
-    .select('id, first_name, second_name, email, role, created_time, is_active', { count: 'exact' });
+    .select('id, first_name, second_name, email, created_time, is_active', { count: 'exact' });
 
   if (search) {
     query = query.or(`first_name.ilike.%${search}%,second_name.ilike.%${search}%,email.ilike.%${search}%`);
@@ -199,31 +200,36 @@ export async function updateUserRole(
     return { success: false, error: 'Cannot change your own role' };
   }
 
-  // Update JSONB role field - set the specified role to true
-  const { data: currentProfile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', userId)
+  // Get role_id from roles table
+  const { data: roleData, error: roleError } = await supabase
+    .from('roles')
+    .select('id')
+    .eq('name', role)
     .single();
 
-  const updatedRole = { ...(currentProfile?.role || {}), [role]: true };
+  if (roleError || !roleData) {
+    return { success: false, error: `Role '${role}' not found` };
+  }
 
+  // Insert into user_roles (upsert to avoid duplicates)
   const { error } = await supabase
-    .from('profiles')
-    .update({ role: updatedRole })
-    .eq('id', userId);
+    .from('user_roles')
+    .upsert(
+      { profile_id: userId, role_id: roleData.id },
+      { onConflict: 'profile_id,role_id' }
+    );
 
   if (error) {
     return { success: false, error: error.message };
   }
 
   // Log the action
-  await supabase.from('audit_logs').insert({
+  await supabase.from('admin_audit_log').insert({
     action: 'update_user_roles',
-    entity_type: 'profile',
-    entity_id: userId,
-    user_id: user?.id,
-    details: { target_user_id: userId, new_role: role },
+    resource_type: 'profile',
+    resource_id: userId,
+    admin_id: user?.id,
+    metadata: { target_user_id: userId, new_role: role },
   });
 
   invalidateTag(CACHE_TAGS.ADMIN);

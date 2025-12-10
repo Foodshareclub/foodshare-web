@@ -99,7 +99,7 @@ export async function getPublicProfile(userId: string): Promise<PublicProfile | 
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, first_name, second_name, nickname, avatar_url, about_me, location, created_time, role')
+        .select('id, first_name, second_name, nickname, avatar_url, about_me, location, created_time')
         .eq('id', userId)
         .single();
 

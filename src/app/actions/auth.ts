@@ -70,7 +70,7 @@ export async function getUser(): Promise<AuthUser | null> {
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, first_name, second_name, nickname, avatar_url, role, email')
+        .select('id, first_name, second_name, nickname, avatar_url, email')
         .eq('id', user.id)
         .single();
 

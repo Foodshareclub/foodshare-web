@@ -122,13 +122,14 @@ export async function deleteForumPost(id: string): Promise<{ success: boolean; e
     .eq('id', id)
     .single();
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
+  const { data: userRole } = await supabase
+    .from('user_roles')
+    .select('roles!inner(name)')
+    .eq('profile_id', user.id)
+    .in('roles.name', ['admin', 'superadmin'])
+    .maybeSingle();
 
-  const isAdmin = profile?.role?.admin === true || profile?.role?.superadmin === true;
+  const isAdmin = !!userRole;
 
   if (post?.author_id !== user.id && !isAdmin) {
     return { success: false, error: 'Not authorized to delete this post' };
@@ -218,15 +219,16 @@ export async function deleteComment(commentId: string): Promise<{ success: boole
       .eq('id', commentId)
       .single(),
     supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single(),
+      .from('user_roles')
+      .select('roles!inner(name)')
+      .eq('profile_id', user.id)
+      .in('roles.name', ['admin', 'superadmin'])
+      .maybeSingle(),
   ]);
 
   const comment = commentResult.data;
-  const profile = profileResult.data;
-  const isAdmin = profile?.role?.admin === true || profile?.role?.superadmin === true;
+  const userRole = profileResult.data;
+  const isAdmin = !!userRole;
 
   if (comment?.author_id !== user.id && !isAdmin) {
     return { success: false, error: 'Not authorized to delete this comment' };

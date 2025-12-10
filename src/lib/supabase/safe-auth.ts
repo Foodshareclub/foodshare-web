@@ -18,7 +18,6 @@ export interface SafeAuthUser {
     first_name: string | null;
     second_name: string | null;
     avatar_url: string | null;
-    role: Record<string, boolean> | null;
     email: string | null;
   } | null;
 }
@@ -69,7 +68,7 @@ export async function safeGetUserWithProfile(): Promise<SafeAuthUser | null> {
     try {
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('id, first_name, second_name, avatar_url, role, email')
+        .select('id, first_name, second_name, avatar_url, email')
         .eq('id', data.user.id)
         .single();
       profile = profileData;
@@ -98,13 +97,14 @@ export async function safeCheckIsAdmin(): Promise<boolean> {
     
     if (error || !data.user) return false;
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', data.user.id)
-      .single();
+    const { data: userRole } = await supabase
+      .from('user_roles')
+      .select('roles!inner(name)')
+      .eq('profile_id', data.user.id)
+      .in('roles.name', ['admin', 'superadmin'])
+      .maybeSingle();
 
-    return profile?.role?.admin === true || profile?.role?.superadmin === true;
+    return !!userRole;
   } catch {
     return false;
   }

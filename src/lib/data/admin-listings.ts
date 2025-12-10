@@ -294,7 +294,7 @@ export const getListingStats = unstable_cache(
 );
 
 /**
- * Check if user has admin role (using new JSONB role field)
+ * Check if user has admin role (using user_roles table)
  */
 export async function checkAdminRole(userId: string): Promise<{
   isAdmin: boolean;
@@ -302,17 +302,18 @@ export async function checkAdminRole(userId: string): Promise<{
 }> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
+  const { data: userRoles, error } = await supabase
+    .from("user_roles")
+    .select("roles!inner(name)")
+    .eq("profile_id", userId);
 
-  if (error || !data) {
+  if (error || !userRoles) {
     return { isAdmin: false, roles: {} };
   }
 
-  const roles = (data.role as Record<string, boolean>) || {};
+  const roleNames = userRoles.map((r) => (r.roles as { name: string }).name);
+  const roles: Record<string, boolean> = {};
+  roleNames.forEach(name => { roles[name] = true; });
   const isAdmin = roles.admin === true || roles.superadmin === true;
 
   return { isAdmin, roles };

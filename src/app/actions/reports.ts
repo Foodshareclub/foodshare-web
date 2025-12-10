@@ -179,13 +179,14 @@ export async function resolvePostReport(
     } = await supabase.auth.getUser();
     if (!user) throw new Error('Authentication required');
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
+    const { data: userRole } = await supabase
+      .from('user_roles')
+      .select('roles!inner(name)')
+      .eq('profile_id', user.id)
+      .in('roles.name', ['admin', 'superadmin'])
+      .maybeSingle();
 
-    if (!profile || (profile.role?.admin !== true && profile.role?.superadmin !== true)) {
+    if (!userRole) {
       throw new Error('Admin access required');
     }
 

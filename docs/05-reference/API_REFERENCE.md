@@ -923,7 +923,6 @@ interface SafeAuthUser {
     first_name: string | null;
     second_name: string | null;
     avatar_url: string | null;
-    role: Record<string, boolean> | null; // JSONB role object: { admin: true, volunteer: false, ... }
     email: string | null;
   } | null;
 }
@@ -931,12 +930,18 @@ interface SafeAuthUser {
 
 Returns user with profile data. If profile fetch fails, returns user with `profile: null`.
 
+> **Note:** This function does not fetch role data. Use `safeCheckIsAdmin()` or `checkIsAdmin()` from `@/lib/data/auth` for admin status checks.
+
 **Checking Admin Status:**
 
 ```typescript
-const user = await safeGetUserWithProfile();
-const isAdmin = user?.profile?.role?.admin === true;
-const isSuperAdmin = user?.profile?.role?.superadmin === true;
+// Use dedicated admin check function
+import { safeCheckIsAdmin } from "@/lib/supabase/safe-auth";
+const isAdmin = await safeCheckIsAdmin();
+
+// Or use checkIsAdmin from data layer for detailed role info
+import { checkIsAdmin } from "@/lib/data/auth";
+const { isAdmin, roles, jsonbRoles } = await checkIsAdmin(userId);
 ```
 
 ---

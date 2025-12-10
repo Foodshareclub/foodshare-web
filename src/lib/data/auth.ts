@@ -78,7 +78,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id, first_name, second_name, nickname, avatar_url, role, email")
+        .select("id, first_name, second_name, nickname, avatar_url, email")
         .eq("id", user.id)
         .single();
 
@@ -110,7 +110,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
 /**
  * Check if current user is admin
- * Uses JSONB role field as single source of truth
+ * Uses user_roles table as source of truth
  */
 export async function checkIsAdmin(userId: string): Promise<{
   isAdmin: boolean;
@@ -120,18 +120,17 @@ export async function checkIsAdmin(userId: string): Promise<{
   try {
     const supabase = await createClient();
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", userId)
-      .single();
+    const { data: userRoles } = await supabase
+      .from("user_roles")
+      .select("roles!inner(name)")
+      .eq("profile_id", userId);
 
-    const jsonbRoles = (profile?.role as Record<string, boolean>) || {};
-    const isAdmin = jsonbRoles.admin === true || jsonbRoles.superadmin === true;
+    const roles = (userRoles || []).map((r) => (r.roles as { name: string }).name);
+    const isAdmin = roles.includes('admin') || roles.includes('superadmin');
 
-    const roles = Object.entries(jsonbRoles)
-      .filter(([_, v]) => v === true)
-      .map(([k]) => k);
+    // Build jsonbRoles for backward compatibility
+    const jsonbRoles: Record<string, boolean> = {};
+    roles.forEach(role => { jsonbRoles[role] = true; });
 
     return { isAdmin, roles, jsonbRoles };
   } catch {
