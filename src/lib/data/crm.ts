@@ -3,9 +3,7 @@
  * Server-side data fetching functions for Customer Relationship Management
  */
 
-import { createClient } from '@/lib/supabase/server';
-import { unstable_cache } from 'next/cache';
-import { CACHE_DURATIONS, logCacheOperation } from '@/lib/data/cache-keys';
+import { createClient } from "@/lib/supabase/server";
 import type {
   CRMCustomer,
   CRMCustomerWithProfile,
@@ -15,18 +13,18 @@ import type {
   CRMCustomerSummary,
   CRMDashboardStats,
   CRMCustomersFilter,
-} from '@/types/crm.types';
+} from "@/types/crm.types";
 
 // ============================================================================
 // Cache Tags
 // ============================================================================
 
 export const CRM_CACHE_TAGS = {
-  CUSTOMERS: 'crm-customers',
+  CUSTOMERS: "crm-customers",
   CUSTOMER: (id: string) => `crm-customer-${id}`,
   CUSTOMER_NOTES: (customerId: string) => `crm-customer-notes-${customerId}`,
-  TAGS: 'crm-tags',
-  DASHBOARD: 'crm-dashboard',
+  TAGS: "crm-tags",
+  DASHBOARD: "crm-dashboard",
 } as const;
 
 // ============================================================================
@@ -34,14 +32,26 @@ export const CRM_CACHE_TAGS = {
 // ============================================================================
 
 interface RawCustomer extends CRMCustomer {
-  profiles?: { id: string; first_name: string; second_name: string; email: string; avatar_url: string | null };
+  profiles?: {
+    id: string;
+    first_name: string;
+    second_name: string;
+    email: string;
+    avatar_url: string | null;
+  };
   profile_stats?: { items_shared: number; items_received: number; rating_average: number | null };
   forum_user_stats?: { reputation_score: number; trust_level: number };
   crm_customer_tag_assignments?: Array<{ tag: CRMCustomerTag }>;
 }
 
 interface RawNote extends CRMCustomerNote {
-  admin?: { id: string; first_name: string; second_name: string; email: string; avatar_url: string | null };
+  admin?: {
+    id: string;
+    first_name: string;
+    second_name: string;
+    email: string;
+    avatar_url: string | null;
+  };
 }
 
 // ============================================================================
@@ -56,7 +66,7 @@ export async function getCRMCustomers(
 ): Promise<CRMCustomerWithProfile[]> {
   const supabase = await createClient();
 
-  let query = supabase.from('crm_customers').select(`
+  let query = supabase.from("crm_customers").select(`
     *,
     profiles:profile_id (
       id,
@@ -88,35 +98,35 @@ export async function getCRMCustomers(
   // Apply filters
   if (filters) {
     if (!filters.includeArchived) {
-      query = query.eq('is_archived', false);
+      query = query.eq("is_archived", false);
     }
 
-    if (filters.customerType && filters.customerType !== 'all') {
-      query = query.eq('customer_type', filters.customerType);
+    if (filters.customerType && filters.customerType !== "all") {
+      query = query.eq("customer_type", filters.customerType);
     }
 
-    if (filters.lifecycleStage && filters.lifecycleStage !== 'all') {
-      query = query.eq('lifecycle_stage', filters.lifecycleStage);
+    if (filters.lifecycleStage && filters.lifecycleStage !== "all") {
+      query = query.eq("lifecycle_stage", filters.lifecycleStage);
     }
 
     if (filters.engagementScoreMin !== undefined) {
-      query = query.gte('engagement_score', filters.engagementScoreMin);
+      query = query.gte("engagement_score", filters.engagementScoreMin);
     }
 
     if (filters.engagementScoreMax !== undefined) {
-      query = query.lte('engagement_score', filters.engagementScoreMax);
+      query = query.lte("engagement_score", filters.engagementScoreMax);
     }
 
     if (filters.churnRiskMin !== undefined) {
-      query = query.gte('churn_risk_score', filters.churnRiskMin);
+      query = query.gte("churn_risk_score", filters.churnRiskMin);
     }
 
     if (filters.churnRiskMax !== undefined) {
-      query = query.lte('churn_risk_score', filters.churnRiskMax);
+      query = query.lte("churn_risk_score", filters.churnRiskMax);
     }
 
     if (filters.sortBy) {
-      query = query.order(filters.sortBy, { ascending: filters.sortOrder === 'asc' });
+      query = query.order(filters.sortBy, { ascending: filters.sortOrder === "asc" });
     }
   }
 
@@ -130,8 +140,10 @@ export async function getCRMCustomers(
   const customers: CRMCustomerWithProfile[] =
     data?.map((customer: RawCustomer) => ({
       ...customer,
-      full_name: [customer.profiles?.first_name, customer.profiles?.second_name].filter(Boolean).join(' ') || '',
-      email: customer.profiles?.email || '',
+      full_name:
+        [customer.profiles?.first_name, customer.profiles?.second_name].filter(Boolean).join(" ") ||
+        "",
+      email: customer.profiles?.email || "",
       avatar_url: customer.profiles?.avatar_url || null,
       items_shared: customer.profile_stats?.items_shared || 0,
       items_received: customer.profile_stats?.items_received || 0,
@@ -155,16 +167,9 @@ export async function getCRMCustomers(
 }
 
 /**
- * Cached version of getCRMCustomers
+ * Alias for getCRMCustomers (unstable_cache removed - incompatible with cookies())
  */
-export const getCRMCustomersCached = unstable_cache(
-  async (filters?: Partial<CRMCustomersFilter>) => {
-    logCacheOperation('miss', CRM_CACHE_TAGS.CUSTOMERS);
-    return getCRMCustomers(filters);
-  },
-  [CRM_CACHE_TAGS.CUSTOMERS],
-  { revalidate: CACHE_DURATIONS.MEDIUM, tags: [CRM_CACHE_TAGS.CUSTOMERS] }
-);
+export const getCRMCustomersCached = getCRMCustomers;
 
 /**
  * Fetch single customer summary
@@ -172,7 +177,7 @@ export const getCRMCustomersCached = unstable_cache(
 export async function getCustomerSummary(customerId: string): Promise<CRMCustomerSummary | null> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc('get_crm_customer_summary', {
+  const { data, error } = await supabase.rpc("get_crm_customer_summary", {
     p_customer_id: customerId,
   });
 
@@ -194,8 +199,9 @@ export async function getCustomerNotes(customerId: string): Promise<CRMCustomerN
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('crm_customer_notes')
-    .select(`
+    .from("crm_customer_notes")
+    .select(
+      `
       *,
       admin:admin_id (
         id,
@@ -204,9 +210,10 @@ export async function getCustomerNotes(customerId: string): Promise<CRMCustomerN
         email,
         avatar_url
       )
-    `)
-    .eq('customer_id', customerId)
-    .order('created_at', { ascending: false });
+    `
+    )
+    .eq("customer_id", customerId)
+    .order("created_at", { ascending: false });
 
   if (error) {
     throw new Error(`Failed to fetch customer notes: ${error.message}`);
@@ -216,8 +223,8 @@ export async function getCustomerNotes(customerId: string): Promise<CRMCustomerN
   return (
     data?.map((note: RawNote) => ({
       ...note,
-      admin_name: [note.admin?.first_name, note.admin?.second_name].filter(Boolean).join(' ') || '',
-      admin_email: note.admin?.email || '',
+      admin_name: [note.admin?.first_name, note.admin?.second_name].filter(Boolean).join(" ") || "",
+      admin_email: note.admin?.email || "",
       admin_avatar_url: note.admin?.avatar_url || null,
     })) || []
   );
@@ -233,13 +240,10 @@ export async function getCustomerNotes(customerId: string): Promise<CRMCustomerN
 export async function getCustomerTags(): Promise<CRMCustomerTag[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from('crm_customer_tags')
-    .select('*')
-    .order('name');
+  const { data, error } = await supabase.from("crm_customer_tags").select("*").order("name");
 
   if (error) {
-    console.error('Failed to fetch customer tags:', error.message);
+    console.error("Failed to fetch customer tags:", error.message);
     return [];
   }
 
@@ -247,16 +251,9 @@ export async function getCustomerTags(): Promise<CRMCustomerTag[]> {
 }
 
 /**
- * Cached version of getCustomerTags
+ * Alias for getCustomerTags (unstable_cache removed - incompatible with cookies())
  */
-export const getCustomerTagsCached = unstable_cache(
-  async () => {
-    logCacheOperation('miss', CRM_CACHE_TAGS.TAGS);
-    return getCustomerTags();
-  },
-  [CRM_CACHE_TAGS.TAGS],
-  { revalidate: CACHE_DURATIONS.LONG, tags: [CRM_CACHE_TAGS.TAGS] }
-);
+export const getCustomerTagsCached = getCustomerTags;
 
 // ============================================================================
 // DASHBOARD STATS
@@ -270,15 +267,15 @@ export async function getCRMDashboardStats(): Promise<CRMDashboardStats> {
 
   // Fetch total customers
   const { count: totalCustomers } = await supabase
-    .from('crm_customers')
-    .select('*', { count: 'exact', head: true })
-    .eq('is_archived', false);
+    .from("crm_customers")
+    .select("*", { count: "exact", head: true })
+    .eq("is_archived", false);
 
   // Fetch lifecycle stage counts
   const { data: lifecycleData } = await supabase
-    .from('crm_customers')
-    .select('lifecycle_stage')
-    .eq('is_archived', false);
+    .from("crm_customers")
+    .select("lifecycle_stage")
+    .eq("is_archived", false);
 
   const lifecycleCounts = {
     lead: 0,
@@ -296,9 +293,9 @@ export async function getCRMDashboardStats(): Promise<CRMDashboardStats> {
 
   // Fetch customer type counts
   const { data: customerTypeData } = await supabase
-    .from('crm_customers')
-    .select('customer_type')
-    .eq('is_archived', false);
+    .from("crm_customers")
+    .select("customer_type")
+    .eq("is_archived", false);
 
   const customerTypeCounts = {
     donor: 0,
@@ -314,9 +311,9 @@ export async function getCRMDashboardStats(): Promise<CRMDashboardStats> {
 
   // Fetch average metrics
   const { data: metricsData } = await supabase
-    .from('crm_customers')
-    .select('engagement_score, churn_risk_score, ltv_score, total_interactions')
-    .eq('is_archived', false);
+    .from("crm_customers")
+    .select("engagement_score, churn_risk_score, ltv_score, total_interactions")
+    .eq("is_archived", false);
 
   const averages = {
     engagement: 0,
@@ -354,20 +351,20 @@ export async function getCRMDashboardStats(): Promise<CRMDashboardStats> {
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
   const { count: newThisWeek } = await supabase
-    .from('crm_customers')
-    .select('*', { count: 'exact', head: true })
-    .gte('created_at', oneWeekAgo.toISOString());
+    .from("crm_customers")
+    .select("*", { count: "exact", head: true })
+    .gte("created_at", oneWeekAgo.toISOString());
 
   const oneMonthAgo = new Date();
   oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
   const { count: newThisMonth } = await supabase
-    .from('crm_customers')
-    .select('*', { count: 'exact', head: true })
-    .gte('created_at', oneMonthAgo.toISOString());
+    .from("crm_customers")
+    .select("*", { count: "exact", head: true })
+    .gte("created_at", oneMonthAgo.toISOString());
 
   // Fetch top tags
-  const { data: tagData } = await supabase.from('crm_customer_tag_assignments').select(`
+  const { data: tagData } = await supabase.from("crm_customer_tag_assignments").select(`
     tag_id,
     tag:tag_id (name)
   `);
@@ -392,15 +389,17 @@ export async function getCRMDashboardStats(): Promise<CRMDashboardStats> {
 
   // Fetch top champions
   const { data: championsData } = await supabase
-    .from('crm_customers')
-    .select(`
+    .from("crm_customers")
+    .select(
+      `
       id,
       profile_id,
       ltv_score,
       profiles:profile_id (first_name, second_name)
-    `)
-    .eq('lifecycle_stage', 'champion')
-    .order('ltv_score', { ascending: false })
+    `
+    )
+    .eq("lifecycle_stage", "champion")
+    .order("ltv_score", { ascending: false })
     .limit(5);
 
   interface ChampionData {
@@ -413,7 +412,10 @@ export async function getCRMDashboardStats(): Promise<CRMDashboardStats> {
   const topChampions =
     (championsData as unknown as ChampionData[] | null)?.map((item) => ({
       customer_id: item.id,
-      full_name: [item.profiles?.[0]?.first_name, item.profiles?.[0]?.second_name].filter(Boolean).join(' ') || 'Unknown',
+      full_name:
+        [item.profiles?.[0]?.first_name, item.profiles?.[0]?.second_name]
+          .filter(Boolean)
+          .join(" ") || "Unknown",
       ltv_score: item.ltv_score,
     })) || [];
 
@@ -442,16 +444,9 @@ export async function getCRMDashboardStats(): Promise<CRMDashboardStats> {
 }
 
 /**
- * Cached version of getCRMDashboardStats
+ * Alias for getCRMDashboardStats (unstable_cache removed - incompatible with cookies())
  */
-export const getCRMDashboardStatsCached = unstable_cache(
-  async () => {
-    logCacheOperation('miss', CRM_CACHE_TAGS.DASHBOARD);
-    return getCRMDashboardStats();
-  },
-  [CRM_CACHE_TAGS.DASHBOARD],
-  { revalidate: CACHE_DURATIONS.MEDIUM, tags: [CRM_CACHE_TAGS.DASHBOARD] }
-);
+export const getCRMDashboardStatsCached = getCRMDashboardStats;
 
 // ============================================================================
 // ADMIN DASHBOARD - Lightweight Customer List
@@ -486,8 +481,9 @@ export async function getAdminCustomers(limit = 100): Promise<AdminCustomer[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('crm_customers')
-    .select(`
+    .from("crm_customers")
+    .select(
+      `
       id,
       profile_id,
       status,
@@ -503,13 +499,14 @@ export async function getAdminCustomers(limit = 100): Promise<AdminCustomer[]> {
         email,
         avatar_url
       )
-    `)
-    .eq('is_archived', false)
-    .order('created_at', { ascending: false })
+    `
+    )
+    .eq("is_archived", false)
+    .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) {
-    console.error('Failed to fetch admin customers:', error.message);
+    console.error("Failed to fetch admin customers:", error.message);
     return [];
   }
 
@@ -524,31 +521,24 @@ export async function getAdminCustomers(limit = 100): Promise<AdminCustomer[]> {
     return {
       id: c.id,
       profile_id: c.profile_id,
-      status: c.status || 'active',
-      lifecycle_stage: c.lifecycle_stage || 'lead',
+      status: c.status || "active",
+      lifecycle_stage: c.lifecycle_stage || "lead",
       engagement_score: c.engagement_score || 50,
       churn_risk_score: c.churn_risk_score || 0,
       total_transactions: c.total_transactions || 0,
       last_interaction_at: c.last_interaction_at,
       created_at: c.created_at,
-      full_name: [profile?.first_name, profile?.second_name].filter(Boolean).join(' ') || 'Unknown',
-      email: profile?.email || '',
+      full_name: [profile?.first_name, profile?.second_name].filter(Boolean).join(" ") || "Unknown",
+      email: profile?.email || "",
       avatar_url: profile?.avatar_url || null,
     };
   });
 }
 
 /**
- * Cached version of getAdminCustomers
+ * Alias for getAdminCustomers (unstable_cache removed - incompatible with cookies())
  */
-export const getAdminCustomersCached = unstable_cache(
-  async (limit = 100) => {
-    logCacheOperation('miss', CRM_CACHE_TAGS.CUSTOMERS);
-    return getAdminCustomers(limit);
-  },
-  [CRM_CACHE_TAGS.CUSTOMERS, 'admin-customers'],
-  { revalidate: CACHE_DURATIONS.MEDIUM, tags: [CRM_CACHE_TAGS.CUSTOMERS] }
-);
+export const getAdminCustomersCached = getAdminCustomers;
 
 /**
  * Fetch CRM stats for admin dashboard
@@ -560,19 +550,19 @@ export async function getAdminCRMStats(): Promise<AdminCRMStats> {
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
   const [totalRes, activeRes, atRiskRes, newRes] = await Promise.all([
-    supabase.from('crm_customers').select('*', { count: 'exact', head: true }),
+    supabase.from("crm_customers").select("*", { count: "exact", head: true }),
     supabase
-      .from('crm_customers')
-      .select('*', { count: 'exact', head: true })
-      .in('lifecycle_stage', ['active', 'champion']),
+      .from("crm_customers")
+      .select("*", { count: "exact", head: true })
+      .in("lifecycle_stage", ["active", "champion"]),
     supabase
-      .from('crm_customers')
-      .select('*', { count: 'exact', head: true })
-      .eq('lifecycle_stage', 'at_risk'),
+      .from("crm_customers")
+      .select("*", { count: "exact", head: true })
+      .eq("lifecycle_stage", "at_risk"),
     supabase
-      .from('crm_customers')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', oneWeekAgo.toISOString()),
+      .from("crm_customers")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", oneWeekAgo.toISOString()),
   ]);
 
   return {
@@ -584,13 +574,6 @@ export async function getAdminCRMStats(): Promise<AdminCRMStats> {
 }
 
 /**
- * Cached version of getAdminCRMStats
+ * Alias for getAdminCRMStats (unstable_cache removed - incompatible with cookies())
  */
-export const getAdminCRMStatsCached = unstable_cache(
-  async () => {
-    logCacheOperation('miss', 'admin-crm-stats');
-    return getAdminCRMStats();
-  },
-  ['admin-crm-stats'],
-  { revalidate: CACHE_DURATIONS.MEDIUM, tags: [CRM_CACHE_TAGS.DASHBOARD] }
-);
+export const getAdminCRMStatsCached = getAdminCRMStats;
