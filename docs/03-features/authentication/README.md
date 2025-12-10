@@ -58,13 +58,22 @@ Located in `src/app/actions/auth.ts`:
 | `updatePassword()`     | Update password                   |
 | `getOAuthSignInUrl()`  | Get OAuth redirect URL            |
 
-> **Note on Admin Checking:** The `checkIsAdmin()` function checks multiple role sources for backwards compatibility:
+> **Note on Admin Checking:** There are two `checkIsAdmin()` functions:
 >
-> 1. **JSONB `role` field** (new system) - Checks `profiles.role` for `{ admin: true }`
-> 2. **Legacy `user_role` field** - Checks `profiles.user_role` for `'admin'` or `'superadmin'`
-> 3. **`user_roles` junction table** - Queries role assignments for `admin` or `superadmin` roles
+> **Server Action** (`src/app/actions/auth.ts`):
 >
-> Returns `{ isAdmin: boolean, roles: string[], jsonbRoles: Record<string, boolean> }` combining all sources.
+> - Checks only the `user_roles` junction table (source of truth)
+> - Returns `boolean`
+> - Use for simple admin guards in Server Actions
+>
+> **Data Function** (`src/lib/data/auth.ts`):
+>
+> - Checks all three role sources for backwards compatibility:
+>   1. **JSONB `role` field** - Checks `profiles.role` for `{ admin: true }`
+>   2. **Legacy `user_role` field** - Checks `profiles.user_role` for `'admin'` or `'superadmin'`
+>   3. **`user_roles` junction table** - Queries role assignments
+> - Returns `{ isAdmin: boolean, roles: string[], jsonbRoles: Record<string, boolean> }`
+> - Use when you need detailed role information
 
 ### Password Reset Example (Server Action Pattern)
 

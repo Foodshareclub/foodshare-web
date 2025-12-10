@@ -1,6 +1,6 @@
 use crate::utils::{
-    filter_files_by_extension, get_staged_diff, get_staged_files, print_error, print_header,
-    print_info, print_success, print_verbose, print_warning,
+    filter_files_by_extension, get_staged_diff, get_staged_files, is_test_file, print_error,
+    print_header, print_info, print_success, print_verbose, print_warning,
 };
 use anyhow::Result;
 use regex::Regex;
@@ -17,8 +17,14 @@ pub fn run(files: &[String]) -> Result<()> {
         files.to_vec()
     };
 
+    // Filter out test files - they contain mock credentials which are false positives
+    let files: Vec<String> = files
+        .into_iter()
+        .filter(|f| !is_test_file(f))
+        .collect();
+
     if files.is_empty() {
-        print_success("No files to check");
+        print_success("No files to check (test files excluded)");
         return Ok(());
     }
 

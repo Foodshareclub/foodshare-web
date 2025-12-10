@@ -13,58 +13,59 @@ const mockState = {
   error: null as { message: string; code?: string } | null,
 };
 
-// Mock the Supabase server module BEFORE any imports
-jest.mock('@/lib/supabase/server', () => ({
-  createClient: jest.fn(() => {
-    // Use getter functions to read state at call time (not closure time)
-    const mockOrder = jest.fn(() => Promise.resolve({
-      data: mockState.products,
-      error: mockState.error
-    }));
-
-    const mockSingle = jest.fn(() => Promise.resolve({
-      data: mockState.product,
-      error: mockState.error
-    }));
-
-    // Create a chainable eq mock that always returns fresh state
-    // Must be "thenable" for direct await (like Supabase query builder)
-    const createEqChain = (): unknown => {
-      const chain = {
-        eq: jest.fn(() => createEqChain()),
-        order: jest.fn(() => Promise.resolve({
+// Create the mock Supabase client factory
+const createMockSupabaseClient = () => {
+  // Create a chainable mock that always returns fresh state
+  // Must be "thenable" for direct await (like Supabase query builder)
+  const createChain = (): unknown => {
+    const chain = {
+      eq: jest.fn(() => createChain()),
+      gt: jest.fn(() => createChain()),
+      gte: jest.fn(() => createChain()),
+      lt: jest.fn(() => createChain()),
+      lte: jest.fn(() => createChain()),
+      limit: jest.fn(() => createChain()),
+      order: jest.fn(() => createChain()),
+      range: jest.fn(() =>
+        Promise.resolve({
           data: mockState.products,
-          error: mockState.error
-        })),
-        single: jest.fn(() => Promise.resolve({
+          error: mockState.error,
+        })
+      ),
+      single: jest.fn(() =>
+        Promise.resolve({
           data: mockState.product,
-          error: mockState.error
-        })),
-        // Make thenable for direct await (getProductLocations uses .eq().eq() without terminal)
-        then: (resolve: (value: unknown) => void) => resolve({
+          error: mockState.error,
+        })
+      ),
+      // Make thenable for direct await
+      then: (resolve: (value: unknown) => void) =>
+        resolve({
           data: mockState.products,
-          error: mockState.error
+          error: mockState.error,
         }),
-      };
-      return chain;
     };
+    return chain;
+  };
 
-    const mockSelect = jest.fn(() => ({
-      eq: jest.fn(() => createEqChain()),
-      order: mockOrder,
-    }));
+  const mockSelect = jest.fn(() => createChain());
 
-    const mockFrom = jest.fn(() => ({
-      select: mockSelect,
-    }));
+  const mockFrom = jest.fn(() => ({
+    select: mockSelect,
+  }));
 
-    return Promise.resolve({
-      from: mockFrom,
-    });
-  }),
+  return {
+    from: mockFrom,
+  };
+};
+
+// Mock the Supabase server module BEFORE any imports
+jest.mock("@/lib/supabase/server", () => ({
+  createClient: jest.fn(() => Promise.resolve(createMockSupabaseClient())),
+  createCachedClient: jest.fn(() => createMockSupabaseClient()),
 }));
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from "@jest/globals";
 
 // Import data functions from lib/data (not actions - 'use server' files can't re-export)
 import {
@@ -73,9 +74,9 @@ import {
   getProductById,
   getProductLocations,
   getUserProducts,
-} from '@/lib/data/products';
+} from "@/lib/data/products";
 
-describe('Products Data Functions', () => {
+describe("Products Data Functions", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockState.products = [];
@@ -87,31 +88,31 @@ describe('Products Data Functions', () => {
   // getProducts Tests
   // ==========================================================================
 
-  describe('getProducts', () => {
-    it('should return products filtered by type', async () => {
+  describe("getProducts", () => {
+    it("should return products filtered by type", async () => {
       const mockProducts = [
-        { id: 1, post_name: 'Apples', post_type: 'food', is_active: true },
-        { id: 2, post_name: 'Oranges', post_type: 'food', is_active: true },
+        { id: 1, post_name: "Apples", post_type: "food", is_active: true },
+        { id: 2, post_name: "Oranges", post_type: "food", is_active: true },
       ];
       mockState.products = mockProducts;
 
-      const result = await getProducts('food');
+      const result = await getProducts("food");
 
       expect(result).toEqual(mockProducts);
     });
 
-    it('should return empty array when no products found', async () => {
+    it("should return empty array when no products found", async () => {
       mockState.products = [];
 
-      const result = await getProducts('food');
+      const result = await getProducts("food");
 
       expect(result).toEqual([]);
     });
 
-    it('should throw error when database fails', async () => {
-      mockState.error = { message: 'Database error' };
+    it("should throw error when database fails", async () => {
+      mockState.error = { message: "Database error" };
 
-      await expect(getProducts('food')).rejects.toThrow('Database error');
+      await expect(getProducts("food")).rejects.toThrow("Database error");
     });
   });
 
@@ -119,11 +120,11 @@ describe('Products Data Functions', () => {
   // getAllProducts Tests
   // ==========================================================================
 
-  describe('getAllProducts', () => {
-    it('should return all active products', async () => {
+  describe("getAllProducts", () => {
+    it("should return all active products", async () => {
       const mockProducts = [
-        { id: 1, post_name: 'Apples', post_type: 'food', is_active: true },
-        { id: 2, post_name: 'Bread', post_type: 'food', is_active: true },
+        { id: 1, post_name: "Apples", post_type: "food", is_active: true },
+        { id: 2, post_name: "Bread", post_type: "food", is_active: true },
       ];
       mockState.products = mockProducts;
 
@@ -132,7 +133,7 @@ describe('Products Data Functions', () => {
       expect(result).toEqual(mockProducts);
     });
 
-    it('should return empty array when no products exist', async () => {
+    it("should return empty array when no products exist", async () => {
       mockState.products = [];
 
       const result = await getAllProducts();
@@ -140,10 +141,10 @@ describe('Products Data Functions', () => {
       expect(result).toEqual([]);
     });
 
-    it('should throw error when database fails', async () => {
-      mockState.error = { message: 'Connection timeout' };
+    it("should throw error when database fails", async () => {
+      mockState.error = { message: "Connection timeout" };
 
-      await expect(getAllProducts()).rejects.toThrow('Connection timeout');
+      await expect(getAllProducts()).rejects.toThrow("Connection timeout");
     });
   });
 
@@ -151,13 +152,13 @@ describe('Products Data Functions', () => {
   // getProductById Tests
   // ==========================================================================
 
-  describe('getProductById', () => {
-    it('should return product with reviews when found', async () => {
+  describe("getProductById", () => {
+    it("should return product with reviews when found", async () => {
       const mockProduct = {
         id: 1,
-        post_name: 'Fresh Apples',
-        post_type: 'food',
-        reviews: [{ id: 1, rating: 5, comment: 'Great!' }],
+        post_name: "Fresh Apples",
+        post_type: "food",
+        reviews: [{ id: 1, rating: 5, comment: "Great!" }],
       };
       mockState.product = mockProduct;
 
@@ -166,19 +167,19 @@ describe('Products Data Functions', () => {
       expect(result).toEqual(mockProduct);
     });
 
-    it('should return null when product not found', async () => {
+    it("should return null when product not found", async () => {
       mockState.product = null;
-      mockState.error = { code: 'PGRST116', message: 'Not found' };
+      mockState.error = { code: "PGRST116", message: "Not found" };
 
       const result = await getProductById(999);
 
       expect(result).toBeNull();
     });
 
-    it('should throw error for non-404 database errors', async () => {
-      mockState.error = { code: 'OTHER', message: 'Server error' };
+    it("should throw error for non-404 database errors", async () => {
+      mockState.error = { code: "OTHER", message: "Server error" };
 
-      await expect(getProductById(1)).rejects.toThrow('Server error');
+      await expect(getProductById(1)).rejects.toThrow("Server error");
     });
   });
 
@@ -186,31 +187,31 @@ describe('Products Data Functions', () => {
   // getProductLocations Tests
   // ==========================================================================
 
-  describe('getProductLocations', () => {
-    it('should return locations for map display', async () => {
+  describe("getProductLocations", () => {
+    it("should return locations for map display", async () => {
       const mockLocations = [
-        { id: 1, location_json: { lat: 50.0, lng: 14.0 }, post_name: 'Apples' },
-        { id: 2, location_json: { lat: 50.1, lng: 14.1 }, post_name: 'Bread' },
+        { id: 1, location_json: { lat: 50.0, lng: 14.0 }, post_name: "Apples" },
+        { id: 2, location_json: { lat: 50.1, lng: 14.1 }, post_name: "Bread" },
       ];
       mockState.products = mockLocations;
 
-      const result = await getProductLocations('food');
+      const result = await getProductLocations("food");
 
       expect(result).toEqual(mockLocations);
     });
 
-    it('should return empty array when no locations found', async () => {
+    it("should return empty array when no locations found", async () => {
       mockState.products = [];
 
-      const result = await getProductLocations('food');
+      const result = await getProductLocations("food");
 
       expect(result).toEqual([]);
     });
 
-    it('should throw error when database fails', async () => {
-      mockState.error = { message: 'Location query failed' };
+    it("should throw error when database fails", async () => {
+      mockState.error = { message: "Location query failed" };
 
-      await expect(getProductLocations('food')).rejects.toThrow('Location query failed');
+      await expect(getProductLocations("food")).rejects.toThrow("Location query failed");
     });
   });
 
@@ -218,31 +219,31 @@ describe('Products Data Functions', () => {
   // getUserProducts Tests
   // ==========================================================================
 
-  describe('getUserProducts', () => {
-    it('should return products created by user', async () => {
+  describe("getUserProducts", () => {
+    it("should return products created by user", async () => {
       const mockProducts = [
-        { id: 1, post_name: 'My Apples', profile_id: 'user-123' },
-        { id: 2, post_name: 'My Bread', profile_id: 'user-123' },
+        { id: 1, post_name: "My Apples", profile_id: "user-123" },
+        { id: 2, post_name: "My Bread", profile_id: "user-123" },
       ];
       mockState.products = mockProducts;
 
-      const result = await getUserProducts('user-123');
+      const result = await getUserProducts("user-123");
 
       expect(result).toEqual(mockProducts);
     });
 
-    it('should return empty array for user with no products', async () => {
+    it("should return empty array for user with no products", async () => {
       mockState.products = [];
 
-      const result = await getUserProducts('user-no-products');
+      const result = await getUserProducts("user-no-products");
 
       expect(result).toEqual([]);
     });
 
-    it('should throw error when database fails', async () => {
-      mockState.error = { message: 'User products query failed' };
+    it("should throw error when database fails", async () => {
+      mockState.error = { message: "User products query failed" };
 
-      await expect(getUserProducts('user-123')).rejects.toThrow('User products query failed');
+      await expect(getUserProducts("user-123")).rejects.toThrow("User products query failed");
     });
   });
 });
