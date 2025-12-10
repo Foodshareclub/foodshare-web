@@ -3,17 +3,16 @@
  * Industry-standard CRM with tabbed interface
  */
 
-import { Suspense } from "react";
-import { AdminUnifiedClient } from "./AdminUnifiedClient";
-import { getDashboardStats, getAuditLogs } from "@/lib/data/admin";
-import { getCustomerTagsCached } from "@/lib/data/crm";
-import { createClient } from "@/lib/supabase/server";
+import { Suspense } from 'react';
+import { AdminUnifiedClient } from './AdminUnifiedClient';
+import { getDashboardStats, getAuditLogs } from '@/lib/data/admin';
+import {
+  getCustomerTagsCached,
+  getAdminCustomersCached,
+  getAdminCRMStatsCached,
+} from '@/lib/data/crm';
 
 export const revalidate = 300;
-
-// ============================================================================
-// Loading Skeleton
-// ============================================================================
 
 function DashboardSkeleton() {
   return (
@@ -40,93 +39,14 @@ function DashboardSkeleton() {
   );
 }
 
-// ============================================================================
-// Data Fetching
-// ============================================================================
-
 async function AdminDashboardData() {
-  const supabase = await createClient();
-
-  // Fetch all data in parallel
-  const [dashboardStats, auditLogs, tags, customersResult] = await Promise.all([
+  const [dashboardStats, auditLogs, tags, customers, crmStats] = await Promise.all([
     getDashboardStats(),
     getAuditLogs(10),
     getCustomerTagsCached(),
-    supabase
-      .from("crm_customers")
-      .select(
-        `
-        id,
-        profile_id,
-        status,
-        lifecycle_stage,
-        engagement_score,
-        churn_risk_score,
-        total_transactions,
-        last_interaction_at,
-        created_at,
-        profiles:profile_id (
-          first_name,
-          second_name,
-          email,
-          avatar_url
-        )
-      `
-      )
-      .eq("is_archived", false)
-      .order("created_at", { ascending: false })
-      .limit(100),
+    getAdminCustomersCached(100),
+    getAdminCRMStatsCached(),
   ]);
-
-  const customers = (customersResult.data || []).map((c) => {
-    const profile = c.profiles as {
-      first_name?: string;
-      second_name?: string;
-      email?: string;
-      avatar_url?: string;
-    } | null;
-    return {
-      id: c.id,
-      profile_id: c.profile_id,
-      status: c.status || "active",
-      lifecycle_stage: c.lifecycle_stage || "lead",
-      engagement_score: c.engagement_score || 50,
-      churn_risk_score: c.churn_risk_score || 0,
-      total_transactions: c.total_transactions || 0,
-      last_interaction_at: c.last_interaction_at,
-      created_at: c.created_at,
-      full_name: [profile?.first_name, profile?.second_name].filter(Boolean).join(" ") || "Unknown",
-      email: profile?.email || "",
-      avatar_url: profile?.avatar_url || null,
-    };
-  });
-
-  // CRM stats
-  const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-  const [totalRes, activeRes, atRiskRes, newRes] = await Promise.all([
-    supabase.from("crm_customers").select("*", { count: "exact", head: true }),
-    supabase
-      .from("crm_customers")
-      .select("*", { count: "exact", head: true })
-      .in("lifecycle_stage", ["active", "champion"]),
-    supabase
-      .from("crm_customers")
-      .select("*", { count: "exact", head: true })
-      .eq("lifecycle_stage", "at_risk"),
-    supabase
-      .from("crm_customers")
-      .select("*", { count: "exact", head: true })
-      .gte("created_at", oneWeekAgo.toISOString()),
-  ]);
-
-  const crmStats = {
-    totalCustomers: totalRes.count || 0,
-    activeCustomers: activeRes.count || 0,
-    atRiskCustomers: atRiskRes.count || 0,
-    newThisWeek: newRes.count || 0,
-  };
 
   return (
     <AdminUnifiedClient
@@ -138,10 +58,6 @@ async function AdminDashboardData() {
     />
   );
 }
-
-// ============================================================================
-// Page Component
-// ============================================================================
 
 export default function AdminDashboardPage() {
   return (

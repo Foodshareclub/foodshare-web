@@ -29,18 +29,29 @@ Mutations for customer relationship management:
 
 Server-side data fetching with caching:
 
-| Function                          | Description                       |
-| --------------------------------- | --------------------------------- |
-| `getCRMCustomers(filters?)`       | Fetch customers with profile data |
-| `getCRMCustomersCached(filters?)` | Cached version                    |
-| `getCustomerSummary(id)`          | Get single customer summary       |
-| `getCustomerNotes(customerId)`    | Fetch customer notes              |
-| `getCustomerTags()`               | Fetch all tags                    |
-| `getCRMDashboardStats()`          | Dashboard statistics              |
+| Function                          | Description                                  |
+| --------------------------------- | -------------------------------------------- |
+| `getCRMCustomers(filters?)`       | Fetch customers with profile data            |
+| `getCRMCustomersCached(filters?)` | Cached version                               |
+| `getCustomerSummary(id)`          | Get single customer summary                  |
+| `getCustomerNotes(customerId)`    | Fetch customer notes                         |
+| `getCustomerTags()`               | Fetch all tags                               |
+| `getCRMDashboardStats()`          | Dashboard statistics                         |
+| `getAdminCustomers(limit?)`       | Lightweight customer list for admin dashboard |
+| `getAdminCustomersCached(limit?)` | Cached version                               |
+| `getAdminCRMStats()`              | Admin dashboard stats (total, active, at-risk, new) |
+| `getAdminCRMStatsCached()`        | Cached version                               |
 
 ### Types (`src/types/crm.types.ts`)
 
 Key types: `CRMCustomer`, `CRMCustomerWithProfile`, `CRMCustomerNote`, `CRMCustomerTag`, `LifecycleStage`, `CustomerType`
+
+### Admin Dashboard Types (`src/lib/data/crm.ts`)
+
+| Type             | Description                                                    |
+| ---------------- | -------------------------------------------------------------- |
+| `AdminCustomer`  | Lightweight customer with profile (id, status, scores, name)   |
+| `AdminCRMStats`  | Dashboard stats (totalCustomers, activeCustomers, atRiskCustomers, newThisWeek) |
 
 ---
 

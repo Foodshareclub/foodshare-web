@@ -449,3 +449,145 @@ export const getCRMDashboardStatsCached = unstable_cache(
   [CRM_CACHE_TAGS.DASHBOARD],
   { revalidate: CACHE_DURATIONS.MEDIUM, tags: [CRM_CACHE_TAGS.DASHBOARD] }
 );
+
+// ============================================================================
+// ADMIN DASHBOARD - Lightweight Customer List
+// ============================================================================
+
+export interface AdminCustomer {
+  id: string;
+  profile_id: string;
+  status: string;
+  lifecycle_stage: string;
+  engagement_score: number;
+  churn_risk_score: number;
+  total_transactions: number;
+  last_interaction_at: string | null;
+  created_at: string;
+  full_name: string;
+  email: string;
+  avatar_url: string | null;
+}
+
+export interface AdminCRMStats {
+  totalCustomers: number;
+  activeCustomers: number;
+  atRiskCustomers: number;
+  newThisWeek: number;
+}
+
+/**
+ * Fetch customers for admin dashboard (lightweight version)
+ */
+export async function getAdminCustomers(limit = 100): Promise<AdminCustomer[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('crm_customers')
+    .select(`
+      id,
+      profile_id,
+      status,
+      lifecycle_stage,
+      engagement_score,
+      churn_risk_score,
+      total_transactions,
+      last_interaction_at,
+      created_at,
+      profiles:profile_id (
+        first_name,
+        second_name,
+        email,
+        avatar_url
+      )
+    `)
+    .eq('is_archived', false)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('Failed to fetch admin customers:', error.message);
+    return [];
+  }
+
+  return (data || []).map((c) => {
+    const profile = c.profiles as {
+      first_name?: string;
+      second_name?: string;
+      email?: string;
+      avatar_url?: string;
+    } | null;
+
+    return {
+      id: c.id,
+      profile_id: c.profile_id,
+      status: c.status || 'active',
+      lifecycle_stage: c.lifecycle_stage || 'lead',
+      engagement_score: c.engagement_score || 50,
+      churn_risk_score: c.churn_risk_score || 0,
+      total_transactions: c.total_transactions || 0,
+      last_interaction_at: c.last_interaction_at,
+      created_at: c.created_at,
+      full_name: [profile?.first_name, profile?.second_name].filter(Boolean).join(' ') || 'Unknown',
+      email: profile?.email || '',
+      avatar_url: profile?.avatar_url || null,
+    };
+  });
+}
+
+/**
+ * Cached version of getAdminCustomers
+ */
+export const getAdminCustomersCached = unstable_cache(
+  async (limit = 100) => {
+    logCacheOperation('miss', CRM_CACHE_TAGS.CUSTOMERS);
+    return getAdminCustomers(limit);
+  },
+  [CRM_CACHE_TAGS.CUSTOMERS, 'admin-customers'],
+  { revalidate: CACHE_DURATIONS.MEDIUM, tags: [CRM_CACHE_TAGS.CUSTOMERS] }
+);
+
+/**
+ * Fetch CRM stats for admin dashboard
+ */
+export async function getAdminCRMStats(): Promise<AdminCRMStats> {
+  const supabase = await createClient();
+
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+  const [totalRes, activeRes, atRiskRes, newRes] = await Promise.all([
+    supabase.from('crm_customers').select('*', { count: 'exact', head: true }),
+    supabase
+      .from('crm_customers')
+      .select('*', { count: 'exact', head: true })
+      .in('lifecycle_stage', ['active', 'champion']),
+    supabase
+      .from('crm_customers')
+      .select('*', { count: 'exact', head: true })
+      .eq('lifecycle_stage', 'at_risk'),
+    supabase
+      .from('crm_customers')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', oneWeekAgo.toISOString()),
+  ]);
+
+  return {
+    totalCustomers: totalRes.count || 0,
+    activeCustomers: activeRes.count || 0,
+    atRiskCustomers: atRiskRes.count || 0,
+    newThisWeek: newRes.count || 0,
+  };
+}
+
+/**
+ * Cached version of getAdminCRMStats
+ */
+export const getAdminCRMStatsCached = unstable_cache(
+  async () => {
+    logCacheOperation('miss', 'admin-crm-stats');
+    return getAdminCRMStats();
+  },
+  ['admin-crm-stats'],
+  { revalidate: CACHE_DURATIONS.MEDIUM, tags: [CRM_CACHE_TAGS.DASHBOARD] }
+);
