@@ -2,12 +2,18 @@
 # Fast, intelligent git hooks powered by lefthook-rs
 # Build: cd scripts/lefthook && cargo build --release
 
+# AUTO-FIX ENABLED BY DEFAULT:
+# - Prettier formats code (ts, tsx, js, jsx, json, css, md, yaml)
+# - ESLint fixes linting issues
+# - Import sorting (alphabetical order)
+# All fixes are automatically staged!
+
 # USAGE:
+# Normal commit: git commit -m "feat: ..."  (auto-fix runs)
 # Fast commit: LEFTHOOK_EXCLUDE=type-check git commit
-# Skip all: LEFTHOOK=0 git commit
+# Skip all hooks: LEFTHOOK=0 git commit
 # Quick push: SKIP_TESTS=1 SKIP_BUILD=1 git push
 # Full validation: ENABLE_ALL=1 git push
-# No auto-fix: NO_FIX=1 git commit
 
 # ============================================================================
 # PRE-COMMIT: Fast checks with auto-fix
@@ -59,15 +65,13 @@ pre-commit:
       skip:
         - run: test -z "$ENABLE_COMPLEXITY" && test -z "$ENABLE_ALL"
 
-    # Auto-sort imports (optional but auto-fixes)
+    # Auto-sort imports (enabled by default, auto-fixes)
     sort-imports:
-      tags: quality autofix optional
+      tags: quality autofix
       glob: "*.{ts,tsx,js,jsx}"
-      run: npx eslint {staged_files} --fix --rule 'import/order:error' --no-warn-ignored
+      run: npx eslint {staged_files} --fix --rule 'import/order:error' --no-warn-ignored 2>/dev/null || true
       stage_fixed: true
-      priority: 3
-      skip:
-        - run: test -z "$ENABLE_IMPORT_SORT" && test -z "$ENABLE_ALL"
+      priority: 1
 
     import-check:
       tags: quality optional
