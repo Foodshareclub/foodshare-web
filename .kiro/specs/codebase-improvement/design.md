@@ -7,12 +7,14 @@ This design document outlines the technical approach for improving the FoodShare
 ## Architecture
 
 ### Current State
+
 - Mixed state management: Redux Toolkit + Zustand + React Query
 - TypeScript with `ignoreBuildErrors: true`
 - Limited test coverage (1 test file)
 - Inconsistent error handling
 
 ### Target State
+
 - Unified state management: Redux (UI) + React Query (server)
 - TypeScript strict mode enabled
 - 70%+ test coverage with property-based tests
@@ -21,6 +23,7 @@ This design document outlines the technical approach for improving the FoodShare
 ## Components and Interfaces
 
 ### Type System
+
 ```typescript
 // src/types/database.types.ts
 export type Database = {
@@ -43,6 +46,7 @@ export interface Coordinates {
 ```
 
 ### API Layer
+
 ```typescript
 // src/lib/api/client.ts
 export interface ApiResponse<T> {
@@ -58,6 +62,7 @@ export interface ApiError {
 ```
 
 ### Error Handler
+
 ```typescript
 // src/lib/api/errorHandler.ts
 export class ApiErrorHandler {
@@ -70,6 +75,7 @@ export class ApiErrorHandler {
 ## Data Models
 
 ### Product
+
 ```typescript
 interface Product {
   id: number;
@@ -84,92 +90,114 @@ interface Product {
 ```
 
 ### Error
+
 ```typescript
 type ErrorCode =
-  | 'NETWORK_ERROR'
-  | 'AUTH_ERROR'
-  | 'VALIDATION_ERROR'
-  | 'NOT_FOUND'
-  | 'SERVER_ERROR';
+  | "UNAUTHORIZED"
+  | "FORBIDDEN"
+  | "NOT_FOUND"
+  | "VALIDATION_ERROR"
+  | "DATABASE_ERROR"
+  | "NETWORK_ERROR"
+  | "RATE_LIMIT"
+  | "INTERNAL_ERROR"
+  | "CONFLICT"
+  | "UNKNOWN_ERROR";
 ```
 
 ## Correctness Properties
 
-*A property is a characteristic or behavior that should hold true across all valid executions of a system-essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+_A property is a characteristic or behavior that should hold true across all valid executions of a system-essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees._
 
 ### Property 1: Distance Calculation Symmetry
-*For any* two coordinate pairs (A, B), the distance from A to B SHALL equal the distance from B to A.
+
+_For any_ two coordinate pairs (A, B), the distance from A to B SHALL equal the distance from B to A.
 **Validates: Requirements 2.4**
 
 ### Property 2: Distance Non-Negativity
-*For any* two coordinate pairs, the calculated distance SHALL be >= 0.
+
+_For any_ two coordinate pairs, the calculated distance SHALL be >= 0.
 **Validates: Requirements 2.4**
 
 ### Property 3: API Error Message Safety
-*For any* API error displayed to users, the message SHALL NOT contain stack traces or raw error codes.
+
+_For any_ API error displayed to users, the message SHALL NOT contain stack traces or raw error codes.
 **Validates: Requirements 4.1**
 
 ### Property 4: Error Boundary Recovery
-*For any* component that throws during render, an error boundary SHALL catch it and render fallback UI.
+
+_For any_ component that throws during render, an error boundary SHALL catch it and render fallback UI.
 **Validates: Requirements 4.2**
 
 ### Property 5: Retry Exponential Backoff
-*For any* retry sequence, delay(N+1) SHALL be greater than delay(N).
+
+_For any_ retry sequence, delay(N+1) SHALL be greater than delay(N).
 **Validates: Requirements 4.3**
 
 ### Property 6: Error Context Completeness
-*For any* logged error, the entry SHALL contain timestamp, operation, and requestId.
+
+_For any_ logged error, the entry SHALL contain timestamp, operation, and requestId.
 **Validates: Requirements 4.4**
 
 ### Property 7: Virtual Scrolling Efficiency
-*For any* list with >50 items, rendered DOM nodes SHALL be less than total items.
+
+_For any_ list with >50 items, rendered DOM nodes SHALL be less than total items.
 **Validates: Requirements 5.5**
 
 ### Property 8: API Error Structure
-*For any* API error, it SHALL contain a valid ErrorCode.
+
+_For any_ API error, it SHALL contain a valid ErrorCode.
 **Validates: Requirements 7.3**
 
 ### Property 9: Interactive Element Accessibility
-*For any* interactive element, it SHALL have an accessible name.
+
+_For any_ interactive element, it SHALL have an accessible name.
 **Validates: Requirements 8.1**
 
 ### Property 10: Modal Focus Trap
-*For any* open modal, Tab SHALL cycle only within modal elements.
+
+_For any_ open modal, Tab SHALL cycle only within modal elements.
 **Validates: Requirements 8.2**
 
 ### Property 11: Keyboard Navigation
-*For any* clickable element, it SHALL be keyboard accessible.
+
+_For any_ clickable element, it SHALL be keyboard accessible.
 **Validates: Requirements 8.4**
 
 ### Property 12: Marker Clustering
-*For any* 100+ markers, visible groups SHALL be less than total count.
+
+_For any_ 100+ markers, visible groups SHALL be less than total count.
 **Validates: Requirements 9.1**
 
 ### Property 13: Viewport Marker Loading
-*For any* viewport, loaded markers SHALL be within bounds.
+
+_For any_ viewport, loaded markers SHALL be within bounds.
 **Validates: Requirements 9.3**
 
 ## Error Handling
 
-| Category | Retryable | User Message |
-|----------|-----------|--------------|
-| Network | Yes (3x) | "Connection issue" |
-| Auth | No | "Please sign in" |
-| Validation | No | Field-specific |
-| Server | Yes (1x) | "Something went wrong" |
+| Category   | Retryable | User Message           |
+| ---------- | --------- | ---------------------- |
+| Network    | Yes (3x)  | "Connection issue"     |
+| Auth       | No        | "Please sign in"       |
+| Validation | No        | Field-specific         |
+| Server     | Yes (1x)  | "Something went wrong" |
 
 ## Testing Strategy
 
 ### Framework
+
 - **Vitest** for test runner
 - **React Testing Library** for components
 - **fast-check** for property-based testing
 
 ### Coverage Target
+
 - Minimum 70% code coverage
 - 100 iterations per property test
 
 ### Test Organization
+
 ```
 src/
 ├── api/__tests__/

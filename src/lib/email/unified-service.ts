@@ -13,7 +13,6 @@
 import type { EmailProvider, EmailType, SendEmailRequest, SendEmailResponse } from "./types";
 
 // Lazy-loaded providers (tree-shaking friendly)
-type _ProviderModule = () => Promise<{ default: new (config: unknown) => IEmailProvider }>;
 
 interface IEmailProvider {
   sendEmail(request: SendEmailRequest): Promise<SendEmailResponse>;
@@ -117,7 +116,6 @@ export class UnifiedEmailService {
 
       return result;
     } catch (error) {
-      const _latency = performance.now() - startTime;
       console.error("[UnifiedEmailService] Send failed:", error);
 
       return {
@@ -420,34 +418,49 @@ export class UnifiedEmailService {
 
 /**
  * Create unified email service (server-side only)
+ * Fetches credentials from Supabase Vault
  */
-export function createUnifiedEmailService(): UnifiedEmailService {
+export async function createUnifiedEmailService(): Promise<UnifiedEmailService> {
   if (typeof window !== "undefined") {
     throw new Error("UnifiedEmailService must only be used server-side");
   }
 
+  // Import vault service dynamically to avoid circular deps
+  const { getEmailSecrets } = await import("./vault");
+  const secrets = await getEmailSecrets();
+
+  const fromEmail = process.env.EMAIL_FROM || "noreply@foodshare.app";
+  const fromName = process.env.EMAIL_FROM_NAME || "FoodShare";
+
   return new UnifiedEmailService({
     providers: {
-      resend: {
-        apiKey: process.env.RESEND_API_KEY || "",
-        fromEmail: process.env.EMAIL_FROM || "noreply@foodshare.app",
-        fromName: process.env.EMAIL_FROM_NAME || "FoodShare",
-      },
-      brevo: {
-        apiKey: process.env.BREVO_API_KEY || "",
-        fromEmail: process.env.EMAIL_FROM || "noreply@foodshare.app",
-        fromName: process.env.EMAIL_FROM_NAME || "FoodShare",
-      },
-      aws_ses: {
-        region: process.env.AWS_REGION || "us-east-1",
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
-        fromEmail: process.env.EMAIL_FROM || "noreply@foodshare.app",
-      },
+      resend: secrets.resendApiKey
+        ? {
+            apiKey: secrets.resendApiKey,
+            fromEmail,
+            fromName,
+          }
+        : undefined,
+      brevo: secrets.brevoApiKey
+        ? {
+            apiKey: secrets.brevoApiKey,
+            fromEmail,
+            fromName,
+          }
+        : undefined,
+      aws_ses:
+        secrets.awsAccessKeyId && secrets.awsSecretAccessKey
+          ? {
+              region: secrets.awsRegion,
+              accessKeyId: secrets.awsAccessKeyId,
+              secretAccessKey: secrets.awsSecretAccessKey,
+              fromEmail,
+            }
+          : undefined,
     },
     defaultFrom: {
-      email: process.env.EMAIL_FROM || "noreply@foodshare.app",
-      name: process.env.EMAIL_FROM_NAME || "FoodShare",
+      email: fromEmail,
+      name: fromName,
     },
     enableMetrics: true,
   });

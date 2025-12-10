@@ -37,7 +37,11 @@ interface ReviewReminderData {
 // Simple HTML template renderer
 function renderEmailTemplate(
   templateName: string,
-  data: ChatNotificationData | FoodListingNotificationData | FeedbackNotificationData | ReviewReminderData
+  data:
+    | ChatNotificationData
+    | FoodListingNotificationData
+    | FeedbackNotificationData
+    | ReviewReminderData
 ): { html: string; subject: string } {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://foodshare.app";
 
@@ -120,7 +124,7 @@ export async function sendChatNotification(params: {
   roomId: string;
 }) {
   try {
-    const emailService = createEmailService();
+    const emailService = await createEmailService();
 
     // Prepare template data
     const templateData: ChatNotificationData = {
@@ -158,7 +162,7 @@ export async function sendChatNotification(params: {
   } catch (error) {
     logger.error("Failed to send chat notification", error as Error, {
       recipientEmail: params.recipientEmail,
-      roomId: params.roomId
+      roomId: params.roomId,
     });
     throw error;
   }
@@ -175,7 +179,7 @@ export async function sendFoodListingNotification(params: {
   distanceKm: number;
 }) {
   try {
-    const emailService = createEmailService();
+    const emailService = await createEmailService();
 
     // Prepare template data
     const templateData: FoodListingNotificationData = {
@@ -213,7 +217,7 @@ export async function sendFoodListingNotification(params: {
   } catch (error) {
     logger.error("Failed to send food listing notification", error as Error, {
       recipientEmail: params.recipientEmail,
-      foodItemId: params.foodItemId
+      foodItemId: params.foodItemId,
     });
     throw error;
   }
@@ -233,7 +237,7 @@ export async function sendFeedbackNotification(params: {
   messagePreview: string;
 }) {
   try {
-    const emailService = createEmailService();
+    const emailService = await createEmailService();
 
     // Prepare template data
     const templateData: FeedbackNotificationData = {
@@ -274,7 +278,7 @@ export async function sendFeedbackNotification(params: {
   } catch (error) {
     logger.error("Failed to send feedback notification", error as Error, {
       adminEmail: params.adminEmail,
-      feedbackId: params.feedbackId
+      feedbackId: params.feedbackId,
     });
     throw error;
   }
@@ -290,7 +294,7 @@ export async function sendReviewReminder(params: {
   otherUserName: string;
 }) {
   try {
-    const emailService = createEmailService();
+    const emailService = await createEmailService();
 
     // Prepare template data
     const templateData: ReviewReminderData = {
@@ -327,7 +331,7 @@ export async function sendReviewReminder(params: {
   } catch (error) {
     logger.error("Failed to send review reminder", error as Error, {
       recipientEmail: params.recipientEmail,
-      transactionId: params.transactionId
+      transactionId: params.transactionId,
     });
     throw error;
   }
@@ -385,7 +389,10 @@ export async function notifyAdminsOfFeedback(params: {
       (admins as unknown as AdminUserRole[]).map((adminRole) =>
         sendFeedbackNotification({
           adminEmail: adminRole.profiles.email,
-          adminName: [adminRole.profiles.first_name, adminRole.profiles.second_name].filter(Boolean).join(' ') || undefined,
+          adminName:
+            [adminRole.profiles.first_name, adminRole.profiles.second_name]
+              .filter(Boolean)
+              .join(" ") || undefined,
           ...params,
         })
       )

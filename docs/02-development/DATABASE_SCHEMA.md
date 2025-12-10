@@ -57,17 +57,24 @@ FoodShare uses the `user_roles` junction table as the **single source of truth**
    - `'volunteer'` - Volunteer
    - `'moderator'` - Content moderator
 
-> **Note:** The `role` column on the `profiles` table is deprecated and no longer used. Role data is exclusively managed via the `user_roles` junction table and accessed through `checkIsAdmin()` or `getUserRoles()` from `@/lib/data/auth` and `@/lib/data/profiles`.
+> **Note:** The `role` column on the `profiles` table is deprecated and no longer used. Role data is exclusively managed via the `user_roles` junction table and accessed through the admin-auth module.
 
 **Checking Admin Status (TypeScript):**
 
 ```typescript
-// ✅ Recommended - Use checkIsAdmin() from lib/data/auth.ts
-import { checkIsAdmin } from "@/lib/data/auth";
+// ✅ Recommended - Use getAdminAuth() from lib/data/admin-auth.ts
+import { getAdminAuth } from "@/lib/data/admin-auth";
 
-const { isAdmin, roles } = await checkIsAdmin(userId);
+const { isAdmin, isSuperAdmin, userId, roles } = await getAdminAuth();
 // isAdmin: true if user has admin or superadmin role
+// isSuperAdmin: true if user has superadmin role
+// userId: current user's ID or null
 // roles: ['admin', 'volunteer'] - all roles from user_roles table
+
+// For Server Actions that require admin access:
+import { requireAdmin } from "@/lib/data/admin-auth";
+
+const adminId = await requireAdmin(); // Throws if not admin
 ```
 
 **Querying Admin Users (Supabase):**

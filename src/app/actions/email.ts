@@ -8,7 +8,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
-import { createEmailService } from "@/lib/email";
 import type { EmailType, EmailProvider } from "@/lib/email/types";
 
 // ============================================================================
@@ -206,24 +205,30 @@ export async function sendTestEmailDirect(
       return serverActionError("Admin access required", "FORBIDDEN");
     }
 
-    // Import Resend directly
-    const { Resend } = await import("resend");
+    // Get Resend API key from Vault
+    const { getResendApiKey } = await import("@/lib/email/vault");
+    const apiKey = await getResendApiKey();
 
-    const apiKey = process.env.RESEND_API_KEY;
     const fromEmail = process.env.EMAIL_FROM || "contact@foodshare.club";
     const fromName = process.env.EMAIL_FROM_NAME || "FoodShare";
 
     console.log("[sendTestEmailDirect] Config:", {
       hasApiKey: !!apiKey,
-      apiKeyPrefix: apiKey?.substring(0, 10) + "...",
+      apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + "..." : "none",
       fromEmail,
       fromName,
       to,
     });
 
     if (!apiKey) {
-      return serverActionError("RESEND_API_KEY not configured", "INTERNAL_ERROR");
+      return serverActionError(
+        "RESEND_API_KEY not configured in Vault or environment",
+        "INTERNAL_ERROR"
+      );
     }
+
+    // Import Resend
+    const { Resend } = await import("resend");
 
     const resend = new Resend(apiKey);
 
@@ -298,23 +303,24 @@ export async function sendAdminEmail(
       return serverActionError("Invalid email address", "VALIDATION_ERROR");
     }
 
-    // Log configuration for debugging
+    // Get configured providers from Vault
+    const { getConfiguredProviders } = await import("@/lib/email/vault");
+    const configuredProviders = await getConfiguredProviders();
+
     const fromEmail = process.env.EMAIL_FROM || "noreply@foodshare.app";
     const fromName = process.env.EMAIL_FROM_NAME || "FoodShare";
-    const hasResendKey = !!process.env.RESEND_API_KEY;
-    const hasBrevoKey = !!process.env.BREVO_API_KEY;
 
     console.log("[sendAdminEmail] Config:", {
       fromEmail,
       fromName,
-      hasResendKey,
-      hasBrevoKey,
+      providers: configuredProviders,
       emailType: request.emailType,
       to: request.to,
     });
 
-    // Create email service and send
-    const emailService = createEmailService();
+    // Create email service (now async, fetches secrets from Vault)
+    const { createUnifiedEmailService } = await import("@/lib/email/unified-service");
+    const emailService = await createUnifiedEmailService();
 
     const result = await emailService.sendEmail({
       content: {

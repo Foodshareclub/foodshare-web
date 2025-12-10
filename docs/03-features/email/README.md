@@ -6,40 +6,74 @@ Beautiful, comprehensive email management system for FoodShare admins with smart
 
 ## 📧 Email Service Architecture
 
-FoodShare uses a dual-service architecture for email delivery:
+FoodShare uses `UnifiedEmailService` for all email delivery:
 
-### UnifiedEmailService (v2) - Default
+### UnifiedEmailService
 
-The recommended service for all new code. Key improvements:
+The optimized email service with:
 
-- **Single source of truth** for provider selection (no Edge Function calls)
-- **Database-first health scoring** with request coalescing
+- **Smart provider routing** based on email type (auth → Resend, app → Brevo)
+- **Request coalescing** for health checks (multiple calls share one DB query)
+- **Buffered metrics** (non-blocking database writes)
 - **Lazy provider initialization** (tree-shaking friendly)
-- **Non-blocking metrics** via buffered writes
 - **Automatic retry queue** when all providers fail
 
 ```typescript
 import { createEmailService } from "@/lib/email";
 
-// Returns UnifiedEmailService (v2)
 const emailService = createEmailService();
 await emailService.sendEmail(request);
 ```
 
-### EnhancedEmailService (v1) - Legacy
-
-Kept for backward compatibility. Uses Edge Function for smart routing.
+Aliases are available for convenience:
 
 ```typescript
-import { createEnhancedEmailService } from "@/lib/email";
-
-// Returns EnhancedEmailService (v1)
-const emailService = createEnhancedEmailService();
+// These are equivalent
+import { createEmailService, createUnifiedEmailService } from "@/lib/email";
+import { EmailService, UnifiedEmailService } from "@/lib/email";
 ```
 
-### Migration Note
+### Email Secrets Vault
 
-The default export `createEmailService()` now returns `UnifiedEmailService`. Existing code using `createEmailService()` will automatically use v2. If you need the legacy behavior, explicitly import `createEnhancedEmailService`.
+Provider credentials are managed via `src/lib/email/vault.ts`, which fetches secrets from Supabase Vault with automatic fallback to environment variables for local development.
+
+**Secrets stored in Vault:**
+
+- `RESEND_API_KEY` - Resend email provider
+- `BREVO_API_KEY` - Brevo email provider
+- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` - AWS SES
+
+**Usage:**
+
+```typescript
+import { getEmailSecrets, getConfiguredProviders } from "@/lib/email";
+
+// Get all secrets (cached for 5 minutes)
+const secrets = await getEmailSecrets();
+
+// Check which providers are configured
+const providers = await getConfiguredProviders();
+// { resend: true, brevo: true, awsSes: false }
+
+// Get individual credentials
+import { getResendApiKey, getBrevoApiKey, getAwsCredentials } from "@/lib/email";
+
+const resendKey = await getResendApiKey();
+const brevoKey = await getBrevoApiKey();
+const awsCreds = await getAwsCredentials();
+```
+
+**Local Development:** Set environment variables directly - the vault service will use them automatically:
+
+```bash
+RESEND_API_KEY=re_xxx
+BREVO_API_KEY=xkeysib-xxx
+AWS_ACCESS_KEY_ID=AKIA...
+AWS_SECRET_ACCESS_KEY=xxx
+AWS_REGION=us-east-1
+```
+
+**Production:** Store secrets in Supabase Vault via Dashboard → Settings → Vault. The `get_secrets` RPC function retrieves them securely.
 
 ---
 
@@ -96,6 +130,21 @@ src/components/admin/
 - `page.tsx` is a Server Component that handles translations and layout
 - `EmailCRMClient` is a Client Component wrapped in Suspense for streaming
 - Skeleton loading state provides instant feedback while data loads
+
+### Email Library
+
+```
+src/lib/email/
+├── index.ts                         # Module exports
+├── unified-service.ts               # Main email service with smart routing
+├── vault.ts                         # Secrets management (Supabase Vault + env fallback)
+├── types.ts                         # TypeScript definitions
+├── constants.ts                     # Email constants
+└── providers/                       # Provider implementations
+    ├── resend.ts
+    ├── brevo.ts
+    └── aws-ses.ts
+```
 
 ### API Functions
 

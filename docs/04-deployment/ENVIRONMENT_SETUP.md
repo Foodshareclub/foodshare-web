@@ -178,8 +178,6 @@ import { createEmailService } from "@/lib/email";
 
 async function testEmailService() {
   try {
-    // createEmailService() returns UnifiedEmailService (v2) by default
-    // For legacy EnhancedEmailService, use createEnhancedEmailService()
     const emailService = createEmailService();
 
     // Test health status (includes provider availability and metrics)

@@ -1972,7 +1972,9 @@ const stats = await getListingStats();
 
 ---
 
-### Check Admin Role
+### Check Admin Role (Legacy)
+
+> **Note:** For new code, prefer `getAdminAuth()` from `@/lib/data/admin-auth` which provides a cleaner API and doesn't require passing userId.
 
 ```typescript
 import { checkAdminRole } from "@/lib/data/admin-listings";
@@ -2000,15 +2002,13 @@ The function uses the `user_roles` junction table as single source of truth:
 
 ```typescript
 // app/admin/listings/page.tsx
-import { getAdminListings, getListingStats, checkAdminRole } from '@/lib/data/admin-listings';
-import { getAuthSession } from '@/lib/data/auth';
+import { getAdminListings, getListingStats } from '@/lib/data/admin-listings';
+import { getAdminAuth } from '@/lib/data/admin-auth';
 import { redirect } from 'next/navigation';
 
 export default async function AdminListingsPage() {
-  const user = await getUser();
-  if (!user) redirect('/auth/login');
-
-  const { isAdmin } = await checkAdminRole(user.id);
+  const { isAdmin, userId } = await getAdminAuth();
+  if (!userId) redirect('/auth/login');
   if (!isAdmin) redirect('/');
 
   const [{ listings, total, totalPages }, stats] = await Promise.all([
@@ -2026,6 +2026,146 @@ export default async function AdminListingsPage() {
   );
 }
 ```
+
+---
+
+## Admin Auth API (`admin-auth`)
+
+Located: `src/lib/data/admin-auth.ts`
+
+Single source of truth for admin authentication and authorization. Use this module for all admin-related auth checks.
+
+### Get Admin Auth
+
+```typescript
+import { getAdminAuth } from "@/lib/data/admin-auth";
+
+const { isAdmin, isSuperAdmin, userId, roles } = await getAdminAuth();
+```
+
+**Returns:** `AdminAuthResult`
+
+```typescript
+interface AdminAuthResult {
+  isAdmin: boolean; // true if user has 'admin' or 'superadmin' role
+  isSuperAdmin: boolean; // true if user has 'superadmin' role
+  userId: string | null; // User's profile ID or null if not authenticated
+  roles: string[]; // Array of role names: ['admin', 'volunteer']
+}
+```
+
+**Behavior:**
+
+- Gets current user from Supabase auth session
+- Queries `user_roles` junction table for role assignments
+- Returns safe defaults if not authenticated or on error
+
+**Example (Server Component):**
+
+```typescript
+// app/admin/page.tsx
+import { getAdminAuth } from '@/lib/data/admin-auth';
+import { redirect } from 'next/navigation';
+
+export default async function AdminPage() {
+  const { isAdmin, userId } = await getAdminAuth();
+
+  if (!userId) redirect('/auth/login');
+  if (!isAdmin) redirect('/');
+
+  return <AdminDashboard />;
+}
+```
+
+---
+
+### Require Admin
+
+```typescript
+import { requireAdmin } from "@/lib/data/admin-auth";
+
+const userId = await requireAdmin();
+```
+
+**Returns:** `string` - User's profile ID
+
+**Throws:**
+
+- `Error("Not authenticated")` - If user is not logged in
+- `Error("Admin access required")` - If user doesn't have admin role
+
+**Use Case:** Server Actions that require admin privileges
+
+**Example (Server Action):**
+
+```typescript
+// app/actions/admin.ts
+"use server";
+
+import { requireAdmin, logAdminAction } from "@/lib/data/admin-auth";
+import { createClient } from "@/lib/supabase/server";
+
+export async function deleteUser(userId: string) {
+  const adminId = await requireAdmin(); // Throws if not admin
+
+  const supabase = await createClient();
+  await supabase.from("profiles").delete().eq("id", userId);
+
+  await logAdminAction("delete", "user", userId, adminId);
+
+  return { success: true };
+}
+```
+
+---
+
+### Require Super Admin
+
+```typescript
+import { requireSuperAdmin } from "@/lib/data/admin-auth";
+
+const userId = await requireSuperAdmin();
+```
+
+**Returns:** `string` - User's profile ID
+
+**Throws:**
+
+- `Error("Not authenticated")` - If user is not logged in
+- `Error("Super admin access required")` - If user doesn't have superadmin role
+
+**Use Case:** Sensitive operations like role management, system configuration
+
+---
+
+### Log Admin Action
+
+```typescript
+import { logAdminAction } from "@/lib/data/admin-auth";
+
+await logAdminAction(action, resourceType, resourceId, adminId, metadata);
+```
+
+**Parameters:**
+
+| Parameter      | Type                      | Description                                                     |
+| -------------- | ------------------------- | --------------------------------------------------------------- |
+| `action`       | `string`                  | Action performed: 'create', 'update', 'delete', 'approve', etc. |
+| `resourceType` | `string`                  | Type of resource: 'user', 'listing', 'review', etc.             |
+| `resourceId`   | `string`                  | ID of the affected resource                                     |
+| `adminId`      | `string`                  | ID of the admin performing the action                           |
+| `metadata`     | `Record<string, unknown>` | Optional additional context                                     |
+
+**Example:**
+
+```typescript
+await logAdminAction("approve", "listing", "42", adminId, {
+  previousStatus: "pending",
+  reason: "Meets guidelines",
+});
+```
+
+**Database:** Inserts into `admin_audit_log` table for compliance and debugging
 
 ---
 

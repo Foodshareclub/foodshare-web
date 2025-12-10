@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
+import { requireAdmin, logAdminAction } from "@/lib/data/admin-auth";
 
 export interface AdminUser {
   id: string;
@@ -23,38 +24,11 @@ export interface UserFilters {
 }
 
 /**
- * Check if current user is admin (throws if not)
- */
-async function requireAdmin(): Promise<void> {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-
-  const { data: userRole } = await supabase
-    .from("user_roles")
-    .select("roles!inner(name)")
-    .eq("profile_id", user.id)
-    .in("roles.name", ["admin", "superadmin"])
-    .maybeSingle();
-
-  if (!userRole) {
-    throw new Error("Admin access required");
-  }
-}
-
-/**
  * Approve a listing
  */
 export async function approveListing(id: number): Promise<{ success: boolean; error?: string }> {
-  await requireAdmin();
+  const adminId = await requireAdmin();
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   const { error } = await supabase.from("posts").update({ is_active: true }).eq("id", id);
 
@@ -62,14 +36,7 @@ export async function approveListing(id: number): Promise<{ success: boolean; er
     return { success: false, error: error.message };
   }
 
-  // Log the action
-  await supabase.from("audit_logs").insert({
-    action: "approve_listing",
-    entity_type: "post",
-    entity_id: String(id),
-    user_id: user?.id,
-    details: { listing_id: id },
-  });
+  await logAdminAction("approve_listing", "post", String(id), adminId, { listing_id: id });
 
   invalidateTag(CACHE_TAGS.ADMIN);
   invalidateTag(CACHE_TAGS.PRODUCTS);
@@ -85,12 +52,8 @@ export async function rejectListing(
   id: number,
   reason: string
 ): Promise<{ success: boolean; error?: string }> {
-  await requireAdmin();
+  const adminId = await requireAdmin();
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   const { error } = await supabase.from("posts").delete().eq("id", id);
 
@@ -98,14 +61,7 @@ export async function rejectListing(
     return { success: false, error: error.message };
   }
 
-  // Log the action
-  await supabase.from("audit_logs").insert({
-    action: "reject_listing",
-    entity_type: "post",
-    entity_id: String(id),
-    user_id: user?.id,
-    details: { listing_id: id, reason },
-  });
+  await logAdminAction("reject_listing", "post", String(id), adminId, { listing_id: id, reason });
 
   invalidateTag(CACHE_TAGS.ADMIN);
   invalidateTag(CACHE_TAGS.ADMIN_LISTINGS);
@@ -122,6 +78,7 @@ export async function getUsers(filters: UserFilters = {}): Promise<{
 }> {
   await requireAdmin();
   const supabase = await createClient();
+  void filters; // Used below
 
   const { search, role, is_active, page = 1, limit = 20 } = filters;
   const offset = (page - 1) * limit;
@@ -191,15 +148,11 @@ export async function updateUserRole(
   userId: string,
   role: string
 ): Promise<{ success: boolean; error?: string }> {
-  await requireAdmin();
+  const adminId = await requireAdmin();
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   // Prevent changing own role
-  if (user?.id === userId) {
+  if (adminId === userId) {
     return { success: false, error: "Cannot change your own role" };
   }
 
@@ -223,13 +176,9 @@ export async function updateUserRole(
     return { success: false, error: error.message };
   }
 
-  // Log the action
-  await supabase.from("admin_audit_log").insert({
-    action: "update_user_roles",
-    resource_type: "profile",
-    resource_id: userId,
-    admin_id: user?.id,
-    metadata: { target_user_id: userId, new_role: role },
+  await logAdminAction("update_user_roles", "profile", userId, adminId, {
+    target_user_id: userId,
+    new_role: role,
   });
 
   invalidateTag(CACHE_TAGS.ADMIN);
@@ -245,15 +194,11 @@ export async function banUser(
   userId: string,
   reason: string
 ): Promise<{ success: boolean; error?: string }> {
-  await requireAdmin();
+  const adminId = await requireAdmin();
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   // Prevent banning yourself
-  if (user?.id === userId) {
+  if (adminId === userId) {
     return { success: false, error: "Cannot ban yourself" };
   }
 
@@ -269,13 +214,9 @@ export async function banUser(
   // Deactivate all user's listings
   await supabase.from("posts").update({ is_active: false }).eq("profile_id", userId);
 
-  // Log the action
-  await supabase.from("audit_logs").insert({
-    action: "ban_user",
-    entity_type: "profile",
-    entity_id: userId,
-    user_id: user?.id,
-    details: { target_user_id: userId, reason },
+  await logAdminAction("ban_user", "profile", userId, adminId, {
+    target_user_id: userId,
+    reason,
   });
 
   invalidateTag(CACHE_TAGS.ADMIN);

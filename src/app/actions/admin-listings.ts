@@ -7,7 +7,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
-import { checkAdminRole } from "@/lib/data/admin-listings";
+import { requireAdmin, logAdminAction } from "@/lib/data/admin-auth";
 
 // ============================================================================
 // Types
@@ -27,41 +27,6 @@ export interface UpdateListingData {
 interface ActionResult {
   success: boolean;
   error?: string;
-}
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-async function requireAdmin(): Promise<string> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) throw new Error("Not authenticated");
-
-  const { isAdmin } = await checkAdminRole(user.id);
-  if (!isAdmin) throw new Error("Admin access required");
-
-  return user.id;
-}
-
-async function logAuditAction(
-  action: string,
-  entityType: string,
-  entityId: string,
-  userId: string,
-  details: Record<string, unknown> = {}
-): Promise<void> {
-  const supabase = await createClient();
-  await supabase.from("audit_logs").insert({
-    action,
-    entity_type: entityType,
-    entity_id: entityId,
-    user_id: userId,
-    details,
-  });
 }
 
 // ============================================================================
@@ -86,7 +51,7 @@ export async function updateListing(id: number, data: UpdateListingData): Promis
 
     if (error) return { success: false, error: error.message };
 
-    await logAuditAction("update_listing", "post", String(id), adminId, {
+    await logAdminAction("update_listing", "post", String(id), adminId, {
       updated_fields: Object.keys(data),
     });
 
@@ -115,7 +80,7 @@ export async function activateListing(id: number): Promise<ActionResult> {
 
     if (error) return { success: false, error: error.message };
 
-    await logAuditAction("activate_listing", "post", String(id), adminId);
+    await logAdminAction("activate_listing", "post", String(id), adminId);
 
     invalidateTag(CACHE_TAGS.ADMIN_LISTINGS);
     invalidateTag(CACHE_TAGS.PRODUCTS);
@@ -146,7 +111,7 @@ export async function deactivateListing(id: number, reason?: string): Promise<Ac
 
     if (error) return { success: false, error: error.message };
 
-    await logAuditAction("deactivate_listing", "post", String(id), adminId, { reason });
+    await logAdminAction("deactivate_listing", "post", String(id), adminId, { reason });
 
     invalidateTag(CACHE_TAGS.ADMIN_LISTINGS);
     invalidateTag(CACHE_TAGS.PRODUCTS);
@@ -170,7 +135,7 @@ export async function deleteListing(id: number): Promise<ActionResult> {
 
     if (error) return { success: false, error: error.message };
 
-    await logAuditAction("delete_listing", "post", String(id), adminId);
+    await logAdminAction("delete_listing", "post", String(id), adminId);
 
     invalidateTag(CACHE_TAGS.ADMIN_LISTINGS);
     invalidateTag(CACHE_TAGS.PRODUCTS);
@@ -196,7 +161,7 @@ export async function bulkActivateListings(ids: number[]): Promise<ActionResult>
 
     if (error) return { success: false, error: error.message };
 
-    await logAuditAction("bulk_activate_listings", "post", ids.join(","), adminId, {
+    await logAdminAction("bulk_activate_listings", "post", ids.join(","), adminId, {
       count: ids.length,
     });
 
@@ -231,7 +196,7 @@ export async function bulkDeactivateListings(
 
     if (error) return { success: false, error: error.message };
 
-    await logAuditAction("bulk_deactivate_listings", "post", ids.join(","), adminId, {
+    await logAdminAction("bulk_deactivate_listings", "post", ids.join(","), adminId, {
       count: ids.length,
       reason,
     });
@@ -257,7 +222,7 @@ export async function bulkDeleteListings(ids: number[]): Promise<ActionResult> {
 
     if (error) return { success: false, error: error.message };
 
-    await logAuditAction("bulk_delete_listings", "post", ids.join(","), adminId, {
+    await logAdminAction("bulk_delete_listings", "post", ids.join(","), adminId, {
       count: ids.length,
     });
 
@@ -285,7 +250,7 @@ export async function updateAdminNotes(id: number, notes: string): Promise<Actio
 
     if (error) return { success: false, error: error.message };
 
-    await logAuditAction("update_admin_notes", "post", String(id), adminId);
+    await logAdminAction("update_admin_notes", "post", String(id), adminId);
 
     invalidateTag(CACHE_TAGS.ADMIN_LISTINGS);
 
@@ -339,7 +304,7 @@ export async function updateUserRoles(
       if (insertError) return { success: false, error: insertError.message };
     }
 
-    await logAuditAction("update_user_roles", "profile", userId, adminId, { roles });
+    await logAdminAction("update_user_roles", "profile", userId, adminId, { roles });
 
     invalidateTag(CACHE_TAGS.PROFILES);
     invalidateTag(CACHE_TAGS.ADMIN);
