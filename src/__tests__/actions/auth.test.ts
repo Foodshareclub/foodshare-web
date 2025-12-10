@@ -14,7 +14,7 @@ const mockState = {
     avatar_url: string | null;
     email: string;
   } | null,
-  userRole: null as { roles: { name: string } } | null, // For user_roles junction table
+  userRoles: null as Array<{ roles: { name: string } }> | null, // For user_roles junction table (array)
   authError: null as { message: string } | null,
   dbError: null as { message: string; code?: string } | null,
 };
@@ -53,14 +53,15 @@ jest.mock("@/lib/supabase/server", () => ({
         ),
         maybeSingle: jest.fn(() =>
           Promise.resolve({
-            // For user_roles table, return userRole data
-            data: tableName === "user_roles" ? mockState.userRole : mockState.profile,
+            data: mockState.profile,
             error: mockState.dbError,
           })
         ),
+        // For user_roles table, the chain resolves to an array (not single)
         then: (resolve: (value: unknown) => void) =>
           resolve({
-            data: mockState.profile,
+            // user_roles returns array of roles, profiles returns single profile
+            data: tableName === "user_roles" ? mockState.userRoles : mockState.profile,
             error: mockState.dbError,
           }),
       };
@@ -156,7 +157,7 @@ describe("Auth Server Actions", () => {
     mockState.user = null;
     mockState.session = null;
     mockState.profile = null;
-    mockState.userRole = null;
+    mockState.userRoles = null;
     mockState.authError = null;
     mockState.dbError = null;
   });
@@ -232,7 +233,7 @@ describe("Auth Server Actions", () => {
   describe("checkIsAdmin", () => {
     it("should return true for admin user", async () => {
       mockState.user = { id: "admin-123", email: "admin@example.com" };
-      mockState.userRole = { roles: { name: "admin" } };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
 
       const result = await checkIsAdmin();
 
@@ -241,7 +242,7 @@ describe("Auth Server Actions", () => {
 
     it("should return true for superadmin user", async () => {
       mockState.user = { id: "super-123", email: "super@example.com" };
-      mockState.userRole = { roles: { name: "superadmin" } };
+      mockState.userRoles = [{ roles: { name: "superadmin" } }];
 
       const result = await checkIsAdmin();
 
@@ -250,7 +251,7 @@ describe("Auth Server Actions", () => {
 
     it("should return false for regular user", async () => {
       mockState.user = { id: "user-123", email: "user@example.com" };
-      mockState.userRole = null; // No admin role in user_roles junction table
+      mockState.userRoles = []; // No admin role in user_roles junction table
 
       const result = await checkIsAdmin();
 
@@ -259,7 +260,7 @@ describe("Auth Server Actions", () => {
 
     it("should return false when not authenticated", async () => {
       mockState.user = null;
-      mockState.userRole = null;
+      mockState.userRoles = null;
 
       const result = await checkIsAdmin();
 
