@@ -1,16 +1,18 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Navbar from '@/components/header/navbar/Navbar';
-import { useAuth } from '@/hooks/useAuth';
-import type { AuthUser } from '@/app/actions/auth';
-import type { CustomRoomType } from '@/api/chatAPI';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Navbar from "@/components/header/navbar/Navbar";
+import { useAuth } from "@/hooks/useAuth";
+import type { AuthUser } from "@/app/actions/auth";
+import type { CustomRoomType } from "@/api/chatAPI";
 
 interface NavbarWrapperProps {
   defaultProductType?: string;
   /** Initial user data from server (required for SSR) */
   initialUser?: AuthUser | null;
+  /** Initial admin status from server */
+  initialIsAdmin?: boolean;
   /** Initial profile data from server */
   initialProfile?: {
     first_name?: string | null;
@@ -29,8 +31,9 @@ interface NavbarWrapperProps {
  * No TanStack Query - data is fetched on the server
  */
 export function NavbarWrapper({
-  defaultProductType = 'food',
+  defaultProductType = "food",
   initialUser,
+  initialIsAdmin = false,
   initialProfile,
   unreadRooms = [],
 }: NavbarWrapperProps) {
@@ -42,22 +45,21 @@ export function NavbarWrapper({
 
   // Prefer client auth state if available, fall back to server data
   const effectiveUser = user || (initialUser ? { id: initialUser.id } : null);
-  const userId = effectiveUser?.id || '';
+  const userId = effectiveUser?.id || "";
 
   // Use server-provided profile data
   const serverProfile = initialUser?.profile || initialProfile;
 
-  const effectiveAvatarUrl = serverProfile?.avatar_url || '';
-  const effectiveFirstName = serverProfile?.first_name || '';
-  const effectiveSecondName = serverProfile?.second_name || '';
-  const effectiveEmail = serverProfile?.email || '';
+  const effectiveAvatarUrl = serverProfile?.avatar_url || "";
+  const effectiveFirstName = serverProfile?.first_name || "";
+  const effectiveSecondName = serverProfile?.second_name || "";
+  const effectiveEmail = serverProfile?.email || "";
 
   // Auth state: client takes precedence for real-time updates
   const effectiveIsAuth = isAuthenticated || !!initialUser;
-  const isAdmin =
-    serverProfile?.user_role === 'admin' ||
-    serverProfile?.user_role === 'superadmin' ||
-    false;
+
+  // Use server-provided admin status (properly checks JSONB role, user_role, and user_roles table)
+  const isAdmin = initialIsAdmin;
 
   const handleRouteChange = (route: string) => {
     router.push(`/${route}`);
@@ -69,7 +71,7 @@ export function NavbarWrapper({
 
   return (
     <Navbar
-      userId={userId || initialUser?.id || ''}
+      userId={userId || initialUser?.id || ""}
       isAuth={effectiveIsAuth}
       isAdmin={isAdmin}
       productType={productType}

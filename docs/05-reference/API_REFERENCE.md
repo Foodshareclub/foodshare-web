@@ -560,7 +560,7 @@ const challenges = await getChallenges();
 ```typescript
 // app/challenge/page.tsx
 import { getChallenges, getPopularChallenges } from '@/lib/data/challenges';
-import { getUser } from '@/app/actions/auth';
+import { getAuthSession } from '@/lib/data/auth';
 import { ChallengesClient } from './ChallengesClient';
 
 export const revalidate = 60;
@@ -570,7 +570,7 @@ export default async function ChallengePage() {
   const [challenges, popularChallenges, user] = await Promise.all([
     getChallenges(),
     getPopularChallenges(3),
-    getUser(),
+    getAuthSession(),
   ]);
 
   const stats = {
@@ -790,18 +790,18 @@ export function LikeChallengeButton({ challengeId }: { challengeId: number }) {
 
 ---
 
-## Auth Server Actions
+## Auth Data Layer
 
-Located: `src/app/actions/auth.ts`
+Located: `src/lib/data/auth.ts`
 
-Server actions for authentication and user data. These provide graceful degradation during database unavailability.
+Server-side data fetching functions for authentication and user data. These provide graceful degradation during database unavailability.
 
-### Get Current User
+### Get Auth Session
 
 ```typescript
-import { getUser } from "@/app/actions/auth";
+import { getAuthSession } from "@/lib/data/auth";
 
-const user = await getUser();
+const user = await getAuthSession();
 ```
 
 **Returns:** `AuthUser | null`
@@ -831,22 +831,22 @@ Returns `null` (instead of throwing) when:
 - Database is unavailable (maintenance mode)
 - Profile fetch fails (returns user without profile)
 
-This ensures pages using `getUser()` continue to render during maintenance, showing unauthenticated state rather than error pages.
+This ensures pages using `getAuthSession()` continue to render during maintenance, showing unauthenticated state rather than error pages.
 
 **Example (Server Component with parallel fetching):**
 
 ```typescript
 // app/challenge/[id]/page.tsx
-import { getUser } from '@/app/actions/auth';
+import { getAuthSession } from '@/lib/data/auth';
 import { getChallengeById } from '@/lib/data/challenges';
 
 export default async function ChallengeDetailPage({ params }: PageProps) {
   const { id } = await params;
 
-  // Parallel fetch - getUser() won't throw even if DB is down
+  // Parallel fetch - getAuthSession() won't throw even if DB is down
   const [challenge, user] = await Promise.all([
     getChallengeById(parseInt(id, 10)),
-    getUser(),
+    getAuthSession(),
   ]);
 
   if (!challenge) notFound();
@@ -966,7 +966,7 @@ Quick check if database is reachable. Useful for conditional rendering or featur
 | Use Case                         | Recommended                                   |
 | -------------------------------- | --------------------------------------------- |
 | Server Components (pages)        | User auth handled by Navbar in root layout    |
-| Server Actions requiring user    | `getUser()` from `@/app/actions/auth`         |
+| Server Actions requiring user    | `getAuthSession()` from `@/lib/data/auth`     |
 | Middleware auth checks           | `safeGetSession()`                            |
 | Admin route protection           | `safeCheckIsAdmin()`                          |
 | Feature flags based on DB status | `isDatabaseAvailable()`                       |
@@ -1168,10 +1168,10 @@ type UnifiedChatRoom = {
 
 ```typescript
 import { getAllUserChats } from '@/lib/data/chat';
-import { getUser } from '@/app/actions/auth';
+import { getAuthSession } from '@/lib/data/auth';
 
 export default async function ChatPage() {
-  const user = await getUser();
+  const user = await getAuthSession();
   if (!user) redirect('/auth/login');
 
   const chats = await getAllUserChats(user.id);
@@ -1988,7 +1988,7 @@ The function checks multiple role sources for backwards compatibility:
 ```typescript
 // app/admin/listings/page.tsx
 import { getAdminListings, getListingStats, checkAdminRole } from '@/lib/data/admin-listings';
-import { getUser } from '@/app/actions/auth';
+import { getAuthSession } from '@/lib/data/auth';
 import { redirect } from 'next/navigation';
 
 export default async function AdminListingsPage() {

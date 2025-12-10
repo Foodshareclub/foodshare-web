@@ -36,12 +36,12 @@ export default function MyRouteLayout({ children }: { children: React.ReactNode 
 If you need to use NavbarWrapper directly (e.g., in the root layout):
 
 ```tsx
-import { NavbarWrapper } from '@/components/header/navbar/NavbarWrapper';
-import { getUser } from '@/app/actions/auth';
+import { NavbarWrapper } from "@/components/header/navbar/NavbarWrapper";
+import { getAuthSession } from "@/lib/data/auth";
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const user = await getUser(); // Fetch user on server for immediate avatar display
-  
+  const user = await getAuthSession(); // Fetch user on server for immediate avatar display
+
   return (
     <div className="min-h-screen">
       <NavbarWrapper defaultProductType="food" initialUser={user} />
@@ -53,10 +53,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
 ### Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `defaultProductType` | `string` | `'food'` | Initial product type for category filtering |
-| `initialUser` | `AuthUser \| null` | `undefined` | Server-fetched user data to prevent loading flicker |
+| Prop                 | Type               | Default     | Description                                         |
+| -------------------- | ------------------ | ----------- | --------------------------------------------------- |
+| `defaultProductType` | `string`           | `'food'`    | Initial product type for category filtering         |
+| `initialUser`        | `AuthUser \| null` | `undefined` | Server-fetched user data to prevent loading flicker |
 
 ### Features
 
@@ -78,6 +78,7 @@ The component uses a server-first fallback chain to ensure the avatar is always 
 3. **Default avatar** - The Avatar component handles empty/invalid URLs with a default fallback
 
 This server-first approach ensures smooth transitions during:
+
 - Initial page load (immediate display without waiting for client queries)
 - Navigation between pages
 - Auth state changes

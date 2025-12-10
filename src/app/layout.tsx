@@ -10,7 +10,7 @@ import { DevTools } from "@/components/dev";
 import { MaintenanceBanner } from "@/components/maintenance/MaintenanceBanner";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { NavbarWrapper } from "@/components/header/navbar/NavbarWrapper";
-import { getUser } from "@/app/actions/auth";
+import { getAuthSession } from "@/lib/data/auth";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,9 +29,9 @@ export default async function RootLayout({
   // Read locale from cookie to prevent hydration mismatch
   const cookieStore = await cookies();
   const locale = (cookieStore.get("locale")?.value || "en") as Locale;
-  
-  // Get user data for navbar (server-side)
-  const user = await getUser();
+
+  // Get auth session for navbar (server-side)
+  const session = await getAuthSession();
 
   return (
     <html lang={locale} suppressHydrationWarning>
@@ -61,7 +61,7 @@ export default async function RootLayout({
         <GoogleAnalytics />
         <Providers initialLocale={locale}>
           <MaintenanceBanner />
-          <NavbarWrapper initialUser={user} />
+          <NavbarWrapper initialUser={session.user} initialIsAdmin={session.isAdmin} />
           <main className="min-h-screen">{children}</main>
           <Footer />
           <DevTools />
