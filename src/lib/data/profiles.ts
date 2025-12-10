@@ -229,7 +229,7 @@ export async function getUserRoles(userId: string): Promise<string[]> {
   if (error) return [];
 
   return (data ?? [])
-    .map((r) => (r.roles as { name: string })?.name)
+    .map((r) => (r.roles as unknown as { name: string })?.name)
     .filter((name): name is string => !!name);
 }
 
