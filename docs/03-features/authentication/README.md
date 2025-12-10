@@ -106,7 +106,7 @@ Located in `src/app/actions/auth.ts`:
 >
 > - Uses the **`user_roles` junction table** as single source of truth
 > - Queries `user_roles` joined with `roles` table to get role names
-> - Returns `{ isAdmin: boolean, roles: string[], jsonbRoles: Record<string, boolean> }`
+> - Returns `{ isAdmin: boolean, roles: string[] }`
 > - `isAdmin` is true if user has `'admin'` or `'superadmin'` role
 > - Use when you need detailed role information
 

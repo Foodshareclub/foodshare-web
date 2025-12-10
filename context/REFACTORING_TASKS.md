@@ -12,7 +12,7 @@ The role system has been consolidated to use `user_roles` junction table as the 
 
 - ✅ Removed `role` field from `Profile` interface in `src/lib/data/profiles.ts`
 - ✅ `checkIsAdmin()` in `src/lib/data/auth.ts` now queries `user_roles` table exclusively
-- ✅ `jsonbRoles` is built from `user_roles` data for backward compatibility
+- ✅ Removed `jsonbRoles` from return type (backward compatibility no longer needed)
 - ✅ Updated documentation to remove references to deprecated JSONB `profiles.role` field:
   - `docs/03-features/authentication/README.md` - Updated admin checking docs
   - `docs/02-development/ARCHITECTURE.md` - Updated admin role checking description
@@ -35,7 +35,7 @@ const isAdmin = profile?.role?.admin === true;
 
 // ✅ New pattern - use checkIsAdmin()
 import { checkIsAdmin } from "@/lib/data/auth";
-const { isAdmin, roles, jsonbRoles } = await checkIsAdmin(userId);
+const { isAdmin, roles } = await checkIsAdmin(userId);
 
 // ✅ Get user roles
 import { getUserRoles } from "@/lib/data/profiles";

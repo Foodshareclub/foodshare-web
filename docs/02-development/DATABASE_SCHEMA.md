@@ -65,10 +65,9 @@ FoodShare uses the `user_roles` junction table as the **single source of truth**
 // ✅ Recommended - Use checkIsAdmin() from lib/data/auth.ts
 import { checkIsAdmin } from "@/lib/data/auth";
 
-const { isAdmin, roles, jsonbRoles } = await checkIsAdmin(userId);
+const { isAdmin, roles } = await checkIsAdmin(userId);
 // isAdmin: true if user has admin or superadmin role
 // roles: ['admin', 'volunteer'] - all roles from user_roles table
-// jsonbRoles: { admin: true, volunteer: true } - roles as object (for backward compatibility)
 ```
 
 **Querying Admin Users (Supabase):**

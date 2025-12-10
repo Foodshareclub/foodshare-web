@@ -942,7 +942,7 @@ const isAdmin = await safeCheckIsAdmin();
 
 // Or use checkIsAdmin from data layer for detailed role info
 import { checkIsAdmin } from "@/lib/data/auth";
-const { isAdmin, roles, jsonbRoles } = await checkIsAdmin(userId);
+const { isAdmin, roles } = await checkIsAdmin(userId);
 ```
 
 ---
@@ -1978,24 +1978,23 @@ const stats = await getListingStats();
 import { checkAdminRole } from "@/lib/data/admin-listings";
 
 const { isAdmin, roles } = await checkAdminRole(userId);
-// { isAdmin: true, roles: ['admin', 'volunteer'], jsonbRoles: { admin: true, volunteer: true } }
+// { isAdmin: true, roles: { admin: true, volunteer: true } }
 ```
 
 **Parameters:**
 
 - `userId` - User's profile ID (UUID)
 
-**Returns:** `{ isAdmin: boolean; roles: string[]; jsonbRoles: Record<string, boolean> }`
+**Returns:** `{ isAdmin: boolean; roles: Record<string, boolean> }`
 
 **Behavior:**
 
-The function uses the JSONB role field as single source of truth:
+The function uses the `user_roles` junction table as single source of truth:
 
-- Checks `profiles.role` for `{ admin: true }` or `{ superadmin: true }`
-- `isAdmin` is `true` if `admin` or `superadmin` is set to `true` in the JSONB role
-- `roles` is an array of role names where the value is `true`
-- `jsonbRoles` contains the raw JSONB role object from `profiles.role`
-- Returns `{ isAdmin: false, roles: [], jsonbRoles: {} }` on error
+- Queries `user_roles` joined with `roles` table to get role names
+- `isAdmin` is `true` if user has `admin` or `superadmin` role
+- `roles` is an object with role names as keys and `true` as values
+- Returns `{ isAdmin: false, roles: {} }` on error
 
 **Example (Server Component):**
 

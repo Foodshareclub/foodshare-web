@@ -114,7 +114,6 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 export async function checkIsAdmin(userId: string): Promise<{
   isAdmin: boolean;
   roles: string[];
-  jsonbRoles: Record<string, boolean>;
 }> {
   try {
     const supabase = await createClient();
@@ -127,15 +126,9 @@ export async function checkIsAdmin(userId: string): Promise<{
     const roles = (userRoles || []).map((r) => (r.roles as unknown as { name: string }).name);
     const isAdmin = roles.includes("admin") || roles.includes("superadmin");
 
-    // Build jsonbRoles for backward compatibility
-    const jsonbRoles: Record<string, boolean> = {};
-    roles.forEach((role) => {
-      jsonbRoles[role] = true;
-    });
-
-    return { isAdmin, roles, jsonbRoles };
+    return { isAdmin, roles };
   } catch {
-    return { isAdmin: false, roles: [], jsonbRoles: {} };
+    return { isAdmin: false, roles: [] };
   }
 }
 
@@ -143,9 +136,7 @@ export async function checkIsAdmin(userId: string): Promise<{
  * Get full auth session with user, profile, and admin status
  * This is the main function for Server Components
  */
-export async function getAuthSession(): Promise<
-  AuthSession & { jsonbRoles?: Record<string, boolean> }
-> {
+export async function getAuthSession(): Promise<AuthSession> {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -157,14 +148,13 @@ export async function getAuthSession(): Promise<
     };
   }
 
-  const { isAdmin, roles, jsonbRoles } = await checkIsAdmin(user.id);
+  const { isAdmin, roles } = await checkIsAdmin(user.id);
 
   return {
     user,
     isAuthenticated: true,
     isAdmin,
     roles,
-    jsonbRoles,
   };
 }
 
