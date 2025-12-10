@@ -113,7 +113,8 @@ export async function getAdminUsers(filters: AdminUsersFilter = {}): Promise<Adm
   // Transform data to extract roles from user_roles join
   const users: AdminUserProfile[] = (data ?? []).map((user) => {
     // Supabase returns user_roles as array with nested roles object
-    const userRoles = (user.user_roles as unknown as Array<{ roles: { name: string } | null }>) ?? [];
+    const userRoles =
+      (user.user_roles as unknown as Array<{ roles: { name: string } | null }>) ?? [];
     const roles = userRoles.map((ur) => ur.roles?.name).filter((name): name is string => !!name);
 
     return {
@@ -207,8 +208,11 @@ export const getUserStats = unstable_cache(
       supabase.from("profiles").select("*", { count: "exact", head: true }),
       supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_active", true),
       supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_verified", true),
-      // Count admins from user_roles table
-      supabase.from("user_roles").select("*", { count: "exact", head: true }).in("role_id", [6]), // admin role_id = 6
+      // Count admins from user_roles table by joining with roles
+      supabase
+        .from("user_roles")
+        .select("*, roles!inner(name)", { count: "exact", head: true })
+        .eq("roles.name", "admin"),
       supabase
         .from("profiles")
         .select("*", { count: "exact", head: true })
