@@ -2781,6 +2781,186 @@ export default async function ProductsPage() {
 
 ---
 
+## CRM Server Actions
+
+Located: `src/app/actions/crm.ts`
+
+Server actions for Customer Relationship Management mutations. These handle customer lifecycle management, notes, and tagging.
+
+### Import Profiles as CRM Customers
+
+```typescript
+import { importProfilesAsCRMCustomers } from "@/app/actions/crm";
+
+const result = await importProfilesAsCRMCustomers();
+```
+
+**Returns:** `{ success: boolean; imported: number; error?: string }`
+
+**Behavior:**
+
+- Finds profiles without CRM customer records
+- Creates CRM customer records with default values:
+  - `status: 'active'`
+  - `lifecycle_stage: 'lead'`
+  - `engagement_score: 50`
+  - `churn_risk_score: 0`
+- Invalidates `CRM_CACHE_TAGS.CUSTOMERS`
+
+---
+
+### Update Customer Lifecycle
+
+```typescript
+import { updateCustomerLifecycle } from "@/app/actions/crm";
+
+const result = await updateCustomerLifecycle(customerId, "champion");
+```
+
+**Parameters:**
+
+- `customerId` - CRM customer UUID
+- `stage` - `'lead' | 'active' | 'champion' | 'at_risk' | 'churned'`
+
+**Returns:** `{ success: boolean; error?: string }`
+
+**Cache Invalidation:** `CRM_CACHE_TAGS.CUSTOMERS`, `CRM_CACHE_TAGS.CUSTOMER(customerId)`
+
+---
+
+### Update Engagement Score
+
+```typescript
+import { updateEngagementScore } from "@/app/actions/crm";
+
+const result = await updateEngagementScore(customerId, 85);
+```
+
+**Parameters:**
+
+- `customerId` - CRM customer UUID
+- `score` - Number (clamped to 0-100)
+
+**Returns:** `{ success: boolean; error?: string }`
+
+---
+
+### Archive Customer
+
+```typescript
+import { archiveCustomer } from "@/app/actions/crm";
+
+const result = await archiveCustomer(customerId, "User requested deletion");
+```
+
+**Parameters:**
+
+- `customerId` - CRM customer UUID
+- `reason` - Optional archive reason
+
+**Returns:** `{ success: boolean; error?: string }`
+
+**Behavior:** Sets `is_archived: true`, `archived_at`, and `archived_reason`
+
+---
+
+### Add Customer Note
+
+```typescript
+import { addCustomerNote } from "@/app/actions/crm";
+
+const result = await addCustomerNote(customerId, "Follow-up call scheduled", "call");
+```
+
+**Parameters:**
+
+- `customerId` - CRM customer UUID
+- `content` - Note text
+- `noteType` - `'general' | 'call' | 'email' | 'meeting' | 'support'` (default: `'general'`)
+
+**Returns:** `{ success: boolean; error?: string }`
+
+**Behavior:**
+
+- Requires authentication
+- Records admin who created the note
+- Updates customer's `last_interaction_at`
+- Invalidates `CRM_CACHE_TAGS.CUSTOMER_NOTES(customerId)`
+
+---
+
+### Assign Tag to Customer
+
+```typescript
+import { assignTagToCustomer } from "@/app/actions/crm";
+
+const result = await assignTagToCustomer(customerId, tagId);
+```
+
+**Parameters:**
+
+- `customerId` - CRM customer UUID
+- `tagId` - CRM tag UUID
+
+**Returns:** `{ success: boolean; error?: string }`
+
+**Note:** Silently succeeds if tag is already assigned (idempotent)
+
+---
+
+### Remove Tag from Customer
+
+```typescript
+import { removeTagFromCustomer } from "@/app/actions/crm";
+
+const result = await removeTagFromCustomer(customerId, tagId);
+```
+
+**Parameters:**
+
+- `customerId` - CRM customer UUID
+- `tagId` - CRM tag UUID
+
+**Returns:** `{ success: boolean; error?: string }`
+
+---
+
+### Create Tag
+
+```typescript
+import { createTag } from "@/app/actions/crm";
+
+const result = await createTag("VIP", "#FFD700", "High-value customers");
+```
+
+**Parameters:**
+
+- `name` - Tag name
+- `color` - Hex color code
+- `description` - Optional description
+
+**Returns:** `{ success: boolean; tagId?: string; error?: string }`
+
+**Cache Invalidation:** `CRM_CACHE_TAGS.TAGS`
+
+---
+
+### CRM Cache Tags
+
+Located: `src/lib/data/crm.ts`
+
+```typescript
+export const CRM_CACHE_TAGS = {
+  CUSTOMERS: "crm-customers",
+  CUSTOMER: (id: string) => `crm-customer-${id}`,
+  CUSTOMER_NOTES: (customerId: string) => `crm-customer-notes-${customerId}`,
+  TAGS: "crm-tags",
+  DASHBOARD: "crm-dashboard",
+} as const;
+```
+
+---
+
 ## Reports Server Actions
 
 Located: `src/app/actions/reports.ts`

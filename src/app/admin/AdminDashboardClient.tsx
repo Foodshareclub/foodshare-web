@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Admin Dashboard Client Component
@@ -6,17 +6,17 @@
  * Receives pre-fetched data from Server Component parent
  */
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
 
 // ============================================================================
 // Types
 // ============================================================================
 
 // Import types from Server Actions
-import type { DashboardStats, AuditLog } from '@/app/actions/admin';
+import type { DashboardStats, AuditLog } from "@/app/actions/admin";
 
 interface AdminDashboardClientProps {
   stats: DashboardStats;
@@ -30,15 +30,15 @@ interface AdminDashboardClientProps {
 interface StatCardProps {
   label: string;
   value: number;
-  colorScheme?: 'green' | 'blue' | 'orange' | 'red';
+  colorScheme?: "green" | "blue" | "orange" | "red";
 }
 
-function StatCard({ label, value, colorScheme = 'green' }: StatCardProps) {
+function StatCard({ label, value, colorScheme = "green" }: StatCardProps) {
   const colorClasses = {
-    green: 'border-green-300 hover:border-green-400 text-green-600',
-    blue: 'border-blue-300 hover:border-blue-400 text-blue-600',
-    orange: 'border-orange-300 hover:border-orange-400 text-orange-600',
-    red: 'border-red-300 hover:border-red-400 text-red-600',
+    green: "border-green-300 hover:border-green-400 text-green-600",
+    blue: "border-blue-300 hover:border-blue-400 text-blue-600",
+    orange: "border-orange-300 hover:border-orange-400 text-orange-600",
+    red: "border-red-300 hover:border-red-400 text-red-600",
   };
 
   return (
@@ -80,24 +80,16 @@ export function AdminDashboardClient({ stats, auditLogs }: AdminDashboardClientP
   const router = useRouter();
 
   const approvalRate =
-    stats.totalProducts > 0
-      ? ((stats.activeProducts / stats.totalProducts) * 100).toFixed(1)
-      : '0';
+    stats.totalProducts > 0 ? ((stats.activeProducts / stats.totalProducts) * 100).toFixed(1) : "0";
 
-  const activeRate = Math.round(
-    (stats.activeProducts / (stats.totalProducts || 1)) * 100
-  );
+  const activeRate = Math.round((stats.activeProducts / (stats.totalProducts || 1)) * 100);
 
   return (
     <div className="flex flex-col gap-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">
-          {t('dashboard_overview')}
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          {t('monitor_and_manage_your_platform')}
-        </p>
+        <h1 className="text-2xl font-bold text-foreground">{t("dashboard_overview")}</h1>
+        <p className="text-muted-foreground mt-1">{t("monitor_and_manage_your_platform")}</p>
       </div>
 
       {/* Stats Grid */}
@@ -119,50 +111,52 @@ export function AdminDashboardClient({ stats, auditLogs }: AdminDashboardClientP
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Quick Actions */}
         <div className="bg-background p-6 rounded-lg border border-border">
-          <h2 className="text-lg font-bold mb-4">{t('quick_actions')}</h2>
+          <h2 className="text-lg font-bold mb-4">{t("quick_actions")}</h2>
           <div className="flex flex-col gap-3">
             <Button
-              onClick={() => router.push('/admin/listings?status=pending')}
+              onClick={() => router.push("/admin/listings?status=pending")}
               size="lg"
               className="w-full bg-orange-500 hover:bg-orange-600 text-white"
             >
-              {t('view_pending_listings')} ({stats.pendingProducts})
+              {t("view_pending_listings")} ({stats.pendingProducts})
             </Button>
             <Button
               variant="outline"
-              onClick={() => router.push('/admin/listings')}
+              onClick={() => router.push("/admin/listings")}
               size="lg"
               className="w-full border-blue-500 text-blue-500 hover:bg-blue-50"
             >
-              {t('view_all_listings')} ({stats.totalProducts})
+              {t("view_all_listings")} ({stats.totalProducts})
             </Button>
             <Button
               variant="outline"
-              onClick={() => router.push('/admin/users')}
+              onClick={() => router.push("/admin/users")}
               size="lg"
               className="w-full border-green-500 text-green-500 hover:bg-green-50"
             >
-              {t('manage_users')}
+              {t("manage_users")}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => router.push("/admin/crm")}
+              size="lg"
+              className="w-full border-purple-500 text-purple-500 hover:bg-purple-50"
+            >
+              CRM Dashboard
             </Button>
           </div>
         </div>
 
         {/* Recent Activity */}
         <div className="bg-background p-6 rounded-lg border border-border">
-          <h2 className="text-lg font-bold mb-4">{t('recent_activity')}</h2>
+          <h2 className="text-lg font-bold mb-4">{t("recent_activity")}</h2>
           <div className="max-h-[300px] overflow-y-auto">
             {auditLogs.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">
-                {t('no_recent_activity')}
-              </p>
+              <p className="text-muted-foreground text-center py-4">{t("no_recent_activity")}</p>
             ) : (
               <div className="flex flex-col">
                 {auditLogs.map((log) => (
-                  <AuditLogItem
-                    key={log.id}
-                    action={log.action}
-                    createdAt={log.created_at}
-                  />
+                  <AuditLogItem key={log.id} action={log.action} createdAt={log.created_at} />
                 ))}
               </div>
             )}
@@ -173,14 +167,12 @@ export function AdminDashboardClient({ stats, auditLogs }: AdminDashboardClientP
       {/* Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-background p-6 rounded-lg border border-border">
-          <h2 className="text-lg font-bold mb-2">{t('approval_rate')}</h2>
+          <h2 className="text-lg font-bold mb-2">{t("approval_rate")}</h2>
           <p className="text-3xl font-bold text-green-600">{approvalRate}%</p>
         </div>
         <div className="bg-background p-6 rounded-lg border border-border">
-          <h2 className="text-lg font-bold mb-2">{t('pending')}</h2>
-          <p className="text-3xl font-bold text-blue-600">
-            {stats.pendingProducts} items
-          </p>
+          <h2 className="text-lg font-bold mb-2">{t("pending")}</h2>
+          <p className="text-3xl font-bold text-blue-600">{stats.pendingProducts} items</p>
         </div>
       </div>
     </div>

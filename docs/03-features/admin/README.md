@@ -8,6 +8,40 @@ Comprehensive admin dashboard for managing the FoodShare platform.
 - [User Management](./USER_MANAGEMENT.md) - User roles, search, statistics
 - [AI Moderation](./AI_MODERATION.md) - Automated content moderation
 
+## CRM Data Layer
+
+### Server Actions (`src/app/actions/crm.ts`)
+
+Mutations for customer relationship management:
+
+| Action                                     | Description                              |
+| ------------------------------------------ | ---------------------------------------- |
+| `importProfilesAsCRMCustomers()`           | Import profiles as CRM customers         |
+| `updateCustomerLifecycle(id, stage)`       | Update lifecycle stage (lead → champion) |
+| `updateEngagementScore(id, score)`         | Update engagement score (0-100)          |
+| `archiveCustomer(id, reason?)`             | Archive a customer                       |
+| `addCustomerNote(id, content, type)`       | Add admin note to customer               |
+| `assignTagToCustomer(customerId, tagId)`   | Assign tag to customer                   |
+| `removeTagFromCustomer(customerId, tagId)` | Remove tag from customer                 |
+| `createTag(name, color, description?)`     | Create new customer tag                  |
+
+### Data Functions (`src/lib/data/crm.ts`)
+
+Server-side data fetching with caching:
+
+| Function                          | Description                       |
+| --------------------------------- | --------------------------------- |
+| `getCRMCustomers(filters?)`       | Fetch customers with profile data |
+| `getCRMCustomersCached(filters?)` | Cached version                    |
+| `getCustomerSummary(id)`          | Get single customer summary       |
+| `getCustomerNotes(customerId)`    | Fetch customer notes              |
+| `getCustomerTags()`               | Fetch all tags                    |
+| `getCRMDashboardStats()`          | Dashboard statistics              |
+
+### Types (`src/types/crm.types.ts`)
+
+Key types: `CRMCustomer`, `CRMCustomerWithProfile`, `CRMCustomerNote`, `CRMCustomerTag`, `LifecycleStage`, `CustomerType`
+
 ---
 
 # Listings Management Visual Guide
