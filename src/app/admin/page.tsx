@@ -69,7 +69,7 @@ async function AdminDashboardData() {
           first_name,
           second_name,
           email,
-          img_url
+          avatar_url
         )
       `
       )
@@ -83,7 +83,7 @@ async function AdminDashboardData() {
       first_name?: string;
       second_name?: string;
       email?: string;
-      img_url?: string;
+      avatar_url?: string;
     } | null;
     return {
       id: c.id,
@@ -97,7 +97,7 @@ async function AdminDashboardData() {
       created_at: c.created_at,
       full_name: [profile?.first_name, profile?.second_name].filter(Boolean).join(" ") || "Unknown",
       email: profile?.email || "",
-      avatar_url: profile?.img_url || null,
+      avatar_url: profile?.avatar_url || null,
     };
   });
 
