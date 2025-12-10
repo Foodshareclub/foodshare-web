@@ -810,14 +810,14 @@ const user = await getAuthSession();
 interface AuthUser {
   id: string;
   email?: string;
-  profile: {
+  profile?: {
     id: string;
-    name?: string;
-    first_name?: string;
-    second_name?: string;
-    avatar_url?: string;
-    role?: string;
-    email?: string;
+    first_name: string | null;
+    second_name: string | null;
+    nickname?: string | null;
+    avatar_url: string | null;
+    role?: Record<string, boolean> | null; // JSONB role field (e.g., { admin: true })
+    email: string | null;
   } | null;
 }
 ```

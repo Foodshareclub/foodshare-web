@@ -19,8 +19,9 @@ export interface AuthUser {
     id: string;
     first_name: string | null;
     second_name: string | null;
-    nickname: string | null;
+    nickname?: string | null;
     avatar_url: string | null;
+    role?: Record<string, boolean> | null;
     email: string | null;
   } | null;
 }
@@ -77,7 +78,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id, first_name, second_name, nickname, avatar_url, email")
+        .select("id, first_name, second_name, nickname, avatar_url, role, email")
         .eq("id", user.id)
         .single();
 

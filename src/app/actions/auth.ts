@@ -6,18 +6,9 @@ import { revalidatePath } from 'next/cache';
 import type { User, Session } from '@supabase/supabase-js';
 import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
 
-export interface AuthUser {
-  id: string;
-  email: string | undefined;
-  profile?: {
-    id: string;
-    first_name: string | null;
-    second_name: string | null;
-    avatar_url: string | null;
-    role: Record<string, boolean> | null;
-    email: string | null;
-  } | null;
-}
+// Import and re-export AuthUser type from data layer for consistency
+import type { AuthUser } from '@/lib/data/auth';
+export type { AuthUser };
 
 /**
  * Check if a string is a full URL (http/https)
@@ -79,7 +70,7 @@ export async function getUser(): Promise<AuthUser | null> {
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, first_name, second_name, avatar_url, role, email')
+        .select('id, first_name, second_name, nickname, avatar_url, role, email')
         .eq('id', user.id)
         .single();
 
