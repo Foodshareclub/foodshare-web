@@ -13,8 +13,8 @@
  * - Client (realtime only): Keep using this file
  */
 
-import { supabase } from "@/lib/supabase/client";
 import type { PostgrestSingleResponse } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase/client";
 
 export type CountryType = {
   continent: string | null;
@@ -52,8 +52,8 @@ export type ProfileType = {
   phone: string;
   // Location is a PostGIS geography type, stored as unknown
   location?: unknown;
-  // JSONB role field - single source of truth for roles
-  role?: Record<string, boolean> | null;
+  // Roles fetched from user_roles junction table
+  roles?: string[];
   // Preferences stored as JSONB
   dietary_preferences?: Record<string, unknown>;
   notification_preferences?: Record<string, unknown>;

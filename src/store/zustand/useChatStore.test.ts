@@ -3,95 +3,93 @@
  * Tests for Zustand chat store
  */
 
-import { act } from '@testing-library/react';
-import { useChatStore } from './useChatStore';
-import type { RoomType, CustomRoomType, RoomParticipantsType } from '@/api/chatAPI';
-import type { RealtimeChannel } from '@supabase/supabase-js';
+import { act } from "@testing-library/react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
+import { useChatStore } from "./useChatStore";
+import type { RoomType, CustomRoomType, RoomParticipantsType } from "@/api/chatAPI";
 
 // Mock data
 const mockRoom: RoomType = {
-  id: 'room-123',
-  requester: 'user-1',
-  sharer: 'user-2',
+  id: "room-123",
+  requester: "user-1",
+  sharer: "user-2",
   post_id: 1,
-  last_message: 'Hello!',
-  last_message_sent_by: 'user-1',
-  last_message_seen_by: 'user-2',
+  last_message: "Hello!",
+  last_message_sent_by: "user-1",
+  last_message_seen_by: "user-2",
   profiles: {
-    id: 'user-2',
-    first_name: 'John',
-    second_name: 'Doe',
-    avatar_url: '',
-    about_me: '',
-    birth_date: '',
-    created_time: '',
-    phone: '',
-    updated_at: '2024-01-01T00:00:00Z',
-    role: null,
+    id: "user-2",
+    first_name: "John",
+    second_name: "Doe",
+    avatar_url: "",
+    about_me: "",
+    birth_date: "",
+    created_time: "",
+    phone: "",
+    updated_at: "2024-01-01T00:00:00Z",
   },
-  post_arranged_to: '',
+  post_arranged_to: "",
 };
 
 const mockCustomRoom: CustomRoomType = {
-  id: 'room-123',
-  last_message: 'Hello!',
-  last_message_seen_by: 'user-2',
-  last_message_sent_by: 'user-1',
-  last_message_time: '2024-01-01T12:00:00Z',
+  id: "room-123",
+  last_message: "Hello!",
+  last_message_seen_by: "user-2",
+  last_message_sent_by: "user-1",
+  last_message_time: "2024-01-01T12:00:00Z",
   post_id: 1,
   posts: {
     id: 1,
-    post_name: 'Test Product',
-    post_description: 'Test description',
-    post_type: 'food',
-    post_address: '123 Test St',
-    post_stripped_address: 'Test St',
+    post_name: "Test Product",
+    post_description: "Test description",
+    post_type: "food",
+    post_address: "123 Test St",
+    post_stripped_address: "Test St",
     images: [],
-    available_hours: '9am-5pm',
-    transportation: 'pickup',
+    available_hours: "9am-5pm",
+    transportation: "pickup",
     is_active: true,
     is_arranged: false,
     post_views: 0,
     post_like_counter: 0,
-    profile_id: 'user-2',
-    created_at: '2024-01-01T00:00:00Z',
+    profile_id: "user-2",
+    created_at: "2024-01-01T00:00:00Z",
     five_star: null,
     four_star: null,
     location: null as unknown as string,
     reviews: [],
-    condition: 'good',
+    condition: "good",
   },
   profiles: {
-    id: 'user-2',
-    first_name: 'John',
-    second_name: 'Doe',
-    avatar_url: '',
-    about_me: '',
-    birth_date: '',
-    created_time: '',
-    phone: '',
-    updated_at: '2024-01-01T00:00:00Z',
-    role: null,
+    id: "user-2",
+    first_name: "John",
+    second_name: "Doe",
+    avatar_url: "",
+    about_me: "",
+    birth_date: "",
+    created_time: "",
+    phone: "",
+    updated_at: "2024-01-01T00:00:00Z",
   },
-  requester: 'user-1',
+  requester: "user-1",
   room_participants: [],
-  sharer: 'user-2',
+  sharer: "user-2",
 };
 
 const mockMessage: RoomParticipantsType = {
-  id: 'msg-1',
-  profile_id: 'user-1',
-  room_id: 'room-123',
-  text: 'Hello, world!',
-  timestamp: '2024-01-01T12:00:00Z',
+  id: "msg-1",
+  profile_id: "user-1",
+  room_id: "room-123",
+  text: "Hello, world!",
+  timestamp: "2024-01-01T12:00:00Z",
 };
 
 const mockMessage2: RoomParticipantsType = {
-  id: 'msg-2',
-  profile_id: 'user-2',
-  room_id: 'room-123',
-  text: 'Hi there!',
-  timestamp: '2024-01-01T12:01:00Z',
+  id: "msg-2",
+  profile_id: "user-2",
+  room_id: "room-123",
+  text: "Hi there!",
+  timestamp: "2024-01-01T12:01:00Z",
 };
 
 const mockChannel = {
@@ -99,7 +97,7 @@ const mockChannel = {
   unsubscribe: jest.fn(),
 } as unknown as RealtimeChannel;
 
-describe('useChatStore', () => {
+describe("useChatStore", () => {
   // Reset store before each test
   beforeEach(() => {
     act(() => {
@@ -111,8 +109,8 @@ describe('useChatStore', () => {
   // Initial State
   // ==========================================================================
 
-  describe('initial state', () => {
-    it('should have correct initial state', () => {
+  describe("initial state", () => {
+    it("should have correct initial state", () => {
       const state = useChatStore.getState();
 
       expect(state.channel).toBeNull();
@@ -121,9 +119,9 @@ describe('useChatStore', () => {
       expect(state.messages).toEqual([]);
       expect(state.newMessage).toBeNull();
       expect(state.isLoading).toBe(false);
-      expect(state.creationStatus).toBe('idle');
-      expect(state.updateStatus).toBe('idle');
-      expect(state.feedbackStatus).toBe('not_written');
+      expect(state.creationStatus).toBe("idle");
+      expect(state.updateStatus).toBe("idle");
+      expect(state.feedbackStatus).toBe("not_written");
       expect(state.createdRoom).toBeNull();
     });
   });
@@ -132,8 +130,8 @@ describe('useChatStore', () => {
   // Channel Management
   // ==========================================================================
 
-  describe('setChannel', () => {
-    it('should set channel', () => {
+  describe("setChannel", () => {
+    it("should set channel", () => {
       act(() => {
         useChatStore.getState().setChannel(mockChannel);
       });
@@ -141,7 +139,7 @@ describe('useChatStore', () => {
       expect(useChatStore.getState().channel).toBe(mockChannel);
     });
 
-    it('should clear channel when set to null', () => {
+    it("should clear channel when set to null", () => {
       act(() => {
         useChatStore.getState().setChannel(mockChannel);
         useChatStore.getState().setChannel(null);
@@ -155,8 +153,8 @@ describe('useChatStore', () => {
   // Current Room
   // ==========================================================================
 
-  describe('setCurrentRoom', () => {
-    it('should set current room', () => {
+  describe("setCurrentRoom", () => {
+    it("should set current room", () => {
       act(() => {
         useChatStore.getState().setCurrentRoom(mockRoom);
       });
@@ -164,7 +162,7 @@ describe('useChatStore', () => {
       expect(useChatStore.getState().currentRoom).toEqual(mockRoom);
     });
 
-    it('should clear current room when set to null', () => {
+    it("should clear current room when set to null", () => {
       act(() => {
         useChatStore.getState().setCurrentRoom(mockRoom);
         useChatStore.getState().setCurrentRoom(null);
@@ -178,9 +176,9 @@ describe('useChatStore', () => {
   // Rooms List
   // ==========================================================================
 
-  describe('rooms management', () => {
-    it('should set rooms array', () => {
-      const rooms = [mockCustomRoom, { ...mockCustomRoom, id: 'room-456' }];
+  describe("rooms management", () => {
+    it("should set rooms array", () => {
+      const rooms = [mockCustomRoom, { ...mockCustomRoom, id: "room-456" }];
 
       act(() => {
         useChatStore.getState().setRooms(rooms);
@@ -190,9 +188,9 @@ describe('useChatStore', () => {
       expect(useChatStore.getState().rooms.length).toBe(2);
     });
 
-    it('should add room to beginning of list', () => {
-      const existingRoom = { ...mockCustomRoom, id: 'room-existing' };
-      const newRoom = { ...mockCustomRoom, id: 'room-new' };
+    it("should add room to beginning of list", () => {
+      const existingRoom = { ...mockCustomRoom, id: "room-existing" };
+      const newRoom = { ...mockCustomRoom, id: "room-new" };
 
       act(() => {
         useChatStore.getState().setRooms([existingRoom]);
@@ -201,34 +199,34 @@ describe('useChatStore', () => {
 
       const rooms = useChatStore.getState().rooms;
       expect(rooms.length).toBe(2);
-      expect(rooms[0].id).toBe('room-new');
-      expect(rooms[1].id).toBe('room-existing');
+      expect(rooms[0].id).toBe("room-new");
+      expect(rooms[1].id).toBe("room-existing");
     });
 
-    it('should update room in list', () => {
-      const rooms = [mockCustomRoom, { ...mockCustomRoom, id: 'room-456' }];
+    it("should update room in list", () => {
+      const rooms = [mockCustomRoom, { ...mockCustomRoom, id: "room-456" }];
 
       act(() => {
         useChatStore.getState().setRooms(rooms);
-        useChatStore.getState().updateRoomInList('room-123', {
-          last_message: 'Updated message',
+        useChatStore.getState().updateRoomInList("room-123", {
+          last_message: "Updated message",
         });
       });
 
       const updatedRooms = useChatStore.getState().rooms;
-      expect(updatedRooms[0].last_message).toBe('Updated message');
-      expect(updatedRooms[1].last_message).toBe('Hello!'); // Unchanged
+      expect(updatedRooms[0].last_message).toBe("Updated message");
+      expect(updatedRooms[1].last_message).toBe("Hello!"); // Unchanged
     });
 
-    it('should not modify rooms when updating non-existent room', () => {
+    it("should not modify rooms when updating non-existent room", () => {
       act(() => {
         useChatStore.getState().setRooms([mockCustomRoom]);
-        useChatStore.getState().updateRoomInList('non-existent', {
-          last_message: 'Updated',
+        useChatStore.getState().updateRoomInList("non-existent", {
+          last_message: "Updated",
         });
       });
 
-      expect(useChatStore.getState().rooms[0].last_message).toBe('Hello!');
+      expect(useChatStore.getState().rooms[0].last_message).toBe("Hello!");
     });
   });
 
@@ -236,8 +234,8 @@ describe('useChatStore', () => {
   // Messages
   // ==========================================================================
 
-  describe('messages management', () => {
-    it('should set messages array', () => {
+  describe("messages management", () => {
+    it("should set messages array", () => {
       const messages = [mockMessage, mockMessage2];
 
       act(() => {
@@ -247,7 +245,7 @@ describe('useChatStore', () => {
       expect(useChatStore.getState().messages).toEqual(messages);
     });
 
-    it('should add message to beginning and set newMessage', () => {
+    it("should add message to beginning and set newMessage", () => {
       act(() => {
         useChatStore.getState().setMessages([mockMessage2]);
         useChatStore.getState().addMessage(mockMessage);
@@ -259,7 +257,7 @@ describe('useChatStore', () => {
       expect(state.newMessage).toEqual(mockMessage);
     });
 
-    it('should prepend messages to end of array', () => {
+    it("should prepend messages to end of array", () => {
       const existingMessages = [mockMessage];
       const olderMessages = [mockMessage2];
 
@@ -279,8 +277,8 @@ describe('useChatStore', () => {
   // New Message
   // ==========================================================================
 
-  describe('setNewMessage', () => {
-    it('should set new message', () => {
+  describe("setNewMessage", () => {
+    it("should set new message", () => {
       act(() => {
         useChatStore.getState().setNewMessage(mockMessage);
       });
@@ -288,7 +286,7 @@ describe('useChatStore', () => {
       expect(useChatStore.getState().newMessage).toEqual(mockMessage);
     });
 
-    it('should clear new message', () => {
+    it("should clear new message", () => {
       act(() => {
         useChatStore.getState().setNewMessage(mockMessage);
         useChatStore.getState().setNewMessage(null);
@@ -302,8 +300,8 @@ describe('useChatStore', () => {
   // Loading State
   // ==========================================================================
 
-  describe('setIsLoading', () => {
-    it('should set loading state', () => {
+  describe("setIsLoading", () => {
+    it("should set loading state", () => {
       act(() => {
         useChatStore.getState().setIsLoading(true);
       });
@@ -311,7 +309,7 @@ describe('useChatStore', () => {
       expect(useChatStore.getState().isLoading).toBe(true);
     });
 
-    it('should clear loading state', () => {
+    it("should clear loading state", () => {
       act(() => {
         useChatStore.getState().setIsLoading(true);
         useChatStore.getState().setIsLoading(false);
@@ -325,9 +323,9 @@ describe('useChatStore', () => {
   // Status Fields
   // ==========================================================================
 
-  describe('setCreationStatus', () => {
-    it.each(['idle', 'creating', 'created', 'error'] as const)(
-      'should set creation status to %s',
+  describe("setCreationStatus", () => {
+    it.each(["idle", "creating", "created", "error"] as const)(
+      "should set creation status to %s",
       (status) => {
         act(() => {
           useChatStore.getState().setCreationStatus(status);
@@ -338,9 +336,9 @@ describe('useChatStore', () => {
     );
   });
 
-  describe('setUpdateStatus', () => {
-    it.each(['idle', 'updating', 'updated', 'error'] as const)(
-      'should set update status to %s',
+  describe("setUpdateStatus", () => {
+    it.each(["idle", "updating", "updated", "error"] as const)(
+      "should set update status to %s",
       (status) => {
         act(() => {
           useChatStore.getState().setUpdateStatus(status);
@@ -351,25 +349,22 @@ describe('useChatStore', () => {
     );
   });
 
-  describe('setFeedbackStatus', () => {
-    it.each(['not_written', 'written'] as const)(
-      'should set feedback status to %s',
-      (status) => {
-        act(() => {
-          useChatStore.getState().setFeedbackStatus(status);
-        });
+  describe("setFeedbackStatus", () => {
+    it.each(["not_written", "written"] as const)("should set feedback status to %s", (status) => {
+      act(() => {
+        useChatStore.getState().setFeedbackStatus(status);
+      });
 
-        expect(useChatStore.getState().feedbackStatus).toBe(status);
-      }
-    );
+      expect(useChatStore.getState().feedbackStatus).toBe(status);
+    });
   });
 
   // ==========================================================================
   // Created Room
   // ==========================================================================
 
-  describe('setCreatedRoom', () => {
-    it('should set created room', () => {
+  describe("setCreatedRoom", () => {
+    it("should set created room", () => {
       act(() => {
         useChatStore.getState().setCreatedRoom(mockRoom);
       });
@@ -377,7 +372,7 @@ describe('useChatStore', () => {
       expect(useChatStore.getState().createdRoom).toEqual(mockRoom);
     });
 
-    it('should clear created room', () => {
+    it("should clear created room", () => {
       act(() => {
         useChatStore.getState().setCreatedRoom(mockRoom);
         useChatStore.getState().setCreatedRoom(null);
@@ -391,8 +386,8 @@ describe('useChatStore', () => {
   // Reset
   // ==========================================================================
 
-  describe('reset', () => {
-    it('should reset all state to initial values', () => {
+  describe("reset", () => {
+    it("should reset all state to initial values", () => {
       // Set various state values
       act(() => {
         useChatStore.getState().setChannel(mockChannel);
@@ -401,9 +396,9 @@ describe('useChatStore', () => {
         useChatStore.getState().setMessages([mockMessage]);
         useChatStore.getState().setNewMessage(mockMessage);
         useChatStore.getState().setIsLoading(true);
-        useChatStore.getState().setCreationStatus('created');
-        useChatStore.getState().setUpdateStatus('updated');
-        useChatStore.getState().setFeedbackStatus('written');
+        useChatStore.getState().setCreationStatus("created");
+        useChatStore.getState().setUpdateStatus("updated");
+        useChatStore.getState().setFeedbackStatus("written");
         useChatStore.getState().setCreatedRoom(mockRoom);
       });
 
@@ -419,15 +414,15 @@ describe('useChatStore', () => {
       expect(state.messages).toEqual([]);
       expect(state.newMessage).toBeNull();
       expect(state.isLoading).toBe(false);
-      expect(state.creationStatus).toBe('idle');
-      expect(state.updateStatus).toBe('idle');
-      expect(state.feedbackStatus).toBe('not_written');
+      expect(state.creationStatus).toBe("idle");
+      expect(state.updateStatus).toBe("idle");
+      expect(state.feedbackStatus).toBe("not_written");
       expect(state.createdRoom).toBeNull();
     });
   });
 
-  describe('resetCurrentRoom', () => {
-    it('should only reset current room related state', () => {
+  describe("resetCurrentRoom", () => {
+    it("should only reset current room related state", () => {
       // Set various state values
       act(() => {
         useChatStore.getState().setChannel(mockChannel);
@@ -436,7 +431,7 @@ describe('useChatStore', () => {
         useChatStore.getState().setMessages([mockMessage]);
         useChatStore.getState().setNewMessage(mockMessage);
         useChatStore.getState().setIsLoading(true);
-        useChatStore.getState().setCreationStatus('created');
+        useChatStore.getState().setCreationStatus("created");
       });
 
       // Reset current room only
@@ -454,7 +449,7 @@ describe('useChatStore', () => {
       expect(state.channel).toBe(mockChannel);
       expect(state.rooms).toEqual([mockCustomRoom]);
       expect(state.isLoading).toBe(true);
-      expect(state.creationStatus).toBe('created');
+      expect(state.creationStatus).toBe("created");
     });
   });
 
@@ -462,7 +457,7 @@ describe('useChatStore', () => {
   // Selectors (testing they exist and return correct values)
   // ==========================================================================
 
-  describe('selectors', () => {
+  describe("selectors", () => {
     beforeEach(() => {
       act(() => {
         useChatStore.getState().setCurrentRoom(mockRoom);
@@ -473,23 +468,23 @@ describe('useChatStore', () => {
       });
     });
 
-    it('should provide current room via state', () => {
+    it("should provide current room via state", () => {
       expect(useChatStore.getState().currentRoom).toEqual(mockRoom);
     });
 
-    it('should provide messages via state', () => {
+    it("should provide messages via state", () => {
       expect(useChatStore.getState().messages).toEqual([mockMessage]);
     });
 
-    it('should provide rooms via state', () => {
+    it("should provide rooms via state", () => {
       expect(useChatStore.getState().rooms).toEqual([mockCustomRoom]);
     });
 
-    it('should provide loading state via state', () => {
+    it("should provide loading state via state", () => {
       expect(useChatStore.getState().isLoading).toBe(true);
     });
 
-    it('should provide new message via state', () => {
+    it("should provide new message via state", () => {
       expect(useChatStore.getState().newMessage).toEqual(mockMessage);
     });
   });

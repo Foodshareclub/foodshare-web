@@ -18,20 +18,22 @@ export default async function OneVolunteer({ id }: OneVolunteerProps) {
 
   // Transform PublicProfile to AllValuesType format expected by VolunteerCards
   // Use empty strings for required fields that may be null
-  const volunteerData: AllValuesType | null = volunteer ? {
-    id: volunteer.id,
-    first_name: volunteer.first_name || '',
-    second_name: volunteer.second_name || '',
-    nickname: volunteer.nickname || undefined,
-    avatar_url: volunteer.avatar_url || '',
-    about_me: volunteer.about_me || '',
-    location: volunteer.location,
-    created_time: volunteer.created_time || '',
-    role: volunteer.role,
-    updated_at: null,
-    birth_date: '',
-    phone: '',
-  } : null;
+  const volunteerData: AllValuesType | null = volunteer
+    ? {
+        id: volunteer.id,
+        first_name: volunteer.first_name || "",
+        second_name: volunteer.second_name || "",
+        nickname: volunteer.nickname || undefined,
+        avatar_url: volunteer.avatar_url || "",
+        about_me: volunteer.about_me || "",
+        location: volunteer.location,
+        created_time: volunteer.created_time || "",
+        roles: volunteer.roles,
+        updated_at: null,
+        birth_date: "",
+        phone: "",
+      }
+    : null;
 
   return (
     <div className="flex flex-col md:flex-row justify-between px-7 xl:px-20 mt-[24vh]">

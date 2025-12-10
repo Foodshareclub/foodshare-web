@@ -148,6 +148,8 @@ export async function updateProduct(id: number, data: ProductData) {
 | `getUserStats(userId)`      | 600s           | `profiles`, `profile-stats-{userId}`   |
 | `getVolunteers()`           | 3600s          | `volunteers`, `profiles`               |
 | `getProfileReviews(userId)` | 300s           | `profiles`, `profile-reviews-{userId}` |
+| `hasUserRole(userId, role)` | N/A            | Direct query (no caching)              |
+| `getUserRoles(userId)`      | N/A            | Direct query (no caching)              |
 
 ### Forum (`@/lib/data/forum`)
 

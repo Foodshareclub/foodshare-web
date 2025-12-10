@@ -816,11 +816,12 @@ interface AuthUser {
     second_name: string | null;
     nickname?: string | null;
     avatar_url: string | null;
-    role?: Record<string, boolean> | null; // JSONB role field (e.g., { admin: true })
     email: string | null;
   } | null;
 }
 ```
+
+> **Note:** Role data is not included in the profile. Use `checkIsAdmin()` from `@/lib/data/auth` to check admin status via the `user_roles` junction table.
 
 **Graceful Degradation:**
 

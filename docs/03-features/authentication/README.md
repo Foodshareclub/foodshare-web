@@ -65,17 +65,18 @@ export async function middleware(request: NextRequest) {
 
 ### Admin Route Protection
 
-The middleware checks admin status using the JSONB role field (consistent with `checkIsAdmin()` in auth.ts):
+The middleware checks admin status using the `user_roles` junction table (consistent with `checkIsAdmin()` in auth.ts):
 
-| Source | Field | Values |
-|--------|-------|--------|
-| JSONB role field | `profiles.role` | `{ admin: true }` or `{ superadmin: true }` |
+| Source                      | Table                            | Check                                    |
+| --------------------------- | -------------------------------- | ---------------------------------------- |
+| `user_roles` junction table | `user_roles` joined with `roles` | Role name is `'admin'` or `'superadmin'` |
 
 If a user accesses `/admin/*` without admin privileges, they are redirected to the home page.
 
 ### Matcher Configuration
 
 The middleware runs on all paths except:
+
 - `_next/static` (static files)
 - `_next/image` (image optimization)
 - `favicon.ico`
@@ -103,9 +104,10 @@ Located in `src/app/actions/auth.ts`:
 
 > **Note on Admin Checking:** The `checkIsAdmin()` function in `src/lib/data/auth.ts`:
 >
-> - Uses the **JSONB `role` field** as single source of truth
-> - Checks `profiles.role` for `{ admin: true }` or `{ superadmin: true }`
+> - Uses the **`user_roles` junction table** as single source of truth
+> - Queries `user_roles` joined with `roles` table to get role names
 > - Returns `{ isAdmin: boolean, roles: string[], jsonbRoles: Record<string, boolean> }`
+> - `isAdmin` is true if user has `'admin'` or `'superadmin'` role
 > - Use when you need detailed role information
 
 ### Password Reset Example (Server Action Pattern)

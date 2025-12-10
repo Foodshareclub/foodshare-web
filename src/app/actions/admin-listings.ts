@@ -298,7 +298,7 @@ export async function updateAdminNotes(id: number, notes: string): Promise<Actio
 }
 
 /**
- * Update user role (JSONB role field)
+ * Update user roles via user_roles junction table
  */
 export async function updateUserRoles(
   userId: string,
@@ -313,12 +313,33 @@ export async function updateUserRoles(
       return { success: false, error: "Cannot remove your own admin role" };
     }
 
-    const { error } = await supabase
-      .from("profiles")
-      .update({ role: roles, updated_at: new Date().toISOString() })
-      .eq("id", userId);
+    // Get all role IDs from roles table
+    const { data: allRoles, error: rolesError } = await supabase.from("roles").select("id, name");
 
-    if (error) return { success: false, error: error.message };
+    if (rolesError) return { success: false, error: rolesError.message };
+
+    const roleMap = new Map(allRoles?.map((r) => [r.name, r.id]) ?? []);
+
+    // Delete existing user roles
+    const { error: deleteError } = await supabase
+      .from("user_roles")
+      .delete()
+      .eq("profile_id", userId);
+
+    if (deleteError) return { success: false, error: deleteError.message };
+
+    // Insert new roles
+    const rolesToInsert = Object.entries(roles)
+      .filter(([_, enabled]) => enabled)
+      .map(([roleName]) => roleMap.get(roleName))
+      .filter((roleId): roleId is number => roleId !== undefined)
+      .map((roleId) => ({ profile_id: userId, role_id: roleId }));
+
+    if (rolesToInsert.length > 0) {
+      const { error: insertError } = await supabase.from("user_roles").insert(rolesToInsert);
+
+      if (insertError) return { success: false, error: insertError.message };
+    }
 
     await logAuditAction("update_user_roles", "profile", userId, adminId, { roles });
 

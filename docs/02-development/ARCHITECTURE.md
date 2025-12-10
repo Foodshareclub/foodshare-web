@@ -72,18 +72,18 @@ The application uses Next.js routing with custom configuration in `next.config.t
 
 Category pages use the `/s/[category]` route pattern:
 
-| URL | Description |
-| --- | ----------- |
-| `/s/food` | Food listings |
-| `/s/things` | Things to share |
-| `/s/borrow` | Items to borrow |
-| `/s/wanted` | Wanted items |
-| `/s/fridges` | Community fridges |
-| `/s/foodbanks` | Food banks |
-| `/s/organisations` | Organisations |
-| `/s/volunteers` | Volunteer opportunities |
-| `/s/zerowaste` | Zero waste listings |
-| `/s/vegan` | Vegan listings |
+| URL                | Description             |
+| ------------------ | ----------------------- |
+| `/s/food`          | Food listings           |
+| `/s/things`        | Things to share         |
+| `/s/borrow`        | Items to borrow         |
+| `/s/wanted`        | Wanted items            |
+| `/s/fridges`       | Community fridges       |
+| `/s/foodbanks`     | Food banks              |
+| `/s/organisations` | Organisations           |
+| `/s/volunteers`    | Volunteer opportunities |
+| `/s/zerowaste`     | Zero waste listings     |
+| `/s/vegan`         | Vegan listings          |
 
 The `/s/[category]` route also supports search via query params: `/s/food?key_word=apples`
 
@@ -91,14 +91,14 @@ The `/s/[category]` route also supports search via query params: `/s/food?key_wo
 
 Some features have their own dedicated routes instead of using the `/s/[category]` pattern:
 
-| Route | Description |
-| ----- | ----------- |
-| `/food` | Food listings page |
-| `/food/[id]` | Individual food listing detail |
-| `/challenge` | Challenges listing page |
+| Route             | Description                      |
+| ----------------- | -------------------------------- |
+| `/food`           | Food listings page               |
+| `/food/[id]`      | Individual food listing detail   |
+| `/challenge`      | Challenges listing page          |
 | `/challenge/[id]` | Individual challenge detail page |
-| `/forum` | Community forum |
-| `/forum/[slug]` | Individual forum post |
+| `/forum`          | Community forum                  |
+| `/forum/[slug]`   | Individual forum post            |
 
 ---
 
@@ -128,11 +128,11 @@ export async function generateMetadata({ params }: PageProps) {
 
 Routes can generate custom OG images using Next.js Image Response:
 
-| Route | OG Image File | Description |
-| ----- | ------------- | ----------- |
-| `/food/[id]` | `opengraph-image.tsx` | Dynamic food listing preview |
+| Route             | OG Image File         | Description                          |
+| ----------------- | --------------------- | ------------------------------------ |
+| `/food/[id]`      | `opengraph-image.tsx` | Dynamic food listing preview         |
 | `/challenge/[id]` | `opengraph-image.tsx` | Challenge preview with event details |
-| `/forum/[slug]` | `opengraph-image.tsx` | Forum post preview |
+| `/forum/[slug]`   | `opengraph-image.tsx` | Forum post preview                   |
 
 **Implementation Pattern:**
 
@@ -148,7 +148,7 @@ export const contentType = 'image/png';
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const product = await getProductById(parseInt(id, 10));
-  
+
   return new ImageResponse(
     (
       <div style={{ /* gradient background, emoji, title, location */ }}>
@@ -161,6 +161,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
 ```
 
 **Features:**
+
 - Type-specific gradients and emojis (food 🍽️, borrow 🤝, wanted 🔍, etc.)
 - Background image overlay when listing has photos
 - Location badge with 📍 icon
@@ -190,6 +191,7 @@ const eventJsonLd = generateEventJsonLd({
 ```
 
 Available generators in `src/lib/jsonld.ts`:
+
 - `generateOrganizationJsonLd()` - Site-wide organization info
 - `generateWebsiteJsonLd()` - Website with search action
 - `generateProductJsonLd()` - Food listings (Product schema)
@@ -206,13 +208,13 @@ Available generators in `src/lib/jsonld.ts`:
 
 Old URLs are permanently redirected (301) to the correct routes:
 
-| Legacy URL | Redirects to |
-|-----------|--------------|
-| `/products/:id` | `/food/:id` |
-| `/thing/:id` | `/things/:id` |
-| `/business` | `/organisations` |
-| `/volunteer` | `/volunteers` |
-| `/community` | `/forum` |
+| Legacy URL      | Redirects to     |
+| --------------- | ---------------- |
+| `/products/:id` | `/food/:id`      |
+| `/thing/:id`    | `/things/:id`    |
+| `/business`     | `/organisations` |
+| `/volunteer`    | `/volunteers`    |
+| `/community`    | `/forum`         |
 
 ### Route Constants
 
@@ -284,14 +286,15 @@ All application routes are defined in `src/utils/ROUTES.ts` for consistent navig
 
 The `src/middleware.ts` provides defense-in-depth security:
 
-| Feature | Description |
-|---------|-------------|
-| Cookie Validation | Detects corrupted `sb-*` cookies and clears them |
-| Session Refresh | Automatically refreshes expired sessions on every request |
-| Admin Protection | Multi-source role checking for `/admin/*` routes |
+| Feature           | Description                                               |
+| ----------------- | --------------------------------------------------------- |
+| Cookie Validation | Detects corrupted `sb-*` cookies and clears them          |
+| Session Refresh   | Automatically refreshes expired sessions on every request |
+| Admin Protection  | Multi-source role checking for `/admin/*` routes          |
 
-Admin role checking uses the JSONB role field as single source of truth (consistent with `checkIsAdmin()`):
-- **JSONB role field** - `profiles.role` with `{ admin: true }` or `{ superadmin: true }`
+Admin role checking uses the `user_roles` junction table as single source of truth (consistent with `checkIsAdmin()`):
+
+- **`user_roles` table** - Queries `user_roles` joined with `roles` table for `'admin'` or `'superadmin'` role names
 
 ---
 
@@ -432,12 +435,12 @@ User Types Message
 
 FoodShare uses a **server-first architecture** with Next.js 16. Data fetching and mutations follow these patterns:
 
-| Operation | Approach | Location |
-|-----------|----------|----------|
-| **READ** (data fetching) | Server Components + `lib/data` functions | `src/lib/data/*.ts` |
-| **WRITE** (mutations) | Server Actions | `src/app/actions/*.ts` |
-| **Realtime** | Supabase client subscriptions | Client Components only |
-| **UI state** | Zustand or `useState` | `src/store/` |
+| Operation                | Approach                                 | Location               |
+| ------------------------ | ---------------------------------------- | ---------------------- |
+| **READ** (data fetching) | Server Components + `lib/data` functions | `src/lib/data/*.ts`    |
+| **WRITE** (mutations)    | Server Actions                           | `src/app/actions/*.ts` |
+| **Realtime**             | Supabase client subscriptions            | Client Components only |
+| **UI state**             | Zustand or `useState`                    | `src/store/`           |
 
 ### Data Flow
 
@@ -519,13 +522,13 @@ The `src/hooks/index.ts` barrel export includes:
 
 ```typescript
 // ❌ Don't fetch in useEffect
-'use client';
+"use client";
 useEffect(() => {
-  fetch('/api/data').then(setData);
+  fetch("/api/data").then(setData);
 }, []);
 
 // ❌ Don't use TanStack Query for server data
-const { data } = useProducts('food');
+const { data } = useProducts("food");
 
 // ❌ Don't create Supabase server client without await
 const supabase = createClient(); // Missing await!

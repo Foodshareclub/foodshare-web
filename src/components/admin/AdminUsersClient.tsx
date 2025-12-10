@@ -7,8 +7,8 @@
 
 import React, { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useTranslations } from "next-intl";
-import Image from "next/image";
+import { Search, MoreVertical, Shield, User, RefreshCw, Mail, Eye } from "lucide-react";
+import { UserRolesModal } from "./UserRolesModal";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,24 +27,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserRolesModal } from "./UserRolesModal";
 import type { AdminUserProfile, UserStats, AdminUsersFilter } from "@/lib/data/admin-users";
-
-// Icons
-import { Search, MoreVertical, Shield, User, RefreshCw, Mail, Eye } from "lucide-react";
 
 // Icon aliases for minimal code changes
 const FiSearch = Search;
 const FiMoreVertical = MoreVertical;
 const FiShield = Shield;
-const FiUser = User;
+const _FiUser = User;
 const FiRefreshCw = RefreshCw;
 const FiMail = Mail;
 const FiEye = Eye;
 
 interface Props {
   initialUsers: AdminUserProfile[];
-  initialTotal: number;
+  _initialTotal: number;
   initialPage: number;
   totalPages: number;
   stats: UserStats;
@@ -53,13 +49,12 @@ interface Props {
 
 export function AdminUsersClient({
   initialUsers,
-  initialTotal,
+  _initialTotal,
   initialPage,
   totalPages,
   stats,
   filters,
 }: Props) {
-  const t = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -99,46 +94,43 @@ export function AdminUsersClient({
 
   const getRoleBadges = (user: AdminUserProfile) => {
     const badges: { label: string; color: string }[] = [];
+    const roles = user.roles ?? [];
 
-    // Check JSONB roles
-    if (user.role?.admin) {
-      badges.push({
-        label: "Admin",
-        color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-      });
-    }
-    if (user.role?.volunteer) {
-      badges.push({
-        label: "Volunteer",
-        color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-      });
-    }
-    if (user.role?.organization) {
-      badges.push({
-        label: "Organization",
-        color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
-      });
-    }
-    if (user.role?.fridge_coordinator) {
-      badges.push({
-        label: "Fridge Coord",
-        color: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400",
-      });
-    }
-    if (user.role?.foodbank_coordinator) {
-      badges.push({
-        label: "Foodbank Coord",
-        color: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
-      });
-    }
-
-    // Check superadmin role
-    if (user.role?.superadmin) {
-      badges.push({
+    // Role color mapping
+    const roleConfig: Record<string, { label: string; color: string }> = {
+      superadmin: {
         label: "Superadmin",
         color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
-      });
-    }
+      },
+      admin: {
+        label: "Admin",
+        color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
+      },
+      volunteer: {
+        label: "Volunteer",
+        color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+      },
+      organization: {
+        label: "Organization",
+        color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400",
+      },
+      fridge_coordinator: {
+        label: "Fridge Coord",
+        color: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400",
+      },
+      foodbank_coordinator: {
+        label: "Foodbank Coord",
+        color: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
+      },
+    };
+
+    // Add badges for each role
+    roles.forEach((role) => {
+      const config = roleConfig[role];
+      if (config) {
+        badges.push(config);
+      }
+    });
 
     // Default user badge if no roles
     if (badges.length === 0) {

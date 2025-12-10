@@ -6,15 +6,15 @@
  */
 
 import React from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Mail, MapPin, Calendar } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 // Icon aliases for consistency
 const FaEnvelope = Mail;
 const FaMapMarkerAlt = MapPin;
 const FaCalendar = Calendar;
-import Image from "next/image";
 import peak from "@/assets/peakpx-min.jpg";
 import type { PublicProfile } from "@/lib/data/profiles";
 import type { AuthUser } from "@/app/actions/auth";
@@ -22,9 +22,11 @@ import type { AuthUser } from "@/app/actions/auth";
 interface ViewProfileClientProps {
   profile: PublicProfile;
   user: AuthUser | null;
+  /** Whether the profile user is a volunteer (from user_roles table) */
+  isVolunteer?: boolean;
 }
 
-export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
+export function ViewProfileClient({ profile, user, isVolunteer = false }: ViewProfileClientProps) {
   const router = useRouter();
   const isAuthenticated = !!user;
 
@@ -72,7 +74,7 @@ export function ViewProfileClient({ profile, user }: ViewProfileClientProps) {
             </div>
 
             {/* Volunteer Badge */}
-            {profile.role?.volunteer && (
+            {isVolunteer && (
               <div className="flex justify-center mb-6">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
                   <span className="text-emerald-600 dark:text-emerald-400 font-semibold text-sm">

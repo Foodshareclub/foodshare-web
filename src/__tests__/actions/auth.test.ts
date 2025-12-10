@@ -12,7 +12,6 @@ const mockState = {
     first_name: string;
     second_name: string;
     avatar_url: string | null;
-    role: Record<string, boolean> | null;
     email: string;
   } | null,
   userRole: null as { roles: { name: string } } | null, // For user_roles junction table
@@ -199,7 +198,6 @@ describe("Auth Server Actions", () => {
         first_name: "Test",
         second_name: "User",
         avatar_url: null,
-        role: null,
         email: "test@example.com",
       };
 
@@ -213,7 +211,6 @@ describe("Auth Server Actions", () => {
           first_name: "Test",
           second_name: "User",
           avatar_url: null,
-          role: null,
           email: "test@example.com",
         },
       });

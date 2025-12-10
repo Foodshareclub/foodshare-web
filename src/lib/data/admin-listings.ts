@@ -5,8 +5,8 @@
  */
 
 import { unstable_cache } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
+import { createClient } from "@/lib/supabase/server";
 
 // ============================================================================
 // Types
@@ -311,9 +311,11 @@ export async function checkAdminRole(userId: string): Promise<{
     return { isAdmin: false, roles: {} };
   }
 
-  const roleNames = userRoles.map((r) => (r.roles as { name: string }).name);
+  const roleNames = userRoles.map((r) => (r.roles as unknown as { name: string }).name);
   const roles: Record<string, boolean> = {};
-  roleNames.forEach(name => { roles[name] = true; });
+  roleNames.forEach((name) => {
+    roles[name] = true;
+  });
   const isAdmin = roles.admin === true || roles.superadmin === true;
 
   return { isAdmin, roles };

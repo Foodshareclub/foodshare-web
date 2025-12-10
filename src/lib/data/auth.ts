@@ -5,8 +5,8 @@
  */
 
 import { unstable_cache } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
+import { createClient } from "@/lib/supabase/server";
 
 // ============================================================================
 // Types
@@ -21,7 +21,6 @@ export interface AuthUser {
     second_name: string | null;
     nickname?: string | null;
     avatar_url: string | null;
-    role?: Record<string, boolean> | null;
     email: string | null;
   } | null;
 }
@@ -126,11 +125,13 @@ export async function checkIsAdmin(userId: string): Promise<{
       .eq("profile_id", userId);
 
     const roles = (userRoles || []).map((r) => (r.roles as { name: string }).name);
-    const isAdmin = roles.includes('admin') || roles.includes('superadmin');
+    const isAdmin = roles.includes("admin") || roles.includes("superadmin");
 
     // Build jsonbRoles for backward compatibility
     const jsonbRoles: Record<string, boolean> = {};
-    roles.forEach(role => { jsonbRoles[role] = true; });
+    roles.forEach((role) => {
+      jsonbRoles[role] = true;
+    });
 
     return { isAdmin, roles, jsonbRoles };
   } catch {

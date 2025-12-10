@@ -4,8 +4,8 @@
  */
 
 import { unstable_cache } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
+import { createClient } from "@/lib/supabase/server";
 
 // ============================================================================
 // Types
@@ -17,11 +17,11 @@ export interface AdminUserProfile {
   second_name: string | null;
   email: string | null;
   avatar_url: string | null;
-  role: Record<string, boolean> | null;
   is_active: boolean;
   is_verified: boolean;
   created_time: string;
   last_seen_at: string | null;
+  roles?: string[];
 }
 
 export interface AdminUsersFilter {
@@ -71,6 +71,7 @@ export async function getAdminUsers(filters: AdminUsersFilter = {}): Promise<Adm
 
   const offset = (page - 1) * limit;
 
+  // Build base query with user_roles join
   let query = supabase.from("profiles").select(
     `
       id,
@@ -78,11 +79,11 @@ export async function getAdminUsers(filters: AdminUsersFilter = {}): Promise<Adm
       second_name,
       email,
       avatar_url,
-      role,
       is_active,
       is_verified,
       created_time,
-      last_seen_at
+      last_seen_at,
+      user_roles(roles(name))
     `,
     { count: "exact" }
   );
@@ -92,11 +93,6 @@ export async function getAdminUsers(filters: AdminUsersFilter = {}): Promise<Adm
     query = query.or(
       `first_name.ilike.%${search}%,second_name.ilike.%${search}%,email.ilike.%${search}%`
     );
-  }
-
-  // Apply role filter using JSONB
-  if (role && role !== "all") {
-    query = query.eq(`role->>${role}`, "true");
   }
 
   // Apply active filter
@@ -114,8 +110,33 @@ export async function getAdminUsers(filters: AdminUsersFilter = {}): Promise<Adm
 
   if (error) throw new Error(error.message);
 
+  // Transform data to extract roles from user_roles join
+  const users: AdminUserProfile[] = (data ?? []).map((user) => {
+    const userRoles = (user.user_roles as Array<{ roles: { name: string } | null }> | null) ?? [];
+    const roles = userRoles.map((ur) => ur.roles?.name).filter((name): name is string => !!name);
+
+    return {
+      id: user.id,
+      first_name: user.first_name,
+      second_name: user.second_name,
+      email: user.email,
+      avatar_url: user.avatar_url,
+      is_active: user.is_active,
+      is_verified: user.is_verified,
+      created_time: user.created_time,
+      last_seen_at: user.last_seen_at,
+      roles,
+    };
+  });
+
+  // Filter by role if specified (post-query filtering)
+  let filteredUsers = users;
+  if (role && role !== "all") {
+    filteredUsers = users.filter((u) => u.roles?.includes(role));
+  }
+
   return {
-    users: (data ?? []) as AdminUserProfile[],
+    users: filteredUsers,
     total: count ?? 0,
     page,
     totalPages: Math.ceil((count ?? 0) / limit),
@@ -151,7 +172,6 @@ export async function getAdminUserById(id: string): Promise<AdminUserProfile | n
       second_name,
       email,
       avatar_url,
-      role,
       is_active,
       is_verified,
       created_time,
@@ -186,10 +206,8 @@ export const getUserStats = unstable_cache(
       supabase.from("profiles").select("*", { count: "exact", head: true }),
       supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_active", true),
       supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_verified", true),
-      supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .or("role->>admin.eq.true,role->>superadmin.eq.true"),
+      // Count admins from user_roles table
+      supabase.from("user_roles").select("*", { count: "exact", head: true }).in("role_id", [6]), // admin role_id = 6
       supabase
         .from("profiles")
         .select("*", { count: "exact", head: true })

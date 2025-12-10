@@ -46,21 +46,18 @@ User profile information linked to Supabase Auth users.
 
 **User Role System:**
 
-FoodShare supports multiple role sources for backwards compatibility:
+FoodShare uses the `user_roles` junction table as the **single source of truth** for all role assignments:
 
-1. **`user_roles` junction table** (source of truth for admin status) - Role assignments linking profiles to roles via the `roles` table. This is the authoritative source for admin/superadmin checks.
+1. **`user_roles` junction table** (source of truth) - Role assignments linking profiles to roles via the `roles` table. This is the authoritative source for all role checks including admin/superadmin.
 
-2. **JSONB `role` field** - Flexible role object in `profiles.role` for other roles:
-
-   ```json
-   { "admin": true, "volunteer": false, "subscriber": true }
-   ```
-
-3. **Legacy `user_role` field** - Simple string in `profiles.user_role`:
+2. **`roles` table** - Defines available roles:
    - `'user'` - Standard user (default)
    - `'admin'` - Administrator
    - `'superadmin'` - Super administrator
    - `'volunteer'` - Volunteer
+   - `'moderator'` - Content moderator
+
+> **Note:** The `role` column on the `profiles` table is deprecated and no longer used. Role data is exclusively managed via the `user_roles` junction table and accessed through `checkIsAdmin()` or `getUserRoles()` from `@/lib/data/auth` and `@/lib/data/profiles`.
 
 **Checking Admin Status (TypeScript):**
 
@@ -69,36 +66,25 @@ FoodShare supports multiple role sources for backwards compatibility:
 import { checkIsAdmin } from "@/lib/data/auth";
 
 const { isAdmin, roles, jsonbRoles } = await checkIsAdmin(userId);
-// isAdmin: true if admin in ANY source
-// roles: ['admin', 'volunteer'] - all roles from all sources
-// jsonbRoles: { admin: true, volunteer: true } - raw JSONB role object
-
-// Manual check (if needed)
-const isJsonbAdmin = profile?.role?.admin === true;
-const isLegacyAdmin = profile?.user_role === "admin" || profile?.user_role === "superadmin";
+// isAdmin: true if user has admin or superadmin role
+// roles: ['admin', 'volunteer'] - all roles from user_roles table
+// jsonbRoles: { admin: true, volunteer: true } - roles as object (for backward compatibility)
 ```
 
 **Querying Admin Users (Supabase):**
 
 ```typescript
-// ✅ Recommended - Query via user_roles table (source of truth)
+// ✅ Query via user_roles table (source of truth)
 const { data: admins } = await supabase
-  .from('user_roles')
-  .select('profiles!inner(id, email, first_name, second_name), roles!inner(name)')
-  .in('roles.name', ['admin', 'superadmin']);
+  .from("user_roles")
+  .select("profiles!inner(id, email, first_name, second_name), roles!inner(name)")
+  .in("roles.name", ["admin", "superadmin"]);
 
-// ✅ Query users with other roles using JSONB arrow operator
+// ✅ Query users with specific roles
 const { data: volunteers } = await supabase
-  .from('profiles')
-  .select('*')
-  .eq('role->>volunteer', 'true')  // JSONB text extraction
-  .order('first_name');
-
-// ❌ Legacy approach (deprecated for admin checks)
-const { data } = await supabase
-  .from('profiles')
-  .select('*')
-  .eq('role->>admin', 'true');
+  .from("user_roles")
+  .select("profiles!inner(*), roles!inner(name)")
+  .eq("roles.name", "volunteer");
 ```
 
 **Relationships:**

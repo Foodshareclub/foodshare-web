@@ -93,11 +93,11 @@ interface AdminUserProfile {
   second_name: string | null;
   email: string | null;
   avatar_url: string | null;
-  role: Record<string, boolean> | null; // JSONB roles
   is_active: boolean;
   is_verified: boolean;
   created_time: string;
   last_seen_at: string | null;
+  roles?: string[]; // Role names from user_roles table
 }
 ```
 
@@ -131,7 +131,23 @@ interface UserStats {
 
 ## Role System
 
-Users have a JSONB `role` field with boolean flags:
+Roles are managed via the `user_roles` junction table, with role names returned as a string array.
+
+### Data Fetching
+
+The `getAdminUsers()` function joins `profiles` → `user_roles` → `roles` to fetch role names:
+
+```typescript
+// Query includes nested join
+profiles.select(`
+  ...,
+  user_roles(roles(name))
+`);
+```
+
+Role filtering is applied post-query (after fetching) since Supabase doesn't support filtering on nested joins directly. This means pagination counts may differ when filtering by role.
+
+### Available Roles
 
 | Role                   | Description                 |
 | ---------------------- | --------------------------- |

@@ -13,7 +13,7 @@ const appUrl = Deno.env.get("APP_URL") || "https://foodshare.club";
 
 interface TelegramResponse {
   ok: boolean;
-  result?: any;
+  result?: unknown;
   description?: string;
 }
 
@@ -28,14 +28,13 @@ interface ProfileData {
   bio?: string;
   avatar_url?: string;
   transportation?: string;
-  dietary_preferences?: string[] | Record<string, any>;
+  dietary_preferences?: string[] | Record<string, unknown>;
   search_radius_km?: number;
   facebook?: string;
   instagram?: string;
   twitter?: string;
   is_verified?: boolean;
   is_active?: boolean;
-  role?: Record<string, boolean>;
   created_time: string;
   updated_at?: string;
 }
@@ -145,14 +144,7 @@ function formatUserMessage(profile: ProfileData): string {
   // Status badges
   const badges = [];
   if (profile.is_verified) badges.push("✅ Verified");
-  if (profile.role) {
-    const roleNames = Object.entries(profile.role)
-      .filter(([_, value]) => value === true)
-      .map(([key]) => key.charAt(0).toUpperCase() + key.slice(1));
-    if (roleNames.length > 0) {
-      badges.push(`👑 ${roleNames.join(", ")}`);
-    }
-  }
+  // Note: Role info now comes from user_roles table, not shown in new user notification
   if (badges.length > 0) {
     message += `\n\n${badges.join(" • ")}`;
   }

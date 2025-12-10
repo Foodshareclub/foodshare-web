@@ -4,23 +4,37 @@ This document outlines identified areas for improvement and refactoring in the F
 
 ## High Priority
 
-### 0. Fix Admin Role Check Pattern (URGENT)
+### 0. Role System Migration (COMPLETED)
 
-The `role` field in profiles is a JSONB object, not a string. Several files use the incorrect pattern.
+The role system has been consolidated to use `user_roles` junction table as the single source of truth.
 
-| File                       | Current (Incorrect)              | Correct                         |
-| -------------------------- | -------------------------------- | ------------------------------- |
-| `src/app/actions/auth.ts`  | `profile?.role === 'admin'`      | `profile?.role?.admin === true` |
-| `src/app/actions/forum.ts` | `profile?.role === 'admin'`      | `profile?.role?.admin === true` |
-| `src/app/HomeClient.tsx`   | `profile?.role === 'admin'`      | `profile?.role?.admin === true` |
-| `src/lib/security/mfa.ts`  | `profile?.user_role === 'admin'` | `profile?.role?.admin === true` |
+**Changes Made:**
 
-**Reference:** See `docs/02-development/DATABASE_SCHEMA.md` for the correct role object structure.
+- ✅ Removed `role` field from `Profile` interface in `src/lib/data/profiles.ts`
+- ✅ `checkIsAdmin()` in `src/lib/data/auth.ts` now queries `user_roles` table exclusively
+- ✅ `jsonbRoles` is built from `user_roles` data for backward compatibility
+- ✅ Updated documentation to remove references to deprecated JSONB `profiles.role` field:
+  - `docs/03-features/authentication/README.md` - Updated admin checking docs
+  - `docs/02-development/ARCHITECTURE.md` - Updated admin role checking description
+  - `docs/05-reference/API_REFERENCE.md` - Removed role from AuthUser interface
+  - `docs/02-development/DATABASE_SCHEMA.md` - Clarified user_roles as source of truth
 
-**Already Fixed:**
+**Migration Pattern:**
 
-- ✅ `src/app/forum/layout.tsx`
-- ✅ `src/app/food/new/NewProductForm.tsx`
+```typescript
+// ❌ Old pattern (deprecated)
+const isAdmin = profile?.role?.admin === true;
+
+// ✅ New pattern - use checkIsAdmin()
+import { checkIsAdmin } from "@/lib/data/auth";
+const { isAdmin, roles, jsonbRoles } = await checkIsAdmin(userId);
+
+// ✅ Get user roles
+import { getUserRoles } from "@/lib/data/profiles";
+const roles = await getUserRoles(userId); // ['admin', 'volunteer']
+```
+
+**Reference:** See `docs/02-development/DATABASE_SCHEMA.md` for the updated role system documentation.
 
 ### 1. Type Safety Improvements
 

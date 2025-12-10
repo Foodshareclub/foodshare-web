@@ -1,8 +1,8 @@
-import { Suspense } from 'react';
-import { notFound } from 'next/navigation';
-import { getPublicProfile } from '@/lib/data/profiles';
-import { getUser } from '@/app/actions/auth';
-import { ViewProfileClient } from './ViewProfileClient';
+import { Suspense } from "react";
+import { notFound } from "next/navigation";
+import { ViewProfileClient } from "./ViewProfileClient";
+import { getPublicProfile, hasUserRole } from "@/lib/data/profiles";
+import { getUser } from "@/app/actions/auth";
 
 // Route segment config for caching
 export const revalidate = 300;
@@ -19,9 +19,10 @@ export default async function ViewProfilePage({ params }: PageProps) {
   const { id } = await params;
 
   // Fetch data in parallel on the server
-  const [profile, user] = await Promise.all([
+  const [profile, user, isVolunteer] = await Promise.all([
     getPublicProfile(id),
     getUser(),
+    hasUserRole(id, "volunteer"),
   ]);
 
   if (!profile) {
@@ -30,7 +31,7 @@ export default async function ViewProfilePage({ params }: PageProps) {
 
   return (
     <Suspense fallback={<ProfileSkeleton />}>
-      <ViewProfileClient profile={profile} user={user} />
+      <ViewProfileClient profile={profile} user={user} isVolunteer={isVolunteer} />
     </Suspense>
   );
 }
@@ -43,13 +44,13 @@ export async function generateMetadata({ params }: PageProps) {
   const profile = await getPublicProfile(id);
 
   if (!profile) {
-    return { title: 'Profile Not Found | FoodShare' };
+    return { title: "Profile Not Found | FoodShare" };
   }
 
-  const fullName = [profile.first_name, profile.second_name].filter(Boolean).join(' ') || 'User';
+  const fullName = [profile.first_name, profile.second_name].filter(Boolean).join(" ") || "User";
   const description = profile.about_me?.slice(0, 160) || `View ${fullName}'s profile on FoodShare`;
   const pageUrl = `https://foodshare.club/profile/${id}`;
-  const imageUrl = profile.avatar_url || 'https://foodshare.club/og-image.jpg';
+  const imageUrl = profile.avatar_url || "https://foodshare.club/og-image.jpg";
 
   return {
     title: `${fullName} | FoodShare`,
@@ -59,10 +60,10 @@ export async function generateMetadata({ params }: PageProps) {
     },
     // OpenGraph: Facebook, LinkedIn, WhatsApp - Profile type
     openGraph: {
-      type: 'profile',
-      locale: 'en_US',
+      type: "profile",
+      locale: "en_US",
       url: pageUrl,
-      siteName: 'FoodShare',
+      siteName: "FoodShare",
       title: `${fullName} on FoodShare`,
       description,
       images: [
@@ -71,7 +72,7 @@ export async function generateMetadata({ params }: PageProps) {
           width: 400,
           height: 400,
           alt: `${fullName}'s profile photo`,
-          type: 'image/jpeg',
+          type: "image/jpeg",
         },
       ],
       firstName: profile.first_name || undefined,
@@ -79,9 +80,9 @@ export async function generateMetadata({ params }: PageProps) {
     },
     // Twitter / X Cards
     twitter: {
-      card: 'summary',
-      site: '@foodshareapp',
-      creator: '@foodshareapp',
+      card: "summary",
+      site: "@foodshareapp",
+      creator: "@foodshareapp",
       title: `${fullName} | FoodShare`,
       description,
       images: [

@@ -19,7 +19,6 @@ interface NavbarWrapperProps {
     second_name?: string | null;
     avatar_url?: string | null;
     email?: string | null;
-    role?: Record<string, boolean> | null;
   } | null;
   /** Unread message rooms from server */
   unreadRooms?: CustomRoomType[];
@@ -58,7 +57,7 @@ export function NavbarWrapper({
   // Auth state: client takes precedence for real-time updates
   const effectiveIsAuth = isAuthenticated || !!initialUser;
 
-  // Use server-provided admin status (properly checks JSONB role field)
+  // Use server-provided admin status (from user_roles table)
   const isAdmin = initialIsAdmin;
 
   const handleRouteChange = (route: string) => {

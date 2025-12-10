@@ -2,11 +2,12 @@
 
 /**
  * UserRolesModal - Modal for managing user roles
- * Allows admins to toggle JSONB role flags for users
+ * Manages roles via user_roles junction table
  */
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Save, X, Shield, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,7 +22,6 @@ import { Separator } from "@/components/ui/separator";
 import { updateUserRoles } from "@/app/actions/admin-listings";
 
 // Icons
-import { Save, X, Shield, User } from "lucide-react";
 
 // Icon aliases for minimal code changes
 const FiSave = Save;
@@ -34,7 +34,7 @@ interface UserProfile {
   first_name: string | null;
   second_name: string | null;
   email: string | null;
-  role?: Record<string, boolean> | null;
+  roles?: string[];
 }
 
 interface Props {
@@ -93,14 +93,15 @@ export function UserRolesModal({ user, open, onClose }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize roles from user data
+  // Initialize roles from user data (user_roles table)
+  const userRoles = user.roles ?? [];
   const [roles, setRoles] = useState<Record<string, boolean>>(() => ({
-    admin: user.role?.admin ?? false,
-    volunteer: user.role?.volunteer ?? false,
-    subscriber: user.role?.subscriber ?? true,
-    organization: user.role?.organization ?? false,
-    fridge_coordinator: user.role?.fridge_coordinator ?? false,
-    foodbank_coordinator: user.role?.foodbank_coordinator ?? false,
+    admin: userRoles.includes("admin"),
+    volunteer: userRoles.includes("volunteer"),
+    subscriber: userRoles.includes("subscriber") || userRoles.length === 0,
+    organization: userRoles.includes("organization"),
+    fridge_coordinator: userRoles.includes("fridge_coordinator"),
+    foodbank_coordinator: userRoles.includes("foodbank_coordinator"),
   }));
 
   const toggleRole = (key: string) => {

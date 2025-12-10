@@ -1,31 +1,23 @@
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
+import { createClient } from "@/lib/supabase/server";
+import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 
 // Re-export types from data layer for backwards compatibility
-export type {
-  DashboardStats,
-  AuditLog,
-  PendingListing,
-} from '@/lib/data/admin';
+export type { DashboardStats, AuditLog, PendingListing } from "@/lib/data/admin";
 
 // Re-export cached data functions for backwards compatibility
-export {
-  getDashboardStats,
-  getAuditLogs,
-  getPendingListings,
-} from '@/lib/data/admin';
+export { getDashboardStats, getAuditLogs, getPendingListings } from "@/lib/data/admin";
 
 export interface AdminUser {
   id: string;
   first_name: string | null;
   second_name: string | null;
   email: string;
-  role: Record<string, boolean> | null;
   created_time: string | null;
   is_active: boolean;
   products_count: number;
+  roles?: string[];
 }
 
 export interface UserFilters {
@@ -42,18 +34,20 @@ export interface UserFilters {
 async function requireAdmin(): Promise<void> {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
 
   const { data: userRole } = await supabase
-    .from('user_roles')
-    .select('roles!inner(name)')
-    .eq('profile_id', user.id)
-    .in('roles.name', ['admin', 'superadmin'])
+    .from("user_roles")
+    .select("roles!inner(name)")
+    .eq("profile_id", user.id)
+    .in("roles.name", ["admin", "superadmin"])
     .maybeSingle();
 
   if (!userRole) {
-    throw new Error('Admin access required');
+    throw new Error("Admin access required");
   }
 }
 
@@ -64,21 +58,20 @@ export async function approveListing(id: number): Promise<{ success: boolean; er
   await requireAdmin();
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const { error } = await supabase
-    .from('posts')
-    .update({ is_active: true })
-    .eq('id', id);
+  const { error } = await supabase.from("posts").update({ is_active: true }).eq("id", id);
 
   if (error) {
     return { success: false, error: error.message };
   }
 
   // Log the action
-  await supabase.from('audit_logs').insert({
-    action: 'approve_listing',
-    entity_type: 'post',
+  await supabase.from("audit_logs").insert({
+    action: "approve_listing",
+    entity_type: "post",
     entity_id: String(id),
     user_id: user?.id,
     details: { listing_id: id },
@@ -101,21 +94,20 @@ export async function rejectListing(
   await requireAdmin();
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const { error } = await supabase
-    .from('posts')
-    .delete()
-    .eq('id', id);
+  const { error } = await supabase.from("posts").delete().eq("id", id);
 
   if (error) {
     return { success: false, error: error.message };
   }
 
   // Log the action
-  await supabase.from('audit_logs').insert({
-    action: 'reject_listing',
-    entity_type: 'post',
+  await supabase.from("audit_logs").insert({
+    action: "reject_listing",
+    entity_type: "post",
     entity_id: String(id),
     user_id: user?.id,
     details: { listing_id: id, reason },
@@ -141,44 +133,59 @@ export async function getUsers(filters: UserFilters = {}): Promise<{
   const offset = (page - 1) * limit;
 
   let query = supabase
-    .from('profiles')
-    .select('id, first_name, second_name, email, created_time, is_active', { count: 'exact' });
+    .from("profiles")
+    .select("id, first_name, second_name, email, created_time, is_active", { count: "exact" });
 
   if (search) {
-    query = query.or(`first_name.ilike.%${search}%,second_name.ilike.%${search}%,email.ilike.%${search}%`);
-  }
-  if (role) {
-    query = query.eq(`role->>${role}`, 'true');
-  }
-  if (is_active !== undefined) {
-    query = query.eq('is_active', is_active);
+    query = query.or(
+      `first_name.ilike.%${search}%,second_name.ilike.%${search}%,email.ilike.%${search}%`
+    );
   }
 
-  query = query
-    .order('created_time', { ascending: false })
-    .range(offset, offset + limit - 1);
+  if (is_active !== undefined) {
+    query = query.eq("is_active", is_active);
+  }
+
+  query = query.order("created_time", { ascending: false }).range(offset, offset + limit - 1);
 
   const { data, count, error } = await query;
 
   if (error) throw new Error(error.message);
 
-  // Get product counts for each user
-  const usersWithCounts = await Promise.all(
+  // Get product counts and roles for each user
+  const usersWithData = await Promise.all(
     (data ?? []).map(async (user) => {
-      const { count: productsCount } = await supabase
-        .from('posts')
-        .select('*', { count: 'exact', head: true })
-        .eq('profile_id', user.id);
+      const [{ count: productsCount }, { data: userRoles }] = await Promise.all([
+        supabase
+          .from("posts")
+          .select("*", { count: "exact", head: true })
+          .eq("profile_id", user.id),
+        supabase.from("user_roles").select("roles!inner(name)").eq("profile_id", user.id),
+      ]);
+
+      const roles = (userRoles ?? [])
+        .map((r) => {
+          const roleData = r.roles as unknown as { name: string } | { name: string }[];
+          return Array.isArray(roleData) ? roleData[0]?.name : roleData?.name;
+        })
+        .filter(Boolean) as string[];
 
       return {
         ...user,
         products_count: productsCount ?? 0,
+        roles,
       };
     })
   );
 
+  // Filter by role if specified
+  let filteredUsers = usersWithData;
+  if (role && role !== "all") {
+    filteredUsers = usersWithData.filter((u) => u.roles?.includes(role));
+  }
+
   return {
-    users: usersWithCounts,
+    users: filteredUsers,
     total: count ?? 0,
   };
 }
@@ -193,18 +200,20 @@ export async function updateUserRole(
   await requireAdmin();
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // Prevent changing own role
   if (user?.id === userId) {
-    return { success: false, error: 'Cannot change your own role' };
+    return { success: false, error: "Cannot change your own role" };
   }
 
   // Get role_id from roles table
   const { data: roleData, error: roleError } = await supabase
-    .from('roles')
-    .select('id')
-    .eq('name', role)
+    .from("roles")
+    .select("id")
+    .eq("name", role)
     .single();
 
   if (roleError || !roleData) {
@@ -213,20 +222,17 @@ export async function updateUserRole(
 
   // Insert into user_roles (upsert to avoid duplicates)
   const { error } = await supabase
-    .from('user_roles')
-    .upsert(
-      { profile_id: userId, role_id: roleData.id },
-      { onConflict: 'profile_id,role_id' }
-    );
+    .from("user_roles")
+    .upsert({ profile_id: userId, role_id: roleData.id }, { onConflict: "profile_id,role_id" });
 
   if (error) {
     return { success: false, error: error.message };
   }
 
   // Log the action
-  await supabase.from('admin_audit_log').insert({
-    action: 'update_user_roles',
-    resource_type: 'profile',
+  await supabase.from("admin_audit_log").insert({
+    action: "update_user_roles",
+    resource_type: "profile",
     resource_id: userId,
     admin_id: user?.id,
     metadata: { target_user_id: userId, new_role: role },
@@ -248,32 +254,31 @@ export async function banUser(
   await requireAdmin();
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // Prevent banning yourself
   if (user?.id === userId) {
-    return { success: false, error: 'Cannot ban yourself' };
+    return { success: false, error: "Cannot ban yourself" };
   }
 
   const { error } = await supabase
-    .from('profiles')
+    .from("profiles")
     .update({ is_active: false, ban_reason: reason })
-    .eq('id', userId);
+    .eq("id", userId);
 
   if (error) {
     return { success: false, error: error.message };
   }
 
   // Deactivate all user's listings
-  await supabase
-    .from('posts')
-    .update({ is_active: false })
-    .eq('profile_id', userId);
+  await supabase.from("posts").update({ is_active: false }).eq("profile_id", userId);
 
   // Log the action
-  await supabase.from('audit_logs').insert({
-    action: 'ban_user',
-    entity_type: 'profile',
+  await supabase.from("audit_logs").insert({
+    action: "ban_user",
+    entity_type: "profile",
     entity_id: userId,
     user_id: user?.id,
     details: { target_user_id: userId, reason },
