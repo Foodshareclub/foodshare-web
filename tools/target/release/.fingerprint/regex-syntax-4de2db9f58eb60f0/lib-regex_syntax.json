@@ -1,0 +1,21 @@
+{
+  "rustc": 3590203003937835053,
+  "features": "[\"default\", \"std\", \"unicode\", \"unicode-age\", \"unicode-bool\", \"unicode-case\", \"unicode-gencat\", \"unicode-perl\", \"unicode-script\", \"unicode-segment\"]",
+  "declared_features": "[\"arbitrary\", \"default\", \"std\", \"unicode\", \"unicode-age\", \"unicode-bool\", \"unicode-case\", \"unicode-gencat\", \"unicode-perl\", \"unicode-script\", \"unicode-segment\"]",
+  "target": 4336297695352704405,
+  "profile": 15819678431627270670,
+  "path": 4640772192777055674,
+  "deps": [],
+  "local": [
+    {
+      "CheckDepInfo": {
+        "dep_info": "release/.fingerprint/regex-syntax-4de2db9f58eb60f0/dep-lib-regex_syntax",
+        "checksum": false
+      }
+    }
+  ],
+  "rustflags": [],
+  "metadata": 11023556572652937807,
+  "config": 2202906307356721367,
+  "compile_kind": 0
+}

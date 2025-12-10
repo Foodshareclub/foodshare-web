@@ -1,6 +1,6 @@
 # Lefthook Configuration for FoodShare - Rust Edition
 # Fast, intelligent git hooks powered by lefthook-rs
-# Build: cd scripts/lefthook && cargo build --release
+# Build: cd tools && cargo build --release
 
 # AUTO-FIX ENABLED BY DEFAULT:
 # - Prettier formats code (ts, tsx, js, jsx, json, css, md, yaml)
@@ -42,13 +42,13 @@ pre-commit:
     # PHASE 2: Security checks (after formatting)
     security-check:
       tags: security critical
-      run: ./scripts/lefthook/target/release/lefthook-rs security
+      run: ./tools/target/release/lefthook-rs security
       priority: 2
 
     nextjs-security:
       tags: security critical
       glob: "*.{ts,tsx,js,jsx,json}"
-      run: ./scripts/lefthook/target/release/lefthook-rs nextjs-security {staged_files}
+      run: ./tools/target/release/lefthook-rs nextjs-security {staged_files}
       priority: 2
 
     # PHASE 3: Type checking (after lint fixes)
@@ -60,7 +60,7 @@ pre-commit:
     complexity-check:
       tags: quality optional
       glob: "*.{ts,tsx,js,jsx}"
-      run: ./scripts/lefthook/target/release/lefthook-rs complexity {staged_files}
+      run: ./tools/target/release/lefthook-rs complexity {staged_files}
       priority: 4
       skip:
         - run: test -z "$ENABLE_COMPLEXITY" && test -z "$ENABLE_ALL"
@@ -76,7 +76,7 @@ pre-commit:
     import-check:
       tags: quality optional
       glob: "*.{ts,tsx,js,jsx}"
-      run: ./scripts/lefthook/target/release/lefthook-rs import-check {staged_files}
+      run: ./tools/target/release/lefthook-rs import-check {staged_files}
       priority: 4
       skip:
         - run: test -z "$ENABLE_IMPORT_CHECK" && test -z "$ENABLE_ALL"
@@ -84,14 +84,14 @@ pre-commit:
     no-console:
       tags: quality optional
       glob: "*.{ts,tsx,js,jsx}"
-      run: ./scripts/lefthook/target/release/lefthook-rs no-console {staged_files}
+      run: ./tools/target/release/lefthook-rs no-console {staged_files}
       priority: 5
       skip:
         - run: test -z "$ENABLE_NO_CONSOLE" && test -z "$ENABLE_ALL"
 
     large-files:
       tags: files optional
-      run: ./scripts/lefthook/target/release/lefthook-rs large-files
+      run: ./tools/target/release/lefthook-rs large-files
       priority: 5
       skip:
         - run: test -z "$ENABLE_LARGE_FILES" && test -z "$ENABLE_ALL"
@@ -99,7 +99,7 @@ pre-commit:
     accessibility:
       tags: a11y optional
       glob: "*.{tsx,jsx}"
-      run: ./scripts/lefthook/target/release/lefthook-rs accessibility {staged_files}
+      run: ./tools/target/release/lefthook-rs accessibility {staged_files}
       priority: 5
       skip:
         - run: test -z "$ENABLE_A11Y" && test -z "$ENABLE_ALL"
@@ -111,7 +111,7 @@ commit-msg:
   commands:
     conventional-commits:
       tags: commit-format
-      run: ./scripts/lefthook/target/release/lefthook-rs conventional-commit {1}
+      run: ./tools/target/release/lefthook-rs conventional-commit {1}
 
 # ============================================================================
 # PRE-PUSH: Comprehensive checks before push
@@ -124,7 +124,7 @@ pre-push:
   commands:
     protected-branch:
       tags: branch critical
-      run: ./scripts/lefthook/target/release/lefthook-rs protected-branch
+      run: ./tools/target/release/lefthook-rs protected-branch
       priority: 1
 
     type-check-strict:
@@ -152,28 +152,28 @@ pre-push:
 
     dependency-audit:
       tags: security optional
-      run: ./scripts/lefthook/target/release/lefthook-rs dependency-audit
+      run: ./tools/target/release/lefthook-rs dependency-audit
       priority: 4
       skip:
         - run: test -z "$ENABLE_AUDIT" && test -z "$ENABLE_ALL"
 
     bundle-size:
       tags: performance optional
-      run: ./scripts/lefthook/target/release/lefthook-rs bundle-size
+      run: ./tools/target/release/lefthook-rs bundle-size
       priority: 4
       skip:
         - run: test -z "$CHECK_BUNDLE_SIZE" && test -z "$ENABLE_ALL"
 
     test-coverage:
       tags: test optional
-      run: ./scripts/lefthook/target/release/lefthook-rs test-coverage
+      run: ./tools/target/release/lefthook-rs test-coverage
       priority: 4
       skip:
         - run: test -z "$ENABLE_COVERAGE" && test -z "$ENABLE_ALL"
 
     unused-exports:
       tags: quality optional
-      run: ./scripts/lefthook/target/release/lefthook-rs unused-exports
+      run: ./tools/target/release/lefthook-rs unused-exports
       priority: 5
       skip:
         - run: test -z "$ENABLE_DEAD_CODE" && test -z "$ENABLE_ALL"

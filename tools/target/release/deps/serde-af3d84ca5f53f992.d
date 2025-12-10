@@ -1,0 +1,14 @@
+/Users/organic/dev/work/foodshare/foodshare/scripts/lefthook-rs/target/release/deps/libserde-af3d84ca5f53f992.rmeta: /Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/lib.rs /Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/integer128.rs /Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/private/mod.rs /Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/private/de.rs /Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/private/ser.rs /Users/organic/dev/work/foodshare/foodshare/scripts/lefthook-rs/target/release/build/serde-761ea7d36576be0b/out/private.rs
+
+/Users/organic/dev/work/foodshare/foodshare/scripts/lefthook-rs/target/release/deps/libserde-af3d84ca5f53f992.rlib: /Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/lib.rs /Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/integer128.rs /Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/private/mod.rs /Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/private/de.rs /Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/private/ser.rs /Users/organic/dev/work/foodshare/foodshare/scripts/lefthook-rs/target/release/build/serde-761ea7d36576be0b/out/private.rs
+
+/Users/organic/dev/work/foodshare/foodshare/scripts/lefthook-rs/target/release/deps/serde-af3d84ca5f53f992.d: /Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/lib.rs /Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/integer128.rs /Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/private/mod.rs /Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/private/de.rs /Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/private/ser.rs /Users/organic/dev/work/foodshare/foodshare/scripts/lefthook-rs/target/release/build/serde-761ea7d36576be0b/out/private.rs
+
+/Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/lib.rs:
+/Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/integer128.rs:
+/Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/private/mod.rs:
+/Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/private/de.rs:
+/Users/organic/.cargo/registry/src/index.crates.io-6f17d22bba15001f/serde-1.0.228/src/private/ser.rs:
+/Users/organic/dev/work/foodshare/foodshare/scripts/lefthook-rs/target/release/build/serde-761ea7d36576be0b/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/organic/dev/work/foodshare/foodshare/scripts/lefthook-rs/target/release/build/serde-761ea7d36576be0b/out
