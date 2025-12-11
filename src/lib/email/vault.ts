@@ -11,7 +11,7 @@
  * - AWS_SECRET_ACCESS_KEY
  */
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 // Types
 interface VaultSecret {
@@ -43,35 +43,24 @@ const SECRET_NAMES = {
 } as const;
 
 /**
- * Get a single secret from Vault or environment
- * @internal Used by getEmailSecrets for batch fetching
+ * Create a service role client for vault access
+ * Vault secrets should only be accessed server-side with elevated privileges
  */
-async function _getSecretFromVault(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  secretName: string
-): Promise<string | null> {
-  // Check environment variable first (for local dev)
-  const envValue = process.env[secretName];
-  if (envValue) {
-    return envValue;
-  }
+function createServiceRoleClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  try {
-    const { data, error } = await supabase.rpc("get_secrets", {
-      secret_names: [secretName],
-    });
-
-    if (error || !data || data.length === 0) {
-      console.warn(`[Vault] Failed to fetch ${secretName}:`, error?.message);
-      return null;
-    }
-
-    const secret = (data as VaultSecret[]).find((s) => s.name === secretName);
-    return secret?.value ?? null;
-  } catch (err) {
-    console.error(`[Vault] Error fetching ${secretName}:`, err);
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("[Vault] Missing SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL");
     return null;
   }
+
+  return createSupabaseClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }
 
 /**
@@ -80,6 +69,7 @@ async function _getSecretFromVault(
 export async function getEmailSecrets(): Promise<EmailSecrets> {
   // Check cache first
   if (secretsCache && Date.now() < cacheExpiry) {
+    console.log("[Vault] Returning cached secrets");
     return secretsCache;
   }
 
@@ -97,14 +87,22 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
     envSecrets.resendApiKey || envSecrets.brevoApiKey || envSecrets.awsAccessKeyId;
 
   if (hasEnvSecrets) {
+    console.log("[Vault] Using environment secrets");
     secretsCache = envSecrets;
     cacheExpiry = Date.now() + CACHE_TTL;
     return envSecrets;
   }
 
-  // Fetch from Supabase Vault
+  // Fetch from Supabase Vault using service role client
   try {
-    const supabase = await createClient();
+    const supabase = createServiceRoleClient();
+
+    if (!supabase) {
+      console.error("[Vault] Could not create service role client");
+      return envSecrets;
+    }
+
+    console.log("[Vault] Fetching secrets from vault...");
 
     // Batch fetch all secrets
     const { data, error } = await supabase.rpc("get_secrets", {
@@ -112,11 +110,18 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
     });
 
     if (error) {
-      console.error("[Vault] Failed to fetch email secrets:", error.message);
+      console.error("[Vault] RPC error:", error.message, error.code, error.details);
       return envSecrets; // Return env fallback
     }
 
-    const secretsMap = new Map((data as VaultSecret[])?.map((s) => [s.name, s.value]) ?? []);
+    if (!data || !Array.isArray(data)) {
+      console.error("[Vault] No data returned from get_secrets, data:", data);
+      return envSecrets;
+    }
+
+    console.log("[Vault] Retrieved", data.length, "secrets from vault");
+
+    const secretsMap = new Map((data as VaultSecret[]).map((s) => [s.name, s.value]));
 
     const secrets: EmailSecrets = {
       resendApiKey: secretsMap.get(SECRET_NAMES.RESEND_API_KEY) ?? null,
@@ -125,6 +130,12 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
       awsSecretAccessKey: secretsMap.get(SECRET_NAMES.AWS_SECRET_ACCESS_KEY) ?? null,
       awsRegion: process.env.AWS_REGION ?? "us-east-1",
     };
+
+    console.log("[Vault] Secrets loaded:", {
+      hasResend: !!secrets.resendApiKey,
+      hasBrevo: !!secrets.brevoApiKey,
+      hasAws: !!secrets.awsAccessKeyId,
+    });
 
     // Cache the secrets
     secretsCache = secrets;
