@@ -205,8 +205,15 @@ export async function sendTestEmailDirect(
       return serverActionError("Admin access required", "FORBIDDEN");
     }
 
-    // Get Resend API key from Vault
-    console.info("[sendTestEmailDirect] 🔐 Fetching Resend API key from vault...");
+    // Get Resend API key from Vault or environment
+    console.info("[sendTestEmailDirect] 🔐 Fetching Resend API key...");
+    console.info("[sendTestEmailDirect] 🔧 Environment:", {
+      nodeEnv: process.env.NODE_ENV,
+      vercelEnv: process.env.VERCEL_ENV ?? "not-vercel",
+      hasResendEnv: !!process.env.RESEND_API_KEY,
+      hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    });
+
     const { getResendApiKey } = await import("@/lib/email/vault");
     const apiKey = await getResendApiKey();
 
@@ -224,9 +231,12 @@ export async function sendTestEmailDirect(
     });
 
     if (!apiKey) {
-      console.error("[sendTestEmailDirect] ❌ No API key available from vault or environment");
+      console.error("[sendTestEmailDirect] ❌ No API key available");
+      console.error(
+        "[sendTestEmailDirect] 💡 Fix: Add RESEND_API_KEY to Vercel environment variables"
+      );
       return serverActionError(
-        "RESEND_API_KEY not configured in Vault or environment",
+        "RESEND_API_KEY not configured. Add it to Vercel environment variables.",
         "INTERNAL_ERROR"
       );
     }

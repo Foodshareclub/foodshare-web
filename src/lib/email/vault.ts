@@ -57,17 +57,29 @@ function createServiceRoleClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+  console.info("[Vault] 🔧 Environment check:", {
+    hasSupabaseUrl: !!supabaseUrl,
+    hasServiceRoleKey: !!serviceRoleKey,
+    serviceRoleKeyLength: serviceRoleKey?.length ?? 0,
+    serviceRoleKeyPrefix: serviceRoleKey?.slice(0, 20) ?? "NOT_SET",
+    nodeEnv: process.env.NODE_ENV,
+    vercelEnv: process.env.VERCEL_ENV ?? "not-vercel",
+  });
+
   if (!supabaseUrl) {
     console.error("[Vault] ❌ Missing NEXT_PUBLIC_SUPABASE_URL");
     return null;
   }
 
   if (!serviceRoleKey) {
-    console.error("[Vault] ❌ Missing SUPABASE_SERVICE_ROLE_KEY");
+    console.error("[Vault] ❌ Missing SUPABASE_SERVICE_ROLE_KEY - vault access disabled");
+    console.error(
+      "[Vault] 💡 Add SUPABASE_SERVICE_ROLE_KEY to Vercel env vars, or add RESEND_API_KEY directly"
+    );
     return null;
   }
 
-  console.info("[Vault] Creating service role client for:", supabaseUrl);
+  console.info("[Vault] ✅ Creating service role client for:", supabaseUrl);
 
   return createSupabaseClient(supabaseUrl, serviceRoleKey, {
     auth: {

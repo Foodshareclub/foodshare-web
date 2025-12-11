@@ -31,6 +31,7 @@ export function useNotificationSound(enabled: boolean = true) {
     audio.addEventListener("error", () => {
       soundLoadedRef.current = false;
       // Will fall back to Web Audio API beep
+      // Note: 404 error for missing sound file is expected if not provided
     });
 
     // Attempt to load
