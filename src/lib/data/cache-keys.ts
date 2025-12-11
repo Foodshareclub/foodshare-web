@@ -85,6 +85,16 @@ export const CACHE_TAGS = {
   ADMIN_CRM: "admin-crm",
   AUDIT_LOGS: "audit-logs",
 
+  // Newsletter & Campaigns
+  NEWSLETTER: "newsletter",
+  CAMPAIGNS: "campaigns",
+  CAMPAIGN: (id: string) => `campaign-${id}`,
+  SEGMENTS: "segments",
+  SEGMENT: (id: string) => `segment-${id}`,
+  AUTOMATIONS: "automations",
+  AUTOMATION: (id: string) => `automation-${id}`,
+  SUBSCRIBERS: "subscribers",
+
   // Auth
   AUTH: "auth",
   SESSION: "session",
@@ -123,6 +133,10 @@ export const CACHE_DURATIONS = {
   CHALLENGE_DETAIL: 300, // 5 minutes
   FORUM: 120, // 2 minutes
   ADMIN_STATS: 300, // 5 minutes
+  NEWSLETTER: 300, // 5 minutes
+  CAMPAIGNS: 300, // 5 minutes
+  SEGMENTS: 600, // 10 minutes
+  AUTOMATIONS: 600, // 10 minutes
   STATIC_PAGES: 86400, // 24 hours
 } as const;
 
@@ -213,9 +227,40 @@ export function getAdminTags(): string[] {
   ];
 }
 
+export function getNewsletterTags(
+  campaignId?: string,
+  segmentId?: string,
+  automationId?: string
+): string[] {
+  const tags: string[] = [
+    CACHE_TAGS.NEWSLETTER,
+    CACHE_TAGS.CAMPAIGNS,
+    CACHE_TAGS.SEGMENTS,
+    CACHE_TAGS.AUTOMATIONS,
+    CACHE_TAGS.SUBSCRIBERS,
+  ];
+  if (campaignId) tags.push(CACHE_TAGS.CAMPAIGN(campaignId));
+  if (segmentId) tags.push(CACHE_TAGS.SEGMENT(segmentId));
+  if (automationId) tags.push(CACHE_TAGS.AUTOMATION(automationId));
+  return tags;
+}
+
 /**
  * Invalidate all admin-related caches
  */
 export function invalidateAdminCaches(): void {
   getAdminTags().forEach((tag) => invalidateTag(tag));
+}
+
+/**
+ * Invalidate all newsletter-related caches
+ */
+export function invalidateNewsletterCaches(): void {
+  [
+    CACHE_TAGS.NEWSLETTER,
+    CACHE_TAGS.CAMPAIGNS,
+    CACHE_TAGS.SEGMENTS,
+    CACHE_TAGS.AUTOMATIONS,
+    CACHE_TAGS.SUBSCRIBERS,
+  ].forEach((tag) => invalidateTag(tag));
 }

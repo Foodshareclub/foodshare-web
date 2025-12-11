@@ -37,6 +37,7 @@ Located in `src/components/ui/`:
 - `skeleton` - Loading placeholders
 - `tabs` - Tabbed content
 - `tooltip` - Hover hints
+- `progress` - Progress indicators
 
 ## Best Practices
 

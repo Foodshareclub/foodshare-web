@@ -12,32 +12,50 @@ Comprehensive admin dashboard for managing the FoodShare platform.
 
 ### AdminSidebar (`src/components/admin/AdminSidebar.tsx`)
 
-Persistent sidebar navigation for all admin pages. Features:
+Persistent sidebar navigation for all admin pages with grouped navigation structure. Features:
 
+- **Grouped navigation**: Routes organized by category (Overview, Content, CRM, Email Marketing)
 - **Collapsible**: Toggle between expanded (256px) and collapsed (64px) states
 - **Active state**: Highlights current route
 - **i18n support**: All labels use `next-intl` translations
+- **ScrollArea**: Scrollable content for many nav items
 
-| Route                | Label Key     | Icon            |
-| -------------------- | ------------- | --------------- |
-| `/admin`             | `overview`    | LayoutDashboard |
-| `/admin/listings`    | `listings`    | ClipboardList   |
-| `/admin/users`       | `users`       | Users           |
-| `/admin/email`       | `email`       | Mail            |
-| `/admin/reports`     | `reports`     | BarChart3       |
-| `/admin/ai-insights` | `ai_insights` | Sparkles        |
-| `/settings`          | `settings`    | Settings        |
+#### Navigation Groups
+
+| Group               | Route                     | Label Key     | Icon            |
+| ------------------- | ------------------------- | ------------- | --------------- |
+| **Overview**        | `/admin`                  | `dashboard`   | LayoutDashboard |
+|                     | `/admin/ai-insights`      | `ai_insights` | Sparkles        |
+| **Content**         | `/admin/listings`         | `listings`    | ClipboardList   |
+|                     | `/admin/reports`          | `reports`     | BarChart3       |
+| **CRM**             | `/admin/crm`              | `customers`   | UserCircle      |
+|                     | `/admin/users`            | `users`       | Users           |
+| **Email Marketing** | `/admin/email`            | `email_crm`   | Mail            |
+|                     | `/admin/email/campaigns`  | `campaigns`   | Send            |
+|                     | `/admin/email/automation` | `automation`  | Workflow        |
+|                     | `/admin/email/audience`   | `audience`    | Target          |
 
 ```
 ┌──────────────────┐
 │ Admin    [<]     │  ← Collapse toggle
 ├──────────────────┤
-│ 📊 Overview      │
-│ 📋 Listings      │  ← Active state highlighted
-│ 👥 Users         │
-│ ✉️ Email         │
-│ 📈 Reports       │
+│ OVERVIEW         │  ← Group label
+│ 📊 Dashboard     │
 │ ✨ AI Insights   │
+│──────────────────│
+│ CONTENT          │
+│ 📋 Listings      │  ← Active state highlighted
+│ 📈 Reports       │
+│──────────────────│
+│ CRM              │
+│ 👤 Customers     │
+│ 👥 Users         │
+│──────────────────│
+│ EMAIL MARKETING  │
+│ ✉️ Email CRM     │
+│ 📤 Campaigns     │
+│ ⚡ Automation    │
+│ 🎯 Audience      │
 ├──────────────────┤
 │ ⚙️ Settings      │
 └──────────────────┘
@@ -87,6 +105,139 @@ Key types: `CRMCustomer`, `CRMCustomerWithProfile`, `CRMCustomerNote`, `CRMCusto
 | --------------- | ------------------------------------------------------------------------------- |
 | `AdminCustomer` | Lightweight customer with profile (id, status, scores, name)                    |
 | `AdminCRMStats` | Dashboard stats (totalCustomers, activeCustomers, atRiskCustomers, newThisWeek) |
+
+---
+
+## Newsletter Data Layer (`src/lib/data/newsletter.ts`)
+
+Server-side data fetching for email marketing and campaigns.
+
+### Types
+
+| Type              | Description                                                |
+| ----------------- | ---------------------------------------------------------- |
+| `Campaign`        | Newsletter campaign (id, name, subject, status, metrics)   |
+| `Segment`         | Audience segment (id, name, criteria, cached_count, color) |
+| `AutomationFlow`  | Email automation workflow (id, name, trigger_type, status) |
+| `NewsletterStats` | Aggregate stats (totalCampaigns, avgOpenRate, subscribers) |
+
+### Data Functions
+
+| Function                       | Description                                  |
+| ------------------------------ | -------------------------------------------- |
+| `getCampaigns(limit?)`         | Fetch newsletter campaigns (default: 20)     |
+| `getCampaignById(id)`          | Get single campaign by ID                    |
+| `getSegments()`                | Fetch all audience segments                  |
+| `calculateSegmentCount(id)`    | Calculate segment member count from criteria |
+| `getAutomationFlows()`         | Fetch email automation workflows             |
+| `getNewsletterStats()`         | Aggregate newsletter statistics              |
+| `getSubscriberCount()`         | Count active newsletter subscribers          |
+| `getRecentSubscribers(limit?)` | Fetch recent subscribers (default: 10)       |
+
+### Database Tables
+
+| Table                    | Description                     |
+| ------------------------ | ------------------------------- |
+| `newsletter_campaigns`   | Email campaigns with metrics    |
+| `audience_segments`      | Customer segmentation rules     |
+| `email_automation_flows` | Automation workflow definitions |
+| `newsletter_subscribers` | Subscriber list with status     |
+
+---
+
+## CRM Dashboard (`src/components/admin/crm/CRMDashboard.tsx`)
+
+Modern CRM dashboard with fixed layout and scrollable content areas, now integrated with newsletter/email marketing data.
+
+### Views
+
+| View         | Description                                                                                                                       |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `overview`   | Metrics, segments, campaigns, automations at-a-glance                                                                             |
+| `customers`  | Customer list with search and lifecycle filtering                                                                                 |
+| `segments`   | Predefined audience segments (New Users 7d, Champions, At Risk, Donors, Receivers, Inactive 30d+) with custom tags management     |
+| `engagement` | Engagement analytics with avg scores, churn risk, interactions, LTV, top champions leaderboard, and engagement distribution chart |
+| `campaigns`  | Full-featured campaign management (see CampaignsClient below)                                                                     |
+| `automation` | Workflow automations with enrollment and conversion metrics                                                                       |
+
+### Components
+
+| Component             | Description                                                               |
+| --------------------- | ------------------------------------------------------------------------- |
+| `MetricCard`          | Displays KPI with value, change %, and color-coded icon                   |
+| `LifecycleBadge`      | Customer lifecycle stage badge (lead, active, champion, at_risk, churned) |
+| `ChurnRiskBadge`      | Visual badge for churn risk score with color coding                       |
+| `EngagementScore`     | Visual progress bar for engagement score (0-100)                          |
+| `CustomerRow`         | Customer list item with avatar, lifecycle, engagement, churn risk         |
+| `SegmentCard`         | Quick segment card with count, description, and color-coded icon          |
+| `CampaignCard`        | Campaign card with status, sent/opened/clicked metrics                    |
+| `AutomationCard`      | Automation workflow card with trigger, status, enrollment, conversion     |
+| `SegmentsTab`         | Audience segmentation view with predefined segments and custom tags       |
+| `EngagementTab`       | Engagement analytics with metrics, top champions, and distribution chart  |
+| `CustomerDetailModal` | Detailed customer view modal with stats, tags, and quick actions          |
+
+### Features
+
+- **Sticky header** with tab navigation (Overview, Customers, Segments, Engagement, Campaigns, Automation)
+- **Profile sync** - Import profiles as CRM customers via Server Action
+- **Customer filtering** - Search by name/email, filter by lifecycle stage
+- **Scrollable content** - Fixed layout with ScrollArea for content
+- **Animated transitions** - Framer Motion for view switching and notifications
+- **Newsletter integration** - Campaigns, segments, automations, and stats from newsletter data layer
+- **Audience segments** - Predefined segments (New Users, Champions, At Risk, Donors, Receivers, Inactive) with custom tags
+- **Engagement analytics** - Metrics dashboard with engagement distribution visualization and top champions leaderboard
+- **Customer detail modal** - Quick view of customer stats, lifecycle, tags, and action buttons (Send Email, Add Note)
+
+### Props
+
+| Prop              | Type               | Required | Description                     |
+| ----------------- | ------------------ | -------- | ------------------------------- |
+| `customers`       | `Customer[]`       | Yes      | CRM customer list               |
+| `tags`            | `Tag[]`            | Yes      | Customer tags                   |
+| `stats`           | `CRMStats`         | Yes      | CRM dashboard statistics        |
+| `campaigns`       | `Campaign[]`       | No       | Newsletter campaigns            |
+| `segments`        | `Segment[]`        | No       | Audience segments               |
+| `automations`     | `AutomationFlow[]` | No       | Email automation workflows      |
+| `newsletterStats` | `NewsletterStats`  | No       | Newsletter aggregate statistics |
+
+### Usage
+
+```tsx
+import { CRMDashboard } from "@/components/admin/crm/CRMDashboard";
+import {
+  getCustomerTagsCached,
+  getAdminCustomersCached,
+  getAdminCRMStatsCached,
+} from "@/lib/data/crm";
+import {
+  getCampaigns,
+  getSegments,
+  getAutomationFlows,
+  getNewsletterStats,
+} from "@/lib/data/newsletter";
+
+// Server Component fetches data in parallel
+const [tags, customers, crmStats, campaigns, segments, automations, newsletterStats] =
+  await Promise.all([
+    getCustomerTagsCached(),
+    getAdminCustomersCached(100),
+    getAdminCRMStatsCached(),
+    getCampaigns(10),
+    getSegments(),
+    getAutomationFlows(),
+    getNewsletterStats(),
+  ]);
+
+<CRMDashboard
+  customers={customers}
+  tags={tags}
+  stats={crmStats}
+  campaigns={campaigns}
+  segments={segments}
+  automations={automations}
+  newsletterStats={newsletterStats}
+/>;
+```
 
 ---
 

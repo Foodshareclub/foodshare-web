@@ -1,52 +1,66 @@
 /**
  * Unified Admin Dashboard Page (Server Component)
- * Industry-standard CRM with tabbed interface
+ * Modern CRM with fixed layout and scrollable content
  */
 
 import { Suspense } from "react";
-import { AdminUnifiedClient } from "./AdminUnifiedClient";
-import { getDashboardStats, getAuditLogs } from "@/lib/data/admin";
+import { CRMDashboard } from "@/components/admin/crm/CRMDashboard";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   getCustomerTagsCached,
   getAdminCustomersCached,
   getAdminCRMStatsCached,
 } from "@/lib/data/crm";
+import {
+  getCampaigns,
+  getSegments,
+  getAutomationFlows,
+  getNewsletterStats,
+} from "@/lib/data/newsletter";
 
 export const revalidate = 300;
 
 function DashboardSkeleton() {
   return (
-    <div className="flex flex-col gap-6 p-6 animate-pulse">
-      <div>
-        <div className="h-8 bg-muted rounded w-48 mb-2" />
-        <div className="h-4 bg-muted rounded w-64" />
-      </div>
-      <div className="h-12 bg-muted rounded w-full" />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-background p-6 rounded-lg border border-border">
-            <div className="h-4 bg-muted rounded w-24 mb-2" />
-            <div className="h-8 bg-muted rounded w-16" />
+    <div className="flex flex-col h-[calc(100vh-8rem)] bg-background">
+      {/* Header Skeleton */}
+      <div className="flex-shrink-0 border-b border-border p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-6 w-48 mb-2" />
+            <Skeleton className="h-4 w-64" />
           </div>
-        ))}
+          <div className="flex gap-2">
+            <Skeleton className="h-9 w-28" />
+            <Skeleton className="h-9 w-32" />
+          </div>
+        </div>
+        <div className="flex gap-2 mt-4">
+          {[...Array(5)].map((_, i) => (
+            <Skeleton key={i} className="h-9 w-24 rounded-lg" />
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {[...Array(2)].map((_, i) => (
-          <div key={i} className="bg-background p-6 rounded-lg border border-border h-64" />
-        ))}
+      {/* Content Skeleton */}
+      <div className="flex-1 p-4 space-y-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-24 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-40 rounded-xl" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-xl" />
+        </div>
       </div>
     </div>
   );
 }
-
-const defaultStats = {
-  totalUsers: 0,
-  totalProducts: 0,
-  activeProducts: 0,
-  pendingProducts: 0,
-  totalChats: 0,
-  newUsersThisWeek: 0,
-};
 
 const defaultCRMStats = {
   totalCustomers: 0,
@@ -55,38 +69,55 @@ const defaultCRMStats = {
   newThisWeek: 0,
 };
 
-async function fetchAdminData() {
+const defaultNewsletterStats = {
+  totalCampaigns: 0,
+  totalSent: 0,
+  avgOpenRate: 0,
+  avgClickRate: 0,
+  totalSubscribers: 0,
+  activeAutomations: 0,
+};
+
+async function fetchCRMData() {
   try {
-    const [dashboardStats, auditLogs, tags, customers, crmStats] = await Promise.all([
-      getDashboardStats(),
-      getAuditLogs(10),
-      getCustomerTagsCached(),
-      getAdminCustomersCached(100),
-      getAdminCRMStatsCached(),
-    ]);
-    return { dashboardStats, auditLogs, tags, customers, crmStats };
+    const [tags, customers, crmStats, campaigns, segments, automations, newsletterStats] =
+      await Promise.all([
+        getCustomerTagsCached(),
+        getAdminCustomersCached(100),
+        getAdminCRMStatsCached(),
+        getCampaigns(10),
+        getSegments(),
+        getAutomationFlows(),
+        getNewsletterStats(),
+      ]);
+    return { tags, customers, crmStats, campaigns, segments, automations, newsletterStats };
   } catch (error) {
-    console.error("[Admin] Dashboard data fetch error:", error);
+    console.error("[Admin] CRM data fetch error:", error);
     return {
-      dashboardStats: defaultStats,
-      auditLogs: [],
       tags: [],
       customers: [],
       crmStats: defaultCRMStats,
+      campaigns: [],
+      segments: [],
+      automations: [],
+      newsletterStats: defaultNewsletterStats,
     };
   }
 }
 
 async function AdminDashboardData() {
-  const { dashboardStats, auditLogs, tags, customers, crmStats } = await fetchAdminData();
+  const { tags, customers, crmStats, campaigns, segments, automations, newsletterStats } =
+    await fetchCRMData();
 
   return (
-    <AdminUnifiedClient
-      dashboardStats={dashboardStats}
-      auditLogs={auditLogs}
+    <CRMDashboard
       customers={customers}
       tags={tags}
-      crmStats={crmStats}
+      stats={crmStats}
+      campaigns={campaigns}
+      segments={segments}
+      automations={automations}
+      newsletterStats={newsletterStats}
     />
   );
 }

@@ -25,13 +25,27 @@
 
 ### CRM
 
-    - Help me implement admin role functionality to edit any listings through an advanced CRM system. Let's first explore the current codebase to understand the existing structure around posts/listings and any admin functionality.
-        - Use the Next.js expert to deeply modify and optimize the code base.
-        - Admin status is determined via `user_roles` table (source of truth) joining profiles to roles. The JSONB `role` field in profiles is used for other roles like volunteer, subscriber, etc.
+    - Deeply improve the EXISTING!!! admin functionality to edit any listings through an advanced CRM system:
+        - Explore the current codebase to understand the existing structure around posts/listings and any admin functionality
+        - Use the Next.js expert to deeply modify and optimize the existing code base.
+        - Admin status is determined via `user_roles` and 'roles' tables (source of truth) joining profiles to roles.
         - Improve the email CRM expirience to be able to use 3 email providers we implemented
         - Improve the UI/UX logic for the CRM
-        - Use the clean next.js 16 arcitecture with Supabase integration
+        - Use the clean Next.js 16 arcitecture with Supabase integration
         - Reuse the existing code, the db, edge functions etc wherever and whenever you can
+        - Add more usefull features to engage with the user base via email newsletters etc
+        - Improve the CRM accordingly via a long list of tasks to execute.
+        - Make the email CRM interface not scrollable right now and it's very userfriendly
+        - Improve the layout make it using the bleeding edge bst practices
+        - Use the Tailwind + Shadcn patest features
+
+    - 🚧 **IN PROGRESS**: EmailCRMClient refactor (`src/components/admin/EmailCRMClient.tsx`)
+        - Upgrading to advanced tabbed interface: Dashboard, Campaigns, Automation, Audience, Compose, Providers
+        - Modern glass UI with fixed viewport layout (no horizontal scroll)
+        - Provider health indicators with daily quota tracking
+        - Framer Motion animations for tab transitions
+        - ✅ **Shared components added**: GlassCard, MetricCard, ProviderHealthBadge, ProviderCard, ProviderDetailCard, ProviderConfigCard, RoutingRule
+        - **Status**: Core UI components complete, integration testing needed
 
 
     - Implement a post management system for any user respectevely:

@@ -146,13 +146,21 @@ export {
   type UnifiedChatRoom,
 } from "./chat";
 
-// Admin email monitoring
+// Admin email CRM
 export {
-  getProviderStatus,
-  getQuotaStatus,
-  getRecentEmails,
-  getHealthEvents,
+  getEmailDashboardStats,
+  getProviderHealth,
+  getRecentCampaigns,
+  getActiveAutomations,
+  getAudienceSegments,
+  getEmailCRMData,
   getEmailMonitoringData,
+  type EmailDashboardStats,
+  type ProviderHealth,
+  type RecentCampaign,
+  type ActiveAutomation,
+  type AudienceSegment,
+  type EmailCRMData,
   type ProviderStatus,
   type QuotaStatus,
   type RecentEmail,

@@ -273,12 +273,18 @@ const apiKey = data?.find((s) => s.name === "XAI_API_KEY")?.value;
 | Use Case                       | Recommendation                       |
 | ------------------------------ | ------------------------------------ |
 | Local development              | Environment variables (`.env.local`) |
-| Vercel deployment              | Vercel environment variables         |
+| Vercel deployment              | Supabase Vault (production)          |
 | Shared secrets across services | Supabase Vault                       |
 | Secrets that need rotation     | Supabase Vault                       |
 | Edge Functions needing secrets | Supabase Vault                       |
+| Email provider credentials     | Supabase Vault (production only)     |
 
-See [AI Moderation docs](../03-features/admin/AI_MODERATION.md) for a complete implementation example.
+**Note:** The email vault service (`src/lib/email/vault.ts`) uses environment-aware behavior:
+
+- **Development:** Uses environment variables directly for fast local iteration
+- **Production:** Always fetches from Supabase Vault for centralized, secure management
+
+See [AI Moderation docs](../03-features/admin/AI_MODERATION.md) and [Email CRM docs](../03-features/email/README.md) for implementation examples.
 
 ---
 

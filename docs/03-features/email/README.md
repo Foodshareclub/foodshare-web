@@ -35,7 +35,10 @@ import { EmailService, UnifiedEmailService } from "@/lib/email";
 
 ### Email Secrets Vault
 
-Provider credentials are managed via `src/lib/email/vault.ts`, which fetches secrets from Supabase Vault with automatic fallback to environment variables for local development.
+Provider credentials are managed via `src/lib/email/vault.ts`, with environment-aware behavior:
+
+- **Development:** Uses environment variables directly (fast local dev)
+- **Production:** Always fetches from Supabase Vault (secure, centralized)
 
 **Secrets stored in Vault:**
 
@@ -63,7 +66,9 @@ const brevoKey = await getBrevoApiKey();
 const awsCreds = await getAwsCredentials();
 ```
 
-**Local Development:** Set environment variables directly - the vault service will use them automatically:
+**Local Development (`NODE_ENV=development`):**
+
+Set environment variables in `.env.local` - the vault service will use them automatically:
 
 ```bash
 RESEND_API_KEY=re_xxx
@@ -73,7 +78,9 @@ AWS_SECRET_ACCESS_KEY=xxx
 AWS_REGION=us-east-1
 ```
 
-**Production:** Store secrets in Supabase Vault via Dashboard → Settings → Vault. The `get_secrets` RPC function retrieves them securely.
+**Production (`NODE_ENV=production`):**
+
+Secrets must be stored in Supabase Vault via Dashboard → Settings → Vault. The `get_secrets` RPC function retrieves them securely. Environment variables are ignored in production to ensure centralized secret management.
 
 ---
 
@@ -108,7 +115,7 @@ You now have a **production-ready Admin Email CRM** with:
 ```
 src/components/admin/
 ├── EmailQuotaDashboard.tsx          # Real-time quota meters with auto-refresh
-├── EmailStatsDashboard.tsx          # 24h statistics and success rates
+├── EmailStatsDashboard.tsx          # 24h statistics with animated cards, dark mode, skeleton loading
 ├── ManualEmailSender.tsx            # Manual email sending interface
 ├── EmailSendingHistory.tsx          # Email logs and queue management
 └── (existing admin components)
@@ -122,13 +129,20 @@ src/app/admin/email/
     └── EmailCRMClient               # Client component for interactive features
 
 src/components/admin/
-└── EmailCRMClient.tsx               # Main email CRM dashboard (client component)
+├── EmailCRMClient.tsx               # Main email CRM dashboard (client component)
+│                                    # Features: Dashboard, Campaigns, Automation, Compose, Audience, Providers
+│                                    # Modern glass UI with fixed viewport layout (no horizontal scroll)
+│                                    # Uses Tailwind v4 + shadcn best practices
+│                                    # Real data integration via initialData prop
+│                                    # Components: ScrollArea, Card, DropdownMenu for enhanced UX
 ```
 
 **Architecture Note:** The email CRM page uses Next.js 16 server-first architecture:
 
-- `page.tsx` is a Server Component that handles translations and layout
-- `EmailCRMClient` is a Client Component wrapped in Suspense for streaming
+- `page.tsx` is a Server Component that fetches real data and passes to client
+- `EmailCRMClient` accepts `initialData: EmailCRMData` prop with stats, campaigns, automations, segments, providerHealth
+- Horizontal top tab navigation with 6 sections for streamlined access
+- Daily quota progress indicator in top bar with provider health status dots
 - Skeleton loading state provides instant feedback while data loads
 
 ### Email Library
@@ -177,11 +191,39 @@ src/api/admin/
 
 ```
 src/app/actions/
-└── email.ts                         # Email server actions
-    ├── getEmailPreferences()        # Get user's email preferences
-    ├── updateEmailPreferences()     # Update user's email preferences
-    ├── resetEmailPreferences()      # Reset to defaults
-    └── sendAdminEmail()             # Send email immediately (admin only)
+├── email.ts                         # Email server actions
+│   ├── getEmailPreferences()        # Get user's email preferences
+│   ├── updateEmailPreferences()     # Update user's email preferences
+│   ├── resetEmailPreferences()      # Reset to defaults
+│   └── sendAdminEmail()             # Send email immediately (admin only)
+│
+└── newsletter.ts                    # Newsletter & Campaign server actions
+    │
+    │  Campaign Management:
+    ├── createCampaign(formData)     # Create new email campaign
+    │   → { success, campaignId?, error? }
+    ├── updateCampaignStatus(id, status)  # Update status (draft/scheduled/sending/sent/paused/cancelled)
+    │   → { success, error? }
+    ├── scheduleCampaign(id, scheduledAt) # Schedule campaign for future send
+    │   → { success, error? }
+    │
+    │  Subscriber Management:
+    ├── addSubscriber(email, firstName?, source?)  # Add email subscriber
+    │   → { success, subscriberId?, error? }
+    ├── unsubscribeEmail(email, reason?)  # Unsubscribe email address
+    │   → { success, error? }
+    │
+    │  Audience Segments:
+    ├── createSegment(formData)      # Create audience segment with criteria
+    │   → { success, segmentId?, error? }
+    │
+    │  Automation Flows:
+    ├── createAutomationFlow(formData)  # Create email automation workflow
+    │   → { success, flowId?, error? }
+    ├── updateAutomationStatus(id, status)  # Update status (draft/active/paused/archived)
+    │   → { success, error? }
+    └── enrollUserInAutomation(flowId, profileId)  # Enroll user in automation flow
+        → { success, error? }
 ```
 
 ### Edge Functions
@@ -265,59 +307,124 @@ curl -X POST \
 
 ## 📊 Dashboard Overview
 
-### Main Dashboard Layout
+### Top Navigation Bar Layout
+
+The Email CRM uses a modern horizontal tab navigation pattern with quota and provider status indicators:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                   Email Management CRM                       │
-│         Smart routing, quota monitoring, and control         │
-└─────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────┐
-│  System Overview                                             │
-│  ┌──────────┬──────────┬──────────┬────────────┐           │
-│  │ Sent 24h │ Failed   │ Queued   │ Success %  │           │
-│  │   245    │    3     │    12    │   98.8%    │           │
-│  └──────────┴──────────┴──────────┴────────────┘           │
-└─────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────┐
-│  Email Provider Quotas                                       │
-│  ┌──────────────┬──────────────┬──────────────┐            │
-│  │   Brevo      │   Resend     │   AWS SES    │            │
-│  │   [████░░]   │   [██░░░░]   │   [█░░░░░]   │            │
-│  │   150/300    │    20/100    │    5/100     │            │
-│  │   50% used   │   20% used   │    5% used   │            │
-│  │   ✅ OK      │   ✅ OK      │   ✅ OK      │            │
-│  └──────────────┴──────────────┴──────────────┘            │
-└─────────────────────────────────────────────────────────────┘
-
-┌───────────────────────────────┬─────────────────────────────┐
-│  Manual Email Sender          │  Smart Routing Info         │
-│  ┌─────────────────────────┐  │  ┌───────────────────────┐ │
-│  │ To: user@example.com    │  │  │ 1. Quota Check        │ │
-│  │ Subject: ...            │  │  │ 2. Channel Selection  │ │
-│  │ Message: ...            │  │  │ 3. Failover           │ │
-│  │ Type: Chat              │  │  │ 4. Retry Queue        │ │
-│  │ Provider: Auto-select   │  │  └───────────────────────┘ │
-│  │ [Send Email]            │  │  Provider Channels:       │
-│  └─────────────────────────┘  │  • Brevo (Primary)        │
-│                                │  • Resend (Auth)          │
-│                                │  • AWS SES (Failover)     │
-└───────────────────────────────┴─────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────┐
-│  Email History                                               │
-│  [Delivery Logs] [Queue (12)]                               │
-│  ┌───────────┬─────────────┬─────────┬──────────┬────────┐ │
-│  │ Time      │ Recipient   │ Subject │ Provider │ Status │ │
-│  ├───────────┼─────────────┼─────────┼──────────┼────────┤ │
-│  │ 2:45 PM   │ user@...    │ Chat... │ brevo    │ ✅ Sent│ │
-│  │ 2:44 PM   │ admin@...   │ Food... │ brevo    │ ✅ Sent│ │
-│  │ 2:43 PM   │ test@...    │ Auth... │ resend   │ ✅ Sent│ │
-│  └───────────┴─────────────┴─────────┴──────────┴────────┘ │
-└─────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────┐
+│ [Dashboard] [Campaigns] [Automation] [Compose] [Audience] [Providers] │
+│                                                                       │
+│                                   [Quota: ████░░ 68/500] [●●●] [+New] │
+├───────────────────────────────────────────────────────────────────────┤
+│                                                                       │
+│                    [Main Content Area - Scrollable]                   │
+│                                                                       │
+│  Dashboard: Stats overview, quick actions, provider health            │
+│  Campaigns: Email campaign management with search                     │
+│  Automation: Workflow automation flows                                │
+│  Compose: Manual email sender with smart routing                      │
+│  Audience: Segment builder & user targeting                           │
+│  Providers: Provider health status and configuration                  │
+│                                                                       │
+└───────────────────────────────────────────────────────────────────────┘
 ```
+
+### Navigation Tabs
+
+| Tab        | Icon | Description                                         |
+| ---------- | ---- | --------------------------------------------------- |
+| Dashboard  | 📊   | Overview stats, provider quotas, quick actions      |
+| Campaigns  | 📢   | Create and manage email campaigns                   |
+| Automation | 🔄   | Workflow automation (welcome series, re-engagement) |
+| Compose    | ✉️   | Manual email sender with smart routing              |
+| Audience   | 🎯   | Audience segmentation with growth metrics           |
+| Providers  | ⚙️   | Provider health status and configuration            |
+
+### Top Bar Features
+
+- **Tab Navigation**: Horizontal tabs with icons (responsive - icons only on mobile)
+- **Daily Quota Indicator**: Progress bar showing quota usage (e.g., 68/500)
+- **Provider Status Dots**: Color-coded health indicators (green=healthy, amber=degraded, red=down)
+- **New Campaign Button**: Quick action to create new campaigns
+
+### Campaign Types
+
+- **Newsletter** - Regular updates and tips
+- **Announcement** - Feature launches and news
+- **Promotion** - Special campaigns and drives
+- **Onboarding** - Welcome series for new users
+- **Re-engagement** - Win back inactive users
+
+### Audience Segments
+
+Pre-built segments for targeted campaigns:
+
+| Segment             | Criteria                                    | Color   | Growth |
+| ------------------- | ------------------------------------------- | ------- | ------ |
+| Active Sharers      | Shared food in last 30 days, verified email | Emerald | +12%   |
+| New Users           | Joined in last 7 days                       | Blue    | +23%   |
+| Inactive Users      | No activity in 60+ days                     | Amber   | -5%    |
+| Community Champions | Top 10% contributors, 5-star rating         | Violet  | +8%    |
+| Mobile Users        | Primarily use mobile app, app installed     | Rose    | +15%   |
+
+**Audience Growth Metrics:**
+
+- Total Subscribers count
+- Weekly growth (+/- new subscribers)
+- Active Rate percentage
+- Unsubscribe Rate tracking
+- Per-segment growth indicators
+
+### Automation Flows
+
+Pre-built automation workflows:
+
+| Flow                      | Trigger                    | Status | Conversion |
+| ------------------------- | -------------------------- | ------ | ---------- |
+| Welcome Series            | User signs up              | Active | 34.5%      |
+| First Listing Celebration | User creates first listing | Active | 67.2%      |
+| Re-engagement Flow        | 30 days inactive           | Active | 12.3%      |
+| Review Request            | Successful pickup          | Paused | —          |
+
+### Providers Tab
+
+The Providers tab provides detailed monitoring and management for all email providers:
+
+**Overview Stats Grid:**
+| Metric | Description |
+|--------|-------------|
+| Active Providers | Count of configured providers (3) |
+| Avg Health | Average health score across all providers |
+| Total Requests | Combined request count across providers |
+| Daily Quota | Current usage vs limit (e.g., 68/500) |
+
+**Provider Cards:**
+
+| Provider | Role     | Description                          |
+| -------- | -------- | ------------------------------------ |
+| Brevo    | Primary  | Transactional & marketing emails     |
+| Resend   | Auth     | Authentication & verification emails |
+| AWS SES  | Failover | High-volume failover & bulk sending  |
+
+Each provider card displays:
+
+- **Header**: Provider name, role badge, status indicator (Operational/Degraded/Down)
+- **Metrics Grid**: Health Score (with progress bar), Success Rate %, Avg Latency (ms), Total Requests
+- **Actions**: View Logs, Configure, Test buttons
+
+**Provider Health Indicators:**
+
+- 🟢 **Operational**: Provider healthy and responding normally
+- 🟡 **Degraded**: Elevated latency or reduced success rate
+- 🔴 **Down**: Provider unavailable or circuit breaker open
+
+**Smart Routing Panel:**
+An info panel at the bottom shows smart routing status with toggle:
+
+- Auth emails → Resend (primary)
+- Marketing emails → Brevo (primary)
+- Failover → AWS SES (automatic)
 
 ---
 
@@ -541,29 +648,36 @@ SELECT status, COUNT(*) FROM email_queue GROUP BY status;
 
 ### Beautiful Design
 
-- **Gradient headers** with green color scheme
-- **Glass-morphism cards** for modern look
-- **Smooth animations** on hover and transitions
+- **Animated content transitions** with Framer Motion (AnimatePresence, slide animations)
+- **Fixed sidebar navigation** with active state highlighting and daily quota progress
+- **Dark mode support** with semantic color tokens (muted, foreground, border)
+- **Skeleton loading states** for smooth UX during data fetch
+- **Provider performance cards** with animated progress bars
 - **Responsive layout** for mobile/tablet/desktop
-- **Status indicators** with color coding
+- **Status indicators** with color-coded badges and icons (emerald/amber/rose)
 - **Real-time updates** without page refresh
+- **Color-coded quick action cards** (emerald, blue, amber, rose)
+- **Switch component** for HTML mode toggle
 
 ### User Experience
 
 - **Auto-refresh** for live data (30s intervals)
-- **Loading states** with spinners
-- **Error handling** with user-friendly messages
+- **Loading states** with animated spinners (RefreshCw icon)
+- **Error handling** with animated result messages
 - **Form validation** with instant feedback
+- **Direct test button** for Resend provider testing
 - **Keyboard shortcuts** (future enhancement)
 - **Accessibility** WCAG compliant
 
 ### Visual Hierarchy
 
-1. **Page header** - Clear title and description
-2. **System overview** - High-level metrics
-3. **Quota dashboard** - Visual capacity meters
-4. **Main actions** - Manual sender and routing info
-5. **History** - Detailed logs and queue
+1. **Top navigation bar** - Horizontal tabs with quota indicator and provider status dots
+2. **Dashboard** - High-level metrics with real stats, campaigns, automations, provider health
+3. **Campaigns** - Campaign list with status badges, search, open/click rates (real campaigns)
+4. **Automation** - Workflow cards with trigger, enrollment, and conversion metrics
+5. **Compose** - Manual sender with smart routing info sidebar
+6. **Audience** - Segment cards with color-coded criteria, user counts, and growth indicators
+7. **Providers** - Provider health status cards with success rates and configuration
 
 ---
 
@@ -632,7 +746,38 @@ All API functions use Supabase RLS:
 
 ## 📚 API Usage Examples
 
-### Server-Side Monitoring (Recommended)
+### Server-Side Data Integration (Recommended)
+
+The Email CRM uses server-first architecture with real data passed via props:
+
+```typescript
+// Server Component - app/admin/email/page.tsx
+import { getEmailCRMData } from "@/lib/data/admin-email";
+import { EmailCRMClient } from "@/components/admin/EmailCRMClient";
+
+export default async function EmailCRMPage() {
+  const data = await getEmailCRMData();
+  return <EmailCRMClient initialData={data} />;
+}
+```
+
+**EmailCRMData Type:**
+
+```typescript
+interface EmailCRMData {
+  stats?: {
+    dailyQuotaUsed: number;
+    dailyQuotaLimit: number;
+    // ... other stats
+  };
+  campaigns: Campaign[]; // Real campaign data from DB
+  automations: AutomationFlow[]; // Automation workflows
+  segments: AudienceSegment[]; // Audience segments
+  providerHealth: ProviderHealth[]; // Provider status
+}
+```
+
+### Server-Side Monitoring
 
 Use the data layer functions in Server Components for optimal performance:
 
@@ -644,6 +789,64 @@ export default async function EmailMonitorPage() {
   const data = await getEmailMonitoringData();
   // data contains: providerStatus, quotaStatus, recentEmails, healthEvents
   return <EmailMonitorClient initialData={data} />;
+}
+```
+
+**Monitoring Types:**
+
+```typescript
+import type {
+  ProviderStatus,
+  QuotaStatus,
+  RecentEmail,
+  HealthEvent,
+  EmailMonitoringData,
+} from "@/lib/data/admin-email";
+
+interface ProviderStatus {
+  provider: string;
+  state: string; // Circuit breaker state
+  failures: number;
+  consecutive_successes: number;
+  last_failure_time: string | null;
+  health_score: number; // 0-100 health score
+  total_requests: number;
+  successful_requests: number;
+  failed_requests: number;
+}
+
+interface QuotaStatus {
+  provider: string;
+  emails_sent: number;
+  daily_limit: number;
+  remaining: number;
+  percentage_used: number;
+  date: string;
+}
+
+interface RecentEmail {
+  id: string;
+  email_type: string;
+  recipient_email: string;
+  provider_used: string;
+  status: string;
+  created_at: string;
+}
+
+interface HealthEvent {
+  id: string;
+  event_type: string;
+  severity: string;
+  message: string;
+  provider: string;
+  created_at: string;
+}
+
+interface EmailMonitoringData {
+  providerStatus: ProviderStatus[];
+  quotaStatus: QuotaStatus[];
+  recentEmails: RecentEmail[];
+  healthEvents: HealthEvent[];
 }
 ```
 
@@ -838,17 +1041,15 @@ The vault service logs detailed environment diagnostics:
 }
 ```
 
-Fix options:
+**Production requires Supabase Vault access.** Fix by adding `SUPABASE_SERVICE_ROLE_KEY` to Vercel:
 
-1. **Add `SUPABASE_SERVICE_ROLE_KEY` to Vercel** (recommended for vault access)
-   - Go to Vercel Dashboard → Project → Settings → Environment Variables
-   - Add `SUPABASE_SERVICE_ROLE_KEY` with your service role key from Supabase
+1. Go to Vercel Dashboard → Project → Settings → Environment Variables
+2. Add `SUPABASE_SERVICE_ROLE_KEY` with your service role key from Supabase
+3. Ensure secrets are stored in Supabase Vault (Dashboard → Settings → Vault)
 
-2. **Or add email provider keys directly** (simpler, no vault needed)
-   - Add `RESEND_API_KEY`, `BREVO_API_KEY`, etc. directly to Vercel env vars
-   - The vault service will use these automatically without needing vault access
+**Important:** In production, environment variables for email providers (`RESEND_API_KEY`, etc.) are ignored. All secrets must be stored in Supabase Vault for centralized, secure management.
 
-**Note:** The vault service prioritizes environment variables over Supabase Vault. If any provider key is set in env vars, vault lookup is skipped entirely.
+**Local Development:** Environment variables work directly - no vault access needed. Set `RESEND_API_KEY`, `BREVO_API_KEY`, etc. in `.env.local`.
 
 ---
 
@@ -898,6 +1099,21 @@ Your Admin Email CRM provides:
 
 ---
 
-**Last Updated:** 2025-12-10
-**Status:** ✅ Production Ready
+**Last Updated:** 2025-12-11
+**Status:** ✅ Production Ready (V1), 🚧 V3 In Development
 **URL:** `/admin/email`
+
+---
+
+## 🔮 V3 Features (Now in Production)
+
+The V3 glass UI features have been merged into the main `EmailCRMClient` component (Dec 2025):
+
+- ✅ **Glass morphism design** using Tailwind v4 utilities
+- ✅ **Fixed viewport layout** - no horizontal scroll issues
+- ✅ **ScrollArea integration** for better scroll handling
+- ✅ **Card-based layout** with shadcn Card components
+- ✅ **DropdownMenu** for contextual actions
+- ✅ **Enhanced animations** with Framer Motion
+
+The legacy `EmailCRMClientV3.tsx` file can be removed as features are now in production.
