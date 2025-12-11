@@ -18,5 +18,5 @@ export * from "./useChatQueries";
 // Forum
 export * from "./useForumQueries";
 
-// Admin
-export * from "./useAdminQueries";
+// Admin - Removed: Use server actions from @/app/actions/admin.ts instead
+// TanStack Query for admin data violates server-first architecture

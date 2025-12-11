@@ -8,18 +8,19 @@ The codebase has been refactored to use **Server Components** and **Server Actio
 
 ### New Architecture
 
-| Old Pattern | New Pattern |
-|-------------|-------------|
+| Old Pattern                  | New Pattern                              |
+| ---------------------------- | ---------------------------------------- |
 | `useQuery` for data fetching | Server Component + `lib/data/*` function |
-| `useMutation` for mutations | Server Action in `app/actions/*` |
-| `QueryClientProvider` | Not needed |
+| `useMutation` for mutations  | Server Action in `app/actions/*`         |
+| `QueryClientProvider`        | Not needed                               |
 
 ### Examples
 
 **Before (TanStack Query):**
+
 ```typescript
-'use client';
-import { useProducts } from '@/hooks/queries/useProductQueries';
+"use client";
+import { useProducts } from "@/hooks/queries/useProductQueries";
 
 function ProductList() {
   const { data: products, isLoading } = useProducts();
@@ -28,9 +29,10 @@ function ProductList() {
 ```
 
 **After (Server Component):**
+
 ```typescript
 // Server Component - no 'use client'
-import { getProducts } from '@/lib/data/products';
+import { getProducts } from "@/lib/data/products";
 
 async function ProductList() {
   const products = await getProducts();
@@ -45,6 +47,17 @@ async function ProductList() {
 - **Auth**: `src/hooks/useAuth.ts` (uses Server Actions internally)
 - **UI State**: Zustand stores in `src/store/zustand/`
 
+### Migration Progress
+
+| Hook                | Status                                       |
+| ------------------- | -------------------------------------------- |
+| `useAdminQueries`   | ✅ Removed - Use `@/app/actions/admin.ts`    |
+| `useProductQueries` | ⏳ Deprecated - Use `@/lib/data/products.ts` |
+| `useProfileQueries` | ⏳ Deprecated - Use `@/lib/data/profiles.ts` |
+| `useChatQueries`    | ⏳ Kept for realtime features                |
+| `useForumQueries`   | ⏳ Deprecated - Use `@/lib/data/forum.ts`    |
+| `useAuthQueries`    | ⏳ Deprecated - Use `@/hooks/useAuth.ts`     |
+
 ### Timeline
 
-These hooks will be removed in a future release. Please migrate to the new patterns.
+Remaining hooks will be removed in a future release. Please migrate to the new patterns.

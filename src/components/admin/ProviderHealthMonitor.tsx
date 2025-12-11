@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
 /**
  * Provider Health Monitor
  * Real-time monitoring of email provider health with circuit breaker status
  */
 
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import type { EmailProvider } from "@/lib/email/types";
 import { PROVIDER_NAMES } from "@/lib/email/constants";
@@ -71,7 +71,7 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
       const interval = setInterval(fetchHealthStatus, 10000); // Refresh every 10s
       return () => clearInterval(interval);
     }
-  }, [fetchHealthStatus, autoRefresh]);
+  }, [autoRefresh, fetchHealthStatus]);
 
   const getCircuitStateColor = (state: string) => {
     switch (state) {
@@ -100,14 +100,14 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
   };
 
   const handleReset = (provider: EmailProvider) => {
-    if (confirm(t('reset_circuit_breaker_confirm', { provider: PROVIDER_NAMES[provider] }))) {
+    if (confirm(t("reset_circuit_breaker_confirm", { provider: PROVIDER_NAMES[provider] }))) {
       onReset?.(provider);
       fetchHealthStatus();
     }
   };
 
   const handleDisable = (provider: EmailProvider) => {
-    const duration = prompt(t('disable_duration_prompt'), "60");
+    const duration = prompt(t("disable_duration_prompt"), "60");
     if (duration) {
       const durationMs = parseInt(duration) * 60 * 1000;
       onDisable?.(provider, durationMs);
@@ -119,9 +119,7 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
     return (
       <div className="text-center py-8">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-        <p className="mt-4 text-gray-600">
-          Loading health status...
-        </p>
+        <p className="mt-4 text-gray-600">Loading health status...</p>
       </div>
     );
   }
@@ -131,9 +129,7 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-bold text-gray-800">
-            Provider Health Monitor
-          </h2>
+          <h2 className="text-xl font-bold text-gray-800">Provider Health Monitor</h2>
           <p className="text-sm text-gray-500">
             Real-time circuit breaker status and health metrics
           </p>
@@ -146,9 +142,7 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
               onChange={(e) => setAutoRefresh(e.target.checked)}
               className="rounded border-gray-300"
             />
-            <span className="text-sm text-gray-700">
-              Auto-refresh
-            </span>
+            <span className="text-sm text-gray-700">Auto-refresh</span>
           </label>
           <button
             onClick={fetchHealthStatus}
@@ -189,9 +183,7 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
             {/* Circuit State */}
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">
-                  Circuit Breaker
-                </span>
+                <span className="text-sm text-gray-600">Circuit Breaker</span>
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-medium uppercase ${getCircuitStateBadge(health.circuitState)}`}
                 >
@@ -208,25 +200,19 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
             {/* Metrics Grid */}
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="bg-gray-50 p-3 rounded">
-                <p className="text-xs text-gray-500 mb-1">
-                  Success Rate
-                </p>
+                <p className="text-xs text-gray-500 mb-1">Success Rate</p>
                 <p className="text-xl font-bold text-gray-800">
                   {(health.successRate * 100).toFixed(1)}%
                 </p>
               </div>
               <div className="bg-gray-50 p-3 rounded">
-                <p className="text-xs text-gray-500 mb-1">
-                  Avg Latency
-                </p>
+                <p className="text-xs text-gray-500 mb-1">Avg Latency</p>
                 <p className="text-xl font-bold text-gray-800">
                   {health.averageLatency.toFixed(0)}ms
                 </p>
               </div>
               <div className="bg-gray-50 p-3 rounded">
-                <p className="text-xs text-gray-500 mb-1">
-                  Recent Failures
-                </p>
+                <p className="text-xs text-gray-500 mb-1">Recent Failures</p>
                 <p
                   className={`text-xl font-bold ${health.recentFailures > 0 ? "text-red-600" : "text-gray-800"}`}
                 >
@@ -234,13 +220,11 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
                 </p>
               </div>
               <div className="bg-gray-50 p-3 rounded">
-                <p className="text-xs text-gray-500 mb-1">
-                  Quota Status
-                </p>
+                <p className="text-xs text-gray-500 mb-1">Quota Status</p>
                 <p
                   className={`text-xl font-bold ${health.isAvailable ? "text-green-600" : "text-red-600"}`}
                 >
-                  {health.isAvailable ? t('ok') : t('full')}
+                  {health.isAvailable ? t("ok") : t("full")}
                 </p>
               </div>
             </div>
@@ -268,17 +252,15 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
                 <p className="text-xs text-red-800 font-medium">
                   ⚠️{" "}
                   {health.circuitState === "open"
-                    ? t('circuit_breaker_open')
-                    : t('provider_experiencing_issues')}
+                    ? t("circuit_breaker_open")
+                    : t("provider_experiencing_issues")}
                 </p>
               </div>
             )}
 
             {!health.isAvailable && health.isHealthy && (
               <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded">
-                <p className="text-xs text-orange-800 font-medium">
-                  ⚠️ Daily quota exhausted
-                </p>
+                <p className="text-xs text-orange-800 font-medium">⚠️ Daily quota exhausted</p>
               </div>
             )}
           </div>
@@ -287,22 +269,16 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
 
       {/* System Status Summary */}
       <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg text-white">
-        <h3 className="text-lg font-bold mb-4">
-          System Status
-        </h3>
+        <h3 className="text-lg font-bold mb-4">System Status</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <p className="text-sm opacity-90 mb-1">
-              Healthy Providers
-            </p>
+            <p className="text-sm opacity-90 mb-1">Healthy Providers</p>
             <p className="text-3xl font-bold">
               {healthStatus.filter((h) => h.isHealthy).length}/{healthStatus.length}
             </p>
           </div>
           <div>
-            <p className="text-sm opacity-90 mb-1">
-              Average Success Rate
-            </p>
+            <p className="text-sm opacity-90 mb-1">Average Success Rate</p>
             <p className="text-3xl font-bold">
               {(
                 (healthStatus.reduce((sum, h) => sum + h.successRate, 0) / healthStatus.length) *
@@ -312,9 +288,7 @@ export const ProviderHealthMonitor: React.FC<ProviderHealthMonitorProps> = ({
             </p>
           </div>
           <div>
-            <p className="text-sm opacity-90 mb-1">
-              System Latency
-            </p>
+            <p className="text-sm opacity-90 mb-1">System Latency</p>
             <p className="text-3xl font-bold">
               {(
                 healthStatus.reduce((sum, h) => sum + h.averageLatency, 0) / healthStatus.length

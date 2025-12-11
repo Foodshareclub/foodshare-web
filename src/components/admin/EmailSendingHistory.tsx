@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * EmailSendingHistory - Display recent email logs and queue status
@@ -6,12 +6,12 @@
  * Optimized with custom hooks and constants
  */
 
-import React, { useState, useCallback } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { type EmailLogEntry, type QueuedEmailEntry } from "@/api/admin/emailManagement";
 import { useEmailLogs, useQueuedEmails } from "@/hooks/useEmailManagement";
-import { PROVIDER_NAMES, STATUS_COLORS } from "@/lib/email/constants";
-import type { EmailProvider, EmailType } from "@/lib/email/types";
+import { PROVIDER_NAMES } from "@/lib/email/constants";
+import type { EmailProvider } from "@/lib/email/types";
 
 interface EmailLogRowProps {
   log: EmailLogEntry;
@@ -158,30 +158,24 @@ export function EmailSendingHistory() {
   const loading = activeTab === "logs" ? logsLoading : queueLoading;
   const error = activeTab === "logs" ? logsError : queueError;
 
-  // Memoized handlers with better UX
-  const handleRetry = useCallback(
-    async (id: string) => {
-      const result = await handleRetryEmail(id);
-      if (!result.success) {
-        alert(`Failed to retry email: ${result.error}`);
-      }
-    },
-    [handleRetryEmail]
-  );
+  // Handlers
+  const handleRetry = async (id: string) => {
+    const result = await handleRetryEmail(id);
+    if (!result.success) {
+      alert(`Failed to retry email: ${result.error}`);
+    }
+  };
 
-  const handleDelete = useCallback(
-    async (id: string) => {
-      if (!confirm("Are you sure you want to delete this queued email?")) {
-        return;
-      }
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this queued email?")) {
+      return;
+    }
 
-      const result = await handleDeleteEmail(id);
-      if (!result.success) {
-        alert(`Failed to delete email: ${result.error}`);
-      }
-    },
-    [handleDeleteEmail]
-  );
+    const result = await handleDeleteEmail(id);
+    if (!result.success) {
+      alert(`Failed to delete email: ${result.error}`);
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -223,34 +217,30 @@ export function EmailSendingHistory() {
         {activeTab === "logs" && (
           <div className="flex gap-4 px-4 pb-4">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">
-                Provider
-              </label>
+              <label className="block text-xs text-gray-600 mb-1">Provider</label>
               <select
                 value={providerFilter}
                 onChange={(e) => setProviderFilter(e.target.value as EmailProvider | "")}
                 className="px-3 py-1 border border-gray-300 rounded text-sm"
               >
-                <option value="">{t('all_providers')}</option>
+                <option value="">{t("all_providers")}</option>
                 <option value="brevo">{PROVIDER_NAMES.brevo}</option>
                 <option value="resend">{PROVIDER_NAMES.resend}</option>
                 <option value="aws_ses">{PROVIDER_NAMES.aws_ses}</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">
-                Status
-              </label>
+              <label className="block text-xs text-gray-600 mb-1">Status</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="px-3 py-1 border border-gray-300 rounded text-sm"
               >
-                <option value="">{t('all_status')}</option>
-                <option value="sent">{t('sent')}</option>
-                <option value="delivered">{t('delivered')}</option>
-                <option value="failed">{t('failed')}</option>
-                <option value="bounced">{t('bounced')}</option>
+                <option value="">{t("all_status")}</option>
+                <option value="sent">{t("sent")}</option>
+                <option value="delivered">{t("delivered")}</option>
+                <option value="failed">{t("failed")}</option>
+                <option value="bounced">{t("bounced")}</option>
               </select>
             </div>
           </div>

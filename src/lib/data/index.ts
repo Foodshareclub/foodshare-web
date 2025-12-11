@@ -145,3 +145,30 @@ export {
   type ChatMessage,
   type UnifiedChatRoom,
 } from "./chat";
+
+// Admin email monitoring
+export {
+  getProviderStatus,
+  getQuotaStatus,
+  getRecentEmails,
+  getHealthEvents,
+  getEmailMonitoringData,
+  type ProviderStatus,
+  type QuotaStatus,
+  type RecentEmail,
+  type HealthEvent,
+  type EmailMonitoringData,
+} from "./admin-email";
+
+// Admin AI insights
+export {
+  getPlatformMetrics,
+  getChurnData,
+  getEmailCampaignData,
+  getGrokInsights,
+  getSuggestedQuestions,
+  clearInsightCache,
+  type PlatformMetrics,
+  type ChurnData,
+  type EmailCampaignData,
+} from "./admin-insights";

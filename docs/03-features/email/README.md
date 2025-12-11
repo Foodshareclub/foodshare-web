@@ -146,6 +146,18 @@ src/lib/email/
     └── aws-ses.ts
 ```
 
+### Data Layer (Server-Side)
+
+```
+src/lib/data/
+└── admin-email.ts                   # Server-side data fetching for monitoring
+    ├── getProviderStatus()          # Provider health + circuit breaker state
+    ├── getQuotaStatus()             # Daily quota usage per provider
+    ├── getRecentEmails()            # Recent email logs
+    ├── getHealthEvents()            # Health events and alerts
+    └── getEmailMonitoringData()     # All monitoring data (parallel fetch)
+```
+
 ### API Functions
 
 ```
@@ -620,7 +632,47 @@ All API functions use Supabase RLS:
 
 ## 📚 API Usage Examples
 
-### Get Current Quotas
+### Server-Side Monitoring (Recommended)
+
+Use the data layer functions in Server Components for optimal performance:
+
+```typescript
+// Server Component - app/admin/email/monitor/page.tsx
+import { getEmailMonitoringData } from "@/lib/data/admin-email";
+
+export default async function EmailMonitorPage() {
+  const data = await getEmailMonitoringData();
+  // data contains: providerStatus, quotaStatus, recentEmails, healthEvents
+  return <EmailMonitorClient initialData={data} />;
+}
+```
+
+Individual functions for granular fetching:
+
+```typescript
+import {
+  getProviderStatus,
+  getQuotaStatus,
+  getRecentEmails,
+  getHealthEvents,
+} from "@/lib/data/admin-email";
+
+// Get provider health with circuit breaker state
+const providers = await getProviderStatus();
+// [{ provider: 'resend', state: 'closed', health_score: 95, ... }]
+
+// Get today's quota usage
+const quotas = await getQuotaStatus();
+// [{ provider: 'resend', emails_sent: 45, daily_limit: 100, remaining: 55, ... }]
+
+// Get recent email logs
+const emails = await getRecentEmails(20); // last 20 emails
+
+// Get health events/alerts
+const events = await getHealthEvents(50); // last 50 events
+```
+
+### Client-Side API (Legacy)
 
 ```typescript
 import { getProviderQuotas } from "@/api/admin/emailManagement";

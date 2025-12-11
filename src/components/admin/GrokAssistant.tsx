@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { Send, Users, Sparkles, Loader2 } from "lucide-react";
-import { getGrokInsights, getSuggestedQuestions } from "@/api/admin/grokInsights";
+import { getGrokInsight, getInsightSuggestions } from "@/app/actions/admin-insights";
 
 interface Message {
   id: string;
@@ -27,8 +27,8 @@ export const GrokAssistant: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Load suggested questions
-    getSuggestedQuestions().then(setSuggestedQuestions).catch(console.error);
+    // Load suggested questions via server action
+    getInsightSuggestions().then(setSuggestedQuestions).catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -52,17 +52,17 @@ export const GrokAssistant: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const insight = await getGrokInsights(messageText);
+      const result = await getGrokInsight(messageText);
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: insight,
+        content: result.success ? result.insight! : result.error || "Failed to get insights",
         timestamp: new Date(),
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error) {
+    } catch {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",

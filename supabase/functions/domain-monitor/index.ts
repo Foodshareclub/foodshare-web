@@ -13,6 +13,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { corsHeaders } from "../_shared/cors.ts";
 
+// ============================================
+// FUNCTION DISABLED - Set to false to re-enable
+// ============================================
+const FUNCTION_DISABLED = true;
+
 // Configuration
 const DOMAINS_TO_MONITOR = [
   "https://foodshare.club",
@@ -20,12 +25,9 @@ const DOMAINS_TO_MONITOR = [
   "https://foodshare-dev.vercel.app",
 ];
 
-const GOOGLE_SAFE_BROWSING_API_KEY = Deno.env.get(
-  "GOOGLE_SAFE_BROWSING_API_KEY"
-);
+const GOOGLE_SAFE_BROWSING_API_KEY = Deno.env.get("GOOGLE_SAFE_BROWSING_API_KEY");
 const VIRUSTOTAL_API_KEY = Deno.env.get("VIRUSTOTAL_API_KEY");
-const TELEGRAM_BOT_TOKEN =
-  Deno.env.get("TELEGRAM_BOT_TOKEN") || Deno.env.get("BOT_TOKEN");
+const TELEGRAM_BOT_TOKEN = Deno.env.get("TELEGRAM_BOT_TOKEN") || Deno.env.get("BOT_TOKEN");
 const ADMIN_CHAT_ID = Deno.env.get("ADMIN_CHAT_ID") || "42281047";
 
 interface MonitorResult {
@@ -90,16 +92,12 @@ interface DNSResolutionResult {
 
 // Check-host.net node IDs for specific regions
 const CHECK_HOST_NODES = {
-  california: "us1.node.check-host.net",  // Los Angeles, CA
-  germany: "de4.node.check-host.net",     // Frankfurt, Germany
+  california: "us1.node.check-host.net", // Los Angeles, CA
+  germany: "de4.node.check-host.net", // Frankfurt, Germany
 };
 
 // Known problematic patterns
-const SAFEBROWSE_PATTERNS = [
-  "safebrowse.io",
-  "safebrowse.net",
-  "warn.html",
-];
+const SAFEBROWSE_PATTERNS = ["safebrowse.io", "safebrowse.net", "warn.html"];
 
 /**
  * Send Telegram notification
@@ -111,18 +109,15 @@ async function sendTelegramAlert(message: string): Promise<boolean> {
   }
 
   try {
-    const response = await fetch(
-      `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: ADMIN_CHAT_ID,
-          text: message,
-          parse_mode: "HTML",
-        }),
-      }
-    );
+    const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: ADMIN_CHAT_ID,
+        text: message,
+        parse_mode: "HTML",
+      }),
+    });
 
     const result = await response.json();
     if (!result.ok) {
@@ -138,9 +133,7 @@ async function sendTelegramAlert(message: string): Promise<boolean> {
 /**
  * Check URLs against Google Safe Browsing API
  */
-async function checkGoogleSafeBrowsing(
-  urls: string[]
-): Promise<GoogleSafeBrowsingResult> {
+async function checkGoogleSafeBrowsing(urls: string[]): Promise<GoogleSafeBrowsingResult> {
   if (!GOOGLE_SAFE_BROWSING_API_KEY) {
     return { error: "GOOGLE_SAFE_BROWSING_API_KEY not configured" };
   }
@@ -194,12 +187,9 @@ async function checkVirusTotal(url: string): Promise<VirusTotalResult> {
     // URL ID is base64 encoded URL without padding
     const urlId = btoa(url).replace(/=/g, "");
 
-    const response = await fetch(
-      `https://www.virustotal.com/api/v3/urls/${urlId}`,
-      {
-        headers: { "x-apikey": VIRUSTOTAL_API_KEY },
-      }
-    );
+    const response = await fetch(`https://www.virustotal.com/api/v3/urls/${urlId}`, {
+      headers: { "x-apikey": VIRUSTOTAL_API_KEY },
+    });
 
     if (response.status === 404) {
       // URL not in database - submit for scanning
@@ -262,7 +252,12 @@ async function checkSSL(url: string): Promise<SSLCheckResult> {
       return { url, status: "valid", region: "Supabase Edge (AWS)" };
     }
 
-    return { url, status: "error", region: "Supabase Edge (AWS)", error: `HTTP ${response.status}` };
+    return {
+      url,
+      status: "error",
+      region: "Supabase Edge (AWS)",
+      error: `HTTP ${response.status}`,
+    };
   } catch (error) {
     return { url, status: "error", region: "Supabase Edge (AWS)", error: error.message };
   }
@@ -275,12 +270,9 @@ async function checkSSL(url: string): Promise<SSLCheckResult> {
 async function resolveDNS(domain: string): Promise<DNSResolutionResult> {
   try {
     // Use dns-over-https for reliable DNS resolution
-    const response = await fetch(
-      `https://cloudflare-dns.com/dns-query?name=${domain}&type=A`,
-      {
-        headers: { "Accept": "application/dns-json" },
-      }
-    );
+    const response = await fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=A`, {
+      headers: { Accept: "application/dns-json" },
+    });
 
     if (!response.ok) {
       return { domain, ips: [], error: `DNS lookup failed: ${response.status}` };
@@ -378,8 +370,9 @@ async function checkSafeBrowseHijack(url: string): Promise<SafeBrowseCheckResult
 /**
  * Check specific IPs for SafeBrowse hijacking using check-host.net TCP check
  * This tests the actual edge node behavior, not just the HTTPS connection
+ * @internal Reserved for future use in advanced hijack detection
  */
-async function checkIPsForHijack(
+async function _checkIPsForHijack(
   domain: string,
   ips: string[]
 ): Promise<{ ip: string; hijacked: boolean; error?: string }[]> {
@@ -390,7 +383,7 @@ async function checkIPsForHijack(
       // Use check-host.net TCP check to port 443
       const checkUrl = `https://check-host.net/check-tcp?host=${ip}:443`;
       const initResponse = await fetch(checkUrl, {
-        headers: { "Accept": "application/json" },
+        headers: { Accept: "application/json" },
       });
 
       if (!initResponse.ok) {
@@ -409,10 +402,9 @@ async function checkIPsForHijack(
       // Wait for results
       await new Promise((r) => setTimeout(r, 3000));
 
-      const resultResponse = await fetch(
-        `https://check-host.net/check-result/${requestId}`,
-        { headers: { "Accept": "application/json" } }
-      );
+      const resultResponse = await fetch(`https://check-host.net/check-result/${requestId}`, {
+        headers: { Accept: "application/json" },
+      });
 
       if (!resultResponse.ok) {
         results.push({ ip, hijacked: false, error: "Failed to get results" });
@@ -443,11 +435,11 @@ async function checkMultiRegion(url: string): Promise<MultiRegionCheckResult> {
     // Step 1: Initiate the check - request specific nodes (California + Germany)
     // Note: API requires separate &node= params for each node
     const nodeList = [CHECK_HOST_NODES.california, CHECK_HOST_NODES.germany];
-    const nodeParams = nodeList.map(n => `node=${n}`).join("&");
+    const nodeParams = nodeList.map((n) => `node=${n}`).join("&");
     const checkUrl = `https://check-host.net/check-http?host=${encodeURIComponent(url)}&${nodeParams}`;
     const initResponse = await fetch(checkUrl, {
       headers: {
-        "Accept": "application/json",
+        Accept: "application/json",
       },
     });
 
@@ -480,12 +472,9 @@ async function checkMultiRegion(url: string): Promise<MultiRegionCheckResult> {
     await new Promise((r) => setTimeout(r, 5000));
 
     // Step 3: Get results
-    const resultResponse = await fetch(
-      `https://check-host.net/check-result/${requestId}`,
-      {
-        headers: { "Accept": "application/json" },
-      }
-    );
+    const resultResponse = await fetch(`https://check-host.net/check-result/${requestId}`, {
+      headers: { Accept: "application/json" },
+    });
 
     if (!resultResponse.ok) {
       throw new Error(`Failed to get results: ${resultResponse.status}`);
@@ -590,17 +579,12 @@ async function monitorDomains(): Promise<MonitorResult> {
 
   if (result.googleSafeBrowsing.error) {
     console.warn("Google Safe Browsing error:", result.googleSafeBrowsing.error);
-  } else if (
-    result.googleSafeBrowsing.matches &&
-    result.googleSafeBrowsing.matches.length > 0
-  ) {
+  } else if (result.googleSafeBrowsing.matches && result.googleSafeBrowsing.matches.length > 0) {
     result.status = "critical";
     const flaggedUrls = result.googleSafeBrowsing.matches
       .map((m) => `${m.threat.url} (${m.threatType})`)
       .join("\n");
-    result.alerts.push(
-      `Google Safe Browsing flagged:\n${flaggedUrls}`
-    );
+    result.alerts.push(`Google Safe Browsing flagged:\n${flaggedUrls}`);
   }
 
   // 2. Check VirusTotal (with rate limiting - 4 req/min free tier)
@@ -624,9 +608,7 @@ async function monitorDomains(): Promise<MonitorResult> {
 
   // 3. Quick SSL/connectivity checks (parallel)
   console.log("Checking SSL/connectivity...");
-  const sslResults = await Promise.all(
-    DOMAINS_TO_MONITOR.map((url) => checkSSL(url))
-  );
+  const sslResults = await Promise.all(DOMAINS_TO_MONITOR.map((url) => checkSSL(url)));
   result.sslChecks = sslResults;
 
   for (const sslResult of sslResults) {
@@ -638,7 +620,7 @@ async function monitorDomains(): Promise<MonitorResult> {
 
   // 4. SafeBrowse hijack detection (custom domains only)
   console.log("Checking for SafeBrowse hijacking...");
-  const customDomains = DOMAINS_TO_MONITOR.filter(d => !d.includes("vercel.app"));
+  const customDomains = DOMAINS_TO_MONITOR.filter((d) => !d.includes("vercel.app"));
   for (const url of customDomains) {
     const hijackResult = await checkSafeBrowseHijack(url);
     result.safeBrowseHijackChecks.push(hijackResult);
@@ -671,11 +653,7 @@ async function monitorDomains(): Promise<MonitorResult> {
   // 5. Send Telegram alerts if issues found
   if (result.alerts.length > 0) {
     const statusEmoji =
-      result.status === "critical"
-        ? "🚨"
-        : result.status === "warning"
-          ? "⚠️"
-          : "✅";
+      result.status === "critical" ? "🚨" : result.status === "warning" ? "⚠️" : "✅";
 
     const message =
       `${statusEmoji} <b>FoodShare Domain Monitor</b>\n\n` +
@@ -695,6 +673,24 @@ Deno.serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Check if function is disabled
+  if (FUNCTION_DISABLED) {
+    return new Response(
+      JSON.stringify({
+        status: "disabled",
+        message:
+          "Domain monitor is currently disabled. Set FUNCTION_DISABLED = false to re-enable.",
+        timestamp: new Date().toISOString(),
+      }),
+      {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+        },
+      }
+    );
   }
 
   try {
@@ -736,7 +732,7 @@ Deno.serve(async (req: Request) => {
           `<b>DNS Resolution:</b>\n<code>${dnsSummary}</code>\n` +
           `<b>SafeBrowse Hijack Check:</b>\n<code>${hijackSummary}</code>\n` +
           `<b>Multi-Region Checks:</b>\n<code>${regionSummary}</code>\n` +
-          `<b>SSL:</b> ${result.sslChecks.filter(s => s.status === "valid").length}/${result.sslChecks.length} valid\n` +
+          `<b>SSL:</b> ${result.sslChecks.filter((s) => s.status === "valid").length}/${result.sslChecks.length} valid\n` +
           `<b>Safe Browsing:</b> ${result.googleSafeBrowsing?.matches ? "⚠️ Flagged" : "Clean"}`
       );
     }
@@ -757,15 +753,12 @@ Deno.serve(async (req: Request) => {
         `Time: ${new Date().toISOString()}`
     );
 
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+      },
+    });
   }
 });

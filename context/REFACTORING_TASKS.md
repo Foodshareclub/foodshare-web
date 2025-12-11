@@ -73,24 +73,26 @@ Replace `any` types with proper TypeScript types across the codebase.
 
 Convert client pages to Server Components where possible for better performance.
 
-| Page                              | Current   | Action                                                            |
-| --------------------------------- | --------- | ----------------------------------------------------------------- |
-| `src/app/admin/listings/page.tsx` | Client    | Migrate to Server Component with data fetching                    |
-| `src/app/admin/users/page.tsx`    | Client    | Migrate to Server Component                                       |
-| `src/app/admin/reports/page.tsx`  | ✅ Server | Migrated to Server Component with `AdminReportsClient` + Suspense |
-| `src/app/admin/email/page.tsx`    | ✅ Server | Migrated to Server Component with `EmailCRMClient` + Suspense     |
-| `src/app/profile/edit/page.tsx`   | Client    | Migrate to Server Component with client form                      |
+| Page                                   | Current   | Action                                                                       |
+| -------------------------------------- | --------- | ---------------------------------------------------------------------------- |
+| `src/app/admin/listings/page.tsx`      | ✅ Server | Already Server Component with `AdminListingsClient` + Suspense               |
+| `src/app/admin/users/page.tsx`         | ✅ Server | Already Server Component with `AdminUsersClient` + Suspense                  |
+| `src/app/admin/reports/page.tsx`       | ✅ Server | Migrated to Server Component with `AdminReportsClient` + Suspense            |
+| `src/app/admin/email/page.tsx`         | ✅ Server | Migrated to Server Component with `EmailCRMClient` + Suspense                |
+| `src/app/admin/email/monitor/page.tsx` | ✅ Server | Migrated to Server Component with `EmailMonitorClient` + Suspense (Dec 2025) |
+| `src/app/admin/email/test/page.tsx`    | ✅ Server | Converted from Client to Server Component (Dec 2025)                         |
+| `src/app/profile/edit/page.tsx`        | Client    | Migrate to Server Component with client form                                 |
 
 ### 3. Remove Direct Supabase Client Usage in Components
 
 Components should use data layer functions or Server Actions, not direct Supabase calls.
 
-| Component                                                     | Issue                                                               | Action                                                                 |
-| ------------------------------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| ✅ `src/components/emailPreferences/EmailPreferencesForm.tsx` | ~~Direct `supabase` import~~                                        | Server Action created (`saveEmailPreferences`)                         |
-| `src/components/modals/PasswordRecoveryModal.tsx`             | ✅ Uses client Supabase correctly for auth state changes (realtime) | Valid use case - Done                                                  |
-| ✅ `src/components/modals/FeedbackModal.tsx`                  | ~~Direct `supabase` import~~                                        | Server Actions created (`submitFeedback`, `getCurrentUserInfo`)        |
-| ✅ `src/components/admin/LocalizationMonitoring.tsx`          | ~~Direct `supabase` import~~                                        | Created `lib/data/localization.ts`, removed `React.memo`/`useCallback` |
+| Component                                                     | Issue                                                               | Action                                                                                                                                         |
+| ------------------------------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅ `src/components/emailPreferences/EmailPreferencesForm.tsx` | ~~Direct `supabase` import~~                                        | Server Action created (`saveEmailPreferences`)                                                                                                 |
+| `src/components/modals/PasswordRecoveryModal.tsx`             | ✅ Uses client Supabase correctly for auth state changes (realtime) | Valid use case - Done                                                                                                                          |
+| ✅ `src/components/modals/FeedbackModal.tsx`                  | ~~Direct `supabase` import~~                                        | Server Actions created (`submitFeedback`, `getCurrentUserInfo`, `getAllFeedback`, `updateFeedbackStatus`, `deleteFeedback`, `getUserFeedback`) |
+| ✅ `src/components/admin/LocalizationMonitoring.tsx`          | ~~Direct `supabase` import~~                                        | Created `lib/data/localization.ts`, removed `React.memo`/`useCallback`                                                                         |
 
 ## Medium Priority
 
@@ -165,22 +167,43 @@ Add cached data functions for features currently fetching directly.
 | Localization stats | ✅ Created `src/lib/data/localization.ts`                 |
 | Feedback           | ✅ Created `src/app/actions/feedback.ts` (Server Actions) |
 | CRM customers      | ✅ Created `src/lib/data/crm.ts`                          |
+| Email monitoring   | ✅ Created `src/lib/data/admin-email.ts` (Dec 2025)       |
+| AI insights        | ✅ Created `src/lib/data/admin-insights.ts` (Dec 2025)    |
+| Feedback actions   | ✅ Created `src/app/actions/feedback.ts` (Dec 2025)       |
+| AI insight actions | ✅ Created `src/app/actions/admin-insights.ts` (Dec 2025) |
 
 ### 6. Consolidate API Layer
 
 The `src/api/` directory has overlap with `src/lib/data/`. Consolidate:
 
-| Current                 | Target                                | Status |
-| ----------------------- | ------------------------------------- | ------ |
-| `src/api/productAPI.ts` | Migrate to `src/lib/data/products.ts` | Pending |
-| `src/api/profileAPI.ts` | Migrate to `src/lib/data/profiles.ts` | Pending |
-| `src/api/forumAPI.ts`   | Migrate to `src/lib/data/forum.ts`    | Pending |
-| `src/api/adminAPI.ts`   | Migrate to server actions             | ✅ Done |
+| Current                                     | Target                                | Status                                                                                      |
+| ------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `src/api/productAPI.ts`                     | Migrate to `src/lib/data/products.ts` | Pending                                                                                     |
+| `src/api/profileAPI.ts`                     | Migrate to `src/lib/data/profiles.ts` | Pending                                                                                     |
+| `src/api/forumAPI.ts`                       | Migrate to `src/lib/data/forum.ts`    | Pending                                                                                     |
+| `src/api/adminAPI.ts`                       | ~~Migrate to server actions~~         | ✅ Deleted - Migrated to `src/app/actions/admin.ts` and `src/app/actions/admin-listings.ts` |
+| `src/api/admin/emailManagementOptimized.ts` | ~~Duplicate of emailManagement.ts~~   | ✅ Deleted                                                                                  |
+| `src/hooks/queries/useAdminQueries.ts`      | ~~TanStack Query hooks~~              | ✅ Deleted - Violates server-first architecture                                             |
+| `src/api/admin/grokInsights.ts`             | ~~Client-side with API keys~~         | ✅ Deleted - Migrated to `src/lib/data/admin-insights.ts` + server actions                  |
+| `src/api/feedbackAPI.ts`                    | Admin functions use client supabase   | ✅ Migrated admin functions to `src/app/actions/feedback.ts`                                |
+
+**Admin Auth Consolidation (December 2025):**
+
+- ✅ Created `src/lib/data/admin-auth.ts` - Single source of truth for admin auth
+  - `getAdminAuth()` - Returns isAdmin, isSuperAdmin, userId, roles
+  - `requireAdmin()` - Throws if not admin, returns userId
+  - `requireSuperAdmin()` - Throws if not superadmin
+  - `logAdminAction()` - Centralized audit logging
+- ✅ Updated all admin actions to use centralized auth utilities
+- ✅ Added cache tags: `ADMIN_USERS`, `ADMIN_REPORTS`, `ADMIN_CRM`
+- ✅ Added helpers: `getAdminTags()`, `invalidateAdminCaches()`
+- ✅ Updated `docs/05-reference/API_REFERENCE.md` - Replaced old adminAPI docs with server actions
 
 Keep `src/api/` only for:
 
 - Client-side API calls (realtime, storage)
 - Third-party integrations
+- `src/api/admin/emailManagement.ts` - Read-only email dashboard (acceptable with RLS)
 
 ### 7. Complete TODO Items
 

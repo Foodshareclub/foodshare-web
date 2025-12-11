@@ -1587,25 +1587,28 @@ import { RoomType } from "@/api/chatAPI";
 
 ---
 
-## Admin API (`adminAPI`)
+## Admin API (Server Actions)
 
-Located: `src/api/adminAPI.ts`
+> **Note:** Admin API has been migrated to server actions following the server-first architecture.
+> Use imports from `@/app/actions/admin.ts` and `@/app/actions/admin-listings.ts`.
 
 ### Check Admin Status
 
 ```typescript
-adminAPI.checkIsAdmin();
-```
+import { checkIsAdmin } from "@/app/actions/auth";
 
-**Returns:** `{ isAdmin: boolean, error: Error | null }`
-
-**Example:**
-
-```typescript
-const { isAdmin, error } = await adminAPI.checkIsAdmin();
+const isAdmin = await checkIsAdmin();
 if (isAdmin) {
   // Show admin features
 }
+```
+
+### Get Admin Auth (with roles)
+
+```typescript
+import { getAdminAuth } from "@/lib/data/admin-auth";
+
+const { isAdmin, isSuperAdmin, userId, roles } = await getAdminAuth();
 ```
 
 ---
@@ -1613,231 +1616,304 @@ if (isAdmin) {
 ### Get All Listings (Admin View)
 
 ```typescript
-adminAPI.getAllListings(filters?: AdminListingsFilter)
-```
+import { getAdminListings } from "@/lib/data/admin-listings";
 
-**Parameters:**
-
-```typescript
-{
-  status?: 'pending' | 'approved' | 'rejected' | 'flagged' | 'all',
-  searchTerm?: string,
-  category?: string | 'all',
-  sortBy?: 'created_at' | 'updated_at' | 'post_name' | 'status',
-  sortOrder?: 'asc' | 'desc',
-  limit?: number,
-  offset?: number
-}
-```
-
-**Returns:** All listings with admin fields (status, approval info, etc.)
-
-**Example:**
-
-```typescript
-const { data, error } = await adminAPI.getAllListings({
+const result = await getAdminListings({
   status: "pending",
   sortBy: "created_at",
   sortOrder: "desc",
+  page: 1,
+  limit: 20,
 });
+// result = { listings, total, page, totalPages }
 ```
 
 ---
 
-### Approve Listing
+## Admin Server Actions
+
+Located: `src/app/actions/admin-listings.ts` and `src/app/actions/admin.ts`
+
+Server actions for admin operations. All actions require admin authentication via `requireAdmin()` and log to the audit trail via `logAdminAction()`.
+
+> **Note:** The client-side `adminAPI` has been removed. Use these server actions directly in components.
+
+### Activate Listing
 
 ```typescript
-adminAPI.approvePost(payload: ApprovePostPayload)
+import { activateListing } from "@/app/actions/admin-listings";
+
+const result = await activateListing(42);
+// { success: true } or { success: false, error: "..." }
 ```
 
 **Parameters:**
 
+- `id` - Post ID to activate
+
+**Returns:** `{ success: boolean; error?: string }`
+
+---
+
+### Deactivate Listing
+
 ```typescript
-{
-  postId: number,
-  adminNotes?: string
+import { deactivateListing } from "@/app/actions/admin-listings";
+
+const result = await deactivateListing(42, "Violates community guidelines");
+```
+
+**Parameters:**
+
+- `id` - Post ID to deactivate
+- `reason` - Optional reason for deactivation (stored in admin_notes)
+
+**Returns:** `{ success: boolean; error?: string }`
+
+---
+
+### Delete Listing
+
+```typescript
+import { deleteListing } from "@/app/actions/admin-listings";
+
+const result = await deleteListing(42);
+```
+
+**Parameters:**
+
+- `id` - Post ID to delete permanently
+
+**Warning:** This is a destructive operation and cannot be undone.
+
+**Returns:** `{ success: boolean; error?: string }`
+
+---
+
+### Update Listing
+
+```typescript
+import { updateListing } from "@/app/actions/admin-listings";
+
+const result = await updateListing(42, {
+  post_name: "Updated Name",
+  post_description: "Updated description",
+  admin_notes: "Edited by admin",
+});
+```
+
+**Parameters:**
+
+- `id` - Post ID to update
+- `data` - `UpdateListingData` object with fields to update
+
+```typescript
+interface UpdateListingData {
+  post_name?: string;
+  post_description?: string;
+  post_type?: string;
+  pickup_time?: string;
+  available_hours?: string;
+  post_address?: string;
+  is_active?: boolean;
+  admin_notes?: string;
 }
 ```
 
-**Example:**
-
-```typescript
-const { error } = await adminAPI.approvePost({
-  postId: 42,
-  adminNotes: "Looks good, approved",
-});
-```
+**Returns:** `{ success: boolean; error?: string }`
 
 ---
 
-### Reject Listing
+### Bulk Activate Listings
 
 ```typescript
-adminAPI.rejectPost(payload: RejectPostPayload)
+import { bulkActivateListings } from "@/app/actions/admin-listings";
+
+const result = await bulkActivateListings([42, 43, 44]);
 ```
 
 **Parameters:**
 
-```typescript
-{
-  postId: number,
-  rejectionReason: string,
-  adminNotes?: string
-}
-```
+- `ids` - Array of post IDs to activate
 
-**Example:**
-
-```typescript
-const { error } = await adminAPI.rejectPost({
-  postId: 42,
-  rejectionReason: "Inappropriate content",
-  adminNotes: "Violates community guidelines",
-});
-```
+**Returns:** `{ success: boolean; error?: string }`
 
 ---
 
-### Flag Listing
+### Bulk Deactivate Listings
 
 ```typescript
-adminAPI.flagPost(payload: FlagPostPayload)
+import { bulkDeactivateListings } from "@/app/actions/admin-listings";
+
+const result = await bulkDeactivateListings([42, 43, 44], "Spam content detected");
 ```
 
 **Parameters:**
 
-```typescript
-{
-  postId: number,
-  flaggedReason: string,
-  adminNotes?: string
-}
-```
+- `ids` - Array of post IDs to deactivate
+- `reason` - Optional reason for deactivation (applied to all)
 
-**Example:**
-
-```typescript
-const { error } = await adminAPI.flagPost({
-  postId: 42,
-  flaggedReason: "Needs review - suspicious activity",
-});
-```
-
----
-
-### Bulk Approve Listings
-
-```typescript
-adminAPI.bulkApproveListings(postIds: number[])
-```
-
-**Parameters:**
-
-- `postIds` - Array of post IDs to approve
-
-**Returns:** Supabase response
-
-**Example:**
-
-```typescript
-const { error } = await adminAPI.bulkApproveListings([42, 43, 44]);
-```
-
----
-
-### Bulk Reject Listings
-
-```typescript
-adminAPI.bulkRejectListings(postIds: number[], rejectionReason: string)
-```
-
-**Parameters:**
-
-- `postIds` - Array of post IDs to reject
-- `rejectionReason` - Reason for rejection (applied to all)
-
-**Example:**
-
-```typescript
-const { error } = await adminAPI.bulkRejectListings([42, 43, 44], "Spam content detected");
-```
-
----
-
-### Bulk Flag Listings
-
-```typescript
-adminAPI.bulkFlagListings(postIds: number[], flaggedReason: string)
-```
-
-**Parameters:**
-
-- `postIds` - Array of post IDs to flag
-- `flaggedReason` - Reason for flagging (applied to all)
-
-**Example:**
-
-```typescript
-const { error } = await adminAPI.bulkFlagListings([42, 43, 44], "Requires manual review");
-```
+**Returns:** `{ success: boolean; error?: string }`
 
 ---
 
 ### Bulk Delete Listings
 
 ```typescript
-adminAPI.bulkDeleteListings(postIds: number[])
+import { bulkDeleteListings } from "@/app/actions/admin-listings";
+
+const result = await bulkDeleteListings([42, 43, 44]);
 ```
 
 **Parameters:**
 
-- `postIds` - Array of post IDs to delete permanently
+- `ids` - Array of post IDs to delete permanently
 
 **Warning:** This is a destructive operation and cannot be undone.
 
-**Example:**
-
-```typescript
-const { error } = await adminAPI.bulkDeleteListings([42, 43, 44]);
-```
+**Returns:** `{ success: boolean; error?: string }`
 
 ---
 
-### Get Audit Log
+### Update Admin Notes
 
 ```typescript
-adminAPI.getPostAuditLog(postId: number)
+import { updateAdminNotes } from "@/app/actions/admin-listings";
+
+const result = await updateAdminNotes(42, "Reviewed and approved");
 ```
 
 **Parameters:**
 
-- `postId` - Post ID to get audit history for
+- `id` - Post ID
+- `notes` - Admin notes to set
 
-**Returns:** Array of audit log entries
-
-**Example:**
-
-```typescript
-const { data, error } = await adminAPI.getPostAuditLog(42);
-// data = [{ action: 'approved', admin_id: '...', created_at: '...' }, ...]
-```
+**Returns:** `{ success: boolean; error?: string }`
 
 ---
 
-### Get Dashboard Stats
+### Approve Listing (Alternative)
 
 ```typescript
-adminAPI.getDashboardStats();
+import { approveListing } from "@/app/actions/admin";
+
+const result = await approveListing(42);
 ```
 
-**Returns:** `AdminDashboardStats` object with counts and metrics
+**Parameters:**
 
-**Example:**
+- `id` - Post ID to approve (sets `is_active: true`)
+
+**Returns:** `{ success: boolean; error?: string }`
+
+---
+
+### Reject Listing
 
 ```typescript
-const { data, error } = await adminAPI.getDashboardStats();
-// data = { totalListings: 150, pendingCount: 12, approvedCount: 120, ... }
+import { rejectListing } from "@/app/actions/admin";
+
+const result = await rejectListing(42, "Inappropriate content");
 ```
+
+**Parameters:**
+
+- `id` - Post ID to reject (deletes the listing)
+- `reason` - Reason for rejection (logged to audit)
+
+**Returns:** `{ success: boolean; error?: string }`
+
+---
+
+### Get Users
+
+```typescript
+import { getUsers } from "@/app/actions/admin";
+
+const { users, total } = await getUsers({
+  search: "john",
+  role: "admin",
+  is_active: true,
+  page: 1,
+  limit: 20,
+});
+```
+
+**Parameters:**
+
+```typescript
+interface UserFilters {
+  search?: string; // Search by name or email
+  role?: string; // Filter by role ('admin', 'user', etc.)
+  is_active?: boolean; // Filter by active status
+  page?: number; // Page number (default: 1)
+  limit?: number; // Items per page (default: 20)
+}
+```
+
+**Returns:** `{ users: AdminUser[]; total: number }`
+
+---
+
+### Update User Role
+
+```typescript
+import { updateUserRole } from "@/app/actions/admin";
+
+const result = await updateUserRole(userId, "admin");
+```
+
+**Parameters:**
+
+- `userId` - User's profile ID
+- `role` - Role name to assign
+
+**Returns:** `{ success: boolean; error?: string }`
+
+---
+
+### Update User Roles (Multiple)
+
+```typescript
+import { updateUserRoles } from "@/app/actions/admin-listings";
+
+const result = await updateUserRoles(userId, {
+  admin: true,
+  volunteer: true,
+  moderator: false,
+});
+```
+
+**Parameters:**
+
+- `userId` - User's profile ID
+- `roles` - Object mapping role names to enabled/disabled
+
+**Returns:** `{ success: boolean; error?: string }`
+
+---
+
+### Ban User
+
+```typescript
+import { banUser } from "@/app/actions/admin";
+
+const result = await banUser(userId, "Repeated violations of community guidelines");
+```
+
+**Parameters:**
+
+- `userId` - User's profile ID to ban
+- `reason` - Reason for ban (stored in profile)
+
+**Behavior:**
+
+- Sets user's `is_active` to false
+- Stores ban reason in profile
+- Deactivates all user's listings
+- Logs action to audit trail
+
+**Returns:** `{ success: boolean; error?: string }`
 
 ---
 
@@ -3319,6 +3395,168 @@ interface AIAnalysis {
 **AI Analysis Endpoint:** `POST /api/moderation/analyze`
 
 The AI analysis is triggered asynchronously and does not block report creation. If AI analysis fails, the report is still created with `pending` status.
+
+---
+
+## Admin AI Insights Data Layer
+
+Located: `src/lib/data/admin-insights.ts`
+
+Server-side data fetching functions for AI-powered admin insights using Grok models. Provides platform metrics, churn analysis, and AI-generated business insights.
+
+> **Note:** This module contains API keys and must only be used server-side. Use the server actions in `src/app/actions/admin-insights.ts` for client components.
+
+### Types
+
+```typescript
+interface PlatformMetrics {
+  totalUsers: number;
+  activeUsers7d: number;
+  activeUsers30d: number;
+  totalListings: number;
+  activeListings: number;
+  newListings7d: number;
+  newListings30d: number;
+  totalMessages: number;
+  listingsByCategory: Record<string, number>;
+  averageViews: number;
+}
+
+interface ChurnData {
+  totalUsers: number;
+  atRiskUsers: number;
+  churnRate: number;
+}
+
+interface EmailCampaignData {
+  totalEmails: number;
+  successRate: number;
+  bestSendTime: string;
+  providerStats: Record<string, number>;
+}
+```
+
+---
+
+### Get Platform Metrics
+
+```typescript
+import { getPlatformMetrics } from "@/lib/data/admin-insights";
+
+const metrics = await getPlatformMetrics();
+```
+
+**Returns:** `PlatformMetrics`
+
+Aggregates user activity, listing statistics, and engagement metrics from the database.
+
+---
+
+### Get Churn Data
+
+```typescript
+import { getChurnData } from "@/lib/data/admin-insights";
+
+const churn = await getChurnData();
+// { totalUsers: 1000, atRiskUsers: 150, churnRate: 15.0 }
+```
+
+**Returns:** `ChurnData`
+
+Identifies users at risk of churning (inactive for 30+ days).
+
+---
+
+### Get Email Campaign Data
+
+```typescript
+import { getEmailCampaignData } from "@/lib/data/admin-insights";
+
+const emailData = await getEmailCampaignData();
+```
+
+**Returns:** `EmailCampaignData | null`
+
+Analyzes email logs for success rates, optimal send times, and provider performance.
+
+---
+
+### Get Grok Insights
+
+```typescript
+import { getGrokInsights } from "@/lib/data/admin-insights";
+
+const insight = await getGrokInsights("How can I reduce user churn?");
+
+// With metrics context (default)
+const insight = await getGrokInsights("Analyze listing trends", true);
+
+// Without metrics (faster)
+const insight = await getGrokInsights("General question", false);
+```
+
+**Parameters:**
+
+- `userQuery` - The question to ask the AI
+- `includeMetrics` - Whether to include platform metrics in context (default: `true`)
+
+**Returns:** `string` - AI-generated insight
+
+**Caching:** Results are cached for 1 hour based on query + includeMetrics.
+
+**Model Selection:** Automatically selects model based on query complexity:
+
+- Simple queries: `grok-3-mini`
+- Complex queries (predict, analyze, optimize, etc.): `grok-4-fast-reasoning`
+
+---
+
+### Get Suggested Questions
+
+```typescript
+import { getSuggestedQuestions } from "@/lib/data/admin-insights";
+
+const questions = await getSuggestedQuestions();
+// ["Why is my churn rate so high?", "Which users are most likely to churn?", ...]
+```
+
+**Returns:** `string[]` - Up to 6 contextual question suggestions
+
+Dynamically generates suggestions based on current platform metrics.
+
+---
+
+### Clear Insight Cache
+
+```typescript
+import { clearInsightCache } from "@/lib/data/admin-insights";
+
+clearInsightCache();
+```
+
+Clears the in-memory insight cache. Useful after significant data changes.
+
+---
+
+### Server Actions
+
+Located: `src/app/actions/admin-insights.ts`
+
+Use these server actions from client components:
+
+```typescript
+"use client";
+import { getGrokInsight, getInsightSuggestions } from "@/app/actions/admin-insights";
+
+// Get AI insight
+const result = await getGrokInsight("How can I improve engagement?");
+if (result.success) {
+  console.log(result.insight);
+}
+
+// Get suggested questions
+const suggestions = await getInsightSuggestions();
+```
 
 ---
 

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * ManualEmailSender - Admin interface for sending manual emails
@@ -6,7 +6,7 @@
  * Optimized with custom hooks and constants
  */
 
-import React, { useState, useCallback } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { type ManualEmailRequest } from "@/api/admin/emailManagement";
 import { useManualEmailSender } from "@/hooks/useEmailManagement";
@@ -36,49 +36,44 @@ export function ManualEmailSender() {
   // Use optimized hook for sending emails
   const { sendEmail, sending, result, clearResult } = useManualEmailSender();
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-      if (!formData.to || !formData.subject || !formData.message) {
-        return;
-      }
+    if (!formData.to || !formData.subject || !formData.message) {
+      return;
+    }
 
-      // Convert plain text to HTML if needed
-      const html = formData.useHtml
-        ? formData.message
-        : `<p>${formData.message.replace(/\n/g, "<br>")}</p>`;
+    // Convert plain text to HTML if needed
+    const html = formData.useHtml
+      ? formData.message
+      : `<p>${formData.message.replace(/\n/g, "<br>")}</p>`;
 
-      const request: ManualEmailRequest = {
-        to: formData.to,
-        subject: formData.subject,
-        html,
-        emailType: formData.emailType,
-        provider: formData.provider,
-      };
+    const request: ManualEmailRequest = {
+      to: formData.to,
+      subject: formData.subject,
+      html,
+      emailType: formData.emailType,
+      provider: formData.provider,
+    };
 
-      const response = await sendEmail(request);
+    const response = await sendEmail(request);
 
-      // Reset form on success
-      if (response.success) {
-        setFormData({
-          to: "",
-          subject: "",
-          message: "",
-          emailType: "chat",
-          provider: undefined,
-          useHtml: false,
-        });
-      }
-    },
-    [formData, sendEmail]
-  );
+    // Reset form on success
+    if (response.success) {
+      setFormData({
+        to: "",
+        subject: "",
+        message: "",
+        emailType: "chat",
+        provider: undefined,
+        useHtml: false,
+      });
+    }
+  };
 
   return (
     <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-      <h2 className="text-xl font-bold text-gray-800 mb-6">
-        Send Manual Email
-      </h2>
+      <h2 className="text-xl font-bold text-gray-800 mb-6">Send Manual Email</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Recipient Email */}
@@ -139,11 +134,9 @@ export function ManualEmailSender() {
             required
           />
           <p className="text-xs text-gray-500 mt-1">
-            {formData.useHtml ? (
-              "Enter HTML content for the email body"
-            ) : (
-              "Enter plain text (will be converted to HTML automatically)"
-            )}
+            {formData.useHtml
+              ? "Enter HTML content for the email body"
+              : "Enter plain text (will be converted to HTML automatically)"}
           </p>
         </div>
 
@@ -182,7 +175,7 @@ export function ManualEmailSender() {
             }
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
           >
-            <option value="">{t('auto_select_smart_routing')}</option>
+            <option value="">{t("auto_select_smart_routing")}</option>
             <option value="brevo">
               {PROVIDER_NAMES.brevo} (Primary - {PROVIDER_LIMITS.brevo}/day)
             </option>
@@ -194,7 +187,7 @@ export function ManualEmailSender() {
             </option>
           </select>
           <p className="text-xs text-gray-500 mt-1">
-            Leave as "Auto-select" to use smart routing based on quota availability
+            Leave as &quot;Auto-select&quot; to use smart routing based on quota availability
           </p>
         </div>
 
@@ -242,25 +235,13 @@ export function ManualEmailSender() {
 
       {/* Info Box */}
       <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-        <h3 className="text-sm font-medium text-blue-800 mb-2">
-          About Smart Routing
-        </h3>
+        <h3 className="text-sm font-medium text-blue-800 mb-2">About Smart Routing</h3>
         <ul className="text-xs text-blue-700 space-y-1">
-          <li>
-            • Auto-select uses smart routing to choose the best available provider
-          </li>
-          <li>
-            • Brevo is prioritized for app notifications (300/day limit)
-          </li>
-          <li>
-            • Resend is prioritized for authentication emails (100/day limit)
-          </li>
-          <li>
-            • AWS SES is used as failover when others are exhausted (100/day limit)
-          </li>
-          <li>
-            • Emails are queued and processed by the Edge Function
-          </li>
+          <li>• Auto-select uses smart routing to choose the best available provider</li>
+          <li>• Brevo is prioritized for app notifications (300/day limit)</li>
+          <li>• Resend is prioritized for authentication emails (100/day limit)</li>
+          <li>• AWS SES is used as failover when others are exhausted (100/day limit)</li>
+          <li>• Emails are queued and processed by the Edge Function</li>
         </ul>
       </div>
     </div>
