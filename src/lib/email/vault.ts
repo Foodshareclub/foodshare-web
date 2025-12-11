@@ -42,6 +42,13 @@ const SECRET_NAMES = {
   AWS_SECRET_ACCESS_KEY: "AWS_SECRET_ACCESS_KEY",
 } as const;
 
+/** Mask a secret for safe logging (show first 6 and last 4 chars) */
+function maskSecret(secret: string | null): string {
+  if (!secret) return "null";
+  if (secret.length <= 12) return "***";
+  return `${secret.slice(0, 6)}...${secret.slice(-4)} (${secret.length} chars)`;
+}
+
 /**
  * Create a service role client for vault access
  * Vault secrets should only be accessed server-side with elevated privileges
@@ -50,10 +57,17 @@ function createServiceRoleClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!supabaseUrl || !serviceRoleKey) {
-    console.error("[Vault] Missing SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL");
+  if (!supabaseUrl) {
+    console.error("[Vault] ❌ Missing NEXT_PUBLIC_SUPABASE_URL");
     return null;
   }
+
+  if (!serviceRoleKey) {
+    console.error("[Vault] ❌ Missing SUPABASE_SERVICE_ROLE_KEY");
+    return null;
+  }
+
+  console.info("[Vault] Creating service role client for:", supabaseUrl);
 
   return createSupabaseClient(supabaseUrl, serviceRoleKey, {
     auth: {
@@ -67,9 +81,12 @@ function createServiceRoleClient() {
  * Get all email secrets from Vault (with caching)
  */
 export async function getEmailSecrets(): Promise<EmailSecrets> {
+  const startTime = Date.now();
+
   // Check cache first
   if (secretsCache && Date.now() < cacheExpiry) {
-    console.log("[Vault] Returning cached secrets");
+    const ttlRemaining = Math.round((cacheExpiry - Date.now()) / 1000);
+    console.info(`[Vault] ✅ Cache hit (TTL: ${ttlRemaining}s remaining)`);
     return secretsCache;
   }
 
@@ -87,39 +104,63 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
     envSecrets.resendApiKey || envSecrets.brevoApiKey || envSecrets.awsAccessKeyId;
 
   if (hasEnvSecrets) {
-    console.log("[Vault] Using environment secrets");
+    console.info("[Vault] ✅ Using environment variables:", {
+      resend: maskSecret(envSecrets.resendApiKey),
+      brevo: maskSecret(envSecrets.brevoApiKey),
+      aws: maskSecret(envSecrets.awsAccessKeyId),
+    });
     secretsCache = envSecrets;
     cacheExpiry = Date.now() + CACHE_TTL;
     return envSecrets;
   }
 
   // Fetch from Supabase Vault using service role client
+  console.info("[Vault] 🔐 No env secrets found, fetching from Supabase Vault...");
+
   try {
     const supabase = createServiceRoleClient();
 
     if (!supabase) {
-      console.error("[Vault] Could not create service role client");
+      console.error("[Vault] ❌ Failed to create service role client - returning empty secrets");
       return envSecrets;
     }
-
-    console.log("[Vault] Fetching secrets from vault...");
 
     // Batch fetch all secrets
     const { data, error } = await supabase.rpc("get_secrets", {
       secret_names: Object.values(SECRET_NAMES),
     });
 
-    if (error) {
-      console.error("[Vault] RPC error:", error.message, error.code, error.details);
-      return envSecrets; // Return env fallback
-    }
+    const duration = Date.now() - startTime;
 
-    if (!data || !Array.isArray(data)) {
-      console.error("[Vault] No data returned from get_secrets, data:", data);
+    if (error) {
+      console.error("[Vault] ❌ RPC get_secrets failed:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        duration: `${duration}ms`,
+      });
       return envSecrets;
     }
 
-    console.log("[Vault] Retrieved", data.length, "secrets from vault");
+    if (!data || !Array.isArray(data)) {
+      console.error("[Vault] ❌ Invalid response from get_secrets:", {
+        dataType: typeof data,
+        isArray: Array.isArray(data),
+        data: data,
+        duration: `${duration}ms`,
+      });
+      return envSecrets;
+    }
+
+    // Log which secrets were found
+    const foundSecrets = (data as VaultSecret[]).map((s) => s.name);
+    const missingSecrets = Object.values(SECRET_NAMES).filter((n) => !foundSecrets.includes(n));
+
+    console.info(`[Vault] ✅ Retrieved ${data.length} secrets in ${duration}ms:`, {
+      found: foundSecrets,
+      missing: missingSecrets.length > 0 ? missingSecrets : "none",
+    });
 
     const secretsMap = new Map((data as VaultSecret[]).map((s) => [s.name, s.value]));
 
@@ -131,19 +172,26 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
       awsRegion: process.env.AWS_REGION ?? "us-east-1",
     };
 
-    console.log("[Vault] Secrets loaded:", {
-      hasResend: !!secrets.resendApiKey,
-      hasBrevo: !!secrets.brevoApiKey,
-      hasAws: !!secrets.awsAccessKeyId,
+    // Log masked values for debugging
+    console.info("[Vault] 🔑 Secret values:", {
+      resend: maskSecret(secrets.resendApiKey),
+      brevo: maskSecret(secrets.brevoApiKey),
+      awsKey: maskSecret(secrets.awsAccessKeyId),
     });
 
     // Cache the secrets
     secretsCache = secrets;
     cacheExpiry = Date.now() + CACHE_TTL;
+    console.info(`[Vault] 💾 Cached secrets for ${CACHE_TTL / 1000}s`);
 
     return secrets;
   } catch (err) {
-    console.error("[Vault] Error fetching email secrets:", err);
+    const duration = Date.now() - startTime;
+    console.error("[Vault] ❌ Exception fetching secrets:", {
+      error: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+      duration: `${duration}ms`,
+    });
     return envSecrets;
   }
 }

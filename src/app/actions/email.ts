@@ -206,21 +206,25 @@ export async function sendTestEmailDirect(
     }
 
     // Get Resend API key from Vault
+    console.info("[sendTestEmailDirect] 🔐 Fetching Resend API key from vault...");
     const { getResendApiKey } = await import("@/lib/email/vault");
     const apiKey = await getResendApiKey();
 
     const fromEmail = process.env.EMAIL_FROM || "contact@foodshare.club";
     const fromName = process.env.EMAIL_FROM_NAME || "FoodShare";
 
-    console.log("[sendTestEmailDirect] Config:", {
+    console.info("[sendTestEmailDirect] 📧 Email config:", {
       hasApiKey: !!apiKey,
-      apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + "..." : "none",
+      apiKeyPreview: apiKey ? `${apiKey.slice(0, 8)}...${apiKey.slice(-4)}` : "NOT_FOUND",
+      apiKeyLength: apiKey?.length ?? 0,
       fromEmail,
       fromName,
       to,
+      subjectLength: subject.length,
     });
 
     if (!apiKey) {
+      console.error("[sendTestEmailDirect] ❌ No API key available from vault or environment");
       return serverActionError(
         "RESEND_API_KEY not configured in Vault or environment",
         "INTERNAL_ERROR"
@@ -228,6 +232,7 @@ export async function sendTestEmailDirect(
     }
 
     // Import Resend
+    console.info("[sendTestEmailDirect] 📤 Sending email via Resend...");
     const { Resend } = await import("resend");
 
     const resend = new Resend(apiKey);
@@ -239,7 +244,12 @@ export async function sendTestEmailDirect(
       html,
     });
 
-    console.log("[sendTestEmailDirect] Response:", response);
+    console.info("[sendTestEmailDirect] 📬 Resend response:", {
+      success: !response.error,
+      messageId: response.data?.id,
+      error: response.error?.message,
+      errorName: response.error?.name,
+    });
 
     if (response.error) {
       return {
