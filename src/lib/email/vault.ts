@@ -102,39 +102,50 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
     return secretsCache;
   }
 
-  // Check if all secrets are in environment (local dev shortcut)
-  const envSecrets: EmailSecrets = {
-    resendApiKey: process.env.RESEND_API_KEY ?? null,
-    brevoApiKey: process.env.BREVO_API_KEY ?? null,
-    awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID ?? null,
-    awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? null,
+  // Default empty secrets (fallback)
+  const emptySecrets: EmailSecrets = {
+    resendApiKey: null,
+    brevoApiKey: null,
+    awsAccessKeyId: null,
+    awsSecretAccessKey: null,
     awsRegion: process.env.AWS_REGION ?? "us-east-1",
   };
 
-  // If any provider is configured via env, use env-only mode
-  const hasEnvSecrets =
-    envSecrets.resendApiKey || envSecrets.brevoApiKey || envSecrets.awsAccessKeyId;
+  // In development, check env vars first (local dev shortcut)
+  // In production, always use vault
+  if (process.env.NODE_ENV === "development") {
+    const envSecrets: EmailSecrets = {
+      resendApiKey: process.env.RESEND_API_KEY ?? null,
+      brevoApiKey: process.env.BREVO_API_KEY ?? null,
+      awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID ?? null,
+      awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? null,
+      awsRegion: process.env.AWS_REGION ?? "us-east-1",
+    };
 
-  if (hasEnvSecrets) {
-    console.info("[Vault] ✅ Using environment variables:", {
-      resend: maskSecret(envSecrets.resendApiKey),
-      brevo: maskSecret(envSecrets.brevoApiKey),
-      aws: maskSecret(envSecrets.awsAccessKeyId),
-    });
-    secretsCache = envSecrets;
-    cacheExpiry = Date.now() + CACHE_TTL;
-    return envSecrets;
+    const hasEnvSecrets =
+      envSecrets.resendApiKey || envSecrets.brevoApiKey || envSecrets.awsAccessKeyId;
+
+    if (hasEnvSecrets) {
+      console.info("[Vault] ✅ DEV MODE - Using environment variables:", {
+        resend: maskSecret(envSecrets.resendApiKey),
+        brevo: maskSecret(envSecrets.brevoApiKey),
+        aws: maskSecret(envSecrets.awsAccessKeyId),
+      });
+      secretsCache = envSecrets;
+      cacheExpiry = Date.now() + CACHE_TTL;
+      return envSecrets;
+    }
   }
 
   // Fetch from Supabase Vault using service role client
-  console.info("[Vault] 🔐 No env secrets found, fetching from Supabase Vault...");
+  console.info("[Vault] 🔐 Fetching secrets from Supabase Vault...");
 
   try {
     const supabase = createServiceRoleClient();
 
     if (!supabase) {
       console.error("[Vault] ❌ Failed to create service role client - returning empty secrets");
-      return envSecrets;
+      return emptySecrets;
     }
 
     // Batch fetch all secrets
@@ -152,7 +163,7 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
         hint: error.hint,
         duration: `${duration}ms`,
       });
-      return envSecrets;
+      return emptySecrets;
     }
 
     if (!data || !Array.isArray(data)) {
@@ -162,7 +173,7 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
         data: data,
         duration: `${duration}ms`,
       });
-      return envSecrets;
+      return emptySecrets;
     }
 
     // Log which secrets were found
@@ -204,7 +215,7 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
       stack: err instanceof Error ? err.stack : undefined,
       duration: `${duration}ms`,
     });
-    return envSecrets;
+    return emptySecrets;
   }
 }
 
