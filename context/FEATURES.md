@@ -156,11 +156,11 @@ const supabase = createClient();
 supabase
   .channel(`room:${roomId}`)
   .on(
-    'postgres_changes',
+    "postgres_changes",
     {
-      event: 'INSERT',
-      schema: 'public',
-      table: 'room_participants',
+      event: "INSERT",
+      schema: "public",
+      table: "room_participants",
       filter: `room_id=eq.${roomId}`,
     },
     (payload) => {
@@ -318,8 +318,8 @@ supabase
 
 **Technical Implementation:**
 
-- API: `adminAPI.ts` with admin-specific endpoints
-- State: Redux `adminReducer`
+- Server Actions: `src/app/actions/admin.ts` and `src/app/actions/admin-listings.ts`
+- Data Layer: `src/lib/data/admin-listings.ts` for server-side data fetching
 - Pages: `/admin` with protected routes
 - RLS: Admin-only database policies
 
@@ -412,7 +412,7 @@ Three-tier state management:
 ```typescript
 // Server state with automatic caching
 const { data, isLoading } = useQuery({
-  queryKey: ['products', filters],
+  queryKey: ["products", filters],
   queryFn: () => productAPI.getProducts(filters),
 });
 ```
@@ -436,9 +436,9 @@ const { data, isLoading } = useQuery({
 
 ```typescript
 // Lightweight feature-specific state
-useChatStore    // Real-time chat
-useForumStore   // Forum functionality
-useUIStore      // UI state management
+useChatStore; // Real-time chat
+useForumStore; // Forum functionality
+useUIStore; // UI state management
 ```
 
 ### API Layer
@@ -455,7 +455,11 @@ useUIStore      // UI state management
 - `productAPI.ts` - Food listings CRUD
 - `chatAPI.ts` - Messaging operations
 - `profileAPI.ts` - User profile management
-- `adminAPI.ts` - Admin operations
+
+**Server Actions (Admin):**
+
+- `src/app/actions/admin.ts` - Admin user management
+- `src/app/actions/admin-listings.ts` - Admin listing operations
 
 ### Performance Optimizations
 
@@ -600,16 +604,16 @@ useUIStore      // UI state management
 
 ### vs. Other Food Sharing Platforms
 
-| Feature                | FoodShare        | OLIO    | Too Good To Go | Food Rescue     |
-| ---------------------- | ---------------- | ------- | -------------- | --------------- |
-| **Free to use**        | Yes              | Yes     | Freemium       | Yes             |
-| **Real-time chat**     | Yes              | Yes     | No             | Limited         |
-| **Interactive map**    | Yes              | Yes     | Yes            | Limited         |
-| **Multi-language**     | 18 languages     | Many    | Many           | English only    |
-| **Open-source**        | Yes              | No      | No             | Partial         |
-| **Community fridges**  | Yes              | Yes     | No             | Yes             |
-| **Volunteer listings** | Yes              | Yes     | No             | Yes             |
-| **Business listings**  | No               | Yes     | Yes            | No              |
+| Feature                | FoodShare    | OLIO | Too Good To Go | Food Rescue  |
+| ---------------------- | ------------ | ---- | -------------- | ------------ |
+| **Free to use**        | Yes          | Yes  | Freemium       | Yes          |
+| **Real-time chat**     | Yes          | Yes  | No             | Limited      |
+| **Interactive map**    | Yes          | Yes  | Yes            | Limited      |
+| **Multi-language**     | 18 languages | Many | Many           | English only |
+| **Open-source**        | Yes          | No   | No             | Partial      |
+| **Community fridges**  | Yes          | Yes  | No             | Yes          |
+| **Volunteer listings** | Yes          | Yes  | No             | Yes          |
+| **Business listings**  | No           | Yes  | Yes            | No           |
 
 ### Unique Advantages
 

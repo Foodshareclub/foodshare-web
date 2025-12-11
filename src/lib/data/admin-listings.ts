@@ -281,30 +281,5 @@ export const getListingStats = unstable_cache(
   }
 );
 
-/**
- * Check if user has admin role (using user_roles table)
- */
-export async function checkAdminRole(userId: string): Promise<{
-  isAdmin: boolean;
-  roles: Record<string, boolean>;
-}> {
-  const supabase = await createClient();
-
-  const { data: userRoles, error } = await supabase
-    .from("user_roles")
-    .select("roles!inner(name)")
-    .eq("profile_id", userId);
-
-  if (error || !userRoles) {
-    return { isAdmin: false, roles: {} };
-  }
-
-  const roleNames = userRoles.map((r) => (r.roles as unknown as { name: string }).name);
-  const roles: Record<string, boolean> = {};
-  roleNames.forEach((name) => {
-    roles[name] = true;
-  });
-  const isAdmin = roles.admin === true || roles.superadmin === true;
-
-  return { isAdmin, roles };
-}
+// Admin auth utilities moved to @/lib/data/admin-auth
+export { getAdminAuth, requireAdmin } from "./admin-auth";

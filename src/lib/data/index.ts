@@ -14,7 +14,10 @@ export {
   getProfileTags,
   getForumTags,
   getChallengeTags,
-} from './cache-keys';
+  getNotificationTags,
+  getAdminTags,
+  invalidateAdminCaches,
+} from "./cache-keys";
 
 // Product data functions
 export {
@@ -28,7 +31,7 @@ export {
   getPopularProductIds,
   type InitialProductStateType,
   type LocationType,
-} from './products';
+} from "./products";
 
 // Profile data functions
 export {
@@ -41,7 +44,7 @@ export {
   type PublicProfile,
   type ProfileStats,
   type ProfileReview,
-} from './profiles';
+} from "./profiles";
 
 // Forum data functions
 export {
@@ -53,10 +56,10 @@ export {
   type ForumStats,
   type LeaderboardUser,
   type ForumPageData,
-} from './forum';
+} from "./forum";
 
 // Forum types from API layer
-export type { ForumPost, ForumCategory, ForumTag } from '@/api/forumAPI';
+export type { ForumPost, ForumCategory, ForumTag } from "@/api/forumAPI";
 
 // Admin data functions
 export {
@@ -66,7 +69,34 @@ export {
   type DashboardStats,
   type AuditLog,
   type PendingListing,
-} from './admin';
+} from "./admin";
+
+// Admin reports
+export { getReportsData, getCachedReportsData, type ReportsData } from "./admin-reports";
+
+// Admin listings
+export {
+  getAdminListings,
+  getCachedAdminListings,
+  getAdminListingById,
+  getListingStats,
+  type AdminListing,
+  type AdminListingsFilter,
+  type AdminListingsResult,
+  type ListingStats,
+} from "./admin-listings";
+
+// Admin users
+export {
+  getAdminUsers,
+  getCachedAdminUsers,
+  getAdminUserById,
+  getUserStats as getAdminUserStats,
+  type AdminUserProfile,
+  type AdminUsersFilter,
+  type AdminUsersResult,
+  type UserStats as AdminUserStats,
+} from "./admin-users";
 
 // Map data functions
 export {
@@ -74,7 +104,7 @@ export {
   getAllMapLocations,
   getNearbyLocations,
   getLocationCountsByType,
-} from './maps';
+} from "./maps";
 
 // Challenge data functions
 export {
@@ -84,7 +114,7 @@ export {
   getUserChallenges,
   getPopularChallenges,
   type Challenge,
-} from './challenges';
+} from "./challenges";
 
 // Auth data functions
 export {
@@ -92,9 +122,15 @@ export {
   checkIsAdmin,
   getAuthSession,
   getCachedAuthSession,
+  getAdminAuth,
+  requireAdmin,
+  requireSuperAdmin,
   type AuthUser,
   type AuthSession,
-} from './auth';
+} from "./auth";
+
+// Admin auth utilities (centralized)
+export { logAdminAction, type AdminAuthResult } from "./admin-auth";
 
 // Chat data functions
 export {
@@ -108,4 +144,4 @@ export {
   type ChatRoom,
   type ChatMessage,
   type UnifiedChatRoom,
-} from './chat';
+} from "./chat";

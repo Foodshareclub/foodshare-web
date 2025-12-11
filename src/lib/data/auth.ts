@@ -107,9 +107,13 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   }
 }
 
+// Re-export admin auth utilities from centralized location
+export { getAdminAuth, requireAdmin, requireSuperAdmin } from "./admin-auth";
+
 /**
  * Check if current user is admin
  * Uses user_roles table as source of truth
+ * @deprecated Use getAdminAuth() from @/lib/data/admin-auth instead
  */
 export async function checkIsAdmin(userId: string): Promise<{
   isAdmin: boolean;

@@ -22,8 +22,8 @@ export * from "./productAPI";
 // Chat
 export * from "./chatAPI";
 
-// Admin
-export * from "./adminAPI";
+// Admin - Use server actions from @/app/actions/admin.ts and @/app/actions/admin-listings.ts
+// Client-side admin API removed in favor of server-first architecture
 
 // Theme
 export * from "./themeAPI";

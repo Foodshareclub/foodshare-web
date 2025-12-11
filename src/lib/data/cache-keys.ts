@@ -80,6 +80,9 @@ export const CACHE_TAGS = {
   ADMIN: "admin",
   ADMIN_STATS: "admin-stats",
   ADMIN_LISTINGS: "admin-listings",
+  ADMIN_USERS: "admin-users",
+  ADMIN_REPORTS: "admin-reports",
+  ADMIN_CRM: "admin-crm",
   AUDIT_LOGS: "audit-logs",
 
   // Auth
@@ -196,4 +199,23 @@ export function getNotificationTags(userId?: string): string[] {
     tags.push(CACHE_TAGS.USER_NOTIFICATIONS(userId));
   }
   return tags;
+}
+
+export function getAdminTags(): string[] {
+  return [
+    CACHE_TAGS.ADMIN,
+    CACHE_TAGS.ADMIN_STATS,
+    CACHE_TAGS.ADMIN_LISTINGS,
+    CACHE_TAGS.ADMIN_USERS,
+    CACHE_TAGS.ADMIN_REPORTS,
+    CACHE_TAGS.ADMIN_CRM,
+    CACHE_TAGS.AUDIT_LOGS,
+  ];
+}
+
+/**
+ * Invalidate all admin-related caches
+ */
+export function invalidateAdminCaches(): void {
+  getAdminTags().forEach((tag) => invalidateTag(tag));
 }

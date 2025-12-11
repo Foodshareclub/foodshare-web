@@ -559,256 +559,73 @@ import { RoomType } from "@/api/chatAPI";
 
 ---
 
-## Admin API (`adminAPI`)
+## Admin Server Actions
 
-Located: `src/api/adminAPI.ts`
+Admin functionality uses server actions following the server-first architecture pattern. Client-side `adminAPI` has been removed in favor of these server actions.
 
-### Check Admin Status
+### Location
+
+- **Mutations:** `src/app/actions/admin.ts` and `src/app/actions/admin-listings.ts`
+- **Data fetching:** `src/lib/data/admin-listings.ts`
+
+### Import
 
 ```typescript
-adminAPI.checkIsAdmin();
+// Server Actions (mutations)
+import { approveListing, rejectListing, banUser, getUsers } from "@/app/actions/admin";
+import {
+  activateListing,
+  deactivateListing,
+  deleteListing,
+  bulkActivateListings,
+  bulkDeactivateListings,
+  bulkDeleteListings,
+  updateListing,
+  updateAdminNotes,
+} from "@/app/actions/admin-listings";
+
+// Data fetching (Server Components)
+import {
+  getAdminListings,
+  getCachedAdminListings,
+  getListingStats,
+} from "@/lib/data/admin-listings";
 ```
 
-**Returns:** `{ isAdmin: boolean, error: Error | null }`
+### Key Actions
 
-**Example:**
+| Action                                 | Description                  |
+| -------------------------------------- | ---------------------------- |
+| `approveListing(id)`                   | Approve a listing            |
+| `rejectListing(id, reason)`            | Reject and delete a listing  |
+| `activateListing(id)`                  | Activate a listing           |
+| `deactivateListing(id, reason?)`       | Deactivate a listing         |
+| `deleteListing(id)`                    | Permanently delete a listing |
+| `bulkActivateListings(ids)`            | Bulk activate listings       |
+| `bulkDeactivateListings(ids, reason?)` | Bulk deactivate listings     |
+| `bulkDeleteListings(ids)`              | Bulk delete listings         |
+| `updateListing(id, data)`              | Update listing fields        |
+| `updateAdminNotes(id, notes)`          | Update admin notes           |
+| `getUsers(filters?)`                   | Get users with filters       |
+| `banUser(userId, reason)`              | Ban a user                   |
+| `updateUserRole(userId, role)`         | Update user role             |
 
-```typescript
-const { isAdmin, error } = await adminAPI.checkIsAdmin();
-if (isAdmin) {
-  // Show admin features
-}
-```
-
----
-
-### Get All Listings (Admin View)
-
-```typescript
-adminAPI.getAllListings(filters?: AdminListingsFilter)
-```
-
-**Parameters:**
-
-```typescript
-{
-  status?: 'pending' | 'approved' | 'rejected' | 'flagged' | 'all',
-  searchTerm?: string,
-  category?: string | 'all',
-  sortBy?: 'created_at' | 'updated_at' | 'post_name' | 'status',
-  sortOrder?: 'asc' | 'desc',
-  limit?: number,
-  offset?: number
-}
-```
-
-**Returns:** All listings with admin fields (status, approval info, etc.)
-
-**Example:**
+### Example Usage
 
 ```typescript
-const { data, error } = await adminAPI.getAllListings({
-  status: "pending",
-  sortBy: "created_at",
-  sortOrder: "desc",
-});
-```
-
----
-
-### Approve Listing
-
-```typescript
-adminAPI.approvePost(payload: ApprovePostPayload)
-```
-
-**Parameters:**
-
-```typescript
-{
-  postId: number,
-  adminNotes?: string
-}
-```
-
-**Example:**
-
-```typescript
-const { error } = await adminAPI.approvePost({
-  postId: 42,
-  adminNotes: "Looks good, approved",
-});
-```
-
----
-
-### Reject Listing
-
-```typescript
-adminAPI.rejectPost(payload: RejectPostPayload)
-```
-
-**Parameters:**
-
-```typescript
-{
-  postId: number,
-  rejectionReason: string,
-  adminNotes?: string
-}
-```
-
-**Example:**
-
-```typescript
-const { error } = await adminAPI.rejectPost({
-  postId: 42,
-  rejectionReason: "Inappropriate content",
-  adminNotes: "Violates community guidelines",
-});
-```
-
----
-
-### Flag Listing
-
-```typescript
-adminAPI.flagPost(payload: FlagPostPayload)
-```
-
-**Parameters:**
-
-```typescript
-{
-  postId: number,
-  flaggedReason: string,
-  adminNotes?: string
-}
-```
-
-**Example:**
-
-```typescript
-const { error } = await adminAPI.flagPost({
-  postId: 42,
-  flaggedReason: "Needs review - suspicious activity",
-});
-```
-
----
-
-### Bulk Approve Listings
-
-```typescript
-adminAPI.bulkApproveListings(postIds: number[])
-```
-
-**Parameters:**
-
-- `postIds` - Array of post IDs to approve
-
-**Returns:** Supabase response
-
-**Example:**
-
-```typescript
-const { error } = await adminAPI.bulkApproveListings([42, 43, 44]);
-```
-
----
-
-### Bulk Reject Listings
-
-```typescript
-adminAPI.bulkRejectListings(postIds: number[], rejectionReason: string)
-```
-
-**Parameters:**
-
-- `postIds` - Array of post IDs to reject
-- `rejectionReason` - Reason for rejection (applied to all)
-
-**Example:**
-
-```typescript
-const { error } = await adminAPI.bulkRejectListings([42, 43, 44], "Spam content detected");
-```
-
----
-
-### Bulk Flag Listings
-
-```typescript
-adminAPI.bulkFlagListings(postIds: number[], flaggedReason: string)
-```
-
-**Parameters:**
-
-- `postIds` - Array of post IDs to flag
-- `flaggedReason` - Reason for flagging (applied to all)
-
-**Example:**
-
-```typescript
-const { error } = await adminAPI.bulkFlagListings([42, 43, 44], "Requires manual review");
-```
-
----
-
-### Bulk Delete Listings
-
-```typescript
-adminAPI.bulkDeleteListings(postIds: number[])
-```
-
-**Parameters:**
-
-- `postIds` - Array of post IDs to delete permanently
-
-**Warning:** This is a destructive operation and cannot be undone.
-
-**Example:**
-
-```typescript
-const { error } = await adminAPI.bulkDeleteListings([42, 43, 44]);
-```
-
----
-
-### Get Audit Log
-
-```typescript
-adminAPI.getPostAuditLog(postId: number)
-```
-
-**Parameters:**
-
-- `postId` - Post ID to get audit history for
-
-**Returns:** Array of audit log entries
-
-**Example:**
-
-```typescript
-const { data, error } = await adminAPI.getPostAuditLog(42);
-// data = [{ action: 'approved', admin_id: '...', created_at: '...' }, ...]
-```
-
----
-
-### Get Dashboard Stats
-
-```typescript
-adminAPI.getDashboardStats();
-```
-
-**Returns:** `AdminDashboardStats` object with counts and metrics
-
-**Example:**
-
-```typescript
-const { data, error } = await adminAPI.getDashboardStats();
-// data = { totalListings: 150, pendingCount: 12, approvedCount: 120, ... }
+// In a Server Component or form action
+import { approveListing } from "@/app/actions/admin";
+
+const { success, error } = await approveListing(42);
+if (!success) console.error(error);
+
+// In a form
+<form action={async () => {
+  "use server";
+  await approveListing(42);
+}}>
+  <button type="submit">Approve</button>
+</form>
 ```
 
 ---
@@ -1092,7 +909,7 @@ postgis.parsePostGISPoint(location: unknown)
 
 ```typescript
 interface PostGISPoint {
-  latitude: number;  // -90 to 90
+  latitude: number; // -90 to 90
   longitude: number; // -180 to 180
 }
 ```

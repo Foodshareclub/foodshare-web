@@ -1,14 +1,14 @@
 /**
  * Safe Auth Helpers
- * 
+ *
  * These functions wrap Supabase auth calls to gracefully handle
  * database unavailability during maintenance periods.
- * 
+ *
  * When the DB is down, these return null/false instead of throwing.
  */
 
-import { createClient } from './server';
-import type { User, Session } from '@supabase/supabase-js';
+import type { User, Session } from "@supabase/supabase-js";
+import { createClient } from "./server";
 
 export interface SafeAuthUser {
   id: string;
@@ -60,16 +60,16 @@ export async function safeGetUserWithProfile(): Promise<SafeAuthUser | null> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.getUser();
-    
+
     if (error || !data.user) return null;
 
     // Try to get profile, but don't fail if it errors
     let profile = null;
     try {
       const { data: profileData } = await supabase
-        .from('profiles')
-        .select('id, first_name, second_name, avatar_url, email')
-        .eq('id', data.user.id)
+        .from("profiles")
+        .select("id, first_name, second_name, avatar_url, email")
+        .eq("id", data.user.id)
         .single();
       profile = profileData;
     } catch {
@@ -88,23 +88,14 @@ export async function safeGetUserWithProfile(): Promise<SafeAuthUser | null> {
 
 /**
  * Safely check if user is admin
+ * Uses centralized admin auth from @/lib/data/admin-auth
  * Returns false if DB is unavailable
  */
 export async function safeCheckIsAdmin(): Promise<boolean> {
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.getUser();
-    
-    if (error || !data.user) return false;
-
-    const { data: userRole } = await supabase
-      .from('user_roles')
-      .select('roles!inner(name)')
-      .eq('profile_id', data.user.id)
-      .in('roles.name', ['admin', 'superadmin'])
-      .maybeSingle();
-
-    return !!userRole;
+    const { getAdminAuth } = await import("@/lib/data/admin-auth");
+    const { isAdmin } = await getAdminAuth();
+    return isAdmin;
   } catch {
     return false;
   }
@@ -116,7 +107,7 @@ export async function safeCheckIsAdmin(): Promise<boolean> {
 export async function isDatabaseAvailable(): Promise<boolean> {
   try {
     const supabase = await createClient();
-    const { error } = await supabase.from('profiles').select('id').limit(1);
+    const { error } = await supabase.from("profiles").select("id").limit(1);
     return !error;
   } catch {
     return false;

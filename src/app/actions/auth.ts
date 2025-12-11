@@ -1,20 +1,20 @@
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
-import type { User, Session } from '@supabase/supabase-js';
-import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import type { Session } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
+import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 
 // Import and re-export AuthUser type from data layer for consistency
-import type { AuthUser } from '@/lib/data/auth';
+import type { AuthUser } from "@/lib/data/auth";
 export type { AuthUser };
 
 /**
  * Check if a string is a full URL (http/https)
  */
 function isFullUrl(url: string): boolean {
-  return url.startsWith('http://') || url.startsWith('https://');
+  return url.startsWith("http://") || url.startsWith("https://");
 }
 
 /**
@@ -26,13 +26,13 @@ async function resolveAvatarUrl(
   supabase: Awaited<ReturnType<typeof createClient>>,
   avatarUrl: string | null
 ): Promise<string | null> {
-  if (!avatarUrl || avatarUrl.trim() === '') return null;
-  
+  if (!avatarUrl || avatarUrl.trim() === "") return null;
+
   // If already a full URL, return as-is
   if (isFullUrl(avatarUrl)) return avatarUrl;
-  
+
   // Otherwise, it's a storage path - get the public URL
-  const { data } = supabase.storage.from('profiles').getPublicUrl(avatarUrl);
+  const { data } = supabase.storage.from("profiles").getPublicUrl(avatarUrl);
   return data?.publicUrl || null;
 }
 
@@ -43,7 +43,10 @@ async function resolveAvatarUrl(
 export async function getSession(): Promise<Session | null> {
   try {
     const supabase = await createClient();
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
     if (error) return null;
     return session;
   } catch {
@@ -61,7 +64,10 @@ export async function getUser(): Promise<AuthUser | null> {
   try {
     const supabase = await createClient();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     // Auth error or no user = return null gracefully
     if (authError || !user) return null;
@@ -69,23 +75,25 @@ export async function getUser(): Promise<AuthUser | null> {
     // Get profile data - also wrapped in try-catch
     try {
       const { data: profile } = await supabase
-        .from('profiles')
-        .select('id, first_name, second_name, nickname, avatar_url, email')
-        .eq('id', user.id)
+        .from("profiles")
+        .select("id, first_name, second_name, nickname, avatar_url, email")
+        .eq("id", user.id)
         .single();
 
       // Resolve avatar URL to public URL if needed
-      const resolvedAvatarUrl = profile?.avatar_url 
+      const resolvedAvatarUrl = profile?.avatar_url
         ? await resolveAvatarUrl(supabase, profile.avatar_url)
         : null;
 
       return {
         id: user.id,
         email: user.email,
-        profile: profile ? {
-          ...profile,
-          avatar_url: resolvedAvatarUrl,
-        } : null,
+        profile: profile
+          ? {
+              ...profile,
+              avatar_url: resolvedAvatarUrl,
+            }
+          : null,
       };
     } catch {
       // Profile fetch failed, return user without profile
@@ -103,25 +111,14 @@ export async function getUser(): Promise<AuthUser | null> {
 
 /**
  * Check if current user is admin
- * Checks the user_roles junction table (source of truth)
+ * Uses centralized admin auth from @/lib/data/admin-auth
  * Returns false if DB is unavailable (graceful degradation)
  */
 export async function checkIsAdmin(): Promise<boolean> {
   try {
-    const supabase = await createClient();
-
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) return false;
-
-    // Check user_roles table (source of truth for admin status)
-    const { data: userRole } = await supabase
-      .from('user_roles')
-      .select('roles!inner(name)')
-      .eq('profile_id', user.id)
-      .in('roles.name', ['admin', 'superadmin'])
-      .maybeSingle();
-
-    return !!userRole;
+    const { getAdminAuth } = await import("@/lib/data/admin-auth");
+    const { isAdmin } = await getAdminAuth();
+    return isAdmin;
   } catch {
     return false;
   }
@@ -135,8 +132,8 @@ export async function signInWithPassword(
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -147,7 +144,7 @@ export async function signInWithPassword(
     return { success: false, error: error.message };
   }
 
-  revalidatePath('/', 'layout');
+  revalidatePath("/", "layout");
   invalidateTag(CACHE_TAGS.AUTH);
   return { success: true };
 }
@@ -155,21 +152,17 @@ export async function signInWithPassword(
 /**
  * Sign up with email and password
  */
-export async function signUp(
-  formData: FormData
-): Promise<{ success: boolean; error?: string }> {
+export async function signUp(formData: FormData): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
-  const firstName = formData.get('firstName') as string | null;
-  const lastName = formData.get('lastName') as string | null;
-  const name = formData.get('name') as string | null;
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+  const firstName = formData.get("firstName") as string | null;
+  const lastName = formData.get("lastName") as string | null;
+  const name = formData.get("name") as string | null;
 
   // Build display name from firstName/lastName or use name directly
-  const displayName = firstName && lastName 
-    ? `${firstName} ${lastName}` 
-    : firstName || name || '';
+  const displayName = firstName && lastName ? `${firstName} ${lastName}` : firstName || name || "";
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -189,15 +182,15 @@ export async function signUp(
 
   // Create profile
   if (data.user) {
-    await supabase.from('profiles').insert({
+    await supabase.from("profiles").insert({
       id: data.user.id,
       first_name: firstName || displayName,
-      second_name: lastName || '',
+      second_name: lastName || "",
       email,
     });
   }
 
-  revalidatePath('/', 'layout');
+  revalidatePath("/", "layout");
   invalidateTag(CACHE_TAGS.AUTH);
   invalidateTag(CACHE_TAGS.PROFILES);
   return { success: true };
@@ -209,17 +202,15 @@ export async function signUp(
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  revalidatePath('/', 'layout');
+  revalidatePath("/", "layout");
   invalidateTag(CACHE_TAGS.AUTH);
-  redirect('/');
+  redirect("/");
 }
 
 /**
  * Request password reset
  */
-export async function resetPassword(
-  email: string
-): Promise<{ success: boolean; error?: string }> {
+export async function resetPassword(email: string): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -241,7 +232,7 @@ export async function updatePassword(
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
-  const newPassword = formData.get('password') as string;
+  const newPassword = formData.get("password") as string;
 
   const { error } = await supabase.auth.updateUser({
     password: newPassword,
@@ -258,7 +249,7 @@ export async function updatePassword(
  * Get OAuth sign in URL
  */
 export async function getOAuthSignInUrl(
-  provider: 'google' | 'github' | 'facebook' | 'apple'
+  provider: "google" | "github" | "facebook" | "apple"
 ): Promise<{ url: string | null; error?: string }> {
   const supabase = await createClient();
 

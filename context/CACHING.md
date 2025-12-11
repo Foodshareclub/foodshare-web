@@ -180,6 +180,15 @@ export async function updateProduct(id: number, data: ProductData) {
 | `getListingStats()`                | 300s           | `admin-stats`, `admin`    |
 | `checkAdminRole(userId)`           | None           | -                         |
 
+### Admin Reports (`@/lib/data/admin-reports`)
+
+| Function                  | Cache Duration | Tags                      |
+| ------------------------- | -------------- | ------------------------- |
+| `getReportsData()`        | None           | -                         |
+| `getCachedReportsData()`  | 300s           | `admin-reports`, `admin`  |
+
+> **Note:** `getReportsData()` uses `createClient()` which calls `cookies()`, so it cannot be cached directly. The `getCachedReportsData()` wrapper provides caching when the caller context allows it (e.g., when not dependent on user-specific cookies).
+
 ### CRM (`@/lib/data/crm`)
 
 | Function                          | Cache Duration | Tags | Notes                                        |

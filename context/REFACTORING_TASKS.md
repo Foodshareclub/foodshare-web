@@ -170,12 +170,12 @@ Add cached data functions for features currently fetching directly.
 
 The `src/api/` directory has overlap with `src/lib/data/`. Consolidate:
 
-| Current                 | Target                                |
-| ----------------------- | ------------------------------------- |
-| `src/api/productAPI.ts` | Migrate to `src/lib/data/products.ts` |
-| `src/api/profileAPI.ts` | Migrate to `src/lib/data/profiles.ts` |
-| `src/api/forumAPI.ts`   | Migrate to `src/lib/data/forum.ts`    |
-| `src/api/adminAPI.ts`   | Migrate to `src/lib/data/admin.ts`    |
+| Current                 | Target                                | Status |
+| ----------------------- | ------------------------------------- | ------ |
+| `src/api/productAPI.ts` | Migrate to `src/lib/data/products.ts` | Pending |
+| `src/api/profileAPI.ts` | Migrate to `src/lib/data/profiles.ts` | Pending |
+| `src/api/forumAPI.ts`   | Migrate to `src/lib/data/forum.ts`    | Pending |
+| `src/api/adminAPI.ts`   | Migrate to server actions             | ✅ Done |
 
 Keep `src/api/` only for:
 
@@ -188,7 +188,6 @@ Keep `src/api/` only for:
 | -------------------------------------- | ------------------------------- | ---------------------------------- |
 | `src/lib/performance/monitoring.ts`    | Send to analytics service       | Implement analytics integration    |
 | `src/lib/security/mfa.ts`              | Integrate SMS provider          | Add Twilio/MessageBird integration |
-| `src/api/adminAPI.ts`                  | Calculate averageApprovalTime   | Query audit logs for calculation   |
 | `src/hooks/useProfile.ts`              | Implement country fetching      | Add countries API                  |
 | `src/utils/productionErrorReporter.ts` | Replace error reporting service | Integrate Sentry or similar        |
 

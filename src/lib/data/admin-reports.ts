@@ -3,6 +3,8 @@
  * Fetches analytics and reporting data for admin dashboard
  */
 
+import { unstable_cache } from "next/cache";
+import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
 import { createClient } from "@/lib/supabase/server";
 
 export interface ReportsData {
@@ -167,3 +169,19 @@ export async function getReportsData(): Promise<ReportsData> {
     recentActivity: [],
   };
 }
+
+/**
+ * Get cached reports data
+ * Note: Cannot use unstable_cache directly with createClient() as it uses cookies()
+ * This is a wrapper that can be used when caching is safe
+ */
+export const getCachedReportsData = unstable_cache(
+  async (): Promise<ReportsData> => {
+    return getReportsData();
+  },
+  ["admin-reports"],
+  {
+    revalidate: CACHE_DURATIONS.ADMIN_STATS,
+    tags: [CACHE_TAGS.ADMIN_REPORTS, CACHE_TAGS.ADMIN],
+  }
+);
