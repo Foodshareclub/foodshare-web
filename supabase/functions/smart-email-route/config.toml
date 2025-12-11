@@ -1,0 +1,2 @@
+[functions.smart-email-route]
+verify_jwt = false

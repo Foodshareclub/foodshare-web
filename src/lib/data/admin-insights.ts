@@ -1,15 +1,18 @@
 /**
  * Admin AI Insights Data Layer
  * Server-side only - contains API keys
+ * Supports both direct xAI API and Vercel AI Gateway
  */
 
+import { createXai } from "@ai-sdk/xai";
+import { generateText } from "ai";
 import { createClient } from "@/lib/supabase/server";
 
 // Grok model configuration
 const MODELS = {
   QUICK_INSIGHTS: "grok-3-mini",
-  FAST_REASONING: "grok-4-fast-non-reasoning",
-  DEEP_ANALYSIS: "grok-4-fast-reasoning",
+  FAST_REASONING: "grok-3-mini", // Use grok-3-mini for all queries via AI Gateway
+  DEEP_ANALYSIS: "grok-3-mini",
 } as const;
 
 // Cache for insights
@@ -225,40 +228,34 @@ ${
 `;
   }
 
-  const apiKey = process.env.XAI_API_KEY;
+  const apiKey = process.env.XAI_API_KEY || process.env.AI_GATEWAY_API_KEY;
   if (!apiKey) {
-    return "AI insights unavailable - API key not configured";
+    return "AI insights unavailable - API key not configured. Add XAI_API_KEY or AI_GATEWAY_API_KEY to your environment variables.";
   }
 
   const model = selectModel(userQuery);
 
-  // Dynamic import to avoid client-side bundling
-  const { default: OpenAI } = await import("openai");
-  const client = new OpenAI({
+  // Use Vercel AI SDK with xAI provider
+  // AI Gateway keys (vck_) use Vercel's AI Gateway proxy
+  const isGatewayKey = apiKey.startsWith("vck_");
+  const xai = createXai({
     apiKey,
-    baseURL: "https://api.x.ai/v1",
+    // Vercel AI Gateway endpoint for xAI/Grok
+    baseURL: isGatewayKey ? "https://ai-gateway.vercel.sh/xai/v1" : undefined,
   });
 
-  const completion = await client.chat.completions.create({
-    model,
-    messages: [
-      {
-        role: "system",
-        content: `You are an AI business analyst for FoodShare, a food sharing platform.
+  const result = await generateText({
+    model: xai(model),
+    system: `You are an AI business analyst for FoodShare, a food sharing platform.
 Analyze the provided metrics and answer admin questions with actionable insights.
 Be concise, data-driven, and provide specific recommendations.
 ${contextData}`,
-      },
-      {
-        role: "user",
-        content: userQuery,
-      },
-    ],
+    prompt: userQuery,
     temperature: 0.7,
-    max_tokens: 1000,
+    maxRetries: 2,
   });
 
-  const insight = completion.choices[0]?.message?.content || "No insight generated";
+  const insight = result.text || "No insight generated";
 
   // Cache result
   insightCache.set(cacheKey, { data: insight, timestamp: Date.now() });
@@ -269,7 +266,7 @@ ${contextData}`,
     .from("grok_usage_logs")
     .insert({
       model,
-      tokens: completion.usage?.total_tokens || 0,
+      tokens: result.usage?.totalTokens || 0,
       timestamp: new Date().toISOString(),
     })
     .then(() => {});

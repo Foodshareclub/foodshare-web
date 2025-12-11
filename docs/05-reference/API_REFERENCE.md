@@ -3402,9 +3402,14 @@ The AI analysis is triggered asynchronously and does not block report creation. 
 
 Located: `src/lib/data/admin-insights.ts`
 
-Server-side data fetching functions for AI-powered admin insights using Grok models. Provides platform metrics, churn analysis, and AI-generated business insights.
+Server-side data fetching functions for AI-powered admin insights using xAI's Grok models via Vercel AI SDK. Provides platform metrics, churn analysis, and AI-generated business insights.
 
 > **Note:** This module contains API keys and must only be used server-side. Use the server actions in `src/app/actions/admin-insights.ts` for client components.
+
+**Dependencies:**
+
+- `@ai-sdk/xai` - xAI provider for Vercel AI SDK
+- `ai` - Vercel AI SDK for `generateText`
 
 ### Types
 
@@ -3504,10 +3509,9 @@ const insight = await getGrokInsights("General question", false);
 
 **Caching:** Results are cached for 1 hour based on query + includeMetrics.
 
-**Model Selection:** Automatically selects model based on query complexity:
+**Model:** Uses `grok-3-mini` for all queries via Vercel AI Gateway for optimal cost/performance balance.
 
-- Simple queries: `grok-3-mini`
-- Complex queries (predict, analyze, optimize, etc.): `grok-4-fast-reasoning`
+**Implementation:** Uses Vercel AI SDK (`generateText`) with xAI provider for standardized AI integration.
 
 ---
 

@@ -1,13 +1,13 @@
-import { createXai } from '@ai-sdk/xai';
-import { generateObject } from 'ai';
-import { z } from 'zod';
-import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createXai } from "@ai-sdk/xai";
+import { generateObject } from "ai";
+import { z } from "zod";
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 // Constants
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-const SECRET_NAME = 'XAI_API_KEY';
-const XAI_MODEL = 'grok-3-mini';
+const SECRET_NAME = "XAI_API_KEY";
+const XAI_MODEL = "grok-3-mini";
 const XAI_TEMPERATURE = 0.3;
 
 // Cache for API key to avoid repeated vault lookups
@@ -21,11 +21,15 @@ interface VaultSecret {
 
 /**
  * Get XAI API key from environment variable or Supabase Vault
+ * Supports both direct xAI keys and Vercel AI Gateway keys
  */
 async function getXaiApiKey(): Promise<string | null> {
-  // Check environment variable first (for local dev or Vercel env)
+  // Check environment variables first (for local dev or Vercel env)
   if (process.env.XAI_API_KEY) {
     return process.env.XAI_API_KEY;
+  }
+  if (process.env.AI_GATEWAY_API_KEY) {
+    return process.env.AI_GATEWAY_API_KEY;
   }
 
   // Check cache
@@ -36,12 +40,12 @@ async function getXaiApiKey(): Promise<string | null> {
   // Fetch from Supabase Vault
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase.rpc('get_secrets', {
+    const { data, error } = await supabase.rpc("get_secrets", {
       secret_names: [SECRET_NAME],
     });
 
     if (error || !data || data.length === 0) {
-      console.error('Failed to fetch XAI_API_KEY from vault:', error?.message);
+      console.error("Failed to fetch XAI_API_KEY from vault:", error?.message);
       return null;
     }
 
@@ -54,7 +58,7 @@ async function getXaiApiKey(): Promise<string | null> {
 
     return null;
   } catch (err) {
-    console.error('Error fetching secret from vault:', err);
+    console.error("Error fetching secret from vault:", err);
     return null;
   }
 }
@@ -62,22 +66,23 @@ async function getXaiApiKey(): Promise<string | null> {
 // Response schema for structured AI output
 const moderationSchema = z.object({
   analysis: z.object({
-    summary: z.string().describe('Brief summary of the report assessment'),
-    categories: z.array(z.string()).describe('Content categories detected (e.g., spam, food safety, misleading)'),
-    reasoning: z.string().describe('Detailed reasoning for the assessment'),
-    suggestedAction: z.string().describe('Recommended moderation action'),
-    riskFactors: z.array(z.string()).describe('Identified risk factors'),
+    summary: z.string().describe("Brief summary of the report assessment"),
+    categories: z
+      .array(z.string())
+      .describe("Content categories detected (e.g., spam, food safety, misleading)"),
+    reasoning: z.string().describe("Detailed reasoning for the assessment"),
+    suggestedAction: z.string().describe("Recommended moderation action"),
+    riskFactors: z.array(z.string()).describe("Identified risk factors"),
   }),
-  severityScore: z.number().min(0).max(100).describe('Severity score from 0 (benign) to 100 (critical)'),
-  recommendedAction: z.enum([
-    'dismiss',
-    'warn_user',
-    'hide_post',
-    'remove_post',
-    'ban_user',
-    'escalate',
-  ]).describe('Recommended action based on analysis'),
-  confidence: z.number().min(0).max(1).describe('Confidence level of the analysis (0-1)'),
+  severityScore: z
+    .number()
+    .min(0)
+    .max(100)
+    .describe("Severity score from 0 (benign) to 100 (critical)"),
+  recommendedAction: z
+    .enum(["dismiss", "warn_user", "hide_post", "remove_post", "ban_user", "escalate"])
+    .describe("Recommended action based on analysis"),
+  confidence: z.number().min(0).max(1).describe("Confidence level of the analysis (0-1)"),
 });
 
 // Request body schema
@@ -91,18 +96,42 @@ const requestSchema = z.object({
 
 export async function POST(request: Request): Promise<NextResponse> {
   try {
+    // Authenticate user - only admins can use moderation API
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check if user is admin
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (!profile || profile.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
+    }
+
     // Get API key from vault or environment
     const apiKey = await getXaiApiKey();
     if (!apiKey) {
-      console.error('XAI_API_KEY not configured in vault or environment');
-      return NextResponse.json(
-        { error: 'AI service not configured' },
-        { status: 503 }
-      );
+      console.error("XAI_API_KEY not configured in vault or environment");
+      return NextResponse.json({ error: "AI service not configured" }, { status: 503 });
     }
 
     // Initialize xAI client with the fetched key
-    const xai = createXai({ apiKey });
+    // AI Gateway keys (vck_) use Vercel's AI Gateway proxy
+    const isGatewayKey = apiKey.startsWith("vck_");
+    const xai = createXai({
+      apiKey,
+      // Vercel AI Gateway endpoint for xAI/Grok
+      baseURL: isGatewayKey ? "https://ai-gateway.vercel.sh/xai/v1" : undefined,
+    });
 
     // Parse and validate request
     const body = await request.json();
@@ -142,7 +171,7 @@ POST DETAILS:
 
 REPORT:
 - Reason: ${input.reportReason}
-- Reporter's Description: ${input.reportDescription || 'No additional details provided'}
+- Reporter's Description: ${input.reportDescription || "No additional details provided"}
 
 Provide a thorough analysis and recommendation.`;
 
@@ -158,7 +187,7 @@ Provide a thorough analysis and recommendation.`;
     // Log usage for monitoring (optional - uses existing grok_usage_logs table)
     try {
       const supabase = await createClient();
-      await supabase.from('grok_usage_logs').insert({
+      await supabase.from("grok_usage_logs").insert({
         model: XAI_MODEL,
         tokens: result.usage?.totalTokens || 0,
       });
@@ -168,18 +197,15 @@ Provide a thorough analysis and recommendation.`;
 
     return NextResponse.json(result.object);
   } catch (error) {
-    console.error('Moderation analysis error:', error);
-    
+    console.error("Moderation analysis error:", error);
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Invalid request data', details: error.issues },
+        { error: "Invalid request data", details: error.issues },
         { status: 400 }
       );
     }
 
-    return NextResponse.json(
-      { error: 'Analysis failed' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Analysis failed" }, { status: 500 });
   }
 }

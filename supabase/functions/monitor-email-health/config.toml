@@ -1,0 +1,2 @@
+[functions.monitor-email-health]
+verify_jwt = false
