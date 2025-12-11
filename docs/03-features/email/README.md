@@ -820,6 +820,36 @@ ON CONFLICT DO NOTHING;
 3. Database connection works
 4. Quota records exist for today
 
+### Vault Access Issues
+
+**Problem:** Emails not sending, logs show `[Vault] ❌ Missing SUPABASE_SERVICE_ROLE_KEY`
+
+**Solution:**
+
+The vault service logs detailed environment diagnostics:
+
+```
+[Vault] 🔧 Environment check: {
+  hasSupabaseUrl: true,
+  hasServiceRoleKey: false,
+  serviceRoleKeyLength: 0,
+  nodeEnv: "production",
+  vercelEnv: "production"
+}
+```
+
+Fix options:
+
+1. **Add `SUPABASE_SERVICE_ROLE_KEY` to Vercel** (recommended for vault access)
+   - Go to Vercel Dashboard → Project → Settings → Environment Variables
+   - Add `SUPABASE_SERVICE_ROLE_KEY` with your service role key from Supabase
+
+2. **Or add email provider keys directly** (simpler, no vault needed)
+   - Add `RESEND_API_KEY`, `BREVO_API_KEY`, etc. directly to Vercel env vars
+   - The vault service will use these automatically without needing vault access
+
+**Note:** The vault service prioritizes environment variables over Supabase Vault. If any provider key is set in env vars, vault lookup is skipped entirely.
+
 ---
 
 ## 📖 Related Documentation
