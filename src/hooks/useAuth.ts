@@ -219,11 +219,19 @@ export function useAuth(): UseAuthReturn {
       setError(null);
 
       try {
+        // Get the current path to redirect back after OAuth
+        const currentPath = window.location.pathname;
+        const redirectUrl = new URL("/auth/callback", window.location.origin);
+        // Pass the current path as 'next' so callback redirects back here
+        if (currentPath && currentPath !== "/auth/callback") {
+          redirectUrl.searchParams.set("next", currentPath);
+        }
+
         // Use browser client directly for OAuth - this ensures same-tab redirect
         const { error: oauthError } = await supabase.auth.signInWithOAuth({
           provider,
           options: {
-            redirectTo: `${window.location.origin}/auth/callback`,
+            redirectTo: redirectUrl.toString(),
             skipBrowserRedirect: false, // Ensure redirect happens in same tab
           },
         });

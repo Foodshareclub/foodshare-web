@@ -428,7 +428,7 @@ export async function createUnifiedEmailService(): Promise<UnifiedEmailService> 
   const { getEmailSecrets } = await import("./vault");
   const secrets = await getEmailSecrets();
 
-  const fromEmail = process.env.EMAIL_FROM || "noreply@foodshare.app";
+  const fromEmail = process.env.EMAIL_FROM || "contact@foodshare.club";
   const fromName = process.env.EMAIL_FROM_NAME || "FoodShare";
 
   return new UnifiedEmailService({

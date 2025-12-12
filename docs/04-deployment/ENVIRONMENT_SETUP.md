@@ -122,15 +122,15 @@ AWS_SECRET_ACCESS_KEY=your-secret-access-key
 Default sender information:
 
 ```env
-NEXT_PUBLIC_EMAIL_FROM=noreply@foodshare.app
+NEXT_PUBLIC_EMAIL_FROM=contact@foodshare.club
 NEXT_PUBLIC_EMAIL_FROM_NAME=FoodShare
 ```
 
 Application URLs:
 
 ```env
-NEXT_PUBLIC_APP_URL=https://foodshare.app
-NEXT_PUBLIC_SITE_URL=https://foodshare.app
+NEXT_PUBLIC_APP_URL=https://foodshare.club
+NEXT_PUBLIC_SITE_URL=https://foodshare.club
 ```
 
 ---

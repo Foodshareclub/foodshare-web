@@ -327,7 +327,7 @@ export async function sendAdminEmail(
     const { getConfiguredProviders } = await import("@/lib/email/vault");
     const configuredProviders = await getConfiguredProviders();
 
-    const fromEmail = process.env.EMAIL_FROM || "noreply@foodshare.app";
+    const fromEmail = process.env.EMAIL_FROM || "contact@foodshare.club";
     const fromName = process.env.EMAIL_FROM_NAME || "FoodShare";
 
     console.log("[sendAdminEmail] Config:", {
