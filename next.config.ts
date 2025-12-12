@@ -46,7 +46,24 @@ const nextConfig: NextConfig = {
   },
 
   // Server-only packages (top-level in Next.js 15)
-  serverExternalPackages: ["@aws-sdk/client-ses", "@getbrevo/brevo", "openai"],
+  serverExternalPackages: [
+    "@aws-sdk/client-ses",
+    "@getbrevo/brevo",
+    "openai",
+    "duckdb",
+    "duckdb-async",
+  ],
+
+  // Webpack config to handle node-pre-gyp conditional requires
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "aws-sdk": false,
+      nock: false,
+      "mock-aws-s3": false,
+    };
+    return config;
+  },
 
   // Enhanced image optimization
   images: {
