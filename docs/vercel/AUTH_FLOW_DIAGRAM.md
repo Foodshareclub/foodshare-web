@@ -9,16 +9,18 @@
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│  Client Component calls Server Action: getOAuthSignInUrl()         │
-│  Location: /src/app/actions/auth.ts                                │
+│  useAuth hook calls browser Supabase client directly:               │
+│  supabase.auth.signInWithOAuth({ provider, options })              │
+│  Location: /src/hooks/useAuth.ts                                   │
 │                                                                     │
-│  Generates URL with:                                                │
-│  - redirectTo: http://localhost:3000/auth/callback                  │
+│  Options:                                                           │
+│  - redirectTo: ${window.location.origin}/auth/callback              │
+│  - skipBrowserRedirect: false (ensures same-tab redirect)           │
 └────────────────────────────┬────────────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│  Browser redirects to Google OAuth                                  │
+│  Browser redirects to Google OAuth (same tab)                       │
 │  User authorizes the app                                            │
 └────────────────────────────┬────────────────────────────────────────┘
                              │
@@ -77,56 +79,74 @@
 
 ## Key Components and Their Roles
 
-### 1. Server Action: getOAuthSignInUrl()
-**File**: `/src/app/actions/auth.ts`
+### 1. useAuth Hook: loginWithOAuth()
+
+**File**: `/src/hooks/useAuth.ts`
+
 ```typescript
-export async function getOAuthSignInUrl(provider: 'google') {
-  const supabase = await createClient();
-  const { data } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
-    }
-  });
-  return { url: data.url };
-}
+const loginWithOAuth = useCallback(
+  async (provider: "google" | "github" | "facebook" | "apple") => {
+    // Use browser client directly for OAuth - ensures same-tab redirect
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        skipBrowserRedirect: false, // Ensure redirect happens in same tab
+      },
+    });
+    // ...
+  },
+  [supabase]
+);
 ```
 
+> **Note:** The `getOAuthSignInUrl` server action in `/src/app/actions/auth.ts` is kept for backward compatibility but is no longer used by the `useAuth` hook. Using the browser client directly ensures same-tab redirect behavior.
+
 ### 2. OAuth Callback Route Handler
+
 **File**: `/src/app/auth/callback/route.ts`
+
 ```typescript
 export async function GET(request: Request) {
-  const code = requestUrl.searchParams.get('code');
+  const code = requestUrl.searchParams.get("code");
   const supabase = await createClient();
 
   // Exchange code for session (sets cookies)
   await supabase.auth.exchangeCodeForSession(code);
 
   // Revalidate to reflect new auth state
-  revalidatePath('/', 'layout');
+  revalidatePath("/", "layout");
 
   // Redirect home
-  return NextResponse.redirect(new URL('/', request.url));
+  return NextResponse.redirect(new URL("/", request.url));
 }
 ```
 
 ### 3. Proxy (Middleware)
+
 **File**: `/src/proxy.ts`
+
 ```typescript
 export async function proxy(request: NextRequest) {
   const supabase = createServerClient(url, key, {
-    cookies: { /* cookie handlers */ }
+    cookies: {
+      /* cookie handlers */
+    },
   });
 
   // Refresh session on every request
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
   return response; // with updated cookies
 }
 ```
 
 ### 4. Server Component
+
 **File**: `/src/app/page.tsx`
+
 ```typescript
 export default async function Home() {
   const products = await getProducts('food');
@@ -137,18 +157,18 @@ export default async function Home() {
 > **Note:** User authentication is handled by the Navbar component (rendered in root layout), which fetches user data independently. Page components like `HomeClient` focus on displaying content data.
 
 ### 5. Server Action: getUser()
+
 **File**: `/src/app/actions/auth.ts`
+
 ```typescript
 export async function getUser() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // Fetch profile from database
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
 
   return { id: user.id, email: user.email, profile };
 }
@@ -195,6 +215,7 @@ export async function getUser() {
 ## Why It Works Now
 
 ### Before the Fix
+
 ```
 ❌ No NEXT_PUBLIC_SITE_URL → OAuth redirect fails
 ❌ proxy.ts not registered → Session never refreshes
@@ -204,6 +225,7 @@ export async function getUser() {
 ```
 
 ### After the Fix
+
 ```
 ✓ NEXT_PUBLIC_SITE_URL set → OAuth redirects correctly
 ✓ proxy.ts auto-detected by Next.js 16 → Session refreshes on every request
@@ -215,6 +237,7 @@ export async function getUser() {
 ## Request Flow Comparison
 
 ### Before (Broken)
+
 ```
 User logs in → OAuth callback → Sets cookies → Redirects home
                                                     ↓
@@ -228,6 +251,7 @@ User logs in → OAuth callback → Sets cookies → Redirects home
 ```
 
 ### After (Fixed)
+
 ```
 User logs in → OAuth callback → Sets cookies → revalidatePath() → Redirects home
                                                                         ↓
@@ -255,6 +279,7 @@ When auth doesn't work:
    - Check: `/src/proxy.ts` exists
 
 3. **Check environment variables**
+
    ```bash
    echo $NEXT_PUBLIC_SITE_URL  # Should match your dev URL
    ```

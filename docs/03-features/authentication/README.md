@@ -100,7 +100,9 @@ Located in `src/app/actions/auth.ts`:
 | `signOut()`            | Sign out and redirect             |
 | `resetPassword()`      | Request password reset            |
 | `updatePassword()`     | Update password                   |
-| `getOAuthSignInUrl()`  | Get OAuth redirect URL            |
+| `getOAuthSignInUrl()`  | Get OAuth redirect URL (legacy)   |
+
+> **Note on OAuth:** The `useAuth` hook now uses the browser Supabase client directly for OAuth login (via `loginWithOAuth`/`loginWithProvider`). This ensures same-tab redirect behavior. The `getOAuthSignInUrl` server action is kept for backward compatibility but is no longer used by the hook.
 
 > **Note on Admin Checking:** The `checkIsAdmin()` function in `src/lib/data/auth.ts`:
 >
@@ -514,14 +516,17 @@ const MagicLinkForm = () => {
 
 Supported providers: `google`, `github`, `facebook`, `apple`
 
+The `useAuth` hook uses the browser Supabase client directly for OAuth, ensuring same-tab redirect behavior:
+
 ```tsx
-import { useAuth } from "@/hook";
+import { useAuth } from "@/hooks";
 
 const SocialLogin = () => {
-  const { loginWithProvider } = useAuth();
+  const { loginWithOAuth } = useAuth();
 
-  const handleGoogleLogin = () => loginWithProvider("google");
-  const handleAppleLogin = () => loginWithProvider("apple");
+  // OAuth redirects happen in the same tab automatically
+  const handleGoogleLogin = () => loginWithOAuth("google");
+  const handleAppleLogin = () => loginWithOAuth("apple");
 
   return (
     <>
@@ -531,6 +536,8 @@ const SocialLogin = () => {
   );
 };
 ```
+
+> **Implementation Note:** OAuth uses `supabase.auth.signInWithOAuth()` directly from the browser client with `skipBrowserRedirect: false`. This ensures the redirect happens in the same tab rather than opening a new window. The callback URL is set to `${window.location.origin}/auth/callback`.
 
 ### Password Recovery
 

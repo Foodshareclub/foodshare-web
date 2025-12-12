@@ -51,7 +51,18 @@ export abstract class BaseEmailProvider implements IEmailProvider {
   }
 
   protected handleError(error: unknown, operation: string): SendEmailResponse {
-    const errorMessage = error instanceof Error ? error.message : String(error);
+    let errorMessage: string;
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === "object" && error !== null) {
+      // Handle Resend/Brevo error objects like { name: string, message: string }
+      const errObj = error as Record<string, unknown>;
+      errorMessage = (errObj.message as string) || (errObj.name as string) || JSON.stringify(error);
+    } else {
+      errorMessage = String(error);
+    }
+
     console.error(`[${this.provider}] ${operation} failed:`, errorMessage);
 
     return {

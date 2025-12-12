@@ -1,26 +1,25 @@
 /**
  * useAuth Hook
  * Client-side authentication hook using Server Actions
- * 
+ *
  * For Server Components, use getAuthSession() from '@/lib/data/auth' instead.
  * This hook is for Client Components that need auth state and actions.
  */
 
-'use client';
+"use client";
 
-import { useCallback, useEffect, useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { useAuthStore } from '@/store/zustand';
+import { useCallback, useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import type { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
+import { useAuthStore } from "@/store/zustand";
 import {
   signInWithPassword,
   signUp,
   signOut,
   resetPassword,
   updatePassword,
-  getOAuthSignInUrl,
-} from '@/app/actions/auth';
-import type { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
+} from "@/app/actions/auth";
 
 // ============================================================================
 // Types
@@ -35,7 +34,7 @@ export interface UseAuthReturn {
   // State
   isAuthenticated: boolean;
   isAdmin: boolean;
-  adminCheckStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
+  adminCheckStatus: "idle" | "loading" | "succeeded" | "failed";
   user: AuthUser | null;
   session: Session | null;
   error: string | null;
@@ -43,10 +42,19 @@ export interface UseAuthReturn {
   roles: string[];
 
   // Actions
-  loginWithPassword: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  loginWithOAuth: (provider: 'google' | 'github' | 'facebook' | 'apple') => Promise<{ success: boolean; error?: string }>;
+  loginWithPassword: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  loginWithOAuth: (
+    provider: "google" | "github" | "facebook" | "apple"
+  ) => Promise<{ success: boolean; error?: string }>;
   loginWithMagicLink: (email: string) => Promise<{ success: boolean; error?: string }>;
-  register: (data: { email: string; password: string; firstName?: string; lastName?: string } | string, password?: string, name?: string) => Promise<{ success: boolean; error?: string; user?: AuthUser }>;
+  register: (
+    data: { email: string; password: string; firstName?: string; lastName?: string } | string,
+    password?: string,
+    name?: string
+  ) => Promise<{ success: boolean; error?: string; user?: AuthUser }>;
   logout: () => Promise<void>;
   recoverPassword: (email: string) => Promise<{ success: boolean; error?: string }>;
   updatePassword: (password: string) => Promise<{ success: boolean; error?: string }>;
@@ -56,7 +64,9 @@ export interface UseAuthReturn {
   // Backward compatibility aliases
   isAuth: boolean;
   authError: string | null;
-  loginWithProvider: (provider: 'google' | 'github' | 'facebook' | 'apple') => Promise<{ success: boolean; error?: string }>;
+  loginWithProvider: (
+    provider: "google" | "github" | "facebook" | "apple"
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 // ============================================================================
@@ -83,6 +93,38 @@ export function useAuth(): UseAuthReturn {
   const reset = useAuthStore((state) => state.reset);
 
   // ========================================================================
+  // Admin Check
+  // ========================================================================
+
+  const checkAdminStatus = useCallback(
+    async (userId: string) => {
+      setAdminCheckStatus("loading");
+      try {
+        const { data, error: roleError } = await supabase
+          .from("user_roles")
+          .select("role_id, roles!user_roles_role_id_fkey(name)")
+          .eq("profile_id", userId);
+
+        if (roleError) {
+          setAdminCheckStatus("failed");
+          return;
+        }
+
+        const userRoles = (data ?? []).flatMap((r) => {
+          const roleName = (r as { roles?: { name?: string } }).roles?.name;
+          return roleName ? [roleName] : [];
+        });
+
+        const isUserAdmin = userRoles.includes("admin") || userRoles.includes("superadmin");
+        setAdmin(isUserAdmin, userRoles);
+      } catch {
+        setAdminCheckStatus("failed");
+      }
+    },
+    [supabase, setAdminCheckStatus, setAdmin]
+  );
+
+  // ========================================================================
   // Auth State Listener
   // ========================================================================
 
@@ -90,16 +132,18 @@ export function useAuth(): UseAuthReturn {
     // Get initial session
     const getInitialSession = async () => {
       try {
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        const {
+          data: { session: initialSession },
+        } = await supabase.auth.getSession();
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
-        
+
         // Check admin status if user exists
         if (initialSession?.user) {
           await checkAdminStatus(initialSession.user.id);
         }
       } catch (err) {
-        console.error('Error getting initial session:', err);
+        console.error("Error getting initial session:", err);
       } finally {
         setIsLoading(false);
       }
@@ -108,7 +152,9 @@ export function useAuth(): UseAuthReturn {
     getInitialSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, newSession: Session | null) => {
         setSession(newSession);
         setUser(newSession?.user ?? null);
@@ -120,7 +166,7 @@ export function useAuth(): UseAuthReturn {
         }
 
         // Refresh server components on auth change
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
           router.refresh();
         }
       }
@@ -129,36 +175,7 @@ export function useAuth(): UseAuthReturn {
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase, router, reset]);
-
-  // ========================================================================
-  // Admin Check
-  // ========================================================================
-
-  const checkAdminStatus = async (userId: string) => {
-    setAdminCheckStatus('loading');
-    try {
-      const { data, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role_id, roles!user_roles_role_id_fkey(name)')
-        .eq('profile_id', userId);
-
-      if (roleError) {
-        setAdminCheckStatus('failed');
-        return;
-      }
-
-      const userRoles = (data ?? []).flatMap((r) => {
-        const roleName = (r as { roles?: { name?: string } }).roles?.name;
-        return roleName ? [roleName] : [];
-      });
-
-      const isUserAdmin = userRoles.includes('admin') || userRoles.includes('superadmin');
-      setAdmin(isUserAdmin, userRoles);
-    } catch {
-      setAdminCheckStatus('failed');
-    }
-  };
+  }, [supabase, router, reset, checkAdminStatus]);
 
   // ========================================================================
   // Auth Actions
@@ -171,13 +188,13 @@ export function useAuth(): UseAuthReturn {
 
       try {
         const formData = new FormData();
-        formData.append('email', email);
-        formData.append('password', password);
+        formData.append("email", email);
+        formData.append("password", password);
 
         const result = await signInWithPassword(formData);
 
         if (!result.success) {
-          setError(result.error || 'Login failed');
+          setError(result.error || "Login failed");
           return { success: false, error: result.error };
         }
 
@@ -187,7 +204,7 @@ export function useAuth(): UseAuthReturn {
 
         return { success: true };
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Login failed';
+        const errorMessage = err instanceof Error ? err.message : "Login failed";
         setError(errorMessage);
         return { success: false, error: errorMessage };
       } finally {
@@ -198,27 +215,32 @@ export function useAuth(): UseAuthReturn {
   );
 
   const loginWithOAuth = useCallback(
-    async (provider: 'google' | 'github' | 'facebook' | 'apple') => {
+    async (provider: "google" | "github" | "facebook" | "apple") => {
       setError(null);
 
       try {
-        const result = await getOAuthSignInUrl(provider);
+        // Use browser client directly for OAuth - this ensures same-tab redirect
+        const { error: oauthError } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`,
+            skipBrowserRedirect: false, // Ensure redirect happens in same tab
+          },
+        });
 
-        if (result.error || !result.url) {
-          setError(result.error || 'OAuth login failed');
-          return { success: false, error: result.error };
+        if (oauthError) {
+          setError(oauthError.message);
+          return { success: false, error: oauthError.message };
         }
 
-        // Redirect to OAuth provider
-        window.location.href = result.url;
         return { success: true };
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'OAuth login failed';
+        const errorMessage = err instanceof Error ? err.message : "OAuth login failed";
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
     },
-    []
+    [supabase]
   );
 
   const loginWithMagicLink = useCallback(
@@ -240,7 +262,7 @@ export function useAuth(): UseAuthReturn {
 
         return { success: true };
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Magic link failed';
+        const errorMessage = err instanceof Error ? err.message : "Magic link failed";
         setError(errorMessage);
         return { success: false, error: errorMessage };
       }
@@ -250,7 +272,9 @@ export function useAuth(): UseAuthReturn {
 
   const register = useCallback(
     async (
-      dataOrEmail: { email: string; password: string; firstName?: string; lastName?: string } | string,
+      dataOrEmail:
+        | { email: string; password: string; firstName?: string; lastName?: string }
+        | string,
       passwordArg?: string,
       nameArg?: string
     ) => {
@@ -264,7 +288,7 @@ export function useAuth(): UseAuthReturn {
         let firstName: string | undefined;
         let lastName: string | undefined;
 
-        if (typeof dataOrEmail === 'object') {
+        if (typeof dataOrEmail === "object") {
           email = dataOrEmail.email;
           password = dataOrEmail.password;
           firstName = dataOrEmail.firstName;
@@ -277,21 +301,21 @@ export function useAuth(): UseAuthReturn {
         }
 
         const formData = new FormData();
-        formData.append('email', email);
-        formData.append('password', password);
-        if (firstName) formData.append('firstName', firstName);
-        if (lastName) formData.append('lastName', lastName);
+        formData.append("email", email);
+        formData.append("password", password);
+        if (firstName) formData.append("firstName", firstName);
+        if (lastName) formData.append("lastName", lastName);
         // Also support legacy 'name' field
         if (firstName && lastName) {
-          formData.append('name', `${firstName} ${lastName}`);
+          formData.append("name", `${firstName} ${lastName}`);
         } else if (firstName) {
-          formData.append('name', firstName);
+          formData.append("name", firstName);
         }
 
         const result = await signUp(formData);
 
         if (!result.success) {
-          setError(result.error || 'Registration failed');
+          setError(result.error || "Registration failed");
           return { success: false, error: result.error };
         }
 
@@ -301,7 +325,7 @@ export function useAuth(): UseAuthReturn {
 
         return { success: true, user: user ? { id: user.id, email: user.email } : undefined };
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Registration failed';
+        const errorMessage = err instanceof Error ? err.message : "Registration failed";
         setError(errorMessage);
         return { success: false, error: errorMessage };
       } finally {
@@ -317,7 +341,7 @@ export function useAuth(): UseAuthReturn {
       await signOut();
       reset();
     } catch (err) {
-      console.error('Logout error:', err);
+      console.error("Logout error:", err);
     } finally {
       setIsLoading(false);
     }
@@ -330,13 +354,13 @@ export function useAuth(): UseAuthReturn {
       const result = await resetPassword(email);
 
       if (!result.success) {
-        setError(result.error || 'Password recovery failed');
+        setError(result.error || "Password recovery failed");
         return { success: false, error: result.error };
       }
 
       return { success: true };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Password recovery failed';
+      const errorMessage = err instanceof Error ? err.message : "Password recovery failed";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     }
@@ -347,25 +371,27 @@ export function useAuth(): UseAuthReturn {
 
     try {
       const formData = new FormData();
-      formData.append('password', password);
+      formData.append("password", password);
 
       const result = await updatePassword(formData);
 
       if (!result.success) {
-        setError(result.error || 'Password update failed');
+        setError(result.error || "Password update failed");
         return { success: false, error: result.error };
       }
 
       return { success: true };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Password update failed';
+      const errorMessage = err instanceof Error ? err.message : "Password update failed";
       setError(errorMessage);
       return { success: false, error: errorMessage };
     }
   }, []);
 
   const checkSession = useCallback(async () => {
-    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    const {
+      data: { session: currentSession },
+    } = await supabase.auth.getSession();
     setSession(currentSession);
     setUser(currentSession?.user ?? null);
   }, [supabase]);

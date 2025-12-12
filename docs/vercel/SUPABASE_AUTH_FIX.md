@@ -1,7 +1,10 @@
 # Supabase Authentication Fix for Next.js 16
 
 ## Problem
+
 After OAuth login (Google), the user session was not being properly recognized on server-side rendered pages. The navbar would not show the user's profile image and `getUser()` would return `null` even after successful login.
+
+> **Update (Dec 2024):** OAuth login now uses the browser Supabase client directly in `useAuth` hook, ensuring same-tab redirect behavior with `skipBrowserRedirect: false`.
 
 ## Root Causes Identified
 
@@ -27,6 +30,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 **Important**: The middleware handles session refresh and corrupted cookie cleanup on every request.
 
 Key improvements:
+
 - Uses `createServerClient` from `@supabase/ssr` for proper cookie handling
 - Validates and clears corrupted Supabase cookies before processing
 - Calls `getUser()` to refresh session tokens if expired
@@ -36,6 +40,7 @@ Key improvements:
 ### 3. Fixed `/src/app/auth/callback/route.ts`
 
 Changes:
+
 - Removed incorrect `'use server'` directive (route handlers should NOT use this)
 - Added `revalidatePath('/', 'layout')` to refresh the entire app after login
 - Improved error logging in development
@@ -48,8 +53,10 @@ Changes:
 ```
 1. User clicks "Login with Google"
    ↓
-2. Server Action (getOAuthSignInUrl) generates OAuth URL
-   redirectTo: http://localhost:3000/auth/callback
+2. useAuth hook calls browser Supabase client directly:
+   supabase.auth.signInWithOAuth({ provider, options })
+   redirectTo: ${window.location.origin}/auth/callback
+   skipBrowserRedirect: false (ensures same-tab redirect)
    ↓
 3. User authorizes on Google
    ↓
@@ -138,7 +145,7 @@ NODE_ENV=development
 The auth callback will now log errors:
 
 ```typescript
-console.error('[Auth Callback] Error exchanging code for session:', error);
+console.error("[Auth Callback] Error exchanging code for session:", error);
 ```
 
 ### Check Supabase Dashboard
@@ -153,11 +160,13 @@ Add temporary logging to `/src/middleware.ts`:
 
 ```typescript
 export async function middleware(request: NextRequest) {
-  console.log('[Middleware] Request:', request.nextUrl.pathname);
+  console.log("[Middleware] Request:", request.nextUrl.pathname);
 
   // After creating supabase client...
-  const { data: { user } } = await supabase.auth.getUser();
-  console.log('[Middleware] User:', user?.id || 'No user');
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  console.log("[Middleware] User:", user?.id || "No user");
 
   // ... rest of code
 }
@@ -167,18 +176,21 @@ export async function middleware(request: NextRequest) {
 
 **Issue**: Still showing "null" user after login
 **Solution**:
+
 - Clear cookies and cache
 - Restart dev server
 - Check that NEXT_PUBLIC_SITE_URL matches your dev URL exactly
 
 **Issue**: Timeout errors
 **Solution**:
+
 - Check Supabase project is not paused
 - Verify network connection
 - Check Supabase status page
 
 **Issue**: "Invalid code" error
 **Solution**:
+
 - Make sure OAuth redirect URL in Supabase matches NEXT_PUBLIC_SITE_URL
 - Check that OAuth provider (Google) is configured in Supabase
 
@@ -206,6 +218,7 @@ export async function middleware(request: NextRequest) {
 Before deploying to production:
 
 1. **Update environment variables on Vercel**:
+
    ```bash
    NEXT_PUBLIC_SITE_URL=https://yourapp.com
    ```
