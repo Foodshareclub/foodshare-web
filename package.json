@@ -106,7 +106,7 @@
   },
   "overrides": {
     "duckdb-async": {
-      "duckdb": "$duckdb"
+      "duckdb": "1.4.3"
     }
   },
   "devDependencies": {
