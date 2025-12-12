@@ -1,0 +1,14 @@
+diff --git a/node_modules/duckdb/package.json b/node_modules/duckdb/package.json
+index 515867f..d95b3b3 100644
+--- a/node_modules/duckdb/package.json
++++ b/node_modules/duckdb/package.json
+@@ -14,7 +14,8 @@
+     "module_name": "duckdb",
+     "module_path": "./lib/binding/",
+-    "host": "https://npm.duckdb.org/duckdb"
++    "host": "https://npm.duckdb.org/duckdb",
++    "napi_versions": [
++      3
++    ]
+   },
+   "scripts": {
