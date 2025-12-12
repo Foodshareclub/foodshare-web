@@ -2,10 +2,6 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
-import type { ForumComment } from "@/api/forumAPI";
-import { RichTextViewer } from "./RichTextViewer";
-import { useAuth } from "@/hooks/useAuth";
 import {
   Award,
   CheckCircle,
@@ -18,6 +14,10 @@ import {
   Reply,
   Trash2,
 } from "lucide-react";
+import { RichTextViewer } from "./RichTextViewer";
+import { cn } from "@/lib/utils";
+import type { ForumComment } from "@/api/forumAPI";
+import { useAuth } from "@/hooks/useAuth";
 
 // Icon aliases for consistency
 const FaAward = Award;
@@ -115,7 +115,7 @@ export function ForumCommentCard({
       {comment.depth > 0 && (
         <div className="flex items-start mb-2">
           <FaReply className="w-4 h-4 text-muted-foreground/50 mr-2 mt-1 flex-shrink-0" />
-          <span className="text-xs text-muted-foreground">"Reply"</span>
+          <span className="text-xs text-muted-foreground">&quot;Reply&quot;</span>
         </div>
       )}
 
@@ -139,7 +139,7 @@ export function ForumCommentCard({
               className="bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 flex items-center gap-2"
             >
               <FaAward className="w-4 h-4 text-white" />
-              <span className="text-white text-sm font-semibold">"Best Answer"</span>
+              <span className="text-white text-sm font-semibold">&quot;Best Answer&quot;</span>
               <FaCheckCircle className="w-4 h-4 text-white ml-auto" />
             </motion.div>
           )}
@@ -187,7 +187,7 @@ export function ForumCommentCard({
                     {comment.is_edited && (
                       <span className="italic flex items-center gap-1">
                         <FaEdit className="w-3 h-3" />
-                        "edited"
+                        &quot;edited&quot;
                       </span>
                     )}
                   </div>
@@ -226,7 +226,7 @@ export function ForumCommentCard({
                             }}
                           >
                             <FaEdit className="w-4 h-4 text-muted-foreground" />
-                            "Edit"
+                            &quot;Edit&quot;
                           </button>
                         )}
                         {isOwnComment && onDelete && (
@@ -238,7 +238,7 @@ export function ForumCommentCard({
                             }}
                           >
                             <FaTrash className="w-4 h-4" />
-                            "Delete"
+                            &quot;Delete&quot;
                           </button>
                         )}
                         {!isOwnComment && onReport && (
@@ -250,7 +250,7 @@ export function ForumCommentCard({
                             }}
                           >
                             <FaFlag className="w-4 h-4 text-muted-foreground" />
-                            "Report"
+                            &quot;Report&quot;
                           </button>
                         )}
                         {isPostAuthor && !comment.is_best_answer && onMarkBestAnswer && (
@@ -264,7 +264,7 @@ export function ForumCommentCard({
                               }}
                             >
                               <FaAward className="w-4 h-4" />
-                              "Mark as Best"
+                              &quot;Mark as Best&quot;
                             </button>
                           </>
                         )}
@@ -312,7 +312,7 @@ export function ForumCommentCard({
                   onClick={() => onReply(comment.id)}
                 >
                   <FaReply className="w-4 h-4" />
-                  "Reply"
+                  &quot;Reply&quot;
                 </motion.button>
               )}
 

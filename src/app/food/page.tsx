@@ -1,43 +1,43 @@
-import { Suspense } from 'react';
-import { redirect } from 'next/navigation';
-import type { Metadata } from 'next';
-import { getProducts } from '@/lib/data/products';
-import { getChallenges } from '@/lib/data/challenges';
-import { HomeClient } from '@/app/HomeClient';
-import SkeletonCard from '@/components/productCard/SkeletonCard';
-import { categoryMetadata, generatePageMetadata } from '@/lib/metadata';
+import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { getProducts } from "@/lib/data/products";
+import { getChallenges } from "@/lib/data/challenges";
+import { HomeClient } from "@/app/HomeClient";
+import SkeletonCard from "@/components/productCard/SkeletonCard";
+import { categoryMetadata, generatePageMetadata } from "@/lib/metadata";
 
 // Route segment config for caching
 export const revalidate = 60;
 
 const CATEGORY_PATHS = [
-  'food',
-  'thing',
-  'borrow',
-  'wanted',
-  'fridge',
-  'foodbank',
-  'business',
-  'volunteer',
-  'challenge',
-  'zerowaste',
-  'vegan',
-  'forum',
+  "food",
+  "thing",
+  "borrow",
+  "wanted",
+  "fridge",
+  "foodbank",
+  "business",
+  "volunteer",
+  "challenge",
+  "zerowaste",
+  "vegan",
+  "forum",
 ];
 
 // Map URL params to categoryMetadata keys
 const categoryKeyMap: Record<string, keyof typeof categoryMetadata> = {
-  food: 'food',
-  thing: 'things',
-  things: 'things',
-  borrow: 'borrow',
-  wanted: 'wanted',
-  fridge: 'fridges',
-  fridges: 'fridges',
-  foodbank: 'foodbanks',
-  foodbanks: 'foodbanks',
-  business: 'business',
-  volunteer: 'volunteer',
+  food: "food",
+  thing: "things",
+  things: "things",
+  borrow: "borrow",
+  wanted: "wanted",
+  fridge: "fridges",
+  fridges: "fridges",
+  foodbank: "foodbanks",
+  foodbanks: "foodbanks",
+  business: "business",
+  volunteer: "volunteer",
 };
 
 interface PageProps {
@@ -46,15 +46,15 @@ interface PageProps {
 
 export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
   const params = await searchParams;
-  const type = params.type || 'food';
-  const categoryKey = categoryKeyMap[type] || 'food';
+  const type = params.type || "food";
+  const categoryKey = categoryKeyMap[type] || "food";
   const category = categoryMetadata[categoryKey];
 
   return generatePageMetadata({
     title: category.title,
     description: category.description,
     keywords: category.keywords,
-    path: type === 'food' ? '/food' : `/food?type=${type}`,
+    path: type === "food" ? "/food" : `/food?type=${type}`,
   });
 }
 
@@ -76,7 +76,7 @@ async function isDatabaseHealthy(): Promise<boolean> {
         Authorization: `Bearer ${supabaseKey}`,
       },
       signal: controller.signal,
-      cache: 'no-store',
+      cache: "no-store",
     });
 
     clearTimeout(timeoutId);
@@ -95,31 +95,25 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   const dbHealthy = await isDatabaseHealthy();
 
   if (!dbHealthy) {
-    redirect('/maintenance');
+    redirect("/maintenance");
   }
 
+  const params = await searchParams;
+  const productType = params.type && CATEGORY_PATHS.includes(params.type) ? params.type : "food";
+
+  // Fetch products
+  let products;
   try {
-    const params = await searchParams;
-    const productType =
-      params.type && CATEGORY_PATHS.includes(params.type) ? params.type : 'food';
-
-    // Fetch products
-    let products;
-    try {
-      products =
-        productType === 'challenge' ? await getChallenges() : await getProducts(productType);
-    } catch {
-      redirect('/maintenance');
-    }
-
-    return (
-      <Suspense fallback={<ProductsPageSkeleton />}>
-        <HomeClient initialProducts={products} productType={productType} />
-      </Suspense>
-    );
+    products = productType === "challenge" ? await getChallenges() : await getProducts(productType);
   } catch {
-    redirect('/maintenance');
+    redirect("/maintenance");
   }
+
+  return (
+    <Suspense fallback={<ProductsPageSkeleton />}>
+      <HomeClient initialProducts={products} productType={productType} />
+    </Suspense>
+  );
 }
 
 function ProductsPageSkeleton() {

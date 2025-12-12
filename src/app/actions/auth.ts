@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import type { Session } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
+import { trackEvent } from "@/app/actions/analytics";
 
 // Import and re-export AuthUser type from data layer for consistency
 import type { AuthUser } from "@/lib/data/auth";
@@ -146,6 +147,10 @@ export async function signInWithPassword(
 
   revalidatePath("/", "layout");
   invalidateTag(CACHE_TAGS.AUTH);
+
+  // Track login
+  await trackEvent("User Login", { method: "password" });
+
   return { success: true };
 }
 
@@ -193,6 +198,10 @@ export async function signUp(formData: FormData): Promise<{ success: boolean; er
   revalidatePath("/", "layout");
   invalidateTag(CACHE_TAGS.AUTH);
   invalidateTag(CACHE_TAGS.PROFILES);
+
+  // Track signup
+  await trackEvent("User Signup", { method: "password" });
+
   return { success: true };
 }
 

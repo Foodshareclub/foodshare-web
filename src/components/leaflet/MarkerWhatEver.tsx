@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import type { LatLngExpression } from "leaflet";
 import { Icon } from "leaflet";
@@ -32,11 +32,6 @@ const MarkerWhatEver: FC<MarkerType> = ({
   const london = [51.507351, -0.127758] as LatLngExpression;
   const africa = [-8.783195, 34.508522] as LatLngExpression;
 
-  useEffect(() => {
-    if (valOne) mapFlyTo();
-    if (valTwo) setView();
-  }, [valOne, valTwo]);
-
   const mapFlyTo = () => {
     handleOnFlyTo(!valOne);
     setLocation(london);
@@ -52,6 +47,11 @@ const MarkerWhatEver: FC<MarkerType> = ({
     });
     //map.setView([54.317749, 26.871780], 14);
   };
+
+  useEffect(() => {
+    if (valOne) mapFlyTo();
+    if (valTwo) setView();
+  }, [valOne, valTwo]);
   return (
     <div>
       {/*для того,чтоб обьединить локации в одну*/}

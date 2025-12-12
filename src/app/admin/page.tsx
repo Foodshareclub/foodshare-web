@@ -109,17 +109,21 @@ async function AdminDashboardData() {
   const { tags, customers, crmStats, campaigns, segments, automations, newsletterStats } =
     await fetchCRMData();
 
-  return (
-    <CRMDashboard
-      customers={customers}
-      tags={tags}
-      stats={crmStats}
-      campaigns={campaigns}
-      segments={segments}
-      automations={automations}
-      newsletterStats={newsletterStats}
-    />
+  // Ensure data is serializable to prevent "Server Components render" errors
+  // This handles Date objects, undefined values, and other non-serializable types
+  const sanitizedProps = JSON.parse(
+    JSON.stringify({
+      customers,
+      tags,
+      stats: crmStats,
+      campaigns,
+      segments,
+      automations,
+      newsletterStats,
+    })
   );
+
+  return <CRMDashboard {...sanitizedProps} />;
 }
 
 export default function AdminDashboardPage() {

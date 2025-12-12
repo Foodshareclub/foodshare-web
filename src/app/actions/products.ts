@@ -4,6 +4,7 @@ import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { type ActionResult, withErrorHandling, validateWithSchema } from "@/lib/errors";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
+import { trackEvent } from "@/app/actions/analytics";
 
 // NOTE: Data functions (getProducts, getAllProducts, etc.) should be imported
 // directly from '@/lib/data/products' - they cannot be re-exported from a
@@ -86,7 +87,15 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     }
 
     return { id: data.id };
-  }, "createProduct");
+  }, "createProduct").then(async (result) => {
+    if (result.success && result.data) {
+      await trackEvent("Listing Created", {
+        listingId: result.data.id,
+        type: formData.get("post_type") as string,
+      });
+    }
+    return result;
+  });
 }
 
 /**

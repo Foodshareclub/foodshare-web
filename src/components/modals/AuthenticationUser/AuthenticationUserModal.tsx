@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Modern Authentication Modal
@@ -7,10 +7,12 @@
 
 import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { PasswordStrength } from "./PasswordStrength";
+import { InvitationStep } from "./InvitationStep";
 import { useAuth } from "@/hooks";
 import { ViewIcon, ViewOffIcon } from "@/utils/icons";
 
-import { PasswordStrength } from "./PasswordStrength";
 import facebook from "@/assets/facebookblue.svg";
 import apple from "@/assets/apple.svg";
 import google from "@/assets/google.svg";
@@ -20,8 +22,13 @@ import {
   clearSupabaseStorage,
   type StorageErrorInfo,
 } from "@/utils/storageErrorHandler";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createLogger } from "@/lib/logger";
@@ -83,6 +90,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
   const [isCheckingStorage, setIsCheckingStorage] = useState(false);
   const [isRecoveringStorage, setIsRecoveringStorage] = useState(false);
   const [emailError, setEmailError] = useState<string>("");
+  const [showInvitation, setShowInvitation] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -226,8 +234,8 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
         });
 
         if (result.success) {
-          logger.info("Registration successful, closing modal");
-          handleClose();
+          logger.info("Registration successful, showing invitation");
+          setShowInvitation(true);
         } else {
           logger.error("Registration failed", new Error(result.error || "Registration failed"));
         }
@@ -283,6 +291,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
     setShowPassword(false);
     setStorageError(null);
     setEmailError("");
+    setShowInvitation(false);
     clearError();
   };
 
@@ -291,14 +300,14 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
       {/* Trigger Buttons - Only render in uncontrolled mode */}
       {!isControlled && fullScreen ? (
         <button onClick={onOpen} className="w-full text-left">
-          "{buttonValue}"
+          &quot;{buttonValue}&quot;
         </button>
       ) : !isControlled && oneProductComponent ? (
         <Button
           onClick={onOpen}
           className="uppercase brand-gradient text-white w-full font-semibold hover:brand-gradient-hover hover:-translate-y-px hover:shadow-lg hover:shadow-primary/40 transition-all"
         >
-          "Request"
+          &quot;Request&quot;
         </Button>
       ) : !isControlled && becomeSharerBlock ? (
         <Button
@@ -306,7 +315,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
           variant="ghost"
           className="mr-2 hidden md:block text-foreground text-base font-semibold hover:text-primary transition-colors"
         >
-          "Become a Sharer"
+          &quot;Become a Sharer&quot;
         </Button>
       ) : !isControlled ? (
         <Button
@@ -314,13 +323,17 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
           variant="outline"
           className="bg-background text-foreground border border-border font-semibold px-6 hover:border-foreground hover:shadow-md transition-all"
         >
-          "{buttonValue}"
+          &quot;{buttonValue}&quot;
         </Button>
       ) : null}
 
       {/* Modal */}
       <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && handleClose()}>
-        <DialogContent variant="glass" className="max-w-[568px] rounded-2xl p-0" aria-describedby={undefined}>
+        <DialogContent
+          variant="glass"
+          className="max-w-[568px] rounded-2xl p-0"
+          aria-describedby={undefined}
+        >
           {/* Header with proper accessibility */}
           <DialogHeader className="border-b border-border py-4 px-6 relative">
             <DialogTitle className="text-base font-semibold text-center text-foreground">
@@ -329,18 +342,19 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
           </DialogHeader>
 
           <div className="p-6">
-            <div key={mode} className="transition-opacity duration-200">
+            {showInvitation ? (
+              <InvitationStep onClose={handleClose} />
+            ) : (
+              <div key={mode} className="transition-opacity duration-200">
                 {/* Welcome Message */}
                 <div className="mb-6">
                   <h2 className="text-[22px] font-semibold mb-2 text-foreground">
-                    "Welcome to FoodShare"
+                    &quot;Welcome to FoodShare&quot;
                   </h2>
                   <p className="text-sm text-muted-foreground">
-
                     {mode === "login"
                       ? "Log in to continue sharing and discovering food"
                       : "Create an account to start sharing food in your community"}
-
                   </p>
                 </div>
 
@@ -363,13 +377,11 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                       </div>
                       <div className="flex-1">
                         <h3 className="text-sm font-medium text-orange-800">
-                          "Memory-Only Mode"
+                          &quot;Memory-Only Mode&quot;
                         </h3>
                         <p className="mt-1 text-sm text-orange-700 mb-2">
-
                           Your browser storage is degraded. You can log in, but your session will
                           only last while this tab is open.
-
                         </p>
                         <Button
                           size="sm"
@@ -377,11 +389,9 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                           disabled={isRecoveringStorage}
                           className="bg-orange-600 hover:bg-orange-700 text-white"
                         >
-                          {isRecoveringStorage ? (
-                            "Clearing..."
-                          ) : (
-                            "Clear Storage to Enable Persistence"
-                          )}
+                          {isRecoveringStorage
+                            ? "Clearing..."
+                            : "Clear Storage to Enable Persistence"}
                         </Button>
                       </div>
                     </div>
@@ -410,7 +420,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                         </svg>
                       </div>
                       <p className="text-sm font-medium text-blue-800">
-                        "Checking browser storage..."
+                        &quot;Checking browser storage...&quot;
                       </p>
                     </div>
                   </div>
@@ -434,7 +444,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                       </div>
                       <div className="flex-1">
                         <h3 className="text-sm font-medium text-red-800">
-                          "Storage Error"
+                          &quot;Storage Error&quot;
                         </h3>
                         <p className="mt-1 text-sm text-red-700 mb-2">{storageError.message}</p>
                         <p className="text-sm text-red-600 mb-3">{storageError.userGuidance}</p>
@@ -445,11 +455,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                             disabled={isRecoveringStorage}
                             className="bg-red-600 hover:bg-red-700 text-white"
                           >
-                            {isRecoveringStorage ? (
-                              "Clearing..."
-                            ) : (
-                              "Clear Browser Storage & Reload"
-                            )}
+                            {isRecoveringStorage ? "Clearing..." : "Clear Browser Storage & Reload"}
                           </Button>
                         )}
                       </div>
@@ -464,12 +470,13 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                       <p className="text-sm text-red-800">
                         {/* Sanitize error message to remove any encoded tokens */}
                         {authError.replace(/[a-zA-Z0-9+/=]{20,}/g, "[token]")}
-                        {process.env.NODE_ENV === 'development' && authError.includes("redirect") && (
-                          <span className="block mt-2 text-xs text-orange-600">
-                            💡 Tip: Add http://localhost:3000/auth/callback to Supabase allowed
-                            redirect URLs
-                          </span>
-                        )}
+                        {process.env.NODE_ENV === "development" &&
+                          authError.includes("redirect") && (
+                            <span className="block mt-2 text-xs text-orange-600">
+                              💡 Tip: Add http://localhost:3000/auth/callback to Supabase allowed
+                              redirect URLs
+                            </span>
+                          )}
                       </p>
                     </div>
                   )}
@@ -514,14 +521,22 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                         onBlur={handleEmailBlur}
                         autoComplete="email"
                         required
-                        className={`h-11 rounded-lg border ${emailError ? "border-red-500 dark:border-red-400" : "border-border"
-                          } hover:border-foreground focus:border-foreground focus:ring-1 ${emailError ? "focus:ring-red-500 dark:focus:ring-red-400" : "focus:ring-foreground"
-                          }`}
+                        className={`h-11 rounded-lg border ${
+                          emailError ? "border-red-500 dark:border-red-400" : "border-border"
+                        } hover:border-foreground focus:border-foreground focus:ring-1 ${
+                          emailError
+                            ? "focus:ring-red-500 dark:focus:ring-red-400"
+                            : "focus:ring-foreground"
+                        }`}
                         aria-invalid={!!emailError}
                         aria-describedby={emailError ? "email-error" : undefined}
                       />
                       {emailError && (
-                        <p id="email-error" className="text-xs text-red-500 dark:text-red-400 mt-1" role="alert">
+                        <p
+                          id="email-error"
+                          className="text-xs text-red-500 dark:text-red-400 mt-1"
+                          role="alert"
+                        >
                           {emailError}
                         </p>
                       )}
@@ -557,15 +572,13 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                       className="h-11 w-full brand-gradient text-white font-semibold text-base rounded-lg hover:brand-gradient-hover hover:-translate-y-px hover:shadow-lg hover:shadow-primary/40 active:translate-y-0 transition-all"
                       disabled={isLoading}
                     >
-                      {isLoading ? (
-                        mode === "login" ? (
-                          "Logging in..."
-                        ) : (
-                          "Signing up..."
-                        )
-                      ) : (
-                        mode === "login" ? "Continue" : "Sign up"
-                      )}
+                      {isLoading
+                        ? mode === "login"
+                          ? "Logging in..."
+                          : "Signing up..."
+                        : mode === "login"
+                          ? "Continue"
+                          : "Sign up"}
                     </Button>
                   </div>
                 </form>
@@ -574,7 +587,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                 <div className="flex items-center my-6">
                   <div className="flex-1 border-t border-border" />
                   <span className="px-4 text-xs text-muted-foreground font-medium">
-                    "or"
+                    &quot;or&quot;
                   </span>
                   <div className="flex-1 border-t border-border" />
                 </div>
@@ -588,7 +601,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
                   >
                     <img src={google.src} alt="Google" className="w-5 h-5 mr-3" />
-                    "Continue with Google"
+                    &quot;Continue with Google&quot;
                   </Button>
 
                   <Button
@@ -598,7 +611,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
                   >
                     <img src={facebook.src} alt="Facebook" className="w-5 h-5 mr-3" />
-                    "Continue with Facebook"
+                    &quot;Continue with Facebook&quot;
                   </Button>
 
                   <Button
@@ -608,26 +621,25 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
                   >
                     <img src={apple.src} alt="Apple" className="w-5 h-5 mr-3" />
-                    "Continue with Apple"
+                    &quot;Continue with Apple&quot;
                   </Button>
                 </div>
 
                 {/* Toggle Mode */}
                 <div className="mt-6 pt-6 border-t border-border">
                   <p className="text-sm text-muted-foreground text-center">
-
-                    {mode === "login" ? "Don't have an account?" : "Already have an account?"}
-                    {" "}
+                    {mode === "login" ? "Don&apos;t have an account?" : "Already have an account?"}{" "}
                     <button
                       type="button"
                       className="font-semibold text-foreground underline hover:text-primary cursor-pointer"
                       onClick={toggleMode}
                     >
-                      "{mode === "login" ? "Sign up" : "Log in"}"
+                      &quot;{mode === "login" ? "Sign up" : "Log in"}&quot;
                     </button>
                   </p>
                 </div>
               </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

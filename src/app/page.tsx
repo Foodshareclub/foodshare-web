@@ -1,9 +1,14 @@
-import { Suspense } from 'react';
-import { redirect } from 'next/navigation';
-import { getProducts } from '@/lib/data/products';
-import { HomeClient } from './HomeClient';
-import SkeletonCard from '@/components/productCard/SkeletonCard';
-import { generateOrganizationJsonLd, generateWebsiteJsonLd, generateSoftwareApplicationJsonLd, safeJsonLdStringify } from '@/lib/jsonld';
+import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { HomeClient } from "./HomeClient";
+import { getProducts } from "@/lib/data/products";
+import SkeletonCard from "@/components/productCard/SkeletonCard";
+import {
+  generateOrganizationJsonLd,
+  generateWebsiteJsonLd,
+  generateSoftwareApplicationJsonLd,
+  safeJsonLdStringify,
+} from "@/lib/jsonld";
 
 export const revalidate = 60;
 
@@ -25,7 +30,7 @@ async function isDatabaseHealthy(): Promise<boolean> {
         Authorization: `Bearer ${supabaseKey}`,
       },
       signal: controller.signal,
-      cache: 'no-store',
+      cache: "no-store",
     });
 
     clearTimeout(timeoutId);
@@ -44,45 +49,41 @@ export default async function Home() {
   const dbHealthy = await isDatabaseHealthy();
 
   if (!dbHealthy) {
-    redirect('/maintenance');
+    redirect("/maintenance");
   }
 
+  // Fetch products
+  let products;
   try {
-    // Fetch products
-    let products;
-    try {
-      products = await getProducts('food');
-    } catch {
-      redirect('/maintenance');
-    }
-
-    // Generate JSON-LD structured data for SEO
-    const organizationJsonLd = generateOrganizationJsonLd();
-    const websiteJsonLd = generateWebsiteJsonLd();
-    const softwareAppJsonLd = generateSoftwareApplicationJsonLd();
-
-    return (
-      <>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(organizationJsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(websiteJsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(softwareAppJsonLd) }}
-        />
-        <Suspense fallback={<HomePageSkeleton />}>
-          <HomeClient initialProducts={products} productType="food" />
-        </Suspense>
-      </>
-    );
+    products = await getProducts("food");
   } catch {
-    redirect('/maintenance');
+    redirect("/maintenance");
   }
+
+  // Generate JSON-LD structured data for SEO
+  const organizationJsonLd = generateOrganizationJsonLd();
+  const websiteJsonLd = generateWebsiteJsonLd();
+  const softwareAppJsonLd = generateSoftwareApplicationJsonLd();
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(organizationJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(websiteJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(softwareAppJsonLd) }}
+      />
+      <Suspense fallback={<HomePageSkeleton />}>
+        <HomeClient initialProducts={products} productType="food" />
+      </Suspense>
+    </>
+  );
 }
 
 function HomePageSkeleton() {

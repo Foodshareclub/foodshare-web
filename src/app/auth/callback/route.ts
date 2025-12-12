@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
-import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
+import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
+import { trackEvent } from "@/app/actions/analytics";
 
 /**
  * Auth Callback Route Handler
@@ -15,9 +16,9 @@ import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
  */
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get('code');
-  const next = requestUrl.searchParams.get('next') ?? '/';
-  const type = requestUrl.searchParams.get('type');
+  const code = requestUrl.searchParams.get("code");
+  const next = requestUrl.searchParams.get("next") ?? "/";
+  const type = requestUrl.searchParams.get("type");
 
   if (code) {
     const supabase = await createClient();
@@ -25,12 +26,15 @@ export async function GET(request: Request) {
 
     if (!error) {
       // Revalidate the entire app to reflect the new auth state
-      revalidatePath('/', 'layout');
+      revalidatePath("/", "layout");
       invalidateTag(CACHE_TAGS.AUTH);
 
+      // Track login (fire and forget)
+      trackEvent("User Login", { method: "oauth" });
+
       // Handle password recovery redirect
-      if (type === 'recovery') {
-        const redirectUrl = new URL('/auth/reset-password', requestUrl.origin);
+      if (type === "recovery") {
+        const redirectUrl = new URL("/auth/reset-password", requestUrl.origin);
         return NextResponse.redirect(redirectUrl);
       }
 
@@ -40,12 +44,12 @@ export async function GET(request: Request) {
     }
 
     // Log error in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('[Auth Callback] Error exchanging code for session:', error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("[Auth Callback] Error exchanging code for session:", error);
     }
   }
 
   // Return the user to an error page with instructions
-  const errorUrl = new URL('/auth/login?error=auth_error', requestUrl.origin);
+  const errorUrl = new URL("/auth/login?error=auth_error", requestUrl.origin);
   return NextResponse.redirect(errorUrl);
 }

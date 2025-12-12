@@ -8,7 +8,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { LayoutDashboard, Users, ClipboardList, Mail, UserCircle } from "lucide-react";
+import { LayoutDashboard, Users, ClipboardList, Mail, UserCircle, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,7 +65,7 @@ interface AdminUnifiedClientProps {
   crmStats: CRMStats;
 }
 
-type TabId = "overview" | "customers" | "listings" | "users" | "email";
+type TabId = "overview" | "customers" | "listings" | "users" | "email" | "analytics";
 
 // ============================================================================
 // Shared Components
@@ -412,6 +412,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
   { id: "listings", label: "Listings", icon: <ClipboardList className="w-4 h-4" /> },
   { id: "users", label: "Users", icon: <Users className="w-4 h-4" /> },
   { id: "email", label: "Email", icon: <Mail className="w-4 h-4" /> },
+  { id: "analytics", label: "Analytics", icon: <BarChart3 className="w-4 h-4" /> },
 ];
 
 export function AdminUnifiedClient({
@@ -437,6 +438,10 @@ export function AdminUnifiedClient({
     }
     if (tab === "email") {
       router.push("/admin/email");
+      return;
+    }
+    if (tab === "analytics") {
+      router.push("/admin/analytics");
       return;
     }
     setActiveTab(tab);
@@ -482,6 +487,7 @@ export function AdminUnifiedClient({
         {activeTab === "listings" && <PlaceholderTab title="Listings" href="/admin/listings" />}
         {activeTab === "users" && <PlaceholderTab title="Users" href="/admin/users" />}
         {activeTab === "email" && <PlaceholderTab title="Email" href="/admin/email" />}
+        {activeTab === "analytics" && <PlaceholderTab title="Analytics" href="/admin/analytics" />}
       </div>
     </div>
   );

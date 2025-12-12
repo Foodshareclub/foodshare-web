@@ -1,8 +1,14 @@
-'use client';
+"use client";
 
 import React, { useState } from "react";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -25,7 +31,7 @@ function VolunteerInfoModal() {
         className="items-center mt-6 text-[22px] w-full md:w-1/2 glass-accent-orange"
         onClick={onOpen}
       >
-        "Get Started"
+        &quot;Get Started&quot;
       </Button>
       <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
         <DialogContent variant="glass">

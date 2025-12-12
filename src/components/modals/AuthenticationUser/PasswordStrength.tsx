@@ -3,7 +3,6 @@
  * Visual feedback for password strength
  */
 
-
 import { useMemo } from "react";
 
 interface PasswordStrengthProps {
@@ -70,7 +69,7 @@ export const PasswordStrength: React.FC<PasswordStrengthProps> = ({ password }) 
         ))}
       </div>
       <p className={`text-xs font-medium ${strength.color.replace("bg-", "text-")}`}>
-        "Password strength: {strength.label}"
+        &quot;Password strength: {strength.label}&quot;
       </p>
     </div>
   );

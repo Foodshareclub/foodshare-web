@@ -1,23 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
-import { ForumPostCard } from "@/components/forum";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { ForumPost, ForumCategory, ForumTag } from "@/api/forumAPI";
-import type { ForumStats, LeaderboardUser, SortOption } from "@/lib/data/forum";
 import {
   Plus,
   Search,
@@ -39,6 +25,20 @@ import {
   ArrowRight,
   Hash,
 } from "lucide-react";
+import { ForumPostCard } from "@/components/forum";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { ForumPost, ForumCategory, ForumTag } from "@/api/forumAPI";
+import type { ForumStats, LeaderboardUser, SortOption } from "@/lib/data/forum";
 
 // Icon aliases for consistency
 const FaPlus = Plus;
@@ -219,14 +219,15 @@ function LeaderboardCard({ user, rank }: { user: LeaderboardUser; rank: number }
 }
 
 function ActivityItem({ post }: { post: ForumPost }) {
-  const timeAgo = (date: string): string => {
-    const diff = Date.now() - new Date(date).getTime();
+  const timeAgo = (() => {
+    // eslint-disable-next-line react-hooks/purity
+    const diff = Date.now() - new Date(post.forum_post_created_at).getTime();
     const mins = Math.floor(diff / 60000);
     if (mins < 60) return `${mins}m`;
     const hours = Math.floor(mins / 60);
     if (hours < 24) return `${hours}h`;
     return `${Math.floor(hours / 24)}d`;
-  };
+  })();
 
   return (
     <motion.div
@@ -254,7 +255,7 @@ function ActivityItem({ post }: { post: ForumPost }) {
             {post.forum_post_name?.slice(0, 30)}...
           </Link>
         </p>
-        <p className="text-xs text-muted-foreground">{timeAgo(post.forum_post_created_at)}</p>
+        <p className="text-xs text-muted-foreground">{timeAgo}</p>
       </div>
     </motion.div>
   );
@@ -278,11 +279,10 @@ function CategoryCard({
       onClick={onClick}
       aria-pressed={isSelected}
       aria-label={`Filter by category: ${category.name}`}
-      className={`w-full text-left p-3 rounded-xl transition-all ${
-        isSelected
+      className={`w-full text-left p-3 rounded-xl transition-all ${isSelected
           ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/25"
           : "glass hover:bg-accent"
-      }`}
+        }`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -316,11 +316,10 @@ function TagPill({
       onClick={onClick}
       aria-pressed={isSelected}
       aria-label={`Filter by tag: ${tag.name}`}
-      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-        isSelected
+      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${isSelected
           ? "bg-primary text-primary-foreground shadow-md"
           : "bg-muted hover:bg-accent border border-transparent hover:border-primary/20"
-      }`}
+        }`}
       style={!isSelected ? { borderLeft: `3px solid ${tag.color}` } : {}}
     >
       <FaHashtag className="inline w-3 h-3 mr-1 opacity-60" />

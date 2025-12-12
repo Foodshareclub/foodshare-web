@@ -25,6 +25,7 @@ interface EmailSecrets {
   awsAccessKeyId: string | null;
   awsSecretAccessKey: string | null;
   awsRegion: string;
+  motherDuckToken: string | null;
 }
 
 // Cache configuration
@@ -40,6 +41,7 @@ const SECRET_NAMES = {
   BREVO_API_KEY: "BREVO_API_KEY",
   AWS_ACCESS_KEY_ID: "AWS_ACCESS_KEY_ID",
   AWS_SECRET_ACCESS_KEY: "AWS_SECRET_ACCESS_KEY",
+  MOTHERDUCK_TOKEN: "MOTHERDUCK_TOKEN",
 } as const;
 
 /** Mask a secret for safe logging (show first 6 and last 4 chars) */
@@ -109,6 +111,7 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
     awsAccessKeyId: null,
     awsSecretAccessKey: null,
     awsRegion: process.env.AWS_REGION ?? "us-east-1",
+    motherDuckToken: null,
   };
 
   // In development, check env vars first (local dev shortcut)
@@ -120,6 +123,7 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
       awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID ?? null,
       awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? null,
       awsRegion: process.env.AWS_REGION ?? "us-east-1",
+      motherDuckToken: process.env.MOTHERDUCK_TOKEN ?? null,
     };
 
     const hasEnvSecrets =
@@ -193,6 +197,7 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
       awsAccessKeyId: secretsMap.get(SECRET_NAMES.AWS_ACCESS_KEY_ID) ?? null,
       awsSecretAccessKey: secretsMap.get(SECRET_NAMES.AWS_SECRET_ACCESS_KEY) ?? null,
       awsRegion: process.env.AWS_REGION ?? "us-east-1",
+      motherDuckToken: secretsMap.get(SECRET_NAMES.MOTHERDUCK_TOKEN) ?? null,
     };
 
     // Log masked values for debugging
@@ -249,6 +254,14 @@ export async function getAwsCredentials(): Promise<{
     secretAccessKey: secrets.awsSecretAccessKey,
     region: secrets.awsRegion,
   };
+}
+
+/**
+ * Get MotherDuck Token specifically
+ */
+export async function getMotherDuckToken(): Promise<string | null> {
+  const secrets = await getEmailSecrets();
+  return secrets.motherDuckToken;
 }
 
 /**

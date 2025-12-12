@@ -15,8 +15,8 @@
 
 import React, { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 
 // ============================================================================
@@ -110,6 +110,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
 
     // Redirect unauthenticated users to login
     if (requireAuth && !isAuthenticated) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsRedirecting(true);
       const loginUrl = `${redirectPath}?from=${encodeURIComponent(pathname || "/")}`;
       router.push(loginUrl);

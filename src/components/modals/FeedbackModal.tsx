@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Feedback Modal Component
@@ -7,12 +7,14 @@
 
 import React, { useState, useEffect, useRef, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { submitFeedback, getCurrentUserInfo, type FeedbackType } from "@/app/actions/feedback";
 import {
-  submitFeedback,
-  getCurrentUserInfo,
-  type FeedbackType,
-} from "@/app/actions/feedback";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -124,13 +126,11 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
               <div className="text-center">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-semibold text-foreground">
-                    "Send us your feedback"
+                    &quot;Send us your feedback&quot;
                   </DialogTitle>
                   <DialogDescription className="text-sm text-muted-foreground mt-2">
-                    
-                      We'd love to hear from you! Share your thoughts, report bugs, or suggest new
-                      features.
-                    
+                    We&apos;d love to hear from you! Share your thoughts, report bugs, or suggest
+                    new features.
                   </DialogDescription>
                 </DialogHeader>
               </div>
@@ -154,10 +154,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                     </div>
                     <div>
                       <h3 className="text-sm font-medium text-green-800">
-                        "Thank you for your feedback!"
+                        &quot;Thank you for your feedback!&quot;
                       </h3>
                       <p className="mt-1 text-sm text-green-700">
-                        "We'll review your message and get back to you soon."
+                        &quot;We&apos;ll review your message and get back to you soon.&quot;
                       </p>
                     </div>
                   </div>
@@ -178,9 +178,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium text-red-800">
-                        "Error"
-                      </h3>
+                      <h3 className="text-sm font-medium text-red-800">&quot;Error&quot;</h3>
                       <p className="mt-1 text-sm text-red-700">{error}</p>
                     </div>
                   </div>
@@ -194,7 +192,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                     {/* Feedback Type */}
                     <div>
                       <label className="text-sm font-medium mb-2 block text-foreground/80">
-                        "Type of feedback"
+                        &quot;Type of feedback&quot;
                       </label>
                       <select
                         value={feedbackType}
@@ -211,7 +209,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                     {/* Name */}
                     <div>
                       <label className="text-sm font-medium mb-2 block text-foreground/80">
-                        "Your name"
+                        &quot;Your name&quot;
                       </label>
                       <Input
                         value={name}
@@ -225,7 +223,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                     {/* Email */}
                     <div>
                       <label className="text-sm font-medium mb-2 block text-foreground/80">
-                        "Email address"
+                        &quot;Email address&quot;
                       </label>
                       <Input
                         type="email"
@@ -240,7 +238,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                     {/* Subject */}
                     <div>
                       <label className="text-sm font-medium mb-2 block text-foreground/80">
-                        "Subject"
+                        &quot;Subject&quot;
                       </label>
                       <Input
                         value={subject}
@@ -254,7 +252,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                     {/* Message */}
                     <div>
                       <label className="text-sm font-medium mb-2 block text-foreground/80">
-                        "Message"
+                        &quot;Message&quot;
                       </label>
                       <textarea
                         value={message}
@@ -274,7 +272,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                         className="flex-1 rounded-xl"
                         disabled={isPending}
                       >
-                        "Cancel"
+                        &quot;Cancel&quot;
                       </Button>
                       <Button
                         type="submit"
