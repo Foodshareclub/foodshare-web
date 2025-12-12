@@ -280,45 +280,51 @@ function PublishListingModal({
       const imagesToUpload = imageUpload.images.filter((image) => image.file && image.filePath);
 
       if (imagesToUpload.length > 0) {
-        setUploadProgress(`Uploading ${imagesToUpload.length} image(s)...`);
+        const totalImages = imagesToUpload.length;
+        setUploadProgress(`Uploading ${totalImages} image${totalImages > 1 ? "s" : ""}...`);
 
-        // Upload with retry wrapper
-        const uploadWithRetry = async (
-          image: (typeof imagesToUpload)[0],
-          retries = 2
+        // Upload with timeout wrapper (no retries to avoid rate limits on free tier)
+        const uploadWithTimeout = async (
+          image: (typeof imagesToUpload)[0]
         ): Promise<{ success: boolean; error?: string }> => {
-          for (let attempt = 0; attempt <= retries; attempt++) {
-            try {
-              const result = await storageAPI.uploadImage({
+          const uploadTimeoutMs = 30000; // 30 second timeout per image
+
+          try {
+            // Create timeout promise
+            const timeoutPromise = new Promise<{ data: null; error: Error }>((_, reject) =>
+              setTimeout(
+                () => reject(new Error("Upload timed out. Please try with smaller images.")),
+                uploadTimeoutMs
+              )
+            );
+
+            // Race upload against timeout
+            const result = await Promise.race([
+              storageAPI.uploadImage({
                 bucket: STORAGE_BUCKETS.POSTS,
                 file: image.file!,
                 filePath: `${id}/${image.filePath}`,
-              });
+              }),
+              timeoutPromise,
+            ]);
 
-              if (result.error) {
-                if (attempt === retries) {
-                  return { success: false, error: result.error.message };
-                }
-                // Wait before retry (exponential backoff)
-                await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
-                continue;
-              }
-
-              return { success: true };
-            } catch (err) {
-              if (attempt === retries) {
-                return {
-                  success: false,
-                  error: err instanceof Error ? err.message : "Upload failed",
-                };
-              }
-              await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+            if (result.error) {
+              return { success: false, error: result.error.message };
             }
+
+            return { success: true };
+          } catch (err) {
+            return {
+              success: false,
+              error: err instanceof Error ? err.message : "Upload failed",
+            };
           }
-          return { success: false, error: "Upload failed after retries" };
         };
 
-        const uploadResults = await Promise.all(imagesToUpload.map((img) => uploadWithRetry(img)));
+        // Upload images in parallel for better performance
+        const uploadResults = await Promise.all(
+          imagesToUpload.map((img) => uploadWithTimeout(img))
+        );
 
         const failedUploads = uploadResults.filter((r) => !r.success);
         if (failedUploads.length > 0) {

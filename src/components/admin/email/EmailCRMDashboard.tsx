@@ -201,10 +201,14 @@ function getDefaultStats(): EmailDashboardStats {
     avgOpenRate: 0,
     avgClickRate: 0,
     unsubscribeRate: 0,
+    bounceRate: 0,
     activeCampaigns: 0,
     activeAutomations: 0,
     dailyQuotaUsed: 0,
     dailyQuotaLimit: 500,
+    monthlyQuotaUsed: 0,
+    monthlyQuotaLimit: 15000,
+    suppressedEmails: 0,
   };
 }
 
@@ -224,10 +228,14 @@ export function EmailCRMDashboard({ initialData }: Props) {
   const automations = initialData?.automations || [];
   const segments = initialData?.segments || [];
 
-  // Quota calculation
-  const quotaPercent =
+  // Quota calculations
+  const dailyQuotaPercent =
     stats.dailyQuotaLimit > 0
       ? Math.round((stats.dailyQuotaUsed / stats.dailyQuotaLimit) * 100)
+      : 0;
+  const monthlyQuotaPercent =
+    stats.monthlyQuotaLimit > 0
+      ? Math.round((stats.monthlyQuotaUsed / stats.monthlyQuotaLimit) * 100)
       : 0;
 
   const handleRefresh = async () => {
@@ -282,20 +290,46 @@ export function EmailCRMDashboard({ initialData }: Props) {
               <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-muted/50">
                 <div className="text-right">
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-                    Daily Quota
+                    Daily
                   </p>
                   <p className="text-sm font-bold tabular-nums">
                     {stats.dailyQuotaUsed.toLocaleString()}/{stats.dailyQuotaLimit.toLocaleString()}
                   </p>
                 </div>
-                <div className="w-20">
+                <div className="w-16">
                   <Progress
-                    value={quotaPercent}
+                    value={dailyQuotaPercent}
                     className={cn(
                       "h-1.5",
-                      quotaPercent > 90
+                      dailyQuotaPercent > 90
                         ? "[&>div]:bg-rose-500"
-                        : quotaPercent > 70
+                        : dailyQuotaPercent > 70
+                          ? "[&>div]:bg-amber-500"
+                          : "[&>div]:bg-emerald-500"
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Monthly Quota Indicator */}
+              <div className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-muted/50">
+                <div className="text-right">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
+                    Monthly
+                  </p>
+                  <p className="text-sm font-bold tabular-nums">
+                    {stats.monthlyQuotaUsed.toLocaleString()}/
+                    {stats.monthlyQuotaLimit.toLocaleString()}
+                  </p>
+                </div>
+                <div className="w-16">
+                  <Progress
+                    value={monthlyQuotaPercent}
+                    className={cn(
+                      "h-1.5",
+                      monthlyQuotaPercent > 90
+                        ? "[&>div]:bg-rose-500"
+                        : monthlyQuotaPercent > 70
                           ? "[&>div]:bg-amber-500"
                           : "[&>div]:bg-emerald-500"
                     )}

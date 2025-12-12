@@ -1,14 +1,21 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { Send, Users, Sparkles, Loader2 } from "lucide-react";
-import { getGrokInsight, getInsightSuggestions } from "@/app/actions/admin-insights";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { Send, Users, Sparkles, Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import {
+  getGrokInsight,
+  getInsightSuggestions,
+  resetAiService,
+} from "@/app/actions/admin-insights";
 
 interface Message {
   id: string;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "error";
   content: string;
   timestamp: Date;
+  errorType?: "rate_limit" | "circuit_open" | "timeout" | "api_error" | "unknown";
+  retryAfterSeconds?: number;
+  originalQuery?: string;
 }
 
 export const GrokAssistant: React.FC = () => {
@@ -24,7 +31,10 @@ export const GrokAssistant: React.FC = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
+  const [retryCountdown, setRetryCountdown] = useState<number | null>(null);
+  const [isResetting, setIsResetting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const retryTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Load suggested questions via server action
@@ -35,6 +45,67 @@ export const GrokAssistant: React.FC = () => {
     // Auto-scroll to bottom
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (retryTimerRef.current) {
+        clearInterval(retryTimerRef.current);
+      }
+    };
+  }, []);
+
+  const startRetryCountdown = useCallback((seconds: number) => {
+    setRetryCountdown(seconds);
+    if (retryTimerRef.current) {
+      clearInterval(retryTimerRef.current);
+    }
+    retryTimerRef.current = setInterval(() => {
+      setRetryCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          if (retryTimerRef.current) {
+            clearInterval(retryTimerRef.current);
+          }
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  const handleRetry = useCallback(
+    async (originalQuery: string) => {
+      if (isLoading || retryCountdown !== null) return;
+
+      await handleSendMessage(originalQuery);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isLoading, retryCountdown]
+  );
+
+  const handleResetService = useCallback(async () => {
+    if (isResetting) return;
+    setIsResetting(true);
+
+    try {
+      const result = await resetAiService();
+      const resetMessage: Message = {
+        id: Date.now().toString(),
+        role: "assistant",
+        content: result.success ? "✓ " + result.message : "✗ " + result.message,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, resetMessage]);
+      setRetryCountdown(null);
+      if (retryTimerRef.current) {
+        clearInterval(retryTimerRef.current);
+      }
+    } catch {
+      // Silent fail
+    } finally {
+      setIsResetting(false);
+    }
+  }, [isResetting]);
 
   const handleSendMessage = async (query?: string) => {
     const messageText = query || input.trim();
@@ -54,22 +125,44 @@ export const GrokAssistant: React.FC = () => {
     try {
       const result = await getGrokInsight(messageText);
 
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: result.success ? result.insight! : result.error || "Failed to get insights",
-        timestamp: new Date(),
-      };
+      if (result.success) {
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: result.insight!,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      } else {
+        // Handle error with retry info
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: "error",
+          content: result.error || "Failed to get insights",
+          timestamp: new Date(),
+          errorType: result.errorType,
+          retryAfterSeconds: result.retryAfterSeconds,
+          originalQuery: messageText,
+        };
+        setMessages((prev) => [...prev, errorMessage]);
 
-      setMessages((prev) => [...prev, assistantMessage]);
+        // Start countdown if retry is suggested
+        if (result.retryAfterSeconds) {
+          startRetryCountdown(result.retryAfterSeconds);
+        }
+      }
     } catch {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        role: "assistant",
-        content: "Sorry, I encountered an error processing your request. Please try again.",
+        role: "error",
+        content: "Sorry, I encountered an unexpected error. Please try again.",
         timestamp: new Date(),
+        errorType: "unknown",
+        retryAfterSeconds: 5,
+        originalQuery: messageText,
       };
       setMessages((prev) => [...prev, errorMessage]);
+      startRetryCountdown(5);
     } finally {
       setIsLoading(false);
     }
@@ -111,17 +204,61 @@ export const GrokAssistant: React.FC = () => {
             key={message.id}
             className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
           >
-            {message.role === "assistant" && (
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-                {getMessageIcon(message.role)}
+            {(message.role === "assistant" || message.role === "error") && (
+              <div
+                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                  message.role === "error" ? "bg-red-100" : "bg-purple-100"
+                }`}
+              >
+                {message.role === "error" ? (
+                  <AlertCircle className="w-5 h-5 text-red-600" />
+                ) : (
+                  getMessageIcon(message.role)
+                )}
               </div>
             )}
             <div
               className={`max-w-[70%] rounded-lg p-4 ${
-                message.role === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
+                message.role === "user"
+                  ? "bg-blue-600 text-white"
+                  : message.role === "error"
+                    ? "bg-red-50 text-red-900 border border-red-200"
+                    : "bg-gray-100 text-gray-900"
               }`}
             >
               <p className="whitespace-pre-wrap break-words">{message.content}</p>
+
+              {/* Error actions */}
+              {message.role === "error" && message.originalQuery && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => handleRetry(message.originalQuery!)}
+                    disabled={isLoading || retryCountdown !== null}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white border border-red-300 rounded-md hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <RefreshCw
+                      className={`w-3.5 h-3.5 ${retryCountdown !== null ? "animate-spin" : ""}`}
+                    />
+                    {retryCountdown !== null ? `Retry in ${retryCountdown}s` : "Retry"}
+                  </button>
+
+                  {message.errorType === "circuit_open" && (
+                    <button
+                      onClick={handleResetService}
+                      disabled={isResetting}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isResetting ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-3.5 h-3.5" />
+                      )}
+                      Reset Service
+                    </button>
+                  )}
+                </div>
+              )}
+
               <span className="text-xs opacity-70 mt-2 block">
                 {message.timestamp.toLocaleTimeString()}
               </span>

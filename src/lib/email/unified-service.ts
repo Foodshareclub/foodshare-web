@@ -8,6 +8,8 @@
  * - Lazy provider initialization
  * - Request coalescing for quota checks
  * - Streaming metrics (no blocking DB writes)
+ * - Suppression list checking (bounces, complaints, unsubscribes)
+ * - Monthly quota tracking alongside daily quota
  */
 
 import type { EmailProvider, EmailType, SendEmailRequest, SendEmailResponse } from "./types";
@@ -23,6 +25,7 @@ interface ProviderHealth {
   provider: EmailProvider;
   healthScore: number;
   quotaRemaining: number;
+  monthlyQuotaRemaining: number;
   avgLatencyMs: number;
   isAvailable: boolean;
 }
@@ -56,6 +59,13 @@ const DAILY_LIMITS: Record<EmailProvider, number> = {
   aws_ses: 50000,
 };
 
+// Monthly limits (static config)
+const MONTHLY_LIMITS: Record<EmailProvider, number> = {
+  resend: 3000,
+  brevo: 9000,
+  aws_ses: 62000,
+};
+
 // Request coalescing for quota checks
 const pendingQuotaChecks = new Map<string, Promise<ProviderHealth[]>>();
 
@@ -86,11 +96,29 @@ export class UnifiedEmailService {
   /**
    * Send email with optimized provider selection
    * No Edge Function calls - all logic is local
+   * Includes suppression list check and monthly quota consideration
    */
   async sendEmail(request: SendEmailRequest): Promise<SendEmailResponse> {
     const startTime = performance.now();
 
     try {
+      // Check suppression list (unless explicitly skipped for transactional emails)
+      if (!request.skipSuppressionCheck) {
+        const recipient = Array.isArray(request.options.to)
+          ? request.options.to[0]
+          : request.options.to;
+
+        const isSuppressed = await this.checkSuppression(recipient.email);
+        if (isSuppressed) {
+          return {
+            success: false,
+            provider: "brevo",
+            error: "Email address is on suppression list",
+            suppressed: true,
+          };
+        }
+      }
+
       // Get provider health (coalesced, cached)
       const healthData = await this.getProviderHealth();
 
@@ -155,14 +183,14 @@ export class UnifiedEmailService {
 
   /**
    * Fetch health data from database (single query)
+   * Uses comprehensive quota status for both daily and monthly limits
    */
   private async fetchProviderHealth(): Promise<ProviderHealth[]> {
     try {
       const supabase = await this.getSupabase();
 
-      // Call without p_date parameter - let PostgreSQL use DEFAULT CURRENT_DATE
-      // This avoids type mismatch issues (string vs date)
-      const { data, error } = await supabase.rpc("get_all_provider_health");
+      // Use comprehensive quota status which includes both daily and monthly
+      const { data, error } = await supabase.rpc("get_comprehensive_quota_status");
 
       if (error) throw error;
 
@@ -173,12 +201,12 @@ export class UnifiedEmailService {
 
       return data.map((row: Record<string, unknown>) => ({
         provider: row.provider as EmailProvider,
-        healthScore: (row.health_score as number) ?? 100,
-        quotaRemaining: Math.max(
-          0,
-          DAILY_LIMITS[row.provider as EmailProvider] - ((row.emails_sent as number) ?? 0)
-        ),
-        avgLatencyMs: (row.avg_latency_ms as number) ?? 500,
+        healthScore: 100, // Will be updated from health metrics if available
+        quotaRemaining:
+          (row.daily_remaining as number) ?? DAILY_LIMITS[row.provider as EmailProvider],
+        monthlyQuotaRemaining:
+          (row.monthly_remaining as number) ?? MONTHLY_LIMITS[row.provider as EmailProvider],
+        avgLatencyMs: 500,
         isAvailable: (row.is_available as boolean) ?? true,
       }));
     } catch (error) {
@@ -188,7 +216,27 @@ export class UnifiedEmailService {
   }
 
   /**
-   * Select best provider based on type priority and health
+   * Check if an email address is on the suppression list
+   */
+  private async checkSuppression(email: string): Promise<boolean> {
+    try {
+      const supabase = await this.getSupabase();
+      const { data, error } = await supabase.rpc("is_email_suppressed", { p_email: email });
+
+      if (error) {
+        console.warn("[UnifiedEmailService] Suppression check failed:", error);
+        return false; // Fail open - don't block emails if check fails
+      }
+
+      return data === true;
+    } catch (error) {
+      console.warn("[UnifiedEmailService] Suppression check error:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Select best provider based on type priority, health, and quota (daily + monthly)
    */
   private selectProvider(emailType: EmailType, healthData: ProviderHealth[]): EmailProvider | null {
     const priority = PROVIDER_PRIORITY[emailType] ?? ["brevo", "resend", "aws_ses"];
@@ -205,8 +253,11 @@ export class UnifiedEmailService {
       // Check availability
       if (!health?.isAvailable) continue;
 
-      // Check quota
+      // Check daily quota
       if ((health?.quotaRemaining ?? 0) <= 0) continue;
+
+      // Check monthly quota (critical for cost control)
+      if ((health?.monthlyQuotaRemaining ?? 0) <= 0) continue;
 
       // Check health score (skip if critically unhealthy)
       if ((health?.healthScore ?? 100) < 20) continue;
@@ -385,6 +436,7 @@ export class UnifiedEmailService {
       provider,
       healthScore: 100,
       quotaRemaining: DAILY_LIMITS[provider],
+      monthlyQuotaRemaining: MONTHLY_LIMITS[provider],
       avgLatencyMs: 500,
       isAvailable: this.isProviderConfigured(provider),
     }));

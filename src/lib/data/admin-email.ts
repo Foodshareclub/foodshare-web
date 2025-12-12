@@ -1,9 +1,16 @@
 /**
  * Admin Email CRM Data Layer
  * Server-side data fetching for email marketing dashboard
+ *
+ * Features:
+ * - Daily + Monthly quota tracking
+ * - Bounce/complaint analytics
+ * - Suppression list management
+ * - Provider health monitoring
  */
 
 import { createClient } from "@/lib/supabase/server";
+import type { EmailProvider } from "@/lib/email/types";
 
 // ============================================================================
 // Types
@@ -16,10 +23,44 @@ export interface EmailDashboardStats {
   avgOpenRate: number;
   avgClickRate: number;
   unsubscribeRate: number;
+  bounceRate: number;
   activeCampaigns: number;
   activeAutomations: number;
+  // Daily quota (combined)
   dailyQuotaUsed: number;
   dailyQuotaLimit: number;
+  // Monthly quota (combined)
+  monthlyQuotaUsed: number;
+  monthlyQuotaLimit: number;
+  // Suppression stats
+  suppressedEmails: number;
+}
+
+export interface ProviderQuotaDetails {
+  provider: EmailProvider;
+  daily: {
+    sent: number;
+    limit: number;
+    remaining: number;
+    percentUsed: number;
+  };
+  monthly: {
+    sent: number;
+    limit: number;
+    remaining: number;
+    percentUsed: number;
+  };
+  isAvailable: boolean;
+}
+
+export interface BounceStats {
+  totalBounces: number;
+  hardBounces: number;
+  softBounces: number;
+  complaints: number;
+  unsubscribes: number;
+  bounceRate: number;
+  last7Days: Array<{ date: string; bounces: number; complaints: number }>;
 }
 
 export interface ProviderHealth {
@@ -82,8 +123,10 @@ export async function getEmailDashboardStats(): Promise<EmailDashboardStats> {
     activeSubsRes,
     registeredUsersRes,
     campaignsRes,
-    quotaRes,
+    comprehensiveQuotaRes,
     automationsRes,
+    suppressionRes,
+    _bounceRes,
   ] = await Promise.all([
     // Total newsletter subscribers (external)
     supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }),
@@ -97,43 +140,51 @@ export async function getEmailDashboardStats(): Promise<EmailDashboardStats> {
     // Campaign stats (last 30 days)
     supabase
       .from("newsletter_campaigns")
-      .select("total_sent, total_opened, total_clicked, total_unsubscribed")
+      .select("total_sent, total_opened, total_clicked, total_unsubscribed, total_bounced")
       .eq("status", "sent")
       .gte("sent_at", thirtyDaysAgo.toISOString()),
-    // Daily quota - get most recent records per provider (handles missing today's data)
-    supabase
-      .from("email_provider_quota")
-      .select("provider, emails_sent, daily_limit, date")
-      .order("date", { ascending: false })
-      .limit(9), // 3 providers * 3 days buffer
+    // Comprehensive quota (daily + monthly) via RPC
+    supabase.rpc("get_comprehensive_quota_status"),
     // Active automations
     supabase
       .from("email_automation_flows")
       .select("*", { count: "exact", head: true })
       .eq("status", "active"),
+    // Suppression list count
+    supabase.from("email_suppression_list").select("*", { count: "exact", head: true }),
+    // Bounce count (last 30 days)
+    supabase
+      .from("email_bounce_events")
+      .select("*", { count: "exact", head: true })
+      .eq("event_type", "bounce")
+      .gte("created_at", thirtyDaysAgo.toISOString()),
   ]);
 
-  // Calculate aggregates
+  // Calculate campaign aggregates
   const campaigns = campaignsRes.data || [];
   const totalSent = campaigns.reduce((sum, c) => sum + (c.total_sent || 0), 0);
   const totalOpened = campaigns.reduce((sum, c) => sum + (c.total_opened || 0), 0);
   const totalClicked = campaigns.reduce((sum, c) => sum + (c.total_clicked || 0), 0);
   const totalUnsubscribed = campaigns.reduce((sum, c) => sum + (c.total_unsubscribed || 0), 0);
+  const totalBounced = campaigns.reduce((sum, c) => sum + (c.total_bounced || 0), 0);
 
-  // Get unique providers with most recent quota data
-  const quotaData = quotaRes.data || [];
-  const latestQuotaByProvider = new Map<string, { emails_sent: number; daily_limit: number }>();
+  // Process comprehensive quota data
+  const quotaData = comprehensiveQuotaRes.data || [];
+  let dailyUsed = 0,
+    dailyLimit = 0,
+    monthlyUsed = 0,
+    monthlyLimit = 0;
+
   for (const q of quotaData) {
-    if (!latestQuotaByProvider.has(q.provider)) {
-      latestQuotaByProvider.set(q.provider, {
-        emails_sent: q.emails_sent || 0,
-        daily_limit: q.daily_limit || 100,
-      });
-    }
+    dailyUsed += q.daily_sent || 0;
+    dailyLimit += q.daily_limit || 0;
+    monthlyUsed += q.monthly_sent || 0;
+    monthlyLimit += q.monthly_limit || 0;
   }
-  const quotas = Array.from(latestQuotaByProvider.values());
-  const dailyUsed = quotas.reduce((sum, q) => sum + q.emails_sent, 0);
-  const dailyLimit = quotas.reduce((sum, q) => sum + q.daily_limit, 0) || 500;
+
+  // Fallback defaults if no quota data
+  if (dailyLimit === 0) dailyLimit = 500;
+  if (monthlyLimit === 0) monthlyLimit = 15000;
 
   // Combine newsletter subscribers + registered users with email prefs
   const totalSubs = (subscribersRes.count || 0) + (registeredUsersRes.count || 0);
@@ -146,10 +197,152 @@ export async function getEmailDashboardStats(): Promise<EmailDashboardStats> {
     avgOpenRate: totalSent > 0 ? Math.round((totalOpened / totalSent) * 1000) / 10 : 0,
     avgClickRate: totalOpened > 0 ? Math.round((totalClicked / totalOpened) * 1000) / 10 : 0,
     unsubscribeRate: totalSent > 0 ? Math.round((totalUnsubscribed / totalSent) * 1000) / 10 : 0,
+    bounceRate: totalSent > 0 ? Math.round((totalBounced / totalSent) * 1000) / 10 : 0,
     activeCampaigns: campaigns.length,
     activeAutomations: automationsRes.count || 0,
     dailyQuotaUsed: dailyUsed,
     dailyQuotaLimit: dailyLimit,
+    monthlyQuotaUsed: monthlyUsed,
+    monthlyQuotaLimit: monthlyLimit,
+    suppressedEmails: suppressionRes.count || 0,
+  };
+}
+
+// ============================================================================
+// Comprehensive Quota Status (per provider)
+// ============================================================================
+
+export async function getComprehensiveQuotaStatus(): Promise<ProviderQuotaDetails[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.rpc("get_comprehensive_quota_status");
+
+  if (error) {
+    console.error("Failed to fetch comprehensive quota:", error.message);
+    return getDefaultQuotaDetails();
+  }
+
+  if (!data || data.length === 0) {
+    return getDefaultQuotaDetails();
+  }
+
+  return data.map((q: Record<string, unknown>) => ({
+    provider: q.provider as EmailProvider,
+    daily: {
+      sent: (q.daily_sent as number) || 0,
+      limit: (q.daily_limit as number) || 100,
+      remaining: (q.daily_remaining as number) || 100,
+      percentUsed: Number(q.daily_percent_used) || 0,
+    },
+    monthly: {
+      sent: (q.monthly_sent as number) || 0,
+      limit: (q.monthly_limit as number) || 3000,
+      remaining: (q.monthly_remaining as number) || 3000,
+      percentUsed: Number(q.monthly_percent_used) || 0,
+    },
+    isAvailable: (q.is_available as boolean) ?? true,
+  }));
+}
+
+function getDefaultQuotaDetails(): ProviderQuotaDetails[] {
+  const defaults: Array<{ provider: EmailProvider; dailyLimit: number; monthlyLimit: number }> = [
+    { provider: "resend", dailyLimit: 100, monthlyLimit: 3000 },
+    { provider: "brevo", dailyLimit: 300, monthlyLimit: 9000 },
+    { provider: "aws_ses", dailyLimit: 100, monthlyLimit: 62000 },
+  ];
+
+  return defaults.map((d) => ({
+    provider: d.provider,
+    daily: { sent: 0, limit: d.dailyLimit, remaining: d.dailyLimit, percentUsed: 0 },
+    monthly: { sent: 0, limit: d.monthlyLimit, remaining: d.monthlyLimit, percentUsed: 0 },
+    isAvailable: true,
+  }));
+}
+
+// ============================================================================
+// Bounce Statistics
+// ============================================================================
+
+export async function getBounceStats(): Promise<BounceStats> {
+  const supabase = await createClient();
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const [bounceEventsRes, suppressionRes, dailyBouncesRes, emailsSentRes] = await Promise.all([
+    // Bounce events by type (last 30 days)
+    supabase
+      .from("email_bounce_events")
+      .select("event_type, bounce_type")
+      .gte("created_at", thirtyDaysAgo.toISOString()),
+    // Suppression list by reason
+    supabase.from("email_suppression_list").select("reason"),
+    // Daily bounces (last 7 days)
+    supabase
+      .from("email_bounce_events")
+      .select("created_at, event_type")
+      .gte("created_at", sevenDaysAgo.toISOString())
+      .order("created_at", { ascending: true }),
+    // Total emails sent (for bounce rate calculation)
+    supabase
+      .from("email_provider_quota")
+      .select("emails_sent")
+      .gte("date", thirtyDaysAgo.toISOString().split("T")[0]),
+  ]);
+
+  const bounceEvents = bounceEventsRes.data || [];
+  const suppressionData = suppressionRes.data || [];
+  const dailyBounces = dailyBouncesRes.data || [];
+  const emailsSent = (emailsSentRes.data || []).reduce((sum, q) => sum + (q.emails_sent || 0), 0);
+
+  // Count by type
+  let hardBounces = 0,
+    softBounces = 0,
+    complaints = 0,
+    unsubscribes = 0;
+
+  for (const event of bounceEvents) {
+    if (event.event_type === "bounce") {
+      if (event.bounce_type === "hard") hardBounces++;
+      else softBounces++;
+    } else if (event.event_type === "complaint") {
+      complaints++;
+    } else if (event.event_type === "unsubscribe") {
+      unsubscribes++;
+    }
+  }
+
+  // Also count from suppression list
+  for (const s of suppressionData) {
+    if (s.reason === "complaint") complaints++;
+    else if (s.reason === "unsubscribe") unsubscribes++;
+  }
+
+  // Group daily bounces
+  const dailyMap = new Map<string, { bounces: number; complaints: number }>();
+  for (const event of dailyBounces) {
+    const date = event.created_at.split("T")[0];
+    const existing = dailyMap.get(date) || { bounces: 0, complaints: 0 };
+    if (event.event_type === "bounce") existing.bounces++;
+    else if (event.event_type === "complaint") existing.complaints++;
+    dailyMap.set(date, existing);
+  }
+
+  const last7Days = Array.from(dailyMap.entries())
+    .map(([date, stats]) => ({ date, ...stats }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const totalBounces = hardBounces + softBounces;
+
+  return {
+    totalBounces,
+    hardBounces,
+    softBounces,
+    complaints,
+    unsubscribes,
+    bounceRate: emailsSent > 0 ? Math.round((totalBounces / emailsSent) * 1000) / 10 : 0,
+    last7Days,
   };
 }
 
@@ -319,18 +512,23 @@ export interface EmailCRMData {
   campaigns: RecentCampaign[];
   automations: ActiveAutomation[];
   segments: AudienceSegment[];
+  quotaDetails: ProviderQuotaDetails[];
+  bounceStats: BounceStats;
 }
 
 export async function getEmailCRMData(): Promise<EmailCRMData> {
-  const [stats, providerHealth, campaigns, automations, segments] = await Promise.all([
-    getEmailDashboardStats(),
-    getProviderHealth(),
-    getRecentCampaigns(),
-    getActiveAutomations(),
-    getAudienceSegments(),
-  ]);
+  const [stats, providerHealth, campaigns, automations, segments, quotaDetails, bounceStats] =
+    await Promise.all([
+      getEmailDashboardStats(),
+      getProviderHealth(),
+      getRecentCampaigns(),
+      getActiveAutomations(),
+      getAudienceSegments(),
+      getComprehensiveQuotaStatus(),
+      getBounceStats(),
+    ]);
 
-  return { stats, providerHealth, campaigns, automations, segments };
+  return { stats, providerHealth, campaigns, automations, segments, quotaDetails, bounceStats };
 }
 
 // ============================================================================

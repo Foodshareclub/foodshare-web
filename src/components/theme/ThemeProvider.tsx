@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * ThemeProvider Component
@@ -7,8 +7,8 @@
  */
 
 import React, { useEffect, useRef, type ReactNode } from "react";
-import { useTheme } from "@/hooks";
 import { ThemeToastProvider } from "./ThemeToast";
+import { useTheme } from "@/hooks";
 
 interface ThemeProviderProps {
   children: ReactNode;
@@ -20,18 +20,26 @@ const prefersReducedMotion = () => {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 };
 
-// Get click position for radial reveal
-let lastClickPosition = { x: window.innerWidth / 2, y: 0 };
+// Get click position for radial reveal (initialized lazily to avoid SSR issues)
+let lastClickPosition = { x: 0, y: 0 };
+let clickListenerInitialized = false;
 
-// Track click position globally
-if (typeof window !== "undefined") {
+// Initialize click position tracking (called client-side only)
+const initClickTracking = () => {
+  if (typeof window === "undefined" || clickListenerInitialized) return;
+
+  // Set initial position now that we have access to window
+  lastClickPosition = { x: window.innerWidth / 2, y: 0 };
+
   document.addEventListener("click", (e) => {
     const target = e.target as HTMLElement;
     if (target.closest("[data-theme-toggle]")) {
       lastClickPosition = { x: e.clientX, y: e.clientY };
     }
   });
-}
+
+  clickListenerInitialized = true;
+};
 
 /**
  * Creates a radial reveal animation from the click point
@@ -102,6 +110,9 @@ const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
 
   // Apply theme changes with animation
   useEffect(() => {
+    // Initialize click tracking on client-side
+    initClickTracking();
+
     const root = document.documentElement;
 
     // Set color scheme for native elements

@@ -14,7 +14,7 @@ import { GiMilkCarton, GiPeanut, GiWheat } from "react-icons/gi";
 
 export const MAX_DESCRIPTION_LENGTH = 500;
 export const MAX_FILE_SIZE_MB = 10;
-export const COMPRESS_THRESHOLD_MB = 2;
+export const COMPRESS_THRESHOLD_MB = 1; // Compress images over 1MB for faster uploads
 export const DRAFT_KEY = "foodshare_listing_draft";
 export const MAX_IMAGES = 4;
 export const MAX_TAGS = 5;
@@ -343,18 +343,6 @@ export const titleSuggestions = {
     "Kitchen Appliances",
     "Sports Equipment",
   ],
-  borrow: [
-    "Power Tools",
-    "Camping Gear",
-    "Camera Equipment",
-    "Moving Boxes",
-    "Party Supplies",
-  ],
-  wanted: [
-    "Baby Items",
-    "Study Desk",
-    "Winter Jacket",
-    "Storage Boxes",
-    "Garden Tools",
-  ],
+  borrow: ["Power Tools", "Camping Gear", "Camera Equipment", "Moving Boxes", "Party Supplies"],
+  wanted: ["Baby Items", "Study Desk", "Winter Jacket", "Storage Boxes", "Garden Tools"],
 } as const;

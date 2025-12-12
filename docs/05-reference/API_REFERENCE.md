@@ -3591,6 +3591,16 @@ interface EmailCampaignData {
   bestSendTime: string;
   providerStats: Record<string, number>;
 }
+
+// Circuit breaker for rate limit handling
+type CircuitState = "CLOSED" | "OPEN" | "HALF_OPEN";
+
+interface RateLimiterStatus {
+  circuitState: CircuitState;
+  failures: number;
+  queueLength: number;
+  lastCallTime: number;
+}
 ```
 
 ---
@@ -3664,6 +3674,50 @@ const insight = await getGrokInsights("General question", false);
 **Model:** Uses `grok-3-mini` for all queries via Vercel AI Gateway for optimal cost/performance balance.
 
 **Implementation:** Uses Vercel AI SDK (`generateText`) with xAI provider for standardized AI integration.
+
+**Rate Limiting:** Includes robust rate limit handling with:
+
+- Circuit breaker pattern (CLOSED → OPEN → HALF_OPEN states)
+- Exponential backoff with jitter (3s base, up to 60s max)
+- Request queuing for non-critical requests
+- Automatic retry on transient errors (429, 5xx, timeouts)
+- 30-second circuit breaker reset timeout after 3 consecutive failures
+
+---
+
+### Rate Limiter Status
+
+```typescript
+import { getRateLimiterStatus } from "@/lib/data/admin-insights";
+
+const status = getRateLimiterStatus();
+// { circuitState: "CLOSED", failures: 0, queueLength: 0, lastCallTime: 1702300000000 }
+```
+
+**Returns:**
+
+```typescript
+{
+  circuitState: "CLOSED" | "OPEN" | "HALF_OPEN";
+  failures: number;
+  queueLength: number;
+  lastCallTime: number;
+}
+```
+
+Useful for monitoring API health and debugging rate limit issues.
+
+---
+
+### Reset Circuit Breaker
+
+```typescript
+import { resetCircuitBreaker } from "@/lib/data/admin-insights";
+
+resetCircuitBreaker();
+```
+
+Manually resets the circuit breaker to CLOSED state. Use when you know the API is healthy again after an outage.
 
 ---
 

@@ -17,6 +17,8 @@ The optimized email service with:
 - **Buffered metrics** (non-blocking database writes)
 - **Lazy provider initialization** (tree-shaking friendly)
 - **Automatic retry queue** when all providers fail
+- **Suppression list checking** - Automatically checks bounces, complaints, and unsubscribes before sending
+- **Monthly quota tracking** - Tracks both daily and monthly quotas for better capacity planning
 
 ```typescript
 import { createEmailService } from "@/lib/email";
@@ -448,19 +450,89 @@ Each provider displays:
 - 🟡 **Warning**: 80-99% used
 - 🔴 **Exhausted**: 100% used
 
-### 2. Smart Routing System
+### 2. Suppression List Checking
+
+**Automatic bounce/complaint protection**
+
+Before sending any email, the service checks if the recipient is on the suppression list:
+
+- **Bounced emails** - Hard bounces from previous sends
+- **Complaints** - Users who marked emails as spam
+- **Unsubscribes** - Users who opted out
+
+```typescript
+// Suppression check happens automatically
+const result = await emailService.sendEmail({
+  emailType: "newsletter",
+  options: { to: { email: "user@example.com", name: "User" } },
+  content: { subject: "Hello", html: "<p>Content</p>" },
+});
+
+// If suppressed, returns:
+// { success: false, provider: "brevo", error: "Email address is on suppression list", suppressed: true }
+```
+
+**Skip suppression for transactional emails:**
+
+```typescript
+// For critical transactional emails (password reset, etc.)
+await emailService.sendEmail({
+  ...request,
+  skipSuppressionCheck: true, // Bypass suppression list
+});
+```
+
+**Benefits:**
+
+- 🛡️ Protects sender reputation
+- 📉 Reduces bounce rates
+- ✅ Improves deliverability scores
+- 🚫 Prevents spam complaints
+
+### 3. Monthly Quota Tracking
+
+**Capacity planning beyond daily limits**
+
+The service now tracks both daily and monthly quotas:
+
+| Provider | Daily Limit | Monthly Limit |
+| -------- | ----------- | ------------- |
+| Resend   | 100         | 3,000         |
+| Brevo    | 300         | 9,000         |
+| AWS SES  | 50,000      | 62,000        |
+
+**ProviderHealth now includes:**
+
+```typescript
+interface ProviderHealth {
+  provider: EmailProvider;
+  healthScore: number;
+  quotaRemaining: number; // Daily quota remaining
+  monthlyQuotaRemaining: number; // Monthly quota remaining
+  avgLatencyMs: number;
+  isAvailable: boolean;
+}
+```
+
+**Use cases:**
+
+- Plan newsletter campaigns based on monthly capacity
+- Avoid hitting monthly limits mid-campaign
+- Better distribute high-volume sends across the month
+
+### 4. Smart Routing System
 
 **How it works:**
 
 ```
-User sends email → Check email type → Query quotas → Select provider
+User sends email → Check suppression → Check email type → Query quotas → Select provider
+                         ↓                    ↓
+                  Suppressed?           Email Type Routing:
+                  Yes → Return error    • auth → Resend first
+                  No → Continue         • chat → Resend first
+                                        • newsletter → Resend first
                          ↓
-                  Email Type Routing:
-                  • auth → Resend first
-                  • chat → Brevo first
-                  • food_listing → Brevo first
-                         ↓
-                  Provider has quota?
+                  Provider has quota (daily + monthly)?
                      Yes → Send via provider
                      No → Try next in priority
 ```
@@ -481,7 +553,7 @@ PRIORITY = {
 };
 ```
 
-### 3. Manual Email Sender
+### 5. Manual Email Sender
 
 **Features:**
 
@@ -499,7 +571,7 @@ When set to "Auto-select", the system:
 3. Queues email with recommended provider
 4. Shows confirmation with queue ID
 
-### 4. Email History & Queue Management
+### 6. Email History & Queue Management
 
 **Delivery Logs Tab:**
 
@@ -515,7 +587,7 @@ When set to "Auto-select", the system:
 - Delete failed emails
 - View attempt count and errors
 
-### 5. Provider Channel Management
+### 7. Provider Channel Management
 
 **Visual representation of each channel:**
 
@@ -1104,6 +1176,93 @@ Your Admin Email CRM provides:
 **Last Updated:** 2025-12-11
 **Status:** ✅ Production Ready (V1), 🚧 V3 In Development
 **URL:** `/admin/email`
+
+---
+
+## 📧 Email Types Reference
+
+Core TypeScript types for the email system are defined in `src/lib/email/types.ts`.
+
+### Email Status
+
+```typescript
+type EmailStatus = "pending" | "sent" | "delivered" | "failed" | "bounced" | "complained";
+```
+
+### Bounce Handling Types
+
+```typescript
+type BounceType = "hard" | "soft";
+type BounceCategory = "invalid" | "full_mailbox" | "blocked" | "spam" | "other";
+type SuppressionReason = "hard_bounce" | "soft_bounce" | "complaint" | "unsubscribe" | "manual";
+```
+
+### Suppression List
+
+The email system maintains a suppression list to prevent sending to addresses that have bounced or complained:
+
+```typescript
+interface SuppressionEntry {
+  id: string;
+  email: string;
+  reason: SuppressionReason;
+  provider?: EmailProvider;
+  bounceType?: string;
+  bounceSubtype?: string;
+  suppressedAt: Date;
+  expiresAt?: Date; // Soft bounces may expire
+}
+```
+
+### Bounce Events (Webhooks)
+
+Provider webhooks report bounce and complaint events:
+
+```typescript
+interface BounceEvent {
+  email: string;
+  provider: EmailProvider;
+  eventType: "bounce" | "complaint" | "delivery" | "open" | "click" | "unsubscribe";
+  bounceType?: BounceType;
+  bounceCategory?: BounceCategory;
+  messageId?: string;
+  timestamp: Date;
+  rawPayload?: Record<string, unknown>;
+}
+```
+
+### Comprehensive Quota
+
+Extended quota tracking with daily and monthly limits:
+
+```typescript
+interface ComprehensiveQuota {
+  provider: EmailProvider;
+  daily: { sent: number; limit: number; remaining: number; percentUsed: number };
+  monthly: { sent: number; limit: number; remaining: number; percentUsed: number };
+  isAvailable: boolean;
+}
+```
+
+### Send Email Options
+
+```typescript
+interface SendEmailRequest {
+  to: EmailAddress | EmailAddress[];
+  content: EmailContent;
+  options: EmailOptions;
+  emailType: EmailType;
+  skipSuppressionCheck?: boolean; // For critical transactional emails
+}
+
+interface SendEmailResponse {
+  success: boolean;
+  messageId?: string;
+  provider: EmailProvider;
+  error?: string;
+  suppressed?: boolean; // True if blocked due to suppression list
+}
+```
 
 ---
 

@@ -1831,9 +1831,13 @@ function getDefaultStats(): EmailDashboardStats {
     avgOpenRate: 0,
     avgClickRate: 0,
     unsubscribeRate: 0,
+    bounceRate: 0,
     activeCampaigns: 0,
     activeAutomations: 0,
     dailyQuotaUsed: 0,
     dailyQuotaLimit: 500,
+    monthlyQuotaUsed: 0,
+    monthlyQuotaLimit: 15000,
+    suppressedEmails: 0,
   };
 }

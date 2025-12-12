@@ -47,14 +47,37 @@ export const historyReducer = (
 
 /**
  * Compress image to reduce file size
+ * Includes timeout to prevent hanging on problematic images
  */
 export const compressImage = async (file: File, maxSizeMB: number = 1): Promise<File> => {
+  const COMPRESSION_TIMEOUT_MS = 10000; // 10 second timeout
+
   return new Promise((resolve) => {
+    let resolved = false;
+    let objectUrl: string | null = null;
+
+    // Timeout fallback - return original file if compression takes too long
+    const timeoutId = setTimeout(() => {
+      if (!resolved) {
+        resolved = true;
+        if (objectUrl) URL.revokeObjectURL(objectUrl);
+        console.warn("[compressImage] Compression timed out, using original file");
+        resolve(file);
+      }
+    }, COMPRESSION_TIMEOUT_MS);
+
+    const cleanup = () => {
+      clearTimeout(timeoutId);
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     const img = new Image();
 
     img.onload = () => {
+      if (resolved) return;
+
       let { width, height } = img;
       const maxDimension = 1200;
 
@@ -74,14 +97,20 @@ export const compressImage = async (file: File, maxSizeMB: number = 1): Promise<
 
       let quality = 0.8;
       const tryCompress = () => {
+        if (resolved) return;
+
         canvas.toBlob(
           (blob) => {
+            if (resolved) return;
+
             if (blob) {
               const sizeMB = blob.size / (1024 * 1024);
               if (sizeMB > maxSizeMB && quality > 0.3) {
                 quality -= 0.1;
                 tryCompress();
               } else {
+                resolved = true;
+                cleanup();
                 const compressedFile = new File([blob], file.name, {
                   type: "image/jpeg",
                   lastModified: Date.now(),
@@ -89,6 +118,8 @@ export const compressImage = async (file: File, maxSizeMB: number = 1): Promise<
                 resolve(compressedFile);
               }
             } else {
+              resolved = true;
+              cleanup();
               resolve(file);
             }
           },
@@ -99,8 +130,15 @@ export const compressImage = async (file: File, maxSizeMB: number = 1): Promise<
       tryCompress();
     };
 
-    img.onerror = () => resolve(file);
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => {
+      if (resolved) return;
+      resolved = true;
+      cleanup();
+      resolve(file);
+    };
+
+    objectUrl = URL.createObjectURL(file);
+    img.src = objectUrl;
   });
 };
 
