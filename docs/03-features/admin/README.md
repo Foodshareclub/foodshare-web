@@ -147,14 +147,15 @@ Server-side data fetching for email marketing and campaigns.
 
 Server actions for newsletter campaign CRUD operations with admin access verification.
 
-| Action                  | Description                                   |
-| ----------------------- | --------------------------------------------- |
-| `createCampaign(input)` | Create new campaign (draft or scheduled)      |
-| `updateCampaign(input)` | Update existing campaign fields               |
-| `deleteCampaign(id)`    | Delete campaign (blocks if currently sending) |
-| `duplicateCampaign(id)` | Clone campaign as new draft                   |
-| `pauseCampaign(id)`     | Pause sending/scheduled campaign              |
-| `resumeCampaign(id)`    | Resume paused campaign                        |
+| Action                    | Description                                      |
+| ------------------------- | ------------------------------------------------ |
+| `createCampaign(input)`   | Create new campaign (draft or scheduled)         |
+| `updateCampaign(input)`   | Update existing campaign fields                  |
+| `deleteCampaign(id)`      | Delete campaign (blocks if currently sending)    |
+| `duplicateCampaign(id)`   | Clone campaign as new draft                      |
+| `pauseCampaign(id)`       | Pause sending/scheduled campaign                 |
+| `resumeCampaign(id)`      | Resume paused campaign                           |
+| `refreshEmailDashboard()` | Refresh email CRM dashboard (cache invalidation) |
 
 #### Types
 

@@ -261,6 +261,10 @@ This checks:
 6. **Generate unique filenames** to avoid collisions
 7. **Clean up** old files when updating
 8. **Run verification** after making storage configuration changes
+9. **Use retry logic** with exponential backoff for production uploads
+10. **Check network status** (`navigator.onLine`) before starting uploads
+11. **Add timeouts** to prevent hanging requests (30s recommended)
+12. **Show progress** to users during multi-file uploads
 
 ## Common Patterns
 
@@ -274,7 +278,7 @@ const uploadAvatar = async (file: File, userId: string) => {
   if (!validation.valid) throw new Error(validation.error);
 
   // Get file extension from filename
-  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
   // Use profile ID as directory: {userId}/avatar.{ext}
   const filePath = `${userId}/avatar.${ext}`;
   const { error } = await storageAPI.uploadImage({
@@ -296,14 +300,15 @@ const uploadAvatar = async (file: File, userId: string) => {
 **Using the hook:**
 
 ```typescript
-import { useUploadAvatar } from '@/hooks/queries';
+import { useUploadAvatar } from "@/hooks/queries";
 
 const { mutateAsync: uploadAvatar } = useUploadAvatar();
 
 // Upload triggers DB trigger to update profiles.avatar_url
 await uploadAvatar({ userId: user.id, file });
 ```
-```
+
+````
 
 ### Multiple Images
 
@@ -329,6 +334,81 @@ const uploadImages = async (files: File[], postId: number) => {
 
   return urls;
 };
+````
+
+### Upload with Retry (Recommended)
+
+For production use, wrap uploads with retry logic and exponential backoff:
+
+```typescript
+const uploadWithRetry = async (
+  file: File,
+  filePath: string,
+  retries = 2
+): Promise<{ success: boolean; error?: string }> => {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const result = await storageAPI.uploadImage({
+        bucket: STORAGE_BUCKETS.POSTS,
+        file,
+        filePath,
+      });
+
+      if (result.error) {
+        if (attempt === retries) {
+          return { success: false, error: result.error.message };
+        }
+        // Exponential backoff: 1s, 2s, 3s...
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        continue;
+      }
+
+      return { success: true };
+    } catch (err) {
+      if (attempt === retries) {
+        return {
+          success: false,
+          error: err instanceof Error ? err.message : "Upload failed",
+        };
+      }
+      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+    }
+  }
+  return { success: false, error: "Upload failed after retries" };
+};
+
+// Usage with multiple files
+const results = await Promise.all(
+  files.map((file) => uploadWithRetry(file, `${postId}/${file.name}`))
+);
+const failed = results.filter((r) => !r.success);
+if (failed.length > 0) {
+  throw new Error(`Failed to upload ${failed.length} file(s)`);
+}
+```
+
+### Pre-flight Checks
+
+Always validate conditions before starting uploads:
+
+```typescript
+// Check network connectivity
+if (!navigator.onLine) {
+  throw new Error("No internet connection");
+}
+
+// Check authentication
+if (!userId) {
+  throw new Error("Please sign in to upload");
+}
+
+// Validate files
+for (const file of files) {
+  const validation = validateFile(file, "POSTS");
+  if (!validation.valid) {
+    throw new Error(validation.error);
+  }
+}
 ```
 
 ---

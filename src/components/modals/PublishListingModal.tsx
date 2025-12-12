@@ -146,6 +146,8 @@ function PublishListingModal({
   const [showTips, setShowTips] = useState(true);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
 
   // Reset form when modal opens
   useEffect(() => {
@@ -164,6 +166,8 @@ function PublishListingModal({
       setShowTips(true);
       setLightboxIndex(null);
       setShowTemplates(false);
+      setError(null);
+      setUploadProgress(null);
       undoRedo.clearHistory();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -248,55 +252,151 @@ function PublishListingModal({
       return;
     }
 
+    // Clear previous errors
+    setError(null);
+    setUploadProgress(null);
+
+    // Pre-flight checks
+    if (!id) {
+      setError("Please sign in to publish a listing");
+      setShakeError(true);
+      setTimeout(() => setShakeError(false), 500);
+      return;
+    }
+
+    // Check network connectivity
+    if (!navigator.onLine) {
+      setError("No internet connection. Please check your network and try again.");
+      setShakeError(true);
+      setTimeout(() => setShakeError(false), 500);
+      return;
+    }
+
     setIsLoading(true);
     setPublishState("loading");
-    try {
-      // Upload images in parallel for faster publishing
-      const uploadPromises = imageUpload.images
-        .filter((image) => image.file && image.filePath)
-        .map((image) =>
-          storageAPI.uploadImage({
-            bucket: STORAGE_BUCKETS.POSTS,
-            file: image.file!,
-            filePath: `${id}/${image.filePath}`,
-          })
-        );
-      await Promise.all(uploadPromises);
 
-      // Create or update product using Server Actions
+    try {
+      // Upload images in parallel with retry logic
+      const imagesToUpload = imageUpload.images.filter((image) => image.file && image.filePath);
+
+      if (imagesToUpload.length > 0) {
+        setUploadProgress(`Uploading ${imagesToUpload.length} image(s)...`);
+
+        // Upload with retry wrapper
+        const uploadWithRetry = async (
+          image: (typeof imagesToUpload)[0],
+          retries = 2
+        ): Promise<{ success: boolean; error?: string }> => {
+          for (let attempt = 0; attempt <= retries; attempt++) {
+            try {
+              const result = await storageAPI.uploadImage({
+                bucket: STORAGE_BUCKETS.POSTS,
+                file: image.file!,
+                filePath: `${id}/${image.filePath}`,
+              });
+
+              if (result.error) {
+                if (attempt === retries) {
+                  return { success: false, error: result.error.message };
+                }
+                // Wait before retry (exponential backoff)
+                await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+                continue;
+              }
+
+              return { success: true };
+            } catch (err) {
+              if (attempt === retries) {
+                return {
+                  success: false,
+                  error: err instanceof Error ? err.message : "Upload failed",
+                };
+              }
+              await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+            }
+          }
+          return { success: false, error: "Upload failed after retries" };
+        };
+
+        const uploadResults = await Promise.all(imagesToUpload.map((img) => uploadWithRetry(img)));
+
+        const failedUploads = uploadResults.filter((r) => !r.success);
+        if (failedUploads.length > 0) {
+          const errorMessages = failedUploads.map((f) => f.error).filter(Boolean);
+          console.error("[PublishListing] Image upload errors:", errorMessages);
+          throw new Error(
+            failedUploads.length === imagesToUpload.length
+              ? "Failed to upload images. Please try again."
+              : `Failed to upload ${failedUploads.length} of ${imagesToUpload.length} image(s)`
+          );
+        }
+      }
+
+      setUploadProgress("Saving listing...");
+
+      // Build form data for server action
       const formData = new FormData();
-      formData.set("post_name", productObj.post_name || "");
-      formData.set("post_description", productObj.post_description || "");
+      formData.set("post_name", (productObj.post_name || "").trim());
+      formData.set("post_description", (productObj.post_description || "").trim());
       formData.set("post_type", productObj.post_type || "");
-      formData.set("post_address", productObj.post_stripped_address || "");
+      formData.set("post_address", (productObj.post_stripped_address || "").trim());
       if (productObj.available_hours) formData.set("available_hours", productObj.available_hours);
       if (productObj.transportation) formData.set("transportation", productObj.transportation);
       if (productObj.condition) formData.set("condition", productObj.condition);
       if (productObj.images) formData.set("images", JSON.stringify(productObj.images));
       if (productObj.profile_id) formData.set("profile_id", productObj.profile_id);
 
+      // Create or update with timeout protection
+      const timeoutMs = 30000; // 30 second timeout
       let result;
+
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Request timed out. Please try again.")), timeoutMs)
+      );
+
       if (product) {
         formData.set("is_active", "true");
-        result = await updateProduct(productId, formData);
+        result = await Promise.race([updateProduct(productId, formData), timeoutPromise]);
       } else {
-        result = await createProduct(formData);
+        result = await Promise.race([createProduct(formData), timeoutPromise]);
         if (result.success) form.clearDraft();
       }
 
       if (!result.success) {
-        throw new Error(result.error?.message || "Failed to save listing");
+        const errorMsg = result.error?.message || "Failed to save listing";
+        console.error("[PublishListing] Save failed:", result.error);
+        throw new Error(errorMsg);
       }
 
-      // Refresh the page to show updated data
+      // Success - refresh and close
+      setUploadProgress(null);
       router.refresh();
-
       setPublishState("success");
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Brief delay to show success state
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       onClose();
       setOpenEdit?.(false);
-    } catch {
+    } catch (err) {
+      console.error("[PublishListing] Publish error:", err);
+
+      // User-friendly error messages
+      let errorMessage = "Failed to publish listing";
+      if (err instanceof Error) {
+        if (err.message.includes("timed out")) {
+          errorMessage = "Request timed out. Please check your connection and try again.";
+        } else if (err.message.includes("network") || err.message.includes("fetch")) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } else if (err.message.includes("unauthorized") || err.message.includes("auth")) {
+          errorMessage = "Session expired. Please sign in again.";
+        } else {
+          errorMessage = err.message;
+        }
+      }
+
+      setError(errorMessage);
+      setUploadProgress(null);
       setPublishState("idle");
     } finally {
       setIsLoading(false);
@@ -427,6 +527,32 @@ function PublishListingModal({
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
+            </div>
+          )}
+
+          {/* Error display */}
+          {error && (
+            <div className="mt-3 p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-start gap-2 text-sm">
+              <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-destructive font-medium">{error}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setError(null)}
+                className="h-6 w-6 p-0 text-destructive/70 hover:text-destructive"
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
+
+          {/* Upload progress indicator */}
+          {uploadProgress && (
+            <div className="mt-3 p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center gap-2 text-sm">
+              <Loader2 className="h-4 w-4 text-primary animate-spin" />
+              <span className="text-primary">{uploadProgress}</span>
             </div>
           )}
         </DialogHeader>

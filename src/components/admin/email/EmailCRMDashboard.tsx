@@ -11,7 +11,7 @@
  * - Real-time metrics
  */
 
-import React, { useState, useTransition, useCallback } from "react";
+import React, { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -94,6 +94,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { sendAdminEmail, sendTestEmailDirect } from "@/app/actions/email";
+import { refreshEmailDashboard } from "@/app/actions/campaigns";
 import type { EmailType } from "@/lib/email/types";
 import type {
   EmailCRMData,
@@ -229,12 +230,14 @@ export function EmailCRMDashboard({ initialData }: Props) {
       ? Math.round((stats.dailyQuotaUsed / stats.dailyQuotaLimit) * 100)
       : 0;
 
-  const handleRefresh = useCallback(async () => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    // Simulate refresh - in production, this would refetch data
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsRefreshing(false);
-  }, []);
+    try {
+      await refreshEmailDashboard();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   return (
     <TooltipProvider>

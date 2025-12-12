@@ -1,7 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
+import { createClient } from "@/lib/supabase/server";
 import { type ActionResult, withErrorHandling, validateWithSchema } from "@/lib/errors";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 
@@ -54,6 +54,17 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
 
   return withErrorHandling(async () => {
     const supabase = await createClient();
+
+    // Verify user is authenticated and matches profile_id
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error("You must be signed in to create a listing");
+    }
+    if (user.id !== validation.data.profile_id) {
+      throw new Error("Unauthorized: User ID mismatch");
+    }
 
     const { data, error } = await supabase
       .from("posts")
@@ -119,12 +130,25 @@ export async function updateProduct(
   return withErrorHandling(async () => {
     const supabase = await createClient();
 
-    // Get current product info for cache invalidation
+    // Verify user is authenticated
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error("You must be signed in to update a listing");
+    }
+
+    // Get current product info for cache invalidation and ownership check
     const { data: currentProduct } = await supabase
       .from("posts")
       .select("post_type, profile_id")
       .eq("id", id)
       .single();
+
+    // Verify ownership
+    if (currentProduct?.profile_id && currentProduct.profile_id !== user.id) {
+      throw new Error("Unauthorized: You can only edit your own listings");
+    }
 
     const { error } = await supabase.from("posts").update(validation.data).eq("id", id);
 
@@ -161,12 +185,25 @@ export async function deleteProduct(id: number): Promise<ActionResult<undefined>
   return withErrorHandling(async () => {
     const supabase = await createClient();
 
-    // Get product info before deletion for cache invalidation
+    // Verify user is authenticated
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error("You must be signed in to delete a listing");
+    }
+
+    // Get product info before deletion for cache invalidation and ownership check
     const { data: product } = await supabase
       .from("posts")
       .select("post_type, profile_id")
       .eq("id", id)
       .single();
+
+    // Verify ownership
+    if (product?.profile_id && product.profile_id !== user.id) {
+      throw new Error("Unauthorized: You can only delete your own listings");
+    }
 
     const { error } = await supabase.from("posts").delete().eq("id", id);
 

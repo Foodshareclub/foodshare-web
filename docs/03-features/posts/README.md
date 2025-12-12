@@ -8,10 +8,10 @@ The Posts feature provides authenticated users with a complete post management i
 
 ## Routes
 
-| Route | Component | Description |
-|-------|-----------|-------------|
+| Route            | Component          | Description                                        |
+| ---------------- | ------------------ | -------------------------------------------------- |
 | `/user-listings` | `UserListingsPage` | Main post management dashboard with stats overview |
-| `/my-posts` | `MyPostsPage` | Alternative post management interface |
+| `/my-posts`      | `MyPostsPage`      | Alternative post management interface              |
 
 ## Architecture
 
@@ -21,7 +21,7 @@ The Posts feature provides authenticated users with a complete post management i
 // src/app/user-listings/page.tsx
 export default async function UserListingsPage() {
   const user = await getUser();
-  
+
   if (!user) {
     redirect('/auth/login?from=/user-listings');
   }
@@ -46,14 +46,14 @@ export default async function UserListingsPage() {
 
 ## Components
 
-| Component | Type | Description |
-|-----------|------|-------------|
-| `UserListingsPage` | Server | Main page with auth check and data fetching |
-| `UserListingsClient` | Client | Interactive post management UI with stats sidebar |
-| `UserListingsSkeleton` | Server | Loading placeholder |
-| `MyPostsClient` | Client | Alternative post management with Server Actions |
-| `PostCard` | Client | Individual post card with image, status badge, and action buttons |
-| `EmptyState` | Client | Empty state messaging with contextual prompts |
+| Component              | Type   | Description                                                       |
+| ---------------------- | ------ | ----------------------------------------------------------------- |
+| `UserListingsPage`     | Server | Main page with auth check and data fetching                       |
+| `UserListingsClient`   | Client | Interactive post management UI with stats sidebar                 |
+| `UserListingsSkeleton` | Server | Loading placeholder                                               |
+| `MyPostsClient`        | Client | Alternative post management with Server Actions                   |
+| `PostCard`             | Client | Individual post card with image, status badge, and action buttons |
+| `EmptyState`           | Client | Empty state messaging with contextual prompts                     |
 
 ## User Listings Client Features
 
@@ -68,6 +68,7 @@ The `UserListingsClient` component provides a streamlined management interface:
 ### Stats Overview
 
 The sidebar displays an animated stats grid showing:
+
 - **Total** - Total number of listings
 - **Active** - Currently active listings (emerald highlight)
 - **Inactive** - Deactivated listings
@@ -77,6 +78,7 @@ Stats cards feature hover animations with scale effects and gradient overlays.
 ### Mobile Filters
 
 On mobile devices, filters are accessible via a drawer component with:
+
 - Type filter buttons
 - Status filter (All/Active/Inactive)
 - Sort options
@@ -86,15 +88,15 @@ On mobile devices, filters are accessible via a drawer component with:
 
 ```typescript
 const POST_TYPE_CONFIG = {
-  food: { label: 'Food', emoji: '🍎' },
-  thing: { label: 'Thing', emoji: '📦' },
-  borrow: { label: 'Borrow', emoji: '🤝' },
-  wanted: { label: 'Wanted', emoji: '🔍' },
-  fridge: { label: 'Fridge', emoji: '🧊' },
-  foodbank: { label: 'Food Bank', emoji: '🏦' },
-  volunteer: { label: 'Volunteer', emoji: '💪' },
-  challenge: { label: 'Challenge', emoji: '🏆' },
-  vegan: { label: 'Vegan', emoji: '🌱' },
+  food: { label: "Food", emoji: "🍎" },
+  thing: { label: "Thing", emoji: "📦" },
+  borrow: { label: "Borrow", emoji: "🤝" },
+  wanted: { label: "Wanted", emoji: "🔍" },
+  fridge: { label: "Fridge", emoji: "🧊" },
+  foodbank: { label: "Food Bank", emoji: "🏦" },
+  volunteer: { label: "Volunteer", emoji: "💪" },
+  challenge: { label: "Challenge", emoji: "🏆" },
+  vegan: { label: "Vegan", emoji: "🌱" },
 };
 ```
 
@@ -142,19 +144,20 @@ Post mutations use Server Actions from `@/app/actions/products`:
 
 ### `updateProduct(id: number, formData: FormData)`
 
-Updates an existing post with partial data.
+Updates an existing post with partial data. Requires authentication and ownership verification.
 
 ```typescript
-import { updateProduct } from '@/app/actions/products';
+import { updateProduct } from "@/app/actions/products";
 
 // Toggle post status
 const formData = new FormData();
-formData.set('is_active', String(!post.is_active));
+formData.set("is_active", String(!post.is_active));
 
 const result = await updateProduct(post.id, formData);
 if (result.success) {
   router.refresh(); // Re-fetch data from server
 }
+// Returns error if user is not authenticated or doesn't own the post
 ```
 
 ### `deleteProduct(id: number)`
@@ -162,7 +165,7 @@ if (result.success) {
 Deletes a post by ID.
 
 ```typescript
-import { deleteProduct } from '@/app/actions/products';
+import { deleteProduct } from "@/app/actions/products";
 
 const result = await deleteProduct(post.id);
 if (result.success) {
@@ -175,7 +178,7 @@ if (result.success) {
 Creates a new post.
 
 ```typescript
-import { createProduct } from '@/app/actions/products';
+import { createProduct } from "@/app/actions/products";
 
 const result = await createProduct(formData);
 if (result.success) {
@@ -190,7 +193,7 @@ if (result.success) {
 Fetches all posts belonging to a specific user (server-side only).
 
 ```typescript
-import { getUserProducts } from '@/lib/data/products';
+import { getUserProducts } from "@/lib/data/products";
 
 const posts = await getUserProducts(user.id);
 ```
@@ -207,15 +210,18 @@ const posts = await getUserProducts(user.id);
 
 - Route protected by authentication check
 - Users can only access their own posts
-- Server-side validation of user ownership
+- **Server-side ownership validation** - All mutation actions (`updateProduct`, `deleteProduct`) verify:
+  1. User is authenticated via `supabase.auth.getUser()`
+  2. User owns the post by comparing `profile_id` with authenticated user ID
+- Unauthorized attempts return descriptive error messages
 - CSRF protection via Supabase Auth
 
 ## SEO
 
 ```typescript
 export const metadata = {
-  title: 'My Listings | FoodShare',
-  description: 'Manage your food sharing listings - create, edit, and organize your posts',
+  title: "My Listings | FoodShare",
+  description: "Manage your food sharing listings - create, edit, and organize your posts",
 };
 ```
 

@@ -92,12 +92,23 @@ export async function createProduct(formData: FormData) {
 }
 
 export async function updateProduct(id: number, data: ProductData) {
-  // Fetch current product to get type and owner for cache invalidation
+  // Verify user is authenticated
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("You must be signed in to update a listing");
+
+  // Fetch current product to get type and owner for cache invalidation + ownership check
   const { data: currentProduct } = await supabase
     .from("posts")
     .select("post_type, profile_id")
     .eq("id", id)
     .single();
+
+  // Verify ownership
+  if (currentProduct?.profile_id && currentProduct.profile_id !== user.id) {
+    throw new Error("Unauthorized: You can only edit your own listings");
+  }
 
   // ... update product
 
@@ -162,11 +173,11 @@ export async function updateProduct(id: number, data: ProductData) {
 
 ### Admin (`@/lib/data/admin`)
 
-| Function               | Cache Duration | Tags                   | Notes                                        |
-| ---------------------- | -------------- | ---------------------- | -------------------------------------------- |
-| `getDashboardStats()`  | None           | -                      | Cannot cache - uses `cookies()` via Supabase |
-| `getAuditLogs(limit?)` | None           | -                      | Cannot cache - uses `cookies()` via Supabase |
-| `getPendingListings()` | None           | -                      | Cannot cache - uses `cookies()` via Supabase |
+| Function               | Cache Duration | Tags | Notes                                        |
+| ---------------------- | -------------- | ---- | -------------------------------------------- |
+| `getDashboardStats()`  | None           | -    | Cannot cache - uses `cookies()` via Supabase |
+| `getAuditLogs(limit?)` | None           | -    | Cannot cache - uses `cookies()` via Supabase |
+| `getPendingListings()` | None           | -    | Cannot cache - uses `cookies()` via Supabase |
 
 > **Note:** Admin data functions cannot use `unstable_cache` because `createClient()` uses `cookies()` which is incompatible with caching. These functions make direct database queries on each request.
 
@@ -182,10 +193,10 @@ export async function updateProduct(id: number, data: ProductData) {
 
 ### Admin Reports (`@/lib/data/admin-reports`)
 
-| Function                  | Cache Duration | Tags                      |
-| ------------------------- | -------------- | ------------------------- |
-| `getReportsData()`        | None           | -                         |
-| `getCachedReportsData()`  | 300s           | `admin-reports`, `admin`  |
+| Function                 | Cache Duration | Tags                     |
+| ------------------------ | -------------- | ------------------------ |
+| `getReportsData()`       | None           | -                        |
+| `getCachedReportsData()` | 300s           | `admin-reports`, `admin` |
 
 > **Note:** `getReportsData()` uses `createClient()` which calls `cookies()`, so it cannot be cached directly. The `getCachedReportsData()` wrapper provides caching when the caller context allows it (e.g., when not dependent on user-specific cookies).
 

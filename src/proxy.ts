@@ -1,5 +1,5 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 
 /**
  * Next.js 16 Proxy for Supabase Auth
@@ -24,14 +24,12 @@ export async function proxy(request: NextRequest) {
   const corruptedCookies: string[] = [];
 
   for (const cookie of cookies) {
-    if (cookie.name.startsWith('sb-')) {
+    if (cookie.name.startsWith("sb-")) {
       try {
         if (cookie.value) {
           const base64urlRegex = /^[A-Za-z0-9_-]*$/;
-          const parts = cookie.value.split('.');
-          const isValid = parts.every(
-            (part) => base64urlRegex.test(part) || part === ''
-          );
+          const parts = cookie.value.split(".");
+          const isValid = parts.every((part) => base64urlRegex.test(part) || part === "");
           if (!isValid) {
             corruptedCookies.push(cookie.name);
           }
@@ -81,7 +79,7 @@ export async function proxy(request: NextRequest) {
         remove(name: string, options: CookieOptions) {
           request.cookies.set({
             name,
-            value: '',
+            value: "",
             ...options,
           });
           response = NextResponse.next({
@@ -91,7 +89,7 @@ export async function proxy(request: NextRequest) {
           });
           response.cookies.set({
             name,
-            value: '',
+            value: "",
             ...options,
           });
         },
@@ -100,15 +98,22 @@ export async function proxy(request: NextRequest) {
   );
 
   // Refresh session - critical for maintaining auth state
-  let session = null;
+  // IMPORTANT: Use getUser() instead of getSession() to properly refresh tokens
+  // getSession() doesn't revalidate the JWT, getUser() does
+  let user = null;
   try {
-    const { data } = await supabase.auth.getSession();
-    session = data.session;
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+      // Token refresh failed - clear cookies and let user re-authenticate
+      console.warn("Middleware: Token refresh failed:", error.message);
+    } else {
+      user = data.user;
+    }
   } catch (error) {
-    console.warn('Middleware: Session load failed, clearing auth cookies:', error);
+    console.warn("Middleware: Session load failed, clearing auth cookies:", error);
     const allCookies = request.cookies.getAll();
     for (const cookie of allCookies) {
-      if (cookie.name.startsWith('sb-')) {
+      if (cookie.name.startsWith("sb-")) {
         response.cookies.delete(cookie.name);
       }
     }
@@ -116,27 +121,27 @@ export async function proxy(request: NextRequest) {
   }
 
   // Admin route protection
-  if (request.nextUrl.pathname.startsWith('/admin')) {
+  if (request.nextUrl.pathname.startsWith("/admin")) {
     // Redirect to login if not authenticated
-    if (!session?.user) {
-      const loginUrl = new URL('/auth/login', request.url);
-      loginUrl.searchParams.set('next', request.nextUrl.pathname);
+    if (!user) {
+      const loginUrl = new URL("/auth/login", request.url);
+      loginUrl.searchParams.set("next", request.nextUrl.pathname);
       return NextResponse.redirect(loginUrl);
     }
 
     // Check admin status from user_roles table
     const { data: userRole } = await supabase
-      .from('user_roles')
-      .select('roles!inner(name)')
-      .eq('profile_id', session.user.id)
-      .in('roles.name', ['admin', 'superadmin'])
+      .from("user_roles")
+      .select("roles!inner(name)")
+      .eq("profile_id", user.id)
+      .in("roles.name", ["admin", "superadmin"])
       .maybeSingle();
 
     const isAdmin = !!userRole;
 
     // Redirect to home if not admin
     if (!isAdmin) {
-      return NextResponse.redirect(new URL('/', request.url));
+      return NextResponse.redirect(new URL("/", request.url));
     }
   }
 
@@ -152,6 +157,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder images
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

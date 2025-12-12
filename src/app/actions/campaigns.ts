@@ -383,3 +383,28 @@ export async function resumeCampaign(id: string): Promise<ServerActionResult<voi
     return serverActionError("Failed to resume campaign", "UNKNOWN_ERROR");
   }
 }
+
+// ============================================================================
+// Refresh Dashboard Data
+// ============================================================================
+
+/**
+ * Refresh the email CRM dashboard data
+ * Triggers revalidation of the admin email page
+ */
+export async function refreshEmailDashboard(): Promise<ServerActionResult<void>> {
+  try {
+    const auth = await verifyAdminAccess();
+    if ("error" in auth) {
+      return serverActionError(auth.error, auth.code);
+    }
+
+    invalidateTag(CACHE_TAGS.ADMIN);
+    revalidatePath("/admin/email");
+
+    return successVoid();
+  } catch (error) {
+    console.error("Failed to refresh dashboard:", error);
+    return serverActionError("Failed to refresh dashboard", "UNKNOWN_ERROR");
+  }
+}
