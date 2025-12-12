@@ -19,6 +19,65 @@ const MODELS = {
 const insightCache = new Map<string, { data: string; timestamp: number }>();
 const CACHE_TTL = 3600000; // 1 hour
 
+// Cache for API key to avoid repeated vault lookups
+const API_KEY_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+let cachedApiKey: string | null = null;
+let apiKeyCacheExpiry = 0;
+
+interface VaultSecret {
+  name: string;
+  value: string;
+}
+
+/**
+ * Get AI API key from environment variable or Supabase Vault
+ * Checks for XAI_API_KEY first, then AI_GATEWAY_API_KEY
+ */
+async function getAiApiKey(): Promise<string | null> {
+  // Check environment variables first (for local dev)
+  if (process.env.XAI_API_KEY) {
+    return process.env.XAI_API_KEY;
+  }
+  if (process.env.AI_GATEWAY_API_KEY) {
+    return process.env.AI_GATEWAY_API_KEY;
+  }
+
+  // Check cache
+  if (cachedApiKey && Date.now() < apiKeyCacheExpiry) {
+    return cachedApiKey;
+  }
+
+  // Fetch from Supabase Vault
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("get_secrets", {
+      secret_names: ["XAI_API_KEY", "AI_GATEWAY_API_KEY"],
+    });
+
+    if (error || !data || data.length === 0) {
+      console.error("Failed to fetch AI API key from vault:", error?.message);
+      return null;
+    }
+
+    const secrets = data as VaultSecret[];
+    // Prefer XAI_API_KEY, fallback to AI_GATEWAY_API_KEY
+    const xaiSecret = secrets.find((s) => s.name === "XAI_API_KEY");
+    const gatewaySecret = secrets.find((s) => s.name === "AI_GATEWAY_API_KEY");
+
+    const apiKey = xaiSecret?.value || gatewaySecret?.value;
+    if (apiKey) {
+      cachedApiKey = apiKey;
+      apiKeyCacheExpiry = Date.now() + API_KEY_CACHE_TTL;
+      return apiKey;
+    }
+
+    return null;
+  } catch (err) {
+    console.error("Error fetching secret from vault:", err);
+    return null;
+  }
+}
+
 export interface PlatformMetrics {
   totalUsers: number;
   activeUsers7d: number;
@@ -228,9 +287,9 @@ ${
 `;
   }
 
-  const apiKey = process.env.XAI_API_KEY || process.env.AI_GATEWAY_API_KEY;
+  const apiKey = await getAiApiKey();
   if (!apiKey) {
-    return "AI insights unavailable - API key not configured. Add XAI_API_KEY or AI_GATEWAY_API_KEY to your environment variables.";
+    return "AI insights unavailable - API key not configured in vault or environment variables.";
   }
 
   const model = selectModel(userQuery);

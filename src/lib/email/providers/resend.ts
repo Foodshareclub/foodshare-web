@@ -4,7 +4,6 @@
  */
 
 import { Resend } from "resend";
-import { BaseEmailProvider } from "./base";
 import type {
   SendEmailRequest,
   SendEmailResponse,
@@ -12,6 +11,7 @@ import type {
   ProviderQuota,
   EmailAddress,
 } from "../types";
+import { BaseEmailProvider } from "./base";
 import { supabase } from "@/lib/supabase/client";
 
 export class ResendProvider extends BaseEmailProvider {
@@ -92,11 +92,10 @@ export class ResendProvider extends BaseEmailProvider {
 
   async getQuota(): Promise<ProviderQuota> {
     try {
-      const today = new Date().toISOString().split("T")[0];
-
+      // Don't pass p_date - let PostgreSQL use DEFAULT CURRENT_DATE
+      // This avoids type mismatch issues (string vs date)
       const { data, error } = await supabase.rpc("check_provider_quota", {
         p_provider: "resend",
-        p_date: today,
       });
 
       if (error) throw error;
@@ -139,11 +138,9 @@ export class ResendProvider extends BaseEmailProvider {
 
   private async incrementQuota(): Promise<void> {
     try {
-      const today = new Date().toISOString().split("T")[0];
-
+      // Don't pass p_date - let PostgreSQL use DEFAULT CURRENT_DATE
       await supabase.rpc("increment_provider_quota", {
         p_provider: "resend",
-        p_date: today,
       });
     } catch (error) {
       console.error("[resend] Failed to increment quota:", error);

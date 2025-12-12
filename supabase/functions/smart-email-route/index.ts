@@ -1,12 +1,9 @@
 /**
- * Smart Email Route v4 - Optimized
+ * Smart Email Route v5 - Fixed
  *
- * Changes from v3:
- * - Uses Deno.serve (modern API)
- * - Single DB query for all health data
- * - Simplified caching with WeakRef
- * - Request deduplication with AbortController
- * - Streaming response support
+ * Changes from v4:
+ * - Removed p_date parameter - let PostgreSQL use DEFAULT CURRENT_DATE
+ * - Updated PRIORITY to use Resend first for all email types
  */
 
 import { getPermissiveCorsHeaders, handleCorsPrelight } from "../_shared/cors.ts";
@@ -45,14 +42,15 @@ const DAILY_LIMITS: Record<EmailProvider, number> = {
   aws_ses: 50000,
 };
 
+// Resend is now prioritized for all types since it's the most reliable
 const PRIORITY: Record<EmailType, EmailProvider[]> = {
   auth: ["resend", "brevo", "aws_ses"],
-  chat: ["brevo", "resend", "aws_ses"],
-  food_listing: ["brevo", "resend", "aws_ses"],
-  feedback: ["brevo", "resend", "aws_ses"],
-  review_reminder: ["brevo", "resend", "aws_ses"],
-  newsletter: ["brevo", "aws_ses", "resend"],
-  announcement: ["brevo", "aws_ses", "resend"],
+  chat: ["resend", "brevo", "aws_ses"],
+  food_listing: ["resend", "brevo", "aws_ses"],
+  feedback: ["resend", "brevo", "aws_ses"],
+  review_reminder: ["resend", "brevo", "aws_ses"],
+  newsletter: ["resend", "brevo", "aws_ses"],
+  announcement: ["resend", "brevo", "aws_ses"],
 };
 
 // Cache with automatic expiry
@@ -86,13 +84,11 @@ async function getProviderHealth(): Promise<ProviderHealth[]> {
 
 async function fetchHealth(): Promise<ProviderHealth[]> {
   const supabase = getSupabaseClient();
-  const today = new Date().toISOString().split("T")[0];
 
   try {
-    // Single optimized query
-    const { data, error } = await supabase.rpc("get_all_provider_health", {
-      p_date: today,
-    });
+    // Don't pass p_date - let PostgreSQL use DEFAULT CURRENT_DATE
+    // This avoids type mismatch issues (string vs date)
+    const { data, error } = await supabase.rpc("get_all_provider_health");
 
     if (error) throw error;
 

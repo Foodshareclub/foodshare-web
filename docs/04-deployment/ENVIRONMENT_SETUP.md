@@ -226,7 +226,13 @@ const requiredEnvVars = [
   "NEXT_PUBLIC_EMAIL_FROM",
 ];
 
-const optionalEnvVars = ["RESEND_API_KEY", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"];
+const optionalEnvVars = [
+  "RESEND_API_KEY",
+  "AWS_ACCESS_KEY_ID",
+  "AWS_SECRET_ACCESS_KEY",
+  "XAI_API_KEY",
+  "AI_GATEWAY_API_KEY",
+];
 
 console.log("Checking environment variables...\n");
 
@@ -254,6 +260,9 @@ For sensitive API keys that shouldn't be stored in environment variables (or as 
 ```sql
 -- Store a secret in vault
 SELECT vault.create_secret('XAI_API_KEY', 'xai-your-api-key-here');
+
+-- Or use AI Gateway key as alternative
+SELECT vault.create_secret('AI_GATEWAY_API_KEY', 'your-gateway-key-here');
 ```
 
 ### Retrieving Secrets (Server-Side Only)
@@ -262,10 +271,13 @@ SELECT vault.create_secret('XAI_API_KEY', 'xai-your-api-key-here');
 // Example: Get secret with caching
 const supabase = await createClient();
 const { data, error } = await supabase.rpc("get_secrets", {
-  secret_names: ["XAI_API_KEY"],
+  secret_names: ["XAI_API_KEY", "AI_GATEWAY_API_KEY"],
 });
 
-const apiKey = data?.find((s) => s.name === "XAI_API_KEY")?.value;
+// Prefer XAI_API_KEY, fallback to AI_GATEWAY_API_KEY
+const apiKey =
+  data?.find((s) => s.name === "XAI_API_KEY")?.value ||
+  data?.find((s) => s.name === "AI_GATEWAY_API_KEY")?.value;
 ```
 
 ### When to Use Vault vs Environment Variables

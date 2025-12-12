@@ -3394,7 +3394,9 @@ interface AIAnalysis {
 
 **AI Analysis Endpoint:** `POST /api/moderation/analyze`
 
-The AI analysis is triggered asynchronously and does not block report creation. If AI analysis fails, the report is still created with `pending` status.
+- **Authentication:** Requires admin role (401 if not logged in, 403 if not admin)
+- The AI analysis is triggered asynchronously and does not block report creation
+- If AI analysis fails, the report is still created with `pending` status
 
 ---
 

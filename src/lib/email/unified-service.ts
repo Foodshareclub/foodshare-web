@@ -38,14 +38,15 @@ interface UnifiedConfig {
 }
 
 // Provider priority by email type (static, no DB needed)
+// Resend is now prioritized for all types since it's the most reliable
 const PROVIDER_PRIORITY: Record<EmailType, EmailProvider[]> = {
   auth: ["resend", "brevo", "aws_ses"],
-  chat: ["brevo", "resend", "aws_ses"],
-  food_listing: ["brevo", "resend", "aws_ses"],
-  feedback: ["brevo", "resend", "aws_ses"],
-  review_reminder: ["brevo", "resend", "aws_ses"],
-  newsletter: ["brevo", "aws_ses", "resend"],
-  announcement: ["brevo", "aws_ses", "resend"],
+  chat: ["resend", "brevo", "aws_ses"],
+  food_listing: ["resend", "brevo", "aws_ses"],
+  feedback: ["resend", "brevo", "aws_ses"],
+  review_reminder: ["resend", "brevo", "aws_ses"],
+  newsletter: ["resend", "brevo", "aws_ses"],
+  announcement: ["resend", "brevo", "aws_ses"],
 };
 
 // Daily limits (static config)
@@ -158,12 +159,10 @@ export class UnifiedEmailService {
   private async fetchProviderHealth(): Promise<ProviderHealth[]> {
     try {
       const supabase = await this.getSupabase();
-      const today = new Date().toISOString().split("T")[0];
 
-      // Single query for all provider data
-      const { data, error } = await supabase.rpc("get_all_provider_health", {
-        p_date: today,
-      });
+      // Call without p_date parameter - let PostgreSQL use DEFAULT CURRENT_DATE
+      // This avoids type mismatch issues (string vs date)
+      const { data, error } = await supabase.rpc("get_all_provider_health");
 
       if (error) throw error;
 

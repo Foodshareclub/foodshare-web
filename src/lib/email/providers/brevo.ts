@@ -4,7 +4,6 @@
  */
 
 import * as brevo from "@getbrevo/brevo";
-import { BaseEmailProvider } from "./base";
 import type {
   SendEmailRequest,
   SendEmailResponse,
@@ -12,6 +11,7 @@ import type {
   ProviderQuota,
   EmailAddress,
 } from "../types";
+import { BaseEmailProvider } from "./base";
 import { supabase } from "@/lib/supabase/client";
 
 export class BrevoProvider extends BaseEmailProvider {
@@ -111,11 +111,10 @@ export class BrevoProvider extends BaseEmailProvider {
 
   async getQuota(): Promise<ProviderQuota> {
     try {
-      const today = new Date().toISOString().split("T")[0];
-
+      // Don't pass p_date - let PostgreSQL use DEFAULT CURRENT_DATE
+      // This avoids type mismatch issues (string vs date)
       const { data, error } = await supabase.rpc("check_provider_quota", {
         p_provider: "brevo",
-        p_date: today,
       });
 
       if (error) throw error;
@@ -154,11 +153,9 @@ export class BrevoProvider extends BaseEmailProvider {
 
   private async incrementQuota(): Promise<void> {
     try {
-      const today = new Date().toISOString().split("T")[0];
-
+      // Don't pass p_date - let PostgreSQL use DEFAULT CURRENT_DATE
       await supabase.rpc("increment_provider_quota", {
         p_provider: "brevo",
-        p_date: today,
       });
     } catch {
       // Silently fail - quota tracking is non-critical

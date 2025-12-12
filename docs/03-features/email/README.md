@@ -12,7 +12,7 @@ FoodShare uses `UnifiedEmailService` for all email delivery:
 
 The optimized email service with:
 
-- **Smart provider routing** based on email type (auth → Resend, app → Brevo)
+- **Smart provider routing** based on email type (Resend prioritized for all types)
 - **Request coalescing** for health checks (multiple calls share one DB query)
 - **Buffered metrics** (non-blocking database writes)
 - **Lazy provider initialization** (tree-shaking friendly)
@@ -103,7 +103,7 @@ You now have a **production-ready Admin Email CRM** with:
 
 - **Edge Function** for real-time quota checks
 - **Automatic failover** when providers are exhausted
-- **Email-type specific routing** (auth → Resend, app → Brevo)
+- **Email-type specific routing** (Resend prioritized for reliability)
 - **Full quota transparency** for informed decisions
 
 ---
@@ -422,8 +422,8 @@ Each provider card displays:
 **Smart Routing Panel:**
 An info panel at the bottom shows smart routing status with toggle:
 
-- Auth emails → Resend (primary)
-- Marketing emails → Brevo (primary)
+- All email types → Resend (primary, most reliable)
+- Fallback → Brevo (secondary)
 - Failover → AWS SES (automatic)
 
 ---
@@ -467,15 +467,17 @@ User sends email → Check email type → Query quotas → Select provider
 
 **Priority Logic:**
 
+Resend is prioritized for all email types since it's the most reliable provider:
+
 ```typescript
 PRIORITY = {
   auth: ["resend", "brevo", "aws_ses"],
-  chat: ["brevo", "aws_ses", "resend"],
-  food_listing: ["brevo", "aws_ses", "resend"],
-  feedback: ["brevo", "aws_ses", "resend"],
-  review_reminder: ["brevo", "aws_ses", "resend"],
-  newsletter: ["brevo", "aws_ses", "resend"],
-  announcement: ["brevo", "aws_ses", "resend"],
+  chat: ["resend", "brevo", "aws_ses"],
+  food_listing: ["resend", "brevo", "aws_ses"],
+  feedback: ["resend", "brevo", "aws_ses"],
+  review_reminder: ["resend", "brevo", "aws_ses"],
+  newsletter: ["resend", "brevo", "aws_ses"],
+  announcement: ["resend", "brevo", "aws_ses"],
 };
 ```
 
