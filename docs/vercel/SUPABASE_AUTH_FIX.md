@@ -84,11 +84,11 @@ On every request:
    ↓
 3. If corrupted cookies found → clear them and return early
    ↓
-4. Middleware creates Supabase client with cookie handlers
+4. Middleware creates Supabase client with modern getAll/setAll cookie pattern
    ↓
-5. supabase.auth.getUser() refreshes session if needed
+5. supabase.auth.getUser() validates JWT and refreshes session if needed
    ↓
-6. Updated session cookies are set in response
+6. Updated session cookies are set via setAll() pattern
    ↓
 7. Request continues to page/API route
    ↓

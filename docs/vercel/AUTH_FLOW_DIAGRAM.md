@@ -130,14 +130,24 @@ export async function GET(request: Request) {
 export async function proxy(request: NextRequest) {
   const supabase = createServerClient(url, key, {
     cookies: {
-      /* cookie handlers */
+      // Modern getAll/setAll pattern (recommended by Supabase)
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        response = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, options)
+        );
+      },
     },
   });
 
-  // Refresh session on every request
+  // Refresh session on every request using getUser() (validates JWT)
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return response; // with updated cookies
 }
@@ -204,10 +214,10 @@ export async function getUser() {
                              ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │  1. Browser sends cookies automatically                             │
-│  2. Proxy reads cookies via: request.cookies.get()                  │
-│  3. Proxy calls: supabase.auth.getSession()                        │
+│  2. Proxy reads all cookies via: getAll() pattern                   │
+│  3. Proxy calls: supabase.auth.getUser() (validates JWT)           │
 │  4. If expired: Supabase refreshes token                            │
-│  5. Proxy updates cookies via: response.cookies.set()              │
+│  5. Proxy updates cookies via: setAll() pattern                     │
 │  6. Server components read fresh session                            │
 └─────────────────────────────────────────────────────────────────────┘
 ```

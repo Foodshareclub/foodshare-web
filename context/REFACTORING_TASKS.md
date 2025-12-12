@@ -161,16 +161,16 @@ React Compiler handles memoization automatically. Remove manual `useMemo`/`useCa
 
 Add cached data functions for features currently fetching directly.
 
-| Feature            | Action                                                    |
-| ------------------ | --------------------------------------------------------- |
-| Email preferences  | ✅ Created `src/lib/data/email-preferences.ts`            |
-| Localization stats | ✅ Created `src/lib/data/localization.ts`                 |
-| Feedback           | ✅ Created `src/app/actions/feedback.ts` (Server Actions) |
-| CRM customers      | ✅ Created `src/lib/data/crm.ts`                          |
-| Email monitoring   | ✅ Created `src/lib/data/admin-email.ts` (Dec 2025)       |
-| AI insights        | ✅ Created `src/lib/data/admin-insights.ts` (Dec 2025)    |
-| Feedback actions   | ✅ Created `src/app/actions/feedback.ts` (Dec 2025)       |
-| AI insight actions | ✅ Created `src/app/actions/admin-insights.ts` (Dec 2025) |
+| Feature            | Action                                                                                                      |
+| ------------------ | ----------------------------------------------------------------------------------------------------------- |
+| Email preferences  | ✅ Created `src/lib/data/email-preferences.ts`                                                              |
+| Localization stats | ✅ Created `src/lib/data/localization.ts`                                                                   |
+| Feedback           | ✅ Created `src/app/actions/feedback.ts` (Server Actions)                                                   |
+| CRM customers      | ✅ Created `src/lib/data/crm.ts`                                                                            |
+| Email monitoring   | ✅ Created `src/lib/data/admin-email.ts` (Dec 2025)                                                         |
+| AI insights        | ✅ Created `src/lib/data/admin-insights.ts` (Dec 2025) - Added deep analysis mode with SQL query generation |
+| Feedback actions   | ✅ Created `src/app/actions/feedback.ts` (Dec 2025)                                                         |
+| AI insight actions | ✅ Created `src/app/actions/admin-insights.ts` (Dec 2025)                                                   |
 
 ### 6. Consolidate API Layer
 

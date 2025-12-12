@@ -6,16 +6,16 @@ Complete setup instructions for the FoodShare web application.
 
 Before starting, ensure you have:
 
-- **Node.js 24+** - [Download](https://nodejs.org/)
-- **npm 11+** - Comes with Node.js
+- **Node.js 22+** - [Download](https://nodejs.org/) (v24 recommended, see `.nvmrc`)
+- **npm 10+** - Comes with Node.js
 - **Git** - [Download](https://git-scm.com/)
 - **Supabase Account** - [Sign up](https://supabase.com/)
 
 Verify installations:
 
 ```bash
-node --version  # Should be 18.x or higher
-npm --version   # Should be 9.x or higher
+node --version  # Should be 22.x or higher
+npm --version   # Should be 10.x or higher
 git --version   # Any recent version
 ```
 

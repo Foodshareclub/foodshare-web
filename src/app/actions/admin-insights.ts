@@ -11,6 +11,8 @@ import {
   clearInsightCache,
   getRateLimiterStatus,
   resetCircuitBreaker,
+  getDeepAnalysis,
+  shouldUseDeepAnalysis,
 } from "@/lib/data/admin-insights";
 
 interface InsightResult {
@@ -80,11 +82,28 @@ function classifyErrorForUser(error: Error): {
 
 /**
  * Get AI insights for admin query
+ * @param query - User's question
+ * @param includeMetrics - Include platform metrics in context
+ * @param enableDeepAnalysis - Allow SQL query generation (auto-detected if not specified)
  */
-export async function getGrokInsight(query: string, includeMetrics = true): Promise<InsightResult> {
+export async function getGrokInsight(
+  query: string,
+  includeMetrics = true,
+  enableDeepAnalysis?: boolean
+): Promise<InsightResult> {
   try {
     await requireAdmin();
-    const insight = await getInsights(query, includeMetrics);
+
+    // Auto-detect if deep analysis should be used
+    const useDeepAnalysis = enableDeepAnalysis ?? shouldUseDeepAnalysis(query);
+
+    let insight: string;
+    if (useDeepAnalysis) {
+      insight = await getDeepAnalysis(query);
+    } else {
+      insight = await getInsights(query, includeMetrics);
+    }
+
     return { success: true, insight };
   } catch (err) {
     const error = err instanceof Error ? err : new Error(String(err));

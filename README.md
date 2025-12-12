@@ -17,6 +17,7 @@ A modern food sharing platform that connects people to reduce food waste by enab
 ## Tech Stack
 
 ### Frontend
+
 - **Next.js 16** with App Router and Turbopack
 - **React 19** with React Compiler
 - **TypeScript 5**
@@ -27,11 +28,13 @@ A modern food sharing platform that connects people to reduce food waste by enab
 - **Leaflet** for interactive maps
 
 ### Backend
+
 - **Supabase** - Database, Authentication, Storage, Realtime
 - **Supabase Edge Functions** (Deno) - Serverless functions
 - **PostGIS** - Geospatial queries
 
 ### Infrastructure
+
 - **Upstash** - Redis caching, Vector search, QStash queues
 - **Vercel** - Hosting and deployment
 - **AWS SES / Brevo / Resend** - Email services
@@ -40,7 +43,7 @@ A modern food sharing platform that connects people to reduce food waste by enab
 
 ## Prerequisites
 
-- Node.js 20+ (see `.nvmrc`)
+- Node.js 22+ (see `.nvmrc` for exact version)
 - npm 10+
 - Supabase CLI (for local development)
 - Git
@@ -78,17 +81,17 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server with Turbopack |
-| `npm run build` | Build for production |
-| `npm run build:analyze` | Build with bundle analyzer |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
-| `npm run lint:fix` | Fix ESLint errors |
-| `npm run type-check` | TypeScript type checking |
-| `npm run test:build` | Run type-check, lint, and build |
-| `npm run clean` | Clean build artifacts and cache |
+| Command                 | Description                             |
+| ----------------------- | --------------------------------------- |
+| `npm run dev`           | Start development server with Turbopack |
+| `npm run build`         | Build for production                    |
+| `npm run build:analyze` | Build with bundle analyzer              |
+| `npm run start`         | Start production server                 |
+| `npm run lint`          | Run ESLint                              |
+| `npm run lint:fix`      | Fix ESLint errors                       |
+| `npm run type-check`    | TypeScript type checking                |
+| `npm run test:build`    | Run type-check, lint, and build         |
+| `npm run clean`         | Clean build artifacts and cache         |
 
 ## Project Structure
 
@@ -134,22 +137,22 @@ Copy `.env.local.example` to `.env.local` and configure:
 
 ### Required
 
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server-side) |
+| Variable                        | Description                             |
+| ------------------------------- | --------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Supabase project URL                    |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key                  |
+| `SUPABASE_SERVICE_ROLE_KEY`     | Supabase service role key (server-side) |
 
 ### Optional Services
 
-| Variable | Description |
-|----------|-------------|
-| `KV_REST_API_URL` | Upstash Redis URL |
-| `KV_REST_API_TOKEN` | Upstash Redis token |
-| `BREVO_API_KEY` | Brevo email API key |
-| `TWILIO_ACCOUNT_SID` | Twilio account SID |
-| `AWS_ACCESS_KEY_ID` | AWS credentials for SES |
-| `NEXT_PUBLIC_APP_URL` | Public app URL |
+| Variable              | Description             |
+| --------------------- | ----------------------- |
+| `KV_REST_API_URL`     | Upstash Redis URL       |
+| `KV_REST_API_TOKEN`   | Upstash Redis token     |
+| `BREVO_API_KEY`       | Brevo email API key     |
+| `TWILIO_ACCOUNT_SID`  | Twilio account SID      |
+| `AWS_ACCESS_KEY_ID`   | AWS credentials for SES |
+| `NEXT_PUBLIC_APP_URL` | Public app URL          |
 
 See `.env.local.example` for the complete list with documentation.
 
@@ -179,16 +182,16 @@ npx lingui compile
 
 Located in `supabase/functions/`:
 
-| Function | Description |
-|----------|-------------|
-| `telegram-bot-foodshare` | Telegram bot webhooks |
-| `smart-email-route` | Email routing and delivery |
-| `process-email-queue` | Email queue processing |
-| `search-functions` | Product search |
-| `update-coordinates` | Geocoding and location updates |
-| `resize-tinify-upload-image` | Image processing |
-| `get-translations` | Dynamic translations |
-| `cors-proxy-images` | Image proxy for CORS |
+| Function                     | Description                    |
+| ---------------------------- | ------------------------------ |
+| `telegram-bot-foodshare`     | Telegram bot webhooks          |
+| `smart-email-route`          | Email routing and delivery     |
+| `process-email-queue`        | Email queue processing         |
+| `search-functions`           | Product search                 |
+| `update-coordinates`         | Geocoding and location updates |
+| `resize-tinify-upload-image` | Image processing               |
+| `get-translations`           | Dynamic translations           |
+| `cors-proxy-images`          | Image proxy for CORS           |
 
 ### Deploy functions
 

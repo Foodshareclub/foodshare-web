@@ -329,7 +329,8 @@ export const GrokAssistant: React.FC = () => {
           </button>
         </div>
         <p className="text-xs text-gray-500 mt-2">
-          Using cost-optimized models • Press Enter to send
+          💡 Try &quot;how many users signed up this week&quot; or &quot;top 10 most active
+          users&quot; for deep database analysis
         </p>
       </div>
     </div>

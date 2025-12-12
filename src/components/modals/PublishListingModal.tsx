@@ -276,71 +276,45 @@ function PublishListingModal({
     setPublishState("loading");
 
     try {
-      // Upload images in parallel with retry logic
       const imagesToUpload = imageUpload.images.filter((image) => image.file && image.filePath);
 
       if (imagesToUpload.length > 0) {
-        const totalImages = imagesToUpload.length;
-        setUploadProgress(`Uploading ${totalImages} image${totalImages > 1 ? "s" : ""}...`);
+        setUploadProgress(`Uploading ${imagesToUpload.length} image(s)...`);
 
-        // Upload with timeout wrapper (no retries to avoid rate limits on free tier)
-        const uploadWithTimeout = async (
-          image: (typeof imagesToUpload)[0]
-        ): Promise<{ success: boolean; error?: string }> => {
-          const uploadTimeoutMs = 30000; // 30 second timeout per image
-
-          try {
-            // Create timeout promise
-            const timeoutPromise = new Promise<{ data: null; error: Error }>((_, reject) =>
-              setTimeout(
-                () => reject(new Error("Upload timed out. Please try with smaller images.")),
-                uploadTimeoutMs
-              )
-            );
-
-            // Race upload against timeout
-            const result = await Promise.race([
-              storageAPI.uploadImage({
-                bucket: STORAGE_BUCKETS.POSTS,
-                file: image.file!,
-                filePath: `${id}/${image.filePath}`,
-              }),
-              timeoutPromise,
-            ]);
-
-            if (result.error) {
-              return { success: false, error: result.error.message };
-            }
-
-            return { success: true };
-          } catch (err) {
-            return {
-              success: false,
-              error: err instanceof Error ? err.message : "Upload failed",
-            };
-          }
-        };
-
-        // Upload images in parallel for better performance
-        const uploadResults = await Promise.all(
-          imagesToUpload.map((img) => uploadWithTimeout(img))
+        // Upload all images in parallel - faster and atomic (all or nothing)
+        const uploadResults = await Promise.allSettled(
+          imagesToUpload.map((image) =>
+            storageAPI.uploadImage({
+              bucket: STORAGE_BUCKETS.POSTS,
+              file: image.file!,
+              filePath: `${id}/${image.filePath}`,
+            })
+          )
         );
 
-        const failedUploads = uploadResults.filter((r) => !r.success);
-        if (failedUploads.length > 0) {
-          const errorMessages = failedUploads.map((f) => f.error).filter(Boolean);
-          console.error("[PublishListing] Image upload errors:", errorMessages);
+        // Check results
+        const failures: string[] = [];
+        uploadResults.forEach((result, idx) => {
+          if (result.status === "rejected") {
+            failures.push(result.reason?.message || `Image ${idx + 1} failed`);
+          } else if (result.value.error) {
+            failures.push(result.value.error.message || `Image ${idx + 1} error`);
+          }
+        });
+
+        if (failures.length > 0) {
+          console.error("[PublishListing] Upload failures:", failures);
           throw new Error(
-            failedUploads.length === imagesToUpload.length
+            failures.length === imagesToUpload.length
               ? "Failed to upload images. Please try again."
-              : `Failed to upload ${failedUploads.length} of ${imagesToUpload.length} image(s)`
+              : `Failed to upload ${failures.length} image(s): ${failures[0]}`
           );
         }
       }
 
       setUploadProgress("Saving listing...");
 
-      // Build form data for server action
+      // Build form data
       const formData = new FormData();
       formData.set("post_name", (productObj.post_name || "").trim());
       formData.set("post_description", (productObj.post_description || "").trim());
@@ -352,56 +326,37 @@ function PublishListingModal({
       if (productObj.images) formData.set("images", JSON.stringify(productObj.images));
       if (productObj.profile_id) formData.set("profile_id", productObj.profile_id);
 
-      // Create or update with timeout protection
-      const timeoutMs = 30000; // 30 second timeout
+      // Execute server action
       let result;
-
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Request timed out. Please try again.")), timeoutMs)
-      );
-
       if (product) {
         formData.set("is_active", "true");
-        result = await Promise.race([updateProduct(productId, formData), timeoutPromise]);
+        result = await updateProduct(productId, formData);
       } else {
-        result = await Promise.race([createProduct(formData), timeoutPromise]);
+        result = await createProduct(formData);
         if (result.success) form.clearDraft();
       }
 
       if (!result.success) {
-        const errorMsg = result.error?.message || "Failed to save listing";
         console.error("[PublishListing] Save failed:", result.error);
-        throw new Error(errorMsg);
+        throw new Error(result.error?.message || "Failed to save listing");
       }
 
-      // Success - refresh and close
+      // Success
       setUploadProgress(null);
       router.refresh();
       setPublishState("success");
-
-      // Brief delay to show success state
       await new Promise((resolve) => setTimeout(resolve, 1500));
-
       onClose();
       setOpenEdit?.(false);
     } catch (err) {
-      console.error("[PublishListing] Publish error:", err);
-
-      // User-friendly error messages
-      let errorMessage = "Failed to publish listing";
-      if (err instanceof Error) {
-        if (err.message.includes("timed out")) {
-          errorMessage = "Request timed out. Please check your connection and try again.";
-        } else if (err.message.includes("network") || err.message.includes("fetch")) {
-          errorMessage = "Network error. Please check your connection and try again.";
-        } else if (err.message.includes("unauthorized") || err.message.includes("auth")) {
-          errorMessage = "Session expired. Please sign in again.";
-        } else {
-          errorMessage = err.message;
-        }
-      }
-
-      setError(errorMessage);
+      console.error("[PublishListing] Error:", err);
+      const message =
+        err instanceof Error
+          ? err.message.includes("sign") || err.message.includes("auth")
+            ? "Session expired. Please sign in again."
+            : err.message
+          : "Failed to publish listing";
+      setError(message);
       setUploadProgress(null);
       setPublishState("idle");
     } finally {

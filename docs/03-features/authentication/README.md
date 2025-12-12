@@ -57,11 +57,13 @@ The `src/middleware.ts` file handles authentication at the edge, running on ever
 // Middleware runs on every request (except static files)
 export async function middleware(request: NextRequest) {
   // 1. Check for corrupted Supabase cookies (sb-*) and clear them
-  // 2. Create Supabase client with cookie handling
-  // 3. Refresh session (critical for auth state)
+  // 2. Create Supabase client with modern getAll/setAll cookie pattern
+  // 3. Refresh session via getUser() (validates JWT, critical for auth state)
   // 4. Protect /admin routes with multi-source role checking
 }
 ```
+
+The middleware uses the modern `getAll/setAll` cookie pattern recommended by Supabase for proper token refresh handling.
 
 ### Admin Route Protection
 

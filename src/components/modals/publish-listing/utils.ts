@@ -79,7 +79,7 @@ export const compressImage = async (file: File, maxSizeMB: number = 1): Promise<
       if (resolved) return;
 
       let { width, height } = img;
-      const maxDimension = 1200;
+      const maxDimension = 1024; // Reduced from 1200 for faster uploads on free tier
 
       if (width > maxDimension || height > maxDimension) {
         if (width > height) {

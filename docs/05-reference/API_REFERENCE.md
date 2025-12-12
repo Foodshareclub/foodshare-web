@@ -3748,6 +3748,99 @@ Clears the in-memory insight cache. Useful after significant data changes.
 
 ---
 
+### Deep Analysis Mode
+
+Deep analysis allows the AI to generate and execute SQL queries against the database for detailed, data-driven insights.
+
+#### Get Deep Analysis
+
+```typescript
+import { getDeepAnalysis } from "@/lib/data/admin-insights";
+
+const analysis = await getDeepAnalysis("Show me the top 10 most active users this month");
+```
+
+**Parameters:**
+
+- `userQuery` - Natural language question about platform data
+
+**Returns:** `string` - AI analysis with query details in collapsible section
+
+**How it works:**
+
+1. AI generates a PostgreSQL SELECT query based on the question
+2. Query is validated (only SELECT/WITH allowed, no mutations)
+3. Query executes with automatic LIMIT (max 100 rows)
+4. AI analyzes results and provides actionable insights
+
+**Supported query types:**
+
+- User analytics ("top users", "most active", "inactive users")
+- Listing statistics ("posts by category", "trending listings")
+- Engagement metrics ("messages between dates", "review breakdown")
+- Comparative analysis ("compare this week vs last week")
+
+**Safety features:**
+
+- Only SELECT queries allowed (no INSERT/UPDATE/DELETE)
+- Automatic LIMIT 100 to prevent large result sets
+- Query length capped at 2000 characters
+- SQL injection patterns blocked
+
+**Example output:**
+
+```markdown
+Based on the data, your top 10 users by activity are...
+
+---
+
+<details>
+<summary>📊 Query Details</summary>
+
+**SQL:**
+\`\`\`sql
+SELECT profiles.nickname, COUNT(posts.id) as post_count
+FROM profiles JOIN posts ON posts.profile_id = profiles.id
+GROUP BY profiles.id ORDER BY post_count DESC LIMIT 10
+\`\`\`
+
+**Rows returned:** 10
+
+</details>
+```
+
+---
+
+#### Should Use Deep Analysis
+
+```typescript
+import { shouldUseDeepAnalysis } from "@/lib/data/admin-insights";
+
+const useDeep = shouldUseDeepAnalysis("Show me all users who posted last week");
+// true - contains "show me all" keyword
+
+const useDeep = shouldUseDeepAnalysis("How can I improve engagement?");
+// false - general question, use standard insights
+```
+
+**Parameters:**
+
+- `query` - User's question string
+
+**Returns:** `boolean` - Whether deep analysis mode should be used
+
+**Triggers deep analysis for queries containing:**
+
+- Data requests: "find all", "list all", "show me all", "how many", "count"
+- Rankings: "top 10", "top users", "most active", "least active"
+- Specific lookups: "specific user", "user with", "posts from"
+- Time-based: "between dates", "last month", "this week"
+- Aggregations: "breakdown", "by category", "by type", "group by"
+- Reports: "detailed report", "export", "raw data"
+- Analysis keywords: "deep analysis", "deep dive", "investigate"
+
+---
+
 ### Server Actions
 
 Located: `src/app/actions/admin-insights.ts`
@@ -3758,15 +3851,27 @@ Use these server actions from client components:
 "use client";
 import { getGrokInsight, getInsightSuggestions } from "@/app/actions/admin-insights";
 
-// Get AI insight
+// Get AI insight (auto-detects if deep analysis is needed)
 const result = await getGrokInsight("How can I improve engagement?");
 if (result.success) {
   console.log(result.insight);
 }
 
+// Force deep analysis mode
+const result = await getGrokInsight("Show me top users", true, true);
+
+// Disable deep analysis (faster for general questions)
+const result = await getGrokInsight("Tips for reducing churn", true, false);
+
 // Get suggested questions
 const suggestions = await getInsightSuggestions();
 ```
+
+**Parameters for `getGrokInsight`:**
+
+- `query` - User's question
+- `includeMetrics` - Include platform metrics in context (default: `true`)
+- `enableDeepAnalysis` - Force deep analysis on/off, or `undefined` for auto-detect
 
 ---
 
