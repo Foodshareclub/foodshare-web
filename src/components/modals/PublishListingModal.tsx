@@ -251,16 +251,17 @@ function PublishListingModal({
     setIsLoading(true);
     setPublishState("loading");
     try {
-      // Upload images
-      for (const image of imageUpload.images) {
-        if (image.file && image.filePath) {
-          await storageAPI.uploadImage({
+      // Upload images in parallel for faster publishing
+      const uploadPromises = imageUpload.images
+        .filter((image) => image.file && image.filePath)
+        .map((image) =>
+          storageAPI.uploadImage({
             bucket: STORAGE_BUCKETS.POSTS,
-            file: image.file,
+            file: image.file!,
             filePath: `${id}/${image.filePath}`,
-          });
-        }
-      }
+          })
+        );
+      await Promise.all(uploadPromises);
 
       // Create or update product using Server Actions
       const formData = new FormData();
