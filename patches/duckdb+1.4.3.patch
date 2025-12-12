@@ -1,14 +1,49 @@
-diff --git a/node_modules/duckdb/package.json b/node_modules/duckdb/package.json
-index 515867f..d95b3b3 100644
---- a/node_modules/duckdb/package.json
-+++ b/node_modules/duckdb/package.json
-@@ -14,7 +14,8 @@
-     "module_name": "duckdb",
-     "module_path": "./lib/binding/",
--    "host": "https://npm.duckdb.org/duckdb"
-+    "host": "https://npm.duckdb.org/duckdb",
-+    "napi_versions": [
-+      3
-+    ]
-   },
-   "scripts": {
+diff --git a/node_modules/duckdb/lib/duckdb.js b/node_modules/duckdb/lib/duckdb.js
+index 63d0020..d594129 100644
+--- a/node_modules/duckdb/lib/duckdb.js
++++ b/node_modules/duckdb/lib/duckdb.js
+@@ -91,7 +91,7 @@ QueryResult.prototype.nextIpcBuffer;
+  * @instance
+  * @yields data chunks
+  */
+-QueryResult.prototype[Symbol.asyncIterator] = async function*() {
++QueryResult.prototype[Symbol.asyncIterator] = async function* () {
+     let prefetch = this.nextChunk();
+     while (true) {
+         const chunk = await prefetch;
+@@ -159,7 +159,7 @@ class IpcResultStreamIterator {
+     }
+ 
+     // Materialize the IPC stream into a list of Uint8Arrays
+-    async toArray () {
++    async toArray() {
+         const retval = []
+ 
+         for await (const ipc_buf of this) {
+@@ -167,7 +167,7 @@ class IpcResultStreamIterator {
+         }
+ 
+         // Push EOS message containing 4 bytes of 0
+-        retval.push(new Uint8Array([0,0,0,0]));
++        retval.push(new Uint8Array([0, 0, 0, 0]));
+ 
+         return retval;
+     }
+@@ -430,7 +430,7 @@ Connection.prototype.close;
+  * @param callback
+  * @return {void}
+  */
+-Database.prototype.close = function() {
++Database.prototype.close = function () {
+     if (this.default_connection) {
+         this.default_connection.close(); // this queues up a job in the internals, which blocks the below close call
+         this.default_connection = null;
+@@ -536,7 +536,7 @@ Database.prototype.each = function () {
+  * @param {...*} params
+  * @yields row chunks
+  */
+-Database.prototype.stream = function() {
++Database.prototype.stream = function () {
+     return default_connection(this).stream.apply(this.default_connection, arguments);
+ }
+ 
