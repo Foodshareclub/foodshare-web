@@ -255,16 +255,16 @@ interface QueuedRequest<T> {
 
 // Circuit breaker configuration
 const CIRCUIT_BREAKER_CONFIG = {
-  failureThreshold: 3, // Open circuit after 3 consecutive failures
-  resetTimeoutMs: 30000, // Try again after 30 seconds
+  failureThreshold: 5, // Open circuit after 5 consecutive failures (more tolerance)
+  resetTimeoutMs: 15000, // Try again after 15 seconds (faster recovery)
   halfOpenMaxAttempts: 1, // Allow 1 request in half-open state
 } as const;
 
 // Rate limiting configuration
 const RATE_LIMIT_CONFIG = {
-  minIntervalMs: 2000, // Minimum 2 seconds between calls
+  minIntervalMs: 1000, // Minimum 1 second between calls (xAI limits are per-minute)
   maxRetries: 5, // Maximum retry attempts
-  baseDelayMs: 3000, // Base delay for exponential backoff
+  baseDelayMs: 2000, // Base delay for exponential backoff (faster initial retry)
   maxDelayMs: 60000, // Maximum delay cap (60 seconds)
   jitterFactor: 0.3, // Add up to 30% random jitter
   requestTimeoutMs: 30000, // Timeout for individual requests

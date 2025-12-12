@@ -46,11 +46,7 @@ const nextConfig: NextConfig = {
   },
 
   // Server-only packages (top-level in Next.js 15)
-  serverExternalPackages: [
-    "@aws-sdk/client-ses",
-    "@getbrevo/brevo",
-    "openai",
-  ],
+  serverExternalPackages: ["@aws-sdk/client-ses", "@getbrevo/brevo", "openai"],
 
   // Enhanced image optimization
   images: {
@@ -251,6 +247,7 @@ const nextConfig: NextConfig = {
               "font-src 'self' https://fonts.gstatic.com",
               "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.openai.com https://vercel.live wss://ws-us3.pusher.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com",
               "frame-ancestors 'self'",
+              "frame-src 'self' https://vercel.live",
               "form-action 'self'",
               "base-uri 'self'",
               "object-src 'none'",
