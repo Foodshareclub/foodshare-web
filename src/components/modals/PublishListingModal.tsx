@@ -32,11 +32,35 @@ import {
   X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import type { PublishListingModalType } from "./publish-listing/types";
+import {
+  categoryConfig,
+  dietaryOptions,
+  conditionOptions,
+  contactOptions,
+  MAX_DESCRIPTION_LENGTH,
+  MAX_IMAGES,
+  MAX_TAGS,
+} from "./publish-listing/constants";
+import {
+  Confetti,
+  ProgressBar,
+  QualityScore,
+  ImageLightbox,
+  TagInput,
+  CollapsibleSection,
+  VoiceInput,
+  TemplatePicker,
+  TitleSuggestions,
+  AriaAnnouncer,
+  SmartTips,
+} from "./publish-listing/components";
+import { useImageUpload, useListingForm, useUndoRedo } from "./publish-listing/hooks";
 import { RequiredStar } from "@/components";
 import { useAuth } from "@/hooks/useAuth";
 import { createProduct, updateProduct } from "@/app/actions/products";
 import { useUIStore } from "@/store/zustand/useUIStore";
-import { useRouter } from "next/navigation";
 import { storageAPI } from "@/api/storageAPI";
 import type { InitialProductStateType } from "@/types/product.types";
 import {
@@ -62,30 +86,6 @@ import {
 } from "@/components/ui/select";
 
 // Extracted components, utilities, and hooks
-import type { PublishListingModalType } from "./publish-listing/types";
-import {
-  categoryConfig,
-  dietaryOptions,
-  conditionOptions,
-  contactOptions,
-  MAX_DESCRIPTION_LENGTH,
-  MAX_IMAGES,
-  MAX_TAGS,
-} from "./publish-listing/constants";
-import {
-  Confetti,
-  ProgressBar,
-  QualityScore,
-  ImageLightbox,
-  TagInput,
-  CollapsibleSection,
-  VoiceInput,
-  TemplatePicker,
-  TitleSuggestions,
-  AriaAnnouncer,
-  SmartTips,
-} from "./publish-listing/components";
-import { useImageUpload, useListingForm, useUndoRedo } from "./publish-listing/hooks";
 
 /**
  * PublishListingModal Component
@@ -99,7 +99,7 @@ function PublishListingModal({
   setOpenEdit,
   value,
 }: PublishListingModalType) {
-  const t = useTranslations();
+  const _t = useTranslations();
   const router = useRouter();
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -166,6 +166,7 @@ function PublishListingModal({
       setShowTemplates(false);
       undoRedo.clearHistory();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, product, value]);
 
   // Keyboard shortcut for publish
@@ -181,6 +182,7 @@ function PublishListingModal({
       window.addEventListener("keydown", handleKeyDown);
       return () => window.removeEventListener("keydown", handleKeyDown);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, isLoading]);
 
   // Voice input handler
@@ -524,6 +526,7 @@ function PublishListingModal({
                           ${imageUpload.draggedImageId === image.id ? "opacity-50 border-primary" : "border-transparent"}
                         `}
                     >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={image.url}
                         alt={`Image ${index + 1}`}
@@ -726,9 +729,9 @@ function PublishListingModal({
                   id="listing-description"
                   value={form.formData.description}
                   onChange={(e) => {
-                    if (e.target.value.length <= MAX_DESCRIPTION_LENGTH) {
-                      form.setDescription(e.target.value);
-                    }
+                    // Truncate to max length instead of rejecting the entire input
+                    const value = e.target.value.slice(0, MAX_DESCRIPTION_LENGTH);
+                    form.setDescription(value);
                   }}
                   onBlur={() => form.setTouched((prev) => ({ ...prev, description: true }))}
                   placeholder={descriptionPlaceholder}
@@ -1003,6 +1006,7 @@ function PublishListingModal({
                 </div>
                 <div className="rounded-2xl overflow-hidden shadow-lg bg-background/80 backdrop-blur-md border border-white/10">
                   <div className="aspect-[4/3] overflow-hidden bg-muted relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={primaryImageUrl}
                       alt={form.formData.title}

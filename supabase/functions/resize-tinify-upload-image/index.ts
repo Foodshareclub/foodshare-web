@@ -1,9 +1,11 @@
 /**
- * Smart Image Compress Edge Function v9 (Bundled)
+ * Smart Image Compress Edge Function v10 (Bundled)
  *
- * This is a bundled version for deployment. The source is componentized in:
- * - lib/config.ts, lib/logger.ts, lib/circuit-breaker.ts, lib/utils.ts, lib/types.ts
- * - services/tinypng.ts, services/cloudinary.ts, services/compressor.ts
+ * Features:
+ * - Parallel race between TinyPNG and Cloudinary (first success wins)
+ * - Circuit breaker with retry logic
+ * - API quota tracking for both services
+ * - Proactive circuit breaker when approaching quota limits
  */
 
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -70,7 +72,158 @@ const CONFIG = {
   ],
   circuitBreaker: { failureThreshold: 3, resetTimeoutMs: 60000, halfOpenMaxAttempts: 1 },
   retry: { maxAttempts: 2, baseDelayMs: 1000, maxDelayMs: 5000 },
+  quotaLimits: {
+    tinypng: { monthly: 500, warningThreshold: 450 },
+    cloudinary: { monthlyCredits: 25, warningThreshold: 22 }, // 25 credits = ~25,000 transformations
+  },
 } as const;
+
+// ============================================================================
+// QUOTA TRACKING
+// ============================================================================
+
+interface QuotaInfo {
+  tinypng: { used: number; limit: number; remaining: number; lastChecked: number };
+  cloudinary: {
+    used: number;
+    limit: number;
+    remaining: number;
+    usedPercent: number;
+    plan: string;
+    lastChecked: number;
+  };
+}
+
+const quotaCache: QuotaInfo = {
+  tinypng: { used: 0, limit: 500, remaining: 500, lastChecked: 0 },
+  cloudinary: {
+    used: 0,
+    limit: 25,
+    remaining: 25,
+    usedPercent: 0,
+    plan: "unknown",
+    lastChecked: 0,
+  },
+};
+
+function updateTinyPNGQuota(compressionCount: number): void {
+  quotaCache.tinypng = {
+    used: compressionCount,
+    limit: CONFIG.quotaLimits.tinypng.monthly,
+    remaining: CONFIG.quotaLimits.tinypng.monthly - compressionCount,
+    lastChecked: Date.now(),
+  };
+  log("info", "TinyPNG quota updated", {
+    service: "tinypng",
+    used: compressionCount,
+    remaining: quotaCache.tinypng.remaining,
+    limit: CONFIG.quotaLimits.tinypng.monthly,
+  });
+  // Proactive circuit breaker if approaching limit
+  if (compressionCount >= CONFIG.quotaLimits.tinypng.warningThreshold) {
+    log("warn", "TinyPNG approaching quota limit", {
+      service: "tinypng",
+      used: compressionCount,
+      threshold: CONFIG.quotaLimits.tinypng.warningThreshold,
+    });
+  }
+  if (compressionCount >= CONFIG.quotaLimits.tinypng.monthly) {
+    circuits.tinypng.state = "open";
+    circuits.tinypng.lastFailureTime = Date.now();
+    log("warn", "TinyPNG quota exhausted - circuit opened", { service: "tinypng" });
+  }
+}
+
+async function fetchCloudinaryUsage(config: CloudinaryConfig): Promise<void> {
+  try {
+    const auth = btoa(`${config.apiKey}:${config.apiSecret}`);
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${config.cloudName}/usage`, {
+      headers: { Authorization: `Basic ${auth}` },
+    });
+    if (!res.ok) {
+      log("warn", "Cloudinary usage API failed", { status: res.status });
+      return;
+    }
+    const data = await res.json();
+    const usedPercent = data.credits?.used_percent || 0;
+    const plan = data.plan || "unknown";
+    quotaCache.cloudinary = {
+      used: data.credits?.usage || 0,
+      limit: data.credits?.limit || 25,
+      remaining: (data.credits?.limit || 25) - (data.credits?.usage || 0),
+      usedPercent,
+      plan,
+      lastChecked: Date.now(),
+    };
+    log("info", "Cloudinary quota updated", {
+      service: "cloudinary",
+      usedPercent: usedPercent.toFixed(1) + "%",
+      plan,
+      credits: data.credits,
+    });
+    // Proactive circuit breaker if approaching limit
+    if (
+      usedPercent >=
+      (CONFIG.quotaLimits.cloudinary.warningThreshold /
+        CONFIG.quotaLimits.cloudinary.monthlyCredits) *
+        100
+    ) {
+      log("warn", "Cloudinary approaching quota limit", {
+        service: "cloudinary",
+        usedPercent: usedPercent.toFixed(1) + "%",
+      });
+    }
+    if (usedPercent >= 100) {
+      circuits.cloudinary.state = "open";
+      circuits.cloudinary.lastFailureTime = Date.now();
+      log("warn", "Cloudinary quota exhausted - circuit opened", { service: "cloudinary" });
+    }
+  } catch (e) {
+    log("warn", "Failed to fetch Cloudinary usage", { error: String(e) });
+  }
+}
+
+async function fetchTinyPNGUsage(apiKey: string): Promise<void> {
+  try {
+    // TinyPNG doesn't have a dedicated usage endpoint, but returns Compression-Count header
+    // We make a minimal POST request with empty body to get the header
+    const auth = "Basic " + btoa(`api:${apiKey}`);
+    const res = await fetch("https://api.tinify.com/shrink", {
+      method: "POST",
+      headers: { Authorization: auth },
+      body: new Uint8Array(0), // Empty body will fail but still return quota header
+    });
+    const compressionCount = res.headers.get("Compression-Count");
+    if (compressionCount) {
+      const count = parseInt(compressionCount, 10);
+      quotaCache.tinypng = {
+        used: count,
+        limit: CONFIG.quotaLimits.tinypng.monthly,
+        remaining: CONFIG.quotaLimits.tinypng.monthly - count,
+        lastChecked: Date.now(),
+      };
+      log("info", "TinyPNG quota fetched", {
+        service: "tinypng",
+        used: count,
+        remaining: quotaCache.tinypng.remaining,
+      });
+      if (count >= CONFIG.quotaLimits.tinypng.warningThreshold) {
+        log("warn", "TinyPNG approaching quota limit", { service: "tinypng", used: count });
+      }
+      if (count >= CONFIG.quotaLimits.tinypng.monthly) {
+        circuits.tinypng.state = "open";
+        circuits.tinypng.lastFailureTime = Date.now();
+        log("warn", "TinyPNG quota exhausted - circuit opened", { service: "tinypng" });
+      }
+    }
+  } catch (e) {
+    log("warn", "Failed to fetch TinyPNG usage", { error: String(e) });
+  }
+}
+
+function getQuotaStatus(): QuotaInfo {
+  return quotaCache;
+}
 
 const STORAGE_BUCKETS = {
   PROFILES: "profiles",
@@ -224,6 +377,13 @@ async function compressWithTinyPNG(
     headers: { Authorization: auth },
     body: imageData,
   });
+
+  // Track quota from response header
+  const compressionCount = compressRes.headers.get("Compression-Count");
+  if (compressionCount) {
+    updateTinyPNGQuota(parseInt(compressionCount, 10));
+  }
+
   if (!compressRes.ok) {
     const e = await compressRes.text();
     throw new Error(
@@ -237,6 +397,7 @@ async function compressWithTinyPNG(
     service: "tinypng",
     inputSize: formatBytes(imageData.length),
     outputSize: formatBytes(result.output.size),
+    compressionCount: compressionCount || "unknown",
     duration: formatDuration(Date.now() - startTime),
   });
   const resizeRes = await fetch(result.output.url, {
@@ -260,6 +421,8 @@ async function compressWithTinyPNG(
     outputSize: formatBytes(buf.length),
     targetWidth,
     savedPercent: ((1 - buf.length / imageData.length) * 100).toFixed(1),
+    quotaUsed: compressionCount || "unknown",
+    quotaRemaining: compressionCount ? 500 - parseInt(compressionCount, 10) : "unknown",
     duration: formatDuration(Date.now() - startTime),
   });
   return { buffer: buf, method: `tinypng@${targetWidth}px`, service: "tinypng" };
@@ -639,13 +802,86 @@ Deno.serve(async (req) => {
       },
     });
 
+    // Fetch quotas on quota mode or periodically (every 5 minutes)
+    if (mode === "quota") {
+      // Fetch both quotas in parallel for quota mode
+      const quotaPromises: Promise<void>[] = [];
+      if (services.tinifyApiKey) {
+        quotaPromises.push(fetchTinyPNGUsage(services.tinifyApiKey));
+      }
+      if (services.cloudinaryConfig) {
+        quotaPromises.push(fetchCloudinaryUsage(services.cloudinaryConfig));
+      }
+      await Promise.all(quotaPromises);
+    } else {
+      // Periodic refresh during normal operations
+      if (
+        services.cloudinaryConfig &&
+        Date.now() - quotaCache.cloudinary.lastChecked > 5 * 60 * 1000
+      ) {
+        await fetchCloudinaryUsage(services.cloudinaryConfig);
+      }
+    }
+
+    if (mode === "quota") {
+      // Dedicated quota check endpoint
+      const quotaStatus = getQuotaStatus();
+      return jsonResponse(
+        {
+          success: true,
+          quotas: {
+            tinypng: {
+              ...quotaStatus.tinypng,
+              nearLimit: quotaStatus.tinypng.used >= CONFIG.quotaLimits.tinypng.warningThreshold,
+              exhausted: quotaStatus.tinypng.used >= CONFIG.quotaLimits.tinypng.monthly,
+              lastCheckedAgo: quotaStatus.tinypng.lastChecked
+                ? formatDuration(Date.now() - quotaStatus.tinypng.lastChecked)
+                : "never",
+            },
+            cloudinary: {
+              ...quotaStatus.cloudinary,
+              nearLimit: quotaStatus.cloudinary.usedPercent >= 88,
+              exhausted: quotaStatus.cloudinary.usedPercent >= 100,
+              lastCheckedAgo: quotaStatus.cloudinary.lastChecked
+                ? formatDuration(Date.now() - quotaStatus.cloudinary.lastChecked)
+                : "never",
+            },
+          },
+          circuitBreakers: {
+            tinypng: { state: getCircuitState("tinypng"), failures: circuits.tinypng.failures },
+            cloudinary: {
+              state: getCircuitState("cloudinary"),
+              failures: circuits.cloudinary.failures,
+            },
+          },
+          servicesConfigured: {
+            tinypng: !!services.tinifyApiKey,
+            cloudinary: !!services.cloudinaryConfig,
+          },
+        },
+        200
+      );
+    }
+
     if (mode === "stats") {
       const { data: stats, error } = await supabase.from("compression_stats").select("*");
       if (error) return jsonResponse({ error: error.message }, 500);
+      const quotaStatus = getQuotaStatus();
       return jsonResponse(
         {
           success: true,
           stats,
+          quotas: {
+            tinypng: {
+              used: quotaStatus.tinypng.used,
+              limit: quotaStatus.tinypng.limit,
+              remaining: quotaStatus.tinypng.remaining,
+            },
+            cloudinary: {
+              usedPercent: quotaStatus.cloudinary.usedPercent,
+              plan: quotaStatus.cloudinary.plan,
+            },
+          },
           circuitBreakers: {
             tinypng: { state: getCircuitState("tinypng"), failures: circuits.tinypng.failures },
             cloudinary: {

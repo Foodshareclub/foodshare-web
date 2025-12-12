@@ -143,6 +143,71 @@ Server-side data fetching for email marketing and campaigns.
 | `email_automation_flows` | Automation workflow definitions |
 | `newsletter_subscribers` | Subscriber list with status     |
 
+### Campaign Server Actions (`src/app/actions/campaigns.ts`)
+
+Server actions for newsletter campaign CRUD operations with admin access verification.
+
+| Action                  | Description                                   |
+| ----------------------- | --------------------------------------------- |
+| `createCampaign(input)` | Create new campaign (draft or scheduled)      |
+| `updateCampaign(input)` | Update existing campaign fields               |
+| `deleteCampaign(id)`    | Delete campaign (blocks if currently sending) |
+| `duplicateCampaign(id)` | Clone campaign as new draft                   |
+| `pauseCampaign(id)`     | Pause sending/scheduled campaign              |
+| `resumeCampaign(id)`    | Resume paused campaign                        |
+
+#### Types
+
+```typescript
+interface CreateCampaignInput {
+  name: string; // Required
+  subject: string; // Required
+  content: string;
+  campaignType?: string; // Default: 'newsletter'
+  segmentId?: string;
+  scheduledAt?: string; // ISO date - sets status to 'scheduled'
+}
+
+interface UpdateCampaignInput {
+  id: string; // Required
+  name?: string;
+  subject?: string;
+  content?: string;
+  campaignType?: string;
+  segmentId?: string;
+  scheduledAt?: string;
+}
+
+interface CampaignResult {
+  id: string;
+  name: string;
+  status: string;
+}
+```
+
+#### Usage Example
+
+```typescript
+import { createCampaign, duplicateCampaign, pauseCampaign } from "@/app/actions/campaigns";
+
+// Create a new draft campaign
+const result = await createCampaign({
+  name: "Weekly Newsletter",
+  subject: "This Week in FoodShare",
+  content: "<h1>Hello!</h1>...",
+});
+
+if (result.success) {
+  console.log("Created campaign:", result.data.id);
+}
+
+// Duplicate an existing campaign
+const copy = await duplicateCampaign(campaignId);
+
+// Pause a running campaign
+await pauseCampaign(campaignId);
+```
+
 ---
 
 ## CRM Dashboard (`src/components/admin/crm/CRMDashboard.tsx`)

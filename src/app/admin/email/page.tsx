@@ -1,30 +1,50 @@
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 import { Mail, Sparkles } from "lucide-react";
-import { EmailCRMClient } from "@/components/admin/EmailCRMClient";
+import { EmailCRMDashboard } from "@/components/admin/email/EmailCRMDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getEmailCRMData } from "@/lib/data/admin-email";
 
 function EmailSkeleton() {
   return (
-    <div className="flex-1 rounded-2xl border border-border/40 bg-card/50 p-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="rounded-xl border border-border/50 bg-card p-5">
-            <div className="flex items-start justify-between">
-              <div className="space-y-3">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-8 w-16" />
-              </div>
-              <Skeleton className="h-10 w-10 rounded-lg" />
-            </div>
+    <div className="flex-1 rounded-2xl border border-border/40 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl overflow-hidden">
+      <div className="border-b border-border/40 bg-card/60 backdrop-blur-sm p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-7 w-20 rounded-full" />
+            ))}
           </div>
-        ))}
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-10 w-32 rounded-lg" />
+            <Skeleton className="h-9 w-24 rounded-lg" />
+          </div>
+        </div>
+        <div className="flex gap-2 mt-4">
+          {[...Array(6)].map((_, i) => (
+            <Skeleton key={i} className="h-10 w-24 rounded-lg" />
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[...Array(3)].map((_, i) => (
-          <Skeleton key={i} className="h-48 rounded-xl" />
-        ))}
+      <div className="p-5 space-y-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="rounded-xl border border-border/50 bg-card/50 p-4">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-7 w-14" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+                <Skeleton className="h-10 w-10 rounded-xl" />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="grid lg:grid-cols-5 gap-5">
+          <Skeleton className="lg:col-span-3 h-64 rounded-xl" />
+          <Skeleton className="lg:col-span-2 h-64 rounded-xl" />
+        </div>
       </div>
     </div>
   );
@@ -32,7 +52,7 @@ function EmailSkeleton() {
 
 async function EmailCRMWithData() {
   const data = await getEmailCRMData();
-  return <EmailCRMClient initialData={data} />;
+  return <EmailCRMDashboard initialData={data} />;
 }
 
 export default async function AdminEmailCRMPage() {

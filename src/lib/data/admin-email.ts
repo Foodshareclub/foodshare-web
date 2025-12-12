@@ -77,34 +77,41 @@ export async function getEmailDashboardStats(): Promise<EmailDashboardStats> {
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   // Parallel fetch for performance
-  const [subscribersRes, activeSubsRes, campaignsRes, quotaRes, automationsRes] = await Promise.all(
-    [
-      // Total subscribers
-      supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }),
-      // Active subscribers
-      supabase
-        .from("newsletter_subscribers")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "active"),
-      // Campaign stats (last 30 days)
-      supabase
-        .from("newsletter_campaigns")
-        .select("total_sent, total_opened, total_clicked, total_unsubscribed")
-        .eq("status", "sent")
-        .gte("sent_at", thirtyDaysAgo.toISOString()),
-      // Daily quota
-      supabase
-        .from("email_provider_quota")
-        .select("emails_sent, daily_limit")
-        .eq("date", new Date().toISOString().split("T")[0])
-        .limit(3),
-      // Active automations
-      supabase
-        .from("email_automation_flows")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "active"),
-    ]
-  );
+  const [
+    subscribersRes,
+    activeSubsRes,
+    registeredUsersRes,
+    campaignsRes,
+    quotaRes,
+    automationsRes,
+  ] = await Promise.all([
+    // Total newsletter subscribers (external)
+    supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }),
+    // Active newsletter subscribers
+    supabase
+      .from("newsletter_subscribers")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "active"),
+    // Registered users with email preferences (internal subscribers)
+    supabase.from("email_preferences").select("*", { count: "exact", head: true }),
+    // Campaign stats (last 30 days)
+    supabase
+      .from("newsletter_campaigns")
+      .select("total_sent, total_opened, total_clicked, total_unsubscribed")
+      .eq("status", "sent")
+      .gte("sent_at", thirtyDaysAgo.toISOString()),
+    // Daily quota - get most recent records per provider (handles missing today's data)
+    supabase
+      .from("email_provider_quota")
+      .select("provider, emails_sent, daily_limit, date")
+      .order("date", { ascending: false })
+      .limit(9), // 3 providers * 3 days buffer
+    // Active automations
+    supabase
+      .from("email_automation_flows")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "active"),
+  ]);
 
   // Calculate aggregates
   const campaigns = campaignsRes.data || [];
@@ -113,13 +120,28 @@ export async function getEmailDashboardStats(): Promise<EmailDashboardStats> {
   const totalClicked = campaigns.reduce((sum, c) => sum + (c.total_clicked || 0), 0);
   const totalUnsubscribed = campaigns.reduce((sum, c) => sum + (c.total_unsubscribed || 0), 0);
 
-  const quotas = quotaRes.data || [];
-  const dailyUsed = quotas.reduce((sum, q) => sum + (q.emails_sent || 0), 0);
-  const dailyLimit = quotas.reduce((sum, q) => sum + (q.daily_limit || 0), 0) || 500;
+  // Get unique providers with most recent quota data
+  const quotaData = quotaRes.data || [];
+  const latestQuotaByProvider = new Map<string, { emails_sent: number; daily_limit: number }>();
+  for (const q of quotaData) {
+    if (!latestQuotaByProvider.has(q.provider)) {
+      latestQuotaByProvider.set(q.provider, {
+        emails_sent: q.emails_sent || 0,
+        daily_limit: q.daily_limit || 100,
+      });
+    }
+  }
+  const quotas = Array.from(latestQuotaByProvider.values());
+  const dailyUsed = quotas.reduce((sum, q) => sum + q.emails_sent, 0);
+  const dailyLimit = quotas.reduce((sum, q) => sum + q.daily_limit, 0) || 500;
+
+  // Combine newsletter subscribers + registered users with email prefs
+  const totalSubs = (subscribersRes.count || 0) + (registeredUsersRes.count || 0);
+  const activeSubs = (activeSubsRes.count || 0) + (registeredUsersRes.count || 0);
 
   return {
-    totalSubscribers: subscribersRes.count || 0,
-    activeSubscribers: activeSubsRes.count || 0,
+    totalSubscribers: totalSubs,
+    activeSubscribers: activeSubs,
     emailsSent30d: totalSent,
     avgOpenRate: totalSent > 0 ? Math.round((totalOpened / totalSent) * 1000) / 10 : 0,
     avgClickRate: totalOpened > 0 ? Math.round((totalClicked / totalOpened) * 1000) / 10 : 0,

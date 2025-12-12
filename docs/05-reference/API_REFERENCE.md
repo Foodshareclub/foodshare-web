@@ -3190,6 +3190,156 @@ export const CRM_CACHE_TAGS = {
 
 ---
 
+## Campaign Server Actions
+
+Located: `src/app/actions/campaigns.ts`
+
+Server actions for newsletter campaign CRUD operations. All actions require admin authentication via `verifyAdminAccess()`.
+
+### Types
+
+```typescript
+interface CreateCampaignInput {
+  name: string; // Required
+  subject: string; // Required
+  content: string;
+  campaignType?: string; // Default: 'newsletter'
+  segmentId?: string;
+  scheduledAt?: string; // ISO date - sets status to 'scheduled'
+}
+
+interface UpdateCampaignInput {
+  id: string; // Required
+  name?: string;
+  subject?: string;
+  content?: string;
+  campaignType?: string;
+  segmentId?: string;
+  scheduledAt?: string;
+}
+
+interface CampaignResult {
+  id: string;
+  name: string;
+  status: string;
+}
+```
+
+### Create Campaign
+
+```typescript
+import { createCampaign } from "@/app/actions/campaigns";
+
+const result = await createCampaign({
+  name: "Weekly Newsletter",
+  subject: "This Week in FoodShare",
+  content: "<h1>Hello!</h1>...",
+  campaignType: "newsletter",
+  segmentId: "segment-uuid", // optional
+  scheduledAt: "2025-12-15T10:00:00Z", // optional - sets status to 'scheduled'
+});
+```
+
+**Returns:** `ServerActionResult<CampaignResult>`
+
+**Behavior:**
+
+- Creates campaign with status `draft` (or `scheduled` if `scheduledAt` provided)
+- Validates required fields (name, subject)
+- Invalidates `CACHE_TAGS.ADMIN` and revalidates `/admin/email`
+
+---
+
+### Update Campaign
+
+```typescript
+import { updateCampaign } from "@/app/actions/campaigns";
+
+const result = await updateCampaign({
+  id: "campaign-uuid",
+  name: "Updated Name",
+  subject: "New Subject Line",
+});
+```
+
+**Returns:** `ServerActionResult<CampaignResult>`
+
+**Behavior:**
+
+- Updates only provided fields
+- If `scheduledAt` is updated, status changes to `scheduled` or `draft`
+
+---
+
+### Delete Campaign
+
+```typescript
+import { deleteCampaign } from "@/app/actions/campaigns";
+
+const result = await deleteCampaign("campaign-uuid");
+```
+
+**Returns:** `ServerActionResult<void>`
+
+**Behavior:**
+
+- Blocks deletion if campaign status is `sending`
+- Returns error for campaigns currently being sent
+
+---
+
+### Duplicate Campaign
+
+```typescript
+import { duplicateCampaign } from "@/app/actions/campaigns";
+
+const result = await duplicateCampaign("campaign-uuid");
+```
+
+**Returns:** `ServerActionResult<CampaignResult>`
+
+**Behavior:**
+
+- Creates copy with `(Copy)` suffix in name
+- New campaign has `draft` status
+- Copies content, subject, campaign_type, segment_id
+
+---
+
+### Pause Campaign
+
+```typescript
+import { pauseCampaign } from "@/app/actions/campaigns";
+
+const result = await pauseCampaign("campaign-uuid");
+```
+
+**Returns:** `ServerActionResult<void>`
+
+**Behavior:**
+
+- Sets status to `paused`
+- Only affects campaigns with status `sending` or `scheduled`
+
+---
+
+### Resume Campaign
+
+```typescript
+import { resumeCampaign } from "@/app/actions/campaigns";
+
+const result = await resumeCampaign("campaign-uuid");
+```
+
+**Returns:** `ServerActionResult<void>`
+
+**Behavior:**
+
+- Resumes paused campaigns
+- Sets status to `scheduled` (if has scheduled_at) or `sending`
+
+---
+
 ## Reports Server Actions
 
 Located: `src/app/actions/reports.ts`
