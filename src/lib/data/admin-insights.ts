@@ -826,7 +826,7 @@ const FORBIDDEN_SQL_PATTERNS = [
   /\bEXEC\b/i,
   /\bEXECUTE\b/i,
   /--/,
-  /;.*;/s, // Multiple statements
+  /;[\s\S]*;/, // Multiple statements (dotAll alternative)
 ];
 
 /**
