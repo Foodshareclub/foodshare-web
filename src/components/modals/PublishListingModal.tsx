@@ -243,21 +243,30 @@ function PublishListingModal({
 
   // Publish handler
   const publishHandler = async () => {
+    console.log("[PublishListing] 🚀 Starting publish handler...");
+    console.log("[PublishListing] Form valid:", form.isFormValid);
+    console.log("[PublishListing] Images count:", imageUpload.images.length);
+
     form.touchAll();
 
     if (!form.isFormValid || imageUpload.images.length === 0) {
+      console.log("[PublishListing] ❌ Validation failed - form valid:", form.isFormValid, "images:", imageUpload.images.length);
       setShakeError(true);
       setTimeout(() => setShakeError(false), 500);
       formRef.current?.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
+    console.log("[PublishListing] ✅ Validation passed");
 
     // Clear previous errors
     setError(null);
     setUploadProgress(null);
 
     // Pre-flight checks
+    console.log("[PublishListing] 🔍 Pre-flight checks - isAuthLoading:", isAuthLoading, "id:", id, "online:", navigator.onLine);
+
     if (isAuthLoading) {
+      console.log("[PublishListing] ❌ Auth still loading");
       setError("Checking authentication... Please try again in a moment.");
       setShakeError(true);
       setTimeout(() => setShakeError(false), 500);
@@ -281,11 +290,14 @@ function PublishListingModal({
 
     setIsLoading(true);
     setPublishState("loading");
+    console.log("[PublishListing] 📤 State set to loading");
 
     try {
       const imagesToUpload = imageUpload.images.filter((image) => image.file && image.filePath);
+      console.log("[PublishListing] 🖼️ Images to upload:", imagesToUpload.length);
 
       if (imagesToUpload.length > 0) {
+        console.log("[PublishListing] 📤 Starting image upload...");
         setUploadProgress(`Uploading ${imagesToUpload.length} image(s)...`);
 
         // Upload all images in parallel - faster and atomic (all or nothing)
@@ -298,28 +310,33 @@ function PublishListingModal({
             })
           )
         );
+        console.log("[PublishListing] 📤 Upload completed, results:", uploadResults.length);
 
         // Check results
         const failures: string[] = [];
         uploadResults.forEach((result, idx) => {
           if (result.status === "rejected") {
+            console.error("[PublishListing] ❌ Upload rejected:", idx, result.reason);
             failures.push(result.reason?.message || `Image ${idx + 1} failed`);
           } else if (result.value.error) {
+            console.error("[PublishListing] ❌ Upload error:", idx, result.value.error);
             failures.push(result.value.error.message || `Image ${idx + 1} error`);
           }
         });
 
         if (failures.length > 0) {
-          console.error("[PublishListing] Upload failures:", failures);
+          console.error("[PublishListing] ❌ Upload failures:", failures);
           throw new Error(
             failures.length === imagesToUpload.length
               ? "Failed to upload images. Please try again."
               : `Failed to upload ${failures.length} image(s): ${failures[0]}`
           );
         }
+        console.log("[PublishListing] ✅ All images uploaded successfully");
       }
 
       setUploadProgress("Saving listing...");
+      console.log("[PublishListing] 💾 Building form data...");
 
       // Build form data
       const formData = new FormData();
@@ -333,7 +350,16 @@ function PublishListingModal({
       if (productObj.images) formData.set("images", JSON.stringify(productObj.images));
       if (productObj.profile_id) formData.set("profile_id", productObj.profile_id);
 
+      console.log("[PublishListing] 📝 Form data built:", {
+        post_name: productObj.post_name,
+        post_type: productObj.post_type,
+        images_count: productObj.images?.length,
+        profile_id: productObj.profile_id,
+        is_update: !!product
+      });
+
       // Execute server action
+      console.log("[PublishListing] 🌐 Calling server action...", product ? "updateProduct" : "createProduct");
       let result;
       if (product) {
         formData.set("is_active", "true");
@@ -342,21 +368,25 @@ function PublishListingModal({
         result = await createProduct(formData);
         if (result.success) form.clearDraft();
       }
+      console.log("[PublishListing] 🌐 Server action response:", result);
 
       if (!result.success) {
-        console.error("[PublishListing] Save failed:", result.error);
+        console.error("[PublishListing] ❌ Save failed:", result.error);
         throw new Error(result.error?.message || "Failed to save listing");
       }
 
       // Success
+      console.log("[PublishListing] ✅ SUCCESS! Setting success state...");
       setUploadProgress(null);
       router.refresh();
       setPublishState("success");
+      console.log("[PublishListing] ⏳ Waiting 1.5s before closing...");
       await new Promise((resolve) => setTimeout(resolve, 1500));
+      console.log("[PublishListing] 🚪 Closing modal...");
       onClose();
       setOpenEdit?.(false);
     } catch (err) {
-      console.error("[PublishListing] Error:", err);
+      console.error("[PublishListing] ❌ Error caught:", err);
       const message =
         err instanceof Error
           ? err.message.includes("sign") || err.message.includes("auth")
@@ -367,6 +397,7 @@ function PublishListingModal({
       setUploadProgress(null);
       setPublishState("idle");
     } finally {
+      console.log("[PublishListing] 🏁 Publish handler complete, isLoading=false");
       setIsLoading(false);
     }
   };
@@ -829,11 +860,10 @@ function PublishListingModal({
                       disabled={form.formData.description.length >= MAX_DESCRIPTION_LENGTH}
                     />
                     <span
-                      className={`text-xs tabular-nums transition-colors ${
-                        form.formData.description.length > MAX_DESCRIPTION_LENGTH * 0.9
+                      className={`text-xs tabular-nums transition-colors ${form.formData.description.length > MAX_DESCRIPTION_LENGTH * 0.9
                           ? "text-orange-500 font-medium"
                           : "text-muted-foreground"
-                      }`}
+                        }`}
                     >
                       {form.formData.description.length}/{MAX_DESCRIPTION_LENGTH}
                     </span>

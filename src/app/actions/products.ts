@@ -34,6 +34,8 @@ const updateProductSchema = createProductSchema.partial().extend({
  * Create a new product
  */
 export async function createProduct(formData: FormData): Promise<ActionResult<{ id: number }>> {
+  console.log("[createProduct] 🚀 Starting createProduct...");
+
   // Parse form data
   const rawData = {
     post_name: formData.get("post_name") as string,
@@ -47,35 +49,58 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     profile_id: formData.get("profile_id") as string,
   };
 
+  console.log("[createProduct] 📝 Raw data parsed:", {
+    post_name: rawData.post_name,
+    post_type: rawData.post_type,
+    images_count: rawData.images?.length,
+    profile_id: rawData.profile_id,
+    post_address: rawData.post_address?.substring(0, 30),
+  });
+
   // Validate with Zod
   const validation = validateWithSchema(createProductSchema, rawData);
   if (!validation.success) {
+    console.log("[createProduct] ❌ Validation failed:", validation.error);
     return validation;
   }
+  console.log("[createProduct] ✅ Validation passed");
 
   return withErrorHandling(async () => {
+    console.log("[createProduct] 🔐 Getting Supabase client...");
     const supabase = await createClient();
 
     // Verify user is authenticated and matches profile_id
+    console.log("[createProduct] 👤 Checking user authentication...");
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
+      console.log("[createProduct] ❌ User not authenticated");
       throw new Error("You must be signed in to create a listing");
     }
+    console.log("[createProduct] ✅ User authenticated:", user.id);
+
     if (user.id !== validation.data.profile_id) {
+      console.log("[createProduct] ❌ User ID mismatch:", user.id, "!=", validation.data.profile_id);
       throw new Error("Unauthorized: User ID mismatch");
     }
+    console.log("[createProduct] ✅ User ID matches profile_id");
 
+    console.log("[createProduct] 💾 Inserting into database...");
     const { data, error } = await supabase
       .from("posts")
       .insert({ ...validation.data, is_active: true })
       .select("id")
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[createProduct] ❌ Database error:", error);
+      throw new Error(error.message);
+    }
+    console.log("[createProduct] ✅ Inserted, post ID:", data.id);
 
     // Invalidate product caches
+    console.log("[createProduct] 🗑️ Invalidating caches...");
     invalidateTag(CACHE_TAGS.PRODUCTS);
     invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS);
     invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(validation.data.post_type));
@@ -86,14 +111,17 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
       invalidateTag(CACHE_TAGS.USER_PRODUCTS(validation.data.profile_id));
     }
 
+    console.log("[createProduct] ✅ SUCCESS! Returning id:", data.id);
     return { id: data.id };
   }, "createProduct").then(async (result) => {
     if (result.success && result.data) {
+      console.log("[createProduct] 📊 Tracking analytics event...");
       await trackEvent("Listing Created", {
         listingId: result.data.id,
         type: formData.get("post_type") as string,
       });
     }
+    console.log("[createProduct] 🏁 Complete, result:", result.success ? "success" : "failed");
     return result;
   });
 }
@@ -105,6 +133,8 @@ export async function updateProduct(
   id: number,
   formData: FormData
 ): Promise<ActionResult<undefined>> {
+  console.log("[updateProduct] 🚀 Starting updateProduct for id:", id);
+
   // Parse form data
   const rawData: Record<string, unknown> = {};
   const fields = [
@@ -130,24 +160,38 @@ export async function updateProduct(
     rawData.images = JSON.parse(images as string);
   }
 
+  console.log("[updateProduct] 📝 Raw data parsed:", {
+    post_name: rawData.post_name,
+    post_type: rawData.post_type,
+    images_count: (rawData.images as string[])?.length,
+    is_active: rawData.is_active,
+  });
+
   // Validate with Zod (partial schema for updates)
   const validation = validateWithSchema(updateProductSchema, rawData);
   if (!validation.success) {
+    console.log("[updateProduct] ❌ Validation failed:", validation.error);
     return validation;
   }
+  console.log("[updateProduct] ✅ Validation passed");
 
   return withErrorHandling(async () => {
+    console.log("[updateProduct] 🔐 Getting Supabase client...");
     const supabase = await createClient();
 
     // Verify user is authenticated
+    console.log("[updateProduct] 👤 Checking user authentication...");
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
+      console.log("[updateProduct] ❌ User not authenticated");
       throw new Error("You must be signed in to update a listing");
     }
+    console.log("[updateProduct] ✅ User authenticated:", user.id);
 
     // Get current product info for cache invalidation and ownership check
+    console.log("[updateProduct] 📝 Getting current product...");
     const { data: currentProduct } = await supabase
       .from("posts")
       .select("post_type, profile_id")
@@ -156,14 +200,22 @@ export async function updateProduct(
 
     // Verify ownership
     if (currentProduct?.profile_id && currentProduct.profile_id !== user.id) {
+      console.log("[updateProduct] ❌ Ownership check failed");
       throw new Error("Unauthorized: You can only edit your own listings");
     }
+    console.log("[updateProduct] ✅ Ownership verified");
 
+    console.log("[updateProduct] 💾 Updating database...");
     const { error } = await supabase.from("posts").update(validation.data).eq("id", id);
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[updateProduct] ❌ Database error:", error);
+      throw new Error(error.message);
+    }
+    console.log("[updateProduct] ✅ Database updated");
 
     // Invalidate product caches
+    console.log("[updateProduct] 🗑️ Invalidating caches...");
     invalidateTag(CACHE_TAGS.PRODUCTS);
     invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS);
     invalidateTag(CACHE_TAGS.PRODUCT(id));
@@ -183,6 +235,7 @@ export async function updateProduct(
       invalidateTag(CACHE_TAGS.USER_PRODUCTS(currentProduct.profile_id));
     }
 
+    console.log("[updateProduct] ✅ SUCCESS!");
     return undefined;
   }, "updateProduct");
 }
