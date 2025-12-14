@@ -1,10 +1,10 @@
 "use client";
 
-import { useTransition } from "react";
+import { useEffect, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ProductGrid } from "@/components/productCard/ProductGrid";
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
-import { LocationFilter } from "@/components/location/LocationFilter";
+import { useUIStore } from "@/store/zustand/useUIStore";
 import type { InitialProductStateType } from "@/types/product.types";
 import type { NearbyPost } from "@/lib/data/nearby-posts";
 
@@ -19,32 +19,92 @@ interface HomeClientProps {
   radiusMeters?: number;
 }
 
+// Default search radius in meters (5km)
+const DEFAULT_RADIUS_METERS = 5000;
+
 /**
  * HomeClient - Client wrapper for the home page
- * Receives products from Server Component
+ * Automatically detects user location and shows nearby posts
  *
- * Location filtering works via URL searchParams:
- * - Client detects location and updates URL with lat/lng/radius
- * - Server Component fetches nearby posts based on searchParams
- * - This follows server-first architecture (no useEffect data fetching)
+ * Flow:
+ * 1. On mount, check if URL already has location params
+ * 2. If not, request browser geolocation automatically
+ * 3. Once location is obtained, update URL with lat/lng/radius
+ * 4. Server Component re-renders with nearby posts
  */
 export function HomeClient({
   initialProducts,
   productType: _productType = "food",
   nearbyPosts,
   isLocationFiltered = false,
-  radiusMeters = 5000,
+  radiusMeters = DEFAULT_RADIUS_METERS,
 }: HomeClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
+  // Get stored location from Zustand (persisted across sessions)
+  const userLocation = useUIStore((state) => state.userLocation);
+  const setUserLocation = useUIStore((state) => state.setUserLocation);
+  const geoDistance = useUIStore((state) => state.geoDistance);
+
   // Use nearby posts if location filter is active, otherwise use initial products
-  // NearbyPost has all fields needed by ProductCard, so cast is safe
   const products =
     isLocationFiltered && nearbyPosts
       ? (nearbyPosts as unknown as InitialProductStateType[])
       : initialProducts;
+
+  // Auto-detect location on mount
+  useEffect(() => {
+    // Skip if URL already has location params
+    if (searchParams.has("lat") && searchParams.has("lng")) {
+      return;
+    }
+
+    // If we have stored location, use it immediately
+    if (userLocation) {
+      const newParams = new URLSearchParams(searchParams.toString());
+      newParams.set("lat", userLocation.latitude.toFixed(6));
+      newParams.set("lng", userLocation.longitude.toFixed(6));
+      newParams.set("radius", (geoDistance || DEFAULT_RADIUS_METERS).toString());
+
+      startTransition(() => {
+        router.replace(`?${newParams.toString()}`);
+      });
+      return;
+    }
+
+    // Request browser geolocation
+    if (navigator?.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+
+          // Store in Zustand for future visits
+          setUserLocation({ latitude, longitude });
+
+          // Update URL to trigger server-side fetch
+          const newParams = new URLSearchParams(searchParams.toString());
+          newParams.set("lat", latitude.toFixed(6));
+          newParams.set("lng", longitude.toFixed(6));
+          newParams.set("radius", (geoDistance || DEFAULT_RADIUS_METERS).toString());
+
+          startTransition(() => {
+            router.replace(`?${newParams.toString()}`);
+          });
+        },
+        (_error) => {
+          // Silently fail - user will see all posts instead of nearby
+          // This is fine for users who deny location permission
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 300000, // 5 minutes cache
+        }
+      );
+    }
+  }, [searchParams, userLocation, setUserLocation, geoDistance, router]);
 
   // Handle load more - triggers server-side fetch
   const handleLoadMore = () => {
@@ -53,39 +113,9 @@ export function HomeClient({
     });
   };
 
-  // Handle location filter change - updates URL searchParams
-  const handleLocationChange = (
-    params: {
-      latitude: number;
-      longitude: number;
-      radiusMeters: number;
-    } | null
-  ) => {
-    const newParams = new URLSearchParams(searchParams.toString());
-
-    if (params) {
-      // Add location params to URL
-      newParams.set("lat", params.latitude.toFixed(6));
-      newParams.set("lng", params.longitude.toFixed(6));
-      newParams.set("radius", params.radiusMeters.toString());
-    } else {
-      // Remove location params
-      newParams.delete("lat");
-      newParams.delete("lng");
-      newParams.delete("radius");
-    }
-
-    // Navigate with new params (triggers server-side data fetch)
-    startTransition(() => {
-      router.push(`?${newParams.toString()}`);
-    });
-  };
-
   return (
     <>
-      <NavigateButtons title="Show map">
-        <LocationFilter onLocationChange={handleLocationChange} />
-      </NavigateButtons>
+      <NavigateButtons title="Show map" />
       <ProductGrid
         products={products}
         isLoading={isPending}
@@ -95,8 +125,7 @@ export function HomeClient({
       />
       {isLocationFiltered && nearbyPosts && nearbyPosts.length === 0 && !isPending && (
         <div className="text-center py-8 text-muted-foreground">
-          No posts found within {Math.round(radiusMeters / 1000)} km. Try increasing the search
-          radius.
+          No posts found within {Math.round(radiusMeters / 1000)} km of your location.
         </div>
       )}
     </>

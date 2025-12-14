@@ -61,7 +61,7 @@ export default async function FoodPage() {
 }
 
 // ✅ DO - Pass data to client components as props
-// HomeClient receives products from server, location filtering via URL params
+// HomeClient receives products from server, auto-detects location via URL params
 export function HomeClient({
   initialProducts,
   nearbyPosts,
@@ -72,23 +72,27 @@ export function HomeClient({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
+  // Get persisted location from Zustand store
+  const userLocation = useUIStore((state) => state.userLocation);
+  const geoDistance = useUIStore((state) => state.geoDistance);
+
   // Use nearby posts if location filter is active
   const products = isLocationFiltered && nearbyPosts ? nearbyPosts : initialProducts;
 
-  // Update URL params for location filtering (triggers server-side fetch)
-  const handleLocationChange = (params: LocationParams | null) => {
-    const newParams = new URLSearchParams(searchParams.toString());
-    if (params) {
-      newParams.set('lat', params.latitude.toFixed(6));
-      newParams.set('lng', params.longitude.toFixed(6));
-      newParams.set('radius', params.radiusMeters.toString());
-    } else {
-      newParams.delete('lat');
-      newParams.delete('lng');
-      newParams.delete('radius');
+  // Auto-detect location on mount (updates URL, triggers server fetch)
+  useEffect(() => {
+    if (searchParams.has('lat')) return; // Already have location
+    if (userLocation) {
+      // Use saved location from Zustand
+      router.replace(`?lat=${userLocation.latitude}&lng=${userLocation.longitude}&radius=${geoDistance}`);
+    } else if (navigator?.geolocation) {
+      // Request browser geolocation
+      navigator.geolocation.getCurrentPosition((pos) => {
+        setUserLocation(pos.coords);
+        router.replace(`?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}&radius=${geoDistance}`);
+      });
     }
-    startTransition(() => router.push(`?${newParams.toString()}`));
-  };
+  }, []);
 
   return <ProductGrid products={products} isLoading={isPending} />;
 }

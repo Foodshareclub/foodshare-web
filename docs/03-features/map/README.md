@@ -158,7 +158,38 @@ Category pages support location-based filtering via URL parameters:
 ### Data Flow
 
 ```
-URL params → parseLocationParams() → getNearbyPosts() → HomeClient (nearbyPosts prop)
+1. HomeClient mounts → checks URL for lat/lng params
+2. If no params → checks Zustand store for saved location
+3. If no saved location → requests browser geolocation
+4. Location obtained → updates URL with lat/lng/radius
+5. URL change triggers server re-render → getNearbyPosts() → nearbyPosts prop
+```
+
+### Automatic Location Detection
+
+`HomeClient` automatically detects user location on mount:
+
+1. **URL params take priority** - If `lat` and `lng` are in URL, use them
+2. **Zustand persistence** - Saved location from previous sessions is used immediately
+3. **Browser geolocation** - Falls back to requesting permission if no saved location
+4. **Graceful degradation** - Shows all posts if location permission denied
+
+```typescript
+// Location stored in Zustand (persisted across sessions)
+const userLocation = useUIStore((state) => state.userLocation);
+const geoDistance = useUIStore((state) => state.geoDistance);
+
+// Auto-updates URL on mount, triggering server-side fetch
+useEffect(() => {
+  if (searchParams.has("lat") && searchParams.has("lng")) return;
+  if (userLocation) {
+    // Use saved location immediately
+    router.replace(`?lat=${lat}&lng=${lng}&radius=${geoDistance}`);
+  } else if (navigator?.geolocation) {
+    // Request browser location
+    navigator.geolocation.getCurrentPosition(onSuccess, onError);
+  }
+}, []);
 ```
 
 ### HomeClient Props
@@ -179,10 +210,10 @@ When location filtering is active, `HomeClient` receives:
 
 ## Future Enhancements
 
-- [x] ~~Geolocation "Near me" button~~ (implemented via URL params)
+- [x] ~~Geolocation "Near me" button~~ (automatic on page load)
 - [x] ~~Save map position in URL params~~ (implemented)
+- [x] ~~"Use my location" button~~ (automatic with Zustand persistence)
 - [ ] Marker clustering for 100+ products
 - [ ] Custom marker icons per category
 - [ ] Map filters (price, distance, etc.)
 - [ ] Radius slider UI component
-- [ ] "Use my location" button that sets URL params
