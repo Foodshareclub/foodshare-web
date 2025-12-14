@@ -38,6 +38,7 @@ Located in `src/components/ui/`:
 - `tabs` - Tabbed content
 - `tooltip` - Hover hints
 - `progress` - Progress indicators
+- `rich-text-editor` - TipTap-based WYSIWYG HTML editor
 
 ## Best Practices
 
@@ -187,6 +188,23 @@ import { Skeleton } from '@/components/ui/skeleton';
   </div>
 </div>
 ```
+
+### Rich Text Editor
+
+TipTap-based WYSIWYG editor with visual/HTML toggle:
+
+```typescript
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
+
+<RichTextEditor
+  value={htmlContent}
+  onChange={(html) => setHtmlContent(html)}
+  placeholder="Start writing..."
+  minHeight="300px"
+/>
+```
+
+Features: Bold, italic, headings (H1-H3), lists, blockquotes, code blocks, links, images, undo/redo, visual/HTML view toggle.
 
 ## Custom Variants
 

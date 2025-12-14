@@ -11,7 +11,7 @@
  * - Real-time metrics
  */
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useTransition, lazy, Suspense } from "react";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -56,7 +56,16 @@ import {
   Megaphone,
   Heart,
   Star,
+  Mail,
+  Smartphone,
+  Monitor,
+  X,
 } from "lucide-react";
+
+// Lazy load the rich text editor to reduce initial bundle size
+const RichTextEditor = lazy(() =>
+  import("@/components/ui/rich-text-editor").then((mod) => ({ default: mod.RichTextEditor }))
+);
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,7 +99,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import { sendAdminEmail, sendTestEmailDirect } from "@/app/actions/email";
@@ -1074,6 +1082,146 @@ function AudienceTab({
 }
 
 // ============================================================================
+// Rich Text Editor Wrapper (Lazy Loaded)
+// ============================================================================
+
+function RichTextEditorLazy({
+  value,
+  onChange,
+  placeholder,
+  minHeight,
+}: {
+  value: string;
+  onChange: (html: string) => void;
+  placeholder?: string;
+  minHeight?: string;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <div
+          className="rounded-xl border border-border/50 bg-background/50 animate-pulse"
+          style={{ minHeight: minHeight || "300px" }}
+        >
+          <div className="p-2 border-b border-border/50 bg-muted/30">
+            <div className="flex gap-1">
+              {[...Array(12)].map((_, i) => (
+                <div key={i} className="h-8 w-8 rounded bg-muted" />
+              ))}
+            </div>
+          </div>
+          <div className="p-4">
+            <div className="h-4 w-3/4 bg-muted rounded mb-2" />
+            <div className="h-4 w-1/2 bg-muted rounded" />
+          </div>
+        </div>
+      }
+    >
+      <RichTextEditor
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        minHeight={minHeight}
+      />
+    </Suspense>
+  );
+}
+
+// ============================================================================
+// Email Preview Component
+// ============================================================================
+
+function EmailPreview({
+  to,
+  subject,
+  html,
+  onClose,
+}: {
+  to: string;
+  subject: string;
+  html: string;
+  onClose: () => void;
+}) {
+  const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
+
+  return (
+    <div className="space-y-4">
+      {/* Preview Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button
+            variant={device === "desktop" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setDevice("desktop")}
+            className="gap-2"
+          >
+            <Monitor className="h-4 w-4" />
+            Desktop
+          </Button>
+          <Button
+            variant={device === "mobile" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setDevice("mobile")}
+            className="gap-2"
+          >
+            <Smartphone className="h-4 w-4" />
+            Mobile
+          </Button>
+        </div>
+        <Button variant="ghost" size="sm" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Email Preview Frame */}
+      <div
+        className={cn(
+          "mx-auto rounded-xl border border-border/50 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden transition-all duration-300",
+          device === "desktop" ? "w-full max-w-2xl" : "w-[375px]"
+        )}
+      >
+        {/* Email Header */}
+        <div className="p-4 border-b border-border/30 bg-muted/30">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Mail className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm truncate">FoodShare</p>
+              <p className="text-xs text-muted-foreground truncate">contact@foodshare.club</p>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">
+              To: <span className="text-foreground">{to || "recipient@example.com"}</span>
+            </p>
+            <p className="font-semibold text-base">{subject || "No subject"}</p>
+          </div>
+        </div>
+
+        {/* Email Body */}
+        <div
+          className={cn(
+            "p-6 prose prose-sm dark:prose-invert max-w-none",
+            "prose-headings:text-foreground prose-p:text-foreground",
+            "prose-a:text-primary prose-strong:text-foreground",
+            device === "mobile" && "text-sm"
+          )}
+          dangerouslySetInnerHTML={{
+            __html: html || "<p class='text-muted-foreground italic'>No content yet...</p>",
+          }}
+        />
+      </div>
+
+      {/* Preview Info */}
+      <p className="text-xs text-center text-muted-foreground">
+        This is a preview. Actual rendering may vary by email client.
+      </p>
+    </div>
+  );
+}
+
+// ============================================================================
 // Compose Tab
 // ============================================================================
 
@@ -1086,8 +1234,9 @@ function ComposeTab() {
     message: "",
     emailType: "newsletter",
     provider: "auto",
-    useHtml: false,
+    useHtml: true, // Default to rich editor
   });
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleChange = (field: keyof EmailFormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -1101,9 +1250,7 @@ function ComposeTab() {
       const response = await sendAdminEmail({
         to: formData.to,
         subject: formData.subject,
-        html: formData.useHtml
-          ? formData.message
-          : `<p>${formData.message.replace(/\n/g, "<br/>")}</p>`,
+        html: formData.message,
         emailType: formData.emailType as EmailType,
       });
 
@@ -1118,7 +1265,7 @@ function ComposeTab() {
           message: "",
           emailType: "newsletter",
           provider: "auto",
-          useHtml: false,
+          useHtml: true,
         });
       } else {
         const errorMessage = !response.success
@@ -1136,10 +1283,7 @@ function ComposeTab() {
     }
     setResult(null);
     startTransition(async () => {
-      const html = formData.useHtml
-        ? formData.message
-        : `<p>${formData.message.replace(/\n/g, "<br/>")}</p>`;
-      const response = await sendTestEmailDirect(formData.to, formData.subject, html);
+      const response = await sendTestEmailDirect(formData.to, formData.subject, formData.message);
       if (response.success && response.data?.success) {
         setResult({
           success: true,
@@ -1157,174 +1301,216 @@ function ComposeTab() {
   return (
     <div className="grid lg:grid-cols-3 gap-5">
       {/* Email Form */}
-      <div className="lg:col-span-2">
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Send className="h-4 w-4 text-primary" />
-              Compose Email
-            </CardTitle>
-            <CardDescription>Send a single email to a recipient</CardDescription>
+      <div className="lg:col-span-2 space-y-5">
+        <Card className="bg-gradient-to-br from-card/90 to-card/50 backdrop-blur-sm border-border/50 shadow-lg">
+          <CardHeader className="pb-4 border-b border-border/30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-primary/10">
+                  <Send className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Compose Email</CardTitle>
+                  <CardDescription>Create and send beautiful emails</CardDescription>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setShowPreview(!showPreview)}
+              >
+                <Eye className="h-4 w-4" />
+                {showPreview ? "Edit" : "Preview"}
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Recipient */}
-              <div className="space-y-2">
-                <Label htmlFor="to">Recipient Email</Label>
-                <Input
-                  id="to"
-                  type="email"
-                  value={formData.to}
-                  onChange={(e) => handleChange("to", e.target.value)}
-                  placeholder="user@example.com"
-                  className="bg-background/50"
-                  required
-                />
-              </div>
-
-              {/* Subject */}
-              <div className="space-y-2">
-                <Label htmlFor="subject">Subject Line</Label>
-                <Input
-                  id="subject"
-                  value={formData.subject}
-                  onChange={(e) => handleChange("subject", e.target.value)}
-                  placeholder="Your email subject..."
-                  className="bg-background/50"
-                  required
-                />
-              </div>
-
-              {/* Type & Provider */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Email Type</Label>
-                  <Select
-                    value={formData.emailType}
-                    onValueChange={(value) => handleChange("emailType", value)}
-                  >
-                    <SelectTrigger className="bg-background/50">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EMAIL_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          <div className="flex items-center gap-2">
-                            {type.icon}
-                            {type.label}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Provider</Label>
-                  <Select
-                    value={formData.provider}
-                    onValueChange={(value) => handleChange("provider", value)}
-                  >
-                    <SelectTrigger className="bg-background/50">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PROVIDERS.map((provider) => (
-                        <SelectItem key={provider.value} value={provider.value}>
-                          <div className="flex flex-col">
-                            <span>{provider.label}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {provider.description}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Message */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="message">Message</Label>
-                  <div className="flex items-center gap-2">
-                    <Label
-                      htmlFor="html-mode"
-                      className="text-xs text-muted-foreground cursor-pointer"
-                    >
-                      HTML Mode
+          <CardContent className="pt-5">
+            {showPreview ? (
+              <EmailPreview
+                to={formData.to}
+                subject={formData.subject}
+                html={formData.message}
+                onClose={() => setShowPreview(false)}
+              />
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Recipient & Subject Row */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="to" className="text-sm font-medium flex items-center gap-2">
+                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                      Recipient
                     </Label>
-                    <Switch
-                      id="html-mode"
-                      checked={formData.useHtml}
-                      onCheckedChange={(checked) => handleChange("useHtml", checked)}
+                    <Input
+                      id="to"
+                      type="email"
+                      value={formData.to}
+                      onChange={(e) => handleChange("to", e.target.value)}
+                      placeholder="user@example.com"
+                      className="bg-background/50 h-11"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="subject"
+                      className="text-sm font-medium flex items-center gap-2"
+                    >
+                      <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                      Subject Line
+                    </Label>
+                    <Input
+                      id="subject"
+                      value={formData.subject}
+                      onChange={(e) => handleChange("subject", e.target.value)}
+                      placeholder="Your email subject..."
+                      className="bg-background/50 h-11"
+                      required
                     />
                   </div>
                 </div>
-                <Textarea
-                  id="message"
-                  value={formData.message}
-                  onChange={(e) => handleChange("message", e.target.value)}
-                  rows={10}
-                  placeholder={formData.useHtml ? "<p>HTML content...</p>" : "Your message..."}
-                  className="font-mono text-sm bg-background/50 resize-none"
-                  required
-                />
-              </div>
 
-              {/* Result */}
-              {result && (
-                <div
-                  className={cn(
-                    "p-3 rounded-lg flex items-center gap-3 text-sm",
-                    result.success
-                      ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-                      : "bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400"
-                  )}
-                >
-                  {result.success ? (
-                    <CheckCircle className="h-4 w-4 flex-shrink-0" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
-                  )}
-                  <p className="font-medium">{result.message}</p>
+                {/* Type & Provider Row */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <Layers className="h-3.5 w-3.5 text-muted-foreground" />
+                      Email Type
+                    </Label>
+                    <Select
+                      value={formData.emailType}
+                      onValueChange={(value) => handleChange("emailType", value)}
+                    >
+                      <SelectTrigger className="bg-background/50 h-11">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {EMAIL_TYPES.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            <div className="flex items-center gap-2">
+                              <span className="text-muted-foreground">{type.icon}</span>
+                              {type.label}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+                      Provider
+                    </Label>
+                    <Select
+                      value={formData.provider}
+                      onValueChange={(value) => handleChange("provider", value)}
+                    >
+                      <SelectTrigger className="bg-background/50 h-11">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PROVIDERS.map((provider) => (
+                          <SelectItem key={provider.value} value={provider.value}>
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={cn(
+                                  "h-2 w-2 rounded-full",
+                                  provider.value === "auto" && "bg-violet-500",
+                                  provider.value === "brevo" && "bg-blue-500",
+                                  provider.value === "resend" && "bg-emerald-500",
+                                  provider.value === "aws_ses" && "bg-amber-500"
+                                )}
+                              />
+                              <span>{provider.label}</span>
+                              <span className="text-xs text-muted-foreground ml-auto">
+                                {provider.description}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              )}
 
-              {/* Actions */}
-              <div className="flex gap-3 pt-2">
-                <Button type="submit" disabled={isPending} className="flex-1 gap-2">
-                  <Send className="h-4 w-4" />
-                  {isPending ? "Sending..." : "Send Email"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  disabled={isPending}
-                  onClick={handleTestSend}
-                >
-                  Test Send
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setFormData({
-                      to: "",
-                      subject: "",
-                      message: "",
-                      emailType: "newsletter",
-                      provider: "auto",
-                      useHtml: false,
-                    });
-                    setResult(null);
-                  }}
-                >
-                  Clear
-                </Button>
-              </div>
-            </form>
+                {/* Rich Text Editor */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <Edit className="h-3.5 w-3.5 text-muted-foreground" />
+                    Email Content
+                  </Label>
+                  <RichTextEditorLazy
+                    value={formData.message}
+                    onChange={(html) => handleChange("message", html)}
+                    placeholder="Start writing your email..."
+                    minHeight="280px"
+                  />
+                </div>
+
+                {/* Result */}
+                {result && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={cn(
+                      "p-4 rounded-xl flex items-center gap-3",
+                      result.success
+                        ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+                        : "bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-400"
+                    )}
+                  >
+                    {result.success ? (
+                      <CheckCircle className="h-5 w-5 flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                    )}
+                    <p className="font-medium text-sm">{result.message}</p>
+                  </motion.div>
+                )}
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    type="submit"
+                    disabled={isPending}
+                    className="flex-1 gap-2 h-11 shadow-lg shadow-primary/20"
+                  >
+                    <Send className="h-4 w-4" />
+                    {isPending ? "Sending..." : "Send Email"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={isPending}
+                    onClick={handleTestSend}
+                    className="gap-2 h-11"
+                  >
+                    <Eye className="h-4 w-4" />
+                    Test
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11"
+                    onClick={() => {
+                      setFormData({
+                        to: "",
+                        subject: "",
+                        message: "",
+                        emailType: "newsletter",
+                        provider: "auto",
+                        useHtml: true,
+                      });
+                      setResult(null);
+                    }}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </form>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -1332,7 +1518,7 @@ function ComposeTab() {
       {/* Sidebar */}
       <div className="space-y-5">
         {/* Smart Routing Info */}
-        <Card className="bg-blue-500/5 border-blue-500/20">
+        <Card className="bg-gradient-to-br from-blue-500/10 to-violet-500/10 border-blue-500/20">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2 text-blue-700 dark:text-blue-400">
               <Sparkles className="h-4 w-4" />
@@ -1340,22 +1526,28 @@ function ComposeTab() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <ul className="text-sm text-blue-700/80 dark:text-blue-400/80 space-y-2">
+            <ul className="text-sm text-blue-700/80 dark:text-blue-400/80 space-y-2.5">
               <li className="flex items-start gap-2">
-                <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                Auto-select uses quota-aware routing
+                <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0 text-emerald-500" />
+                <span>Auto-select uses quota-aware routing</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                Brevo: Primary for notifications
+                <div className="h-4 w-4 mt-0.5 flex-shrink-0 rounded-full bg-blue-500/20 flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-blue-600">B</span>
+                </div>
+                <span>Brevo: Primary for notifications</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                Resend: Prioritized for auth emails
+                <div className="h-4 w-4 mt-0.5 flex-shrink-0 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-emerald-600">R</span>
+                </div>
+                <span>Resend: Prioritized for auth emails</span>
               </li>
               <li className="flex items-start gap-2">
-                <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                AWS SES: Failover when others exhausted
+                <div className="h-4 w-4 mt-0.5 flex-shrink-0 rounded-full bg-amber-500/20 flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-amber-600">A</span>
+                </div>
+                <span>AWS SES: High-volume failover</span>
               </li>
             </ul>
           </CardContent>
@@ -1364,45 +1556,72 @@ function ComposeTab() {
         {/* Quick Templates */}
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Quick Templates</CardTitle>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Layers className="h-4 w-4 text-violet-500" />
+              Quick Templates
+            </CardTitle>
           </CardHeader>
           <CardContent className="pt-0 space-y-2">
             <QuickTemplateButton
               label="Welcome Email"
+              description="New user onboarding"
               icon={<UserPlus className="h-4 w-4" />}
+              color="emerald"
               onClick={() => {
                 setFormData((prev) => ({
                   ...prev,
                   subject: "Welcome to FoodShare! 🍎",
                   message:
-                    "Hi there!\n\nWelcome to FoodShare, your community food sharing platform.\n\nStart exploring food near you today!",
+                    "<h2>Welcome to FoodShare!</h2><p>Hi there!</p><p>Welcome to FoodShare, your community food sharing platform.</p><p>Start exploring food near you today!</p>",
+                  emailType: "welcome",
                 }));
               }}
             />
             <QuickTemplateButton
               label="Newsletter"
+              description="Weekly updates"
               icon={<FileText className="h-4 w-4" />}
+              color="blue"
               onClick={() => {
                 setFormData((prev) => ({
                   ...prev,
                   subject: "This Week on FoodShare 📬",
-                  message: "Hi!\n\nHere's what's happening in your community this week...",
+                  message:
+                    "<h2>This Week on FoodShare</h2><p>Hi!</p><p>Here's what's happening in your community this week...</p>",
                   emailType: "newsletter",
                 }));
               }}
             />
             <QuickTemplateButton
               label="Food Alert"
+              description="New listing notification"
               icon={<Heart className="h-4 w-4" />}
+              color="rose"
               onClick={() => {
                 setFormData((prev) => ({
                   ...prev,
                   subject: "New Food Available Near You! 🥗",
                   message:
-                    "Great news!\n\nNew food has been listed in your area. Check it out before it's gone!",
+                    "<h2>New Food Available!</h2><p>Great news!</p><p>New food has been listed in your area. Check it out before it's gone!</p>",
                   emailType: "food_listing",
                 }));
               }}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Character Count */}
+        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Content Length</span>
+              <span className="font-mono tabular-nums">
+                {formData.message.length.toLocaleString()} chars
+              </span>
+            </div>
+            <Progress
+              value={Math.min((formData.message.length / 10000) * 100, 100)}
+              className="h-1.5 mt-2"
             />
           </CardContent>
         </Card>
@@ -2407,22 +2626,38 @@ function RoutingRule({
 // QuickTemplateButton - Template button for compose sidebar
 function QuickTemplateButton({
   label,
+  description,
   icon,
+  color = "primary",
   onClick,
 }: {
   label: string;
+  description?: string;
   icon: React.ReactNode;
+  color?: "primary" | "emerald" | "blue" | "rose" | "amber" | "violet";
   onClick: () => void;
 }) {
+  const colorClasses = {
+    primary: "bg-primary/10 text-primary",
+    emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+    amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+    violet: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+  };
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-full flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-muted/20 hover:bg-muted/40 hover:border-primary/30 transition-all text-left"
+      className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 hover:border-primary/30 hover:shadow-sm transition-all text-left group"
     >
-      <div className="p-1.5 rounded bg-primary/10 text-primary">{icon}</div>
-      <span className="text-sm font-medium">{label}</span>
-      <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto" />
+      <div className={cn("p-2 rounded-lg", colorClasses[color])}>{icon}</div>
+      <div className="flex-1 min-w-0">
+        <span className="text-sm font-medium block">{label}</span>
+        {description && <span className="text-xs text-muted-foreground">{description}</span>}
+      </div>
+      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
     </button>
   );
 }
