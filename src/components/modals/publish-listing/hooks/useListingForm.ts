@@ -212,6 +212,18 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
   const showTitleError = touched.title && !title;
   const showDescriptionError = touched.description && !description;
 
+  // Log validation state when it changes
+  console.log('[useListingForm] 📋 Validation state:', {
+    isFormValid: !!isFormValid,
+    category: !!category,
+    title: !!title,
+    description: !!description,
+    imageCount,
+    showCategoryError,
+    showTitleError,
+    showDescriptionError,
+  });
+
   // Check for draft on mount
   useEffect(() => {
     const draft = localStorage.getItem(DRAFT_KEY);
@@ -304,6 +316,7 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
 
   // Touch all fields
   const touchAll = useCallback(() => {
+    console.log('[useListingForm] 👆 touchAll called - marking all fields as touched');
     setTouched({ category: true, title: true, description: true, image: true });
   }, []);
 

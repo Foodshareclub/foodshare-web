@@ -49,9 +49,18 @@ export const storageAPI = {
   async uploadImage(
     params: UploadImageType
   ): Promise<{ data: { path: string }; error: null } | { data: null; error: Error }> {
+    console.log("[storageAPI.uploadImage] 🚀 Starting upload...", {
+      bucket: params.bucket,
+      filePath: params.filePath,
+      fileName: params.file?.name,
+      fileSize: params.file?.size,
+      fileType: params.file?.type,
+    });
+
     try {
       // Validate file if validation is enabled (default: true)
       if (params.validate !== false) {
+        console.log("[storageAPI.uploadImage] 🔍 Validating file...");
         const bucketKey = Object.keys(STORAGE_BUCKETS).find(
           (key) => STORAGE_BUCKETS[key as keyof typeof STORAGE_BUCKETS] === params.bucket
         ) as keyof typeof STORAGE_BUCKETS | undefined;
@@ -59,21 +68,31 @@ export const storageAPI = {
         if (bucketKey) {
           const validation = validateFile(params.file, bucketKey);
           if (!validation.valid) {
+            console.log("[storageAPI.uploadImage] ❌ Validation failed:", validation.error);
             return { data: null, error: new Error(validation.error) };
           }
+          console.log("[storageAPI.uploadImage] ✅ Validation passed");
+        } else {
+          console.log("[storageAPI.uploadImage] ⚠️ No bucket key found, skipping validation");
         }
+      } else {
+        console.log("[storageAPI.uploadImage] ⏭️ Validation skipped");
       }
 
+      console.log("[storageAPI.uploadImage] 📤 Uploading to Supabase storage...");
       const { data, error } = await supabase.storage
         .from(params.bucket)
         .upload(params.filePath, params.file, { upsert: true });
 
       if (error) {
+        console.error("[storageAPI.uploadImage] ❌ Supabase upload error:", error);
         return { data: null, error };
       }
 
+      console.log("[storageAPI.uploadImage] ✅ Upload successful, path:", data?.path);
       return { data, error: null };
     } catch (error) {
+      console.error("[storageAPI.uploadImage] ❌ Exception caught:", error);
       return { data: null, error: error as Error };
     }
   },

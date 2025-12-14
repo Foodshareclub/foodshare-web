@@ -56,9 +56,16 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
   const [draggedImageId, setDraggedImageId] = useState<string | null>(null);
 
   const processImage = useCallback(async (fileToProcess: File): Promise<File | null> => {
+    console.log('[useImageUpload] 🖼️ Processing image:', {
+      name: fileToProcess.name,
+      size: fileToProcess.size,
+      type: fileToProcess.type,
+    });
+
     const fileSizeMB = fileToProcess.size / (1024 * 1024);
 
     if (fileSizeMB > MAX_FILE_SIZE_MB) {
+      console.log('[useImageUpload] ❌ File too large:', fileSizeMB.toFixed(1), 'MB');
       setImageError(
         `File size (${fileSizeMB.toFixed(1)}MB) exceeds ${MAX_FILE_SIZE_MB}MB limit`
       );
@@ -66,23 +73,30 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
     }
 
     if (fileSizeMB > COMPRESS_THRESHOLD_MB) {
+      console.log('[useImageUpload] 📦 Compressing image...');
       setIsCompressing(true);
       try {
         const compressed = await compressImage(fileToProcess, COMPRESS_THRESHOLD_MB);
+        console.log('[useImageUpload] ✅ Compression complete');
         setIsCompressing(false);
         return compressed;
-      } catch {
+      } catch (err) {
+        console.error('[useImageUpload] ❌ Compression failed:', err);
         setIsCompressing(false);
         return fileToProcess;
       }
     }
 
+    console.log('[useImageUpload] ✅ Image ready (no compression needed)');
     return fileToProcess;
   }, []);
 
   const addImage = useCallback(
     async (file: File) => {
+      console.log('[useImageUpload] ➕ addImage called - current count:', images.length, 'max:', maxImages);
+
       if (images.length >= maxImages) {
+        console.log('[useImageUpload] ❌ Max images reached');
         setImageError(`Maximum ${maxImages} images allowed`);
         return;
       }
@@ -97,8 +111,11 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
           file: processed,
           filePath: `${Date.now()}-${file.name}`,
         };
+        console.log('[useImageUpload] ✅ Image added:', newImage.id, newImage.filePath);
         setImages((prev) => [...prev, newImage]);
         onImageAdded?.();
+      } else {
+        console.log('[useImageUpload] ❌ Image processing returned null');
       }
     },
     [images.length, maxImages, processImage, onImageAdded]

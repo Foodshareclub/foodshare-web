@@ -100,20 +100,23 @@ export async function withErrorHandling<T>(
   fn: () => Promise<T>,
   errorContext?: string
 ): Promise<ActionResult<T>> {
+  const ctx = errorContext ? `[${errorContext}]` : '[withErrorHandling]';
+  console.log(`${ctx} 🔄 Starting...`);
+
   try {
     const data = await fn();
+    console.log(`${ctx} ✅ Success`);
     return success(data);
   } catch (error) {
-    // Log error for debugging (in development)
-    if (process.env.NODE_ENV === 'development') {
-      console.error(`[Error${errorContext ? ` in ${errorContext}` : ''}]:`, error);
-    }
+    // Always log errors for debugging
+    console.error(`${ctx} ❌ Error caught:`, error);
 
     // Handle known error types
     if (error instanceof Error) {
       // Supabase specific errors
       if ('code' in error) {
         const pgError = error as Error & { code: string };
+        console.error(`${ctx} 📋 Postgres error code:`, pgError.code);
 
         switch (pgError.code) {
           case 'PGRST116': // Not found
@@ -131,7 +134,8 @@ export async function withErrorHandling<T>(
 
       // Auth errors
       if (error.message.includes('not authenticated') ||
-          error.message.includes('JWT')) {
+        error.message.includes('JWT')) {
+        console.error(`${ctx} 🔐 Auth error detected`);
         return failure(unauthorizedError());
       }
 
