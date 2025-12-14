@@ -137,6 +137,12 @@ src/components/admin/
 │                                    # Uses Tailwind v4 + shadcn best practices
 │                                    # Real data integration via initialData prop
 │                                    # Components: ScrollArea, Card, DropdownMenu for enhanced UX
+│
+├── email/
+│   └── AutomationBuilder.tsx        # Visual automation flow builder (lazy-loaded)
+│                                    # Features: Step editor, drag-and-drop, template selector
+│                                    # Exports: AutomationBuilder, PresetAutomationCreator
+│                                    # Step types: email, delay, condition, action
 ```
 
 **Architecture Note:** The email CRM page uses Next.js 16 server-first architecture:
@@ -166,12 +172,30 @@ src/lib/email/
 
 ```
 src/lib/data/
-└── admin-email.ts                   # Server-side data fetching for monitoring
-    ├── getProviderStatus()          # Provider health + circuit breaker state
-    ├── getQuotaStatus()             # Daily quota usage per provider
-    ├── getRecentEmails()            # Recent email logs
-    ├── getHealthEvents()            # Health events and alerts
-    └── getEmailMonitoringData()     # All monitoring data (parallel fetch)
+├── admin-email.ts                   # Server-side data fetching for monitoring
+│   ├── getProviderStatus()          # Provider health + circuit breaker state
+│   ├── getQuotaStatus()             # Daily quota usage per provider
+│   ├── getRecentEmails()            # Recent email logs
+│   ├── getHealthEvents()            # Health events and alerts
+│   └── getEmailMonitoringData()     # All monitoring data (parallel fetch)
+│
+└── automations.ts                   # Email automation data functions
+    ├── getAutomationFlows()         # All automation workflows
+    ├── getAutomationFlow(id)        # Single flow by ID
+    ├── getFlowEnrollments(flowId)   # Enrollments for a flow (with profiles)
+    ├── getEmailTemplates()          # All email templates
+    ├── getAutomationQueue(status)   # Queue items by status
+    ├── getAutomationStats()         # Aggregate automation metrics
+    └── Re-exports types from @/types/automations.types.ts
+
+src/types/
+└── automations.types.ts             # Shared automation types (client/server)
+    ├── AutomationFlow               # Workflow definition
+    ├── AutomationStep               # Step configuration
+    ├── AutomationEnrollment         # User enrollment state
+    ├── EmailTemplate                # Template definition
+    ├── AutomationQueueItem          # Queue item state
+    └── TRIGGER_TYPES                # Trigger type definitions with labels/icons
 ```
 
 ### API Functions
@@ -219,13 +243,28 @@ src/app/actions/
     ├── createSegment(formData)      # Create audience segment with criteria
     │   → { success, segmentId?, error? }
     │
-    │  Automation Flows:
-    ├── createAutomationFlow(formData)  # Create email automation workflow
-    │   → { success, flowId?, error? }
-    ├── updateAutomationStatus(id, status)  # Update status (draft/active/paused/archived)
-    │   → { success, error? }
-    └── enrollUserInAutomation(flowId, profileId)  # Enroll user in automation flow
-        → { success, error? }
+    │  Automation Flows (src/app/actions/automations.ts):
+    │  Uses type-safe ActionResult<T> pattern with Zod validation
+    ├── createAutomationFlow(data)      # Create email automation workflow
+    │   → ActionResult<{ id: string }>
+    ├── updateAutomationFlow(id, data)  # Update automation flow
+    │   → ActionResult<void>
+    ├── deleteAutomationFlow(id)        # Archive/delete automation flow (soft delete by default)
+    │   → ActionResult<void>
+    ├── toggleAutomationStatus(id, status)  # Toggle status (active/paused)
+    │   → ActionResult<void>
+    ├── duplicateAutomation(id)         # Clone automation as new draft
+    │   → ActionResult<{ id: string, name: string }>
+    ├── enrollUserInAutomation(flowId, profileId)  # Enroll user in flow
+    │   → ActionResult<{ enrollmentId: string }>
+    ├── exitUserFromAutomation(enrollmentId, reason?)  # Exit user from flow
+    │   → ActionResult<void>
+    ├── saveEmailTemplate(data)         # Create/update email template
+    │   → ActionResult<{ id: string }>
+    ├── deleteEmailTemplate(id)         # Delete email template
+    │   → ActionResult<void>
+    └── createPresetAutomation(preset)  # Create preset (welcome/reengagement/food_alert)
+        → ActionResult<{ id: string }>
 ```
 
 ### Edge Functions
@@ -388,6 +427,17 @@ Pre-built automation workflows:
 | First Listing Celebration | User creates first listing | Active | 67.2%      |
 | Re-engagement Flow        | 30 days inactive           | Active | 12.3%      |
 | Review Request            | Successful pickup          | Paused | —          |
+
+**Automation Builder Features (Dec 2025):**
+
+The Automation tab now includes a full visual automation builder:
+
+- **Visual Step Editor** - Add email, delay, and condition steps with drag-and-drop
+- **Step Types**: Email (with template selector), Delay (preset or custom), Condition (field/operator/value)
+- **Trigger Configuration** - Configure trigger-specific settings (e.g., inactivity days, radius for nearby food)
+- **Edit/Toggle/Delete** - Enhanced automation cards with inline status toggle and dropdown actions
+- **Preset Templates** - Quick-start with Welcome Series, Re-engagement, or Food Alert presets
+- **Lazy Loading** - AutomationBuilder and PresetAutomationCreator are lazy-loaded for performance
 
 ### Providers Tab
 

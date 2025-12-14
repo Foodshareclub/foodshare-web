@@ -3340,6 +3340,360 @@ const result = await resumeCampaign("campaign-uuid");
 
 ---
 
+## Automation Data Layer
+
+Located: `src/lib/data/automations.ts`
+
+Server-side data fetching functions for email automation flows. Provides typed interfaces and functions for managing automation workflows, enrollments, templates, and queue processing.
+
+### Types
+
+Types are defined in `src/types/automations.types.ts` and re-exported from the data layer for convenience. Import from either location:
+
+```typescript
+// From data layer (recommended for server components)
+import type { AutomationFlow, AutomationStep } from "@/lib/data/automations";
+
+// From types directly (for client components that only need types)
+import type { AutomationFlow, AutomationStep } from "@/types/automations.types";
+```
+
+```typescript
+interface AutomationFlow {
+  id: string;
+  name: string;
+  description: string | null;
+  trigger_type: string;
+  trigger_config: Record<string, unknown>;
+  status: "draft" | "active" | "paused" | "archived";
+  steps: AutomationStep[];
+  total_enrolled: number;
+  total_completed: number;
+  total_converted: number;
+  conversion_goal: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface AutomationStep {
+  type: "email" | "delay" | "condition" | "action";
+  delay_minutes?: number;
+  template_slug?: string;
+  subject?: string;
+  content?: string;
+  condition?: {
+    field: string;
+    operator: string;
+    value: unknown;
+  };
+}
+
+interface AutomationEnrollment {
+  id: string;
+  flow_id: string;
+  profile_id: string;
+  status: "active" | "completed" | "exited" | "paused";
+  current_step: number;
+  enrolled_at: string;
+  completed_at: string | null;
+  exited_at: string | null;
+  exit_reason: string | null;
+  converted: boolean;
+  converted_at: string | null;
+  step_history: Array<{ step: number; processed_at: string; status: string }>;
+  profile?: { email: string; first_name: string; nickname: string; avatar_url: string };
+}
+
+interface EmailTemplate {
+  id: string;
+  name: string;
+  slug: string;
+  subject: string;
+  html_content: string;
+  plain_text_content: string | null;
+  category: "automation" | "transactional" | "marketing" | "system";
+  variables: string[];
+  is_active: boolean;
+  created_at: string;
+}
+
+interface AutomationQueueItem {
+  id: string;
+  enrollment_id: string;
+  flow_id: string;
+  profile_id: string;
+  step_index: number;
+  scheduled_for: string;
+  status: "pending" | "processing" | "sent" | "failed" | "cancelled";
+  attempts: number;
+  sent_at: string | null;
+  error_message: string | null;
+  email_data: Record<string, unknown>;
+}
+```
+
+### Trigger Types
+
+```typescript
+import { TRIGGER_TYPES } from "@/lib/data/automations";
+
+// Available triggers with labels, descriptions, and icons
+TRIGGER_TYPES.user_signup; // "User Signup" - When a new user registers
+TRIGGER_TYPES.first_listing; // "First Listing" - When user creates first food listing
+TRIGGER_TYPES.first_share; // "First Share" - When user completes first share
+TRIGGER_TYPES.inactivity; // "Inactivity" - When user is inactive for X days
+TRIGGER_TYPES.food_listed_nearby; // "Food Alert" - When food is listed near user
+TRIGGER_TYPES.food_reserved; // "Food Reserved" - When user reserves food
+TRIGGER_TYPES.food_collected; // "Food Collected" - When pickup is completed
+TRIGGER_TYPES.message_received; // "New Message" - When user receives a chat message
+TRIGGER_TYPES.profile_incomplete; // "Profile Incomplete" - When profile is missing info
+TRIGGER_TYPES.milestone_reached; // "Milestone" - When user reaches a milestone
+TRIGGER_TYPES.segment_entry; // "Segment Entry" - When user enters a segment
+TRIGGER_TYPES.manual; // "Manual" - Manually triggered
+TRIGGER_TYPES.scheduled; // "Scheduled" - Run on a schedule
+```
+
+---
+
+### Get Automation Flows
+
+```typescript
+import { getAutomationFlows } from "@/lib/data/automations";
+
+const flows = await getAutomationFlows();
+```
+
+**Returns:** `AutomationFlow[]` - All automation flows ordered by `created_at` descending
+
+---
+
+### Get Automation Flow
+
+```typescript
+import { getAutomationFlow } from "@/lib/data/automations";
+
+const flow = await getAutomationFlow("flow-uuid");
+```
+
+**Parameters:**
+
+- `id` - Automation flow UUID
+
+**Returns:** `AutomationFlow | null`
+
+---
+
+### Get Flow Enrollments
+
+```typescript
+import { getFlowEnrollments } from "@/lib/data/automations";
+
+const enrollments = await getFlowEnrollments("flow-uuid");
+```
+
+**Parameters:**
+
+- `flowId` - Automation flow UUID
+
+**Returns:** `AutomationEnrollment[]` - Enrollments with profile data, limited to 100 most recent
+
+---
+
+### Get Email Templates
+
+```typescript
+import { getEmailTemplates } from "@/lib/data/automations";
+
+const templates = await getEmailTemplates();
+```
+
+**Returns:** `EmailTemplate[]` - All email templates ordered by name
+
+---
+
+### Get Automation Queue
+
+```typescript
+import { getAutomationQueue } from "@/lib/data/automations";
+
+// Get all pending items
+const queue = await getAutomationQueue("pending");
+
+// Get all items (any status)
+const allQueue = await getAutomationQueue();
+
+// With custom limit
+const queue = await getAutomationQueue("pending", 100);
+```
+
+**Parameters:**
+
+- `status` - Optional filter: `"pending" | "processing" | "sent" | "failed" | "cancelled"`
+- `limit` - Max items to return (default: 50)
+
+**Returns:** `AutomationQueueItem[]` - Queue items ordered by `scheduled_for`
+
+---
+
+### Get Automation Stats
+
+```typescript
+import { getAutomationStats } from "@/lib/data/automations";
+
+const stats = await getAutomationStats();
+// {
+//   totalFlows: 5,
+//   activeFlows: 3,
+//   totalEnrolled: 1250,
+//   totalCompleted: 890,
+//   pendingEmails: 45,
+//   sentToday: 127
+// }
+```
+
+**Returns:**
+
+```typescript
+{
+  totalFlows: number; // Total automation flows
+  activeFlows: number; // Flows with status 'active'
+  totalEnrolled: number; // Sum of all enrollments
+  totalCompleted: number; // Sum of completed enrollments
+  pendingEmails: number; // Queue items with status 'pending'
+  sentToday: number; // Queue items sent today
+}
+```
+
+---
+
+### Example Usage (Server Component)
+
+```typescript
+// app/admin/email/automation/page.tsx
+import { getAutomationFlows, getAutomationStats, TRIGGER_TYPES } from "@/lib/data/automations";
+import { AutomationClient } from "./AutomationClient";
+
+export default async function AutomationPage() {
+  const [flows, stats] = await Promise.all([
+    getAutomationFlows(),
+    getAutomationStats(),
+  ]);
+
+  return <AutomationClient flows={flows} stats={stats} triggerTypes={TRIGGER_TYPES} />;
+}
+```
+
+---
+
+## Automation Server Actions
+
+Located: `src/app/actions/automations.ts`
+
+Server actions for email automation workflow mutations. Uses bleeding-edge patterns with Zod validation, type-safe results, and audit logging.
+
+### Type-Safe Action Result Pattern
+
+All automation actions return a discriminated union for type-safe error handling:
+
+```typescript
+type ActionSuccess<T> = { success: true; data: T };
+type ActionError = { success: false; error: { message: string; code?: string; field?: string } };
+type ActionResult<T> = ActionSuccess<T> | ActionError;
+```
+
+### Zod Validation Schemas
+
+Input validation using Zod schemas:
+
+```typescript
+// Automation step schema
+const AutomationStepSchema = z.object({
+  type: z.enum(["email", "delay", "condition", "action"]),
+  delay_minutes: z.number().min(0).optional(),
+  template_slug: z.string().optional(),
+  subject: z.string().max(200).optional(),
+  content: z.string().optional(),
+  condition: z
+    .object({
+      field: z.string(),
+      operator: z.string(),
+      value: z.unknown(),
+    })
+    .optional(),
+});
+
+// Create automation schema
+const CreateAutomationSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100, "Name too long"),
+  description: z.string().max(500).optional(),
+  trigger_type: z.string().min(1, "Trigger type is required"),
+  trigger_config: z.record(z.unknown()).optional(),
+  steps: z.array(AutomationStepSchema).optional(),
+});
+
+// Update automation schema
+const UpdateAutomationSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).nullable().optional(),
+  trigger_type: z.string().optional(),
+  trigger_config: z.record(z.unknown()).optional(),
+  steps: z.array(AutomationStepSchema).optional(),
+  status: z.enum(["draft", "active", "paused", "archived"]).optional(),
+});
+
+// Email template schema
+const EmailTemplateSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().min(1, "Name is required").max(100),
+  slug: z
+    .string()
+    .min(1)
+    .max(50)
+    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase with hyphens"),
+  subject: z.string().min(1, "Subject is required").max(200),
+  html_content: z.string().min(1, "Content is required"),
+  plain_text_content: z.string().optional(),
+  category: z.enum(["automation", "transactional", "marketing", "system"]).optional(),
+  variables: z.array(z.string()).optional(),
+});
+```
+
+### Features
+
+- **Zod schema validation** - Input validation with detailed error messages
+- **Type-safe action results** - Discriminated union for success/error handling
+- **Admin role verification** - All actions require admin/super_admin role
+- **Audit logging** - All mutations logged to `audit_logs` table
+- **Cache invalidation** - Automatic revalidation of `/admin/email` and related tags
+
+### Usage Example
+
+```typescript
+"use client";
+
+import { createAutomationFlow } from "@/app/actions/automations";
+
+async function handleCreate(formData: FormData) {
+  const result = await createAutomationFlow({
+    name: formData.get("name") as string,
+    trigger_type: formData.get("trigger_type") as string,
+    description: formData.get("description") as string,
+  });
+
+  if (result.success) {
+    console.log("Created automation:", result.data.id);
+  } else {
+    console.error("Error:", result.error.message);
+    if (result.error.field) {
+      // Highlight specific field with error
+    }
+  }
+}
+```
+
+---
+
 ## Reports Server Actions
 
 Located: `src/app/actions/reports.ts`

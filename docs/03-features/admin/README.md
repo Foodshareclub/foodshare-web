@@ -95,6 +95,33 @@ Server-side data fetching with caching:
 | `getAdminCRMStats()`              | Admin dashboard stats (total, active, at-risk, new) |
 | `getAdminCRMStatsCached()`        | Cached version                                      |
 
+### Reports Data Functions (`src/lib/data/admin-reports.ts`)
+
+Analytics and reporting data for admin dashboard with parallel query optimization:
+
+| Function                 | Description                                      | Cache |
+| ------------------------ | ------------------------------------------------ | ----- |
+| `getReportsData()`       | Comprehensive reports with growth metrics        | None  |
+| `getCachedReportsData()` | Cached version (300s, tags: admin-reports/admin) | 300s  |
+
+**ReportsData Interface:**
+
+| Field                | Type              | Description                                           |
+| -------------------- | ----------------- | ----------------------------------------------------- |
+| `overview`           | `OverviewMetrics` | Totals and growth % for listings/users/chats/arranged |
+| `listingsByCategory` | `CategoryCount[]` | Top 8 categories by listing count                     |
+| `listingsByDay`      | `DailyCount[]`    | Daily listing counts (last 30 days)                   |
+| `usersByDay`         | `DailyCount[]`    | Daily user signups (last 30 days)                     |
+| `topUsers`           | `TopUser[]`       | Most active users (TODO)                              |
+| `recentActivity`     | `ActivityItem[]`  | Recent platform activity (TODO)                       |
+
+**Implementation Patterns:**
+
+- Readonly interfaces for immutability
+- Pure utility functions (`calculateGrowth`, `aggregateByCategory`, `aggregateByDay`)
+- Type-safe query builders for Supabase
+- Parallel data fetching with `Promise.all` for optimal performance
+
 ### Types (`src/types/crm.types.ts`)
 
 Key types: `CRMCustomer`, `CRMCustomerWithProfile`, `CRMCustomerNote`, `CRMCustomerTag`, `LifecycleStage`, `CustomerType`
@@ -133,6 +160,17 @@ Server-side data fetching for email marketing and campaigns.
 | `getNewsletterStats()`         | Aggregate newsletter statistics              |
 | `getSubscriberCount()`         | Count active newsletter subscribers          |
 | `getRecentSubscribers(limit?)` | Fetch recent subscribers (default: 10)       |
+
+**Automation Data Layer** (`src/lib/data/automations.ts`):
+
+| Function                      | Description                                |
+| ----------------------------- | ------------------------------------------ |
+| `getAutomationFlows()`        | All automation workflows (ordered by date) |
+| `getAutomationFlow(id)`       | Single flow by ID                          |
+| `getFlowEnrollments(flowId)`  | Enrollments for a flow with profile data   |
+| `getEmailTemplates()`         | All email templates                        |
+| `getAutomationQueue(status?)` | Queue items filtered by status             |
+| `getAutomationStats()`        | Aggregate stats (flows, enrolled, sent)    |
 
 ### Database Tables
 
@@ -228,19 +266,19 @@ Modern CRM dashboard with fixed layout and scrollable content areas, now integra
 
 ### Components
 
-| Component             | Description                                                               |
-| --------------------- | ------------------------------------------------------------------------- |
-| `MetricCard`          | Displays KPI with value, change %, and color-coded icon                   |
-| `LifecycleBadge`      | Customer lifecycle stage badge (lead, active, champion, at_risk, churned) |
-| `ChurnRiskBadge`      | Visual badge for churn risk score with color coding                       |
-| `EngagementScore`     | Visual progress bar for engagement score (0-100)                          |
-| `CustomerRow`         | Customer list item with avatar, lifecycle, engagement, churn risk         |
-| `SegmentCard`         | Quick segment card with count, description, and color-coded icon          |
-| `CampaignCard`        | Campaign card with status, sent/opened/clicked metrics                    |
-| `AutomationCard`      | Automation workflow card with trigger, status, enrollment, conversion     |
-| `SegmentsTab`         | Audience segmentation view with predefined segments and custom tags       |
-| `EngagementTab`       | Engagement analytics with metrics, top champions, and distribution chart  |
-| `CustomerDetailModal` | Detailed customer view modal with stats, tags, and quick actions          |
+| Component             | Description                                                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `MetricCard`          | Displays KPI with value, change %, and color-coded icon                                                                  |
+| `LifecycleBadge`      | Customer lifecycle stage badge (lead, active, champion, at_risk, churned)                                                |
+| `ChurnRiskBadge`      | Visual badge for churn risk score with color coding                                                                      |
+| `EngagementScore`     | Visual progress bar for engagement score (0-100)                                                                         |
+| `CustomerRow`         | Customer list item with avatar, lifecycle, engagement, churn risk                                                        |
+| `SegmentCard`         | Quick segment card with count, description, and color-coded icon                                                         |
+| `CampaignCard`        | Campaign card with status, sent/opened/clicked metrics                                                                   |
+| `AutomationCard`      | Automation workflow card with trigger, status, enrollment, conversion, and full CRUD (toggle status, duplicate, archive) |
+| `SegmentsTab`         | Audience segmentation view with predefined segments and custom tags                                                      |
+| `EngagementTab`       | Engagement analytics with metrics, top champions, and distribution chart                                                 |
+| `CustomerDetailModal` | Detailed customer view modal with stats, tags, and quick actions                                                         |
 
 ### Features
 

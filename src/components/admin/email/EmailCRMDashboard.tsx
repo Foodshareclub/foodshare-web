@@ -61,6 +61,7 @@ import {
   Monitor,
   X,
 } from "lucide-react";
+import { useActionToast } from "@/hooks/useActionToast";
 
 // Lazy load the rich text editor to reduce initial bundle size
 const RichTextEditor = lazy(() =>
@@ -874,10 +875,19 @@ function CampaignsTab({ campaigns }: { campaigns: RecentCampaign[] }) {
 
 function AutomationTab({ automations }: { automations: ActiveAutomation[] }) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [showBuilder, setShowBuilder] = useState(false);
+  const [editingFlow, setEditingFlow] = useState<ActiveAutomation | null>(null);
+  const [_refreshKey, setRefreshKey] = useState(0);
 
   const filteredAutomations = automations.filter((a) =>
     a.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleRefresh = (): void => {
+    setRefreshKey((k) => k + 1);
+    // Trigger page revalidation
+    refreshEmailDashboard();
+  };
 
   return (
     <div className="space-y-5">
@@ -892,16 +902,56 @@ function AutomationTab({ automations }: { automations: ActiveAutomation[] }) {
             className="pl-9 bg-card/50"
           />
         </div>
-        <Button className="gap-2 shadow-sm">
-          <Plus className="h-4 w-4" />
-          New Automation
-        </Button>
+        <Dialog open={showBuilder} onOpenChange={setShowBuilder}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 shadow-sm">
+              <Plus className="h-4 w-4" />
+              New Automation
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+            <AutomationBuilderLazy
+              flow={
+                editingFlow
+                  ? {
+                      id: editingFlow.id,
+                      name: editingFlow.name,
+                      description: null,
+                      trigger_type: editingFlow.triggerType,
+                      trigger_config: {},
+                      status: editingFlow.status,
+                      steps: [],
+                      total_enrolled: editingFlow.totalEnrolled,
+                      total_completed: editingFlow.totalCompleted,
+                      total_converted: 0,
+                      conversion_goal: null,
+                      created_by: null,
+                      created_at: "",
+                      updated_at: "",
+                    }
+                  : undefined
+              }
+              onClose={() => {
+                setShowBuilder(false);
+                setEditingFlow(null);
+              }}
+              onSave={handleRefresh}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Automation Cards */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredAutomations.map((automation) => (
-          <AutomationCard key={automation.id} automation={automation} />
+          <AutomationCardEnhanced
+            key={automation.id}
+            automation={automation}
+            onEdit={() => {
+              setEditingFlow(automation);
+              setShowBuilder(true);
+            }}
+          />
         ))}
         {filteredAutomations.length === 0 && (
           <div className="col-span-full">
@@ -911,7 +961,7 @@ function AutomationTab({ automations }: { automations: ActiveAutomation[] }) {
                 title="No automations yet"
                 description="Create automated email flows to engage your users"
                 action={
-                  <Button className="mt-4 gap-2">
+                  <Button className="mt-4 gap-2" onClick={() => setShowBuilder(true)}>
                     <Plus className="h-4 w-4" />
                     Create Automation
                   </Button>
@@ -932,29 +982,225 @@ function AutomationTab({ automations }: { automations: ActiveAutomation[] }) {
           <CardDescription>Pre-built automation flows to get you started</CardDescription>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="grid md:grid-cols-3 gap-4">
-            <AutomationTemplate
-              name="Welcome Series"
-              description="Onboard new subscribers with a 3-email sequence"
-              trigger="On signup"
-              icon={<UserPlus className="h-5 w-5" />}
-            />
-            <AutomationTemplate
-              name="Re-engagement"
-              description="Win back inactive users after 30 days"
-              trigger="Inactivity"
-              icon={<RefreshCw className="h-5 w-5" />}
-            />
-            <AutomationTemplate
-              name="Food Alert"
-              description="Notify users when food is available nearby"
-              trigger="New listing"
-              icon={<Heart className="h-5 w-5" />}
-            />
-          </div>
+          <PresetAutomationCreatorLazy onCreated={handleRefresh} />
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// Lazy load AutomationBuilder
+const AutomationBuilderLazy = React.lazy(() =>
+  import("./AutomationBuilder").then((mod) => ({ default: mod.AutomationBuilder }))
+);
+
+// Lazy load PresetAutomationCreator
+const PresetAutomationCreatorLazy = React.lazy(() =>
+  import("./AutomationBuilder").then((mod) => ({ default: mod.PresetAutomationCreator }))
+);
+
+// Enhanced Automation Card with full CRUD functionality
+function AutomationCardEnhanced({
+  automation,
+  onEdit,
+}: {
+  automation: ActiveAutomation;
+  onEdit: () => void;
+}) {
+  const [isPending, startTransition] = useTransition();
+  const [actionType, setActionType] = useState<"toggle" | "delete" | "duplicate" | null>(null);
+  const toast = useActionToast();
+
+  const statusConfig = {
+    draft: {
+      color: "border-slate-500/30",
+      dot: "bg-slate-500",
+      label: "Draft",
+      bg: "bg-slate-500/5",
+    },
+    active: {
+      color: "border-emerald-500/30",
+      dot: "bg-emerald-500 animate-pulse",
+      label: "Active",
+      bg: "bg-emerald-500/5",
+    },
+    paused: {
+      color: "border-amber-500/30",
+      dot: "bg-amber-500",
+      label: "Paused",
+      bg: "bg-amber-500/5",
+    },
+    archived: {
+      color: "border-slate-400/30",
+      dot: "bg-slate-400",
+      label: "Archived",
+      bg: "bg-slate-400/5",
+    },
+  };
+
+  const config = statusConfig[automation.status];
+
+  const handleToggleStatus = (): void => {
+    setActionType("toggle");
+    startTransition(async () => {
+      const { toggleAutomationStatus } = await import("@/app/actions/automations");
+      const newStatus = automation.status === "active" ? "paused" : "active";
+      const result = await toggleAutomationStatus(automation.id, newStatus);
+      if (result.success) {
+        toast.success(
+          newStatus === "active" ? "Automation activated" : "Automation paused",
+          result.data.message
+        );
+      } else {
+        const errorMsg = typeof result.error === "string" ? result.error : result.error?.message;
+        toast.error("Failed to update status", errorMsg);
+      }
+      refreshEmailDashboard();
+      setActionType(null);
+    });
+  };
+
+  const handleDuplicate = (): void => {
+    setActionType("duplicate");
+    startTransition(async () => {
+      const { duplicateAutomation } = await import("@/app/actions/automations");
+      const result = await duplicateAutomation(automation.id);
+      if (result.success) {
+        toast.success("Automation duplicated", `Created "${result.data.name}"`);
+      } else {
+        const errorMsg = typeof result.error === "string" ? result.error : result.error?.message;
+        toast.error("Failed to duplicate", errorMsg);
+      }
+      refreshEmailDashboard();
+      setActionType(null);
+    });
+  };
+
+  const handleDelete = (): void => {
+    if (
+      !confirm(
+        `Are you sure you want to archive "${automation.name}"? This will stop all pending emails.`
+      )
+    ) {
+      return;
+    }
+    setActionType("delete");
+    startTransition(async () => {
+      const { deleteAutomationFlow } = await import("@/app/actions/automations");
+      const result = await deleteAutomationFlow(automation.id);
+      if (result.success) {
+        toast.success("Automation archived", "All pending emails have been cancelled");
+      } else {
+        const errorMsg = typeof result.error === "string" ? result.error : result.error?.message;
+        toast.error("Failed to archive", errorMsg);
+      }
+      refreshEmailDashboard();
+      setActionType(null);
+    });
+  };
+
+  const isLoading = isPending && actionType !== null;
+
+  return (
+    <Card
+      className={cn(
+        "bg-card/50 backdrop-blur-sm border hover:shadow-md transition-all",
+        config.color,
+        config.bg,
+        isLoading && "opacity-70"
+      )}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className={cn("h-2 w-2 rounded-full", config.dot)} />
+            <Badge variant="outline" className="text-xs">
+              {config.label}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={handleToggleStatus}
+                  disabled={isLoading || automation.status === "archived"}
+                >
+                  {isPending && actionType === "toggle" ? (
+                    <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : automation.status === "active" ? (
+                    <Pause className="h-4 w-4" />
+                  ) : (
+                    <Play className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {automation.status === "active" ? "Pause automation" : "Activate automation"}
+              </TooltipContent>
+            </Tooltip>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={isLoading}>
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onEdit}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDuplicate} disabled={isPending}>
+                  {actionType === "duplicate" ? (
+                    <div className="h-4 w-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Copy className="h-4 w-4 mr-2" />
+                  )}
+                  Duplicate
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-rose-600 focus:text-rose-600"
+                  onClick={handleDelete}
+                  disabled={isPending}
+                >
+                  {actionType === "delete" ? (
+                    <div className="h-4 w-4 mr-2 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-2" />
+                  )}
+                  Archive
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+        <h4 className="font-semibold text-sm mb-1">{automation.name}</h4>
+        <p className="text-xs text-muted-foreground mb-4 capitalize">
+          Trigger: {automation.triggerType.replace(/_/g, " ")}
+        </p>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div>
+            <p className="text-lg font-bold tabular-nums">
+              {automation.totalEnrolled.toLocaleString()}
+            </p>
+            <p className="text-[10px] text-muted-foreground uppercase">Enrolled</p>
+          </div>
+          <div>
+            <p className="text-lg font-bold tabular-nums">
+              {automation.totalCompleted.toLocaleString()}
+            </p>
+            <p className="text-[10px] text-muted-foreground uppercase">Completed</p>
+          </div>
+          <div>
+            <p className="text-lg font-bold tabular-nums">{automation.conversionRate}%</p>
+            <p className="text-[10px] text-muted-foreground uppercase">Conversion</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -2157,8 +2403,8 @@ function AutomationListItem({ automation }: { automation: ActiveAutomation }) {
   );
 }
 
-// AutomationCard - Full card for automation grid
-function AutomationCard({ automation }: { automation: ActiveAutomation }) {
+// AutomationCard - Full card for automation grid (reserved for future use)
+function _AutomationCard({ automation }: { automation: ActiveAutomation }) {
   const statusConfig = {
     draft: {
       color: "border-slate-500/30",
@@ -2262,8 +2508,8 @@ function AutomationCard({ automation }: { automation: ActiveAutomation }) {
   );
 }
 
-// AutomationTemplate - Quick start template card
-function AutomationTemplate({
+// AutomationTemplate - Quick start template card (reserved for future use)
+function _AutomationTemplate({
   name,
   description,
   trigger,

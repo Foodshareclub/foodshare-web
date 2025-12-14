@@ -22,7 +22,7 @@ interface Props {
 }
 
 export function AdminReportsClient({ data }: Props) {
-  const t = useTranslations();
+  const _t = useTranslations();
 
   return (
     <div className="space-y-6">
@@ -218,7 +218,7 @@ function SimpleBarChart({
   label,
   color = "blue",
 }: {
-  data: { date: string; count: number }[];
+  data: readonly { date: string; count: number }[];
   label: string;
   color?: "blue" | "green";
 }) {
@@ -228,7 +228,7 @@ function SimpleBarChart({
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 flex items-end gap-1">
-        {data.slice(-14).map((item, index) => (
+        {data.slice(-14).map((item) => (
           <div key={item.date} className="flex-1 flex flex-col items-center gap-1">
             <div
               className={cn("w-full rounded-t transition-all", barColor)}
