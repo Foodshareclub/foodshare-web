@@ -70,22 +70,37 @@ The application uses Next.js routing with custom configuration in `next.config.t
 
 ### Category URLs
 
-Category pages use the `/s/[category]` route pattern:
+Category pages use the `/{category}` route pattern:
 
-| URL                | Description             |
-| ------------------ | ----------------------- |
-| `/s/food`          | Food listings           |
-| `/s/things`        | Things to share         |
-| `/s/borrow`        | Items to borrow         |
-| `/s/wanted`        | Wanted items            |
-| `/s/fridges`       | Community fridges       |
-| `/s/foodbanks`     | Food banks              |
-| `/s/organisations` | Organisations           |
-| `/s/volunteers`    | Volunteer opportunities |
-| `/s/zerowaste`     | Zero waste listings     |
-| `/s/vegan`         | Vegan listings          |
+| URL              | Description             |
+| ---------------- | ----------------------- |
+| `/food`          | Food listings           |
+| `/things`        | Things to share         |
+| `/borrow`        | Items to borrow         |
+| `/wanted`        | Wanted items            |
+| `/fridges`       | Community fridges       |
+| `/foodbanks`     | Food banks              |
+| `/organisations` | Organisations           |
+| `/volunteers`    | Volunteer opportunities |
+| `/zerowaste`     | Zero waste listings     |
+| `/vegan`         | Vegan listings          |
 
-The `/s/[category]` route also supports search via query params: `/s/food?key_word=apples`
+#### Query Parameters
+
+| Parameter  | Type   | Description                                          |
+| ---------- | ------ | ---------------------------------------------------- |
+| `key_word` | string | Full-text search within category                     |
+| `lat`      | number | Latitude for location-based filtering (-90 to 90)    |
+| `lng`      | number | Longitude for location-based filtering (-180 to 180) |
+| `radius`   | number | Search radius in meters (default: 5000, max: 100000) |
+
+**Examples:**
+
+- `/food?key_word=apples` - Search for "apples" in food listings
+- `/food?lat=51.5074&lng=-0.1278&radius=10000` - Food within 10km of London
+- `/fridges?lat=50.0755&lng=14.4378` - Fridges within 5km of Prague (default radius)
+
+> **Note:** Location filtering and keyword search are mutually exclusive. When both are provided, keyword search takes precedence.
 
 ### Dedicated Feature Routes
 

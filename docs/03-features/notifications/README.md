@@ -24,11 +24,11 @@ The notification system keeps users informed about:
 │         │                      │                             │
 │         ▼                      ▼                             │
 │  Edge Functions         Server Components                    │
-│  (push to mobile)       (fetch via lib/data)                │
-│                                │                             │
-│                                ▼                             │
-│                         Server Actions                       │
-│                         (mark read, delete)                  │
+│  (push to mobile/web)   (fetch via lib/data)                │
+│         │                      │                             │
+│         ▼                      ▼                             │
+│  Web Push API           Server Actions                       │
+│  (via sw-push.js)       (mark read, delete)                  │
 │                                │                             │
 │                                ▼                             │
 │                         Supabase Realtime                    │
@@ -37,6 +37,21 @@ The notification system keeps users informed about:
 │                                ▼                             │
 │                         Toast Component                      │
 │                         (immediate UI feedback)              │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│                  Web Push Subscription Flow                  │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  usePushNotifications ──► Request Permission                 │
+│         │                      │                             │
+│         ▼                      ▼                             │
+│  Register sw-push.js    PushManager.subscribe()              │
+│         │                      │                             │
+│         ▼                      ▼                             │
+│  VAPID Auth             Save to device_tokens table          │
+│  (public key)           (endpoint, p256dh, auth keys)        │
+│                                                              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -55,6 +70,7 @@ src/
 │       └── NotificationSettingsForm.tsx # Preferences form (Client Component)
 ├── hooks/
 │   ├── useBrowserNotifications.ts # Browser notification API hook
+│   ├── usePushNotifications.ts    # Web Push subscription hook
 │   └── useNotificationSound.ts    # Sound notification hook
 └── components/notifications/
     ├── index.ts              # Barrel exports
@@ -62,6 +78,9 @@ src/
     ├── NotificationItem.tsx  # Individual notification display
     ├── NotificationList.tsx  # Paginated notification list
     └── NotificationCenter.tsx # Full notification panel (realtime, sound, toasts)
+
+public/
+└── sw-push.js                # Push notification service worker
 ```
 
 ## Notification Types
@@ -595,6 +614,66 @@ playSound();
 1. Attempts to play the MP3 sound file first
 2. If the file fails to load or play, generates a 800Hz sine wave beep using Web Audio API
 3. If Web Audio API is unavailable, fails silently
+
+### usePushNotifications
+
+Hook for Web Push API subscription management with VAPID authentication.
+
+```typescript
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+
+const {
+  permission, // 'default' | 'granted' | 'denied' | 'unsupported'
+  isSubscribed, // Boolean: user has active push subscription
+  isLoading, // Boolean: operation in progress
+  error, // Error message or null
+  subscribe, // Function to subscribe to push notifications
+  unsubscribe, // Function to unsubscribe from push notifications
+} = usePushNotifications();
+
+// Subscribe to push notifications
+const success = await subscribe();
+if (success) {
+  console.log("Push notifications enabled!");
+}
+
+// Unsubscribe
+await unsubscribe();
+```
+
+**Features:**
+
+- Automatic permission and subscription state detection on mount
+- Registers `/sw-push.js` service worker for push handling
+- Stores subscription in `device_tokens` table with Web Push keys (p256dh, auth)
+- Handles unsupported browsers gracefully
+- Requires `NEXT_PUBLIC_VAPID_PUBLIC_KEY` environment variable
+
+**Database Schema (device_tokens):**
+
+| Column     | Type | Description                         |
+| ---------- | ---- | ----------------------------------- |
+| profile_id | UUID | User's profile ID                   |
+| token      | TEXT | Endpoint identifier (last segment)  |
+| platform   | TEXT | Always 'web' for push subscriptions |
+| endpoint   | TEXT | Full push service endpoint URL      |
+| p256dh     | TEXT | Public key for message encryption   |
+| auth       | TEXT | Authentication secret               |
+| user_agent | TEXT | Browser user agent string           |
+
+**Environment Setup:**
+
+```env
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-public-key
+```
+
+Generate VAPID keys using:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+Store the private key in Supabase Edge Function secrets for sending push notifications.
 
 ## Realtime Updates
 

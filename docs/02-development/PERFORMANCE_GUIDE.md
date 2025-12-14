@@ -61,17 +61,36 @@ export default async function FoodPage() {
 }
 
 // ✅ DO - Pass data to client components as props
-// HomeClient receives products from server
-export function HomeClient({ initialProducts }: { initialProducts: Product[] }) {
+// HomeClient receives products from server, location filtering via URL params
+export function HomeClient({
+  initialProducts,
+  nearbyPosts,
+  isLocationFiltered,
+  radiusMeters,
+}: HomeClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  
-  // Use router.refresh() for updates
-  const handleRefresh = () => {
-    startTransition(() => router.refresh());
+
+  // Use nearby posts if location filter is active
+  const products = isLocationFiltered && nearbyPosts ? nearbyPosts : initialProducts;
+
+  // Update URL params for location filtering (triggers server-side fetch)
+  const handleLocationChange = (params: LocationParams | null) => {
+    const newParams = new URLSearchParams(searchParams.toString());
+    if (params) {
+      newParams.set('lat', params.latitude.toFixed(6));
+      newParams.set('lng', params.longitude.toFixed(6));
+      newParams.set('radius', params.radiusMeters.toString());
+    } else {
+      newParams.delete('lat');
+      newParams.delete('lng');
+      newParams.delete('radius');
+    }
+    startTransition(() => router.push(`?${newParams.toString()}`));
   };
-  
-  return <ProductGrid products={initialProducts} />;
+
+  return <ProductGrid products={products} isLoading={isPending} />;
 }
 
 // ❌ DON'T - Fetch in client components with useEffect

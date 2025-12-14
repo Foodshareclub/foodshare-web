@@ -268,6 +268,97 @@ const coords = data[0].location_json?.coordinates; // [longitude, latitude]
 
 ---
 
+### `post_activity_logs`
+
+Comprehensive activity log for all post-related events. Supports analytics, debugging, audit trails, and user activity tracking.
+
+**Columns:**
+
+- `id` (uuid, PK) - Unique activity log identifier
+- `post_id` (bigint, FK → posts.id) - The post this activity relates to
+- `actor_id` (uuid, FK → profiles.id) - User who performed the action (null for system actions)
+- `activity_type` (enum) - Type of activity (see Activity Types below)
+- `previous_state` (jsonb) - Snapshot of post fields before the activity
+- `new_state` (jsonb) - Snapshot of post fields after the activity
+- `changes` (jsonb) - Diff of what changed (for updates)
+- `metadata` (jsonb) - Additional context-specific data
+- `reason` (text) - Reason for the action (e.g., moderation reason)
+- `notes` (text) - Additional notes
+- `ip_address` (inet) - IP address of the actor
+- `user_agent` (text) - Browser/client user agent
+- `request_id` (text) - Correlation ID for request tracing
+- `related_post_id` (bigint, FK → posts.id) - Related post (if applicable)
+- `related_profile_id` (uuid, FK → profiles.id) - Related user (if applicable)
+- `related_room_id` (uuid, FK → rooms.id) - Related chat room (if applicable)
+- `created_at` (timestamp) - When the activity occurred
+
+**Activity Types:**
+
+| Category    | Types                                                                                    |
+| ----------- | ---------------------------------------------------------------------------------------- |
+| Lifecycle   | `created`, `updated`, `deleted`, `restored`                                              |
+| Status      | `activated`, `deactivated`, `expired`                                                    |
+| Arrangement | `viewed`, `contacted`, `arranged`, `arrangement_cancelled`, `collected`, `not_collected` |
+| Moderation  | `reported`, `flagged`, `unflagged`, `approved`, `rejected`, `hidden`, `unhidden`         |
+| Engagement  | `liked`, `unliked`, `shared`, `bookmarked`, `unbookmarked`                               |
+| Admin       | `admin_edited`, `admin_note_added`, `admin_status_changed`                               |
+| System      | `auto_expired`, `auto_deactivated`, `location_updated`, `images_updated`                 |
+
+**TypeScript Types:**
+
+```typescript
+import {
+  PostActivityType,
+  PostActivityLog,
+  PostActivityTimelineItem,
+  LogPostActivityInput,
+  ACTIVITY_CATEGORIES,
+  ACTIVITY_TYPE_LABELS,
+} from "@/types/post-activity.types";
+```
+
+**Relationships:**
+
+- Many-to-one with `posts` (the post being tracked)
+- Many-to-one with `profiles` (the actor)
+- Many-to-one with `rooms` (related chat room)
+
+**RLS Policies:**
+
+- Admins can read all activity logs
+- Users can read activity logs for their own posts
+- Only system/admins can insert activity logs
+
+---
+
+### `post_activity_daily_stats`
+
+Aggregated daily statistics for post activities. Updated by scheduled jobs or triggers.
+
+**Columns:**
+
+- `id` (uuid, PK) - Unique stats record identifier
+- `date` (date) - The date for these statistics
+- `post_type` (text) - Post type filter ('all' for aggregate)
+- `posts_created` (integer) - Count of posts created
+- `posts_updated` (integer) - Count of posts updated
+- `posts_deleted` (integer) - Count of posts deleted
+- `posts_viewed` (integer) - Count of post views
+- `posts_arranged` (integer) - Count of arrangements made
+- `posts_collected` (integer) - Count of items collected
+- `posts_reported` (integer) - Count of reports filed
+- `posts_expired` (integer) - Count of expired posts
+- `total_likes` (integer) - Total likes given
+- `total_shares` (integer) - Total shares
+- `total_contacts` (integer) - Total contact initiations
+- `unique_posters` (integer) - Unique users who posted
+- `unique_viewers` (integer) - Unique users who viewed
+- `unique_arrangers` (integer) - Unique users who arranged
+- `created_at` (timestamp) - Record creation time
+- `updated_at` (timestamp) - Last update time
+
+---
+
 ## Geospatial Features
 
 The `posts` table uses PostGIS for geospatial queries:

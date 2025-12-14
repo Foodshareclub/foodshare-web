@@ -54,6 +54,10 @@ export const CACHE_TAGS = {
   USER_PRODUCTS: (userId: string) => `user-products-${userId}`,
   PRODUCT_SEARCH: "product-search",
 
+  // Nearby Posts (PostGIS geo-queries)
+  NEARBY_POSTS: "nearby-posts",
+  NEARBY_POSTS_COUNTS: "nearby-posts-counts",
+
   // Profiles
   PROFILES: "profiles",
   PROFILE: (id: string) => `profile-${id}`,
@@ -84,6 +88,12 @@ export const CACHE_TAGS = {
   ADMIN_REPORTS: "admin-reports",
   ADMIN_CRM: "admin-crm",
   AUDIT_LOGS: "audit-logs",
+
+  // Post Activity Logs
+  POST_ACTIVITY: "post-activity",
+  POST_ACTIVITY_LOGS: (postId: number) => `post-activity-${postId}`,
+  USER_ACTIVITY: (userId: string) => `user-activity-${userId}`,
+  POST_ACTIVITY_STATS: "post-activity-stats",
 
   // Newsletter & Campaigns
   NEWSLETTER: "newsletter",
@@ -126,6 +136,7 @@ export const CACHE_DURATIONS = {
   PRODUCTS: 60, // 1 minute - products change frequently
   PRODUCT_DETAIL: 120, // 2 minutes
   PRODUCT_LOCATIONS: 300, // 5 minutes - map data
+  NEARBY_POSTS: 60, // 1 minute - location-based data changes frequently
   PROFILES: 300, // 5 minutes
   PROFILE_STATS: 600, // 10 minutes
   VOLUNTEERS: 3600, // 1 hour
@@ -250,6 +261,20 @@ export function getNewsletterTags(
  */
 export function invalidateAdminCaches(): void {
   getAdminTags().forEach((tag) => invalidateTag(tag));
+}
+
+export function getPostActivityTags(postId?: number, userId?: string): string[] {
+  const tags: string[] = [CACHE_TAGS.POST_ACTIVITY, CACHE_TAGS.POST_ACTIVITY_STATS];
+  if (postId) tags.push(CACHE_TAGS.POST_ACTIVITY_LOGS(postId));
+  if (userId) tags.push(CACHE_TAGS.USER_ACTIVITY(userId));
+  return tags;
+}
+
+/**
+ * Invalidate post activity caches
+ */
+export function invalidatePostActivityCaches(postId?: number, userId?: string): void {
+  getPostActivityTags(postId, userId).forEach((tag) => invalidateTag(tag));
 }
 
 /**

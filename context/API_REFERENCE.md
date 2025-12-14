@@ -1,10 +1,51 @@
 # FoodShare API Reference
 
-**Last Updated:** December 2025 (Updated: posts_with_location view usage)
+**Last Updated:** December 2025 (Updated: Nearby Posts Route Handler)
 
 ## Overview
 
-FoodShare uses a client-side API layer that interfaces with Supabase backend services. All API functions are located in `src/api/` and return Supabase query builders.
+FoodShare uses a client-side API layer that interfaces with Supabase backend services. All API functions are located in `src/api/` and return Supabase query builders. Route Handlers in `src/app/api/` provide REST endpoints for client-side fetching.
+
+---
+
+## Route Handlers
+
+### Nearby Posts API
+
+**Endpoint:** `GET /api/nearby-posts`
+
+**Location:** `src/app/api/nearby-posts/route.ts`
+
+Fetches posts near a given location using PostGIS spatial queries. Supports pagination, filtering, and configurable radius.
+
+**Query Parameters:**
+
+| Parameter      | Type     | Required | Description                                 |
+| -------------- | -------- | -------- | ------------------------------------------- |
+| `lat`          | `number` | Yes      | User's latitude (-90 to 90)                 |
+| `lng`          | `number` | Yes      | User's longitude (-180 to 180)              |
+| `radiusMeters` | `number` | No       | Search radius (default: 50000, max: 200000) |
+| `postType`     | `string` | No       | Filter by post type                         |
+| `limit`        | `number` | No       | Results per page (default: 20, max: 100)    |
+| `cursor`       | `number` | No       | Pagination cursor (last seen post ID)       |
+
+**Response:**
+
+```typescript
+{
+  data: NearbyPost[];
+  hasMore: boolean;
+  nextCursor: number | null;
+  counts?: Record<string, number>; // First page only
+}
+```
+
+**Example:**
+
+```typescript
+const res = await fetch(`/api/nearby-posts?lat=50.0755&lng=14.4378&postType=food`);
+const { data, hasMore, nextCursor } = await res.json();
+```
 
 ---
 
@@ -874,6 +915,95 @@ i18nBackend.metadata; // Full metadata for all locales
 ```
 
 ---
+
+## Nearby Posts Data Layer
+
+Located: `src/lib/data/nearby-posts.ts`
+
+Server-side data fetching functions for geolocation-based post discovery. Uses PostGIS spatial queries via Supabase RPC functions for efficient radius-based searches.
+
+### Types
+
+```typescript
+interface NearbyPostsParams {
+  latitude: number;
+  longitude: number;
+  radiusMeters?: number; // Default: 5000 (5km), Max: 100000 (100km)
+  postType?: string | null;
+  categoryId?: number | null;
+  limit?: number; // Default: 50
+}
+
+/**
+ * Post returned from get_nearby_posts RPC
+ * Contains a subset of InitialProductStateType fields plus distance
+ */
+interface NearbyPost {
+  id: number;
+  profile_id: string;
+  post_name: string;
+  post_description: string;
+  post_type: string;
+  post_address: string;
+  post_stripped_address: string | null;
+  location_json: { type: string; coordinates: [number, number] } | null;
+  images: string[] | null;
+  available_hours: string;
+  transportation: string;
+  condition: string;
+  is_active: boolean;
+  is_arranged: boolean;
+  post_views: number;
+  post_like_counter: number;
+  created_at: string;
+  /** Distance from user in meters */
+  distance_meters: number;
+}
+```
+
+### Get Nearby Posts
+
+```typescript
+import { getNearbyPosts } from "@/lib/data/nearby-posts";
+
+const posts = await getNearbyPosts({
+  latitude: 50.0755,
+  longitude: 14.4378,
+  radiusMeters: 10000, // 10km
+  postType: "food",
+  limit: 20,
+});
+```
+
+**Parameters:**
+
+- `latitude` - User's latitude (required)
+- `longitude` - User's longitude (required)
+- `radiusMeters` - Search radius in meters (default: 5000, max: 100000)
+- `postType` - Filter by post type (optional)
+- `categoryId` - Filter by category ID (optional)
+- `limit` - Maximum results (default: 50)
+
+**Returns:** `NearbyPost[]` - Posts sorted by distance with `distance_meters` field
+
+**Database Function:** Uses `nearby_posts_full` RPC
+
+### Get Nearby Posts Count
+
+```typescript
+import { getNearbyPostsCount } from "@/lib/data/nearby-posts";
+
+const count = await getNearbyPostsCount({
+  latitude: 50.0755,
+  longitude: 14.4378,
+  radiusMeters: 5000,
+  postType: "food",
+});
+```
+
+**Returns:** `number` - Count of posts within radius
+
+**Database Function:** Uses `posts_within_radius` RPC
 
 ---
 

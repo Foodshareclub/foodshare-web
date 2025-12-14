@@ -135,6 +135,43 @@ NEXT_PUBLIC_SITE_URL=https://foodshare.club
 
 ---
 
+### 6. Web Push Notifications (VAPID)
+
+**Purpose:** Enable native push notifications via the Web Push API.
+
+#### Generate VAPID Keys
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+This outputs a public and private key pair.
+
+#### Environment Variables
+
+```env
+# Client-side (for subscription)
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-public-key
+
+# Server-side (for sending - store in Supabase Edge Function secrets)
+VAPID_PRIVATE_KEY=your-vapid-private-key
+VAPID_SUBJECT=mailto:contact@foodshare.club
+```
+
+#### Supabase Edge Function Secrets
+
+Store the private key in Supabase secrets for the push notification edge function:
+
+```bash
+supabase secrets set VAPID_PRIVATE_KEY=your-vapid-private-key
+supabase secrets set VAPID_PUBLIC_KEY=your-vapid-public-key
+supabase secrets set VAPID_SUBJECT=mailto:contact@foodshare.club
+```
+
+**Note:** The public key must match between client (`NEXT_PUBLIC_VAPID_PUBLIC_KEY`) and server (`VAPID_PUBLIC_KEY`).
+
+---
+
 ## Optional Configuration
 
 ### Development Mode
@@ -232,6 +269,7 @@ const optionalEnvVars = [
   "AWS_SECRET_ACCESS_KEY",
   "XAI_API_KEY",
   "AI_GATEWAY_API_KEY",
+  "NEXT_PUBLIC_VAPID_PUBLIC_KEY",
 ];
 
 console.log("Checking environment variables...\n");

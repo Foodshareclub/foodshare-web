@@ -10,16 +10,16 @@
  */
 
 // Database types (auto-generated from Supabase)
-export * from './database.types';
+export * from "./database.types";
 
 // Enums and constants
-export * from './enums';
+export * from "./enums";
 
 // PostGIS/Geographic types
-export * from './postgis.types';
+export * from "./postgis.types";
 
 // Admin types (includes shared ApiError, ApiResponse, PaginationState)
-export * from './admin.types';
+export * from "./admin.types";
 
 // CRM types - selective exports (avoid conflicts with admin.types)
 export type {
@@ -54,9 +54,12 @@ export type {
   ChurnRiskTimelineData,
   CustomerActivitySummary,
   CustomerInteractionTimelineItem,
-} from './crm.types';
+} from "./crm.types";
 
-export { DEFAULT_CRM_FILTERS, DEFAULT_PAGINATION } from './crm.types';
+export { DEFAULT_CRM_FILTERS, DEFAULT_PAGINATION } from "./crm.types";
 
 // Campaign types
-export * from './campaign.types';
+export * from "./campaign.types";
+
+// Post Activity types
+export * from "./post-activity.types";

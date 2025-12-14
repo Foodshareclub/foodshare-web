@@ -33,6 +33,10 @@ CACHE_TAGS.FORUM; // 'forum'
 CACHE_TAGS.CHATS; // 'chats'
 CACHE_TAGS.ADMIN; // 'admin'
 CACHE_TAGS.AUTH; // 'auth'
+CACHE_TAGS.POST_ACTIVITY; // 'post-activity'
+CACHE_TAGS.POST_ACTIVITY_LOGS(postId); // 'post-activity-{postId}'
+CACHE_TAGS.POST_ACTIVITY_STATS; // 'post-activity-stats'
+CACHE_TAGS.USER_ACTIVITY(userId); // 'user-activity-{userId}'
 
 // CRM tags (from @/lib/data/crm)
 import { CRM_CACHE_TAGS } from "@/lib/data/crm";
@@ -213,6 +217,20 @@ export async function updateProduct(id: number, data: ProductData) {
 | `getAdminCRMStatsCached()`        | None           | -    | Cannot cache - uses `cookies()` via Supabase |
 
 > **Note:** CRM data functions cannot use `unstable_cache` because `createClient()` uses `cookies()` which is incompatible with caching. These functions make direct database queries on each request. The `CRM_CACHE_TAGS` constants are still defined in `@/lib/data/crm.ts` for potential future use with cache invalidation.
+
+### Post Activity (`@/lib/data/post-activity`)
+
+| Function                          | Cache Duration | Tags                                      |
+| --------------------------------- | -------------- | ----------------------------------------- |
+| `getPostActivityTimeline(postId)` | 60s            | `post-activity`, `post-activity-{postId}` |
+| `getPostActivityLogs(postId)`     | 60s            | `post-activity`, `post-activity-{postId}` |
+| `getUserActivitySummary(userId)`  | 300s           | `post-activity`, `user-activity-{userId}` |
+| `getActivityCountsByType(postId)` | 60s            | `post-activity`, `post-activity-{postId}` |
+| `getDailyActivityStats(options?)` | 300s           | `post-activity`, `post-activity-stats`    |
+| `getActivityOverviewStats()`      | 300s           | `post-activity`, `post-activity-stats`    |
+| `getRecentActivities(options?)`   | None           | -                                         |
+
+> **Note:** `getRecentActivities` is not cached as it's used for real-time admin monitoring. All other functions use `unstable_cache` for dashboard performance.
 
 ### Email Preferences (`@/lib/data/email-preferences`)
 
@@ -417,20 +435,40 @@ export default async function FoodPage() {
 }
 
 // ✅ Client Component receives data as props
-// Uses router.refresh() for updates instead of client-side fetching
+// Location filtering uses URL searchParams (server-first pattern)
 'use client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTransition } from 'react';
 
-export function HomeClient({ initialProducts }: HomeClientProps) {
+export function HomeClient({
+  initialProducts,
+  nearbyPosts,
+  isLocationFiltered,
+  radiusMeters,
+}: HomeClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  const handleRefresh = () => {
-    startTransition(() => router.refresh());
+  // Use nearby posts if location filter is active
+  const products = isLocationFiltered && nearbyPosts ? nearbyPosts : initialProducts;
+
+  // Update URL params for location filtering (triggers server-side fetch)
+  const handleLocationChange = (params: LocationParams | null) => {
+    const newParams = new URLSearchParams(searchParams.toString());
+    if (params) {
+      newParams.set('lat', params.latitude.toFixed(6));
+      newParams.set('lng', params.longitude.toFixed(6));
+      newParams.set('radius', params.radiusMeters.toString());
+    } else {
+      newParams.delete('lat');
+      newParams.delete('lng');
+      newParams.delete('radius');
+    }
+    startTransition(() => router.push(`?${newParams.toString()}`));
   };
 
-  return <ProductGrid products={initialProducts} isLoading={isPending} />;
+  return <ProductGrid products={products} isLoading={isPending} />;
 }
 ```
 

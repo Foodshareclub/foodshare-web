@@ -15,11 +15,13 @@ export function useBrowserNotifications() {
 
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsSupported(false);
       return;
     }
 
     setIsSupported(true);
+
     setPermission(Notification.permission);
   }, []);
 
@@ -40,8 +42,8 @@ export function useBrowserNotifications() {
 
     try {
       const notification = new Notification(title, {
-        icon: "/icons/icon-192x192.png",
-        badge: "/icons/badge-72x72.png",
+        icon: "/logo192.png",
+        badge: "/favicon-32x32.png",
         ...options,
       });
 

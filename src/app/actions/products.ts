@@ -3,8 +3,9 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { type ActionResult, withErrorHandling, validateWithSchema } from "@/lib/errors";
-import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
+import { CACHE_TAGS, invalidateTag, invalidatePostActivityCaches } from "@/lib/data/cache-keys";
 import { trackEvent } from "@/app/actions/analytics";
+import { logPostActivity as _logPostActivity } from "@/app/actions/post-activity";
 
 // NOTE: Data functions (getProducts, getAllProducts, etc.) should be imported
 // directly from '@/lib/data/products' - they cannot be re-exported from a
@@ -81,7 +82,12 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     console.log("[createProduct] ✅ User authenticated:", user.id);
 
     if (user.id !== validation.data.profile_id) {
-      console.log("[createProduct] ❌ User ID mismatch:", user.id, "!=", validation.data.profile_id);
+      console.log(
+        "[createProduct] ❌ User ID mismatch:",
+        user.id,
+        "!=",
+        validation.data.profile_id
+      );
       throw new Error("Unauthorized: User ID mismatch");
     }
     console.log("[createProduct] ✅ User ID matches profile_id");
@@ -112,6 +118,10 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     }
 
     console.log("[createProduct] ✅ SUCCESS! Returning id:", data.id);
+
+    // Invalidate activity caches
+    invalidatePostActivityCaches(data.id, validation.data.profile_id);
+
     return { id: data.id };
   }, "createProduct").then(async (result) => {
     if (result.success && result.data) {
@@ -235,6 +245,9 @@ export async function updateProduct(
       invalidateTag(CACHE_TAGS.USER_PRODUCTS(currentProduct.profile_id));
     }
 
+    // Invalidate activity caches
+    invalidatePostActivityCaches(id, currentProduct?.profile_id);
+
     console.log("[updateProduct] ✅ SUCCESS!");
     return undefined;
   }, "updateProduct");
@@ -286,6 +299,9 @@ export async function deleteProduct(id: number): Promise<ActionResult<undefined>
     if (product?.profile_id) {
       invalidateTag(CACHE_TAGS.USER_PRODUCTS(product.profile_id));
     }
+
+    // Invalidate activity caches
+    invalidatePostActivityCaches(id, product?.profile_id);
 
     return undefined;
   }, "deleteProduct");

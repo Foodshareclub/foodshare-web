@@ -74,15 +74,15 @@ The `Leaflet.tsx` component provides a beautiful map view for individual product
 ### Usage
 
 ```tsx
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
 
-const Leaflet = dynamic(() => import('@/components/leaflet/Leaflet'), {
+const Leaflet = dynamic(() => import("@/components/leaflet/Leaflet"), {
   ssr: false,
   loading: () => <div className="h-[300px] bg-gray-100 animate-pulse" />,
 });
 
 // In product detail page
-<Leaflet product={product} />
+<Leaflet product={product} />;
 ```
 
 ### Styling Files
@@ -103,29 +103,86 @@ const Leaflet = dynamic(() => import('@/components/leaflet/Leaflet'), {
 
 ### Map Tiles
 
-| Context | Tile Provider | Style |
-|---------|---------------|-------|
-| Split-view | OpenStreetMap | Standard |
-| Product detail | CARTO | Voyager (light, modern) |
+| Context        | Tile Provider | Style                   |
+| -------------- | ------------- | ----------------------- |
+| Split-view     | OpenStreetMap | Standard                |
+| Product detail | CARTO         | Voyager (light, modern) |
 
 ---
 
 ## Routes Using Maps
 
 Split-view enabled on:
-- `/s/food`, `/s/things`, `/s/borrow`, `/s/wanted`
-- All other `/s/[category]` routes
+
+- `/food`, `/things`, `/borrow`, `/wanted`
+- All other `/{category}` routes
 - `/map/[category]` routes (map-focused view)
 
 Product detail map on:
+
 - `/food/[id]` and similar detail pages
+
+---
+
+## Location-Based Filtering
+
+Category pages support location-based filtering via URL parameters:
+
+```
+/{category}?lat={latitude}&lng={longitude}&radius={meters}
+```
+
+### URL Parameters
+
+| Parameter | Type   | Required | Description                                                    |
+| --------- | ------ | -------- | -------------------------------------------------------------- |
+| `lat`     | number | Yes      | Latitude (-90 to 90)                                           |
+| `lng`     | number | Yes      | Longitude (-180 to 180)                                        |
+| `radius`  | number | No       | Search radius in meters (default: 5000, min: 100, max: 100000) |
+
+### Example URLs
+
+```
+/food?lat=51.5074&lng=-0.1278&radius=10000    # Food within 10km of London
+/fridges?lat=50.0755&lng=14.4378              # Fridges within 5km of Prague (default radius)
+/all?lat=40.7128&lng=-74.0060&radius=5000     # All posts within 5km of NYC
+```
+
+### How It Works
+
+1. **Server-side filtering**: Uses PostGIS `get_nearby_posts` RPC for efficient spatial queries
+2. **Distance included**: Each result includes `distance_meters` from the search point
+3. **Sorted by proximity**: Results ordered by distance (closest first)
+4. **Mutually exclusive with search**: Location filter is ignored when `key_word` search is active
+
+### Data Flow
+
+```
+URL params → parseLocationParams() → getNearbyPosts() → HomeClient (nearbyPosts prop)
+```
+
+### HomeClient Props
+
+When location filtering is active, `HomeClient` receives:
+
+```typescript
+<HomeClient
+  initialProducts={[]}           // Empty (not used)
+  productType={dbPostType}
+  nearbyPosts={nearbyPosts}      // Posts with distance_meters
+  isLocationFiltered={true}
+  radiusMeters={locationParams.radius}
+/>
+```
 
 ---
 
 ## Future Enhancements
 
+- [x] ~~Geolocation "Near me" button~~ (implemented via URL params)
+- [x] ~~Save map position in URL params~~ (implemented)
 - [ ] Marker clustering for 100+ products
 - [ ] Custom marker icons per category
 - [ ] Map filters (price, distance, etc.)
-- [ ] Geolocation "Near me" button
-- [ ] Save map position in URL params
+- [ ] Radius slider UI component
+- [ ] "Use my location" button that sets URL params

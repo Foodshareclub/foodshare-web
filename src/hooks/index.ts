@@ -41,6 +41,10 @@ export * from "./useImageBlobUrl";
 // Notification hooks
 export * from "./useBrowserNotifications";
 export * from "./useNotificationSound";
+export * from "./usePushNotifications";
 
 // Toast notifications for server action feedback
 export { useActionToast, ActionToastProvider } from "./useActionToast";
+
+// User location (geolocation API + Zustand integration)
+export { useUserLocation, type Coordinates, type UseUserLocationReturn } from "./useUserLocation";

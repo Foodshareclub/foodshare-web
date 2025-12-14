@@ -1,6 +1,6 @@
 # FoodShare Utilities Reference
 
-**Last Updated:** December 8, 2024
+**Last Updated:** December 14, 2024
 
 ## Overview
 
@@ -9,6 +9,102 @@ This document provides a comprehensive reference for utility functions and hooks
 ---
 
 ## React Hooks
+
+### useViewTracking
+
+**Location:** `src/hooks/useViewTracking.ts`
+
+A hook for automatic post view tracking with visibility detection using Intersection Observer. Includes deduplication, scroll depth tracking, and duration tracking.
+
+**Signature:**
+
+```typescript
+function useViewTracking(options: UseViewTrackingOptions): {
+  ref: React.RefObject<HTMLElement>;
+  viewCount: number | null;
+  hasRecordedView: boolean;
+  scrollDepth: number;
+};
+
+interface UseViewTrackingOptions {
+  postId: number;
+  minVisibleTime?: number; // Default: 1000ms
+  trackScrollDepth?: boolean; // Default: false
+  trackDuration?: boolean; // Default: false
+  referrer?: string;
+  source?: "direct" | "search" | "social" | "internal";
+  onViewRecorded?: (views: number) => void;
+}
+```
+
+**When to Use:**
+
+- Post detail pages to track views automatically
+- When you need visibility-based view counting (50% visible for 1 second)
+- For analytics with scroll depth and time-on-page tracking
+
+**Example:**
+
+```typescript
+'use client';
+
+import { useViewTracking } from '@/hooks/useViewTracking';
+
+function PostDetail({ post }) {
+  const { ref, viewCount, hasRecordedView } = useViewTracking({
+    postId: post.id,
+    trackScrollDepth: true,
+    trackDuration: true,
+    source: 'internal',
+    onViewRecorded: (views) => console.log(`Post now has ${views} views`),
+  });
+
+  return (
+    <article ref={ref}>
+      <h1>{post.title}</h1>
+      {viewCount && <span>{viewCount} views</span>}
+    </article>
+  );
+}
+```
+
+**Features:**
+
+- Intersection Observer for visibility detection (50% threshold)
+- Minimum visible time before counting (prevents scroll-by views)
+- Session-based deduplication (30-second cooldown server-side)
+- Optional scroll depth tracking (0-100%)
+- Duration tracking (tracked internally, recorded on unmount)
+- Records detailed analytics on unmount
+
+---
+
+### useSimpleViewTracking
+
+**Location:** `src/hooks/useViewTracking.ts`
+
+A simpler hook that just records a view on component mount. Use when you don't need visibility detection.
+
+**Signature:**
+
+```typescript
+function useSimpleViewTracking(postId: number): void;
+```
+
+**Example:**
+
+```typescript
+'use client';
+
+import { useSimpleViewTracking } from '@/hooks/useViewTracking';
+
+function PostDetail({ post }) {
+  useSimpleViewTracking(post.id);
+  return <article>...</article>;
+}
+```
+
+---
 
 ### useImageBlobUrl
 
@@ -29,7 +125,7 @@ interface UseImageBlobUrlOptions {
 
 interface UseImageBlobUrlResult {
   blobUrl: string | null;
-  data: string | null;  // Alias for blobUrl
+  data: string | null; // Alias for blobUrl
   isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
@@ -70,6 +166,7 @@ function ProductImage({ imagePath }: { imagePath: string }) {
 **Memory Management:**
 
 The hook automatically revokes blob URLs when:
+
 - The component unmounts
 - A new blob URL replaces the old one
 - The fetch is triggered again (via deps change or refetch)
@@ -149,6 +246,7 @@ interface PostGISPoint {
 ```
 
 Returns `null` if:
+
 - Input is invalid or cannot be parsed
 - Coordinates are outside valid ranges
 - Coordinates are (0, 0) - often indicates invalid/default data
@@ -701,5 +799,5 @@ const location = `POINT(${lat} ${lng})`; // Missing SRID, wrong order
 
 ---
 
-**Last Updated:** December 8, 2024  
+**Last Updated:** December 14, 2024  
 **Status:** ✅ Production Ready

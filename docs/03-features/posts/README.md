@@ -54,6 +54,7 @@ export default async function UserListingsPage() {
 | `MyPostsClient`        | Client | Alternative post management with Server Actions                   |
 | `PostCard`             | Client | Individual post card with image, status badge, and action buttons |
 | `EmptyState`           | Client | Empty state messaging with contextual prompts                     |
+| `PostActivityTimeline` | Client | Chronological activity history with icons and actor info          |
 
 ## User Listings Client Features
 
@@ -223,6 +224,123 @@ export const metadata = {
   title: "My Listings | FoodShare",
   description: "Manage your food sharing listings - create, edit, and organize your posts",
 };
+```
+
+## Post Activity Timeline
+
+The `PostActivityTimeline` component displays a chronological history of all activities for a post. Used in post detail pages and admin dashboards for audit trails and debugging.
+
+Supports streaming with Suspense and optimistic updates for a responsive UX.
+
+### Available Components
+
+| Component                      | Type   | Description                                               |
+| ------------------------------ | ------ | --------------------------------------------------------- |
+| `PostActivityTimeline`         | Client | Interactive timeline with real-time updates               |
+| `PostActivityStats`            | Client | Activity statistics and metrics                           |
+| `PostActivityTimelineSkeleton` | Client | Loading skeleton for Suspense fallback                    |
+| `PostActivityTimelineServer`   | Server | Server Component for streaming                            |
+| `PostEngagementButtons`        | Client | Like, bookmark, and share buttons with optimistic updates |
+
+### Component Usage
+
+```typescript
+// Client Component (interactive)
+import { PostActivityTimeline } from '@/components/post-activity';
+
+<PostActivityTimeline
+  activities={activities}
+  showActor={true}    // Show user avatars and names
+  compact={false}     // Full view with notes and changes
+  className="mt-4"
+/>
+
+// Server Component with Suspense streaming
+import { Suspense } from 'react';
+import {
+  PostActivityTimelineServer,
+  PostActivityTimelineSkeleton
+} from '@/components/post-activity';
+
+<Suspense fallback={<PostActivityTimelineSkeleton />}>
+  <PostActivityTimelineServer postId={post.id} />
+</Suspense>
+
+// Engagement buttons (like, bookmark, share)
+import { PostEngagementButtons } from '@/components/post-activity';
+
+<PostEngagementButtons
+  postId={post.id}
+  initialIsLiked={isLiked}
+  initialLikeCount={likeCount}
+  initialIsBookmarked={isBookmarked}
+  showCounts={true}
+  size="default"      // "sm" | "default" | "lg"
+/>
+```
+
+### Props
+
+#### PostActivityTimeline
+
+| Prop         | Type                         | Default  | Description                        |
+| ------------ | ---------------------------- | -------- | ---------------------------------- |
+| `activities` | `PostActivityTimelineItem[]` | required | Array of activity items            |
+| `showActor`  | `boolean`                    | `true`   | Display actor avatar and name      |
+| `compact`    | `boolean`                    | `false`  | Compact view (hides notes/changes) |
+| `className`  | `string`                     | -        | Additional CSS classes             |
+
+#### PostEngagementButtons
+
+| Prop                  | Type                        | Default     | Description                    |
+| --------------------- | --------------------------- | ----------- | ------------------------------ |
+| `postId`              | `number`                    | required    | Post ID for engagement actions |
+| `initialIsLiked`      | `boolean`                   | `false`     | Initial like state             |
+| `initialLikeCount`    | `number`                    | `0`         | Initial like count             |
+| `initialIsBookmarked` | `boolean`                   | `false`     | Initial bookmark state         |
+| `showCounts`          | `boolean`                   | `true`      | Show like count next to button |
+| `size`                | `"sm" \| "default" \| "lg"` | `"default"` | Button size variant            |
+| `className`           | `string`                    | -           | Additional CSS classes         |
+
+### Activity Types
+
+Activities are categorized into groups:
+
+| Category        | Activities                                                                   |
+| --------------- | ---------------------------------------------------------------------------- |
+| **Lifecycle**   | created, updated, deleted, restored                                          |
+| **Status**      | activated, deactivated, expired                                              |
+| **Arrangement** | viewed, contacted, arranged, arrangement_cancelled, collected, not_collected |
+| **Moderation**  | reported, flagged, unflagged, approved, rejected, hidden, unhidden           |
+| **Engagement**  | liked, unliked, shared, bookmarked, unbookmarked                             |
+| **Admin**       | admin_edited, admin_note_added, admin_status_changed                         |
+| **System**      | auto_expired, auto_deactivated, location_updated, images_updated             |
+
+### Data Fetching
+
+```typescript
+// Server Component
+import { getPostActivityTimeline } from "@/lib/data/post-activity";
+
+const activities = await getPostActivityTimeline({
+  postId: post.id,
+  limit: 50,
+  activityTypes: ["created", "updated", "arranged", "collected"],
+});
+```
+
+### Logging Activities
+
+```typescript
+// Server Action
+import { logPostActivity } from "@/app/actions/post-activity";
+
+await logPostActivity({
+  postId: post.id,
+  activityType: "updated",
+  changes: { post_name: "New Title" },
+  reason: "User edited post",
+});
 ```
 
 ## Related

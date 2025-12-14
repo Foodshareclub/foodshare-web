@@ -199,6 +199,52 @@ User reviews and ratings for posts.
 
 ---
 
+### `post_activity_logs`
+
+Comprehensive activity log for all post-related events. Supports analytics, debugging, audit trails, and user activity tracking.
+
+**Columns:**
+
+- `id` (uuid, PK) - Unique activity log identifier
+- `post_id` (bigint, FK → posts.id) - The post this activity relates to
+- `actor_id` (uuid, FK → profiles.id) - User who performed the action
+- `activity_type` (enum) - Type of activity (created, updated, arranged, etc.)
+- `previous_state` (jsonb) - Snapshot before the activity
+- `new_state` (jsonb) - Snapshot after the activity
+- `changes` (jsonb) - Diff of what changed
+- `metadata` (jsonb) - Additional context data
+- `reason` (text) - Reason for the action
+- `notes` (text) - Additional notes
+- `ip_address` (inet) - Actor's IP address
+- `user_agent` (text) - Browser/client info
+- `request_id` (text) - Correlation ID for tracing
+- `related_post_id` (bigint) - Related post if applicable
+- `related_profile_id` (uuid) - Related user if applicable
+- `related_room_id` (uuid) - Related chat room if applicable
+- `created_at` (timestamp) - When the activity occurred
+
+**Activity Types:** `created`, `updated`, `deleted`, `restored`, `activated`, `deactivated`, `expired`, `viewed`, `contacted`, `arranged`, `arrangement_cancelled`, `collected`, `not_collected`, `reported`, `flagged`, `unflagged`, `approved`, `rejected`, `hidden`, `unhidden`, `liked`, `unliked`, `shared`, `bookmarked`, `unbookmarked`, `admin_edited`, `admin_note_added`, `admin_status_changed`, `auto_expired`, `auto_deactivated`, `location_updated`, `images_updated`
+
+**TypeScript Types:** See `@/types/post-activity.types`
+
+---
+
+### `post_activity_daily_stats`
+
+Aggregated daily statistics for post activities.
+
+**Columns:**
+
+- `id` (uuid, PK) - Unique stats record identifier
+- `date` (date) - The date for these statistics
+- `post_type` (text) - Post type filter ('all' for aggregate)
+- Activity counts: `posts_created`, `posts_updated`, `posts_deleted`, `posts_viewed`, `posts_arranged`, `posts_collected`, `posts_reported`, `posts_expired`
+- Engagement counts: `total_likes`, `total_shares`, `total_contacts`
+- Unique counts: `unique_posters`, `unique_viewers`, `unique_arrangers`
+- `created_at`, `updated_at` (timestamps)
+
+---
+
 ## Geospatial Features
 
 The `posts` table uses PostGIS for geospatial queries:

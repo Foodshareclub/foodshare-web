@@ -6,11 +6,12 @@
  */
 
 import { useState } from "react";
-import { Bell, MessageSquare, MapPin, Star, Loader2 } from "lucide-react";
+import { Bell, MessageSquare, MapPin, Star, Loader2, Smartphone } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { updateNotificationPreferences } from "@/app/actions/notifications";
+import { PushNotificationToggle } from "@/components/notifications/PushNotificationToggle";
 
 type NotificationPreferences = {
   messages?: boolean;
@@ -70,15 +71,28 @@ export function NotificationSettingsForm({ initialPreferences }: NotificationSet
 
   return (
     <div className="space-y-6">
+      {/* Browser Push Notifications */}
+      <div className="rounded-lg border bg-card p-6">
+        <div className="mb-6">
+          <h2 className="flex items-center gap-2 text-lg font-semibold">
+            <Smartphone className="h-5 w-5" />
+            Browser Push Notifications
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Receive notifications even when FoodShare is closed
+          </p>
+        </div>
+        <PushNotificationToggle showLabel />
+      </div>
+
+      {/* In-App Notification Preferences */}
       <div className="rounded-lg border bg-card p-6">
         <div className="mb-6">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Bell className="h-5 w-5" />
-            Push Notifications
+            Notification Types
           </h2>
-          <p className="text-sm text-muted-foreground">
-            Control which notifications you receive in the app
-          </p>
+          <p className="text-sm text-muted-foreground">Control which notifications you receive</p>
         </div>
         <div className="space-y-6">
           {notificationSettings.map((setting, index) => (

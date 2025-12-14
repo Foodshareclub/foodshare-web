@@ -11,9 +11,10 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
+import { CACHE_TAGS, invalidateTag, invalidatePostActivityCaches } from "@/lib/data/cache-keys";
 import { trackEvent } from "@/app/actions/analytics";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
+import { logPostContact, logPostArrangement } from "@/app/actions/post-activity";
 
 // ============================================================================
 // Zod Schemas
@@ -238,6 +239,13 @@ export async function createFoodChatRoom(
     }
 
     invalidateTag(CACHE_TAGS.CHATS);
+    invalidatePostActivityCaches(validated.data.postId, user.id);
+
+    // Log post contact activity
+    await logPostContact(validated.data.postId, newRoom.id, {
+      sharer_id: validated.data.sharerId,
+      requester_id: user.id,
+    });
 
     // Track analytics
     await trackEvent("Food Requested", {
@@ -300,6 +308,18 @@ export async function updateRoom(
 
     // Track if food was arranged
     if (updateData.post_arranged_to) {
+      // Get post_id from room for activity logging
+      const { data: roomData } = await supabase
+        .from("rooms")
+        .select("post_id")
+        .eq("id", roomId)
+        .single();
+
+      if (roomData?.post_id) {
+        await logPostArrangement(roomData.post_id, updateData.post_arranged_to as string, roomId);
+        invalidatePostActivityCaches(roomData.post_id, user.id);
+      }
+
       await trackEvent("Food Arranged", {
         roomId,
         arrangedTo: updateData.post_arranged_to,

@@ -180,3 +180,20 @@ export {
   type ChurnData,
   type EmailCampaignData,
 } from "./admin-insights";
+
+// Nearby posts (PostGIS geo-queries)
+export {
+  getNearbyPosts,
+  getNearbyPostsCounts,
+  getPostsInBounds,
+  updateUserLocation,
+  formatDistance,
+  getBoundingBox,
+  type Coordinates,
+  type NearbyPostsOptions,
+  type NearbyPost,
+  type NearbyPostsResult,
+  type PostTypeCount,
+  type BoundingBox,
+  type MapPost,
+} from "./nearby-posts";

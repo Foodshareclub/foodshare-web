@@ -7,14 +7,15 @@ Real-time messaging system for coordinating food pickups between sharers and see
 The chat system enables direct communication between users about food listings. It uses Supabase Realtime for instant message delivery and supports both product-based and direct user conversations.
 
 **Key Safeguards:**
+
 - Users cannot chat with themselves about their own listings
 - Users cannot request their own posts
 - Duplicate room creation is prevented (returns existing room)
 
 ## Route
 
-| Route | Purpose |
-|-------|---------|
+| Route   | Purpose                                                 |
+| ------- | ------------------------------------------------------- |
 | `/chat` | Full chat interface with conversation list and messages |
 
 ## URL Parameters
@@ -65,13 +66,13 @@ The chat page does **not** auto-select the first room when no room is specified.
 Server-side data fetching for the unified chat system. Use these in Server Components.
 
 ```typescript
-import { 
-  getUserChatRooms, 
-  getChatRoom, 
+import {
+  getUserChatRooms,
+  getChatRoom,
   getOrCreateChatRoom,
   getChatMessages,
-  getUnreadMessageCount 
-} from '@/lib/data/chat';
+  getUnreadMessageCount,
+} from "@/lib/data/chat";
 ```
 
 #### Get User Chat Rooms
@@ -211,7 +212,7 @@ import { UnifiedChatList } from '@/components/chat/UnifiedChatList';
 const chatRooms = await getAllUserChats(userId);
 
 // Pass to client component
-<UnifiedChatList 
+<UnifiedChatList
   chatRooms={chatRooms}
   activeChatId={selectedChatId}
   onSelectChat={(chat) => handleSelectChat(chat)}
@@ -221,14 +222,15 @@ const chatRooms = await getAllUserChats(userId);
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `chatRooms` | `UnifiedChatRoom[]` | Array of chat rooms to display |
-| `activeChatId` | `string` | Currently selected chat ID (optional) |
-| `onSelectChat` | `(chat: UnifiedChatRoom) => void` | Callback when chat is selected (optional) |
-| `onlineUserIds` | `string[]` | Array of user IDs currently online (optional) |
+| Prop            | Type                              | Description                                   |
+| --------------- | --------------------------------- | --------------------------------------------- |
+| `chatRooms`     | `UnifiedChatRoom[]`               | Array of chat rooms to display                |
+| `activeChatId`  | `string`                          | Currently selected chat ID (optional)         |
+| `onSelectChat`  | `(chat: UnifiedChatRoom) => void` | Callback when chat is selected (optional)     |
+| `onlineUserIds` | `string[]`                        | Array of user IDs currently online (optional) |
 
 **Features:**
+
 - Search across conversation titles and participant names with clear button
 - Unread message badges and total count in header
 - Online status indicators (green dot) for participants
@@ -254,17 +256,18 @@ import { UnifiedChatContainer } from '@/components/chat/UnifiedChatContainer';
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `userId` | `string` | Current user's ID |
-| `userName` | `string` | Current user's display name |
-| `userAvatar` | `string` | Current user's avatar URL |
-| `chatRoom` | `UnifiedChatRoom` | Selected chat room |
-| `initialMessages` | `Message[]` | Pre-fetched messages for the room |
-| `onBack` | `() => void` | Optional callback for mobile back navigation |
-| `isLoadingMessages` | `boolean` | Optional loading state for messages |
+| Prop                | Type              | Description                                  |
+| ------------------- | ----------------- | -------------------------------------------- |
+| `userId`            | `string`          | Current user's ID                            |
+| `userName`          | `string`          | Current user's display name                  |
+| `userAvatar`        | `string`          | Current user's avatar URL                    |
+| `chatRoom`          | `UnifiedChatRoom` | Selected chat room                           |
+| `initialMessages`   | `Message[]`       | Pre-fetched messages for the room            |
+| `onBack`            | `() => void`      | Optional callback for mobile back navigation |
+| `isLoadingMessages` | `boolean`         | Optional loading state for messages          |
 
 **Features:**
+
 - Real-time message updates via Supabase subscriptions
 - Optimistic UI updates for sent messages
 - Auto-scroll to latest messages
@@ -301,16 +304,17 @@ import { ChatPageClient } from './ChatPageClient';
 
 **Props:**
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `userId` | `string` | Current user's ID |
-| `userName` | `string` | Current user's display name (first + second name) |
-| `userAvatar` | `string` | Current user's avatar URL |
-| `chatRooms` | `UnifiedChatRoom[]` | All chat rooms for the user |
-| `activeChatRoom` | `UnifiedChatRoom \| null` | Currently selected chat room |
-| `initialMessages` | `NormalizedMessage[]` | Pre-fetched messages for active room |
+| Prop              | Type                      | Description                                       |
+| ----------------- | ------------------------- | ------------------------------------------------- |
+| `userId`          | `string`                  | Current user's ID                                 |
+| `userName`        | `string`                  | Current user's display name (first + second name) |
+| `userAvatar`      | `string`                  | Current user's avatar URL                         |
+| `chatRooms`       | `UnifiedChatRoom[]`       | All chat rooms for the user                       |
+| `activeChatRoom`  | `UnifiedChatRoom \| null` | Currently selected chat room                      |
+| `initialMessages` | `NormalizedMessage[]`     | Pre-fetched messages for active room              |
 
 **Layout Features:**
+
 - Chat layout wrapper uses `h-full` to fill the main container (viewport minus navbar)
 - `overflow-hidden` on wrapper prevents double scrollbars
 - Footer is hidden via `[data-chat-page]` attribute on the layout wrapper
@@ -321,11 +325,13 @@ import { ChatPageClient } from './ChatPageClient';
 - Smooth Framer Motion transitions between views
 
 **Message Loading:**
+
 - Initial messages loaded server-side for active room
 - Additional messages fetched via API when switching chats
 - Loading state shown during message fetch
 
 **Empty State:**
+
 - Animated icon with pulsing effect
 - Shows chat statistics (food sharing vs community counts)
 - Different messaging for "select a chat" vs "no chats yet"
@@ -342,11 +348,7 @@ The chat system provides a unified interface for food sharing conversations.
 ### Unified Chat Functions
 
 ```typescript
-import { 
-  getAllUserChats, 
-  getTotalUnreadCount,
-  type UnifiedChatRoom 
-} from '@/lib/data/chat';
+import { getAllUserChats, getTotalUnreadCount, type UnifiedChatRoom } from "@/lib/data/chat";
 ```
 
 #### Get All User Chats
@@ -362,7 +364,7 @@ Returns all chat rooms for a user, sorted by last message time.
 ```typescript
 type UnifiedChatRoom = {
   id: string;
-  type: 'food';
+  type: "food";
   title: string;
   lastMessage: string | null;
   lastMessageTime: string | null;
@@ -405,24 +407,32 @@ Returns the total unread message count across all chats.
 The `useUnifiedChat` hook provides real-time subscriptions for the food sharing chat system, including typing indicators, presence, and read receipts.
 
 ```typescript
-import { useUnifiedChat } from '@/hooks/useUnifiedChat';
+import { useUnifiedChat } from "@/hooks/useUnifiedChat";
 
 const {
   subscribeToAllRooms,
-  typingUsers,        // Users currently typing
-  onlineUsers,        // Users currently online in this chat
-  isTyping,           // Whether current user is typing
+  typingUsers, // Users currently typing
+  onlineUsers, // Users currently online in this chat
+  isTyping, // Whether current user is typing
   sendTypingIndicator,
   sendReadReceipt,
 } = useUnifiedChat({
   userId: currentUserId,
-  userName: 'John',
-  userAvatar: '/avatar.jpg',
-  roomId: 'food-room-id',           // Food sharing room ID
-  onNewFoodMessage: (message) => { /* handle new food message */ },
-  onTypingChange: (users) => { /* handle typing users change */ },
-  onPresenceChange: (users) => { /* handle online users change */ },
-  onMessageRead: (messageId, readBy) => { /* handle read receipt */ },
+  userName: "John",
+  userAvatar: "/avatar.jpg",
+  roomId: "food-room-id", // Food sharing room ID
+  onNewFoodMessage: (message) => {
+    /* handle new food message */
+  },
+  onTypingChange: (users) => {
+    /* handle typing users change */
+  },
+  onPresenceChange: (users) => {
+    /* handle online users change */
+  },
+  onMessageRead: (messageId, readBy) => {
+    /* handle read receipt */
+  },
 });
 ```
 
@@ -456,9 +466,9 @@ useEffect(() => {
 // Handle read receipt updates in UnifiedChatContainer
 onMessageRead: (messageId, readBy) => {
   setMessages((prev) =>
-    prev.map((m) => m.id === messageId ? { ...m, readBy: [...(m.readBy || []), readBy] } : m)
+    prev.map((m) => (m.id === messageId ? { ...m, readBy: [...(m.readBy || []), readBy] } : m))
   );
-}
+};
 ```
 
 #### Presence (Online Users)
@@ -491,7 +501,7 @@ const { unreadCount, setUnreadCount } = useUnreadCount(userId);
 Track and broadcast the current user's online status.
 
 ```typescript
-import { useOnlineStatus } from '@/hooks/useUnifiedChat';
+import { useOnlineStatus } from "@/hooks/useUnifiedChat";
 
 const isOnline = useOnlineStatus(userId);
 // Automatically tracks visibility changes and broadcasts presence
@@ -507,11 +517,11 @@ Fetches messages for food sharing rooms. Used by `ChatPageClient` when switching
 
 **Query Parameters:**
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `roomId` | `string` | Food sharing room ID (required) |
-| `limit` | `number` | Number of messages to fetch (default: 50) |
-| `offset` | `number` | Pagination offset (default: 0) |
+| Parameter | Type     | Description                               |
+| --------- | -------- | ----------------------------------------- |
+| `roomId`  | `string` | Food sharing room ID (required)           |
+| `limit`   | `number` | Number of messages to fetch (default: 50) |
+| `offset`  | `number` | Pagination offset (default: 0)            |
 
 **Response:**
 
@@ -526,7 +536,7 @@ Fetches messages for food sharing rooms. Used by `ChatPageClient` when switching
     isOwn: boolean;
     senderName?: string;
     senderAvatar?: string;
-  }>
+  }>;
 }
 ```
 
@@ -543,11 +553,11 @@ const response = await fetch(`/api/chat/messages?roomId=${roomId}&limit=20&offse
 
 **Error Responses:**
 
-| Status | Description |
-|--------|-------------|
-| 400 | Missing `roomId` |
-| 401 | User not authenticated |
-| 500 | Server error fetching messages |
+| Status | Description                    |
+| ------ | ------------------------------ |
+| 400    | Missing `roomId`               |
+| 401    | User not authenticated         |
+| 500    | Server error fetching messages |
 
 ## Server Actions
 
@@ -558,19 +568,27 @@ Server actions for chat mutations are located in `src/app/actions/chat.ts`.
 Creates a new food sharing chat room between a requester and a sharer.
 
 ```typescript
-import { createFoodChatRoom } from '@/app/actions/chat';
+import { createFoodChatRoom } from "@/app/actions/chat";
 
 const result = await createFoodChatRoom(postId, sharerId);
 // Returns: { success: true, roomId: string } or { error: string }
 ```
 
 **Validation Rules:**
+
 - User must be authenticated
 - User cannot chat with themselves (self-chat prevention)
 - User cannot request their own listings
 - If room already exists, returns existing room ID
 
+**Side Effects:**
+
+- Logs a `contacted` activity via `logPostContact()` for analytics and audit trails
+- Invalidates post activity caches for the post and user
+- Tracks "Food Requested" analytics event
+
 **Error Messages:**
+
 - `'You cannot chat with yourself about your own listing'` - When sharerId matches current user
 - `'You cannot request your own listing'` - When post belongs to current user
 
@@ -579,12 +597,12 @@ const result = await createFoodChatRoom(postId, sharerId);
 Sends a message in a food sharing chat room.
 
 ```typescript
-import { sendFoodChatMessage } from '@/app/actions/chat';
+import { sendFoodChatMessage } from "@/app/actions/chat";
 
 const formData = new FormData();
-formData.set('roomId', roomId);
-formData.set('text', 'Hello!');
-formData.set('image', imageUrl); // Optional
+formData.set("roomId", roomId);
+formData.set("text", "Hello!");
+formData.set("image", imageUrl); // Optional
 
 const result = await sendFoodChatMessage(formData);
 ```
@@ -594,7 +612,7 @@ const result = await sendFoodChatMessage(formData);
 Marks a chat room as read for the current user.
 
 ```typescript
-import { markFoodChatAsRead } from '@/app/actions/chat';
+import { markFoodChatAsRead } from "@/app/actions/chat";
 
 const result = await markFoodChatAsRead(roomId);
 ```
@@ -604,21 +622,29 @@ const result = await markFoodChatAsRead(roomId);
 Updates a food sharing chat room with arrangement details (pickup time, assigned recipient).
 
 ```typescript
-import { updateRoom } from '@/app/actions/chat';
+import { updateRoom } from "@/app/actions/chat";
 
 const formData = new FormData();
-formData.set('post_arranged_to', recipientUserId); // User ID who will pick up the item
-formData.set('post_arranged_at', '2025-12-15T14:00:00Z'); // Pickup date/time (ISO string)
+formData.set("post_arranged_to", recipientUserId); // User ID who will pick up the item
+formData.set("post_arranged_at", "2025-12-15T14:00:00Z"); // Pickup date/time (ISO string)
 
 const result = await updateRoom(roomId, formData);
 // Returns: { success: true } or { success: false, error: { message: string } }
 ```
 
 **Supported Fields:**
+
 - `post_arranged_to` - User ID of the person the item is arranged for
 - `post_arranged_at` - Timestamp when pickup is arranged (ISO 8601 format)
 
+**Side Effects (when `post_arranged_to` is set):**
+
+- Logs an `arranged` activity via `logPostArrangement()` for analytics and audit trails
+- Invalidates post activity caches for the post and user
+- Tracks "Food Arranged" analytics event
+
 **Use Cases:**
+
 - Post owner confirms a requester for pickup
 - Setting pickup date/time for food sharing arrangements
 
@@ -639,9 +665,28 @@ const result = await updateRoom(roomId, formData);
 - `src/store/zustand/useChatStore.ts` - Chat state management
 - `src/app/actions/chat.ts` - Server actions for sending messages
 
+## Post Activity Integration
+
+Chat actions automatically log activities to the `post_activity_logs` table for analytics and audit trails:
+
+| Action           | Activity Type | Logged Data                               |
+| ---------------- | ------------- | ----------------------------------------- |
+| Create chat room | `contacted`   | Post ID, room ID, sharer ID, requester ID |
+| Arrange pickup   | `arranged`    | Post ID, room ID, arranged-to profile ID  |
+
+These activities are logged via functions from `@/app/actions/post-activity`:
+
+- `logPostContact()` - When a user initiates a chat about a post
+- `logPostArrangement()` - When a post owner confirms a pickup arrangement
+
+Cache invalidation uses `invalidatePostActivityCaches()` from `@/lib/data/cache-keys` to ensure activity timelines and stats are updated.
+
+See [Post Activity Documentation](../posts/README.md#post-activity-timeline) for more details on the activity logging system.
+
 ## Dependencies
 
 The chat components use the following key dependencies:
+
 - `framer-motion` - Animations for list transitions in UnifiedChatList
 - `@supabase/supabase-js` - Real-time subscriptions
 - `next-intl` - Internationalization

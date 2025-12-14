@@ -69,6 +69,121 @@ const { messages } = await response.json();
 
 ---
 
+### Nearby Posts API
+
+**Endpoint:** `GET /api/nearby-posts`
+
+**Location:** `src/app/api/nearby-posts/route.ts`
+
+Fetches posts near a given location using PostGIS spatial queries. Supports pagination, filtering by post type, and configurable radius. Ideal for map-based discovery and location-aware feeds.
+
+**Authentication:** Not required (public endpoint)
+
+**Query Parameters:**
+
+| Parameter       | Type     | Required | Description                                           |
+| --------------- | -------- | -------- | ----------------------------------------------------- |
+| `lat`           | `number` | Yes      | User's latitude (-90 to 90)                           |
+| `lng`           | `number` | Yes      | User's longitude (-180 to 180)                        |
+| `radiusMeters`  | `number` | No       | Search radius in meters (default: 50000, max: 200000) |
+| `postType`      | `string` | No       | Filter by post type (e.g., 'food', 'fridge')          |
+| `limit`         | `number` | No       | Results per page (default: 20, max: 100)              |
+| `cursor`        | `number` | No       | Pagination cursor (last seen post ID)                 |
+| `includeCounts` | `string` | No       | Include counts by type (default: true for first page) |
+
+**Success Response (200):**
+
+```typescript
+{
+  data: Array<{
+    id: number;
+    post_name: string;
+    post_type: string;
+    post_address: string;
+    distance_meters: number;
+    latitude: number;
+    longitude: number;
+    // ... other post fields
+  }>;
+  hasMore: boolean;
+  nextCursor: number | null;
+  counts?: Record<string, number>; // Only on first page when includeCounts=true
+}
+```
+
+**Error Responses:**
+
+| Status | Body                                                    | Description             |
+| ------ | ------------------------------------------------------- | ----------------------- |
+| 400    | `{ error: 'Missing required parameters: lat and lng' }` | Missing coordinates     |
+| 400    | `{ error: 'Invalid lat/lng values' }`                   | Non-numeric coordinates |
+| 400    | `{ error: 'Latitude must be between -90 and 90' }`      | Out of range latitude   |
+| 400    | `{ error: 'Longitude must be between -180 and 180' }`   | Out of range longitude  |
+| 500    | `{ error: 'Failed to fetch nearby posts' }`             | Database error          |
+| 500    | `{ error: 'Internal server error' }`                    | Unexpected error        |
+
+**Caching:** 30 seconds with stale-while-revalidate (60s)
+
+**Database Functions:** Uses `get_nearby_posts` and `get_nearby_posts_count` RPC functions
+
+**Example Usage:**
+
+```typescript
+// Basic nearby search
+const response = await fetch(`/api/nearby-posts?lat=50.0755&lng=14.4378`);
+const { data, hasMore, nextCursor } = await response.json();
+
+// With filters and custom radius
+const response = await fetch(
+  `/api/nearby-posts?lat=50.0755&lng=14.4378&radiusMeters=10000&postType=food&limit=10`
+);
+
+// Pagination (load more)
+const nextPage = await fetch(
+  `/api/nearby-posts?lat=50.0755&lng=14.4378&cursor=${nextCursor}&includeCounts=false`
+);
+```
+
+**React Hook Example:**
+
+```typescript
+"use client";
+import { useState, useEffect } from "react";
+
+function useNearbyPosts(lat: number, lng: number, postType?: string) {
+  const [posts, setPosts] = useState([]);
+  const [cursor, setCursor] = useState<number | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const fetchPosts = async (reset = false) => {
+    setLoading(true);
+    const params = new URLSearchParams({
+      lat: lat.toString(),
+      lng: lng.toString(),
+      ...(postType && { postType }),
+      ...(cursor && !reset && { cursor: cursor.toString() }),
+    });
+
+    const res = await fetch(`/api/nearby-posts?${params}`);
+    const { data, hasMore: more, nextCursor } = await res.json();
+
+    setPosts((prev) => (reset ? data : [...prev, ...data]));
+    setHasMore(more);
+    setCursor(nextCursor);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchPosts(true);
+  }, [lat, lng, postType]);
+
+  return { posts, hasMore, loading, loadMore: () => fetchPosts() };
+}
+```
+
+---
+
 ## Product API (`productAPI`)
 
 Located: `src/api/productAPI.ts`
@@ -531,6 +646,154 @@ export const PAGINATION = {
   DEFAULT_PAGE_SIZE: 20,
   MAX_PAGE_SIZE: 100,
 } as const;
+```
+
+---
+
+## Nearby Posts Data Layer
+
+Located: `src/lib/data/nearby-posts.ts`
+
+Server-side data fetching functions for geolocation-based post discovery. Uses PostGIS spatial queries via Supabase RPC functions for efficient radius-based searches.
+
+### Types
+
+```typescript
+interface NearbyPostsParams {
+  latitude: number;
+  longitude: number;
+  radiusMeters?: number; // Default: 5000 (5km), Max: 100000 (100km)
+  postType?: string | null;
+  categoryId?: number | null;
+  limit?: number; // Default: 50
+}
+
+/**
+ * Post returned from get_nearby_posts RPC
+ * Contains a subset of InitialProductStateType fields plus distance
+ */
+interface NearbyPost {
+  id: number;
+  profile_id: string;
+  post_name: string;
+  post_description: string;
+  post_type: string;
+  post_address: string;
+  post_stripped_address: string | null;
+  location_json: { type: string; coordinates: [number, number] } | null;
+  images: string[] | null;
+  available_hours: string;
+  transportation: string;
+  condition: string;
+  is_active: boolean;
+  is_arranged: boolean;
+  post_views: number;
+  post_like_counter: number;
+  created_at: string;
+  /** Distance from user in meters */
+  distance_meters: number;
+}
+```
+
+---
+
+### Get Nearby Posts
+
+```typescript
+import { getNearbyPosts } from "@/lib/data/nearby-posts";
+
+const posts = await getNearbyPosts({
+  latitude: 50.0755,
+  longitude: 14.4378,
+  radiusMeters: 10000, // 10km
+  postType: "food",
+  limit: 20,
+});
+```
+
+**Parameters:**
+
+- `latitude` - User's latitude (required)
+- `longitude` - User's longitude (required)
+- `radiusMeters` - Search radius in meters (default: 5000, max: 100000)
+- `postType` - Filter by post type (optional)
+- `categoryId` - Filter by category ID (optional)
+- `limit` - Maximum results (default: 50)
+
+**Returns:** `NearbyPost[]` - Posts sorted by distance, including `distance_meters` field
+
+**Database Function:** Uses `nearby_posts_full` RPC for efficient PostGIS spatial queries
+
+**Example (Server Component):**
+
+```typescript
+// app/nearby/page.tsx
+import { getNearbyPosts } from '@/lib/data/nearby-posts';
+
+export default async function NearbyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ lat?: string; lng?: string; radius?: string }>;
+}) {
+  const params = await searchParams;
+  const lat = parseFloat(params.lat || '0');
+  const lng = parseFloat(params.lng || '0');
+  const radius = parseInt(params.radius || '5000', 10);
+
+  if (!lat || !lng) {
+    return <LocationPrompt />;
+  }
+
+  const nearbyPosts = await getNearbyPosts({
+    latitude: lat,
+    longitude: lng,
+    radiusMeters: radius,
+  });
+
+  return <NearbyPostsGrid posts={nearbyPosts} />;
+}
+```
+
+---
+
+### Get Nearby Posts Count
+
+```typescript
+import { getNearbyPostsCount } from "@/lib/data/nearby-posts";
+
+const count = await getNearbyPostsCount({
+  latitude: 50.0755,
+  longitude: 14.4378,
+  radiusMeters: 5000,
+  postType: "food",
+});
+```
+
+**Parameters:**
+
+- `latitude` - User's latitude (required)
+- `longitude` - User's longitude (required)
+- `radiusMeters` - Search radius in meters (default: 5000)
+- `postType` - Filter by post type (optional)
+
+**Returns:** `number` - Count of posts within radius
+
+**Database Function:** Uses `posts_within_radius` RPC
+
+**Use Case:** Display count badges, radius slider feedback
+
+**Example:**
+
+```typescript
+// Show count in UI
+const foodCount = await getNearbyPostsCount({
+  latitude: userLat,
+  longitude: userLng,
+  radiusMeters: 5000,
+  postType: 'food',
+});
+
+return <Badge>{foodCount} food items nearby</Badge>;
 ```
 
 ---
