@@ -120,19 +120,29 @@ const prefs = await getNotificationPreferences(userId);
 
 ## Server Actions
 
-Located in `src/app/actions/notifications.ts`:
+Located in `src/app/actions/notifications.ts`.
+
+All actions return `ServerActionResult<T>` for type-safe error handling:
+
+```typescript
+type ServerActionResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: { code: ErrorCode; message: string } };
+```
 
 ### markNotificationAsRead
 
-Mark a single notification as read.
+Mark a single notification as read. Validates UUID format.
 
 ```typescript
 import { markNotificationAsRead } from "@/app/actions/notifications";
 
 const result = await markNotificationAsRead(notificationId);
-if (result.error) {
-  // Handle error
+if (!result.success) {
+  console.error(result.error.message); // "Invalid notification ID" | "Not authenticated"
+  return;
 }
+// Success - notification marked as read
 ```
 
 ### markAllNotificationsAsRead
@@ -143,16 +153,22 @@ Mark all notifications as read for the current user.
 import { markAllNotificationsAsRead } from "@/app/actions/notifications";
 
 const result = await markAllNotificationsAsRead();
+if (!result.success) {
+  // Handle error
+}
 ```
 
 ### deleteNotification
 
-Delete a single notification.
+Delete a single notification. Validates UUID format.
 
 ```typescript
 import { deleteNotification } from "@/app/actions/notifications";
 
 const result = await deleteNotification(notificationId);
+if (!result.success) {
+  // Handle error
+}
 ```
 
 ### deleteReadNotifications
@@ -167,33 +183,106 @@ const result = await deleteReadNotifications();
 
 ### createNotification
 
-Create a notification (internal use / Edge Functions).
+Create a notification (internal use / Edge Functions). Validates with Zod schema.
 
 ```typescript
 import { createNotification } from "@/app/actions/notifications";
 
-await createNotification({
-  recipientId: userId,
-  actorId: senderId,
-  type: "new_message",
-  title: "New message from John",
-  body: "Hey, is the food still available?",
-  roomId: chatRoomId,
+const result = await createNotification({
+  recipientId: userId, // Required: UUID
+  actorId: senderId, // Optional: UUID
+  type: "new_message", // Required: NotificationType
+  title: "New message", // Required: 1-200 chars
+  body: "Message preview", // Optional: max 1000 chars
+  roomId: chatRoomId, // Optional: UUID
+  postId: 123, // Optional: positive integer
+  reviewId: 456, // Optional: positive integer
+  data: { custom: "data" }, // Optional: JSON object
 });
+
+if (!result.success) {
+  console.error(result.error.message); // Validation or database error
+}
 ```
 
 ### updateNotificationPreferences
 
-Update user's notification preferences.
+Update user's notification preferences. Validates with Zod schema.
 
 ```typescript
 import { updateNotificationPreferences } from "@/app/actions/notifications";
 
-await updateNotificationPreferences({
+const result = await updateNotificationPreferences({
   messages: true,
   new_listings: false,
   reservations: true,
 });
+```
+
+### getUnreadNotificationCount
+
+Get the count of unread notifications for the current user.
+
+```typescript
+import { getUnreadNotificationCount } from "@/app/actions/notifications";
+
+const result = await getUnreadNotificationCount();
+if (result.success) {
+  console.log(`You have ${result.data} unread notifications`);
+}
+```
+
+## Validation & Error Handling
+
+Server actions use Zod schemas for input validation and return type-safe results.
+
+### Zod Schemas
+
+```typescript
+// CreateNotificationSchema
+{
+  recipientId: z.string().uuid(),
+  actorId: z.string().uuid().optional().nullable(),
+  type: z.string().min(1),
+  title: z.string().min(1).max(200),
+  body: z.string().max(1000).optional().nullable(),
+  postId: z.number().int().positive().optional().nullable(),
+  roomId: z.string().uuid().optional().nullable(),
+  reviewId: z.number().int().positive().optional().nullable(),
+  data: z.record(z.string(), z.unknown()).optional().default({}),
+}
+
+// NotificationPreferencesSchema
+{
+  messages: z.boolean().optional(),
+  new_listings: z.boolean().optional(),
+  reservations: z.boolean().optional(),
+}
+```
+
+### Error Codes
+
+| Code               | Description                                  |
+| ------------------ | -------------------------------------------- |
+| `VALIDATION_ERROR` | Invalid input (UUID format, required fields) |
+| `UNAUTHORIZED`     | User not authenticated                       |
+| `DATABASE_ERROR`   | Supabase query failed                        |
+| `UNKNOWN_ERROR`    | Unexpected error                             |
+
+### Handling Results
+
+```typescript
+import { isSuccessResult } from "@/lib/errors";
+
+const result = await markNotificationAsRead(id);
+
+if (isSuccessResult(result)) {
+  // TypeScript knows result.data exists
+  toast.success("Marked as read");
+} else {
+  // TypeScript knows result.error exists
+  toast.error(result.error.message);
+}
 ```
 
 ## Cache Invalidation
@@ -283,6 +372,7 @@ export default async function NotificationsPage() {
 import { markNotificationAsRead } from '@/app/actions/notifications';
 import { Button } from '@/components/ui/button';
 import { useTransition } from 'react';
+import { toast } from 'sonner';
 
 export function MarkReadButton({ notificationId }: { notificationId: string }) {
   const [isPending, startTransition] = useTransition();
@@ -294,7 +384,10 @@ export function MarkReadButton({ notificationId }: { notificationId: string }) {
       disabled={isPending}
       onClick={() => {
         startTransition(async () => {
-          await markNotificationAsRead(notificationId);
+          const result = await markNotificationAsRead(notificationId);
+          if (!result.success) {
+            toast.error(result.error.message);
+          }
         });
       }}
     >
@@ -304,7 +397,7 @@ export function MarkReadButton({ notificationId }: { notificationId: string }) {
 }
 ```
 
-### Notification Badge
+### Notification Badge (Server Component)
 
 ```typescript
 // components/notifications/NotificationBadge.tsx
@@ -318,6 +411,40 @@ export async function NotificationBadge() {
   if (!user) return null;
 
   const count = await getUnreadNotificationCount(user.id);
+
+  if (count === 0) return null;
+
+  return (
+    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+      {count > 99 ? '99+' : count}
+    </span>
+  );
+}
+```
+
+### Notification Badge (Client Component)
+
+For client-side fetching (e.g., after mutations):
+
+```typescript
+// components/notifications/NotificationBadgeClient.tsx
+'use client';
+
+import { getUnreadNotificationCount } from '@/app/actions/notifications';
+import { useEffect, useState } from 'react';
+
+export function NotificationBadgeClient() {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchCount() {
+      const result = await getUnreadNotificationCount();
+      if (result.success) {
+        setCount(result.data);
+      }
+    }
+    fetchCount();
+  }, []);
 
   if (count === 0) return null;
 

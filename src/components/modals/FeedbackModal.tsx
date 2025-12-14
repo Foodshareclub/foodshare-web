@@ -46,10 +46,10 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
   // Pre-fill user info if authenticated
   useEffect(() => {
     const loadUserInfo = async () => {
-      const userInfo = await getCurrentUserInfo();
-      if (userInfo) {
-        if (userInfo.email) setEmail(userInfo.email);
-        if (userInfo.name) setName(userInfo.name);
+      const result = await getCurrentUserInfo();
+      if (result.success && result.data) {
+        if (result.data.email) setEmail(result.data.email);
+        if (result.data.name) setName(result.data.name);
       }
     };
     if (isOpen) {
@@ -90,7 +90,7 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
           onClose();
         }, 2000);
       } else {
-        setError(result.error || "Failed to submit feedback. Please try again.");
+        setError(result.error.message || "Failed to submit feedback. Please try again.");
       }
     });
   };

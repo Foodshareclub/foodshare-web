@@ -35,7 +35,7 @@ export function NewsletterSubscribe({ variant = "default", className }: Newslett
         setEmail("");
       } else {
         setStatus("error");
-        setMessage(result.error || "Something went wrong");
+        setMessage(result.error.message || "Something went wrong");
       }
       setTimeout(() => setStatus("idle"), 5000);
     });

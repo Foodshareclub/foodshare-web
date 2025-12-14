@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Your Weekly Digest - Foodshare</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f0f0f0; color: #363a57; -webkit-font-smoothing: antialiased;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f0f0f0; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden;">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #6366f1; padding: 50px 30px; text-align: center;">
+              <img src="https://***REMOVED***.supabase.co/storage/v1/object/public/assets/logo-512.png" alt="Foodshare Logo" width="80" height="80" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 20px; border: 4px solid rgba(255, 255, 255, 0.4); background: white; padding: 4px;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 800;">Your Weekly Digest 📊</h1>
+              <p style="margin: 12px 0 0; color: rgba(255, 255, 255, 0.95); font-size: 16px;">{{ .WeekRange }}</p>
+            </td>
+          </tr>
+
+          <!-- Stats Section -->
+          <tr>
+            <td style="padding: 40px 40px 20px; background-color: #fafafa;">
+              <p style="margin: 0 0 20px; font-size: 14px; font-weight: 600; color: #888888; text-transform: uppercase; letter-spacing: 1px; text-align: center;">Your Impact This Week</p>
+              
+              <!-- Stats Grid -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td width="33%" style="padding: 10px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: white; border-radius: 12px; border: 2px solid #e0e0e0; text-align: center;">
+                      <tr>
+                        <td style="padding: 25px 15px;">
+                          <p style="margin: 0; font-size: 36px; font-weight: 800; color: #ff2d55;">{{ .ItemsShared }}</p>
+                          <p style="margin: 8px 0 0; font-size: 13px; color: #888888; font-weight: 600;">Items Shared</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td width="33%" style="padding: 10px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: white; border-radius: 12px; border: 2px solid #e0e0e0; text-align: center;">
+                      <tr>
+                        <td style="padding: 25px 15px;">
+                          <p style="margin: 0; font-size: 36px; font-weight: 800; color: #00A699;">{{ .FoodSaved }}</p>
+                          <p style="margin: 8px 0 0; font-size: 13px; color: #888888; font-weight: 600;">kg Saved</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td width="33%" style="padding: 10px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: white; border-radius: 12px; border: 2px solid #e0e0e0; text-align: center;">
+                      <tr>
+                        <td style="padding: 25px 15px;">
+                          <p style="margin: 0; font-size: 36px; font-weight: 800; color: #FC642D;">{{ .CO2Saved }}</p>
+                          <p style="margin: 8px 0 0; font-size: 13px; color: #888888; font-weight: 600;">kg CO₂</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Nearby Listings -->
+          <tr>
+            <td style="padding: 20px 40px 40px; background-color: #fafafa;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: white; border-radius: 12px; border: 2px solid #f0f0f0;">
+                <tr>
+                  <td style="padding: 30px;">
+                    <p style="margin: 0 0 20px; font-size: 18px; font-weight: 700; color: #363a57;">🍎 Fresh Near You</p>
+                    
+                    <!-- Listing 1 -->
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 15px; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px;">
+                      <tr>
+                        <td width="70" valign="top">
+                          <img src="{{ .Listing1Image }}" alt="{{ .Listing1Title }}" width="60" height="60" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
+                        </td>
+                        <td valign="middle" style="padding-left: 15px;">
+                          <p style="margin: 0; font-size: 15px; font-weight: 600; color: #363a57;">{{ .Listing1Title }}</p>
+                          <p style="margin: 4px 0 0; font-size: 13px; color: #888888;">📍 {{ .Listing1Distance }} away</p>
+                        </td>
+                        <td width="80" valign="middle" align="right">
+                          <a href="{{ .Listing1URL }}" style="display: inline-block; padding: 8px 16px; background-color: #ff2d55; color: #ffffff; text-decoration: none; border-radius: 20px; font-size: 12px; font-weight: 600;">View</a>
+                        </td>
+                      </tr>
+                    </table>
+                    
+                    <!-- Listing 2 -->
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 15px; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px;">
+                      <tr>
+                        <td width="70" valign="top">
+                          <img src="{{ .Listing2Image }}" alt="{{ .Listing2Title }}" width="60" height="60" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
+                        </td>
+                        <td valign="middle" style="padding-left: 15px;">
+                          <p style="margin: 0; font-size: 15px; font-weight: 600; color: #363a57;">{{ .Listing2Title }}</p>
+                          <p style="margin: 4px 0 0; font-size: 13px; color: #888888;">📍 {{ .Listing2Distance }} away</p>
+                        </td>
+                        <td width="80" valign="middle" align="right">
+                          <a href="{{ .Listing2URL }}" style="display: inline-block; padding: 8px 16px; background-color: #ff2d55; color: #ffffff; text-decoration: none; border-radius: 20px; font-size: 12px; font-weight: 600;">View</a>
+                        </td>
+                      </tr>
+                    </table>
+                    
+                    <!-- Listing 3 -->
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td width="70" valign="top">
+                          <img src="{{ .Listing3Image }}" alt="{{ .Listing3Title }}" width="60" height="60" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
+                        </td>
+                        <td valign="middle" style="padding-left: 15px;">
+                          <p style="margin: 0; font-size: 15px; font-weight: 600; color: #363a57;">{{ .Listing3Title }}</p>
+                          <p style="margin: 4px 0 0; font-size: 13px; color: #888888;">📍 {{ .Listing3Distance }} away</p>
+                        </td>
+                        <td width="80" valign="middle" align="right">
+                          <a href="{{ .Listing3URL }}" style="display: inline-block; padding: 8px 16px; background-color: #ff2d55; color: #ffffff; text-decoration: none; border-radius: 20px; font-size: 12px; font-weight: 600;">View</a>
+                        </td>
+                      </tr>
+                    </table>
+                    
+                    <!-- See All -->
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" style="padding: 25px 0 5px;">
+                          <a href="{{ .ExploreURL }}" style="display: inline-block; padding: 14px 40px; background-color: #6366f1; color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 14px;">🔍 Explore All Listings</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Community Highlight -->
+          <tr>
+            <td style="padding: 0 40px 40px; background-color: #fafafa;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px;">
+                <tr>
+                  <td style="padding: 25px; text-align: center;">
+                    <p style="margin: 0; font-size: 24px;">🏆</p>
+                    <p style="margin: 10px 0 0; font-size: 16px; font-weight: 700; color: #92400e;">Community Milestone!</p>
+                    <p style="margin: 8px 0 0; font-size: 14px; color: #a16207;">Together we've saved <strong>{{ .CommunityFoodSaved }}</strong> of food this month!</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #6366f1; padding: 30px; text-align: center;">
+              <img src="https://***REMOVED***.supabase.co/storage/v1/object/public/assets/logo-512.png" alt="Foodshare" width="40" height="40" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.4); background: white; padding: 2px;">
+              <p style="margin: 15px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.9);">Foodshare LLC &copy; 2025</p>
+              <p style="margin: 10px 0 0; font-size: 13px; color: rgba(255, 255, 255, 0.8);">
+                <a href="{{ .UnsubscribeURL }}" style="color: #ffffff; text-decoration: underline;">Unsubscribe from digest</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

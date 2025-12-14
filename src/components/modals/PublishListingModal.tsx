@@ -372,9 +372,20 @@ function PublishListingModal({
   };
 
   const onDialogOpenChange = (open: boolean) => {
-    if (!open && publishState !== "loading") {
-      onClose();
-      setOpenEdit?.(false);
+    if (!open) {
+      if (publishState === "loading") {
+        if (
+          confirm(
+            "Publishing involves uploading images. closing now may result in incomplete data. Are you sure?"
+          )
+        ) {
+          onClose();
+          setOpenEdit?.(false);
+        }
+      } else {
+        onClose();
+        setOpenEdit?.(false);
+      }
     }
   };
 
@@ -389,7 +400,15 @@ function PublishListingModal({
   // Success state
   if (publishState === "success") {
     return (
-      <Dialog open={isOpen} onOpenChange={() => {}}>
+      <Dialog
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            onClose();
+            setOpenEdit?.(false);
+          }
+        }}
+      >
         <DialogContent variant="glass" className="max-w-md">
           <Confetti />
           <div className="flex flex-col items-center justify-center py-12 text-center relative z-10">

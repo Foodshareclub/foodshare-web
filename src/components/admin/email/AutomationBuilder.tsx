@@ -636,14 +636,16 @@ function StepEditor({
           <div className="space-y-2">
             <Label className="text-xs">Template (optional)</Label>
             <Select
-              value={step.template_slug || ""}
-              onValueChange={(value) => onUpdate({ template_slug: value || undefined })}
+              value={step.template_slug || "none"}
+              onValueChange={(value) =>
+                onUpdate({ template_slug: value === "none" ? undefined : value })
+              }
             >
               <SelectTrigger className="bg-background/50 h-9 text-sm">
                 <SelectValue placeholder="Select a template..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No template</SelectItem>
+                <SelectItem value="none">No template</SelectItem>
                 {templates.map((template) => (
                   <SelectItem key={template.slug} value={template.slug}>
                     {template.name}

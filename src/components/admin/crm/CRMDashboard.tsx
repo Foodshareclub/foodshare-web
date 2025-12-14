@@ -503,7 +503,7 @@ export function CRMDashboard({
     startTransition(async () => {
       const result = await importProfilesAsCRMCustomers();
       if (result.success) {
-        setImportMessage(`Imported ${result.imported} profiles`);
+        setImportMessage(`Imported ${result.data.imported} profiles`);
         router.refresh();
       } else {
         setImportMessage(`Error: ${result.error}`);

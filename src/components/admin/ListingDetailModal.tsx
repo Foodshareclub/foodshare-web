@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -60,11 +60,7 @@ interface AuditLogTimelineProps {
 
 function AuditLogTimeline({ logs }: AuditLogTimelineProps) {
   if (logs.length === 0) {
-    return (
-      <p className="text-gray-500 text-center py-4">
-        No audit history available
-      </p>
-    );
+    return <p className="text-gray-500 text-center py-4">No audit history available</p>;
   }
 
   return (
@@ -77,9 +73,13 @@ function AuditLogTimeline({ logs }: AuditLogTimelineProps) {
             </span>
             <p className="text-xs text-gray-500">{new Date(log.created_at).toLocaleString()}</p>
           </div>
-          {log.details?.reason ? <p className="text-sm text-gray-700 mt-2">{String(log.details.reason)}</p> : null}
+          {log.details?.reason ? (
+            <p className="text-sm text-gray-700 mt-2">{String(log.details.reason)}</p>
+          ) : null}
           {log.details?.admin_notes ? (
-            <p className="text-sm text-gray-600 mt-1 italic">Note: {String(log.details.admin_notes)}</p>
+            <p className="text-sm text-gray-600 mt-1 italic">
+              Note: {String(log.details.admin_notes)}
+            </p>
           ) : null}
         </div>
       ))}
@@ -139,7 +139,7 @@ export function ListingDetailModal({
     try {
       const result = await approveListing(listing.id);
       if (!result.success) {
-        throw new Error(result.error || 'Failed to approve listing');
+        throw new Error(result.error.message || "Failed to approve listing");
       }
       router.refresh();
       handleClose();
@@ -159,7 +159,7 @@ export function ListingDetailModal({
     try {
       const result = await rejectListing(listing.id, rejectionReason.trim());
       if (!result.success) {
-        throw new Error(result.error || 'Failed to reject listing');
+        throw new Error(result.error.message || "Failed to reject listing");
       }
       router.refresh();
       handleClose();
@@ -209,11 +209,10 @@ export function ListingDetailModal({
           {/* Images */}
           {listing.images?.length > 0 && (
             <div>
-              <h3 className="font-bold mb-2">
-                Images
-              </h3>
+              <h3 className="font-bold mb-2">Images</h3>
               <div className="flex gap-2 overflow-x-auto">
                 {listing.images.map((imageUrl, index) => (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     key={index}
                     src={imageUrl}
@@ -227,23 +226,17 @@ export function ListingDetailModal({
 
           {/* Details */}
           <div>
-            <h3 className="font-bold mb-2">
-              Description
-            </h3>
+            <h3 className="font-bold mb-2">Description</h3>
             <p className="text-gray-700">{listing.post_description}</p>
           </div>
 
           <div className="flex gap-4">
             <div className="flex-1">
-              <h3 className="font-bold mb-1">
-                Category
-              </h3>
+              <h3 className="font-bold mb-1">Category</h3>
               <p className="text-gray-700">{listing.post_type}</p>
             </div>
             <div className="flex-1">
-              <h3 className="font-bold mb-1">
-                Created
-              </h3>
+              <h3 className="font-bold mb-1">Created</h3>
               <p className="text-gray-700">{new Date(listing.created_at).toLocaleString()}</p>
             </div>
           </div>
@@ -252,13 +245,11 @@ export function ListingDetailModal({
 
           {/* Admin Notes */}
           <div>
-            <h3 className="font-bold mb-2">
-              Admin Notes (Internal)
-            </h3>
+            <h3 className="font-bold mb-2">Admin Notes (Internal)</h3>
             <textarea
               value={adminNotes}
               onChange={(e) => setAdminNotes(e.target.value)}
-              placeholder={t('add_internal_notes_about_this_listing')}
+              placeholder={t("add_internal_notes_about_this_listing")}
               rows={3}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
@@ -277,9 +268,7 @@ export function ListingDetailModal({
             <>
               <Separator />
               <div>
-                <h3 className="font-bold mb-3">
-                  Review Actions
-                </h3>
+                <h3 className="font-bold mb-3">Review Actions</h3>
                 <div className="flex flex-col gap-3">
                   {/* Approve */}
                   <Button
@@ -296,7 +285,7 @@ export function ListingDetailModal({
                     <textarea
                       value={rejectionReason}
                       onChange={(e) => setRejectionReason(e.target.value)}
-                      placeholder={t('reason_for_rejection_required')}
+                      placeholder={t("reason_for_rejection_required")}
                       rows={2}
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring mb-2"
                     />
@@ -314,7 +303,7 @@ export function ListingDetailModal({
                     <textarea
                       value={flaggedReason}
                       onChange={(e) => setFlaggedReason(e.target.value)}
-                      placeholder={t('reason_for_flagging_required')}
+                      placeholder={t("reason_for_flagging_required")}
                       rows={2}
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring mb-2"
                     />
@@ -334,13 +323,9 @@ export function ListingDetailModal({
           {/* Audit Log */}
           <Separator />
           <div>
-            <h3 className="font-bold mb-3">
-              Audit History
-            </h3>
+            <h3 className="font-bold mb-3">Audit History</h3>
             {isAuditLogsLoading ? (
-              <p className="text-gray-500 text-center">
-                Loading history...
-              </p>
+              <p className="text-gray-500 text-center">Loading history...</p>
             ) : (
               <AuditLogTimeline logs={auditLogs} />
             )}

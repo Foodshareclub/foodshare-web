@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import type { KeyboardEvent } from "react";
 import React, { useState } from "react";
@@ -17,30 +17,30 @@ type InputSectionType = {
  * Chat message input with send functionality
  * Uses Server Actions for message operations
  */
-export function InputSection({ roomId, userID }: InputSectionType) {
+export function InputSection({ roomId, userID: _userID }: InputSectionType) {
   const router = useRouter();
   const [val, setVal] = useState("");
-  const [isSending, setIsSending] = useState(false);
+  const [_isSending, setIsSending] = useState(false);
 
   const sendMessage = async () => {
     if (!val.trim()) return;
-    
+
     setIsSending(true);
     try {
       const formData = new FormData();
-      formData.set('roomId', roomId);
-      formData.set('text', val);
+      formData.set("roomId", roomId);
+      formData.set("text", val);
 
       const result = await sendFoodChatMessage(formData);
-      if (result.error) {
-        console.error('Failed to send message:', result.error);
+      if (!result.success) {
+        console.error("Failed to send message:", result.error);
         return;
       }
-      
+
       setVal("");
       router.refresh();
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error("Failed to send message:", error);
     } finally {
       setIsSending(false);
     }

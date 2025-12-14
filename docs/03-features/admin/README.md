@@ -185,6 +185,12 @@ Server-side data fetching for email marketing and campaigns.
 
 Server actions for newsletter campaign CRUD operations with admin access verification.
 
+Features:
+
+- Zod schema validation for type-safe inputs
+- Audit logging for admin actions
+- Proper admin auth via `user_roles` table
+
 | Action                    | Description                                      |
 | ------------------------- | ------------------------------------------------ |
 | `createCampaign(input)`   | Create new campaign (draft or scheduled)         |
@@ -195,27 +201,32 @@ Server actions for newsletter campaign CRUD operations with admin access verific
 | `resumeCampaign(id)`      | Resume paused campaign                           |
 | `refreshEmailDashboard()` | Refresh email CRM dashboard (cache invalidation) |
 
-#### Types
+#### Zod Schemas & Types
 
 ```typescript
-interface CreateCampaignInput {
-  name: string; // Required
-  subject: string; // Required
-  content: string;
-  campaignType?: string; // Default: 'newsletter'
-  segmentId?: string;
-  scheduledAt?: string; // ISO date - sets status to 'scheduled'
-}
+// Zod schema with validation rules
+const CreateCampaignSchema = z.object({
+  name: z.string().min(1, "Campaign name is required").max(200, "Name too long"),
+  subject: z.string().min(1, "Subject line is required").max(200, "Subject too long"),
+  content: z.string().default(""),
+  campaignType: z.enum(["newsletter", "announcement", "promotional", "transactional"]).optional(),
+  segmentId: z.string().uuid().optional().nullable(),
+  scheduledAt: z.string().datetime().optional().nullable(),
+});
 
-interface UpdateCampaignInput {
-  id: string; // Required
-  name?: string;
-  subject?: string;
-  content?: string;
-  campaignType?: string;
-  segmentId?: string;
-  scheduledAt?: string;
-}
+const UpdateCampaignSchema = z.object({
+  id: z.string().uuid("Invalid campaign ID"),
+  name: z.string().min(1).max(200).optional(),
+  subject: z.string().min(1).max(200).optional(),
+  content: z.string().optional(),
+  campaignType: z.enum(["newsletter", "announcement", "promotional", "transactional"]).optional(),
+  segmentId: z.string().uuid().optional().nullable(),
+  scheduledAt: z.string().datetime().optional().nullable(),
+});
+
+// Types inferred from schemas
+type CreateCampaignInput = z.infer<typeof CreateCampaignSchema>;
+type UpdateCampaignInput = z.infer<typeof UpdateCampaignSchema>;
 
 interface CampaignResult {
   id: string;

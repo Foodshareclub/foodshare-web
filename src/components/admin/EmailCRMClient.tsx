@@ -739,16 +739,15 @@ function ComposeTab() {
       const response = await sendAdminEmail({
         to: formData.to,
         subject: formData.subject,
-        html: formData.useHtml
-          ? formData.message
-          : `<p>${formData.message.replace(/\n/g, "<br/>")}</p>`,
+        message: formData.message,
+        useHtml: formData.useHtml,
         emailType: formData.emailType as EmailType,
       });
 
-      if (response.success && response.data?.success) {
+      if (response.success) {
         setResult({
           success: true,
-          message: `Email sent via ${response.data.provider}! ID: ${response.data.messageId}`,
+          message: `Email sent! ID: ${response.data?.messageId}`,
         });
         setFormData({
           to: "",
@@ -759,10 +758,7 @@ function ComposeTab() {
           useHtml: false,
         });
       } else {
-        const errorMessage = !response.success
-          ? response.error.message
-          : response.data?.error || "Failed to send email";
-        setResult({ success: false, message: errorMessage });
+        setResult({ success: false, message: response.error.message });
       }
     });
   };
@@ -774,20 +770,14 @@ function ComposeTab() {
     }
     setResult(null);
     startTransition(async () => {
-      const html = formData.useHtml
-        ? formData.message
-        : `<p>${formData.message.replace(/\n/g, "<br/>")}</p>`;
-      const response = await sendTestEmailDirect(formData.to, formData.subject, html);
-      if (response.success && response.data?.success) {
+      const response = await sendTestEmailDirect(formData.to, formData.subject, formData.message);
+      if (response.success) {
         setResult({
           success: true,
           message: `Test email sent! ID: ${response.data.messageId}`,
         });
       } else {
-        const errorMessage = !response.success
-          ? response.error.message
-          : response.data?.error || "Failed to send";
-        setResult({ success: false, message: `Test failed: ${errorMessage}` });
+        setResult({ success: false, message: `Test failed: ${response.error.message}` });
       }
     });
   };

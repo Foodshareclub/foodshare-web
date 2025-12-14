@@ -217,11 +217,25 @@ src/api/admin/
 
 ```
 src/app/actions/
-├── email.ts                         # Email server actions
-│   ├── getEmailPreferences()        # Get user's email preferences
-│   ├── updateEmailPreferences()     # Update user's email preferences
-│   ├── resetEmailPreferences()      # Reset to defaults
-│   └── sendAdminEmail()             # Send email immediately (admin only)
+├── email.ts                         # Email server actions (Zod-validated, type-safe)
+│   │  Uses ServerActionResult<T> pattern with proper error codes
+│   │  Admin auth via user_roles table (not profiles.role)
+│   │
+│   │  Notification Actions (public):
+│   ├── sendNewMessageNotification(email, data)      # New chat message notification
+│   │   → ServerActionResult<{ messageId?: string }>
+│   ├── sendListingInterestNotification(email, data) # Someone interested in listing
+│   │   → ServerActionResult<{ messageId?: string }>
+│   ├── sendPickupReminder(email, data)              # Pickup reminder email
+│   │   → ServerActionResult<{ messageId?: string }>
+│   ├── sendReviewRequest(email, data)               # Request review after pickup
+│   │   → ServerActionResult<{ messageId?: string }>
+│   ├── sendListingExpiredNotification(email, data)  # Listing expired notice
+│   │   → ServerActionResult<{ messageId?: string }>
+│   │
+│   │  Admin-Only Actions:
+│   └── previewEmailTemplate(template, props)        # Preview email (admin only)
+│       → ServerActionResult<{ html, text, subject }>
 │
 └── newsletter.ts                    # Newsletter & Campaign server actions
     │
@@ -239,9 +253,16 @@ src/app/actions/
     ├── unsubscribeEmail(email, reason?)  # Unsubscribe email address
     │   → { success, error? }
     │
-    │  Audience Segments:
-    ├── createSegment(formData)      # Create audience segment with criteria
-    │   → { success, segmentId?, error? }
+    │  Audience Segments (src/app/actions/segments.ts):
+    │  Uses type-safe ServerActionResult<T> pattern with Zod validation and audit logging
+    ├── createSegment(input)         # Create audience segment with filter rules
+    │   → ServerActionResult<{ id, name, cachedCount }>
+    ├── updateSegment(id, input)     # Update segment (non-system only)
+    │   → ServerActionResult<{ id, name, cachedCount }>
+    ├── deleteSegment(id)            # Delete segment (non-system only)
+    │   → ServerActionResult<void>
+    ├── refreshSegmentCount(id)      # Recalculate segment member count
+    │   → ServerActionResult<number>
     │
     │  Automation Flows (src/app/actions/automations.ts):
     │  Uses type-safe ActionResult<T> pattern with Zod validation
@@ -263,8 +284,18 @@ src/app/actions/
     │   → ActionResult<{ id: string }>
     ├── deleteEmailTemplate(id)         # Delete email template
     │   → ActionResult<void>
-    └── createPresetAutomation(preset)  # Create preset (welcome/reengagement/food_alert)
-        → ActionResult<{ id: string }>
+    ├── createPresetAutomation(preset)  # Create preset (welcome/reengagement/food_alert)
+    │   → ActionResult<{ id: string }>
+    │
+    │  Queue Management:
+    ├── getQueueStatus()                # Get queue statistics (pending/processing/sent/failed)
+    │   → ActionResult<{ pending, processing, sent, failed }>
+    ├── triggerQueueProcessing()        # Manually trigger queue processing
+    │   → ActionResult<{ message: string }>
+    ├── cancelPendingEmails()           # Cancel all pending automation emails
+    │   → ActionResult<{ cancelled: number }>
+    └── retryFailedEmails()             # Re-queue failed emails for retry
+        → ActionResult<{ retried: number }>
 ```
 
 ### Edge Functions
@@ -438,6 +469,16 @@ The Automation tab now includes a full visual automation builder:
 - **Edit/Toggle/Delete** - Enhanced automation cards with inline status toggle and dropdown actions
 - **Preset Templates** - Quick-start with Welcome Series, Re-engagement, or Food Alert presets
 - **Lazy Loading** - AutomationBuilder and PresetAutomationCreator are lazy-loaded for performance
+
+**Queue Control Card (Dec 2025):**
+
+Admin controls for managing the automation email queue:
+
+- **Queue Statistics** - Real-time display of pending, processing, sent, and failed email counts
+- **Process Now** - Manually trigger queue processing (bypasses 5-minute cron interval)
+- **Retry Failed** - Re-queue all failed emails for another delivery attempt
+- **Cancel Pending** - Cancel all pending automation emails (with confirmation)
+- **Cron Status** - Shows queue is processed automatically every 5 minutes
 
 ### Providers Tab
 
@@ -1223,8 +1264,8 @@ Your Admin Email CRM provides:
 
 ---
 
-**Last Updated:** 2025-12-11
-**Status:** ✅ Production Ready (V1), 🚧 V3 In Development
+**Last Updated:** 2025-12-14
+**Status:** ✅ Production Ready (V1 + Queue Control)
 **URL:** `/admin/email`
 
 ---

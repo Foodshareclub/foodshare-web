@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Someone's Interested! - Foodshare</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f0f0f0; color: #363a57; -webkit-font-smoothing: antialiased;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f0f0f0; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden;">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #FC642D; padding: 50px 30px; text-align: center;">
+              <img src="https://***REMOVED***.supabase.co/storage/v1/object/public/assets/logo-512.png" alt="Foodshare Logo" width="80" height="80" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 20px; border: 4px solid rgba(255, 255, 255, 0.4); background: white; padding: 4px;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 800;">Someone's Interested! 🙋</h1>
+              <p style="margin: 12px 0 0; color: rgba(255, 255, 255, 0.95); font-size: 16px;">Your listing is getting attention</p>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 50px 40px; background-color: #fafafa;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: white; border-radius: 12px; border: 2px solid #f0f0f0;">
+                <tr>
+                  <td style="padding: 30px;">
+                    <p style="margin: 0 0 20px; font-size: 17px; line-height: 1.7; color: #363a57;">Great news! 🎉</p>
+                    <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #555555;"><strong style="color: #FC642D;">{{ .InterestedUserName }}</strong> has expressed interest in your listing:</p>
+                    
+                    <!-- Listing Card -->
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fff8f5; border-radius: 12px; border: 2px solid #FC642D; overflow: hidden;">
+                      <tr>
+                        <td>
+                          <img src="{{ .ListingImage }}" alt="{{ .ListingTitle }}" width="100%" style="width: 100%; height: 180px; object-fit: cover;">
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 20px;">
+                          <p style="margin: 0; font-size: 12px; font-weight: 600; color: #FC642D; text-transform: uppercase; letter-spacing: 1px;">{{ .ListingType }}</p>
+                          <p style="margin: 8px 0 0; font-size: 20px; font-weight: 700; color: #363a57;">{{ .ListingTitle }}</p>
+                          <p style="margin: 8px 0 0; font-size: 14px; color: #888888;">📍 {{ .ListingLocation }}</p>
+                        </td>
+                      </tr>
+                    </table>
+                    
+                    <!-- Interested User -->
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 25px 0; background-color: #f8f8f8; border-radius: 8px;">
+                      <tr>
+                        <td style="padding: 20px;">
+                          <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td width="60" valign="top">
+                                <img src="{{ .InterestedUserAvatar }}" alt="{{ .InterestedUserName }}" width="50" height="50" style="width: 50px; height: 50px; border-radius: 50%; border: 3px solid #FC642D;">
+                              </td>
+                              <td valign="middle" style="padding-left: 15px;">
+                                <p style="margin: 0; font-size: 16px; font-weight: 700; color: #363a57;">{{ .InterestedUserName }}</p>
+                                <p style="margin: 4px 0 0; font-size: 14px; color: #888888;">⭐ {{ .InterestedUserRating }} rating • {{ .InterestedUserShares }} shares</p>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                    
+                    <!-- CTA Buttons -->
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" style="padding: 10px 0;">
+                          <a href="{{ .MessageURL }}" style="display: inline-block; padding: 18px 40px; background-color: #FC642D; color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">💬 Message Them</a>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="center" style="padding: 10px 0;">
+                          <a href="{{ .ListingURL }}" style="display: inline-block; padding: 14px 30px; background-color: transparent; color: #FC642D; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 14px; border: 2px solid #FC642D;">View Listing</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Tip -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0 0; background-color: #e8f5e9; border-radius: 8px; border-left: 4px solid #4caf50;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #2e7d32;"><strong>💡 Tip:</strong> Respond quickly! Fast responses lead to successful shares and better ratings.</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #FC642D; padding: 30px; text-align: center;">
+              <img src="https://***REMOVED***.supabase.co/storage/v1/object/public/assets/logo-512.png" alt="Foodshare" width="40" height="40" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.4); background: white; padding: 2px;">
+              <p style="margin: 15px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.9);">Foodshare LLC &copy; 2025</p>
+              <p style="margin: 10px 0 0; font-size: 13px; color: rgba(255, 255, 255, 0.8);">
+                <a href="{{ .UnsubscribeURL }}" style="color: #ffffff; text-decoration: underline;">Manage notifications</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

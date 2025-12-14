@@ -53,7 +53,7 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
       });
 
       if (!result.success) {
-        throw new Error(result.error);
+        throw new Error(result.error.message);
       }
 
       setSubmitStatus("success");

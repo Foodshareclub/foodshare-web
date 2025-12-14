@@ -233,7 +233,7 @@ function CustomersTab({
     startTransition(async () => {
       const result = await importProfilesAsCRMCustomers();
       if (result.success) {
-        setImportMessage(`Imported ${result.imported} profiles as customers`);
+        setImportMessage(`Imported ${result.data.imported} profiles as customers`);
         router.refresh();
       } else {
         setImportMessage(`Error: ${result.error}`);

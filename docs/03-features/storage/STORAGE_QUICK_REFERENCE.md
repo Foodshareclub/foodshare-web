@@ -297,7 +297,7 @@ const uploadAvatar = async (file: File, userId: string) => {
 };
 ```
 
-**Using the hook:**
+**Using the hook (client-side):**
 
 ```typescript
 import { useUploadAvatar } from "@/hooks/queries";
@@ -307,6 +307,27 @@ const { mutateAsync: uploadAvatar } = useUploadAvatar();
 // Upload triggers DB trigger to update profiles.avatar_url
 await uploadAvatar({ userId: user.id, file });
 ```
+
+**Using Server Actions (recommended):**
+
+```typescript
+import { uploadAvatar, uploadProfileAvatar, deleteAvatar } from "@/app/actions/profile";
+
+// Upload to 'avatars' bucket (expects 'avatar' field)
+const formData = new FormData();
+formData.set("avatar", file);
+const result = await uploadAvatar(formData);
+
+// Upload to 'profiles' bucket (expects 'file' field)
+const formData2 = new FormData();
+formData2.set("file", file);
+const result2 = await uploadProfileAvatar(formData2);
+
+// Delete avatar from both buckets
+const deleteResult = await deleteAvatar();
+```
+
+> **Note:** Server actions handle validation (5MB max, JPEG/PNG/WebP/GIF), storage upload, profile update, and cache invalidation in one call.
 
 ````
 

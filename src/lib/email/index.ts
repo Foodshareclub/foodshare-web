@@ -6,6 +6,11 @@
  * - Request coalescing for health checks
  * - Buffered metrics (non-blocking)
  * - Lazy provider initialization
+ *
+ * React Email Templates - Bleeding edge implementation:
+ * - Type-safe templates with @react-email/components
+ * - Server-side rendering
+ * - Cross-client compatibility
  */
 
 // Main service
@@ -16,6 +21,9 @@ export {
   UnifiedEmailService as EmailService,
   createUnifiedEmailService as createEmailService,
 } from "./unified-service";
+
+// Template-based sending (recommended)
+export { sendTemplateEmail, sendBatchTemplateEmail, previewEmail } from "./send";
 
 // Providers
 export { ResendProvider, BrevoProvider, AWSSESProvider, type IEmailProvider } from "./providers";

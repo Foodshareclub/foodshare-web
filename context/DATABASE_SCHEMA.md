@@ -24,14 +24,38 @@ User profile information linked to Supabase Auth users.
 - `avatar_url` (text) - Profile picture URL
 - `bio` (text) - User biography
 - `about_me` (text) - Extended user description
+- `telegram_id` (bigint) - Linked Telegram account ID
 - `created_time` (timestamp) - Account creation time
 - `updated_at` (timestamp) - Last profile update
+
+**User Role System:**
+
+FoodShare uses the `user_roles` junction table as the **single source of truth** for all role assignments:
+
+1. **`user_roles` junction table** (source of truth) - Role assignments linking profiles to roles via the `roles` table
+2. **`roles` table** - Defines available roles: `'user'`, `'admin'`, `'superadmin'`, `'volunteer'`, `'moderator'`
+
+> **Note:** Any `role` column on `profiles` is deprecated. Use `user_roles` table for all role checks.
+
+**Checking Admin Status:**
+
+```typescript
+// Query via user_roles table (source of truth)
+const { data: userRoles } = await supabase
+  .from("user_roles")
+  .select("roles!inner(name)")
+  .eq("profile_id", userId);
+
+const roles = (userRoles || []).map((r) => r.roles?.name).filter(Boolean);
+const isAdmin = roles.includes("admin") || roles.includes("superadmin");
+```
 
 **Relationships:**
 
 - One-to-many with `posts` (user's listings)
 - One-to-many with `rooms` (user's conversations)
 - One-to-many with `reviews` (reviews written)
+- One-to-many with `user_roles` (role assignments)
 
 **RLS Policies:**
 

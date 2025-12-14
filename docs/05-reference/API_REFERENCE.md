@@ -1487,6 +1487,210 @@ const { data, error } = await profileAPI.createProfile({
 
 ---
 
+## Profile Server Actions
+
+Located: `src/app/actions/profile.ts`
+
+Server actions for profile management with Zod validation and type-safe results. All actions require authentication.
+
+> **Note:** Prefer these server actions over the client-side `profileAPI` for mutations.
+
+### Get Current Profile
+
+```typescript
+import { getCurrentProfile } from "@/app/actions/profile";
+
+const profile = await getCurrentProfile();
+```
+
+**Returns:** `Profile | null` - Current user's profile or null if not authenticated
+
+---
+
+### Update Profile
+
+```typescript
+import { updateProfile } from "@/app/actions/profile";
+
+const formData = new FormData();
+formData.set("name", "John Doe");
+formData.set("bio", "Food sharing enthusiast");
+formData.set("phone", "+1234567890");
+formData.set("location", "Prague, CZ");
+formData.set("is_volunteer", "true");
+
+const result = await updateProfile(formData);
+```
+
+**Form Fields:**
+
+| Field          | Type      | Validation               |
+| -------------- | --------- | ------------------------ |
+| `name`         | `string`  | 1-100 chars, optional    |
+| `bio`          | `string`  | Max 500 chars, optional  |
+| `phone`        | `string`  | Max 20 chars, optional   |
+| `location`     | `string`  | Max 200 chars, optional  |
+| `is_volunteer` | `boolean` | "true"/"false", optional |
+
+**Returns:** `ServerActionResult<{ id: string; name?: string }>`
+
+**Example (Form Component):**
+
+```typescript
+'use client';
+import { updateProfile } from '@/app/actions/profile';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+
+export function ProfileForm() {
+  return (
+    <form action={updateProfile} className="space-y-4">
+      <Input name="name" placeholder="Your name" />
+      <Input name="bio" placeholder="Bio" />
+      <Button type="submit">Save</Button>
+    </form>
+  );
+}
+```
+
+---
+
+### Upload Avatar
+
+```typescript
+import { uploadAvatar } from "@/app/actions/profile";
+
+const formData = new FormData();
+formData.set("avatar", file); // File object
+
+const result = await uploadAvatar(formData);
+// { success: true, data: { url: "https://..." } }
+```
+
+**Form Fields:**
+
+| Field    | Type   | Required | Description          |
+| -------- | ------ | -------- | -------------------- |
+| `avatar` | `File` | Yes      | Image file to upload |
+
+**Validation:**
+
+- Max file size: 5MB
+- Allowed types: JPEG, PNG, WebP, GIF
+
+**Storage:** Uploads to `avatars` bucket at `{userId}/avatar.{ext}`
+
+**Returns:** `ServerActionResult<{ url: string }>`
+
+---
+
+### Upload Profile Avatar (Alternative)
+
+```typescript
+import { uploadProfileAvatar } from "@/app/actions/profile";
+
+const formData = new FormData();
+formData.set("file", file);
+formData.set("userId", userId); // Optional, verified against auth
+
+const result = await uploadProfileAvatar(formData);
+```
+
+**Form Fields:**
+
+| Field    | Type     | Required | Description                     |
+| -------- | -------- | -------- | ------------------------------- |
+| `file`   | `File`   | Yes      | Image file to upload            |
+| `userId` | `string` | No       | User ID (verified against auth) |
+
+**Storage:** Uploads to `profiles` bucket at `{userId}/avatar.{ext}`
+
+**Returns:** `ServerActionResult<{ url: string }>`
+
+**Note:** This is an alias for `uploadAvatar` with different form field names and storage bucket. Use when integrating with components that expect `file` field name.
+
+---
+
+### Delete Avatar
+
+```typescript
+import { deleteAvatar } from "@/app/actions/profile";
+
+const result = await deleteAvatar();
+// { success: true }
+```
+
+**Behavior:**
+
+1. Removes all avatar files from `avatars` bucket for the user
+2. Removes all avatar files from `profiles` bucket for the user
+3. Sets `avatar_url` to `null` in the profile
+4. Invalidates profile caches
+
+**Returns:** `ServerActionResult<void>`
+
+**Example (Delete Button):**
+
+```typescript
+'use client';
+import { deleteAvatar } from '@/app/actions/profile';
+import { Button } from '@/components/ui/button';
+
+export function DeleteAvatarButton() {
+  const handleDelete = async () => {
+    const result = await deleteAvatar();
+    if (!result.success) {
+      console.error(result.error);
+    }
+  };
+
+  return (
+    <Button variant="destructive" onClick={handleDelete}>
+      Remove Avatar
+    </Button>
+  );
+}
+```
+
+---
+
+### Error Codes
+
+All profile actions return `ServerActionResult` with these error codes:
+
+| Code               | Description                          |
+| ------------------ | ------------------------------------ |
+| `UNAUTHORIZED`     | User not authenticated               |
+| `FORBIDDEN`        | User not authorized for this action  |
+| `VALIDATION_ERROR` | Invalid input (file type, size, etc) |
+| `DATABASE_ERROR`   | Supabase operation failed            |
+| `UNKNOWN_ERROR`    | Unexpected error                     |
+
+**Example Error Handling:**
+
+```typescript
+const result = await uploadAvatar(formData);
+
+if (!result.success) {
+  switch (result.code) {
+    case "VALIDATION_ERROR":
+      toast.error(result.error); // "File too large. Maximum size is 5MB"
+      break;
+    case "UNAUTHORIZED":
+      redirect("/auth/login");
+      break;
+    default:
+      toast.error("Something went wrong");
+  }
+  return;
+}
+
+// Success
+toast.success("Avatar updated!");
+```
+
+---
+
 ## Realtime Subscriptions
 
 ### Subscribe to Room Messages
@@ -3196,27 +3400,40 @@ Located: `src/app/actions/campaigns.ts`
 
 Server actions for newsletter campaign CRUD operations. All actions require admin authentication via `verifyAdminAccess()`.
 
-### Types
+Features:
+
+- Zod schema validation for type-safe inputs
+- Audit logging for admin actions
+- Proper admin auth via `user_roles` table
+
+### Zod Schemas & Types
 
 ```typescript
-interface CreateCampaignInput {
-  name: string; // Required
-  subject: string; // Required
-  content: string;
-  campaignType?: string; // Default: 'newsletter'
-  segmentId?: string;
-  scheduledAt?: string; // ISO date - sets status to 'scheduled'
-}
+import { z } from "zod";
 
-interface UpdateCampaignInput {
-  id: string; // Required
-  name?: string;
-  subject?: string;
-  content?: string;
-  campaignType?: string;
-  segmentId?: string;
-  scheduledAt?: string;
-}
+// Validation schemas
+const CreateCampaignSchema = z.object({
+  name: z.string().min(1, "Campaign name is required").max(200, "Name too long"),
+  subject: z.string().min(1, "Subject line is required").max(200, "Subject too long"),
+  content: z.string().default(""),
+  campaignType: z.enum(["newsletter", "announcement", "promotional", "transactional"]).optional(),
+  segmentId: z.string().uuid().optional().nullable(),
+  scheduledAt: z.string().datetime().optional().nullable(),
+});
+
+const UpdateCampaignSchema = z.object({
+  id: z.string().uuid("Invalid campaign ID"),
+  name: z.string().min(1).max(200).optional(),
+  subject: z.string().min(1).max(200).optional(),
+  content: z.string().optional(),
+  campaignType: z.enum(["newsletter", "announcement", "promotional", "transactional"]).optional(),
+  segmentId: z.string().uuid().optional().nullable(),
+  scheduledAt: z.string().datetime().optional().nullable(),
+});
+
+// Types inferred from Zod schemas
+type CreateCampaignInput = z.infer<typeof CreateCampaignSchema>;
+type UpdateCampaignInput = z.infer<typeof UpdateCampaignSchema>;
 
 interface CampaignResult {
   id: string;
@@ -3664,7 +3881,7 @@ const EmailTemplateSchema = z.object({
 - **Zod schema validation** - Input validation with detailed error messages
 - **Type-safe action results** - Discriminated union for success/error handling
 - **Admin role verification** - All actions require admin/super_admin role
-- **Audit logging** - All mutations logged to `audit_logs` table
+- **Audit logging** - All mutations logged via `log_audit_event` RPC
 - **Cache invalidation** - Automatic revalidation of `/admin/email` and related tags
 
 ### Usage Example
@@ -3689,6 +3906,199 @@ async function handleCreate(formData: FormData) {
       // Highlight specific field with error
     }
   }
+}
+```
+
+---
+
+## Segment Server Actions
+
+Located: `src/app/actions/segments.ts`
+
+Server actions for audience segment CRUD operations. Uses bleeding-edge patterns with Zod validation, type-safe results, and audit logging.
+
+### Features
+
+- **Zod schema validation** - Input validation with detailed error messages
+- **Type-safe action results** - `ServerActionResult<T>` discriminated union
+- **Admin role verification** - All actions require admin/superadmin role via `user_roles` table
+- **Audit logging** - All mutations logged via `log_audit_event` RPC
+- **Cache invalidation** - Invalidates `CACHE_TAGS.ADMIN` and `CACHE_TAGS.SEGMENTS`
+
+### Zod Validation Schemas
+
+```typescript
+import { z } from "zod";
+
+const SegmentFilterRuleSchema = z.object({
+  field: z.string().min(1, "Field is required"),
+  operator: z.enum([
+    "equals",
+    "not_equals",
+    "contains",
+    "greater_than",
+    "less_than",
+    "in",
+    "not_in",
+  ]),
+  value: z.union([z.string(), z.number(), z.array(z.string())]),
+});
+
+const CreateSegmentSchema = z.object({
+  name: z.string().min(1, "Segment name is required").max(100, "Name too long"),
+  description: z.string().max(500).optional(),
+  filterRules: z.array(SegmentFilterRuleSchema).min(1, "At least one filter rule is required"),
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/, "Invalid color format")
+    .optional(),
+  iconName: z.string().max(50).optional(),
+});
+
+const UpdateSegmentSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).optional(),
+  filterRules: z.array(SegmentFilterRuleSchema).optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .optional(),
+  iconName: z.string().max(50).optional(),
+});
+```
+
+### Types
+
+```typescript
+export type SegmentFilterRule = z.infer<typeof SegmentFilterRuleSchema>;
+export type CreateSegmentInput = z.infer<typeof CreateSegmentSchema>;
+
+export interface SegmentResult {
+  id: string;
+  name: string;
+  cachedCount: number;
+}
+```
+
+### Create Segment
+
+```typescript
+import { createSegment } from "@/app/actions/segments";
+
+const result = await createSegment({
+  name: "Active Donors",
+  description: "Users who have shared food in the last 30 days",
+  filterRules: [{ field: "last_donation_at", operator: "greater_than", value: "30_days_ago" }],
+  color: "#22c55e",
+  iconName: "heart",
+});
+```
+
+**Returns:** `ServerActionResult<SegmentResult>`
+
+**Behavior:**
+
+- Validates input with Zod schema before processing
+- Creates segment in `audience_segments` table with `is_system: false`
+- Logs audit event with segment name and rules count
+- Invalidates `CACHE_TAGS.ADMIN` and `CACHE_TAGS.SEGMENTS`
+
+---
+
+### Update Segment
+
+```typescript
+import { updateSegment } from "@/app/actions/segments";
+
+const result = await updateSegment("segment-uuid", {
+  name: "Updated Name",
+  filterRules: [{ field: "status", operator: "equals", value: "active" }],
+});
+```
+
+**Returns:** `ServerActionResult<SegmentResult>`
+
+**Behavior:**
+
+- Validates segment ID is valid UUID
+- Prevents modification of system segments (`is_system: true`)
+- Logs audit event with changed fields
+- Invalidates cache tags
+
+---
+
+### Delete Segment
+
+```typescript
+import { deleteSegment } from "@/app/actions/segments";
+
+const result = await deleteSegment("segment-uuid");
+```
+
+**Returns:** `ServerActionResult<void>`
+
+**Behavior:**
+
+- Validates segment ID is valid UUID
+- Prevents deletion of system segments
+- Logs audit event with segment name
+- Invalidates cache tags
+
+---
+
+### Refresh Segment Count
+
+```typescript
+import { refreshSegmentCount } from "@/app/actions/segments";
+
+const result = await refreshSegmentCount("segment-uuid");
+// result.data = 1234 (member count)
+```
+
+**Returns:** `ServerActionResult<number>`
+
+**Behavior:**
+
+- Recalculates segment member count based on filter rules
+- Updates `cached_count` in database
+- Returns the new count
+
+---
+
+### Usage Example
+
+```typescript
+"use client";
+
+import { createSegment, type CreateSegmentInput } from "@/app/actions/segments";
+import { Button } from "@/components/ui/button";
+
+export function CreateSegmentForm() {
+  async function handleSubmit(formData: FormData) {
+    const input: CreateSegmentInput = {
+      name: formData.get("name") as string,
+      description: formData.get("description") as string,
+      filterRules: [
+        { field: "status", operator: "equals", value: "active" },
+      ],
+    };
+
+    const result = await createSegment(input);
+
+    if (result.success) {
+      console.log("Created segment:", result.data.id);
+    } else {
+      console.error("Error:", result.error);
+    }
+  }
+
+  return (
+    <form action={handleSubmit}>
+      <input name="name" required />
+      <textarea name="description" />
+      <Button type="submit">Create Segment</Button>
+    </form>
+  );
 }
 ```
 

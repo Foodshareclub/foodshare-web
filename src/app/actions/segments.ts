@@ -2,32 +2,65 @@
 
 /**
  * Audience Segment Server Actions
- * Handles audience segment CRUD operations
+ * Bleeding-edge implementation with:
+ * - Zod schema validation
+ * - Type-safe action results
+ * - Audit logging
  */
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 import type { ErrorCode } from "@/lib/errors";
 
 // ============================================================================
+// Zod Schemas
+// ============================================================================
+
+const SegmentFilterRuleSchema = z.object({
+  field: z.string().min(1, "Field is required"),
+  operator: z.enum([
+    "equals",
+    "not_equals",
+    "contains",
+    "greater_than",
+    "less_than",
+    "in",
+    "not_in",
+  ]),
+  value: z.union([z.string(), z.number(), z.array(z.string())]),
+});
+
+const CreateSegmentSchema = z.object({
+  name: z.string().min(1, "Segment name is required").max(100, "Name too long"),
+  description: z.string().max(500).optional(),
+  filterRules: z.array(SegmentFilterRuleSchema).min(1, "At least one filter rule is required"),
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/, "Invalid color format")
+    .optional(),
+  iconName: z.string().max(50).optional(),
+});
+
+const UpdateSegmentSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).optional(),
+  filterRules: z.array(SegmentFilterRuleSchema).optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .optional(),
+  iconName: z.string().max(50).optional(),
+});
+
+// ============================================================================
 // Types
 // ============================================================================
 
-export interface CreateSegmentInput {
-  name: string;
-  description?: string;
-  filterRules: SegmentFilterRule[];
-  color?: string;
-  iconName?: string;
-}
-
-export interface SegmentFilterRule {
-  field: string;
-  operator: "equals" | "not_equals" | "contains" | "greater_than" | "less_than" | "in" | "not_in";
-  value: string | number | string[];
-}
+export type SegmentFilterRule = z.infer<typeof SegmentFilterRuleSchema>;
+export type CreateSegmentInput = z.infer<typeof CreateSegmentSchema>;
 
 export interface SegmentResult {
   id: string;
@@ -76,6 +109,31 @@ function isAuthError(result: AuthError | AuthSuccess): result is AuthError {
 }
 
 // ============================================================================
+// Audit Logging Helper
+// ============================================================================
+
+async function logAuditEvent(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  action: string,
+  resourceType: string,
+  resourceId: string,
+  metadata?: Record<string, unknown>
+): Promise<void> {
+  try {
+    await supabase.rpc("log_audit_event", {
+      p_user_id: userId,
+      p_action: action,
+      p_resource_type: resourceType,
+      p_resource_id: resourceId,
+      p_metadata: metadata || {},
+    });
+  } catch (err) {
+    console.warn(`[audit] Failed to log: ${action} ${resourceType}:${resourceId}`, err);
+  }
+}
+
+// ============================================================================
 // Segment Actions
 // ============================================================================
 
@@ -86,6 +144,13 @@ export async function createSegment(
   input: CreateSegmentInput
 ): Promise<ServerActionResult<SegmentResult>> {
   try {
+    // Validate with Zod
+    const validated = CreateSegmentSchema.safeParse(input);
+    if (!validated.success) {
+      const firstError = validated.error.issues[0];
+      return serverActionError(firstError.message, "VALIDATION_ERROR");
+    }
+
     const auth = await verifyAdminAccess();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
@@ -93,21 +158,14 @@ export async function createSegment(
 
     const { supabase, user } = auth;
 
-    if (!input.name?.trim()) {
-      return serverActionError("Segment name is required", "VALIDATION_ERROR");
-    }
-    if (!input.filterRules || input.filterRules.length === 0) {
-      return serverActionError("At least one filter rule is required", "VALIDATION_ERROR");
-    }
-
     const { data, error } = await supabase
       .from("audience_segments")
       .insert({
-        name: input.name.trim(),
-        description: input.description?.trim() || null,
-        filter_rules: input.filterRules,
-        color: input.color || "#6366f1",
-        icon_name: input.iconName || "users",
+        name: validated.data.name.trim(),
+        description: validated.data.description?.trim() || null,
+        filter_rules: validated.data.filterRules,
+        color: validated.data.color || "#6366f1",
+        icon_name: validated.data.iconName || "users",
         is_system: false,
         created_by: user.id,
       })
@@ -119,7 +177,14 @@ export async function createSegment(
       return serverActionError(error.message, "DATABASE_ERROR");
     }
 
+    // Audit log
+    await logAuditEvent(supabase, user.id, "CREATE", "segment", data.id, {
+      name: data.name,
+      rulesCount: validated.data.filterRules.length,
+    });
+
     invalidateTag(CACHE_TAGS.ADMIN);
+    invalidateTag(CACHE_TAGS.SEGMENTS);
     revalidatePath("/admin/email");
 
     return {
@@ -144,30 +209,47 @@ export async function updateSegment(
   input: Partial<CreateSegmentInput>
 ): Promise<ServerActionResult<SegmentResult>> {
   try {
+    // Validate ID
+    if (!id || !z.string().uuid().safeParse(id).success) {
+      return serverActionError("Invalid segment ID", "VALIDATION_ERROR");
+    }
+
+    // Validate input
+    const validated = UpdateSegmentSchema.safeParse(input);
+    if (!validated.success) {
+      const firstError = validated.error.issues[0];
+      return serverActionError(firstError.message, "VALIDATION_ERROR");
+    }
+
     const auth = await verifyAdminAccess();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
 
-    const { supabase } = auth;
+    const { supabase, user } = auth;
 
     // Check if segment is system segment
     const { data: existing } = await supabase
       .from("audience_segments")
-      .select("is_system")
+      .select("is_system, name")
       .eq("id", id)
       .single();
 
-    if (existing?.is_system) {
+    if (!existing) {
+      return serverActionError("Segment not found", "NOT_FOUND");
+    }
+
+    if (existing.is_system) {
       return serverActionError("Cannot modify system segments", "VALIDATION_ERROR");
     }
 
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (input.name !== undefined) updates.name = input.name.trim();
-    if (input.description !== undefined) updates.description = input.description?.trim() || null;
-    if (input.filterRules !== undefined) updates.filter_rules = input.filterRules;
-    if (input.color !== undefined) updates.color = input.color;
-    if (input.iconName !== undefined) updates.icon_name = input.iconName;
+    if (validated.data.name !== undefined) updates.name = validated.data.name.trim();
+    if (validated.data.description !== undefined)
+      updates.description = validated.data.description?.trim() || null;
+    if (validated.data.filterRules !== undefined) updates.filter_rules = validated.data.filterRules;
+    if (validated.data.color !== undefined) updates.color = validated.data.color;
+    if (validated.data.iconName !== undefined) updates.icon_name = validated.data.iconName;
 
     const { data, error } = await supabase
       .from("audience_segments")
@@ -181,7 +263,13 @@ export async function updateSegment(
       return serverActionError(error.message, "DATABASE_ERROR");
     }
 
+    // Audit log
+    await logAuditEvent(supabase, user.id, "UPDATE", "segment", id, {
+      changes: Object.keys(updates).filter((k) => k !== "updated_at"),
+    });
+
     invalidateTag(CACHE_TAGS.ADMIN);
+    invalidateTag(CACHE_TAGS.SEGMENTS);
     revalidatePath("/admin/email");
 
     return {
@@ -203,21 +291,30 @@ export async function updateSegment(
  */
 export async function deleteSegment(id: string): Promise<ServerActionResult<void>> {
   try {
+    // Validate ID
+    if (!id || !z.string().uuid().safeParse(id).success) {
+      return serverActionError("Invalid segment ID", "VALIDATION_ERROR");
+    }
+
     const auth = await verifyAdminAccess();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
 
-    const { supabase } = auth;
+    const { supabase, user } = auth;
 
     // Check if segment is system segment
     const { data: existing } = await supabase
       .from("audience_segments")
-      .select("is_system")
+      .select("is_system, name")
       .eq("id", id)
       .single();
 
-    if (existing?.is_system) {
+    if (!existing) {
+      return serverActionError("Segment not found", "NOT_FOUND");
+    }
+
+    if (existing.is_system) {
       return serverActionError("Cannot delete system segments", "VALIDATION_ERROR");
     }
 
@@ -228,7 +325,13 @@ export async function deleteSegment(id: string): Promise<ServerActionResult<void
       return serverActionError(error.message, "DATABASE_ERROR");
     }
 
+    // Audit log
+    await logAuditEvent(supabase, user.id, "DELETE", "segment", id, {
+      name: existing.name,
+    });
+
     invalidateTag(CACHE_TAGS.ADMIN);
+    invalidateTag(CACHE_TAGS.SEGMENTS);
     revalidatePath("/admin/email");
 
     return successVoid();
@@ -243,12 +346,17 @@ export async function deleteSegment(id: string): Promise<ServerActionResult<void
  */
 export async function refreshSegmentCount(id: string): Promise<ServerActionResult<number>> {
   try {
+    // Validate ID
+    if (!id || !z.string().uuid().safeParse(id).success) {
+      return serverActionError("Invalid segment ID", "VALIDATION_ERROR");
+    }
+
     const auth = await verifyAdminAccess();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
 
-    const { supabase } = auth;
+    const { supabase, user } = auth;
 
     // Get segment filter rules
     const { data: segment, error: fetchError } = await supabase
@@ -279,7 +387,13 @@ export async function refreshSegmentCount(id: string): Promise<ServerActionResul
       .update({ cached_count: count || 0, updated_at: new Date().toISOString() })
       .eq("id", id);
 
+    // Audit log
+    await logAuditEvent(supabase, user.id, "REFRESH_COUNT", "segment", id, {
+      newCount: count || 0,
+    });
+
     invalidateTag(CACHE_TAGS.ADMIN);
+    invalidateTag(CACHE_TAGS.SEGMENTS);
 
     return {
       success: true,

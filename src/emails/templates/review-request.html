@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>How Was Your Experience? - Foodshare</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f0f0f0; color: #363a57; -webkit-font-smoothing: antialiased;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f0f0f0; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden;">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #f59e0b; padding: 50px 30px; text-align: center;">
+              <img src="https://***REMOVED***.supabase.co/storage/v1/object/public/assets/logo-512.png" alt="Foodshare Logo" width="80" height="80" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 20px; border: 4px solid rgba(255, 255, 255, 0.4); background: white; padding: 4px;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 800;">How Was Your Experience? ⭐</h1>
+              <p style="margin: 12px 0 0; color: rgba(255, 255, 255, 0.95); font-size: 16px;">Your feedback helps our community</p>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 50px 40px; background-color: #fafafa;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: white; border-radius: 12px; border: 2px solid #f0f0f0;">
+                <tr>
+                  <td style="padding: 30px;">
+                    <p style="margin: 0 0 20px; font-size: 17px; line-height: 1.7; color: #363a57;">Hi {{ .RecipientName }}! 👋</p>
+                    <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #555555;">You recently picked up an item from <strong style="color: #f59e0b;">{{ .SharerName }}</strong>. We'd love to hear how it went!</p>
+                    
+                    <!-- Transaction Summary -->
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fffbeb; border-radius: 12px; margin-bottom: 25px;">
+                      <tr>
+                        <td style="padding: 20px;">
+                          <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td width="80" valign="top">
+                                <img src="{{ .ListingImage }}" alt="{{ .ListingTitle }}" width="70" height="70" style="width: 70px; height: 70px; border-radius: 8px; object-fit: cover;">
+                              </td>
+                              <td valign="middle" style="padding-left: 15px;">
+                                <p style="margin: 0; font-size: 16px; font-weight: 700; color: #363a57;">{{ .ListingTitle }}</p>
+                                <p style="margin: 5px 0 0; font-size: 14px; color: #888888;">Picked up on {{ .PickupDate }}</p>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                    
+                    <!-- Star Rating -->
+                    <p style="margin: 0 0 15px; font-size: 16px; font-weight: 600; color: #363a57; text-align: center;">Rate your experience:</p>
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" style="padding: 10px 0 25px;">
+                          <a href="{{ .Review1StarURL }}" style="display: inline-block; margin: 0 5px; font-size: 36px; text-decoration: none;">⭐</a>
+                          <a href="{{ .Review2StarURL }}" style="display: inline-block; margin: 0 5px; font-size: 36px; text-decoration: none;">⭐</a>
+                          <a href="{{ .Review3StarURL }}" style="display: inline-block; margin: 0 5px; font-size: 36px; text-decoration: none;">⭐</a>
+                          <a href="{{ .Review4StarURL }}" style="display: inline-block; margin: 0 5px; font-size: 36px; text-decoration: none;">⭐</a>
+                          <a href="{{ .Review5StarURL }}" style="display: inline-block; margin: 0 5px; font-size: 36px; text-decoration: none;">⭐</a>
+                        </td>
+                      </tr>
+                    </table>
+                    
+                    <!-- CTA Button -->
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td align="center" style="padding: 10px 0;">
+                          <a href="{{ .ReviewURL }}" style="display: inline-block; padding: 18px 48px; background-color: #f59e0b; color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">✍️ Write a Review</a>
+                        </td>
+                      </tr>
+                    </table>
+                    
+                    <!-- Why Review -->
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 25px 0 0; background-color: #f8f8f8; border-radius: 8px;">
+                      <tr>
+                        <td style="padding: 20px;">
+                          <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #666666;"><strong style="color: #f59e0b;">Why leave a review?</strong><br>Reviews help build trust in our community and let other members know who the great sharers are!</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #f59e0b; padding: 30px; text-align: center;">
+              <img src="https://***REMOVED***.supabase.co/storage/v1/object/public/assets/logo-512.png" alt="Foodshare" width="40" height="40" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.4); background: white; padding: 2px;">
+              <p style="margin: 15px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.9);">Foodshare LLC &copy; 2025</p>
+              <p style="margin: 10px 0 0; font-size: 13px; color: rgba(255, 255, 255, 0.8);">
+                <a href="{{ .UnsubscribeURL }}" style="color: #ffffff; text-decoration: underline;">Manage notifications</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

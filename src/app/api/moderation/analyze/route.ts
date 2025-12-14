@@ -106,14 +106,19 @@ export async function POST(request: Request): Promise<NextResponse> {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
+    // Check if user is admin using user_roles junction table (source of truth)
+    const { data: userRoles } = await supabase
+      .from("user_roles")
+      .select("roles!inner(name)")
+      .eq("profile_id", user.id);
 
-    if (!profile || profile.role !== "admin") {
+    const roles = (userRoles || [])
+      .map((r) => (r.roles as unknown as { name: string })?.name)
+      .filter(Boolean);
+
+    const isAdmin = roles.includes("admin") || roles.includes("superadmin");
+
+    if (!isAdmin) {
       return NextResponse.json({ error: "Forbidden - Admin access required" }, { status: 403 });
     }
 

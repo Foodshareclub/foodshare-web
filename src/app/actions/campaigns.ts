@@ -2,37 +2,49 @@
 
 /**
  * Campaign Server Actions
- * Handles newsletter campaign CRUD operations with proper server-side validation
+ * Bleeding-edge implementation with:
+ * - Zod schema validation
+ * - Type-safe action results
+ * - Audit logging
+ * - Proper admin auth via user_roles
  */
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 import type { ErrorCode } from "@/lib/errors";
 
 // ============================================================================
+// Zod Schemas
+// ============================================================================
+
+const CreateCampaignSchema = z.object({
+  name: z.string().min(1, "Campaign name is required").max(200, "Name too long"),
+  subject: z.string().min(1, "Subject line is required").max(200, "Subject too long"),
+  content: z.string().default(""),
+  campaignType: z.enum(["newsletter", "announcement", "promotional", "transactional"]).optional(),
+  segmentId: z.string().uuid().optional().nullable(),
+  scheduledAt: z.string().datetime().optional().nullable(),
+});
+
+const UpdateCampaignSchema = z.object({
+  id: z.string().uuid("Invalid campaign ID"),
+  name: z.string().min(1).max(200).optional(),
+  subject: z.string().min(1).max(200).optional(),
+  content: z.string().optional(),
+  campaignType: z.enum(["newsletter", "announcement", "promotional", "transactional"]).optional(),
+  segmentId: z.string().uuid().optional().nullable(),
+  scheduledAt: z.string().datetime().optional().nullable(),
+});
+
+// ============================================================================
 // Types
 // ============================================================================
 
-export interface CreateCampaignInput {
-  name: string;
-  subject: string;
-  content: string;
-  campaignType?: string;
-  segmentId?: string;
-  scheduledAt?: string;
-}
-
-export interface UpdateCampaignInput {
-  id: string;
-  name?: string;
-  subject?: string;
-  content?: string;
-  campaignType?: string;
-  segmentId?: string;
-  scheduledAt?: string;
-}
+export type CreateCampaignInput = z.infer<typeof CreateCampaignSchema>;
+export type UpdateCampaignInput = z.infer<typeof UpdateCampaignSchema>;
 
 export interface CampaignResult {
   id: string;
@@ -62,14 +74,18 @@ async function verifyAdminAccess(): Promise<AuthError | AuthSuccess> {
     return { error: "You must be logged in", code: "UNAUTHORIZED" };
   }
 
-  const { data: userRole } = await supabase
+  const { data: userRoles } = await supabase
     .from("user_roles")
     .select("roles!inner(name)")
-    .eq("profile_id", user.id)
-    .in("roles.name", ["admin", "superadmin"])
-    .single();
+    .eq("profile_id", user.id);
 
-  if (!userRole) {
+  const roles = (userRoles || [])
+    .map((r) => (r.roles as unknown as { name: string })?.name)
+    .filter(Boolean);
+
+  const isAdmin = roles.includes("admin") || roles.includes("superadmin");
+
+  if (!isAdmin) {
     return { error: "Admin access required", code: "FORBIDDEN" };
   }
 
@@ -78,6 +94,31 @@ async function verifyAdminAccess(): Promise<AuthError | AuthSuccess> {
 
 function isAuthError(result: AuthError | AuthSuccess): result is AuthError {
   return "error" in result && "code" in result && !("supabase" in result);
+}
+
+// ============================================================================
+// Audit Logging Helper
+// ============================================================================
+
+async function logAuditEvent(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+  action: string,
+  resourceType: string,
+  resourceId: string,
+  metadata?: Record<string, unknown>
+): Promise<void> {
+  try {
+    await supabase.rpc("log_audit_event", {
+      p_user_id: userId,
+      p_action: action,
+      p_resource_type: resourceType,
+      p_resource_id: resourceId,
+      p_metadata: metadata || {},
+    });
+  } catch (err) {
+    console.warn(`[audit] Failed to log: ${action} ${resourceType}:${resourceId}`, err);
+  }
 }
 
 // ============================================================================
@@ -91,6 +132,13 @@ export async function createCampaign(
   input: CreateCampaignInput
 ): Promise<ServerActionResult<CampaignResult>> {
   try {
+    // Validate with Zod
+    const validated = CreateCampaignSchema.safeParse(input);
+    if (!validated.success) {
+      const firstError = validated.error.issues[0];
+      return serverActionError(firstError.message, "VALIDATION_ERROR");
+    }
+
     const auth = await verifyAdminAccess();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
@@ -98,24 +146,16 @@ export async function createCampaign(
 
     const { supabase, user } = auth;
 
-    // Validate required fields
-    if (!input.name?.trim()) {
-      return serverActionError("Campaign name is required", "VALIDATION_ERROR");
-    }
-    if (!input.subject?.trim()) {
-      return serverActionError("Subject line is required", "VALIDATION_ERROR");
-    }
-
     const { data, error } = await supabase
       .from("newsletter_campaigns")
       .insert({
-        name: input.name.trim(),
-        subject: input.subject.trim(),
-        content: input.content || "",
-        campaign_type: input.campaignType || "newsletter",
-        segment_id: input.segmentId || null,
-        scheduled_at: input.scheduledAt || null,
-        status: input.scheduledAt ? "scheduled" : "draft",
+        name: validated.data.name.trim(),
+        subject: validated.data.subject.trim(),
+        content: validated.data.content || "",
+        campaign_type: validated.data.campaignType || "newsletter",
+        segment_id: validated.data.segmentId || null,
+        scheduled_at: validated.data.scheduledAt || null,
+        status: validated.data.scheduledAt ? "scheduled" : "draft",
         created_by: user.id,
       })
       .select("id, name, status")
@@ -126,7 +166,14 @@ export async function createCampaign(
       return serverActionError(error.message, "DATABASE_ERROR");
     }
 
+    // Audit log
+    await logAuditEvent(supabase, user.id, "CREATE", "campaign", data.id, {
+      name: data.name,
+      status: data.status,
+    });
+
     invalidateTag(CACHE_TAGS.ADMIN);
+    invalidateTag(CACHE_TAGS.CAMPAIGNS);
     revalidatePath("/admin/email");
 
     return {
@@ -150,33 +197,38 @@ export async function updateCampaign(
   input: UpdateCampaignInput
 ): Promise<ServerActionResult<CampaignResult>> {
   try {
+    // Validate with Zod
+    const validated = UpdateCampaignSchema.safeParse(input);
+    if (!validated.success) {
+      const firstError = validated.error.issues[0];
+      return serverActionError(firstError.message, "VALIDATION_ERROR");
+    }
+
     const auth = await verifyAdminAccess();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
 
-    const { supabase } = auth;
-
-    if (!input.id) {
-      return serverActionError("Campaign ID is required", "VALIDATION_ERROR");
-    }
+    const { supabase, user } = auth;
 
     // Build update object with only provided fields
     const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (input.name !== undefined) updates.name = input.name.trim();
-    if (input.subject !== undefined) updates.subject = input.subject.trim();
-    if (input.content !== undefined) updates.content = input.content;
-    if (input.campaignType !== undefined) updates.campaign_type = input.campaignType;
-    if (input.segmentId !== undefined) updates.segment_id = input.segmentId || null;
-    if (input.scheduledAt !== undefined) {
-      updates.scheduled_at = input.scheduledAt || null;
-      updates.status = input.scheduledAt ? "scheduled" : "draft";
+    if (validated.data.name !== undefined) updates.name = validated.data.name.trim();
+    if (validated.data.subject !== undefined) updates.subject = validated.data.subject.trim();
+    if (validated.data.content !== undefined) updates.content = validated.data.content;
+    if (validated.data.campaignType !== undefined)
+      updates.campaign_type = validated.data.campaignType;
+    if (validated.data.segmentId !== undefined)
+      updates.segment_id = validated.data.segmentId || null;
+    if (validated.data.scheduledAt !== undefined) {
+      updates.scheduled_at = validated.data.scheduledAt || null;
+      updates.status = validated.data.scheduledAt ? "scheduled" : "draft";
     }
 
     const { data, error } = await supabase
       .from("newsletter_campaigns")
       .update(updates)
-      .eq("id", input.id)
+      .eq("id", validated.data.id)
       .select("id, name, status")
       .single();
 
@@ -185,7 +237,13 @@ export async function updateCampaign(
       return serverActionError(error.message, "DATABASE_ERROR");
     }
 
+    // Audit log
+    await logAuditEvent(supabase, user.id, "UPDATE", "campaign", data.id, {
+      changes: Object.keys(updates).filter((k) => k !== "updated_at"),
+    });
+
     invalidateTag(CACHE_TAGS.ADMIN);
+    invalidateTag(CACHE_TAGS.CAMPAIGNS);
     revalidatePath("/admin/email");
 
     return {
@@ -207,25 +265,30 @@ export async function updateCampaign(
  */
 export async function deleteCampaign(id: string): Promise<ServerActionResult<void>> {
   try {
+    // Validate ID
+    if (!id || !z.string().uuid().safeParse(id).success) {
+      return serverActionError("Invalid campaign ID", "VALIDATION_ERROR");
+    }
+
     const auth = await verifyAdminAccess();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
 
-    const { supabase } = auth;
-
-    if (!id) {
-      return serverActionError("Campaign ID is required", "VALIDATION_ERROR");
-    }
+    const { supabase, user } = auth;
 
     // Check campaign status - only allow deleting drafts
     const { data: campaign } = await supabase
       .from("newsletter_campaigns")
-      .select("status")
+      .select("status, name")
       .eq("id", id)
       .single();
 
-    if (campaign?.status === "sending") {
+    if (!campaign) {
+      return serverActionError("Campaign not found", "NOT_FOUND");
+    }
+
+    if (campaign.status === "sending") {
       return serverActionError(
         "Cannot delete a campaign that is currently sending",
         "VALIDATION_ERROR"
@@ -239,7 +302,13 @@ export async function deleteCampaign(id: string): Promise<ServerActionResult<voi
       return serverActionError(error.message, "DATABASE_ERROR");
     }
 
+    // Audit log
+    await logAuditEvent(supabase, user.id, "DELETE", "campaign", id, {
+      name: campaign.name,
+    });
+
     invalidateTag(CACHE_TAGS.ADMIN);
+    invalidateTag(CACHE_TAGS.CAMPAIGNS);
     revalidatePath("/admin/email");
 
     return successVoid();
@@ -254,6 +323,11 @@ export async function deleteCampaign(id: string): Promise<ServerActionResult<voi
  */
 export async function duplicateCampaign(id: string): Promise<ServerActionResult<CampaignResult>> {
   try {
+    // Validate ID
+    if (!id || !z.string().uuid().safeParse(id).success) {
+      return serverActionError("Invalid campaign ID", "VALIDATION_ERROR");
+    }
+
     const auth = await verifyAdminAccess();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
@@ -272,11 +346,24 @@ export async function duplicateCampaign(id: string): Promise<ServerActionResult<
       return serverActionError("Campaign not found", "NOT_FOUND");
     }
 
-    // Create duplicate
+    // Create duplicate with unique name
+    let newName = `${original.name} (Copy)`;
+    let counter = 1;
+    while (true) {
+      const { data: existing } = await supabase
+        .from("newsletter_campaigns")
+        .select("id")
+        .eq("name", newName)
+        .single();
+      if (!existing) break;
+      counter++;
+      newName = `${original.name} (Copy ${counter})`;
+    }
+
     const { data, error } = await supabase
       .from("newsletter_campaigns")
       .insert({
-        name: `${original.name} (Copy)`,
+        name: newName,
         subject: original.subject,
         content: original.content,
         campaign_type: original.campaign_type,
@@ -292,7 +379,14 @@ export async function duplicateCampaign(id: string): Promise<ServerActionResult<
       return serverActionError(error.message, "DATABASE_ERROR");
     }
 
+    // Audit log
+    await logAuditEvent(supabase, user.id, "DUPLICATE", "campaign", data.id, {
+      sourceId: id,
+      sourceName: original.name,
+    });
+
     invalidateTag(CACHE_TAGS.ADMIN);
+    invalidateTag(CACHE_TAGS.CAMPAIGNS);
     revalidatePath("/admin/email");
 
     return {
@@ -314,25 +408,34 @@ export async function duplicateCampaign(id: string): Promise<ServerActionResult<
  */
 export async function pauseCampaign(id: string): Promise<ServerActionResult<void>> {
   try {
+    if (!id || !z.string().uuid().safeParse(id).success) {
+      return serverActionError("Invalid campaign ID", "VALIDATION_ERROR");
+    }
+
     const auth = await verifyAdminAccess();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
 
-    const { supabase } = auth;
+    const { supabase, user } = auth;
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from("newsletter_campaigns")
       .update({ status: "paused", updated_at: new Date().toISOString() })
       .eq("id", id)
-      .in("status", ["sending", "scheduled"]);
+      .in("status", ["sending", "scheduled"])
+      .select("name")
+      .single();
 
     if (error) {
       console.error("Failed to pause campaign:", error);
       return serverActionError(error.message, "DATABASE_ERROR");
     }
 
+    await logAuditEvent(supabase, user.id, "PAUSE", "campaign", id, { name: data?.name });
+
     invalidateTag(CACHE_TAGS.ADMIN);
+    invalidateTag(CACHE_TAGS.CAMPAIGNS);
     revalidatePath("/admin/email");
 
     return successVoid();
@@ -347,17 +450,21 @@ export async function pauseCampaign(id: string): Promise<ServerActionResult<void
  */
 export async function resumeCampaign(id: string): Promise<ServerActionResult<void>> {
   try {
+    if (!id || !z.string().uuid().safeParse(id).success) {
+      return serverActionError("Invalid campaign ID", "VALIDATION_ERROR");
+    }
+
     const auth = await verifyAdminAccess();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
     }
 
-    const { supabase } = auth;
+    const { supabase, user } = auth;
 
     // Check if campaign has a scheduled time
     const { data: campaign } = await supabase
       .from("newsletter_campaigns")
-      .select("scheduled_at")
+      .select("scheduled_at, name")
       .eq("id", id)
       .single();
 
@@ -374,7 +481,13 @@ export async function resumeCampaign(id: string): Promise<ServerActionResult<voi
       return serverActionError(error.message, "DATABASE_ERROR");
     }
 
+    await logAuditEvent(supabase, user.id, "RESUME", "campaign", id, {
+      name: campaign?.name,
+      newStatus,
+    });
+
     invalidateTag(CACHE_TAGS.ADMIN);
+    invalidateTag(CACHE_TAGS.CAMPAIGNS);
     revalidatePath("/admin/email");
 
     return successVoid();

@@ -10,6 +10,7 @@ import React, { useState, useEffect, useRef, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+import { Send, ImageIcon, MoreVertical, ArrowLeft, Check, Smile, BadgeCheck } from "lucide-react";
 import { useUnifiedChat } from "@/hooks/useUnifiedChat";
 import { sendFoodChatMessage, markFoodChatAsRead } from "@/app/actions/chat";
 import { Button } from "@/components/ui/button";
@@ -18,16 +19,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import {
-  Send,
-  ImageIcon,
-  MoreVertical,
-  ArrowLeft,
-  Check,
-  Smile,
-  X,
-  BadgeCheck,
-} from "lucide-react";
 
 // Icon aliases for consistency
 const FiSend = Send;
@@ -36,7 +27,6 @@ const FiMoreVertical = MoreVertical;
 const FiArrowLeft = ArrowLeft;
 const FiCheck = Check;
 const FiSmile = Smile;
-const FiX = X;
 const HiCheckBadge = BadgeCheck;
 import type { UnifiedChatRoom } from "@/lib/data/chat";
 
@@ -168,7 +158,7 @@ export function UnifiedChatContainer({
       formData.set("roomId", chatRoom.id);
       formData.set("text", messageText);
       const result = await sendFoodChatMessage(formData);
-      if (result.error) {
+      if (!result.success) {
         setMessages((prev) => prev.filter((m) => m.id !== optimisticMessage.id));
       }
     });
@@ -483,7 +473,7 @@ type MessageBubbleProps = {
   getText: (key: keyof typeof FALLBACK) => string;
 };
 
-function MessageBubble({ message, otherParticipant, getText }: MessageBubbleProps) {
+function MessageBubble({ message, otherParticipant, getText: _getText }: MessageBubbleProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.98 }}
