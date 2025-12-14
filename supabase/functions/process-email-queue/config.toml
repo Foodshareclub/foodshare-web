@@ -1,2 +1,0 @@
-[functions.process-email-queue]
-verify_jwt = false

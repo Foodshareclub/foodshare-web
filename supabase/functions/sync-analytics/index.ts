@@ -1,5 +1,23 @@
 import { createClient } from "@supabase/supabase-js";
-import { MDConnection } from "@motherduck/wasm-client";
+
+// MotherDuck REST API helper
+async function executeMotherDuckQuery(token: string, sql: string): Promise<unknown> {
+  const response = await fetch("https://api.motherduck.com/v1/sql", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ sql }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`MotherDuck API error: ${response.status} - ${errorText}`);
+  }
+
+  return response.json();
+}
 
 Deno.serve(async (_req) => {
   try {
@@ -12,14 +30,12 @@ Deno.serve(async (_req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // 1. Fetch Snapshot Data from Supabase
-    // Fetch all users (profiles)
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
       .select("id, created_at, role, full_name, email");
 
     if (profilesError) throw profilesError;
 
-    // Fetch all listings (posts)
     const { data: posts, error: postsError } = await supabase
       .from("posts")
       .select("id, created_at, title, status, profile_id, type");
@@ -28,17 +44,14 @@ Deno.serve(async (_req) => {
 
     console.log(`Fetched ${profiles.length} profiles and ${posts.length} posts.`);
 
-    // 2. Connect to MotherDuck
-    const conn = await MDConnection.create({
+    // Safe string escape function
+    const esc = (s: unknown) =>
+      s === null || s === undefined ? "NULL" : `'${String(s).replace(/'/g, "''")}'`;
+
+    // 2. Sync Users (Full Replenish / Snapshot)
+    await executeMotherDuckQuery(
       mdToken,
-    });
-
-    // 3. Sync Users (Full Replenish / Snapshot)
-    // We create a temp table or just truncate and insert.
-    // For analytics snapshots, strict consistency isn't always required, but let's try to be clean.
-    // We'll Create 'full_users' if not exists.
-
-    await conn.evaluateQuery(`
+      `
       CREATE TABLE IF NOT EXISTS full_users (
         id VARCHAR,
         created_at TIMESTAMP,
@@ -47,32 +60,31 @@ Deno.serve(async (_req) => {
         email VARCHAR,
         synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `);
+    `
+    );
 
-    // Basic "Insert" strategy: clearing old snapshot might be better for "current state"
-    // faster: DELETE FROM full_users; INSERT INTO ...
-    await conn.evaluateQuery("DELETE FROM full_users");
+    await executeMotherDuckQuery(mdToken, "DELETE FROM full_users");
 
-    // Bulk insert users
-    // Constructing large VALUES string is naive but effective for <10k rows on Edge.
-    // For larger datasets, we'd stream CSV or use JSON.
+    // Bulk insert users in batches to avoid query size limits
+    const BATCH_SIZE = 500;
     if (profiles.length > 0) {
-      // Safe string escape function
-      const esc = (s: unknown) =>
-        s === null || s === undefined ? "NULL" : `'${String(s).replace(/'/g, "''")}'`;
+      for (let i = 0; i < profiles.length; i += BATCH_SIZE) {
+        const batch = profiles.slice(i, i + BATCH_SIZE);
+        const values = batch
+          .map(
+            (p) =>
+              `(${esc(p.id)}, ${esc(p.created_at)}, ${esc(p.role)}, ${esc(p.full_name)}, ${esc(p.email)}, CURRENT_TIMESTAMP)`
+          )
+          .join(",");
 
-      const values = profiles
-        .map(
-          (p) =>
-            `(${esc(p.id)}, ${esc(p.created_at)}, ${esc(p.role)}, ${esc(p.full_name)}, ${esc(p.email)}, CURRENT_TIMESTAMP)`
-        )
-        .join(",");
-
-      await conn.evaluateQuery(`INSERT INTO full_users VALUES ${values}`);
+        await executeMotherDuckQuery(mdToken, `INSERT INTO full_users VALUES ${values}`);
+      }
     }
 
-    // 4. Sync Listings
-    await conn.evaluateQuery(`
+    // 3. Sync Listings
+    await executeMotherDuckQuery(
+      mdToken,
+      `
       CREATE TABLE IF NOT EXISTS full_listings (
         id BIGINT,
         created_at TIMESTAMP,
@@ -82,26 +94,24 @@ Deno.serve(async (_req) => {
         type VARCHAR,
         synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `);
+    `
+    );
 
-    await conn.evaluateQuery("DELETE FROM full_listings");
+    await executeMotherDuckQuery(mdToken, "DELETE FROM full_listings");
 
     if (posts.length > 0) {
-      const esc = (s: unknown) =>
-        s === null || s === undefined ? "NULL" : `'${String(s).replace(/'/g, "''")}'`;
+      for (let i = 0; i < posts.length; i += BATCH_SIZE) {
+        const batch = posts.slice(i, i + BATCH_SIZE);
+        const values = batch
+          .map(
+            (p) =>
+              `(${p.id}, ${esc(p.created_at)}, ${esc(p.title)}, ${esc(p.status)}, ${esc(p.profile_id)}, ${esc(p.type)}, CURRENT_TIMESTAMP)`
+          )
+          .join(",");
 
-      const values = posts
-        .map(
-          (p) =>
-            `(${p.id}, ${esc(p.created_at)}, ${esc(p.title)}, ${esc(p.status)}, ${esc(p.profile_id)}, ${esc(p.type)}, CURRENT_TIMESTAMP)`
-        )
-        .join(",");
-
-      await conn.evaluateQuery(`INSERT INTO full_listings VALUES ${values}`);
+        await executeMotherDuckQuery(mdToken, `INSERT INTO full_listings VALUES ${values}`);
+      }
     }
-
-    // Cleanup
-    // conn.close(); // ensure connection is closed? MDConnection logic.
 
     return new Response(
       JSON.stringify({
