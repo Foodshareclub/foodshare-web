@@ -75,7 +75,7 @@ interface ServiceCircuit {
 // ============================================================================
 
 const CONFIG = {
-  version: "v12",
+  version: "v13",
   targetSize: 100 * 1024,
   skipThreshold: 100 * 1024,
   defaultBucket: "posts",
@@ -1236,7 +1236,7 @@ Deno.serve(async (req) => {
     }
 
     // Check rate limit for processing modes
-    if ((mode === "batch" || mode === "upload") && !checkRateLimit()) {
+    if ((mode === "batch" || mode === "batch-all" || mode === "upload") && !checkRateLimit()) {
       return jsonResponse(
         { error: "Rate limit exceeded", retryAfter: CONFIG.rateLimit.windowMs / 1000 },
         429
@@ -1255,7 +1255,7 @@ Deno.serve(async (req) => {
       fetchCloudinaryUsage(services.cloudinaryConfig); // Fire and forget
     }
 
-    // Batch mode
+    // Batch mode - single bucket
     if (mode === "batch") {
       const bucket = url.searchParams.get("bucket") || CONFIG.defaultBucket;
       const limit = Math.min(
@@ -1317,6 +1317,109 @@ Deno.serve(async (req) => {
             cloudinary: getCircuitState("cloudinary"),
           },
           results: results.map((r) => ({
+            path: r.originalPath,
+            success: r.success,
+            originalSize: r.originalSize,
+            compressedSize: r.compressedSize,
+            savedPercent:
+              r.compressedSize && r.originalSize > r.compressedSize
+                ? Math.round((1 - r.compressedSize / r.originalSize) * 100)
+                : 0,
+            method: r.compressionMethod,
+            error: r.error,
+            errorType: r.errorType,
+          })),
+        },
+        200
+      );
+    }
+
+    // Batch-all mode - process images from ALL buckets
+    if (mode === "batch-all") {
+      const limit = Math.min(
+        parseInt(url.searchParams.get("limit") || String(CONFIG.batch.defaultLimit)),
+        CONFIG.batch.maxBatchSize
+      );
+      const minSize = parseInt(url.searchParams.get("minSize") || String(CONFIG.skipThreshold));
+      const concurrency = Math.min(
+        parseInt(url.searchParams.get("concurrency") || String(CONFIG.batch.maxConcurrency)),
+        CONFIG.batch.maxConcurrency
+      );
+
+      const { data: images, error } = await supabase.rpc(
+        "get_large_uncompressed_images_all_buckets",
+        {
+          p_min_size: minSize,
+          p_limit: limit,
+        }
+      );
+
+      if (error) return jsonResponse({ error: `Query failed: ${error.message}` }, 500);
+
+      if (!images?.length) {
+        return jsonResponse(
+          {
+            success: true,
+            message: "No images to process across all buckets",
+            buckets: Object.values(STORAGE_BUCKETS),
+            processed: 0,
+            failed: 0,
+            skipped: 0,
+          },
+          200
+        );
+      }
+
+      const items: BatchItem[] = images.map(
+        (i: { name: string; bucket_id: string; size: number }) => ({
+          bucket: i.bucket_id,
+          path: i.name,
+          size: i.size,
+        })
+      );
+
+      // Group by bucket for reporting
+      const bucketCounts: Record<string, number> = {};
+      items.forEach((item) => {
+        bucketCounts[item.bucket] = (bucketCounts[item.bucket] || 0) + 1;
+      });
+
+      const { processed, failed, skipped, results, totalSavedBytes, avgTimeMs } =
+        await processBatch(supabase, items, services, concurrency);
+
+      // Group results by bucket
+      const resultsByBucket: Record<string, number> = {};
+      results.forEach((r) => {
+        const bucket = items.find((i) => i.path === r.originalPath)?.bucket || "unknown";
+        if (
+          r.success &&
+          r.compressionMethod !== "skipped" &&
+          r.compressionMethod !== "no-improvement"
+        ) {
+          resultsByBucket[bucket] = (resultsByBucket[bucket] || 0) + 1;
+        }
+      });
+
+      return jsonResponse(
+        {
+          success: true,
+          mode: "batch-all",
+          buckets: Object.values(STORAGE_BUCKETS),
+          bucketCounts,
+          resultsByBucket,
+          concurrency,
+          processed,
+          failed,
+          skipped,
+          totalSavedBytes,
+          avgTimeMs,
+          duration: Date.now() - startTime,
+          circuits: {
+            tinypng: getCircuitState("tinypng"),
+            cloudinary: getCircuitState("cloudinary"),
+          },
+          results: results.map((r) => ({
+            bucket: items.find((i) => i.path === r.originalPath)?.bucket,
             path: r.originalPath,
             success: r.success,
             originalSize: r.originalSize,

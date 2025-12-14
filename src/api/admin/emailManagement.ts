@@ -58,41 +58,51 @@ export interface EmailStats {
  * Get current quota status for all providers
  */
 export async function getProviderQuotas(): Promise<ProviderQuotaStatus[]> {
+  // Call the edge function to get real-time merged quota data (Live API + DB)
+  const { data, error: invokeError } = await supabase.functions.invoke("monitor-email-health", {
+    method: "GET",
+    // No params needed, defaults to action=full which fetches quotas
+  });
+
+  if (invokeError) throw invokeError;
+
+  // Map the edge function response to ProviderQuotaStatus
+  // Response format: { success: true, quotas: [...], summary: ... }
+
+  const quotas = data.quotas || [];
   const today = new Date().toISOString().split("T")[0];
 
-  const { data, error } = await supabase
-    .from("email_provider_quota")
-    .select("*")
-    .eq("date", today)
-    .order("provider");
-
-  if (error) throw error;
-
-  interface RawQuota {
-    provider: EmailProvider;
-    emails_sent: number;
-    daily_limit: number;
-    date: string;
+  interface EdgeFunctionQuota {
+    provider: string;
+    daily?: {
+      sent: number;
+      limit: number;
+      remaining: number;
+      percentUsed: number;
+    };
   }
 
-  return (data || []).map((quota: RawQuota) => {
-    const remaining = quota.daily_limit - quota.emails_sent;
-    const usagePercentage = (quota.emails_sent / quota.daily_limit) * 100;
+  return quotas.map((q: EdgeFunctionQuota) => {
+    // Edge function returns detailed structure:
+    // daily: { sent, limit, remaining, percentUsed }
+
+    // Safety check for missing data
+    const daily = q.daily || { sent: 0, limit: 100, remaining: 100, percentUsed: 0 };
 
     let status: "ok" | "warning" | "exhausted" = "ok";
-    if (quota.emails_sent >= quota.daily_limit) {
+    if (daily.sent >= daily.limit && daily.limit > 0) {
       status = "exhausted";
-    } else if (usagePercentage >= 80) {
+    } else if (daily.percentUsed >= 80) {
       status = "warning";
     }
 
     return {
-      provider: quota.provider,
-      emails_sent: quota.emails_sent,
-      daily_limit: quota.daily_limit,
-      remaining,
-      usage_percentage: usagePercentage,
-      date: quota.date,
+      provider: q.provider as EmailProvider,
+      emails_sent: daily.sent,
+      daily_limit: daily.limit,
+      remaining: daily.remaining,
+      usage_percentage: daily.percentUsed,
+      date: today, // Edge function doesn't return date, implies current
       status,
     };
   });

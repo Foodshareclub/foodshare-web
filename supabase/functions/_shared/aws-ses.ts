@@ -62,7 +62,7 @@ class AWSV4Signer {
     };
 
     // Create canonical request
-    const canonicalRequest = this.createCanonicalRequest(method, url, signedHeaders, payload);
+    const canonicalRequest = await this.createCanonicalRequest(method, url, signedHeaders, payload);
 
     // Create string to sign
     const credentialScope = `${dateStamp}/${this.region}/${this.service}/aws4_request`;
@@ -84,12 +84,12 @@ class AWSV4Signer {
     };
   }
 
-  private createCanonicalRequest(
+  private async createCanonicalRequest(
     method: string,
     url: string,
     headers: Record<string, string>,
     payload: string
-  ): string {
+  ): Promise<string> {
     const urlObj = new URL(url);
     const canonicalUri = urlObj.pathname || "/";
     const canonicalQueryString = urlObj.search.slice(1) || "";
@@ -106,8 +106,8 @@ class AWSV4Signer {
       .map((key) => key.toLowerCase())
       .join(";");
 
-    // Hash payload
-    const payloadHash = this.sha256Hex(payload);
+    // Hash payload (must await the async sha256Hex)
+    const payloadHash = await this.sha256Hex(payload);
 
     return [
       method,
@@ -298,40 +298,60 @@ export class AWSSESProvider {
   }
 
   /**
-   * Get AWS SES sending quota
+   * Get AWS SES sending quota using SES v1 Query API
+   * This is more compatible than the v2 REST API
    */
   async getQuota(): Promise<{
     max24HourSend: number;
     maxSendRate: number;
     sentLast24Hours: number;
+    error?: string;
+    rawResponse?: unknown;
   }> {
     try {
+      // Use SES v1 Query API endpoint (more compatible)
+      const sesV1Endpoint = `https://email.${this.config.region}.amazonaws.com/`;
+      const queryParams = "Action=GetSendQuota&Version=2010-12-01";
+      const url = `${sesV1Endpoint}?${queryParams}`;
+
       const headers = {
-        "Content-Type": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
       };
 
-      const signedHeaders = await this.signer.signRequest(
-        "GET",
-        `${this.endpoint}/v2/email/account`,
-        headers,
-        ""
-      );
+      const signedHeaders = await this.signer.signRequest("GET", url, headers, "");
 
-      const response = await fetch(`${this.endpoint}/v2/email/account`, {
+      const response = await fetch(url, {
         method: "GET",
         headers: signedHeaders,
       });
 
+      const responseText = await response.text();
+
       if (!response.ok) {
-        throw new Error(`Failed to get quota: ${response.status}`);
+        // Parse XML error response
+        const errorMatch = responseText.match(/<Message>([^<]+)<\/Message>/);
+        const errorMessage =
+          errorMatch?.[1] || responseText.slice(0, 200) || `HTTP ${response.status}`;
+        return {
+          max24HourSend: 0,
+          maxSendRate: 0,
+          sentLast24Hours: 0,
+          error: `AWS SES API error (${response.status}): ${errorMessage}`,
+          rawResponse: responseText,
+        };
       }
 
-      const data = await response.json();
+      // Parse XML response
+      const max24HourSendMatch = responseText.match(/<Max24HourSend>([^<]+)<\/Max24HourSend>/);
+      const maxSendRateMatch = responseText.match(/<MaxSendRate>([^<]+)<\/MaxSendRate>/);
+      const sentLast24HoursMatch = responseText.match(
+        /<SentLast24Hours>([^<]+)<\/SentLast24Hours>/
+      );
 
       return {
-        max24HourSend: data.SendQuota?.Max24HourSend || 0,
-        maxSendRate: data.SendQuota?.MaxSendRate || 0,
-        sentLast24Hours: data.SendQuota?.SentLast24Hours || 0,
+        max24HourSend: max24HourSendMatch ? parseFloat(max24HourSendMatch[1]) : 0,
+        maxSendRate: maxSendRateMatch ? parseFloat(maxSendRateMatch[1]) : 0,
+        sentLast24Hours: sentLast24HoursMatch ? parseFloat(sentLast24HoursMatch[1]) : 0,
       };
     } catch (error) {
       console.error("Failed to get AWS SES quota:", error);
@@ -339,8 +359,27 @@ export class AWSSESProvider {
         max24HourSend: 0,
         maxSendRate: 0,
         sentLast24Hours: 0,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
+  }
+
+  /**
+   * Get the configured region
+   */
+  getRegion(): string {
+    return this.config.region;
+  }
+
+  /**
+   * Get masked credentials for debugging
+   */
+  getDebugInfo(): { region: string; accessKeyIdPrefix: string; endpoint: string } {
+    return {
+      region: this.config.region,
+      accessKeyIdPrefix: this.config.accessKeyId.substring(0, 8) + "...",
+      endpoint: this.endpoint,
+    };
   }
 }
 

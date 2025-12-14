@@ -5,7 +5,7 @@
 This guide documents the authentication system for FoodShare, built with Supabase Auth. The codebase supports two patterns:
 
 1. **Server Actions (Recommended)** - For new features, uses `src/app/actions/auth.ts`
-2. **useAuth Hook (Legacy)** - Existing code uses Redux-based `useAuth` hook
+2. **useAuth Hook** - Client-side hook using Zustand for shared state
 
 New features should use Server Actions with `useTransition` for pending states.
 
@@ -29,7 +29,10 @@ src/
 │   ├── authAPI.ts                 # Legacy auth API methods
 │   └── profileAPI.ts              # Profile operations
 ├── hooks/
-│   └── useAuth.ts                 # Legacy custom auth hook
+│   └── useAuth.ts                 # Client-side auth hook (Zustand-based)
+├── store/
+│   └── zustand/
+│       └── useAuthStore.ts        # Shared auth state (Zustand)
 ├── components/
 │   └── auth/
 │       ├── AuthProvider.tsx       # Auth state provider
@@ -179,9 +182,9 @@ export default function ForgotPasswordPage() {
 
 ---
 
-## Legacy Pattern (useAuth Hook)
+## useAuth Hook (Zustand-Based)
 
-The following sections document the legacy `useAuth` hook pattern. Use this when working with existing code that already uses Redux for auth state.
+The `uslowing sections document the legacy `useAuth` hook pattern. Use this when working with existing code that already uses Redux for auth state.
 
 ---
 

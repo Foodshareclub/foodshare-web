@@ -104,7 +104,7 @@ function PublishListingModal({
   const formRef = useRef<HTMLDivElement>(null);
 
   // Auth and location state
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const id = user?.id;
   const { userLocation } = useUIStore();
 
@@ -257,6 +257,13 @@ function PublishListingModal({
     setUploadProgress(null);
 
     // Pre-flight checks
+    if (isAuthLoading) {
+      setError("Checking authentication... Please try again in a moment.");
+      setShakeError(true);
+      setTimeout(() => setShakeError(false), 500);
+      return;
+    }
+
     if (!id) {
       setError("Please sign in to publish a listing");
       setShakeError(true);

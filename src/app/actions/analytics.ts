@@ -1,9 +1,15 @@
 "use server";
 
-import { MotherDuckService } from "@/lib/analytics/motherduck";
 import { createClient } from "@/lib/supabase/server";
 import { serverActionError, serverActionSuccess } from "@/lib/errors/server-actions";
 import { ServerActionResult } from "@/lib/errors/types";
+
+// Dynamic import to avoid bundling duckdb-async at build time
+// DuckDB native binaries don't work in Vercel's serverless environment
+async function getMotherDuckService() {
+  const { MotherDuckService } = await import("@/lib/analytics/motherduck");
+  return MotherDuckService;
+}
 
 export interface AnalyticsSummary {
   totalUsers: number;
@@ -38,6 +44,7 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
     // SELECT count(*) as total_users FROM users
     // But we need to know the table names in the MotherDuck instance.
     // Query real data from MotherDuck
+    const MotherDuckService = await getMotherDuckService();
     const [eventStats] = await MotherDuckService.runQuery<{ count: number }>(
       "SELECT count(*) as count FROM events"
     );
@@ -85,7 +92,7 @@ export async function getMonthlyGrowth(): Promise<ServerActionResult<MonthlyGrow
       { month: "Jun", users: 239, listings: 380 },
       { month: "Jul", users: 349, listings: 430 },
     ]);
-  } catch (error) {
+  } catch {
     return serverActionError("Failed to fetch growth data", "UNKNOWN_ERROR");
   }
 }
@@ -119,6 +126,7 @@ export async function getDailyActiveUsers(): Promise<ServerActionResult<DailyAct
       ORDER BY 1 ASC
     `;
 
+    const MotherDuckService = await getMotherDuckService();
     const results = await MotherDuckService.runQuery<DailyActiveUsers>(query);
     return serverActionSuccess(results);
   } catch (error) {
@@ -134,7 +142,7 @@ export async function getDailyActiveUsers(): Promise<ServerActionResult<DailyAct
 export interface EventDistribution {
   name: string;
   value: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export async function getEventDistribution(): Promise<ServerActionResult<EventDistribution[]>> {
@@ -156,6 +164,7 @@ export async function getEventDistribution(): Promise<ServerActionResult<EventDi
       LIMIT 5
     `;
 
+    const MotherDuckService = await getMotherDuckService();
     const results = await MotherDuckService.runQuery<EventDistribution>(query);
     return serverActionSuccess(results);
   } catch (error) {
@@ -201,6 +210,7 @@ export async function getConversionFunnel(): Promise<ServerActionResult<FunnelSt
       SELECT 'Arranged', arranged, 1.0 - (arranged::FLOAT / NULLIF(requests, 0)) FROM counts
     `;
 
+    const MotherDuckService = await getMotherDuckService();
     const results = await MotherDuckService.runQuery<FunnelStep>(query);
     return serverActionSuccess(results);
   } catch (error) {
@@ -215,7 +225,7 @@ export async function getConversionFunnel(): Promise<ServerActionResult<FunnelSt
  */
 export async function trackEvent(
   eventName: string,
-  properties: Record<string, any> = {}
+  properties: Record<string, unknown> = {}
 ): Promise<void> {
   try {
     const supabase = await createClient();
@@ -228,15 +238,22 @@ export async function trackEvent(
     const userId = user?.id || "anonymous";
     const timestamp = new Date().toISOString();
 
-    const propertiesJson = JSON.stringify(properties).replace(/'/g, "''"); // Basic escaping
+    const propertiesJson = JSON.stringify(properties);
 
     // Insert into MotherDuck
     const query = `
       INSERT INTO events (id, event_name, user_id, properties, timestamp) 
-      VALUES ('${eventId}', '${eventName}', '${userId}', '${propertiesJson}', '${timestamp}')
+      VALUES (?, ?, ?, ?, ?)
     `;
 
-    await MotherDuckService.runQuery(query);
+    const MotherDuckService = await getMotherDuckService();
+    await MotherDuckService.runQuery(query, [
+      eventId,
+      eventName,
+      userId,
+      propertiesJson,
+      timestamp,
+    ]);
   } catch (error) {
     // Silently fail for analytics to not break app flow
     console.error("Failed to track event:", error);
@@ -287,6 +304,7 @@ export async function getUserRetentionCohorts(): Promise<ServerActionResult<Rete
       LIMIT 6
     `;
 
+    const MotherDuckService = await getMotherDuckService();
     const results = await MotherDuckService.runQuery<RetentionCohort>(query);
     return serverActionSuccess(results);
   } catch (error) {
@@ -325,6 +343,7 @@ export async function getInventoryAging(): Promise<ServerActionResult<InventoryA
       GROUP BY 1
     `;
 
+    const MotherDuckService = await getMotherDuckService();
     const results = await MotherDuckService.runQuery<InventoryAge>(query);
     return serverActionSuccess(results);
   } catch (error) {

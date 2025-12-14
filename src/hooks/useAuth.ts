@@ -8,9 +8,9 @@
 
 "use client";
 
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { User, Session, AuthChangeEvent } from "@supabase/supabase-js";
+import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store/zustand";
 import {
@@ -78,18 +78,23 @@ export function useAuth(): UseAuthReturn {
   const [isPending, startTransition] = useTransition();
   const supabase = createClient();
 
-  // Local state for auth
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Zustand for admin state (persisted across components)
+  // Use Zustand for shared auth state (fixes race condition where multiple components
+  // calling useAuth() would each have their own loading state)
+  const user = useAuthStore((state) => state.user);
+  const session = useAuthStore((state) => state.session);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const error = useAuthStore((state) => state.error);
   const isAdmin = useAuthStore((state) => state.isAdmin);
   const roles = useAuthStore((state) => state.roles);
   const adminCheckStatus = useAuthStore((state) => state.adminCheckStatus);
+
+  // Zustand actions
+  const setAuth = useAuthStore((state) => state.setAuth);
+  const setLoading = useAuthStore((state) => state.setLoading);
+  const setError = useAuthStore((state) => state.setError);
   const setAdmin = useAuthStore((state) => state.setAdmin);
   const setAdminCheckStatus = useAuthStore((state) => state.setAdminCheckStatus);
+  const clearErrorAction = useAuthStore((state) => state.clearError);
   const reset = useAuthStore((state) => state.reset);
 
   // ========================================================================
@@ -129,14 +134,19 @@ export function useAuth(): UseAuthReturn {
   // ========================================================================
 
   useEffect(() => {
+    // Skip if already loaded (another component already initialized)
+    const currentState = useAuthStore.getState();
+    if (!currentState.isLoading && (currentState.user || currentState.session)) {
+      return;
+    }
+
     // Get initial session
     const getInitialSession = async () => {
       try {
         const {
           data: { session: initialSession },
         } = await supabase.auth.getSession();
-        setSession(initialSession);
-        setUser(initialSession?.user ?? null);
+        setAuth(initialSession?.user ?? null, initialSession);
 
         // Check admin status if user exists
         if (initialSession?.user) {
@@ -145,7 +155,7 @@ export function useAuth(): UseAuthReturn {
       } catch (err) {
         console.error("Error getting initial session:", err);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
@@ -156,8 +166,7 @@ export function useAuth(): UseAuthReturn {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, newSession: Session | null) => {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
+        setAuth(newSession?.user ?? null, newSession);
 
         if (newSession?.user) {
           await checkAdminStatus(newSession.user.id);
@@ -175,7 +184,7 @@ export function useAuth(): UseAuthReturn {
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase, router, reset, checkAdminStatus]);
+  }, [supabase, router, reset, checkAdminStatus, setAuth, setLoading]);
 
   // ========================================================================
   // Auth Actions
@@ -183,8 +192,8 @@ export function useAuth(): UseAuthReturn {
 
   const loginWithPassword = useCallback(
     async (email: string, password: string) => {
-      setError(null);
-      setIsLoading(true);
+      clearErrorAction();
+      setLoading(true);
 
       try {
         const formData = new FormData();
@@ -208,15 +217,15 @@ export function useAuth(): UseAuthReturn {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     },
-    [router]
+    [router, clearErrorAction, setLoading, setError]
   );
 
   const loginWithOAuth = useCallback(
     async (provider: "google" | "github" | "facebook" | "apple") => {
-      setError(null);
+      clearErrorAction();
 
       try {
         // Get the current path to redirect back after OAuth
@@ -248,12 +257,12 @@ export function useAuth(): UseAuthReturn {
         return { success: false, error: errorMessage };
       }
     },
-    [supabase]
+    [supabase, clearErrorAction, setError]
   );
 
   const loginWithMagicLink = useCallback(
     async (email: string) => {
-      setError(null);
+      clearErrorAction();
 
       try {
         const { error: otpError } = await supabase.auth.signInWithOtp({
@@ -275,7 +284,7 @@ export function useAuth(): UseAuthReturn {
         return { success: false, error: errorMessage };
       }
     },
-    [supabase]
+    [supabase, clearErrorAction, setError]
   );
 
   const register = useCallback(
@@ -286,8 +295,8 @@ export function useAuth(): UseAuthReturn {
       passwordArg?: string,
       nameArg?: string
     ) => {
-      setError(null);
-      setIsLoading(true);
+      clearErrorAction();
+      setLoading(true);
 
       try {
         // Support both object and positional arguments for backward compatibility
@@ -337,83 +346,88 @@ export function useAuth(): UseAuthReturn {
         setError(errorMessage);
         return { success: false, error: errorMessage };
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     },
-    [router, user]
+    [router, user, clearErrorAction, setLoading, setError]
   );
 
   const logout = useCallback(async () => {
-    setIsLoading(true);
+    setLoading(true);
     try {
       await signOut();
       reset();
     } catch (err) {
       console.error("Logout error:", err);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  }, [reset]);
+  }, [reset, setLoading]);
 
-  const recoverPassword = useCallback(async (email: string) => {
-    setError(null);
+  const recoverPassword = useCallback(
+    async (email: string) => {
+      clearErrorAction();
 
-    try {
-      const result = await resetPassword(email);
+      try {
+        const result = await resetPassword(email);
 
-      if (!result.success) {
-        setError(result.error || "Password recovery failed");
-        return { success: false, error: result.error };
+        if (!result.success) {
+          setError(result.error || "Password recovery failed");
+          return { success: false, error: result.error };
+        }
+
+        return { success: true };
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Password recovery failed";
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
       }
+    },
+    [clearErrorAction, setError]
+  );
 
-      return { success: true };
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Password recovery failed";
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    }
-  }, []);
+  const handleUpdatePassword = useCallback(
+    async (password: string) => {
+      clearErrorAction();
 
-  const handleUpdatePassword = useCallback(async (password: string) => {
-    setError(null);
+      try {
+        const formData = new FormData();
+        formData.append("password", password);
 
-    try {
-      const formData = new FormData();
-      formData.append("password", password);
+        const result = await updatePassword(formData);
 
-      const result = await updatePassword(formData);
+        if (!result.success) {
+          setError(result.error || "Password update failed");
+          return { success: false, error: result.error };
+        }
 
-      if (!result.success) {
-        setError(result.error || "Password update failed");
-        return { success: false, error: result.error };
+        return { success: true };
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Password update failed";
+        setError(errorMessage);
+        return { success: false, error: errorMessage };
       }
-
-      return { success: true };
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Password update failed";
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
-    }
-  }, []);
+    },
+    [clearErrorAction, setError]
+  );
 
   const checkSession = useCallback(async () => {
     const {
       data: { session: currentSession },
     } = await supabase.auth.getSession();
-    setSession(currentSession);
-    setUser(currentSession?.user ?? null);
-  }, [supabase]);
+    setAuth(currentSession?.user ?? null, currentSession);
+  }, [supabase, setAuth]);
 
   const clearError = useCallback(() => {
-    setError(null);
-  }, []);
+    clearErrorAction();
+  }, [clearErrorAction]);
 
   // ========================================================================
   // Return Interface
   // ========================================================================
 
   const authUser: AuthUser | null = user ? { id: user.id, email: user.email } : null;
-  const isAuthenticated = !!session;
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   return {
     // State
