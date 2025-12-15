@@ -248,6 +248,7 @@ function getDefaultQuotaDetails(): ProviderQuotaDetails[] {
   const defaults: Array<{ provider: EmailProvider; dailyLimit: number; monthlyLimit: number }> = [
     { provider: "resend", dailyLimit: 100, monthlyLimit: 3000 },
     { provider: "brevo", dailyLimit: 300, monthlyLimit: 9000 },
+    { provider: "mailersend", dailyLimit: 400, monthlyLimit: 12000 },
     { provider: "aws_ses", dailyLimit: 100, monthlyLimit: 62000 },
   ];
 
@@ -362,6 +363,14 @@ export async function getProviderHealth(): Promise<ProviderHealth[]> {
     // Return defaults if no metrics
     return [
       {
+        provider: "resend",
+        healthScore: 100,
+        successRate: 100,
+        avgLatencyMs: 0,
+        totalRequests: 0,
+        status: "healthy",
+      },
+      {
         provider: "brevo",
         healthScore: 100,
         successRate: 100,
@@ -370,7 +379,7 @@ export async function getProviderHealth(): Promise<ProviderHealth[]> {
         status: "healthy",
       },
       {
-        provider: "resend",
+        provider: "mailersend",
         healthScore: 100,
         successRate: 100,
         avgLatencyMs: 0,
@@ -389,7 +398,7 @@ export async function getProviderHealth(): Promise<ProviderHealth[]> {
   }
 
   return data.map((m) => ({
-    provider: m.provider as "resend" | "brevo" | "aws_ses",
+    provider: m.provider as "resend" | "brevo" | "mailersend" | "aws_ses",
     healthScore: m.health_score || 100,
     successRate:
       m.total_requests > 0
@@ -584,7 +593,7 @@ export interface EmailMonitoringData {
 export async function getEmailMonitoringData(): Promise<EmailMonitoringData> {
   const supabase = await createClient();
   const today = new Date().toISOString().split("T")[0];
-  const PROVIDER_LIMITS: Record<string, number> = { resend: 100, brevo: 300, aws_ses: 1000 };
+  const PROVIDER_LIMITS: Record<string, number> = { resend: 100, brevo: 300, mailersend: 400, aws_ses: 1000 };
 
   const [cbRes, healthRes, quotaRes, emailRes, eventRes] = await Promise.all([
     supabase.from("email_circuit_breaker").select("*"),
@@ -651,7 +660,7 @@ export async function getEmailMonitoringData(): Promise<EmailMonitoringData> {
 
   // Add defaults if no data
   if (providerStatus.length === 0) {
-    ["brevo", "resend"].forEach((p) => {
+    ["resend", "brevo", "mailersend", "aws_ses"].forEach((p) => {
       providerStatus.push({
         provider: p,
         state: "closed",
@@ -667,7 +676,7 @@ export async function getEmailMonitoringData(): Promise<EmailMonitoringData> {
   }
 
   if (quotaStatus.length === 0) {
-    ["brevo", "resend"].forEach((p) => {
+    ["resend", "brevo", "mailersend", "aws_ses"].forEach((p) => {
       const limit = PROVIDER_LIMITS[p] || 100;
       quotaStatus.push({
         provider: p,

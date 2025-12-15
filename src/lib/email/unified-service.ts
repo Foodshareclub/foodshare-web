@@ -509,6 +509,13 @@ export async function createUnifiedEmailService(): Promise<UnifiedEmailService> 
             fromName,
           }
         : undefined,
+      mailersend: secrets.mailersendApiKey
+        ? {
+            apiKey: secrets.mailersendApiKey,
+            fromEmail,
+            fromName,
+          }
+        : undefined,
       aws_ses:
         secrets.awsAccessKeyId && secrets.awsSecretAccessKey
           ? {

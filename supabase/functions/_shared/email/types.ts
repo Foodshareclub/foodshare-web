@@ -8,7 +8,7 @@
 // Core Types
 // ============================================================================
 
-export type EmailProviderName = "resend" | "brevo" | "aws_ses";
+export type EmailProviderName = "resend" | "brevo" | "aws_ses" | "mailersend";
 
 export type EmailType =
   | "auth"
@@ -125,6 +125,11 @@ export interface ProviderConfig {
     fromEmail?: string;
     fromName?: string;
   };
+  mailersend?: {
+    apiKey: string;
+    fromEmail?: string;
+    fromName?: string;
+  };
 }
 
 // ============================================================================
@@ -156,16 +161,16 @@ export const DEFAULT_EMAIL_CONFIG: EmailServiceConfig = {
   defaultFromEmail: "contact@foodshare.club",
   defaultFromName: "FoodShare",
   providerPriority: {
-    auth: ["resend", "brevo", "aws_ses"],
-    chat: ["resend", "brevo", "aws_ses"],
-    food_listing: ["resend", "brevo", "aws_ses"],
-    feedback: ["resend", "brevo", "aws_ses"],
-    review_reminder: ["brevo", "resend", "aws_ses"],
-    newsletter: ["brevo", "aws_ses", "resend"],
-    announcement: ["brevo", "aws_ses", "resend"],
-    welcome: ["resend", "brevo", "aws_ses"],
-    goodbye: ["resend", "brevo", "aws_ses"],
-    notification: ["resend", "brevo", "aws_ses"],
+    auth: ["resend", "brevo", "mailersend", "aws_ses"],
+    chat: ["brevo", "mailersend", "resend", "aws_ses"],
+    food_listing: ["brevo", "mailersend", "resend", "aws_ses"],
+    feedback: ["brevo", "mailersend", "resend", "aws_ses"],
+    review_reminder: ["brevo", "mailersend", "resend", "aws_ses"],
+    newsletter: ["brevo", "mailersend", "aws_ses", "resend"],
+    announcement: ["brevo", "mailersend", "aws_ses", "resend"],
+    welcome: ["resend", "brevo", "mailersend", "aws_ses"],
+    goodbye: ["resend", "brevo", "mailersend", "aws_ses"],
+    notification: ["resend", "brevo", "mailersend", "aws_ses"],
   },
   timeoutMs: 10000,
   circuitBreakerEnabled: true,
@@ -180,5 +185,6 @@ export const DEFAULT_EMAIL_CONFIG: EmailServiceConfig = {
 export const PROVIDER_LIMITS: Record<EmailProviderName, { daily: number; monthly: number }> = {
   resend: { daily: 100, monthly: 3000 },
   brevo: { daily: 300, monthly: 9000 },
+  mailersend: { daily: 400, monthly: 12000 },
   aws_ses: { daily: 200, monthly: 62000 }, // Sandbox: 200/day, Production: 50,000+/day
 };

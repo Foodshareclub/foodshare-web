@@ -22,6 +22,7 @@ interface VaultSecret {
 interface EmailSecrets {
   resendApiKey: string | null;
   brevoApiKey: string | null;
+  mailersendApiKey: string | null;
   awsAccessKeyId: string | null;
   awsSecretAccessKey: string | null;
   awsRegion: string;
@@ -39,6 +40,7 @@ let cacheExpiry = 0;
 const SECRET_NAMES = {
   RESEND_API_KEY: "RESEND_API_KEY",
   BREVO_API_KEY: "BREVO_API_KEY",
+  MAILERSEND_API_KEY: "MAILERSEND_API_KEY",
   AWS_ACCESS_KEY_ID: "AWS_ACCESS_KEY_ID",
   AWS_SECRET_ACCESS_KEY: "AWS_SECRET_ACCESS_KEY",
   MOTHERDUCK_TOKEN: "MOTHERDUCK_TOKEN",
@@ -108,6 +110,7 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
   const emptySecrets: EmailSecrets = {
     resendApiKey: null,
     brevoApiKey: null,
+    mailersendApiKey: null,
     awsAccessKeyId: null,
     awsSecretAccessKey: null,
     awsRegion: process.env.AWS_REGION ?? "us-east-1",
@@ -120,6 +123,7 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
     const envSecrets: EmailSecrets = {
       resendApiKey: process.env.RESEND_API_KEY ?? null,
       brevoApiKey: process.env.BREVO_API_KEY ?? null,
+      mailersendApiKey: process.env.MAILERSEND_API_KEY ?? null,
       awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID ?? null,
       awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? null,
       awsRegion: process.env.AWS_REGION ?? "us-east-1",
@@ -127,12 +131,13 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
     };
 
     const hasEnvSecrets =
-      envSecrets.resendApiKey || envSecrets.brevoApiKey || envSecrets.awsAccessKeyId;
+      envSecrets.resendApiKey || envSecrets.brevoApiKey || envSecrets.mailersendApiKey || envSecrets.awsAccessKeyId;
 
     if (hasEnvSecrets) {
       console.info("[Vault] ✅ DEV MODE - Using environment variables:", {
         resend: maskSecret(envSecrets.resendApiKey),
         brevo: maskSecret(envSecrets.brevoApiKey),
+        mailersend: maskSecret(envSecrets.mailersendApiKey),
         aws: maskSecret(envSecrets.awsAccessKeyId),
       });
       secretsCache = envSecrets;
@@ -194,6 +199,7 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
     const secrets: EmailSecrets = {
       resendApiKey: secretsMap.get(SECRET_NAMES.RESEND_API_KEY) ?? null,
       brevoApiKey: secretsMap.get(SECRET_NAMES.BREVO_API_KEY) ?? null,
+      mailersendApiKey: secretsMap.get(SECRET_NAMES.MAILERSEND_API_KEY) ?? null,
       awsAccessKeyId: secretsMap.get(SECRET_NAMES.AWS_ACCESS_KEY_ID) ?? null,
       awsSecretAccessKey: secretsMap.get(SECRET_NAMES.AWS_SECRET_ACCESS_KEY) ?? null,
       awsRegion: process.env.AWS_REGION ?? "us-east-1",
@@ -204,6 +210,7 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
     console.info("[Vault] 🔑 Secret values:", {
       resend: maskSecret(secrets.resendApiKey),
       brevo: maskSecret(secrets.brevoApiKey),
+      mailersend: maskSecret(secrets.mailersendApiKey),
       awsKey: maskSecret(secrets.awsAccessKeyId),
     });
 
@@ -238,6 +245,14 @@ export async function getResendApiKey(): Promise<string | null> {
 export async function getBrevoApiKey(): Promise<string | null> {
   const secrets = await getEmailSecrets();
   return secrets.brevoApiKey;
+}
+
+/**
+ * Get MailerSend API key specifically
+ */
+export async function getMailerSendApiKey(): Promise<string | null> {
+  const secrets = await getEmailSecrets();
+  return secrets.mailersendApiKey;
 }
 
 /**
@@ -278,12 +293,14 @@ export function clearSecretsCache(): void {
 export async function getConfiguredProviders(): Promise<{
   resend: boolean;
   brevo: boolean;
+  mailersend: boolean;
   awsSes: boolean;
 }> {
   const secrets = await getEmailSecrets();
   return {
     resend: !!secrets.resendApiKey,
     brevo: !!secrets.brevoApiKey,
+    mailersend: !!secrets.mailersendApiKey,
     awsSes: !!secrets.awsAccessKeyId && !!secrets.awsSecretAccessKey,
   };
 }

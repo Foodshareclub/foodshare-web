@@ -1259,12 +1259,14 @@ function ProviderDetailCard({ provider }: { provider: ProviderHealth }) {
     brevo: "Brevo",
     resend: "Resend",
     aws_ses: "AWS SES",
+    mailersend: "MailerSend",
   };
 
   const providerDescriptions = {
     brevo: "Primary email provider for app notifications",
     resend: "Optimized for authentication emails",
     aws_ses: "Failover provider for high availability",
+    mailersend: "High volume email delivery",
   };
 
   return (

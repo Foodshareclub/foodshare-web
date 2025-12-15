@@ -22,6 +22,7 @@ import {
 import { ResendProvider, createResendProvider } from "./resend-provider.ts";
 import { BrevoProvider, createBrevoProvider } from "./brevo-provider.ts";
 import { AWSSESProvider, createAWSSESProvider } from "./aws-ses-provider.ts";
+import { MailerSendProvider, createMailerSendProvider } from "./mailersend-provider.ts";
 
 // ============================================================================
 // Circuit Breaker
@@ -129,10 +130,12 @@ export class EmailService {
     const resend = createResendProvider();
     const brevo = createBrevoProvider();
     const awsSes = createAWSSESProvider();
+    const mailersend = createMailerSendProvider();
 
     this.providers.set("resend", resend);
     this.providers.set("brevo", brevo);
     this.providers.set("aws_ses", awsSes);
+    this.providers.set("mailersend", mailersend);
   }
 
   /**
@@ -156,7 +159,7 @@ export class EmailService {
     params: SendEmailParams,
     emailType: EmailType = "notification"
   ): Promise<SendEmailResult> {
-    const priority = this.config.providerPriority[emailType] || ["resend", "brevo", "aws_ses"];
+    const priority = this.config.providerPriority[emailType] || ["resend", "brevo", "mailersend", "aws_ses"];
 
     // Apply defaults
     const emailParams: SendEmailParams = {
@@ -294,7 +297,7 @@ export class EmailService {
    */
   async getBestProvider(emailType: EmailType = "notification"): Promise<EmailProviderName | null> {
     const health = await this.checkAllHealth();
-    const priority = this.config.providerPriority[emailType] || ["resend", "brevo", "aws_ses"];
+    const priority = this.config.providerPriority[emailType] || ["resend", "brevo", "mailersend", "aws_ses"];
 
     // Sort by priority, then by health score
     const available = health
@@ -374,5 +377,5 @@ export function resetEmailService(): void {
 // Convenience Exports
 // ============================================================================
 
-export { ResendProvider, BrevoProvider, AWSSESProvider };
-export { createResendProvider, createBrevoProvider, createAWSSESProvider };
+export { ResendProvider, BrevoProvider, AWSSESProvider, MailerSendProvider };
+export { createResendProvider, createBrevoProvider, createAWSSESProvider, createMailerSendProvider };

@@ -23,7 +23,7 @@ import {
 import { welcomeEmail, goodbyeEmail } from "../_shared/email/templates.ts";
 
 const VERSION = "1.0.0";
-const VALID_PROVIDERS: EmailProviderName[] = ["resend", "brevo", "aws_ses"];
+const VALID_PROVIDERS: EmailProviderName[] = ["resend", "brevo", "aws_ses", "mailersend"];
 
 // ============================================================================
 // Types
@@ -469,7 +469,7 @@ function selectProvider(
   health: ProviderHealth[],
   dbQuotas: Map<EmailProviderName, { sent: number; limit: number }>
 ): { provider: EmailProviderName; reason: string; alternates: EmailProviderName[] } {
-  const priorityOrder: EmailProviderName[] = ["resend", "brevo", "aws_ses"];
+  const priorityOrder: EmailProviderName[] = ["resend", "brevo", "mailersend", "aws_ses"];
   const healthMap = new Map(health.map((h) => [h.provider, h]));
 
   let selected: EmailProviderName | null = null;
@@ -659,7 +659,7 @@ async function handleHealth(
   const [liveQuotas, dbQuotasRaw] = await Promise.all([
     // Get live quotas from provider APIs (AWS SES has real quota API)
     Promise.all(
-      (["resend", "brevo", "aws_ses"] as EmailProviderName[]).map(async (name) => {
+      (["resend", "brevo", "mailersend", "aws_ses"] as EmailProviderName[]).map(async (name) => {
         const provider = emailService.getProvider(name);
         if (provider?.getQuota) return provider.getQuota();
         return null;

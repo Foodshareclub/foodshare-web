@@ -46,6 +46,7 @@ export { DEFAULT_EMAIL_CONFIG, PROVIDER_LIMITS } from "./types.ts";
 export { ResendProvider, createResendProvider } from "./resend-provider.ts";
 export { BrevoProvider, createBrevoProvider } from "./brevo-provider.ts";
 export { AWSSESProvider, createAWSSESProvider } from "./aws-ses-provider.ts";
+export { MailerSendProvider, createMailerSendProvider } from "./mailersend-provider.ts";
 
 // Service
 export { EmailService, getEmailService, resetEmailService } from "./email-service.ts";
