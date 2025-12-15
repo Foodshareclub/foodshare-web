@@ -79,13 +79,33 @@ export const storageAPI = {
         console.log("[storageAPI.uploadImage] ⏭️ Validation skipped");
       }
 
-      // Check if user is authenticated before upload
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      // Check if user is authenticated before upload (with timeout)
+      console.log("[storageAPI.uploadImage] 🔐 Checking session...");
+      const SESSION_TIMEOUT_MS = 10000;
+
+      const sessionPromise = supabase.auth.getSession();
+      const sessionTimeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          reject(new Error("Session check timed out. Please refresh the page and try again."));
+        }, SESSION_TIMEOUT_MS);
+      });
+
+      let sessionData;
+      let sessionError;
+      try {
+        const result = await Promise.race([sessionPromise, sessionTimeoutPromise]);
+        sessionData = result.data;
+        sessionError = result.error;
+      } catch (timeoutError) {
+        console.error("[storageAPI.uploadImage] ❌ Session timeout:", timeoutError);
+        return { data: null, error: timeoutError as Error };
+      }
+
       if (sessionError) {
         console.error("[storageAPI.uploadImage] ❌ Session error:", sessionError);
         return { data: null, error: new Error("Authentication error. Please sign in again.") };
       }
-      if (!sessionData.session) {
+      if (!sessionData?.session) {
         console.error("[storageAPI.uploadImage] ❌ No active session");
         return { data: null, error: new Error("Please sign in to upload images.") };
       }
