@@ -134,41 +134,55 @@ export async function uploadToStorage(formData: FormData): Promise<UploadResult>
 /**
  * Get a direct upload URL for client-side upload
  * Bypasses server bandwidth and timeouts
+ *
+ * @param bucket - Storage bucket name
+ * @param filePath - Path within the bucket
+ * @param fileType - MIME type
+ * @param fileSize - File size in bytes
+ * @param forceSupabase - Skip R2 and use Supabase directly (for CORS fallback)
  */
 export async function getDirectUploadUrl(
   bucket: string,
   filePath: string,
   fileType: string,
-  fileSize: number
+  fileSize: number,
+  forceSupabase: boolean = false
 ): Promise<DirectUploadResult> {
   console.log("[Storage Action] 🚀 Getting direct upload URL:", {
     bucket,
     filePath,
     size: fileSize,
     type: fileType,
+    forceSupabase,
   });
 
   try {
-    // Try R2 first
-    const r2Config = await getR2Secrets();
+    // Try R2 first (unless forced to use Supabase)
+    if (!forceSupabase) {
+      const r2Config = await getR2Secrets();
 
-    if (r2Config.accountId && r2Config.accessKeyId && r2Config.secretAccessKey) {
-      const presigned = await getPresignedUpload(`${bucket}/${filePath}`, fileType, fileSize);
+      if (r2Config.accountId && r2Config.accessKeyId && r2Config.secretAccessKey) {
+        const presigned = await getPresignedUpload(`${bucket}/${filePath}`, fileType, fileSize);
 
-      if (presigned) {
-        console.log("[Storage Action] ✅ Generated R2 presigned URL");
-        return {
-          success: true,
-          url: presigned.url,
-          uploadHeaders: presigned.headers,
-          method: "PUT",
-          storage: "r2",
-        };
+        if (presigned) {
+          console.log("[Storage Action] ✅ Generated R2 presigned URL");
+          return {
+            success: true,
+            url: presigned.url,
+            uploadHeaders: presigned.headers,
+            method: "PUT",
+            storage: "r2",
+          };
+        }
       }
     }
 
-    // Fallback to Supabase
-    console.log("[Storage Action] ⚠️ R2 not configured, falling back to Supabase");
+    // Fallback to Supabase (or forced)
+    console.log(
+      forceSupabase
+        ? "[Storage Action] 🔄 Using Supabase (forced fallback)"
+        : "[Storage Action] ⚠️ R2 not configured, falling back to Supabase"
+    );
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

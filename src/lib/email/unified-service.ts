@@ -35,6 +35,7 @@ interface UnifiedConfig {
     resend?: { apiKey: string; fromEmail: string; fromName: string };
     brevo?: { apiKey: string; fromEmail: string; fromName: string };
     aws_ses?: { region: string; accessKeyId: string; secretAccessKey: string; fromEmail: string };
+    mailersend?: { apiKey: string; fromEmail: string; fromName: string };
   };
   defaultFrom: { email: string; name: string };
   enableMetrics?: boolean;
@@ -43,19 +44,20 @@ interface UnifiedConfig {
 // Provider priority by email type (static, no DB needed)
 // Resend is now prioritized for all types since it's the most reliable
 const PROVIDER_PRIORITY: Record<EmailType, EmailProvider[]> = {
-  auth: ["resend", "brevo", "aws_ses"],
-  chat: ["resend", "brevo", "aws_ses"],
-  food_listing: ["resend", "brevo", "aws_ses"],
-  feedback: ["resend", "brevo", "aws_ses"],
-  review_reminder: ["resend", "brevo", "aws_ses"],
-  newsletter: ["resend", "brevo", "aws_ses"],
-  announcement: ["resend", "brevo", "aws_ses"],
+  auth: ["resend", "brevo", "mailersend", "aws_ses"],
+  chat: ["resend", "brevo", "mailersend", "aws_ses"],
+  food_listing: ["resend", "brevo", "mailersend", "aws_ses"],
+  feedback: ["resend", "brevo", "mailersend", "aws_ses"],
+  review_reminder: ["resend", "brevo", "mailersend", "aws_ses"],
+  newsletter: ["resend", "brevo", "mailersend", "aws_ses"],
+  announcement: ["resend", "brevo", "mailersend", "aws_ses"],
 };
 
 // Daily limits (static config)
 const DAILY_LIMITS: Record<EmailProvider, number> = {
   resend: 100,
   brevo: 300,
+  mailersend: 400,
   aws_ses: 50000,
 };
 
@@ -63,6 +65,7 @@ const DAILY_LIMITS: Record<EmailProvider, number> = {
 const MONTHLY_LIMITS: Record<EmailProvider, number> = {
   resend: 3000,
   brevo: 9000,
+  mailersend: 12000,
   aws_ses: 62000,
 };
 
@@ -277,6 +280,8 @@ export class UnifiedEmailService {
         return !!this.config.providers.resend?.apiKey;
       case "brevo":
         return !!this.config.providers.brevo?.apiKey;
+      case "mailersend":
+        return !!this.config.providers.mailersend?.apiKey;
       case "aws_ses":
         return !!this.config.providers.aws_ses?.accessKeyId;
       default:
@@ -302,6 +307,11 @@ export class UnifiedEmailService {
       case "brevo": {
         const { BrevoProvider } = await import("./providers/brevo");
         instance = new BrevoProvider(this.config.providers.brevo!);
+        break;
+      }
+      case "mailersend": {
+        const { MailerSendProvider } = await import("./providers/mailersend");
+        instance = new MailerSendProvider(this.config.providers.mailersend!);
         break;
       }
       case "aws_ses": {

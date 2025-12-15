@@ -64,7 +64,7 @@ export interface BounceStats {
 }
 
 export interface ProviderHealth {
-  provider: "resend" | "brevo" | "aws_ses";
+  provider: "resend" | "brevo" | "aws_ses" | "mailersend";
   healthScore: number;
   successRate: number;
   avgLatencyMs: number;

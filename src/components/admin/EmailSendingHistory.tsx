@@ -37,6 +37,7 @@ function EmailLogRow({ log }: EmailLogRowProps) {
     const colors: Record<EmailProvider, string> = {
       brevo: "text-purple-600",
       resend: "text-blue-600",
+      mailersend: "text-green-600",
       aws_ses: "text-orange-600",
     };
     return colors[provider] || "text-gray-600";

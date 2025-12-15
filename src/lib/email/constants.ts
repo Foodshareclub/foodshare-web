@@ -9,15 +9,17 @@ import type { EmailProvider, EmailType } from "./types";
 export const PROVIDER_LIMITS: Record<EmailProvider, number> = {
   resend: 100,
   brevo: 300,
+  mailersend: 400,
   aws_ses: 100,
 } as const;
 
-export const TOTAL_DAILY_CAPACITY = 500;
+export const TOTAL_DAILY_CAPACITY = 900;
 
 // Provider Display Names
 export const PROVIDER_NAMES: Record<EmailProvider, string> = {
   resend: "Resend",
   brevo: "Brevo",
+  mailersend: "MailerSend",
   aws_ses: "AWS SES",
 } as const;
 
@@ -25,6 +27,7 @@ export const PROVIDER_NAMES: Record<EmailProvider, string> = {
 export const PROVIDER_COLORS: Record<EmailProvider, string> = {
   resend: "blue",
   brevo: "purple",
+  mailersend: "green",
   aws_ses: "orange",
 } as const;
 
@@ -71,13 +74,13 @@ export const STATUS_COLORS = {
 
 // Provider Priority by Email Type
 export const PROVIDER_PRIORITY: Record<EmailType, EmailProvider[]> = {
-  auth: ["resend", "brevo", "aws_ses"],
-  chat: ["brevo", "aws_ses", "resend"],
-  food_listing: ["brevo", "aws_ses", "resend"],
-  feedback: ["brevo", "aws_ses", "resend"],
-  review_reminder: ["brevo", "aws_ses", "resend"],
-  newsletter: ["brevo", "aws_ses", "resend"],
-  announcement: ["brevo", "aws_ses", "resend"],
+  auth: ["resend", "brevo", "mailersend", "aws_ses"],
+  chat: ["brevo", "mailersend", "aws_ses", "resend"],
+  food_listing: ["brevo", "mailersend", "aws_ses", "resend"],
+  feedback: ["brevo", "mailersend", "aws_ses", "resend"],
+  review_reminder: ["brevo", "mailersend", "aws_ses", "resend"],
+  newsletter: ["brevo", "mailersend", "aws_ses", "resend"],
+  announcement: ["brevo", "mailersend", "aws_ses", "resend"],
 } as const;
 
 // Error Messages

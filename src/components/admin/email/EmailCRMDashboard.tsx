@@ -199,6 +199,12 @@ const PROVIDERS = [
   },
   { value: "brevo", label: "Brevo", description: "Primary (300/day)", color: "blue" },
   { value: "resend", label: "Resend", description: "Auth emails (100/day)", color: "emerald" },
+  {
+    value: "mailersend",
+    label: "MailerSend",
+    description: "High volume (400/day)",
+    color: "green",
+  },
   { value: "aws_ses", label: "AWS SES", description: "Failover (100/day)", color: "amber" },
 ];
 
@@ -524,6 +530,7 @@ function ProviderPill({ provider }: { provider: ProviderHealth }) {
   const providerNames: Record<string, string> = {
     brevo: "Brevo",
     resend: "Resend",
+    mailersend: "MailerSend",
     aws_ses: "AWS",
   };
 
@@ -675,7 +682,7 @@ function OverviewTab({
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {(providerHealth.length > 0
               ? providerHealth
               : [
@@ -689,6 +696,14 @@ function OverviewTab({
                   },
                   {
                     provider: "resend" as const,
+                    healthScore: 100,
+                    successRate: 100,
+                    avgLatencyMs: 0,
+                    totalRequests: 0,
+                    status: "healthy" as const,
+                  },
+                  {
+                    provider: "mailersend" as const,
                     healthScore: 100,
                     successRate: 100,
                     avgLatencyMs: 0,
@@ -1780,6 +1795,7 @@ function ComposeTab() {
                                   provider.value === "auto" && "bg-violet-500",
                                   provider.value === "brevo" && "bg-blue-500",
                                   provider.value === "resend" && "bg-emerald-500",
+                                  provider.value === "mailersend" && "bg-green-500",
                                   provider.value === "aws_ses" && "bg-amber-500"
                                 )}
                               />
@@ -2044,7 +2060,7 @@ function ProvidersTab({ providerHealth }: { providerHealth: ProviderHealth[] }) 
           <CardDescription>Manage email provider settings and priorities</CardDescription>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             <ProviderConfigCard
               name="Brevo"
               status="configured"
@@ -2060,10 +2076,17 @@ function ProvidersTab({ providerHealth }: { providerHealth: ProviderHealth[] }) 
               description="Optimized for authentication and transactional emails"
             />
             <ProviderConfigCard
+              name="MailerSend"
+              status="configured"
+              dailyLimit={400}
+              priority={3}
+              description="High-volume email provider with 12,000 emails/month free tier"
+            />
+            <ProviderConfigCard
               name="AWS SES"
               status="configured"
               dailyLimit={100}
-              priority={3}
+              priority={4}
               description="Failover provider when primary quotas are exhausted"
             />
           </div>
@@ -2741,6 +2764,7 @@ function ProviderPerformanceCard({ provider }: { provider: ProviderHealth }) {
   const providerConfig = {
     brevo: { name: "Brevo", color: "blue", description: "Primary notifications" },
     resend: { name: "Resend", color: "emerald", description: "Auth & transactional" },
+    mailersend: { name: "MailerSend", color: "green", description: "High volume emails" },
     aws_ses: { name: "AWS SES", color: "amber", description: "Failover provider" },
   };
 
@@ -2748,6 +2772,7 @@ function ProviderPerformanceCard({ provider }: { provider: ProviderHealth }) {
   const colorClasses = {
     blue: "bg-blue-500/10 border-blue-500/20",
     emerald: "bg-emerald-500/10 border-emerald-500/20",
+    green: "bg-green-500/10 border-green-500/20",
     amber: "bg-amber-500/10 border-amber-500/20",
   };
 
@@ -2808,6 +2833,12 @@ function ProviderDetailCard({ provider }: { provider: ProviderHealth }) {
       color: "emerald",
       limit: 100,
       description: "Optimized for authentication and transactional emails",
+    },
+    mailersend: {
+      name: "MailerSend",
+      color: "green",
+      limit: 400,
+      description: "High-volume email provider with 12,000 emails/month free tier",
     },
     aws_ses: {
       name: "AWS SES",

@@ -2,14 +2,30 @@
  * Storage API
  * Unified file storage with Cloudflare R2 (primary) and Supabase Storage (fallback)
  *
- * R2 provides zero egress fees and 10GB free storage
- * Uses Server Action for uploads to access Vault credentials
+ * Features:
+ * - R2 primary storage (zero egress fees, 10GB free)
+ * - Automatic Supabase fallback on R2 failures
+ * - Circuit breaker to skip R2 after repeated failures
+ * - Retry logic with exponential backoff
+ * - Timeout handling
+ * - Comprehensive error classification
  */
 
 import { supabase } from "@/lib/supabase/client";
 import { STORAGE_BUCKETS, validateFile, type StorageBucket } from "@/constants/storage";
 import { deleteFromR2, isR2Configured, getR2PublicUrl } from "@/lib/r2/client";
 import { getDirectUploadUrl } from "@/app/actions/storage";
+import {
+  isR2CircuitOpen,
+  recordR2Failure,
+  recordR2Success,
+  classifyError,
+  formatUploadError,
+  sleep,
+  calculateBackoffDelay,
+  type UploadError,
+  type RetryConfig,
+} from "@/lib/upload";
 
 // ============================================================================
 // Types
@@ -25,12 +41,26 @@ export type UploadImageType = {
   filePath: string;
   file: File;
   validate?: boolean;
+  /** Optional retry configuration override */
+  retryConfig?: Partial<RetryConfig>;
 };
 
 export type UploadResult = {
   path: string;
   publicUrl?: string;
   storage: "r2" | "supabase";
+};
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+/** Default upload configuration */
+const UPLOAD_CONFIG: RetryConfig = {
+  maxRetries: 2, // 2 retries = 3 total attempts
+  baseDelayMs: 500,
+  maxDelayMs: 5000,
+  timeoutMs: 30000, // 30 seconds
 };
 
 // ============================================================================
@@ -44,6 +74,52 @@ function getBucketKey(bucket: string): keyof typeof STORAGE_BUCKETS | undefined 
   return Object.keys(STORAGE_BUCKETS).find(
     (key) => STORAGE_BUCKETS[key as keyof typeof STORAGE_BUCKETS] === bucket
   ) as keyof typeof STORAGE_BUCKETS | undefined;
+}
+
+/**
+ * Create an AbortController with timeout
+ */
+function createTimeoutController(timeoutMs: number): {
+  controller: AbortController;
+  timeoutId: ReturnType<typeof setTimeout>;
+} {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  return { controller, timeoutId };
+}
+
+/**
+ * Perform a single upload attempt
+ */
+async function attemptUpload(
+  url: string,
+  file: File,
+  headers: Record<string, string> | undefined,
+  method: string,
+  timeoutMs: number
+): Promise<{ ok: boolean; status: number; errorText?: string }> {
+  const { controller, timeoutId } = createTimeoutController(timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      method,
+      headers,
+      body: file,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "Unknown error");
+      return { ok: false, status: response.status, errorText };
+    }
+
+    return { ok: true, status: response.status };
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
 }
 
 // ============================================================================
@@ -68,78 +144,220 @@ export const storageAPI = {
   },
 
   /**
-   * Upload image to storage via Server Action
-   * Uses R2 as primary (credentials from Vault), falls back to Supabase
-   */
-  /**
-   * Upload image to storage
-   * Uses direct client-side upload (presigned URL) for performance
-   * Bypasses Next.js Server Action limits and timeouts
+   * Upload image to storage with robust error handling
+   *
+   * Features:
+   * - R2 primary with automatic Supabase fallback
+   * - Circuit breaker: skips R2 after repeated failures
+   * - Retry logic with exponential backoff
+   * - Timeout handling (30s default)
+   * - Comprehensive error classification
+   *
+   * Flow:
+   * 1. Check circuit breaker (skip R2 if open)
+   * 2. Try R2 with retries
+   * 3. On R2 failure: record failure, fallback to Supabase
+   * 4. Try Supabase with retries
+   * 5. Return success or user-friendly error
    */
   async uploadImage(
     params: UploadImageType
   ): Promise<{ data: UploadResult; error: null } | { data: null; error: Error }> {
-    const { bucket, filePath, file, validate = true } = params;
+    const { bucket, filePath, file, validate = true, retryConfig } = params;
+    const config = { ...UPLOAD_CONFIG, ...retryConfig };
 
-    console.log("[storageAPI.uploadImage] 🚀 Starting upload:", {
+    const logPrefix = "[storageAPI.uploadImage]";
+
+    console.log(`${logPrefix} 🚀 Starting upload:`, {
       bucket,
       filePath,
       size: file.size,
       type: file.type,
+      r2CircuitOpen: isR2CircuitOpen(),
     });
 
     try {
-      // Client-side validation first (fast feedback)
+      // ========================================
+      // Step 1: Client-side validation
+      // ========================================
       if (validate) {
         const bucketKey = getBucketKey(bucket);
         if (bucketKey) {
           const validation = validateFile(file, bucketKey);
           if (!validation.valid) {
-            console.log("[storageAPI.uploadImage] ❌ Validation failed:", validation.error);
+            console.log(`${logPrefix} ❌ Validation failed:`, validation.error);
             return { data: null, error: new Error(validation.error) };
           }
         }
       }
 
-      // Get direct upload URL from server
-      console.log("[storageAPI.uploadImage] 🌐 Getting direct upload URL...");
-      const directUpload = await getDirectUploadUrl(bucket, filePath, file.type, file.size);
+      // ========================================
+      // Step 2: Get upload URL and perform upload
+      // ========================================
+      type UploadAttemptResult = {
+        success: boolean;
+        storage: "r2" | "supabase";
+        error?: UploadError;
+        errorMessage?: string;
+      };
 
-      if (!directUpload.success || !directUpload.url) {
-        throw new Error(directUpload.error || "Failed to get upload configuration");
+      /**
+       * Attempt upload to a specific storage with retries
+       */
+      const attemptStorageUpload = async (forceSupabase: boolean): Promise<UploadAttemptResult> => {
+        const storageType = forceSupabase ? "supabase" : "r2";
+
+        // Get presigned URL from server
+        console.log(`${logPrefix} 🌐 Getting ${storageType} upload URL...`);
+
+        const directUpload = await getDirectUploadUrl(
+          bucket,
+          filePath,
+          file.type,
+          file.size,
+          forceSupabase
+        );
+
+        if (!directUpload.success || !directUpload.url) {
+          return {
+            success: false,
+            storage: directUpload.storage || "supabase",
+            errorMessage: directUpload.error || "Failed to get upload URL",
+          };
+        }
+
+        const actualStorage = directUpload.storage || "supabase";
+        console.log(`${logPrefix} 📤 Uploading to ${actualStorage}...`);
+
+        // Retry loop
+        let lastError: UploadError | undefined;
+
+        for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
+          try {
+            if (attempt > 0) {
+              const delay = calculateBackoffDelay(attempt - 1, config);
+              console.log(
+                `${logPrefix} 🔄 Retry ${attempt}/${config.maxRetries} for ${actualStorage}, ` +
+                  `waiting ${Math.round(delay)}ms...`
+              );
+              await sleep(delay);
+            }
+
+            const result = await attemptUpload(
+              directUpload.url,
+              file,
+              directUpload.uploadHeaders,
+              directUpload.method || "PUT",
+              config.timeoutMs
+            );
+
+            if (result.ok) {
+              console.log(`${logPrefix} ✅ Upload successful via ${actualStorage}`);
+              return { success: true, storage: actualStorage };
+            }
+
+            // HTTP error - classify it
+            const httpError = new Error(`HTTP ${result.status}: ${result.errorText}`);
+            lastError = classifyError(httpError, { status: result.status } as Response);
+
+            console.log(
+              `${logPrefix} ⚠️ Attempt ${attempt + 1} failed:`,
+              lastError.type,
+              lastError.message
+            );
+
+            // Don't retry non-retriable errors
+            if (!lastError.retriable) {
+              break;
+            }
+          } catch (fetchError) {
+            // Network/CORS/timeout error
+            lastError = classifyError(fetchError);
+
+            console.log(
+              `${logPrefix} ⚠️ Attempt ${attempt + 1} exception:`,
+              lastError.type,
+              lastError.message
+            );
+
+            // CORS errors won't fix themselves with retries
+            if (lastError.type === "cors") {
+              break;
+            }
+
+            // Don't retry non-retriable errors
+            if (!lastError.retriable) {
+              break;
+            }
+          }
+        }
+
+        return {
+          success: false,
+          storage: actualStorage,
+          error: lastError,
+          errorMessage: lastError?.message || "Upload failed after retries",
+        };
+      };
+
+      // ========================================
+      // Step 3: Try R2 first (unless circuit is open)
+      // ========================================
+      let result: UploadAttemptResult;
+
+      if (isR2CircuitOpen()) {
+        console.log(`${logPrefix} ⚡ R2 circuit open, skipping to Supabase`);
+        result = await attemptStorageUpload(true);
+      } else {
+        // Try R2
+        result = await attemptStorageUpload(false);
+
+        // ========================================
+        // Step 4: Fallback to Supabase if R2 failed
+        // ========================================
+        if (!result.success && result.storage === "r2") {
+          // Record R2 failure for circuit breaker
+          recordR2Failure();
+
+          const failureReason = result.error?.type || "unknown";
+          console.log(`${logPrefix} 🔄 R2 failed (${failureReason}), falling back to Supabase...`);
+
+          // Try Supabase
+          result = await attemptStorageUpload(true);
+        } else if (result.success && result.storage === "r2") {
+          // Record R2 success (resets circuit breaker)
+          recordR2Success();
+        }
       }
 
-      // Perform direct upload
-      console.log(`[storageAPI.uploadImage] 📤 Uploading to ${directUpload.storage}...`);
+      // ========================================
+      // Step 5: Return result
+      // ========================================
+      if (!result.success) {
+        // Format user-friendly error message
+        const userMessage = result.error
+          ? formatUploadError(result.error)
+          : result.errorMessage || "Upload failed. Please try again.";
 
-      const response = await fetch(directUpload.url, {
-        method: directUpload.method || "PUT",
-        headers: directUpload.uploadHeaders,
-        body: file,
-      });
-
-      if (!response.ok) {
-        // R2/S3 usually return XML error, Supabase might return JSON
-        const errorText = await response.text();
-        console.error(`[storageAPI.uploadImage] ❌ Upload failed (${response.status}):`, errorText);
-        throw new Error(`Upload failed with status ${response.status}`);
+        console.error(`${logPrefix} ❌ All upload attempts failed:`, userMessage);
+        return { data: null, error: new Error(userMessage) };
       }
-
-      console.log(`[storageAPI.uploadImage] ✅ Upload successful via ${directUpload.storage}`);
 
       return {
         data: {
-          path: directUpload.storage === "r2" ? `${bucket}/${filePath}` : filePath,
-          storage: directUpload.storage || "supabase",
-          // We can't easily get the public URL immediately for R2 without config on client
-          // But consumers often construct it or use path.
+          path: result.storage === "r2" ? `${bucket}/${filePath}` : filePath,
+          storage: result.storage,
           publicUrl: undefined,
         },
         error: null,
       };
     } catch (error) {
-      console.error("[storageAPI.uploadImage] ❌ Exception:", error);
-      return { data: null, error: error as Error };
+      // Unexpected error (shouldn't happen, but be safe)
+      console.error(`${logPrefix} ❌ Unexpected exception:`, error);
+      return {
+        data: null,
+        error: new Error("An unexpected error occurred. Please try again."),
+      };
     }
   },
 

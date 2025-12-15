@@ -1192,6 +1192,7 @@ function ProviderHealthBadge({ provider }: { provider: ProviderHealth }) {
     brevo: "Brevo",
     resend: "Resend",
     aws_ses: "AWS SES",
+    mailersend: "MailerSend",
   };
 
   return (
@@ -1217,6 +1218,7 @@ function ProviderCard({ provider }: { provider: ProviderHealth }) {
     brevo: "Brevo",
     resend: "Resend",
     aws_ses: "AWS SES",
+    mailersend: "MailerSend",
   };
 
   const statusColors = {

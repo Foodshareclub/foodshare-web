@@ -3,7 +3,7 @@
  * Comprehensive type definitions for robust email handling
  */
 
-export type EmailProvider = "resend" | "brevo" | "aws_ses";
+export type EmailProvider = "resend" | "brevo" | "aws_ses" | "mailersend";
 
 export type EmailType =
   | "auth"
@@ -141,3 +141,5 @@ export interface AWSSESConfig {
   fromEmail: string;
   fromName?: string;
 }
+
+export type MailerSendConfig = EmailProviderConfig;
