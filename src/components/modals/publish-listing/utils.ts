@@ -47,16 +47,20 @@ export const historyReducer = (
 
 /**
  * Compress image to reduce file size
- * Includes timeout to prevent hanging on problematic images
+ * Aggressive compression for storage savings on free tier
+ * Target: ~200KB per image, max 800px dimension
  */
-export const compressImage = async (file: File, maxSizeMB: number = 1): Promise<File> => {
-  const COMPRESSION_TIMEOUT_MS = 10000; // 10 second timeout
+export const compressImage = async (
+  file: File,
+  targetSizeKB: number = 200,
+  maxDimension: number = 800
+): Promise<File> => {
+  const COMPRESSION_TIMEOUT_MS = 15000; // 15 second timeout
 
   return new Promise((resolve) => {
     let resolved = false;
     let objectUrl: string | null = null;
 
-    // Timeout fallback - return original file if compression takes too long
     const timeoutId = setTimeout(() => {
       if (!resolved) {
         resolved = true;
@@ -79,14 +83,14 @@ export const compressImage = async (file: File, maxSizeMB: number = 1): Promise<
       if (resolved) return;
 
       let { width, height } = img;
-      const maxDimension = 1024; // Reduced from 1200 for faster uploads on free tier
 
+      // Aggressive resize - max 800px (saves significant storage)
       if (width > maxDimension || height > maxDimension) {
         if (width > height) {
-          height = (height / width) * maxDimension;
+          height = Math.round((height / width) * maxDimension);
           width = maxDimension;
         } else {
-          width = (width / height) * maxDimension;
+          width = Math.round((width / height) * maxDimension);
           height = maxDimension;
         }
       }
@@ -95,27 +99,42 @@ export const compressImage = async (file: File, maxSizeMB: number = 1): Promise<
       canvas.height = height;
       ctx?.drawImage(img, 0, 0, width, height);
 
-      let quality = 0.8;
+      const targetSizeBytes = targetSizeKB * 1024;
+      let quality = 0.7; // Start lower for faster compression
+      let attempts = 0;
+      const maxAttempts = 8;
+
       const tryCompress = () => {
         if (resolved) return;
+        attempts++;
 
         canvas.toBlob(
           (blob) => {
             if (resolved) return;
 
             if (blob) {
-              const sizeMB = blob.size / (1024 * 1024);
-              if (sizeMB > maxSizeMB && quality > 0.3) {
-                quality -= 0.1;
-                tryCompress();
-              } else {
+              const sizeKB = blob.size / 1024;
+              console.log(
+                `[compressImage] Attempt ${attempts}: ${sizeKB.toFixed(0)}KB @ quality ${quality.toFixed(2)}`
+              );
+
+              // Accept if under target or we've tried enough times
+              if (blob.size <= targetSizeBytes || quality <= 0.3 || attempts >= maxAttempts) {
                 resolved = true;
                 cleanup();
-                const compressedFile = new File([blob], file.name, {
+                const compressedFile = new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
                   type: "image/jpeg",
                   lastModified: Date.now(),
                 });
+                const savings = (((file.size - blob.size) / file.size) * 100).toFixed(0);
+                console.log(
+                  `[compressImage] ✅ Done: ${(file.size / 1024).toFixed(0)}KB → ${sizeKB.toFixed(0)}KB (${savings}% saved)`
+                );
                 resolve(compressedFile);
+              } else {
+                // Reduce quality more aggressively
+                quality -= 0.1;
+                tryCompress();
               }
             } else {
               resolved = true;
@@ -134,6 +153,7 @@ export const compressImage = async (file: File, maxSizeMB: number = 1): Promise<
       if (resolved) return;
       resolved = true;
       cleanup();
+      console.error("[compressImage] Failed to load image");
       resolve(file);
     };
 

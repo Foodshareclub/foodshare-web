@@ -72,24 +72,24 @@ export default async function ProductsPage() {
 
 ```typescript
 // src/app/actions/products.ts
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
-import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
 
-  const { error } = await supabase.from('products').insert({
-    title: formData.get('title') as string,
-    description: formData.get('description') as string,
+  const { error } = await supabase.from("products").insert({
+    title: formData.get("title") as string,
+    description: formData.get("description") as string,
   });
 
   if (error) throw new Error(error.message);
 
   invalidateTag(CACHE_TAGS.PRODUCTS);
-  revalidatePath('/products');
+  revalidatePath("/products");
 }
 ```
 
@@ -120,11 +120,11 @@ export async function createProduct(formData: FormData) {
 
 ```typescript
 // Use React Query only when client-side caching is needed
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
 
 export function useRealtimeMessages(chatId: string) {
   return useQuery({
-    queryKey: ['messages', chatId],
+    queryKey: ["messages", chatId],
     queryFn: () => fetchMessages(chatId),
     refetchInterval: 5000, // Polling for real-time
   });
@@ -146,7 +146,7 @@ export function useRealtimeMessages(chatId: string) {
 
 ```typescript
 // src/store/zustand/useUIStore.ts
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface UIStore {
   sidebarOpen: boolean;
@@ -245,19 +245,34 @@ Full suite of headless UI components:
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
   - `SUPABASE_SERVICE_ROLE_KEY`
 
+### **Cloudflare R2**
+
+- **Purpose**: S3-compatible object storage with zero egress fees
+- **Config**: `src/lib/r2/client.ts`
+- **Features**:
+  - AWS Signature V4 authentication
+  - Zero egress fees (great for high-traffic images)
+  - Cloudflare CDN integration
+- **Environment Variables**:
+  - `R2_ACCOUNT_ID`
+  - `R2_ACCESS_KEY_ID`
+  - `R2_SECRET_ACCESS_KEY`
+  - `R2_BUCKET_NAME`
+  - `NEXT_PUBLIC_R2_PUBLIC_URL`
+
 ### **Supabase Client Patterns**
 
 ```typescript
 // Server-side (Server Components, Server Actions, Route Handlers)
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from "@/lib/supabase/server";
 
 export default async function Page() {
   const supabase = await createClient();
-  const { data } = await supabase.from('products').select('*');
+  const { data } = await supabase.from("products").select("*");
 }
 
 // Client-side (Client Components with 'use client')
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from "@/lib/supabase/client";
 
 function ClientComponent() {
   const supabase = createClient();
@@ -302,9 +317,9 @@ The server client (`@/lib/supabase/server`) includes built-in protection against
 
 ```typescript
 // src/app/products/page.tsx
-export const dynamic = 'force-dynamic'; // Always fetch fresh
+export const dynamic = "force-dynamic"; // Always fetch fresh
 export const revalidate = 3600; // Revalidate every hour
-export const runtime = 'edge'; // Use Edge Runtime
+export const runtime = "edge"; // Use Edge Runtime
 ```
 
 ---
@@ -530,11 +545,13 @@ npm run clean        # Clean build artifacts
 ## Browser Targets
 
 ### Production
+
 - > 0.2% market share
 - Not dead browsers
 - Not Opera Mini
 
 ### Development
+
 - Latest Chrome
 - Latest Firefox
 - Latest Safari

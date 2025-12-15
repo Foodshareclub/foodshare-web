@@ -4,7 +4,8 @@
  */
 
 /** Default avatar URL for unauthenticated users or users without a profile picture */
-export const DEFAULT_AVATAR_URL = "https://***REMOVED***.supabase.co/storage/v1/object/public/profiles/cuties/cute-strawberry.png";
+export const DEFAULT_AVATAR_URL =
+  "https://***REMOVED***.supabase.co/storage/v1/object/public/profiles/cuties/cute-strawberry.png";
 
 export const STORAGE_BUCKETS = {
   /** User profile pictures and avatars (public) */
@@ -106,11 +107,21 @@ export const MAX_FILE_SIZES = {
 
 /**
  * Get public URL for a storage object
+ * Automatically uses R2 URL if configured, otherwise Supabase
+ *
  * @param bucket - Storage bucket name
  * @param path - File path within bucket
  * @returns Full public URL
  */
 export const getStorageUrl = (bucket: StorageBucket, path: string): string => {
+  const r2PublicUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
+
+  // Use R2 if configured (primary storage)
+  if (r2PublicUrl) {
+    return `${r2PublicUrl}/${bucket}/${path}`;
+  }
+
+  // Fallback to Supabase
   const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   return `${baseUrl}/storage/v1/object/public/${bucket}/${path}`;
 };
@@ -120,9 +131,9 @@ export const getStorageUrl = (bucket: StorageBucket, path: string): string => {
  * Use this for private buckets like profiles
  */
 export const getSignedStorageUrl = async (
-  bucket: StorageBucket,
-  path: string,
-  expiresIn: number = 3600
+  _bucket: StorageBucket,
+  _path: string,
+  _expiresIn: number = 3600
 ): Promise<string | null> => {
   // This would use the storageAPI.createSignedUrl method
   // Implementation depends on your storage API setup
@@ -136,8 +147,8 @@ export const getSignedStorageUrl = async (
  * @returns true if valid, false otherwise
  */
 export const isValidFileType = (file: File, bucket: keyof typeof STORAGE_BUCKETS): boolean => {
-  const allowedTypes = ALLOWED_MIME_TYPES[bucket];
-  return allowedTypes.includes(file.type as any);
+  const allowedTypes = ALLOWED_MIME_TYPES[bucket] as readonly string[];
+  return allowedTypes.includes(file.type);
 };
 
 /**

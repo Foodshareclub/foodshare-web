@@ -1,9 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useRef } from 'react';
-import type { ImageItem } from '../types';
-import { MAX_FILE_SIZE_MB, COMPRESS_THRESHOLD_MB, MAX_IMAGES } from '../constants';
-import { compressImage } from '../utils';
+import { useState, useCallback, useRef } from "react";
+import type { ImageItem } from "../types";
+import {
+  MAX_FILE_SIZE_MB,
+  COMPRESS_THRESHOLD_MB,
+  TARGET_FILE_SIZE_KB,
+  MAX_IMAGE_DIMENSION,
+  MAX_IMAGES,
+} from "../constants";
+import { compressImage } from "../utils";
 
 interface UseImageUploadOptions {
   maxImages?: number;
@@ -50,13 +56,13 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
   const inputFileRef = useRef<HTMLInputElement | null>(null);
 
   const [images, setImages] = useState<ImageItem[]>([]);
-  const [imageError, setImageError] = useState('');
+  const [imageError, setImageError] = useState("");
   const [isCompressing, setIsCompressing] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [draggedImageId, setDraggedImageId] = useState<string | null>(null);
 
   const processImage = useCallback(async (fileToProcess: File): Promise<File | null> => {
-    console.log('[useImageUpload] 🖼️ Processing image:', {
+    console.log("[useImageUpload] 🖼️ Processing image:", {
       name: fileToProcess.name,
       size: fileToProcess.size,
       type: fileToProcess.type,
@@ -65,43 +71,71 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
     const fileSizeMB = fileToProcess.size / (1024 * 1024);
 
     if (fileSizeMB > MAX_FILE_SIZE_MB) {
-      console.log('[useImageUpload] ❌ File too large:', fileSizeMB.toFixed(1), 'MB');
-      setImageError(
-        `File size (${fileSizeMB.toFixed(1)}MB) exceeds ${MAX_FILE_SIZE_MB}MB limit`
-      );
+      console.log("[useImageUpload] ❌ File too large:", fileSizeMB.toFixed(1), "MB");
+      setImageError(`File size (${fileSizeMB.toFixed(1)}MB) exceeds ${MAX_FILE_SIZE_MB}MB limit`);
       return null;
     }
 
+    // Always compress images over threshold (300KB) for storage savings
     if (fileSizeMB > COMPRESS_THRESHOLD_MB) {
-      console.log('[useImageUpload] 📦 Compressing image...');
+      console.log(
+        "[useImageUpload] 📦 Compressing image (target:",
+        TARGET_FILE_SIZE_KB,
+        "KB, max:",
+        MAX_IMAGE_DIMENSION,
+        "px)..."
+      );
       setIsCompressing(true);
       try {
-        const compressed = await compressImage(fileToProcess, COMPRESS_THRESHOLD_MB);
-        console.log('[useImageUpload] ✅ Compression complete');
+        const compressed = await compressImage(
+          fileToProcess,
+          TARGET_FILE_SIZE_KB,
+          MAX_IMAGE_DIMENSION
+        );
+        const savedPercent = (
+          ((fileToProcess.size - compressed.size) / fileToProcess.size) *
+          100
+        ).toFixed(0);
+        console.log(
+          "[useImageUpload] ✅ Compression complete:",
+          (compressed.size / 1024).toFixed(0),
+          "KB (",
+          savedPercent,
+          "% saved)"
+        );
         setIsCompressing(false);
         return compressed;
       } catch (err) {
-        console.error('[useImageUpload] ❌ Compression failed:', err);
+        console.error("[useImageUpload] ❌ Compression failed:", err);
         setIsCompressing(false);
         return fileToProcess;
       }
     }
 
-    console.log('[useImageUpload] ✅ Image ready (no compression needed)');
+    console.log(
+      "[useImageUpload] ✅ Image ready (under",
+      COMPRESS_THRESHOLD_MB,
+      "MB, no compression needed)"
+    );
     return fileToProcess;
   }, []);
 
   const addImage = useCallback(
     async (file: File) => {
-      console.log('[useImageUpload] ➕ addImage called - current count:', images.length, 'max:', maxImages);
+      console.log(
+        "[useImageUpload] ➕ addImage called - current count:",
+        images.length,
+        "max:",
+        maxImages
+      );
 
       if (images.length >= maxImages) {
-        console.log('[useImageUpload] ❌ Max images reached');
+        console.log("[useImageUpload] ❌ Max images reached");
         setImageError(`Maximum ${maxImages} images allowed`);
         return;
       }
 
-      setImageError('');
+      setImageError("");
       const processed = await processImage(file);
       if (processed) {
         const url = URL.createObjectURL(file);
@@ -111,11 +145,11 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
           file: processed,
           filePath: `${Date.now()}-${file.name}`,
         };
-        console.log('[useImageUpload] ✅ Image added:', newImage.id, newImage.filePath);
+        console.log("[useImageUpload] ✅ Image added:", newImage.id, newImage.filePath);
         setImages((prev) => [...prev, newImage]);
         onImageAdded?.();
       } else {
-        console.log('[useImageUpload] ❌ Image processing returned null');
+        console.log("[useImageUpload] ❌ Image processing returned null");
       }
     },
     [images.length, maxImages, processImage, onImageAdded]
@@ -130,7 +164,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
         }
       }
       if (inputFileRef.current) {
-        inputFileRef.current.value = '';
+        inputFileRef.current.value = "";
       }
     },
     [addImage, images.length, maxImages]
@@ -142,7 +176,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
       setIsDragOver(false);
       const files = e.dataTransfer.files;
       for (let i = 0; i < Math.min(files.length, maxImages - images.length); i++) {
-        if (files[i].type.startsWith('image/')) {
+        if (files[i].type.startsWith("image/")) {
           await addImage(files[i]);
         }
       }
@@ -168,7 +202,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
       }
       return prev.filter((img) => img.id !== imageId);
     });
-    setImageError('');
+    setImageError("");
   }, []);
 
   const rotateImage = useCallback((imageId: string) => {
@@ -227,14 +261,14 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
           id: `existing-${index}`,
           url,
           file: null,
-          filePath: '',
+          filePath: "",
           isExisting: true,
         }))
       );
     } else {
       setImages([]);
     }
-    setImageError('');
+    setImageError("");
   }, []);
 
   const clearImages = useCallback(() => {
@@ -245,7 +279,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
       }
     });
     setImages([]);
-    setImageError('');
+    setImageError("");
   }, [images]);
 
   return {

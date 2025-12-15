@@ -4,6 +4,8 @@
 
 FoodShare uses Supabase Storage with a centralized, type-safe configuration system that includes automatic file validation. This guide covers everything you need to know about working with file uploads and storage.
 
+> **Note:** The upload function uses direct `fetch` API calls instead of the Supabase client to avoid auth session hanging issues in production SSR environments. This provides more reliable uploads with a 30-second timeout.
+
 ---
 
 ## Quick Start
@@ -178,6 +180,8 @@ const maxSize = MAX_FILE_SIZES.POSTS; // 10485760 (10MB in bytes)
 
 ### Upload Image
 
+Uses direct `fetch` API with 30-second timeout for reliable uploads:
+
 ```typescript
 const { data, error } = await storageAPI.uploadImage({
   bucket: STORAGE_BUCKETS.POSTS,
@@ -188,11 +192,22 @@ const { data, error } = await storageAPI.uploadImage({
 
 if (error) {
   console.error("Upload failed:", error.message);
+  // Possible errors:
+  // - "Upload timed out after 30 seconds..."
+  // - "Upload failed: 401 Unauthorized"
+  // - "Supabase configuration missing"
   return;
 }
 
 console.log("Uploaded to:", data.path);
 ```
+
+**Implementation details:**
+
+- Uses direct REST API calls to `{SUPABASE_URL}/storage/v1/object/{bucket}/{path}`
+- Bypasses Supabase client auth to avoid SSR session hanging issues
+- 30-second timeout with `AbortController`
+- Supports upsert (overwrites existing files)
 
 ### Get Public URL
 
@@ -536,8 +551,13 @@ try {
       alert("Please select a valid image file");
     } else if (error.message.includes("File too large")) {
       alert("File is too large. Maximum size is 10MB");
-    } else if (error.message.includes("already exists")) {
-      alert("A file with this name already exists");
+    } else if (error.message.includes("timed out")) {
+      alert("Upload timed out. Please check your connection and try again.");
+    } else if (error.message.includes("401") || error.message.includes("403")) {
+      alert("Upload not authorized. Please sign in again.");
+    } else if (error.message.includes("configuration missing")) {
+      console.error("Supabase environment variables not configured");
+      alert("Server configuration error. Please contact support.");
     } else {
       alert("Upload failed. Please try again.");
     }
@@ -804,4 +824,21 @@ See `src/components/examples/StorageUploadExample.tsx` for a complete, productio
 
 ---
 
-**Last Updated:** 2024-01-29
+## Architecture Notes
+
+### Upload Implementation
+
+The `storageAPI.uploadImage()` function uses **direct fetch API** instead of the Supabase JavaScript client for uploads. This design decision was made to avoid auth session hanging issues that can occur in production SSR environments when the Supabase client's internal `getSession()` call blocks.
+
+**Key characteristics:**
+
+- Direct REST API calls to Supabase Storage endpoints
+- Uses `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` environment variables
+- 30-second timeout via `AbortController`
+- Upsert enabled by default (`x-upsert: true` header)
+
+**Other methods** (`downloadImage`, `deleteImage`, `getPublicUrl`, `createSignedUrl`) still use the Supabase client as they don't exhibit the same hanging behavior.
+
+---
+
+**Last Updated:** 2024-12-14

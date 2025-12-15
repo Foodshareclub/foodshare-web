@@ -11,44 +11,44 @@ FoodShare uses several Vercel/Upstash storage services for different purposes.
 ### Usage
 
 ```typescript
-import { 
-  cache, 
-  rateLimiter, 
-  lock, 
-  REDIS_KEYS, 
+import {
+  cache,
+  rateLimiter,
+  lock,
+  REDIS_KEYS,
   CACHE_TTL,
   type RateLimitResult,
   type CacheTTL,
-} from '@/lib/storage/redis';
+} from "@/lib/storage/redis";
 
 // Cache operations (all methods have built-in error handling)
-const data = await cache.get<Product>(REDIS_KEYS.PRODUCT('123'));
-const success = await cache.set(REDIS_KEYS.PRODUCT('123'), data, CACHE_TTL.MEDIUM);
+const data = await cache.get<Product>(REDIS_KEYS.PRODUCT("123"));
+const success = await cache.set(REDIS_KEYS.PRODUCT("123"), data, CACHE_TTL.MEDIUM);
 
 // Cache-aside pattern
 const products = await cache.getOrSet(
-  REDIS_KEYS.PRODUCTS_LIST('food'),
-  () => fetchProducts('food'),
+  REDIS_KEYS.PRODUCTS_LIST("food"),
+  () => fetchProducts("food"),
   CACHE_TTL.SHORT
 );
 
 // Delete operations
-await cache.del('key');                    // Returns boolean
-await cache.delMany(['key1', 'key2']);     // Returns number of deleted keys
-await cache.delByPattern('products:*');    // Returns number of deleted keys
+await cache.del("key"); // Returns boolean
+await cache.delMany(["key1", "key2"]); // Returns number of deleted keys
+await cache.delByPattern("products:*"); // Returns number of deleted keys
 
 // Counter operations
-const count = await cache.incr('counter:views');
+const count = await cache.incr("counter:views");
 
 // TTL operations
-await cache.expire('key', 3600);           // Set expiration
-const ttl = await cache.ttl('key');        // Get remaining TTL
+await cache.expire("key", 3600); // Set expiration
+const ttl = await cache.ttl("key"); // Get remaining TTL
 
 // Rate limiting
-const { allowed, remaining, reset } = await rateLimiter.check('api:user123', 100, 60);
+const { allowed, remaining, reset } = await rateLimiter.check("api:user123", 100, 60);
 
 // Distributed locks
-const result = await lock.withLock('my-task', async () => {
+const result = await lock.withLock("my-task", async () => {
   // Critical section - only one instance runs at a time
   return await performTask();
 });
@@ -56,18 +56,18 @@ const result = await lock.withLock('my-task', async () => {
 
 ### Cache Methods
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `get<T>(key)` | `T \| null` | Get cached value |
-| `set(key, value, ttl?)` | `boolean` | Set value with optional TTL |
-| `del(key)` | `boolean` | Delete single key |
-| `delMany(keys)` | `number` | Delete multiple keys |
-| `delByPattern(pattern)` | `number` | Delete by glob pattern |
-| `exists(key)` | `boolean` | Check if key exists |
-| `getOrSet(key, fetcher, ttl?)` | `T` | Cache-aside pattern |
-| `incr(key)` | `number` | Increment counter |
-| `expire(key, seconds)` | `boolean` | Set expiration |
-| `ttl(key)` | `number` | Get remaining TTL |
+| Method                         | Returns     | Description                 |
+| ------------------------------ | ----------- | --------------------------- |
+| `get<T>(key)`                  | `T \| null` | Get cached value            |
+| `set(key, value, ttl?)`        | `boolean`   | Set value with optional TTL |
+| `del(key)`                     | `boolean`   | Delete single key           |
+| `delMany(keys)`                | `number`    | Delete multiple keys        |
+| `delByPattern(pattern)`        | `number`    | Delete by glob pattern      |
+| `exists(key)`                  | `boolean`   | Check if key exists         |
+| `getOrSet(key, fetcher, ttl?)` | `T`         | Cache-aside pattern         |
+| `incr(key)`                    | `number`    | Increment counter           |
+| `expire(key, seconds)`         | `boolean`   | Set expiration              |
+| `ttl(key)`                     | `number`    | Get remaining TTL           |
 
 All methods include error handling and return sensible defaults on failure (null, false, 0, -1).
 
@@ -87,27 +87,31 @@ type CacheTTL = (typeof CACHE_TTL)[keyof typeof CACHE_TTL];
 
 ### Lock Methods (Distributed Locking)
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `lock.acquire(key, ttl?)` | `string \| null` | Acquire lock, returns token or null if held |
-| `lock.release(key, token)` | `boolean` | Release lock (only if we own it) |
-| `lock.withLock(key, fn, ttl?)` | `T \| null` | Execute function with lock, returns null if lock unavailable |
+| Method                         | Returns          | Description                                                  |
+| ------------------------------ | ---------------- | ------------------------------------------------------------ |
+| `lock.acquire(key, ttl?)`      | `string \| null` | Acquire lock, returns token or null if held                  |
+| `lock.release(key, token)`     | `boolean`        | Release lock (only if we own it)                             |
+| `lock.withLock(key, fn, ttl?)` | `T \| null`      | Execute function with lock, returns null if lock unavailable |
 
 ```typescript
 // Manual lock management
-const token = await lock.acquire('my-task', 30); // 30 second TTL
+const token = await lock.acquire("my-task", 30); // 30 second TTL
 if (token) {
   try {
     await performCriticalTask();
   } finally {
-    await lock.release('my-task', token);
+    await lock.release("my-task", token);
   }
 }
 
 // Automatic lock management (recommended)
-const result = await lock.withLock('my-task', async () => {
-  return await performCriticalTask();
-}, 30);
+const result = await lock.withLock(
+  "my-task",
+  async () => {
+    return await performCriticalTask();
+  },
+  30
+);
 
 if (result === null) {
   // Lock was held by another process
@@ -121,6 +125,169 @@ KV_REST_API_URL=<your-url>
 KV_REST_API_TOKEN=<your-token>
 REDIS_URL=<your-redis-url>
 ```
+
+## Cloudflare R2
+
+**Purpose:** S3-compatible object storage with zero egress fees for images and files
+
+**Client Location:** `src/lib/r2/client.ts`
+**Vault Service:** `src/lib/r2/vault.ts`
+
+### Usage
+
+```typescript
+// Import from the unified index (recommended)
+import {
+  uploadToR2,
+  deleteFromR2,
+  existsInR2,
+  getR2PublicUrl,
+  isR2Configured,
+  isR2ConfiguredAsync,
+  getR2Secrets,
+  clearR2SecretsCache,
+  type R2UploadResult,
+  type R2OperationResult,
+  type R2Secrets,
+} from "@/lib/r2";
+
+// Sync check (uses cached config or env vars)
+if (isR2Configured()) {
+  // ...
+}
+
+// Async check (fetches from Vault if needed - recommended for server code)
+if (await isR2ConfiguredAsync()) {
+  // Upload a file
+  const result = await uploadToR2(file, "posts/123/image.jpg", "image/jpeg");
+  if (result.success) {
+    console.log("Public URL:", result.publicUrl);
+    console.log("Path:", result.path);
+  } else {
+    console.error("Upload failed:", result.error);
+  }
+
+  // Check if a file exists
+  const exists = await existsInR2("posts/123/image.jpg");
+  if (exists) {
+    console.log("File exists");
+  }
+
+  // Delete a file
+  const deleteResult = await deleteFromR2("posts/123/image.jpg");
+  if (deleteResult.success) {
+    console.log("File deleted");
+  }
+
+  // Get public URL for existing file
+  const url = getR2PublicUrl("posts/123/image.jpg");
+}
+```
+
+### R2 Methods
+
+| Method                                 | Returns             | Description                                           |
+| -------------------------------------- | ------------------- | ----------------------------------------------------- |
+| `isR2Configured()`                     | `boolean`           | Sync check if R2 credentials are set (uses cache/env) |
+| `isR2ConfiguredAsync()`                | `Promise<boolean>`  | Async check - fetches from Vault if needed            |
+| `uploadToR2(file, path, contentType?)` | `R2UploadResult`    | Upload file to R2                                     |
+| `deleteFromR2(path)`                   | `R2OperationResult` | Delete file from R2                                   |
+| `existsInR2(path)`                     | `Promise<boolean>`  | Check if file exists in R2                            |
+| `getR2PublicUrl(path)`                 | `string`            | Get public URL for a path                             |
+
+### Types
+
+```typescript
+type R2UploadResult = {
+  success: boolean;
+  path?: string; // Object path in bucket
+  publicUrl?: string; // Public URL for the file
+  error?: string; // Error message if failed
+};
+
+type R2OperationResult = {
+  success: boolean;
+  error?: string; // Error message if failed
+};
+```
+
+### R2 Secrets Vault
+
+R2 credentials can be securely stored in Supabase Vault instead of environment variables. The vault service (`src/lib/r2/vault.ts`) provides:
+
+- **Automatic fallback**: Uses env vars in development, Vault in production
+- **In-memory caching**: 5-minute TTL to reduce Vault calls
+- **Secure logging**: Masks sensitive values in logs
+
+```typescript
+import { getR2Secrets, clearR2SecretsCache, type R2Secrets } from "@/lib/r2/vault";
+
+// Get R2 credentials (cached)
+const secrets = await getR2Secrets();
+// Returns: { accountId, accessKeyId, secretAccessKey, bucketName, publicUrl }
+
+// Clear cache (e.g., after rotating credentials)
+clearR2SecretsCache();
+```
+
+#### Vault Methods
+
+| Method                  | Returns              | Description                            |
+| ----------------------- | -------------------- | -------------------------------------- |
+| `getR2Secrets()`        | `Promise<R2Secrets>` | Get R2 credentials from Vault (cached) |
+| `clearR2SecretsCache()` | `void`               | Clear the in-memory secrets cache      |
+
+#### R2Secrets Type
+
+```typescript
+interface R2Secrets {
+  accountId: string | null;
+  accessKeyId: string | null;
+  secretAccessKey: string | null;
+  bucketName: string; // Defaults to 'foodshare'
+  publicUrl: string; // From Vault (R2_PUBLIC_URL) or env (NEXT_PUBLIC_R2_PUBLIC_URL)
+}
+```
+
+#### Storing R2 Secrets in Vault
+
+```sql
+-- Store R2 credentials in Supabase Vault
+SELECT vault.create_secret('R2_ACCOUNT_ID', 'your-cloudflare-account-id');
+SELECT vault.create_secret('R2_ACCESS_KEY_ID', 'your-r2-access-key');
+SELECT vault.create_secret('R2_SECRET_ACCESS_KEY', 'your-r2-secret-key');
+SELECT vault.create_secret('R2_BUCKET_NAME', 'foodshare');
+SELECT vault.create_secret('R2_PUBLIC_URL', 'https://your-r2-public-url.com');
+```
+
+### Environment Variables
+
+```bash
+# Required for local development (or store in Vault for production)
+R2_ACCOUNT_ID=<your-cloudflare-account-id>
+R2_ACCESS_KEY_ID=<your-r2-access-key>
+R2_SECRET_ACCESS_KEY=<your-r2-secret-key>
+R2_BUCKET_NAME=foodshare
+
+# Public URL - can be stored in Vault (R2_PUBLIC_URL) or env var
+NEXT_PUBLIC_R2_PUBLIC_URL=<your-r2-public-url>  # Custom domain or R2.dev URL
+```
+
+### Credential Management
+
+| Environment | Source                | Notes                          |
+| ----------- | --------------------- | ------------------------------ |
+| Development | Environment variables | Fast local iteration           |
+| Production  | Supabase Vault        | Centralized, secure management |
+
+### Why R2?
+
+- **Zero egress fees**: No charges for bandwidth when serving files
+- **S3-compatible**: Uses standard AWS Signature V4 authentication
+- **Global CDN**: Files served via Cloudflare's edge network
+- **Cost-effective**: Great for high-traffic image serving
+
+---
 
 ## Vercel Blob
 
@@ -144,11 +311,11 @@ import {
   MAX_FILE_SIZES,
   ALLOWED_IMAGE_TYPES,
   BLOB_PATHS,
-} from '@/lib/storage/blob';
+} from "@/lib/storage/blob";
 
 // Upload with validation
-const result = await uploadProductImage(productId, file, 'photo.jpg');
-if ('error' in result) {
+const result = await uploadProductImage(productId, file, "photo.jpg");
+if ("error" in result) {
   console.error(result.error);
 } else {
   console.log(result.url);
@@ -158,11 +325,11 @@ if ('error' in result) {
 const avatarResult = await uploadUserAvatar(userId, file);
 
 // Upload chat attachment
-const attachmentResult = await uploadChatAttachment(roomId, file, 'document.pdf');
+const attachmentResult = await uploadChatAttachment(roomId, file, "document.pdf");
 
 // Generic upload
-const blob = await uploadBlob('images/photo.jpg', file, {
-  access: 'public',
+const blob = await uploadBlob("images/photo.jpg", file, {
+  access: "public",
   cacheControlMaxAge: 31536000, // 1 year
 });
 
@@ -174,7 +341,7 @@ const deletedCount = await deleteProductBlobs(productId);
 
 // List blobs with prefix
 const { blobs, hasMore, cursor } = await listBlobs({
-  prefix: 'products/',
+  prefix: "products/",
   limit: 100,
 });
 
@@ -194,18 +361,18 @@ if (!validation.valid) {
 ### File Size Limits
 
 ```typescript
-MAX_FILE_SIZES.IMAGE    // 5MB - Product images
-MAX_FILE_SIZES.AVATAR   // 2MB - User avatars
-MAX_FILE_SIZES.DOCUMENT // 10MB - Documents
+MAX_FILE_SIZES.IMAGE; // 5MB - Product images
+MAX_FILE_SIZES.AVATAR; // 2MB - User avatars
+MAX_FILE_SIZES.DOCUMENT; // 10MB - Documents
 ```
 
 ### Blob Path Organization
 
 ```typescript
-BLOB_PATHS.PRODUCT_IMAGES(productId)  // 'products/{productId}/'
-BLOB_PATHS.USER_AVATARS(userId)       // 'avatars/{userId}/'
-BLOB_PATHS.CHAT_ATTACHMENTS(roomId)   // 'chat/{roomId}/'
-BLOB_PATHS.DOCUMENTS                  // 'documents/'
+BLOB_PATHS.PRODUCT_IMAGES(productId); // 'products/{productId}/'
+BLOB_PATHS.USER_AVATARS(userId); // 'avatars/{userId}/'
+BLOB_PATHS.CHAT_ATTACHMENTS(roomId); // 'chat/{roomId}/'
+BLOB_PATHS.DOCUMENTS; // 'documents/'
 ```
 
 ### Environment Variables
@@ -284,43 +451,43 @@ const stats = await getIndexStats();
 
 ### Vector Methods
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `upsertVector(id, vector, metadata?)` | `boolean` | Upsert single vector |
-| `upsertVectors(vectors)` | `boolean` | Upsert multiple vectors |
-| `querySimilar(vector, options?)` | `VectorQueryResult[]` | Query similar vectors |
-| `querySimilarByType(vector, type, options?)` | `VectorQueryResult[]` | Query by content type |
-| `fetchVectors(ids, options?)` | `(VectorQueryResult \| null)[]` | Fetch vectors by IDs |
-| `deleteVectors(ids)` | `boolean` | Delete vectors by IDs |
-| `deleteVectorsByType(type)` | `boolean` | Delete all vectors of a type (batched) |
-| `getIndexStats()` | `Stats \| null` | Get index statistics |
+| Method                                       | Returns                         | Description                            |
+| -------------------------------------------- | ------------------------------- | -------------------------------------- |
+| `upsertVector(id, vector, metadata?)`        | `boolean`                       | Upsert single vector                   |
+| `upsertVectors(vectors)`                     | `boolean`                       | Upsert multiple vectors                |
+| `querySimilar(vector, options?)`             | `VectorQueryResult[]`           | Query similar vectors                  |
+| `querySimilarByType(vector, type, options?)` | `VectorQueryResult[]`           | Query by content type                  |
+| `fetchVectors(ids, options?)`                | `(VectorQueryResult \| null)[]` | Fetch vectors by IDs                   |
+| `deleteVectors(ids)`                         | `boolean`                       | Delete vectors by IDs                  |
+| `deleteVectorsByType(type)`                  | `boolean`                       | Delete all vectors of a type (batched) |
+| `getIndexStats()`                            | `Stats \| null`                 | Get index statistics                   |
 
 All methods include built-in error handling and return sensible defaults on failure.
 
 ### Content Types
 
 ```typescript
-type VectorContentType = 'product' | 'user' | 'message' | 'location';
+type VectorContentType = "product" | "user" | "message" | "location";
 ```
 
 ### Vector Namespaces
 
 ```typescript
-VECTOR_NAMESPACES.PRODUCTS   // 'products'
-VECTOR_NAMESPACES.USERS      // 'users'
-VECTOR_NAMESPACES.MESSAGES   // 'messages'
-VECTOR_NAMESPACES.LOCATIONS  // 'locations'
+VECTOR_NAMESPACES.PRODUCTS; // 'products'
+VECTOR_NAMESPACES.USERS; // 'users'
+VECTOR_NAMESPACES.MESSAGES; // 'messages'
+VECTOR_NAMESPACES.LOCATIONS; // 'locations'
 ```
 
 ### Query Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `topK` | `number` | `10` | Maximum results to return |
-| `filter` | `string` | - | Metadata filter expression |
-| `includeMetadata` | `boolean` | `true` | Include metadata in results |
-| `includeVectors` | `boolean` | `false` | Include vector data in results |
-| `minScore` | `number` | `0` | Minimum similarity score threshold |
+| Option            | Type      | Default | Description                        |
+| ----------------- | --------- | ------- | ---------------------------------- |
+| `topK`            | `number`  | `10`    | Maximum results to return          |
+| `filter`          | `string`  | -       | Metadata filter expression         |
+| `includeMetadata` | `boolean` | `true`  | Include metadata in results        |
+| `includeVectors`  | `boolean` | `false` | Include vector data in results     |
+| `minScore`        | `number`  | `0`     | Minimum similarity score threshold |
 
 ### Environment Variables
 
@@ -351,61 +518,61 @@ import {
   queueEmail,
   queueImageProcessing,
   JOB_TYPES,
-} from '@/lib/storage/qstash';
+} from "@/lib/storage/qstash";
 
 // Publish a message to a URL endpoint
 const result = await publishMessage(
-  'https://your-app.com/api/process',
-  { taskId: '123' },
+  "https://your-app.com/api/process",
+  { taskId: "123" },
   {
     retries: 3,
     delay: 60, // delay in seconds
-    deduplicationId: 'unique-id',
+    deduplicationId: "unique-id",
     contentBasedDeduplication: true,
   }
 );
 if (result.success) {
-  console.log('Message ID:', result.messageId);
+  console.log("Message ID:", result.messageId);
 }
 
 // Publish with delay
 const delayed = await publishDelayed(
-  'https://your-app.com/api/notify',
-  { userId: 'abc' },
+  "https://your-app.com/api/notify",
+  { userId: "abc" },
   300 // 5 minutes delay
 );
 
 // Create a recurring schedule (cron)
 const schedule = await createSchedule(
-  'daily-cleanup',
-  'https://your-app.com/api/jobs/cleanup-expired',
-  '0 0 * * *', // Daily at midnight
-  { type: 'expired-listings' }
+  "daily-cleanup",
+  "https://your-app.com/api/jobs/cleanup-expired",
+  "0 0 * * *", // Daily at midnight
+  { type: "expired-listings" }
 );
 
 // Get schedule info
-const info = await getSchedule('daily-cleanup');
+const info = await getSchedule("daily-cleanup");
 // Returns: { scheduleId, cron, destination, createdAt, isPaused }
 
 // Pause/resume schedules
-await pauseSchedule('daily-cleanup');
-await resumeSchedule('daily-cleanup');
+await pauseSchedule("daily-cleanup");
+await resumeSchedule("daily-cleanup");
 
 // List all schedules
 const schedules = await listSchedules();
 
 // Delete a schedule
-await deleteSchedule('daily-cleanup');
+await deleteSchedule("daily-cleanup");
 
 // Queue common jobs
-await queueEmail('user@example.com', 'Welcome!', 'welcome', { name: 'John' });
-await queueImageProcessing('https://...', 'product-123');
+await queueEmail("user@example.com", "Welcome!", "welcome", { name: "John" });
+await queueImageProcessing("https://...", "product-123");
 
 // Verify incoming webhook (in API route)
 export async function POST(request: Request) {
   const isValid = await verifyRequest(request);
   if (!isValid) {
-    return new Response('Unauthorized', { status: 401 });
+    return new Response("Unauthorized", { status: 401 });
   }
   // Process the job...
 }
@@ -413,24 +580,24 @@ export async function POST(request: Request) {
 
 ### Publish Options
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `delay` | `number` | Delay in seconds before delivery |
-| `notBefore` | `number` | Unix timestamp for scheduled delivery |
-| `retries` | `number` | Number of retry attempts (default: 3) |
-| `callback` | `string` | URL to call after successful completion |
-| `failureCallback` | `string` | URL to call on failure |
-| `deduplicationId` | `string` | Unique ID to prevent duplicate messages |
-| `contentBasedDeduplication` | `boolean` | Deduplicate based on message content |
+| Option                      | Type      | Description                             |
+| --------------------------- | --------- | --------------------------------------- |
+| `delay`                     | `number`  | Delay in seconds before delivery        |
+| `notBefore`                 | `number`  | Unix timestamp for scheduled delivery   |
+| `retries`                   | `number`  | Number of retry attempts (default: 3)   |
+| `callback`                  | `string`  | URL to call after successful completion |
+| `failureCallback`           | `string`  | URL to call on failure                  |
+| `deduplicationId`           | `string`  | Unique ID to prevent duplicate messages |
+| `contentBasedDeduplication` | `boolean` | Deduplicate based on message content    |
 
 ### Job Types
 
 ```typescript
-JOB_TYPES.SEND_EMAIL         // 'send-email'
-JOB_TYPES.PROCESS_IMAGE      // 'process-image'
-JOB_TYPES.CLEANUP_EXPIRED    // 'cleanup-expired'
-JOB_TYPES.SYNC_SEARCH_INDEX  // 'sync-search-index'
-JOB_TYPES.GENERATE_EMBEDDINGS // 'generate-embeddings'
+JOB_TYPES.SEND_EMAIL; // 'send-email'
+JOB_TYPES.PROCESS_IMAGE; // 'process-image'
+JOB_TYPES.CLEANUP_EXPIRED; // 'cleanup-expired'
+JOB_TYPES.SYNC_SEARCH_INDEX; // 'sync-search-index'
+JOB_TYPES.GENERATE_EMBEDDINGS; // 'generate-embeddings'
 ```
 
 ### Environment Variables
@@ -496,22 +663,22 @@ await removeProductFromSearch('product-123');
 
 ### Search Methods
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `indexDocument(index, doc)` | `boolean` | Index single document |
-| `indexDocuments(index, docs)` | `boolean` | Index multiple documents |
-| `searchDocuments(index, query, opts?)` | `{ results, total }` | Search with pagination |
-| `deleteDocument(index, id)` | `boolean` | Delete single document |
-| `deleteDocuments(index, ids)` | `number` | Delete multiple, returns count |
+| Method                                 | Returns              | Description                    |
+| -------------------------------------- | -------------------- | ------------------------------ |
+| `indexDocument(index, doc)`            | `boolean`            | Index single document          |
+| `indexDocuments(index, docs)`          | `boolean`            | Index multiple documents       |
+| `searchDocuments(index, query, opts?)` | `{ results, total }` | Search with pagination         |
+| `deleteDocument(index, id)`            | `boolean`            | Delete single document         |
+| `deleteDocuments(index, ids)`          | `number`             | Delete multiple, returns count |
 
 All methods include built-in error handling and return sensible defaults on failure (false, 0, empty results).
 
 ### Search Indexes
 
 ```typescript
-SEARCH_INDEXES.PRODUCTS  // 'products'
-SEARCH_INDEXES.USERS     // 'users'
-SEARCH_INDEXES.MESSAGES  // 'messages'
+SEARCH_INDEXES.PRODUCTS; // 'products'
+SEARCH_INDEXES.USERS; // 'users'
+SEARCH_INDEXES.MESSAGES; // 'messages'
 ```
 
 ### Document Types
@@ -519,9 +686,9 @@ SEARCH_INDEXES.MESSAGES  // 'messages'
 ```typescript
 // Base document interface - all indexed documents must have these fields
 interface SearchDocument {
-  id: string;                          // Unique identifier
-  content: Record<string, unknown>;    // Searchable content object
-  metadata?: Record<string, unknown>;  // Optional metadata
+  id: string; // Unique identifier
+  content: Record<string, unknown>; // Searchable content object
+  metadata?: Record<string, unknown>; // Optional metadata
 }
 
 // Product-specific document
@@ -552,13 +719,13 @@ UPSTASH_SEARCH_REST_TOKEN=<your-token>
 ### Usage
 
 ```typescript
-import { 
-  isFeatureEnabled, 
-  getFeatureFlags, 
+import {
+  isFeatureEnabled,
+  getFeatureFlags,
   isMaintenanceMode,
   getConfig,
   FEATURE_FLAGS,
-  CONFIG_KEYS 
+  CONFIG_KEYS
 } from '@/lib/storage/edge-config';
 
 // Check single feature flag
@@ -585,21 +752,21 @@ const rateLimit = await getConfig<{ requests: number; windowSeconds: number }>(
 ### Available Feature Flags
 
 ```typescript
-FEATURE_FLAGS.NEW_UI          // 'feature_new_ui'
-FEATURE_FLAGS.DARK_MODE       // 'feature_dark_mode'
-FEATURE_FLAGS.BETA_FEATURES   // 'feature_beta'
-FEATURE_FLAGS.MAINTENANCE_MODE // 'maintenance_mode'
-FEATURE_FLAGS.AI_SEARCH       // 'feature_ai_search'
-FEATURE_FLAGS.REALTIME_CHAT   // 'feature_realtime_chat'
+FEATURE_FLAGS.NEW_UI; // 'feature_new_ui'
+FEATURE_FLAGS.DARK_MODE; // 'feature_dark_mode'
+FEATURE_FLAGS.BETA_FEATURES; // 'feature_beta'
+FEATURE_FLAGS.MAINTENANCE_MODE; // 'maintenance_mode'
+FEATURE_FLAGS.AI_SEARCH; // 'feature_ai_search'
+FEATURE_FLAGS.REALTIME_CHAT; // 'feature_realtime_chat'
 ```
 
 ### Available Config Keys
 
 ```typescript
-CONFIG_KEYS.RATE_LIMIT        // 'config_rate_limit'
-CONFIG_KEYS.MAX_UPLOAD_SIZE   // 'config_max_upload_size'
-CONFIG_KEYS.SUPPORTED_LOCALES // 'config_supported_locales'
-CONFIG_KEYS.DEFAULT_LOCALE    // 'config_default_locale'
+CONFIG_KEYS.RATE_LIMIT; // 'config_rate_limit'
+CONFIG_KEYS.MAX_UPLOAD_SIZE; // 'config_max_upload_size'
+CONFIG_KEYS.SUPPORTED_LOCALES; // 'config_supported_locales'
+CONFIG_KEYS.DEFAULT_LOCALE; // 'config_default_locale'
 ```
 
 ### Environment Variables
@@ -623,15 +790,15 @@ npm install @upstash/redis @upstash/vector @upstash/qstash @upstash/search @verc
 │                     Application Layer                        │
 └─────────────────────┬───────────────────────────────────────┘
                       │
-        ┌─────────────┼─────────────┐
-        │             │             │
-        ▼             ▼             ▼
-┌───────────┐  ┌───────────┐  ┌───────────┐
-│   Redis   │  │   Blob    │  │  Vector   │
-│  (Cache)  │  │ (Files)   │  │ (Search)  │
-└───────────┘  └───────────┘  └───────────┘
-        │             │             │
-        └─────────────┼─────────────┘
+    ┌─────────────────┼─────────────────┐
+    │         │       │       │         │
+    ▼         ▼       ▼       ▼         ▼
+┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐
+│ Redis │ │ Blob  │ │  R2   │ │Vector │ │QStash │
+│(Cache)│ │(Files)│ │(Files)│ │(Embed)│ │(Jobs) │
+└───────┘ └───────┘ └───────┘ └───────┘ └───────┘
+    │         │       │       │         │
+    └─────────┴───────┴───────┴─────────┘
                       │
                       ▼
 ┌─────────────────────────────────────────────────────────────┐
@@ -639,3 +806,12 @@ npm install @upstash/redis @upstash/vector @upstash/qstash @upstash/search @verc
 │              (Primary Database + Auth)                       │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+### File Storage Decision
+
+| Use Case               | Recommended | Why                |
+| ---------------------- | ----------- | ------------------ |
+| High-traffic images    | **R2**      | Zero egress fees   |
+| User uploads (general) | **Blob**    | Vercel integration |
+| Temporary files        | **Blob**    | Easy cleanup       |
+| CDN-served assets      | **R2**      | Cloudflare edge    |
