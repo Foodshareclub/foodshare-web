@@ -19,7 +19,7 @@ const createProductSchema = z.object({
   post_name: z.string().min(1, "Name is required").max(200),
   post_description: z.string().min(1, "Description is required").max(5000),
   post_type: z.string().min(1, "Type is required"),
-  post_address: z.string().min(1, "Address is required"),
+  post_address: z.string().optional().default(""), // Address is optional
   available_hours: z.string().optional(),
   transportation: z.string().optional(),
   condition: z.string().optional(),
@@ -52,13 +52,30 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
 
   console.log("[createProduct] 📝 Raw data parsed:", {
     post_name: rawData.post_name,
+    post_name_length: rawData.post_name?.length,
+    post_description_length: rawData.post_description?.length,
     post_type: rawData.post_type,
+    post_address: rawData.post_address,
+    post_address_length: rawData.post_address?.length,
     images_count: rawData.images?.length,
     profile_id: rawData.profile_id,
-    post_address: rawData.post_address?.substring(0, 30),
   });
 
-  // Validate with Zod
+  // Validate with Zod - do manual validation first to get detailed errors
+  const zodResult = createProductSchema.safeParse(rawData);
+  if (!zodResult.success) {
+    const fieldErrors = zodResult.error.issues.map((e: z.ZodIssue) => ({
+      field: e.path.join("."),
+      message: e.message,
+      code: e.code,
+    }));
+    console.log(
+      "[createProduct] ❌ Zod validation failed - Field errors:",
+      JSON.stringify(fieldErrors, null, 2)
+    );
+  }
+
+  // Validate with standard helper
   const validation = validateWithSchema(createProductSchema, rawData);
   if (!validation.success) {
     console.log("[createProduct] ❌ Validation failed:", validation.error);
