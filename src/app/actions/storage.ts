@@ -10,12 +10,22 @@ import {
   validateFile,
   type StorageBucket as _StorageBucket,
 } from "@/constants/storage";
-import { uploadToR2, getR2Secrets } from "@/lib/r2";
+import { uploadToR2, getR2Secrets, getPresignedUpload } from "@/lib/r2";
+import { createClient } from "@/lib/supabase/server";
 
 export type UploadResult = {
   success: boolean;
   path?: string;
   publicUrl?: string;
+  storage?: "r2" | "supabase";
+  error?: string;
+};
+
+export type DirectUploadResult = {
+  success: boolean;
+  url?: string;
+  uploadHeaders?: Record<string, string>;
+  method?: string;
   storage?: "r2" | "supabase";
   error?: string;
 };
@@ -113,6 +123,69 @@ export async function uploadToStorage(formData: FormData): Promise<UploadResult>
     return {
       success: true,
       path: result.Key || filePath,
+      storage: "supabase",
+    };
+  } catch (error) {
+    console.error("[Storage Action] ❌ Exception:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
+ * Get a direct upload URL for client-side upload
+ * Bypasses server bandwidth and timeouts
+ */
+export async function getDirectUploadUrl(
+  bucket: string,
+  filePath: string,
+  fileType: string,
+  fileSize: number
+): Promise<DirectUploadResult> {
+  console.log("[Storage Action] 🚀 Getting direct upload URL:", {
+    bucket,
+    filePath,
+    size: fileSize,
+    type: fileType,
+  });
+
+  try {
+    // Try R2 first
+    const r2Config = await getR2Secrets();
+
+    if (r2Config.accountId && r2Config.accessKeyId && r2Config.secretAccessKey) {
+      const presigned = await getPresignedUpload(`${bucket}/${filePath}`, fileType, fileSize);
+
+      if (presigned) {
+        console.log("[Storage Action] ✅ Generated R2 presigned URL");
+        return {
+          success: true,
+          url: presigned.url,
+          uploadHeaders: presigned.headers,
+          method: "PUT",
+          storage: "r2",
+        };
+      }
+    }
+
+    // Fallback to Supabase
+    console.log("[Storage Action] ⚠️ R2 not configured, falling back to Supabase");
+    const supabase = await createClient();
+
+    const { data, error } = await supabase.storage.from(bucket).createSignedUploadUrl(filePath);
+
+    if (error || !data) {
+      console.error("[Storage Action] ❌ Supabase presign failed:", error);
+      return { success: false, error: error?.message || "Failed to generate upload URL" };
+    }
+
+    console.log("[Storage Action] ✅ Generated Supabase upload URL");
+    return {
+      success: true,
+      url: data.signedUrl,
+      method: "PUT",
+      uploadHeaders: {
+        "x-upsert": "true",
+      },
       storage: "supabase",
     };
   } catch (error) {

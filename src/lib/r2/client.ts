@@ -302,3 +302,41 @@ export async function existsInR2(path: string): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Get presigned upload URL and headers for direct client-side upload
+ *
+ * @param path - Object path
+ * @param contentType - MIME type
+ * @param contentLength - Content size in bytes
+ */
+export async function getPresignedUpload(
+  path: string,
+  contentType: string,
+  contentLength: number
+): Promise<{ url: string; headers: Record<string, string> } | null> {
+  const config = await getConfig();
+
+  if (!config.accountId || !config.accessKeyId || !config.secretAccessKey) {
+    return null;
+  }
+
+  const objectPath = `/${config.bucketName}/${path}`;
+
+  // Headers to sign
+  const headersToSign = {
+    "Content-Type": contentType,
+    "Content-Length": contentLength.toString(),
+  };
+
+  const signedHeaders = await signRequest(config, "PUT", objectPath, headersToSign);
+
+  // Remove Host from returned headers (browser sets it automatically)
+  // The signature includes Host, so the browser-sent Host must match, which it will.
+  const { host: _host, ...validHeaders } = signedHeaders;
+
+  return {
+    url: `${getEndpoint(config.accountId)}${objectPath}`,
+    headers: validHeaders,
+  };
+}

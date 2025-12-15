@@ -9,7 +9,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { STORAGE_BUCKETS, validateFile, type StorageBucket } from "@/constants/storage";
 import { deleteFromR2, isR2Configured, getR2PublicUrl } from "@/lib/r2/client";
-import { uploadToStorage } from "@/app/actions/storage";
+import { getDirectUploadUrl } from "@/app/actions/storage";
 
 // ============================================================================
 // Types
@@ -71,6 +71,11 @@ export const storageAPI = {
    * Upload image to storage via Server Action
    * Uses R2 as primary (credentials from Vault), falls back to Supabase
    */
+  /**
+   * Upload image to storage
+   * Uses direct client-side upload (presigned URL) for performance
+   * Bypasses Next.js Server Action limits and timeouts
+   */
   async uploadImage(
     params: UploadImageType
   ): Promise<{ data: UploadResult; error: null } | { data: null; error: Error }> {
@@ -96,30 +101,42 @@ export const storageAPI = {
         }
       }
 
-      // Use Server Action for upload (has access to Vault)
-      console.log("[storageAPI.uploadImage] 📤 Calling server action...");
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("bucket", bucket);
-      formData.append("filePath", filePath);
-      formData.append("skipValidation", "true"); // Already validated client-side
+      // Get direct upload URL from server
+      console.log("[storageAPI.uploadImage] 🌐 Getting direct upload URL...");
+      const directUpload = await getDirectUploadUrl(bucket, filePath, file.type, file.size);
 
-      const result = await uploadToStorage(formData);
-
-      if (result.success && result.path) {
-        console.log("[storageAPI.uploadImage] ✅ Upload successful via", result.storage);
-        return {
-          data: {
-            path: result.path,
-            publicUrl: result.publicUrl,
-            storage: result.storage || "supabase",
-          },
-          error: null,
-        };
+      if (!directUpload.success || !directUpload.url) {
+        throw new Error(directUpload.error || "Failed to get upload configuration");
       }
 
-      console.error("[storageAPI.uploadImage] ❌ Upload failed:", result.error);
-      return { data: null, error: new Error(result.error || "Upload failed") };
+      // Perform direct upload
+      console.log(`[storageAPI.uploadImage] 📤 Uploading to ${directUpload.storage}...`);
+
+      const response = await fetch(directUpload.url, {
+        method: directUpload.method || "PUT",
+        headers: directUpload.uploadHeaders,
+        body: file,
+      });
+
+      if (!response.ok) {
+        // R2/S3 usually return XML error, Supabase might return JSON
+        const errorText = await response.text();
+        console.error(`[storageAPI.uploadImage] ❌ Upload failed (${response.status}):`, errorText);
+        throw new Error(`Upload failed with status ${response.status}`);
+      }
+
+      console.log(`[storageAPI.uploadImage] ✅ Upload successful via ${directUpload.storage}`);
+
+      return {
+        data: {
+          path: directUpload.storage === "r2" ? `${bucket}/${filePath}` : filePath,
+          storage: directUpload.storage || "supabase",
+          // We can't easily get the public URL immediately for R2 without config on client
+          // But consumers often construct it or use path.
+          publicUrl: undefined,
+        },
+        error: null,
+      };
     } catch (error) {
       console.error("[storageAPI.uploadImage] ❌ Exception:", error);
       return { data: null, error: error as Error };

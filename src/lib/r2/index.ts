@@ -12,6 +12,7 @@ export {
   uploadToR2,
   deleteFromR2,
   existsInR2,
+  getPresignedUpload,
   type R2UploadResult,
   type R2OperationResult,
 } from "./client";
