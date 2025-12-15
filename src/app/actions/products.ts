@@ -37,17 +37,23 @@ const updateProductSchema = createProductSchema.partial().extend({
 export async function createProduct(formData: FormData): Promise<ActionResult<{ id: number }>> {
   console.log("[createProduct] 🚀 Starting createProduct...");
 
-  // Parse form data
+  // Parse form data - convert null to undefined for optional fields
+  const getString = (key: string): string => (formData.get(key) as string) ?? "";
+  const getOptionalString = (key: string): string | undefined => {
+    const value = formData.get(key);
+    return value ? (value as string) : undefined;
+  };
+
   const rawData = {
-    post_name: formData.get("post_name") as string,
-    post_description: formData.get("post_description") as string,
-    post_type: formData.get("post_type") as string,
-    post_address: formData.get("post_address") as string,
-    available_hours: formData.get("available_hours") as string,
-    transportation: formData.get("transportation") as string,
-    condition: formData.get("condition") as string,
+    post_name: getString("post_name"),
+    post_description: getString("post_description"),
+    post_type: getString("post_type"),
+    post_address: getOptionalString("post_address") ?? "",
+    available_hours: getOptionalString("available_hours"),
+    transportation: getOptionalString("transportation"),
+    condition: getOptionalString("condition"),
     images: JSON.parse((formData.get("images") as string) || "[]"),
-    profile_id: formData.get("profile_id") as string,
+    profile_id: getString("profile_id"),
   };
 
   console.log("[createProduct] 📝 Raw data parsed:", {
