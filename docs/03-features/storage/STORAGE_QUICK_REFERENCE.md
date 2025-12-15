@@ -15,7 +15,10 @@ import {
   getStorageUrl, // Generate public URL
 } from "@/constants/storage";
 
-// API
+// Server Action (R2 + Supabase fallback)
+import { uploadToStorage, type UploadResult } from "@/app/actions/storage";
+
+// Client API (Supabase only)
 import { storageAPI } from "@/api/storageAPI";
 ```
 
@@ -33,7 +36,22 @@ STORAGE_BUCKETS.ASSETS; // "assets" - General assets
 
 ## Common Operations
 
-### Upload File
+### Upload File (Server Action - Recommended)
+
+```typescript
+// Server Action with R2 → Supabase fallback
+const formData = new FormData();
+formData.set("file", file);
+formData.set("bucket", STORAGE_BUCKETS.POSTS);
+formData.set("filePath", "123/image.jpg");
+
+const result = await uploadToStorage(formData);
+if (result.success) {
+  console.log(result.publicUrl, result.storage); // 'r2' or 'supabase'
+}
+```
+
+### Upload File (Client API)
 
 ```typescript
 const { data, error } = await storageAPI.uploadImage({

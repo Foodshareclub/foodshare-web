@@ -287,6 +287,50 @@ NEXT_PUBLIC_R2_PUBLIC_URL=<your-r2-public-url>  # Custom domain or R2.dev URL
 - **Global CDN**: Files served via Cloudflare's edge network
 - **Cost-effective**: Great for high-traffic image serving
 
+### Server Action for R2 Uploads
+
+For uploads that need R2 with Vault credentials, use the `uploadToStorage` Server Action:
+
+**Location:** `src/app/actions/storage.ts`
+
+```typescript
+import { uploadToStorage, type UploadResult } from "@/app/actions/storage";
+import { STORAGE_BUCKETS } from "@/constants/storage";
+
+// Create FormData
+const formData = new FormData();
+formData.set("file", file);
+formData.set("bucket", STORAGE_BUCKETS.POSTS);
+formData.set("filePath", `posts/${userId}/${Date.now()}.jpg`);
+// formData.set('skipValidation', 'true'); // Optional
+
+const result: UploadResult = await uploadToStorage(formData);
+
+if (result.success) {
+  console.log("Storage:", result.storage); // 'r2' or 'supabase'
+  console.log("URL:", result.publicUrl);
+}
+```
+
+**Features:**
+
+- Runs server-side where Vault credentials are accessible
+- Automatic fallback: R2 → Supabase Storage
+- Built-in file validation (configurable)
+- Returns which storage was used
+
+**UploadResult Type:**
+
+```typescript
+type UploadResult = {
+  success: boolean;
+  path?: string; // File path in storage
+  publicUrl?: string; // Public URL (R2 only)
+  storage?: "r2" | "supabase"; // Which storage was used
+  error?: string; // Error message if failed
+};
+```
+
 ---
 
 ## Vercel Blob

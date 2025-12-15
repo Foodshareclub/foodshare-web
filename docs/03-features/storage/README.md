@@ -10,7 +10,33 @@ FoodShare uses Supabase Storage with a centralized, type-safe configuration syst
 
 ## Quick Start
 
-### Basic Upload Example
+### Server Action Upload (Recommended)
+
+For server-side uploads with R2/Supabase fallback:
+
+```typescript
+import { uploadToStorage, type UploadResult } from "@/app/actions/storage";
+import { STORAGE_BUCKETS } from "@/constants/storage";
+
+// Create FormData with file and metadata
+const formData = new FormData();
+formData.set("file", file);
+formData.set("bucket", STORAGE_BUCKETS.POSTS);
+formData.set("filePath", `posts/${userId}/${Date.now()}.jpg`);
+
+// Upload via Server Action (handles R2 → Supabase fallback)
+const result: UploadResult = await uploadToStorage(formData);
+
+if (result.success) {
+  console.log("Uploaded to:", result.storage); // 'r2' or 'supabase'
+  console.log("Public URL:", result.publicUrl);
+  console.log("Path:", result.path);
+} else {
+  console.error("Upload failed:", result.error);
+}
+```
+
+### Client-Side Upload Example
 
 ```typescript
 import { STORAGE_BUCKETS, validateFile } from "@/constants/storage";
@@ -828,6 +854,34 @@ See `src/components/examples/StorageUploadExample.tsx` for a complete, productio
 
 ### Upload Implementation
 
+There are two upload approaches available:
+
+#### 1. Server Action (Recommended for R2)
+
+The `uploadToStorage` Server Action (`src/app/actions/storage.ts`) handles uploads server-side where Vault credentials are accessible:
+
+**Key characteristics:**
+
+- Runs on the server where R2 Vault secrets are accessible
+- Automatic fallback: R2 → Supabase Storage
+- Built-in file validation (can be skipped via `skipValidation`)
+- Returns storage type used (`'r2'` or `'supabase'`)
+
+```typescript
+import { uploadToStorage } from "@/app/actions/storage";
+
+const formData = new FormData();
+formData.set("file", file);
+formData.set("bucket", "posts");
+formData.set("filePath", "posts/123/image.jpg");
+// formData.set('skipValidation', 'true'); // Optional
+
+const result = await uploadToStorage(formData);
+// { success: true, path: '...', publicUrl: '...', storage: 'r2' }
+```
+
+#### 2. Client-Side API (Supabase Only)
+
 The `storageAPI.uploadImage()` function uses **direct fetch API** instead of the Supabase JavaScript client for uploads. This design decision was made to avoid auth session hanging issues that can occur in production SSR environments when the Supabase client's internal `getSession()` call blocks.
 
 **Key characteristics:**
@@ -838,6 +892,15 @@ The `storageAPI.uploadImage()` function uses **direct fetch API** instead of the
 - Upsert enabled by default (`x-upsert: true` header)
 
 **Other methods** (`downloadImage`, `deleteImage`, `getPublicUrl`, `createSignedUrl`) still use the Supabase client as they don't exhibit the same hanging behavior.
+
+### When to Use Which
+
+| Scenario                   | Recommended Approach              |
+| -------------------------- | --------------------------------- |
+| R2 storage needed          | Server Action (`uploadToStorage`) |
+| Vault credentials required | Server Action (`uploadToStorage`) |
+| Client-only upload         | `storageAPI.uploadImage()`        |
+| Simple Supabase upload     | `storageAPI.uploadImage()`        |
 
 ---
 

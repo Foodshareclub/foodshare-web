@@ -3,12 +3,13 @@
  * Unified file storage with Cloudflare R2 (primary) and Supabase Storage (fallback)
  *
  * R2 provides zero egress fees and 10GB free storage
- * Supabase is used as fallback when R2 is not configured
+ * Uses Server Action for uploads to access Vault credentials
  */
 
 import { supabase } from "@/lib/supabase/client";
 import { STORAGE_BUCKETS, validateFile, type StorageBucket } from "@/constants/storage";
-import { uploadToR2, deleteFromR2, isR2Configured, getR2PublicUrl } from "@/lib/r2/client";
+import { deleteFromR2, isR2Configured, getR2PublicUrl } from "@/lib/r2/client";
+import { uploadToStorage } from "@/app/actions/storage";
 
 // ============================================================================
 // Types
@@ -33,12 +34,6 @@ export type UploadResult = {
 };
 
 // ============================================================================
-// Constants
-// ============================================================================
-
-const UPLOAD_TIMEOUT_MS = 30000;
-
-// ============================================================================
 // Internal Helpers
 // ============================================================================
 
@@ -49,55 +44,6 @@ function getBucketKey(bucket: string): keyof typeof STORAGE_BUCKETS | undefined 
   return Object.keys(STORAGE_BUCKETS).find(
     (key) => STORAGE_BUCKETS[key as keyof typeof STORAGE_BUCKETS] === bucket
   ) as keyof typeof STORAGE_BUCKETS | undefined;
-}
-
-/**
- * Upload to Supabase Storage using direct fetch (bypasses auth issues)
- */
-async function uploadToSupabase(
-  bucket: string,
-  filePath: string,
-  file: File
-): Promise<{ path: string } | null> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Supabase configuration missing");
-  }
-
-  const uploadUrl = `${supabaseUrl}/storage/v1/object/${bucket}/${filePath}`;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
-
-  try {
-    const response = await fetch(uploadUrl, {
-      method: "POST",
-      headers: {
-        apikey: supabaseAnonKey,
-        Authorization: `Bearer ${supabaseAnonKey}`,
-        "x-upsert": "true",
-      },
-      body: file,
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Upload failed: ${response.status} ${errorText}`);
-    }
-
-    const result = await response.json();
-    return { path: result.Key || filePath };
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if ((error as Error).name === "AbortError") {
-      throw new Error(`Upload timed out after ${UPLOAD_TIMEOUT_MS / 1000}s`);
-    }
-    throw error;
-  }
 }
 
 // ============================================================================
@@ -122,15 +68,15 @@ export const storageAPI = {
   },
 
   /**
-   * Upload image to storage
-   * Uses R2 as primary (if configured), falls back to Supabase
+   * Upload image to storage via Server Action
+   * Uses R2 as primary (credentials from Vault), falls back to Supabase
    */
   async uploadImage(
     params: UploadImageType
   ): Promise<{ data: UploadResult; error: null } | { data: null; error: Error }> {
     const { bucket, filePath, file, validate = true } = params;
 
-    console.log("[Storage] 🚀 Starting upload:", {
+    console.log("[storageAPI.uploadImage] 🚀 Starting upload:", {
       bucket,
       filePath,
       size: file.size,
@@ -138,57 +84,44 @@ export const storageAPI = {
     });
 
     try {
-      // Validate file if enabled
+      // Client-side validation first (fast feedback)
       if (validate) {
         const bucketKey = getBucketKey(bucket);
         if (bucketKey) {
           const validation = validateFile(file, bucketKey);
           if (!validation.valid) {
-            console.log("[Storage] ❌ Validation failed:", validation.error);
+            console.log("[storageAPI.uploadImage] ❌ Validation failed:", validation.error);
             return { data: null, error: new Error(validation.error) };
           }
         }
       }
 
-      // Try R2 first (primary storage)
-      if (isR2Configured()) {
-        console.log("[Storage] 📤 Uploading to R2...");
-        const r2Path = `${bucket}/${filePath}`;
-        const result = await uploadToR2(file, r2Path, file.type);
+      // Use Server Action for upload (has access to Vault)
+      console.log("[storageAPI.uploadImage] 📤 Calling server action...");
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("bucket", bucket);
+      formData.append("filePath", filePath);
+      formData.append("skipValidation", "true"); // Already validated client-side
 
-        if (result.success && result.path) {
-          console.log("[Storage] ✅ R2 upload successful");
-          return {
-            data: {
-              path: result.path,
-              publicUrl: result.publicUrl,
-              storage: "r2",
-            },
-            error: null,
-          };
-        }
+      const result = await uploadToStorage(formData);
 
-        console.warn("[Storage] ⚠️ R2 failed, falling back to Supabase:", result.error);
-      }
-
-      // Fallback to Supabase
-      console.log("[Storage] 📤 Uploading to Supabase...");
-      const supabaseResult = await uploadToSupabase(bucket, filePath, file);
-
-      if (supabaseResult) {
-        console.log("[Storage] ✅ Supabase upload successful");
+      if (result.success && result.path) {
+        console.log("[storageAPI.uploadImage] ✅ Upload successful via", result.storage);
         return {
           data: {
-            path: supabaseResult.path,
-            storage: "supabase",
+            path: result.path,
+            publicUrl: result.publicUrl,
+            storage: result.storage || "supabase",
           },
           error: null,
         };
       }
 
-      return { data: null, error: new Error("Upload failed") };
+      console.error("[storageAPI.uploadImage] ❌ Upload failed:", result.error);
+      return { data: null, error: new Error(result.error || "Upload failed") };
     } catch (error) {
-      console.error("[Storage] ❌ Upload error:", error);
+      console.error("[storageAPI.uploadImage] ❌ Exception:", error);
       return { data: null, error: error as Error };
     }
   },
