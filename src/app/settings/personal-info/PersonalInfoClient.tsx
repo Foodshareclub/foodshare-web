@@ -9,24 +9,14 @@ import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { User, Mail, Phone, MapPin, ChevronRight, Check, X, Camera, Loader2 } from "lucide-react";
-
-// Icon aliases for consistency
-const FaUser = User;
-const FaEnvelope = Mail;
-const FaPhone = Phone;
-const FaMapMarkerAlt = MapPin;
-const FaChevronRight = ChevronRight;
-const FaCheck = Check;
-const FaTimes = X;
-const FaCamera = Camera;
-const FaSpinner = Loader2;
+import { User, Mail, Phone, MapPin, ChevronLeft, Check, X, Camera, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { uploadProfileAvatar } from "@/app/actions/profile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Glass } from "@/components/ui/glass";
 import { cn } from "@/lib/utils";
 import { ALLOWED_MIME_TYPES } from "@/constants/mime-types";
 import type { AuthUser } from "@/app/actions/auth";
@@ -91,61 +81,65 @@ function InfoCard({
   isSaving = false,
 }: InfoCardProps) {
   return (
-    <motion.div
-      variants={itemVariants}
-      className="group relative bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-6 hover:border-border hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20 transition-all duration-300"
-    >
-      <div className="flex items-start gap-4">
-        <div
-          className={cn(
-            "relative flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center",
-            "bg-gradient-to-br shadow-lg",
-            gradient
-          )}
-        >
-          <span className="text-white">{icon}</span>
-          <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-white/20 to-transparent" />
-        </div>
+    <motion.div variants={itemVariants}>
+      <Glass
+        variant="subtle"
+        hover
+        className="group relative p-6 hover:shadow-lg transition-all duration-300"
+      >
+        <div className="flex items-start gap-4">
+          <div
+            className={cn(
+              "relative flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center",
+              "bg-gradient-to-br shadow-lg transition-transform duration-300",
+              "group-hover:scale-105",
+              gradient
+            )}
+          >
+            <span className="text-white">{icon}</span>
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-white/20 to-transparent" />
+          </div>
 
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-            {canEdit && !isEditing && (
-              <Button
-                onClick={onEdit}
-                variant="ghost"
-                size="sm"
-                disabled={editDisabled}
-                className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-              >
-                Edit
-              </Button>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+              {canEdit && !isEditing && (
+                <Button
+                  onClick={onEdit}
+                  variant="ghost"
+                  size="sm"
+                  disabled={editDisabled}
+                  className="text-primary hover:text-primary/80 hover:bg-primary/10"
+                >
+                  Edit
+                </Button>
+              )}
+            </div>
+            {children}
+            {isEditing && (
+              <div className="flex gap-2 mt-4">
+                <Button
+                  onClick={onSave}
+                  size="sm"
+                  disabled={isSaving}
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                >
+                  {isSaving ? (
+                    <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+                  ) : (
+                    <Check className="w-3 h-3 mr-1.5" />
+                  )}
+                  {isSaving ? "Saving..." : "Save"}
+                </Button>
+                <Button onClick={onCancel} variant="outline" size="sm" disabled={isSaving}>
+                  <X className="w-3 h-3 mr-1.5" />
+                  Cancel
+                </Button>
+              </div>
             )}
           </div>
-          {children}
-          {isEditing && (
-            <div className="flex gap-2 mt-4">
-              <Button
-                onClick={onSave}
-                size="sm"
-                disabled={isSaving}
-                className="bg-emerald-600 hover:bg-emerald-700"
-              >
-                {isSaving ? (
-                  <FaSpinner className="w-3 h-3 mr-1.5 animate-spin" />
-                ) : (
-                  <FaCheck className="w-3 h-3 mr-1.5" />
-                )}
-                {isSaving ? "Saving..." : "Save"}
-              </Button>
-              <Button onClick={onCancel} variant="outline" size="sm" disabled={isSaving}>
-                <FaTimes className="w-3 h-3 mr-1.5" />
-                Cancel
-              </Button>
-            </div>
-          )}
         </div>
-      </div>
+      </Glass>
     </motion.div>
   );
 }
@@ -308,48 +302,51 @@ export function PersonalInfoClient({
   }
 
   return (
-    <div className="bg-gradient-to-b from-background via-muted/30 to-background pb-10">
+    <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background pb-10">
       {/* Decorative background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-20 w-60 h-60 bg-cyan-500/10 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/8 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -left-20 w-60 h-60 bg-cyan-500/8 rounded-full blur-3xl" />
       </div>
 
-      {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-xl">
-        <div className="container mx-auto max-w-3xl px-4 py-8">
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 mb-6 text-sm">
-            <Link
-              href="/settings"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Settings
-            </Link>
-            <FaChevronRight className="w-3 h-3 text-muted-foreground/50" />
-            <span className="text-foreground font-medium">Personal info</span>
-          </nav>
-
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+      <div className="container mx-auto max-w-3xl px-4 py-6 lg:py-10">
+        {/* Back navigation */}
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
+          className="mb-6"
+        >
+          <Link
+            href="/settings"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
           >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/25">
-                <FaUser className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-3xl font-bold text-foreground">Personal info</h1>
-            </div>
-            <p className="text-muted-foreground">
-              Manage your personal details and how we can reach you
-            </p>
-          </motion.div>
-        </div>
-      </header>
+            <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+            Back to Settings
+          </Link>
+        </motion.div>
 
-      {/* Content */}
-      <main className="container mx-auto max-w-3xl px-4 py-8">
+        {/* Header */}
+        <motion.header
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-8"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <User className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Personal info</h1>
+              <p className="text-sm text-muted-foreground">
+                Manage your personal details and contact info
+              </p>
+            </div>
+          </div>
+        </motion.header>
+
+        {/* Content */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -357,98 +354,101 @@ export function PersonalInfoClient({
           className="space-y-4"
         >
           {/* Profile Photo */}
-          <motion.div
-            variants={itemVariants}
-            className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-6 hover:border-border hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20 transition-all duration-300"
-          >
-            <div className="flex items-center gap-6">
-              {/* Avatar */}
-              <div className="relative group">
-                <div
-                  className={cn(
-                    "relative w-24 h-24 rounded-full overflow-hidden",
-                    "ring-4 ring-background shadow-xl",
-                    "transition-transform duration-300 group-hover:scale-105"
-                  )}
-                >
-                  {displayAvatarUrl ? (
-                    <Image
-                      src={displayAvatarUrl}
-                      alt="Profile photo"
-                      fill
-                      className="object-cover"
-                      sizes="96px"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
-                      <span className="text-3xl text-white font-semibold">
-                        {firstName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || "?"}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Upload overlay */}
-                  <button
-                    onClick={handleAvatarClick}
-                    disabled={isUploadingAvatar}
+          <motion.div variants={itemVariants}>
+            <Glass
+              variant="subtle"
+              hover
+              className="p-6 hover:shadow-lg transition-all duration-300"
+            >
+              <div className="flex items-center gap-6">
+                {/* Avatar */}
+                <div className="relative group">
+                  <div
                     className={cn(
-                      "absolute inset-0 bg-black/50 flex items-center justify-center",
-                      "opacity-0 group-hover:opacity-100 transition-opacity duration-200",
-                      "cursor-pointer"
+                      "relative w-24 h-24 rounded-full overflow-hidden",
+                      "ring-4 ring-background shadow-xl",
+                      "transition-transform duration-300 group-hover:scale-105"
                     )}
                   >
-                    {isUploadingAvatar ? (
-                      <FaSpinner className="w-6 h-6 text-white animate-spin" />
+                    {displayAvatarUrl ? (
+                      <Image
+                        src={displayAvatarUrl}
+                        alt="Profile photo"
+                        fill
+                        className="object-cover"
+                        sizes="96px"
+                      />
                     ) : (
-                      <FaCamera className="w-6 h-6 text-white" />
+                      <div className="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
+                        <span className="text-3xl text-white font-semibold">
+                          {firstName?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || "?"}
+                        </span>
+                      </div>
                     )}
-                  </button>
+
+                    {/* Upload overlay */}
+                    <button
+                      onClick={handleAvatarClick}
+                      disabled={isUploadingAvatar}
+                      className={cn(
+                        "absolute inset-0 bg-black/50 flex items-center justify-center",
+                        "opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+                        "cursor-pointer"
+                      )}
+                    >
+                      {isUploadingAvatar ? (
+                        <Loader2 className="w-6 h-6 text-white animate-spin" />
+                      ) : (
+                        <Camera className="w-6 h-6 text-white" />
+                      )}
+                    </button>
+                  </div>
+
+                  {/* Hidden file input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={ALLOWED_MIME_TYPES.PROFILES.join(",")}
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                  />
                 </div>
 
-                {/* Hidden file input */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept={ALLOWED_MIME_TYPES.PROFILES.join(",")}
-                  onChange={handleAvatarChange}
-                  className="hidden"
-                />
+                {/* Info */}
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-foreground mb-1">Profile photo</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Click on the photo to upload a new image. JPG or PNG, max 10MB.
+                  </p>
+                  <Button
+                    onClick={handleAvatarClick}
+                    variant="outline"
+                    size="sm"
+                    disabled={isUploadingAvatar}
+                    className="text-primary border-primary/30 hover:bg-primary/10"
+                  >
+                    {isUploadingAvatar ? (
+                      <>
+                        <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="w-3 h-3 mr-1.5" />
+                        Change photo
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
-
-              {/* Info */}
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-foreground mb-1">Profile photo</h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  Click on the photo to upload a new image. JPG or PNG, max 10MB.
-                </p>
-                <Button
-                  onClick={handleAvatarClick}
-                  variant="outline"
-                  size="sm"
-                  disabled={isUploadingAvatar}
-                  className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/20"
-                >
-                  {isUploadingAvatar ? (
-                    <>
-                      <FaSpinner className="w-3 h-3 mr-1.5 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <FaCamera className="w-3 h-3 mr-1.5" />
-                      Change photo
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
+            </Glass>
           </motion.div>
 
           <Separator className="my-6 bg-border/50" />
 
           {/* Name */}
           <InfoCard
-            icon={<FaUser className="w-5 h-5" />}
+            icon={<User className="w-5 h-5" />}
             gradient="from-blue-500 to-cyan-500"
             title="Legal name"
             isEditing={editingName}
@@ -494,7 +494,7 @@ export function PersonalInfoClient({
 
           {/* Email */}
           <InfoCard
-            icon={<FaEnvelope className="w-5 h-5" />}
+            icon={<Mail className="w-5 h-5" />}
             gradient="from-violet-500 to-purple-500"
             title="Email address"
             isEditing={false}
@@ -511,7 +511,7 @@ export function PersonalInfoClient({
 
           {/* Phone */}
           <InfoCard
-            icon={<FaPhone className="w-5 h-5" />}
+            icon={<Phone className="w-5 h-5" />}
             gradient="from-emerald-500 to-teal-500"
             title="Phone number"
             isEditing={editingPhone}
@@ -544,7 +544,7 @@ export function PersonalInfoClient({
 
           {/* Address */}
           <InfoCard
-            icon={<FaMapMarkerAlt className="w-5 h-5" />}
+            icon={<MapPin className="w-5 h-5" />}
             gradient="from-orange-500 to-amber-500"
             title="Address"
             isEditing={editingAddress}
@@ -624,7 +624,7 @@ export function PersonalInfoClient({
             )}
           </InfoCard>
         </motion.div>
-      </main>
+      </div>
     </div>
   );
 }

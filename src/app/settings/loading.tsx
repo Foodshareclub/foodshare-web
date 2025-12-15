@@ -1,78 +1,123 @@
+import { Skeleton } from "@/components/ui/skeleton";
+
 /**
  * Settings Loading Component
- * Matches the new premium settings design
+ * Matches the modern sidebar + content layout
  */
 export default function Loading() {
   return (
-    <div className="bg-gradient-to-b from-background via-muted/30 to-background pb-10">
-      {/* Header Skeleton */}
-      <header className="border-b border-border/50 bg-card/50">
-        <div className="container mx-auto px-6 lg:px-8 py-10 lg:py-14">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-muted animate-pulse" />
-            <div className="h-9 w-32 bg-muted rounded-lg animate-pulse" />
+    <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
+      <div className="container mx-auto px-4 lg:px-8 py-6 lg:py-10">
+        {/* Header Skeleton */}
+        <header className="mb-8">
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-12 h-12 rounded-2xl" />
+            <div>
+              <Skeleton className="h-8 w-32 mb-2" />
+              <Skeleton className="h-4 w-48 hidden sm:block" />
+            </div>
           </div>
-          <div className="h-6 w-80 bg-muted rounded animate-pulse" />
-        </div>
-      </header>
+        </header>
 
-      {/* Content Skeleton */}
-      <main className="container mx-auto px-6 lg:px-8 py-10">
-        <div className="max-w-4xl mx-auto space-y-10">
-          {/* Account Section */}
-          <section>
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-8 h-8 rounded-lg bg-muted animate-pulse" />
-              <div>
-                <div className="h-5 w-24 bg-muted rounded animate-pulse mb-1" />
-                <div className="h-4 w-48 bg-muted rounded animate-pulse" />
+        {/* Main content */}
+        <div className="flex gap-8">
+          {/* Desktop Sidebar Skeleton */}
+          <aside className="hidden lg:block w-72 flex-shrink-0">
+            <div className="rounded-xl border border-border/50 bg-card/50 p-4 space-y-6">
+              {/* Account section */}
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-20 mb-3" />
+                {[1, 2].map((i) => (
+                  <div key={i} className="flex items-center gap-3 p-2.5">
+                    <Skeleton className="w-9 h-9 rounded-lg" />
+                    <div className="flex-1">
+                      <Skeleton className="h-4 w-24 mb-1" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <Skeleton className="h-px w-full" />
+
+              {/* Preferences section */}
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24 mb-3" />
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-3 p-2.5 opacity-50">
+                    <Skeleton className="w-9 h-9 rounded-lg" />
+                    <div className="flex-1">
+                      <Skeleton className="h-4 w-20 mb-1" />
+                      <Skeleton className="h-3 w-14" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <Skeleton className="h-px w-full" />
+
+              {/* Support section */}
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-16 mb-3" />
+                {[1, 2].map((i) => (
+                  <div key={i} className="flex items-center gap-3 p-2.5">
+                    <Skeleton className="w-9 h-9 rounded-lg" />
+                    <div className="flex-1">
+                      <Skeleton className="h-4 w-24 mb-1" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {[...Array(2)].map((_, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-4 p-5 rounded-2xl border border-border bg-card/80"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-muted animate-pulse" />
-                  <div className="flex-1">
-                    <div className="h-5 w-28 bg-muted rounded animate-pulse mb-2" />
-                    <div className="h-4 w-full bg-muted rounded animate-pulse" />
-                  </div>
+          </aside>
+
+          {/* Main content area */}
+          <main className="flex-1 min-w-0 space-y-8">
+            {/* Welcome section */}
+            <div className="rounded-xl border border-border/50 bg-card/50 p-6 lg:p-8">
+              <div className="flex items-start gap-4">
+                <Skeleton className="w-14 h-14 rounded-2xl" />
+                <div className="flex-1">
+                  <Skeleton className="h-6 w-48 mb-2" />
+                  <Skeleton className="h-4 w-full max-w-md" />
                 </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Separator */}
-          <div className="h-px bg-border/50" />
-
-          {/* Preferences Section */}
-          <section>
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-8 h-8 rounded-lg bg-muted animate-pulse" />
-              <div>
-                <div className="h-5 w-28 bg-muted rounded animate-pulse mb-1" />
-                <div className="h-4 w-52 bg-muted rounded animate-pulse" />
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {[...Array(3)].map((_, i) => (
-                <div
-                  key={i}
-                  className="flex items-start gap-4 p-5 rounded-2xl border border-border bg-card/80 opacity-50"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-muted animate-pulse" />
-                  <div className="flex-1">
-                    <div className="h-5 w-24 bg-muted rounded animate-pulse mb-2" />
-                    <div className="h-4 w-full bg-muted rounded animate-pulse" />
+
+            {/* Quick actions */}
+            <div className="space-y-4">
+              <Skeleton className="h-6 w-32" />
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="rounded-xl border border-border/50 bg-card/50 p-5">
+                    <div className="flex items-start gap-4">
+                      <Skeleton className="w-12 h-12 rounded-xl" />
+                      <div className="flex-1">
+                        <Skeleton className="h-5 w-28 mb-2" />
+                        <Skeleton className="h-4 w-40" />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </section>
+
+            {/* Coming soon */}
+            <div className="space-y-4">
+              <Skeleton className="h-6 w-28" />
+              <div className="rounded-xl border border-border/50 bg-card/50 p-6">
+                <div className="flex flex-wrap gap-3">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-9 w-28 rounded-lg" />
+                  ))}
+                </div>
+                <Skeleton className="h-4 w-64 mt-4" />
+              </div>
+            </div>
+          </main>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

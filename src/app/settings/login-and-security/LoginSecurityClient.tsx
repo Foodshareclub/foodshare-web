@@ -11,7 +11,7 @@ import { motion } from "framer-motion";
 import {
   Shield,
   Key,
-  ChevronRight,
+  ChevronLeft,
   Check,
   X,
   CheckCircle,
@@ -19,24 +19,14 @@ import {
   Lock,
   Fingerprint,
 } from "lucide-react";
-
-// Icon aliases for consistency
-const FaShieldAlt = Shield;
-const FaKey = Key;
-const FaChevronRight = ChevronRight;
-const FaCheck = Check;
-const FaTimes = X;
-const FaCheckCircle = CheckCircle;
-const FaExclamationCircle = AlertCircle;
-const FaLock = Lock;
-const FaFingerprint = Fingerprint;
 import { auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Glass } from "@/components/ui/glass";
 import { MFAEnrollment } from "@/components/security/MFAEnrollment";
-import { cn } from "@/lib/utils";
+import { cn as _cn } from "@/lib/utils";
 import type { AuthUser } from "@/app/actions/auth";
 
 interface LoginSecurityClientProps {
@@ -116,48 +106,51 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
   ];
 
   return (
-    <div className="bg-gradient-to-b from-background via-muted/30 to-background pb-10">
+    <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background pb-10">
       {/* Decorative background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 -left-20 w-60 h-60 bg-teal-500/10 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-500/8 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 -left-20 w-60 h-60 bg-teal-500/8 rounded-full blur-3xl" />
       </div>
 
-      {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-xl">
-        <div className="container mx-auto max-w-3xl px-4 py-8">
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 mb-6 text-sm">
-            <Link
-              href="/settings"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Settings
-            </Link>
-            <FaChevronRight className="w-3 h-3 text-muted-foreground/50" />
-            <span className="text-foreground font-medium">Login & security</span>
-          </nav>
-
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+      <div className="container mx-auto max-w-3xl px-4 py-6 lg:py-10">
+        {/* Back navigation */}
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
+          className="mb-6"
+        >
+          <Link
+            href="/settings"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
           >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                <FaShieldAlt className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-3xl font-bold text-foreground">Login & security</h1>
-            </div>
-            <p className="text-muted-foreground">
-              Manage your password and keep your account secure
-            </p>
-          </motion.div>
-        </div>
-      </header>
+            <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+            Back to Settings
+          </Link>
+        </motion.div>
 
-      {/* Content */}
-      <main className="container mx-auto max-w-3xl px-4 py-8">
+        {/* Header */}
+        <motion.header
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-8"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <Shield className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Login & security</h1>
+              <p className="text-sm text-muted-foreground">
+                Manage your password and account security
+              </p>
+            </div>
+          </div>
+        </motion.header>
+
+        {/* Content */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -165,117 +158,120 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
           className="space-y-4"
         >
           {/* Password Section */}
-          <motion.div
-            variants={itemVariants}
-            className="group relative bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-6 hover:border-border hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20 transition-all duration-300"
-          >
-            <div className="flex items-start gap-4">
-              <div className="relative flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg">
-                <FaKey className="w-5 h-5 text-white" />
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-white/20 to-transparent" />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold text-foreground">Password</h3>
-                  {!editingPassword && (
-                    <Button
-                      onClick={() => setEditingPassword(true)}
-                      variant="ghost"
-                      size="sm"
-                      className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-                    >
-                      Update
-                    </Button>
-                  )}
+          <motion.div variants={itemVariants}>
+            <Glass
+              variant="subtle"
+              hover
+              className="group relative p-6 hover:shadow-lg transition-all duration-300"
+            >
+              <div className="flex items-start gap-4">
+                <div className="relative flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg transition-transform duration-300 group-hover:scale-105">
+                  <Key className="w-5 h-5 text-white" />
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-white/20 to-transparent" />
                 </div>
 
-                {editingPassword ? (
-                  <div className="space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                      We&apos;ll send a password reset link to your email address
-                    </p>
-
-                    {/* Success Message */}
-                    {isEmailSent && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex items-start gap-3 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800"
-                      >
-                        <FaCheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
-                            Reset link sent!
-                          </p>
-                          <p className="text-sm text-emerald-700 dark:text-emerald-300">
-                            Check your email for the password reset link.
-                          </p>
-                        </div>
-                      </motion.div>
-                    )}
-
-                    {/* Error Message */}
-                    {error && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex items-start gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
-                      >
-                        <FaExclamationCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
-                        <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
-                      </motion.div>
-                    )}
-
-                    <div>
-                      <Label htmlFor="email" className="text-xs text-muted-foreground">
-                        Email address
-                      </Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="your@email.com"
-                        className="mt-1"
-                        disabled={isEmailSent}
-                      />
-                    </div>
-
-                    <div className="flex gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-semibold text-foreground">Password</h3>
+                    {!editingPassword && (
                       <Button
-                        onClick={handleSendResetEmail}
-                        disabled={isLoading || isEmailSent || !email}
+                        onClick={() => setEditingPassword(true)}
+                        variant="ghost"
                         size="sm"
-                        className="bg-emerald-600 hover:bg-emerald-700"
+                        className="text-primary hover:text-primary/80 hover:bg-primary/10"
                       >
-                        {isLoading ? (
-                          "Sending..."
-                        ) : (
-                          <>
-                            <FaCheck className="w-3 h-3 mr-1.5" />
-                            Send reset link
-                          </>
-                        )}
+                        Update
                       </Button>
-                      <Button
-                        onClick={handleCancelPasswordEdit}
-                        variant="outline"
-                        size="sm"
-                        disabled={isLoading}
-                      >
-                        <FaTimes className="w-3 h-3 mr-1.5" />
-                        Cancel
-                      </Button>
-                    </div>
+                    )}
                   </div>
-                ) : (
-                  <p className="text-muted-foreground">
-                    Keep your account secure with a strong password
-                  </p>
-                )}
+
+                  {editingPassword ? (
+                    <div className="space-y-4">
+                      <p className="text-sm text-muted-foreground">
+                        We&apos;ll send a password reset link to your email address
+                      </p>
+
+                      {/* Success Message */}
+                      {isEmailSent && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="flex items-start gap-3 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800"
+                        >
+                          <CheckCircle className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mt-0.5" />
+                          <div>
+                            <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200">
+                              Reset link sent!
+                            </p>
+                            <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                              Check your email for the password reset link.
+                            </p>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* Error Message */}
+                      {error && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="flex items-start gap-3 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+                        >
+                          <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
+                          <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+                        </motion.div>
+                      )}
+
+                      <div>
+                        <Label htmlFor="email" className="text-xs text-muted-foreground">
+                          Email address
+                        </Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="your@email.com"
+                          className="mt-1"
+                          disabled={isEmailSent}
+                        />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={handleSendResetEmail}
+                          disabled={isLoading || isEmailSent || !email}
+                          size="sm"
+                          className="bg-emerald-600 hover:bg-emerald-700"
+                        >
+                          {isLoading ? (
+                            "Sending..."
+                          ) : (
+                            <>
+                              <Check className="w-3 h-3 mr-1.5" />
+                              Send reset link
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          onClick={handleCancelPasswordEdit}
+                          variant="outline"
+                          size="sm"
+                          disabled={isLoading}
+                        >
+                          <X className="w-3 h-3 mr-1.5" />
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">
+                      Keep your account secure with a strong password
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+            </Glass>
           </motion.div>
 
           {/* Admin MFA Section */}
@@ -283,34 +279,33 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
             <>
               <Separator className="my-6 bg-border/50" />
 
-              <motion.div
-                variants={itemVariants}
-                className="bg-card/80 backdrop-blur-sm rounded-2xl border border-border/50 p-6"
-              >
-                <div className="flex items-start gap-4 mb-6">
-                  <div className="relative flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
-                    <FaFingerprint className="w-5 h-5 text-white" />
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-white/20 to-transparent" />
+              <motion.div variants={itemVariants}>
+                <Glass variant="subtle" className="p-6">
+                  <div className="flex items-start gap-4 mb-6">
+                    <div className="relative flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg">
+                      <Fingerprint className="w-5 h-5 text-white" />
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-white/20 to-transparent" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground">Admin Security</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Multi-factor authentication for administrator access
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">Admin Security</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Multi-factor authentication for administrator access
-                    </p>
-                  </div>
-                </div>
 
-                <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 mb-6">
-                  <div className="flex items-start gap-3">
-                    <FaLock className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5" />
-                    <p className="text-sm text-blue-900 dark:text-blue-100">
-                      <strong>Admin Access Protection:</strong> As an administrator, MFA adds an
-                      extra layer of security to protect sensitive features and the CMS.
-                    </p>
+                  <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 mb-6">
+                    <div className="flex items-start gap-3">
+                      <Lock className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5" />
+                      <p className="text-sm text-blue-900 dark:text-blue-100">
+                        <strong>Admin Access Protection:</strong> As an administrator, MFA adds an
+                        extra layer of security to protect sensitive features and the CMS.
+                      </p>
+                    </div>
                   </div>
-                </div>
 
-                <MFAEnrollment profileId={user.id} />
+                  <MFAEnrollment profileId={user.id} />
+                </Glass>
               </motion.div>
             </>
           )}
@@ -318,36 +313,35 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
           <Separator className="my-6 bg-border/50" />
 
           {/* Security Tips */}
-          <motion.div
-            variants={itemVariants}
-            className="bg-muted/50 rounded-2xl border border-border/50 p-6"
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                <FaShieldAlt className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <motion.div variants={itemVariants}>
+            <Glass variant="subtle" className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground">Security tips</h3>
               </div>
-              <h3 className="text-lg font-semibold text-foreground">Security tips</h3>
-            </div>
 
-            <ul className="space-y-3">
-              {securityTips.map((tip, index) => (
-                <motion.li
-                  key={index}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
-                  className="flex items-start gap-3"
-                >
-                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mt-0.5">
-                    <FaCheck className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
-                  </div>
-                  <span className="text-sm text-muted-foreground">{tip}</span>
-                </motion.li>
-              ))}
-            </ul>
+              <ul className="space-y-3">
+                {securityTips.map((tip, index) => (
+                  <motion.li
+                    key={index}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 + index * 0.1 }}
+                    className="flex items-start gap-3"
+                  >
+                    <div className="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mt-0.5">
+                      <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <span className="text-sm text-muted-foreground">{tip}</span>
+                  </motion.li>
+                ))}
+              </ul>
+            </Glass>
           </motion.div>
         </motion.div>
-      </main>
+      </div>
     </div>
   );
 }

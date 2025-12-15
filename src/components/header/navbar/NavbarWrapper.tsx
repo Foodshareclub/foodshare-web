@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Navbar from "@/components/header/navbar/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import type { AuthUser } from "@/app/actions/auth";
@@ -37,10 +37,17 @@ export function NavbarWrapper({
   unreadRooms = [],
 }: NavbarWrapperProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [productType, setProductType] = useState(defaultProductType);
 
   // Client-side auth for real-time updates (login/logout)
+  // Must be called before any conditional returns (React hooks rules)
   const { isAuthenticated, user } = useAuth();
+
+  // Don't render navbar on map pages - MapClient renders its own navbar
+  if (pathname?.startsWith("/map")) {
+    return null;
+  }
 
   // Prefer client auth state if available, fall back to server data
   const effectiveUser = user || (initialUser ? { id: initialUser.id } : null);
