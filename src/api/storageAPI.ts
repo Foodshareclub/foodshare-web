@@ -79,10 +79,37 @@ export const storageAPI = {
         console.log("[storageAPI.uploadImage] ⏭️ Validation skipped");
       }
 
+      // Check if user is authenticated before upload
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error("[storageAPI.uploadImage] ❌ Session error:", sessionError);
+        return { data: null, error: new Error("Authentication error. Please sign in again.") };
+      }
+      if (!sessionData.session) {
+        console.error("[storageAPI.uploadImage] ❌ No active session");
+        return { data: null, error: new Error("Please sign in to upload images.") };
+      }
+      console.log("[storageAPI.uploadImage] ✅ Session valid, user:", sessionData.session.user.id);
+
       console.log("[storageAPI.uploadImage] 📤 Uploading to Supabase storage...");
-      const { data, error } = await supabase.storage
+
+      // Add timeout to prevent hanging uploads (30 seconds)
+      const UPLOAD_TIMEOUT_MS = 30000;
+      const uploadPromise = supabase.storage
         .from(params.bucket)
         .upload(params.filePath, params.file, { upsert: true });
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => {
+          reject(
+            new Error(
+              `Upload timed out after ${UPLOAD_TIMEOUT_MS / 1000} seconds. Please check your connection and try again.`
+            )
+          );
+        }, UPLOAD_TIMEOUT_MS);
+      });
+
+      const { data, error } = await Promise.race([uploadPromise, timeoutPromise]);
 
       if (error) {
         console.error("[storageAPI.uploadImage] ❌ Supabase upload error:", error);

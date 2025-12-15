@@ -139,10 +139,32 @@ src/components/admin/
 │                                    # Components: ScrollArea, Card, DropdownMenu for enhanced UX
 │
 ├── email/
-│   └── AutomationBuilder.tsx        # Visual automation flow builder (lazy-loaded)
-│                                    # Features: Step editor, drag-and-drop, template selector
-│                                    # Exports: AutomationBuilder, PresetAutomationCreator
-│                                    # Step types: email, delay, condition, action
+│   ├── AutomationBuilder.tsx        # Visual automation flow builder (lazy-loaded)
+│   │                                # Features: Step editor, drag-and-drop, template selector
+│   │                                # Exports: AutomationBuilder, PresetAutomationCreator
+│   │                                # Step types: email, delay, condition, action
+│   │
+│   ├── EmailContentEditor.tsx       # Email content editor with visual settings
+│   │                                # Features: TipTap rich text, device preview (desktop/tablet/mobile)
+│   │                                # Visual settings: typography, colors, spacing, alignment
+│   │                                # Dark mode preview toggle, real-time style application
+│   │                                # Zoom controls: 50-150% zoom with +/- buttons
+│   │                                # Copy HTML: One-click copy email HTML to clipboard
+│   │                                # Fullscreen mode: Expand editor to full viewport
+│   │                                # Props: to, subject, html, onClose, settings, onSettingsChange
+│   │
+│   ├── EmailCRMDashboard.tsx        # Email CRM dashboard component
+│   │
+│   └── EmailPreview.tsx             # Email preview with device simulation
+│                                    # Features: Desktop/tablet/mobile preview, visual settings panel
+│                                    # Typography: font family, size, line height (5 fonts, 3 sizes)
+│                                    # Colors: header, button, link, background, text (color pickers)
+│                                    # Layout: content width (narrow/medium/wide), border radius
+│                                    # Toggles: show logo, show footer
+│                                    # Email client chrome simulation with macOS-style window controls
+│                                    # Framer Motion animations for settings panel
+│                                    # Exports: EmailPreview, EmailVisualSettings, DEFAULT_VISUAL_SETTINGS
+│                                    # Props: to, subject, html, onClose, visualSettings?, onSettingsChange?
 ```
 
 **Architecture Note:** The email CRM page uses Next.js 16 server-first architecture:

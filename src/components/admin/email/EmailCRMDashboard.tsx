@@ -56,16 +56,20 @@ import {
   Megaphone,
   Heart,
   Star,
-  Mail,
-  Smartphone,
-  Monitor,
-  X,
+  Mail as _Mail,
 } from "lucide-react";
 import { useActionToast } from "@/hooks/useActionToast";
 
 // Lazy load the rich text editor to reduce initial bundle size
 const RichTextEditor = lazy(() =>
   import("@/components/ui/rich-text-editor").then((mod) => ({ default: mod.RichTextEditor }))
+);
+
+// Lazy load the email content editor with visual settings
+const EmailContentEditor = lazy(() =>
+  import("@/components/admin/email/EmailContentEditor").then((mod) => ({
+    default: mod.EmailContentEditor,
+  }))
 );
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -1572,99 +1576,7 @@ function RichTextEditorLazy({
   );
 }
 
-// ============================================================================
-// Email Preview Component
-// ============================================================================
-
-function EmailPreview({
-  to,
-  subject,
-  html,
-  onClose,
-}: {
-  to: string;
-  subject: string;
-  html: string;
-  onClose: () => void;
-}) {
-  const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
-
-  return (
-    <div className="space-y-4">
-      {/* Preview Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button
-            variant={device === "desktop" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setDevice("desktop")}
-            className="gap-2"
-          >
-            <Monitor className="h-4 w-4" />
-            Desktop
-          </Button>
-          <Button
-            variant={device === "mobile" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setDevice("mobile")}
-            className="gap-2"
-          >
-            <Smartphone className="h-4 w-4" />
-            Mobile
-          </Button>
-        </div>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Email Preview Frame */}
-      <div
-        className={cn(
-          "mx-auto rounded-xl border border-border/50 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden transition-all duration-300",
-          device === "desktop" ? "w-full max-w-2xl" : "w-[375px]"
-        )}
-      >
-        {/* Email Header */}
-        <div className="p-4 border-b border-border/30 bg-muted/30">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Mail className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm truncate">FoodShare</p>
-              <p className="text-xs text-muted-foreground truncate">contact@foodshare.club</p>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">
-              To: <span className="text-foreground">{to || "recipient@example.com"}</span>
-            </p>
-            <p className="font-semibold text-base">{subject || "No subject"}</p>
-          </div>
-        </div>
-
-        {/* Email Body */}
-        <div
-          className={cn(
-            "p-6 prose prose-sm dark:prose-invert max-w-none",
-            "prose-headings:text-foreground prose-p:text-foreground",
-            "prose-a:text-primary prose-strong:text-foreground",
-            device === "mobile" && "text-sm"
-          )}
-          dangerouslySetInnerHTML={{
-            __html: html || "<p class='text-muted-foreground italic'>No content yet...</p>",
-          }}
-        />
-      </div>
-
-      {/* Preview Info */}
-      <p className="text-xs text-center text-muted-foreground">
-        This is a preview. Actual rendering may vary by email client.
-      </p>
-    </div>
-  );
-}
+// EmailPreview is now replaced by EmailContentEditor from ./EmailContentEditor
 
 // ============================================================================
 // Compose Tab
@@ -1767,12 +1679,20 @@ function ComposeTab() {
           </CardHeader>
           <CardContent className="pt-5">
             {showPreview ? (
-              <EmailPreview
-                to={formData.to}
-                subject={formData.subject}
-                html={formData.message}
-                onClose={() => setShowPreview(false)}
-              />
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center h-64">
+                    <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+                  </div>
+                }
+              >
+                <EmailContentEditor
+                  to={formData.to}
+                  subject={formData.subject}
+                  html={formData.message}
+                  onClose={() => setShowPreview(false)}
+                />
+              </Suspense>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Recipient & Subject Row */}
