@@ -7,11 +7,15 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Module-level loading with empty string fallback for build-time safety
+// The actual check happens at runtime in the functions that use these
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing Supabase environment variables");
+function ensureConfig() {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Missing Supabase environment variables");
+  }
 }
 
 /**
@@ -19,6 +23,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * Use this inside unstable_cache() where cookies() cannot be called
  */
 export function createCachedClient() {
+  ensureConfig();
   return createSupabaseClient(supabaseUrl, supabaseAnonKey);
 }
 
@@ -65,6 +70,7 @@ function getSafeCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
  * Includes error handling for corrupted cookies
  */
 export async function createClient() {
+  ensureConfig();
   const cookieStore = await cookies();
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
