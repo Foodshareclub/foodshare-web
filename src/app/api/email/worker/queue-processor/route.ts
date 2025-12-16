@@ -5,14 +5,20 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { verifySignatureAppRouter } from "@upstash/qstash/nextjs";
 import { Redis } from "@upstash/redis";
 import { createClient } from "@/lib/supabase/server";
 
-const redis = new Redis({
-  url: process.env.KV_REST_API_URL!,
-  token: process.env.KV_REST_API_TOKEN!,
-});
+// Lazy initialization to avoid build-time errors when env vars aren't available
+let redis: Redis | null = null;
+function getRedis(): Redis {
+  if (!redis) {
+    redis = new Redis({
+      url: process.env.KV_REST_API_URL!,
+      token: process.env.KV_REST_API_TOKEN!,
+    });
+  }
+  return redis;
+}
 
 const BATCH_SIZE = 100;
 const CONCURRENCY = 10;
@@ -55,26 +61,23 @@ async function processEmailBatch(
       chunk.map(async (email): Promise<EmailProcessResult> => {
         try {
           // Call the email Edge Function
-          const response = await fetch(
-            `${process.env.SUPABASE_URL}/functions/v1/email`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-              },
-              body: JSON.stringify({
-                action: "send",
-                to: email.recipient_email,
-                subject: email.template_data.subject,
-                html: email.template_data.html,
-                text: email.template_data.text,
-                from: email.template_data.from,
-                fromName: email.template_data.fromName,
-                provider: "resend", // Let the edge function decide the best provider
-              }),
-            }
-          );
+          const response = await fetch(`${process.env.SUPABASE_URL}/functions/v1/email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+            },
+            body: JSON.stringify({
+              action: "send",
+              to: email.recipient_email,
+              subject: email.template_data.subject,
+              html: email.template_data.html,
+              text: email.template_data.text,
+              from: email.template_data.from,
+              fromName: email.template_data.fromName,
+              provider: "resend", // Let the edge function decide the best provider
+            }),
+          });
 
           const result = await response.json();
 
@@ -120,7 +123,7 @@ async function processEmailBatch(
   return results;
 }
 
-async function handler(req: NextRequest) {
+async function handler(_req: NextRequest) {
   const startTime = Date.now();
 
   try {
@@ -128,7 +131,7 @@ async function handler(req: NextRequest) {
     const lockKey = "email:queue:lock";
     const lockValue = crypto.randomUUID();
 
-    const acquired = await redis.set(lockKey, lockValue, {
+    const acquired = await getRedis().set(lockKey, lockValue, {
       ex: LOCK_TTL,
       nx: true,
     });
@@ -180,9 +183,9 @@ async function handler(req: NextRequest) {
       const failed = results.length - successful;
 
       // Update cache stats
-      await redis.hincrby("email:stats:daily", "processed", results.length);
-      await redis.hincrby("email:stats:daily", "successful", successful);
-      await redis.hincrby("email:stats:daily", "failed", failed);
+      await getRedis().hincrby("email:stats:daily", "processed", results.length);
+      await getRedis().hincrby("email:stats:daily", "successful", successful);
+      await getRedis().hincrby("email:stats:daily", "failed", failed);
 
       return NextResponse.json({
         success: true,
@@ -194,9 +197,9 @@ async function handler(req: NextRequest) {
       });
     } finally {
       // Release lock
-      const current = await redis.get(lockKey);
+      const current = await getRedis().get(lockKey);
       if (current === lockValue) {
-        await redis.del(lockKey);
+        await getRedis().del(lockKey);
       }
     }
   } catch (error) {
@@ -213,8 +216,13 @@ async function handler(req: NextRequest) {
   }
 }
 
-// Verify QStash signature for security
-export const POST = verifySignatureAppRouter(handler);
+// Lazy QStash signature verification to avoid build-time initialization
+export async function POST(req: NextRequest) {
+  // Dynamically import and apply verification at runtime
+  const { verifySignatureAppRouter } = await import("@upstash/qstash/nextjs");
+  const verifiedHandler = verifySignatureAppRouter(handler);
+  return verifiedHandler(req);
+}
 
 // Allow manual triggering for testing
 export async function GET(req: NextRequest) {

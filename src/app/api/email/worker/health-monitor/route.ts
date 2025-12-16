@@ -5,20 +5,26 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { verifySignatureAppRouter } from "@upstash/qstash/nextjs";
 import { Redis } from "@upstash/redis";
 import { createClient } from "@/lib/supabase/server";
 
-const redis = new Redis({
-  url: process.env.KV_REST_API_URL!,
-  token: process.env.KV_REST_API_TOKEN!,
-});
+// Lazy initialization to avoid build-time errors when env vars aren't available
+let redis: Redis | null = null;
+function getRedis(): Redis {
+  if (!redis) {
+    redis = new Redis({
+      url: process.env.KV_REST_API_URL!,
+      token: process.env.KV_REST_API_TOKEN!,
+    });
+  }
+  return redis;
+}
 
-async function handler(req: NextRequest) {
+async function handler(_req: NextRequest) {
   const startTime = Date.now();
 
   try {
-    const supabase = await createClient();
+    const _supabase = await createClient();
 
     // Call the email Edge Function health check
     const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/email`, {
@@ -40,17 +46,17 @@ async function handler(req: NextRequest) {
     const healthData = await response.json();
 
     // Cache health data in Redis for fast API access
-    await redis.setex("email:health:latest", 300, JSON.stringify(healthData));
+    await getRedis().setex("email:health:latest", 300, JSON.stringify(healthData));
 
     // Check for critical alerts
-    const criticalAlerts = healthData.alerts?.filter((a: string) =>
-      a.startsWith("ERROR:") || a.startsWith("CRITICAL:")
+    const criticalAlerts = healthData.alerts?.filter(
+      (a: string) => a.startsWith("ERROR:") || a.startsWith("CRITICAL:")
     );
 
     if (criticalAlerts && criticalAlerts.length > 0) {
       // Store alerts in Redis for dashboard
-      await redis.lpush("email:alerts:critical", ...criticalAlerts);
-      await redis.ltrim("email:alerts:critical", 0, 99); // Keep last 100
+      await getRedis().lpush("email:alerts:critical", ...criticalAlerts);
+      await getRedis().ltrim("email:alerts:critical", 0, 99); // Keep last 100
 
       // Could trigger admin notification here
       console.error("[health-monitor] Critical alerts:", criticalAlerts);
@@ -66,14 +72,14 @@ async function handler(req: NextRequest) {
       best_provider: healthData.summary?.bestProvider || null,
     };
 
-    await redis.zadd("email:metrics:timeseries", {
+    await getRedis().zadd("email:metrics:timeseries", {
       score: Date.now(),
       member: JSON.stringify(metrics),
     });
 
     // Keep only last 24 hours of metrics
     const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
-    await redis.zremrangebyscore("email:metrics:timeseries", 0, oneDayAgo);
+    await getRedis().zremrangebyscore("email:metrics:timeseries", 0, oneDayAgo);
 
     return NextResponse.json({
       success: true,
@@ -86,7 +92,7 @@ async function handler(req: NextRequest) {
     console.error("[health-monitor] Error:", error);
 
     // Cache the error state
-    await redis.setex(
+    await getRedis().setex(
       "email:health:error",
       60,
       JSON.stringify({
@@ -106,7 +112,13 @@ async function handler(req: NextRequest) {
   }
 }
 
-export const POST = verifySignatureAppRouter(handler);
+// Lazy QStash signature verification to avoid build-time initialization
+export async function POST(req: NextRequest) {
+  // Dynamically import and apply verification at runtime
+  const { verifySignatureAppRouter } = await import("@upstash/qstash/nextjs");
+  const verifiedHandler = verifySignatureAppRouter(handler);
+  return verifiedHandler(req);
+}
 
 export async function GET(req: NextRequest) {
   if (process.env.NODE_ENV !== "development") {
