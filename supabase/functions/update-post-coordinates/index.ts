@@ -2,288 +2,483 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 import { geocodeAddress, type Coordinates } from "../_shared/geocoding.ts";
 
-const API_DELAY = 1000; // 1 second delay between batch operations
+const API_DELAY = 1000; // 1 second delay between API calls (Nominatim rate limit)
 
+/**
+ * Delay helper for rate limiting
+ */
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-async function updatePostCoordinates(
+
+/**
+ * Process a single geocoding queue item
+ */
+async function processQueueItem(
   supabase: any,
-  post: { id: number; post_address?: string; location?: string }
+  queueItem: {
+    id: number;
+    post_id: number;
+    post_address: string;
+    retry_count: number;
+  }
 ): Promise<{
-  id: number;
+  queue_id: number;
+  post_id: number;
   success: boolean;
   reason?: string;
-  address?: string;
   coordinates?: Coordinates;
 }> {
-  console.log(`Processing coordinates for post_id: ${post.id}`);
-
-  if (!post.post_address) {
-    console.log(`No post_address for post_id: ${post.id}`);
-    return {
-      id: post.id,
-      success: false,
-      reason: "No post_address available",
-    };
-  }
-
-  // Skip if location already exists
-  if (post.location) {
-    console.log(`Location already exists for post_id: ${post.id}`);
-    return {
-      id: post.id,
-      success: true,
-      reason: "Existing location is valid",
-    };
-  }
-
-  console.log(`Geocoding required for post_id: ${post.id}`);
-
-  // Use shared geocoding service
-  const coordinates = await geocodeAddress(post.post_address);
-
-  if (!coordinates) {
-    console.log(`No coordinates found for address: ${post.post_address}`);
-    return {
-      id: post.id,
-      success: false,
-      reason: "No coordinates found",
-      address: post.post_address,
-    };
-  }
+  console.log(
+    `[Queue ${queueItem.id}] Processing post ${queueItem.post_id} (attempt ${queueItem.retry_count + 1})`
+  );
 
   try {
+    // Mark as processing
+    const { error: markError } = await supabase.rpc("mark_geocode_processing", {
+      queue_id: queueItem.id,
+    });
+
+    if (markError) {
+      console.error(`[Queue ${queueItem.id}] Error marking as processing:`, markError);
+      throw markError;
+    }
+
+    // Geocode the address
+    console.log(`[Queue ${queueItem.id}] Geocoding: ${queueItem.post_address}`);
+    const coordinates = await geocodeAddress(queueItem.post_address);
+
+    if (!coordinates) {
+      console.log(`[Queue ${queueItem.id}] No coordinates found for address`);
+
+      // Mark as failed (will retry if under max_retries)
+      await supabase.rpc("mark_geocode_failed", {
+        queue_id: queueItem.id,
+        error_msg: "No coordinates found for address",
+      });
+
+      return {
+        queue_id: queueItem.id,
+        post_id: queueItem.post_id,
+        success: false,
+        reason: "No coordinates found",
+      };
+    }
+
+    console.log(
+      `[Queue ${queueItem.id}] Coordinates found: ${coordinates.latitude}, ${coordinates.longitude}`
+    );
+
+    // Update post with coordinates
     const { error: updateError } = await supabase
       .from("posts")
       .update({
         location: `SRID=4326;POINT(${coordinates.longitude} ${coordinates.latitude})`,
       })
-      .eq("id", post.id);
+      .eq("id", queueItem.post_id);
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      console.error(`[Queue ${queueItem.id}] Error updating post location:`, updateError);
 
-    console.log(`Coordinates updated successfully for post_id: ${post.id}`);
+      await supabase.rpc("mark_geocode_failed", {
+        queue_id: queueItem.id,
+        error_msg: `Database update failed: ${updateError.message}`,
+      });
+
+      return {
+        queue_id: queueItem.id,
+        post_id: queueItem.post_id,
+        success: false,
+        reason: `Database error: ${updateError.message}`,
+      };
+    }
+
+    // Mark as completed
+    const { error: completeError } = await supabase.rpc("mark_geocode_completed", {
+      queue_id: queueItem.id,
+    });
+
+    if (completeError) {
+      console.error(`[Queue ${queueItem.id}] Error marking as completed:`, completeError);
+      // Post was updated successfully, so still return success
+    }
+
+    console.log(`[Queue ${queueItem.id}] ✅ Successfully geocoded post ${queueItem.post_id}`);
+
     return {
-      id: post.id,
+      queue_id: queueItem.id,
+      post_id: queueItem.post_id,
       success: true,
-      address: post.post_address,
       coordinates,
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    console.error(`Error updating coordinates for post_id ${post.id}:`, errorMessage);
+    console.error(`[Queue ${queueItem.id}] Unexpected error:`, errorMessage);
+
+    // Try to mark as failed
+    try {
+      await supabase.rpc("mark_geocode_failed", {
+        queue_id: queueItem.id,
+        error_msg: errorMessage,
+      });
+    } catch (markFailError) {
+      console.error(`[Queue ${queueItem.id}] Could not mark as failed:`, markFailError);
+    }
+
     return {
-      id: post.id,
+      queue_id: queueItem.id,
+      post_id: queueItem.post_id,
       success: false,
       reason: errorMessage,
     };
   }
 }
-async function batchUpdateCoordinates(supabase: any): Promise<{
-  message: string;
-  updates: any[];
-  error?: any;
-}> {
-  console.log("Starting batch update process");
 
-  const { data: posts, error: fetchError } = await supabase
-    .from("posts")
-    .select("id, post_address, location")
-    .is("location", null)
-    .order("created_at")
-    .limit(10);
+/**
+ * Process batch of geocoding queue items
+ */
+async function processBatchFromQueue(
+  supabase: any,
+  batchSize: number = 10
+): Promise<{
+  message: string;
+  processed: number;
+  successful: number;
+  failed: number;
+  results: any[];
+}> {
+  console.log(`📋 Starting batch processing (max ${batchSize} items)...`);
+
+  // Get pending items from queue
+  const { data: queueItems, error: fetchError } = await supabase.rpc(
+    "get_pending_geocode_queue",
+    {
+      batch_size: batchSize,
+    }
+  );
 
   if (fetchError) {
-    console.error("Error fetching posts:", fetchError);
+    console.error("❌ Error fetching queue items:", fetchError);
+    throw new Error(`Failed to fetch queue: ${fetchError.message}`);
+  }
+
+  if (!queueItems || queueItems.length === 0) {
+    console.log("✅ No items in queue");
     return {
-      message: "Error fetching posts",
-      error: fetchError,
-      updates: [],
+      message: "No items to process",
+      processed: 0,
+      successful: 0,
+      failed: 0,
+      results: [],
     };
   }
 
-  console.log(`Found ${posts?.length || 0} posts to update`);
+  console.log(`📦 Found ${queueItems.length} items to process`);
 
-  if (!posts || posts.length === 0) {
-    return {
-      message: "No posts found for update",
-      updates: [],
-    };
-  }
+  const results = [];
+  let successful = 0;
+  let failed = 0;
 
-  const updates = [];
-
-  for (const post of posts) {
-    console.log(`Processing post ${post.id}`);
+  for (const item of queueItems) {
     try {
-      const result = await updatePostCoordinates(supabase, post);
-      updates.push(result);
-      console.log(`Updated post ${post.id}:`, result);
+      const result = await processQueueItem(supabase, item);
+      results.push(result);
+
+      if (result.success) {
+        successful++;
+      } else {
+        failed++;
+      }
+
+      // Rate limiting - wait between each geocoding request
+      await delay(API_DELAY);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      console.error(`Error updating post ${post.id}:`, errorMessage);
-      updates.push({
-        id: post.id,
+      console.error(`❌ Error processing queue item ${item.id}:`, errorMessage);
+
+      results.push({
+        queue_id: item.id,
+        post_id: item.post_id,
         success: false,
         reason: errorMessage,
       });
+      failed++;
+
+      // Continue processing other items
+      await delay(API_DELAY);
+    }
+  }
+
+  const summary = {
+    message: `Processed ${queueItems.length} items: ${successful} successful, ${failed} failed`,
+    processed: queueItems.length,
+    successful,
+    failed,
+    results,
+  };
+
+  console.log(`✅ Batch complete: ${summary.message}`);
+  return summary;
+}
+
+/**
+ * Process a single post directly (legacy support)
+ */
+async function processSinglePost(
+  supabase: any,
+  postId: number,
+  postAddress: string
+): Promise<{
+  id: number;
+  success: boolean;
+  reason?: string;
+  coordinates?: Coordinates;
+}> {
+  console.log(`Processing single post ${postId}: ${postAddress}`);
+
+  if (!postAddress || postAddress.trim() === "") {
+    return {
+      id: postId,
+      success: false,
+      reason: "No address provided",
+    };
+  }
+
+  try {
+    const coordinates = await geocodeAddress(postAddress);
+
+    if (!coordinates) {
+      return {
+        id: postId,
+        success: false,
+        reason: "No coordinates found",
+      };
     }
 
-    // Rate limiting between batch operations
-    await delay(API_DELAY);
-  }
-
-  const successCount = updates.filter((u) => u.success).length;
-  console.log(`Batch update completed. ${successCount}/${updates.length} successful`);
-
-  return {
-    message: "Batch update completed",
-    updates,
-  };
-}
-async function checkOtherPosts(supabase: any): Promise<{
-  message: string;
-  checks: any[];
-  error?: string;
-  details?: any;
-}> {
-  console.log("Starting check other posts process");
-
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  const { data: posts, error: fetchError } = await supabase
-    .from("posts")
-    .select("id, title, created_at, last_activity_at")
-    .lt("created_at", sevenDaysAgo.toISOString())
-    .is("last_activity_at", null)
-    .order("created_at")
-    .limit(10);
-
-  if (fetchError) {
-    console.error("Error fetching other posts:", fetchError);
-    return {
-      message: "Error fetching other posts",
-      error: "Error fetching other posts",
-      details: fetchError,
-      checks: [],
-    };
-  }
-
-  console.log(`Found ${posts?.length || 0} other posts to check`);
-
-  if (!posts || posts.length === 0) {
-    return {
-      message: "No other posts found to check",
-      checks: [],
-    };
-  }
-
-  const checks = [];
-
-  for (const post of posts) {
-    console.log(`Checking post ${post.id}`);
-
-    const checkResult: any = {
-      id: post.id,
-      title: post.title,
-      created_at: post.created_at,
-      status: "checked",
-    };
-
-    const { error: updateError } = await supabase
+    const { error } = await supabase
       .from("posts")
       .update({
-        last_activity_at: new Date().toISOString(),
+        location: `SRID=4326;POINT(${coordinates.longitude} ${coordinates.latitude})`,
       })
-      .eq("id", post.id);
+      .eq("id", postId);
 
-    if (updateError) {
-      console.error(`Error updating last_activity_at for post ${post.id}:`, updateError);
-      checkResult.status = "error";
-      checkResult.error = updateError.message;
-    }
+    if (error) throw error;
 
-    checks.push(checkResult);
-    await delay(API_DELAY);
+    return {
+      id: postId,
+      success: true,
+      coordinates,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error(`Error processing post ${postId}:`, errorMessage);
+    return {
+      id: postId,
+      success: false,
+      reason: errorMessage,
+    };
+  }
+}
+
+/**
+ * Get queue statistics
+ */
+async function getQueueStats(supabase: any): Promise<{
+  pending: number;
+  processing: number;
+  failed_retryable: number;
+  failed_permanent: number;
+  completed_today: number;
+}> {
+  const { data, error } = await supabase.from("location_update_queue").select("status, retry_count, max_retries, completed_at");
+
+  if (error) {
+    console.error("Error fetching queue stats:", error);
+    throw error;
   }
 
-  console.log(`Other posts check completed. Checked ${checks.length} posts.`);
-
-  return {
-    message: "Other posts check completed",
-    checks,
+  const stats = {
+    pending: 0,
+    processing: 0,
+    failed_retryable: 0,
+    failed_permanent: 0,
+    completed_today: 0,
   };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (const item of data || []) {
+    if (item.status === "pending") {
+      stats.pending++;
+    } else if (item.status === "processing") {
+      stats.processing++;
+    } else if (item.status === "failed") {
+      if (item.retry_count < item.max_retries) {
+        stats.failed_retryable++;
+      } else {
+        stats.failed_permanent++;
+      }
+    } else if (item.status === "completed" && item.completed_at) {
+      const completedDate = new Date(item.completed_at);
+      if (completedDate >= today) {
+        stats.completed_today++;
+      }
+    }
+  }
+
+  return stats;
 }
+
+/**
+ * Main Edge Function handler
+ */
 serve(async (req) => {
-  console.log("Function started - Updating post coordinates and checking other posts");
+  console.log("🚀 update-post-coordinates Edge Function invoked");
+
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
   if (!supabaseUrl || !supabaseServiceRoleKey) {
-    console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables");
+    console.error("❌ Missing required environment variables");
     return new Response(
       JSON.stringify({
-        error: "Server configuration error",
+        error: "Server configuration error: Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY",
       }),
       {
         status: 500,
+        headers: { "Content-Type": "application/json" },
       }
     );
   }
+
   const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+
   try {
-    const { id, post_address, operation } = await req.json();
-    if (operation === "BATCH_UPDATE") {
-      const result = await batchUpdateCoordinates(supabase);
-      return new Response(JSON.stringify(result), {
-        status: 200,
-      });
-    } else if (operation === "DELETE") {
-      console.log(`Post with id ${id} has been deleted`);
-      return new Response(
-        JSON.stringify({
-          message: "Delete operation acknowledged",
-          id: id,
-        }),
-        {
+    const contentType = req.headers.get("content-type");
+    let requestBody: any = {};
+
+    if (contentType?.includes("application/json")) {
+      try {
+        requestBody = await req.json();
+      } catch (e) {
+        console.log("Could not parse JSON body, using empty object");
+      }
+    }
+
+    const { operation, id, post_address, batch_size } = requestBody;
+
+    console.log(`📋 Operation: ${operation || "BATCH_UPDATE"}`);
+
+    // Handle different operations
+    switch (operation) {
+      case "BATCH_UPDATE":
+      case undefined: // Default operation
+      case null: {
+        const size = batch_size || 10;
+        const result = await processBatchFromQueue(supabase, size);
+        return new Response(JSON.stringify(result), {
           status: 200,
-        }
-      );
-    } else if (operation === "CHECK_OTHER_POSTS") {
-      const result = await checkOtherPosts(supabase);
-      return new Response(JSON.stringify(result), {
-        status: 200,
-      });
-    } else {
-      if (!id || !post_address) {
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      case "STATS": {
+        const stats = await getQueueStats(supabase);
         return new Response(
           JSON.stringify({
-            error: "Missing id or post_address in request body",
+            message: "Queue statistics",
+            stats,
           }),
           {
-            status: 400,
+            status: 200,
+            headers: { "Content-Type": "application/json" },
           }
         );
       }
-      console.log(`Processing single post update for post_id: ${id}`);
-      const result = await updatePostCoordinates(supabase, {
-        id,
-        post_address,
-      });
-      console.log(`Single post update result: ${JSON.stringify(result)}`);
-      return new Response(JSON.stringify(result), {
-        status: 200,
-      });
+
+      case "SINGLE": {
+        // Legacy: process single post directly
+        if (!id || !post_address) {
+          return new Response(
+            JSON.stringify({
+              error: "Missing id or post_address for SINGLE operation",
+            }),
+            {
+              status: 400,
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        }
+
+        const result = await processSinglePost(supabase, id, post_address);
+        return new Response(JSON.stringify(result), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      case "CLEANUP": {
+        // Cleanup old completed queue entries
+        const daysOld = requestBody.days_old || 30;
+        const { data, error } = await supabase.rpc("cleanup_old_geocode_queue", {
+          days_old: daysOld,
+        });
+
+        if (error) throw error;
+
+        return new Response(
+          JSON.stringify({
+            message: `Cleaned up ${data || 0} old queue entries`,
+            deleted: data || 0,
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      case "DELETE": {
+        // Acknowledge delete (for webhook compatibility)
+        console.log(`Post ${id} deleted`);
+        return new Response(
+          JSON.stringify({
+            message: "Delete acknowledged",
+            id,
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      default: {
+        return new Response(
+          JSON.stringify({
+            error: `Unknown operation: ${operation}`,
+            available_operations: ["BATCH_UPDATE", "STATS", "SINGLE", "CLEANUP", "DELETE"],
+          }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+      }
     }
   } catch (error) {
-    console.error("Unexpected error:", error.message);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("❌ Unexpected error:", errorMessage);
+
     return new Response(
       JSON.stringify({
-        error: error.message,
+        error: errorMessage,
+        stack: error instanceof Error ? error.stack : undefined,
       }),
       {
         status: 500,
+        headers: { "Content-Type": "application/json" },
       }
     );
   }
