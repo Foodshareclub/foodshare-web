@@ -11,7 +11,7 @@
 
 import { unstable_cache } from "next/cache";
 import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
-import { createClient } from "@/lib/supabase/server";
+import { createCachedClient } from "@/lib/supabase/server";
 import type { EmailProvider, EmailType } from "@/lib/email/types";
 
 // ============================================================================
@@ -116,7 +116,7 @@ export interface AudienceSegment {
 
 export const getEmailDashboardStats = unstable_cache(
   async (): Promise<EmailDashboardStats> => {
-    const supabase = await createClient();
+    const supabase = createCachedClient();
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -241,7 +241,7 @@ export const getEmailDashboardStats = unstable_cache(
 
 export const getComprehensiveQuotaStatus = unstable_cache(
   async (): Promise<ProviderQuotaDetails[]> => {
-    const supabase = await createClient();
+    const supabase = createCachedClient();
     const today = new Date().toISOString().split("T")[0];
 
     // Get today's quota data for all providers (includes daily_limit AND monthly_limit)
@@ -336,7 +336,7 @@ function getDefaultQuotaDetails(): ProviderQuotaDetails[] {
 
 export const getBounceStats = unstable_cache(
   async (): Promise<BounceStats> => {
-    const supabase = await createClient();
+    const supabase = createCachedClient();
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const thirtyDaysAgo = new Date();
@@ -430,7 +430,7 @@ export const getBounceStats = unstable_cache(
 
 export const getProviderHealth = unstable_cache(
   async (): Promise<ProviderHealth[]> => {
-    const supabase = await createClient();
+    const supabase = createCachedClient();
 
     const { data } = await supabase
       .from("email_provider_health_metrics")
@@ -500,7 +500,7 @@ export const getProviderHealth = unstable_cache(
 
 export const getRecentCampaigns = unstable_cache(
   async (limit = 10): Promise<RecentCampaign[]> => {
-    const supabase = await createClient();
+    const supabase = createCachedClient();
 
     const { data, error } = await supabase
       .from("newsletter_campaigns")
@@ -547,7 +547,7 @@ export const getRecentCampaigns = unstable_cache(
 
 export const getActiveAutomations = unstable_cache(
   async (): Promise<ActiveAutomation[]> => {
-    const supabase = await createClient();
+    const supabase = createCachedClient();
 
     const { data, error } = await supabase
       .from("email_automation_flows")
@@ -590,7 +590,7 @@ export const getActiveAutomations = unstable_cache(
 
 export const getAudienceSegments = unstable_cache(
   async (): Promise<AudienceSegment[]> => {
-    const supabase = await createClient();
+    const supabase = createCachedClient();
 
     const { data, error } = await supabase.from("audience_segments").select("*").order("name");
 
@@ -697,7 +697,7 @@ export interface EmailMonitoringData {
 
 export const getEmailMonitoringData = unstable_cache(
   async (): Promise<EmailMonitoringData> => {
-    const supabase = await createClient();
+    const supabase = createCachedClient();
     const today = new Date().toISOString().split("T")[0];
     const PROVIDER_LIMITS: Record<string, number> = {
       resend: 100,
@@ -819,7 +819,7 @@ export const getEmailLogs = unstable_cache(
     status?: string;
     hours?: number;
   }) => {
-    const supabase = await createClient();
+    const supabase = createCachedClient();
     const hoursAgo = params.hours || 24;
     const since = new Date(Date.now() - hoursAgo * 60 * 60 * 1000).toISOString();
 
@@ -871,7 +871,7 @@ export const getEmailLogs = unstable_cache(
  */
 export const getQueuedEmails = unstable_cache(
   async (params: { status?: string }) => {
-    const supabase = await createClient();
+    const supabase = createCachedClient();
 
     let query = supabase
       .from("email_queue")
