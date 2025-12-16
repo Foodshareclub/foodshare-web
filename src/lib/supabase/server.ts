@@ -7,11 +7,18 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+/**
+ * Get Supabase config lazily to avoid build-time errors
+ */
+function getSupabaseConfig() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing Supabase environment variables');
+  }
+
+  return { supabaseUrl, supabaseAnonKey };
 }
 
 /**
@@ -19,6 +26,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * Use this inside unstable_cache() where cookies() cannot be called
  */
 export function createCachedClient() {
+  const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig();
   return createSupabaseClient(supabaseUrl, supabaseAnonKey);
 }
 
@@ -69,6 +77,7 @@ function getSafeCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
  * Includes error handling for corrupted cookies
  */
 export async function createClient() {
+  const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig();
   const cookieStore = await cookies();
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
