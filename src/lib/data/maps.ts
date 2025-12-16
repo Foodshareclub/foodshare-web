@@ -8,13 +8,30 @@
  * cookies() cannot be called inside unstable_cache().
  */
 
-import { unstable_cache } from 'next/cache';
-import { createCachedClient } from '@/lib/supabase/server';
-import { CACHE_TAGS, CACHE_DURATIONS, logCacheOperation } from './cache-keys';
-import type { LocationType } from '@/types/product.types';
+import { unstable_cache } from "next/cache";
+import { CACHE_TAGS, CACHE_DURATIONS, logCacheOperation } from "./cache-keys";
+import { createCachedClient } from "@/lib/supabase/server";
+import type { LocationType } from "@/types/product.types";
+import { approximateGeoJSON } from "@/utils/postgis";
 
 // Re-export types for consumers
 export type { LocationType };
+
+// ============================================================================
+// Location Privacy Helper
+// ============================================================================
+
+/**
+ * Apply location approximation to an array of locations for user privacy
+ * Each location is offset by ~100-200m using a deterministic algorithm
+ * based on the post ID (consistent across requests)
+ */
+function applyLocationPrivacy(locations: LocationType[]): LocationType[] {
+  return locations.map((item) => ({
+    ...item,
+    location_json: approximateGeoJSON(item.location_json, item.id) as LocationType["location_json"],
+  }));
+}
 
 // ============================================================================
 // Cached Map Data Functions
@@ -30,18 +47,19 @@ export async function getMapLocations(productType: string): Promise<LocationType
 
   return unstable_cache(
     async (): Promise<LocationType[]> => {
-      logCacheOperation('miss', cacheKey, { type: normalizedType });
+      logCacheOperation("miss", cacheKey, { type: normalizedType });
       const supabase = createCachedClient();
 
       const { data, error } = await supabase
-        .from('posts_with_location')
-        .select('id, location_json, post_name, post_type, images')
-        .eq('post_type', normalizedType)
-        .eq('is_active', true);
+        .from("posts_with_location")
+        .select("id, location_json, post_name, post_type, images")
+        .eq("post_type", normalizedType)
+        .eq("is_active", true);
 
       if (error) throw new Error(error.message);
-      logCacheOperation('set', cacheKey, { count: data?.length ?? 0 });
-      return data ?? [];
+      logCacheOperation("set", cacheKey, { count: data?.length ?? 0 });
+      // Apply location privacy (~200m approximation) for user safety
+      return applyLocationPrivacy(data ?? []);
     },
     [cacheKey],
     {
@@ -57,19 +75,20 @@ export async function getMapLocations(productType: string): Promise<LocationType
  */
 export const getAllMapLocations = unstable_cache(
   async (): Promise<LocationType[]> => {
-    logCacheOperation('miss', 'all-map-locations');
+    logCacheOperation("miss", "all-map-locations");
     const supabase = createCachedClient();
 
     const { data, error } = await supabase
-      .from('posts_with_location')
-      .select('id, location_json, post_name, post_type, images')
-      .eq('is_active', true);
+      .from("posts_with_location")
+      .select("id, location_json, post_name, post_type, images")
+      .eq("is_active", true);
 
     if (error) throw new Error(error.message);
-    logCacheOperation('set', 'all-map-locations', { count: data?.length ?? 0 });
-    return data ?? [];
+    logCacheOperation("set", "all-map-locations", { count: data?.length ?? 0 });
+    // Apply location privacy (~200m approximation) for user safety
+    return applyLocationPrivacy(data ?? []);
   },
-  ['all-map-locations'],
+  ["all-map-locations"],
   {
     revalidate: CACHE_DURATIONS.PRODUCT_LOCATIONS,
     tags: [CACHE_TAGS.PRODUCT_LOCATIONS],
@@ -100,12 +119,12 @@ export async function getNearbyLocations(
       // Use PostGIS ST_MakeEnvelope for efficient bounding box query
       // Note: This requires the location column to have a spatial index
       let query = supabase
-        .from('posts_with_location')
-        .select('id, location_json, post_name, post_type, images')
-        .eq('is_active', true);
+        .from("posts_with_location")
+        .select("id, location_json, post_name, post_type, images")
+        .eq("is_active", true);
 
       if (productType) {
-        query = query.eq('post_type', productType.toLowerCase());
+        query = query.eq("post_type", productType.toLowerCase());
       }
 
       const { data, error } = await query;
@@ -114,12 +133,16 @@ export async function getNearbyLocations(
 
       // Filter by bounds in JavaScript (PostGIS filtering would be more efficient)
       // TODO: Add PostGIS bounding box query when RPC function is available
-      return (data ?? []).filter((item) => {
+      const filtered = (data ?? []).filter((item) => {
         const loc = item.location_json as { coordinates?: [number, number] } | null;
         if (!loc?.coordinates) return false;
         const [lng, lat] = loc.coordinates;
-        return lat >= bounds.south && lat <= bounds.north && lng >= bounds.west && lng <= bounds.east;
+        return (
+          lat >= bounds.south && lat <= bounds.north && lng >= bounds.west && lng <= bounds.east
+        );
       });
+      // Apply location privacy (~200m approximation) for user safety
+      return applyLocationPrivacy(filtered);
     },
     [cacheKey],
     {
@@ -137,23 +160,23 @@ export const getLocationCountsByType = unstable_cache(
     const supabase = createCachedClient();
 
     const { data, error } = await supabase
-      .from('posts_with_location')
-      .select('post_type')
-      .eq('is_active', true)
-      .not('location_json', 'is', null);
+      .from("posts_with_location")
+      .select("post_type")
+      .eq("is_active", true)
+      .not("location_json", "is", null);
 
     if (error) throw new Error(error.message);
 
     // Count by type
     const counts: Record<string, number> = {};
     for (const item of data ?? []) {
-      const type = item.post_type || 'unknown';
+      const type = item.post_type || "unknown";
       counts[type] = (counts[type] || 0) + 1;
     }
 
     return counts;
   },
-  ['location-counts-by-type'],
+  ["location-counts-by-type"],
   {
     revalidate: CACHE_DURATIONS.MEDIUM,
     tags: [CACHE_TAGS.PRODUCT_LOCATIONS],

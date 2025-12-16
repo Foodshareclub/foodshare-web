@@ -60,6 +60,7 @@ import { useImageUpload, useListingForm, useUndoRedo } from "./publish-listing/h
 import { RequiredStar } from "@/components";
 import { useAuth } from "@/hooks/useAuth";
 import { createProduct, updateProduct } from "@/app/actions/products";
+import { getUserAddress } from "@/app/actions/profile";
 import { useUIStore } from "@/store/zustand/useUIStore";
 import { storageAPI } from "@/api/storageAPI";
 import type { InitialProductStateType } from "@/types/product.types";
@@ -110,6 +111,9 @@ function PublishListingModal({
 
   const productId = product?.id || 0;
 
+  // User's saved address for pre-filling form (must be defined before useListingForm)
+  const [userSavedAddress, setUserSavedAddress] = useState<string>("");
+
   // Image upload hook
   const imageUpload = useImageUpload({
     onImageAdded: () => form.setTouched((prev) => ({ ...prev, image: true })),
@@ -120,6 +124,7 @@ function PublishListingModal({
     isOpen,
     initialCategory: value || "",
     imageCount: imageUpload.images.length,
+    userAddress: userSavedAddress,
   });
 
   // Undo/Redo hook
@@ -148,6 +153,18 @@ function PublishListingModal({
   const [showTemplates, setShowTemplates] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
+
+  // Fetch user's saved address when modal opens (for pre-filling)
+  useEffect(() => {
+    if (isOpen && id && !product) {
+      // Only fetch for new listings, not edits
+      getUserAddress().then((result) => {
+        if (result.success && result.data?.generated_full_address) {
+          setUserSavedAddress(result.data.generated_full_address);
+        }
+      });
+    }
+  }, [isOpen, id, product]);
 
   // Reset form when modal opens
   useEffect(() => {
@@ -250,7 +267,12 @@ function PublishListingModal({
     form.touchAll();
 
     if (!form.isFormValid || imageUpload.images.length === 0) {
-      console.log("[PublishListing] ❌ Validation failed - form valid:", form.isFormValid, "images:", imageUpload.images.length);
+      console.log(
+        "[PublishListing] ❌ Validation failed - form valid:",
+        form.isFormValid,
+        "images:",
+        imageUpload.images.length
+      );
       setShakeError(true);
       setTimeout(() => setShakeError(false), 500);
       formRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -263,7 +285,14 @@ function PublishListingModal({
     setUploadProgress(null);
 
     // Pre-flight checks
-    console.log("[PublishListing] 🔍 Pre-flight checks - isAuthLoading:", isAuthLoading, "id:", id, "online:", navigator.onLine);
+    console.log(
+      "[PublishListing] 🔍 Pre-flight checks - isAuthLoading:",
+      isAuthLoading,
+      "id:",
+      id,
+      "online:",
+      navigator.onLine
+    );
 
     if (isAuthLoading) {
       console.log("[PublishListing] ❌ Auth still loading");
@@ -355,11 +384,14 @@ function PublishListingModal({
         post_type: productObj.post_type,
         images_count: productObj.images?.length,
         profile_id: productObj.profile_id,
-        is_update: !!product
+        is_update: !!product,
       });
 
       // Execute server action
-      console.log("[PublishListing] 🌐 Calling server action...", product ? "updateProduct" : "createProduct");
+      console.log(
+        "[PublishListing] 🌐 Calling server action...",
+        product ? "updateProduct" : "createProduct"
+      );
       let result;
       if (product) {
         formData.set("is_active", "true");
@@ -860,10 +892,11 @@ function PublishListingModal({
                       disabled={form.formData.description.length >= MAX_DESCRIPTION_LENGTH}
                     />
                     <span
-                      className={`text-xs tabular-nums transition-colors ${form.formData.description.length > MAX_DESCRIPTION_LENGTH * 0.9
+                      className={`text-xs tabular-nums transition-colors ${
+                        form.formData.description.length > MAX_DESCRIPTION_LENGTH * 0.9
                           ? "text-orange-500 font-medium"
                           : "text-muted-foreground"
-                        }`}
+                      }`}
                     >
                       {form.formData.description.length}/{MAX_DESCRIPTION_LENGTH}
                     </span>

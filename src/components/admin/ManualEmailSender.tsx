@@ -8,10 +8,18 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { type ManualEmailRequest } from "@/api/admin/emailManagement";
 import { useManualEmailSender } from "@/hooks/useEmailManagement";
 import { PROVIDER_NAMES, PROVIDER_LIMITS, EMAIL_TYPE_NAMES } from "@/lib/email/constants";
 import type { EmailProvider, EmailType } from "@/lib/email/types";
+
+// Local type definitions (previously in @/api/admin/emailManagement)
+export interface ManualEmailRequest {
+  to: string;
+  subject: string;
+  html: string;
+  emailType: EmailType;
+  provider?: EmailProvider;
+}
 
 interface FormData {
   to: string;

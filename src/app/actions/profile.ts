@@ -43,6 +43,21 @@ export interface AvatarUploadResult {
   url: string;
 }
 
+export interface UserAddress {
+  profile_id: string;
+  address_line_1: string;
+  address_line_2: string;
+  address_line_3: string;
+  city: string;
+  state_province: string;
+  postal_code: string;
+  country: string;
+  lat: number | null;
+  long: number | null;
+  generated_full_address: string;
+  radius_meters: number | null;
+}
+
 // ============================================================================
 // Helper: Verify Auth
 // ============================================================================
@@ -339,5 +354,110 @@ export async function deleteAvatar(): Promise<ServerActionResult<void>> {
   } catch (error) {
     console.error("Failed to delete avatar:", error);
     return serverActionError("Failed to delete avatar", "UNKNOWN_ERROR");
+  }
+}
+
+/**
+ * Get current user's address for pre-filling forms
+ * Returns the user's saved address from the address table
+ */
+export async function getUserAddress(): Promise<ServerActionResult<UserAddress | null>> {
+  try {
+    const { supabase, user, error: authError } = await verifyAuth();
+    if (authError || !supabase || !user) {
+      return serverActionError(authError || "Not authenticated", "UNAUTHORIZED");
+    }
+
+    const { data, error } = await supabase
+      .from("address")
+      .select(
+        `
+        profile_id,
+        address_line_1,
+        address_line_2,
+        address_line_3,
+        city,
+        state_province,
+        postal_code,
+        country,
+        lat,
+        long,
+        generated_full_address,
+        radius_meters
+      `
+      )
+      .eq("profile_id", user.id)
+      .single();
+
+    if (error) {
+      // No address found is not an error - just return null
+      if (error.code === "PGRST116") {
+        return { success: true, data: null };
+      }
+      console.error("Failed to fetch user address:", error);
+      return serverActionError(error.message, "DATABASE_ERROR");
+    }
+
+    return { success: true, data: data as UserAddress };
+  } catch (error) {
+    console.error("Failed to fetch user address:", error);
+    return serverActionError("Failed to fetch user address", "UNKNOWN_ERROR");
+  }
+}
+
+/**
+ * Update user's address
+ */
+export async function updateUserAddress(
+  formData: FormData
+): Promise<ServerActionResult<UserAddress>> {
+  try {
+    const { supabase, user, error: authError } = await verifyAuth();
+    if (authError || !supabase || !user) {
+      return serverActionError(authError || "Not authenticated", "UNAUTHORIZED");
+    }
+
+    // Parse form data
+    const addressData = {
+      address_line_1: (formData.get("address_line_1") as string) || "",
+      address_line_2: (formData.get("address_line_2") as string) || "",
+      address_line_3: (formData.get("address_line_3") as string) || "",
+      city: (formData.get("city") as string) || "",
+      state_province: (formData.get("state_province") as string) || "",
+      postal_code: (formData.get("postal_code") as string) || "",
+      country: (formData.get("country") as string) || "",
+      generated_full_address: (formData.get("generated_full_address") as string) || "",
+      updated_at: new Date().toISOString(),
+    };
+
+    // Handle lat/long if provided
+    const lat = formData.get("lat");
+    const long = formData.get("long");
+    if (lat && long) {
+      Object.assign(addressData, {
+        lat: parseFloat(lat as string),
+        long: parseFloat(long as string),
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("address")
+      .update(addressData)
+      .eq("profile_id", user.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Failed to update user address:", error);
+      return serverActionError(error.message, "DATABASE_ERROR");
+    }
+
+    revalidatePath("/profile");
+    revalidatePath("/settings");
+
+    return { success: true, data: data as UserAddress };
+  } catch (error) {
+    console.error("Failed to update user address:", error);
+    return serverActionError("Failed to update user address", "UNKNOWN_ERROR");
   }
 }

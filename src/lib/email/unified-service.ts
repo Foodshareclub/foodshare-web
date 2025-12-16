@@ -13,6 +13,7 @@
  */
 
 import type { EmailProvider, EmailType, SendEmailRequest, SendEmailResponse } from "./types";
+import { toEmailProvider } from "./type-guards";
 
 // Lazy-loaded providers (tree-shaking friendly)
 
@@ -202,16 +203,17 @@ export class UnifiedEmailService {
         return this.getDefaultHealth();
       }
 
-      return data.map((row: Record<string, unknown>) => ({
-        provider: row.provider as EmailProvider,
-        healthScore: 100, // Will be updated from health metrics if available
-        quotaRemaining:
-          (row.daily_remaining as number) ?? DAILY_LIMITS[row.provider as EmailProvider],
-        monthlyQuotaRemaining:
-          (row.monthly_remaining as number) ?? MONTHLY_LIMITS[row.provider as EmailProvider],
-        avgLatencyMs: 500,
-        isAvailable: (row.is_available as boolean) ?? true,
-      }));
+      return data.map((row: Record<string, unknown>) => {
+        const provider = toEmailProvider(row.provider);
+        return {
+          provider,
+          healthScore: 100, // Will be updated from health metrics if available
+          quotaRemaining: (row.daily_remaining as number) ?? DAILY_LIMITS[provider],
+          monthlyQuotaRemaining: (row.monthly_remaining as number) ?? MONTHLY_LIMITS[provider],
+          avgLatencyMs: 500,
+          isAvailable: (row.is_available as boolean) ?? true,
+        };
+      });
     } catch (error) {
       console.warn("[UnifiedEmailService] Health fetch failed, using defaults:", error);
       return this.getDefaultHealth();
@@ -442,7 +444,7 @@ export class UnifiedEmailService {
    * Get default health data (fallback)
    */
   private getDefaultHealth(): ProviderHealth[] {
-    return (["resend", "brevo", "aws_ses"] as EmailProvider[]).map((provider) => ({
+    return (["resend", "brevo", "mailersend", "aws_ses"] as EmailProvider[]).map((provider) => ({
       provider,
       healthScore: 100,
       quotaRemaining: DAILY_LIMITS[provider],

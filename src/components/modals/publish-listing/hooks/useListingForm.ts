@@ -1,13 +1,7 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
-import type { ImageItem } from '../types';
-import {
-  DRAFT_KEY,
-  MIN_TITLE_LENGTH,
-  MIN_DESCRIPTION_LENGTH,
-  MAX_DESCRIPTION_LENGTH,
-} from '../constants';
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { DRAFT_KEY, MIN_TITLE_LENGTH, MIN_DESCRIPTION_LENGTH } from "../constants";
 
 export interface ListingFormData {
   category: string;
@@ -42,6 +36,8 @@ interface UseListingFormOptions {
   isOpen: boolean;
   initialCategory?: string;
   imageCount: number;
+  /** User's saved address for pre-filling the address field */
+  userAddress?: string;
 }
 
 interface UseListingFormReturn {
@@ -81,14 +77,16 @@ interface UseListingFormReturn {
   toggleContactPreference: (prefId: string) => void;
 
   // Initialize from product
-  initializeFromProduct: (product: {
-    post_type?: string;
-    post_name?: string;
-    post_description?: string;
-    available_hours?: string;
-    post_stripped_address?: string;
-    transportation?: string;
-  } | null) => void;
+  initializeFromProduct: (
+    product: {
+      post_type?: string;
+      post_name?: string;
+      post_description?: string;
+      available_hours?: string;
+      post_stripped_address?: string;
+      transportation?: string;
+    } | null
+  ) => void;
 
   // Reset form
   resetForm: (initialCategory?: string) => void;
@@ -100,23 +98,23 @@ interface UseListingFormReturn {
 }
 
 export function useListingForm(options: UseListingFormOptions): UseListingFormReturn {
-  const { isOpen, initialCategory = '', imageCount } = options;
+  const { isOpen, initialCategory = "", imageCount, userAddress = "" } = options;
 
   // Form state
   const [category, setCategory] = useState(initialCategory);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [time, setTime] = useState('');
-  const [address, setAddress] = useState('');
-  const [metroStation, setMetroStation] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [expirationDate, setExpirationDate] = useState('');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [time, setTime] = useState("");
+  const [address, setAddress] = useState("");
+  const [metroStation, setMetroStation] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [expirationDate, setExpirationDate] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [dietaryLabels, setDietaryLabels] = useState<string[]>([]);
-  const [condition, setCondition] = useState('');
-  const [contactPreferences, setContactPreferences] = useState<string[]>(['chat']);
-  const [scheduledDate, setScheduledDate] = useState('');
-  const [scheduledTime, setScheduledTime] = useState('');
+  const [condition, setCondition] = useState("");
+  const [contactPreferences, setContactPreferences] = useState<string[]>(["chat"]);
+  const [scheduledDate, setScheduledDate] = useState("");
+  const [scheduledTime, setScheduledTime] = useState("");
 
   // Touched state
   const [touched, setTouched] = useState<TouchedFields>({
@@ -126,30 +124,52 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
     image: false,
   });
 
-  // Draft state
-  const [hasDraft, setHasDraft] = useState(false);
+  // Draft state - initialize from localStorage (avoids setState in effect)
+  const [hasDraft, setHasDraft] = useState(() => {
+    if (typeof window !== "undefined") {
+      return !!localStorage.getItem(DRAFT_KEY);
+    }
+    return false;
+  });
+
+  // Track if address was pre-filled from user profile
+  const addressInitializedRef = useRef(false);
 
   // Form data object
-  const formData = useMemo<ListingFormData>(() => ({
-    category,
-    title,
-    description,
-    time,
-    address,
-    metroStation,
-    quantity,
-    expirationDate,
-    tags,
-    dietaryLabels,
-    condition,
-    contactPreferences,
-    scheduledDate,
-    scheduledTime,
-  }), [
-    category, title, description, time, address, metroStation,
-    quantity, expirationDate, tags, dietaryLabels, condition,
-    contactPreferences, scheduledDate, scheduledTime,
-  ]);
+  const formData = useMemo<ListingFormData>(
+    () => ({
+      category,
+      title,
+      description,
+      time,
+      address,
+      metroStation,
+      quantity,
+      expirationDate,
+      tags,
+      dietaryLabels,
+      condition,
+      contactPreferences,
+      scheduledDate,
+      scheduledTime,
+    }),
+    [
+      category,
+      title,
+      description,
+      time,
+      address,
+      metroStation,
+      quantity,
+      expirationDate,
+      tags,
+      dietaryLabels,
+      condition,
+      contactPreferences,
+      scheduledDate,
+      scheduledTime,
+    ]
+  );
 
   // Quality score calculation
   const qualityScore = useMemo<QualityScoreResult>(() => {
@@ -160,37 +180,35 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
     if (imageCount >= 1) score += 10;
     if (imageCount >= 2) score += 10;
     if (imageCount >= 3) score += 5;
-    if (imageCount === 0) suggestions.push('Add at least one photo');
-    else if (imageCount === 1) suggestions.push('Add more photos for better visibility');
+    if (imageCount === 0) suggestions.push("Add at least one photo");
+    else if (imageCount === 1) suggestions.push("Add more photos for better visibility");
 
     // Title (20 points)
     if (title.length >= MIN_TITLE_LENGTH) score += 10;
     if (title.length >= 10) score += 10;
-    if (title.length < MIN_TITLE_LENGTH) suggestions.push('Add a descriptive title');
-    else if (title.length < 10) suggestions.push('Make your title more descriptive');
+    if (title.length < MIN_TITLE_LENGTH) suggestions.push("Add a descriptive title");
+    else if (title.length < 10) suggestions.push("Make your title more descriptive");
 
     // Description (25 points)
     if (description.length >= MIN_DESCRIPTION_LENGTH) score += 10;
     if (description.length >= 50) score += 10;
     if (description.length >= 100) score += 5;
-    if (description.length < MIN_DESCRIPTION_LENGTH)
-      suggestions.push('Add a detailed description');
-    else if (description.length < 50)
-      suggestions.push('Expand your description for more context');
+    if (description.length < MIN_DESCRIPTION_LENGTH) suggestions.push("Add a detailed description");
+    else if (description.length < 50) suggestions.push("Expand your description for more context");
 
     // Category (10 points)
     if (category) score += 10;
-    else suggestions.push('Select a category');
+    else suggestions.push("Select a category");
 
     // Tags (10 points)
     if (tags.length >= 1) score += 5;
     if (tags.length >= 3) score += 5;
-    if (tags.length === 0) suggestions.push('Add tags to improve discoverability');
+    if (tags.length === 0) suggestions.push("Add tags to improve discoverability");
 
     // Additional info (10 points)
     if (time || address) score += 5;
     if (time && address) score += 5;
-    if (!time && !address) suggestions.push('Add pickup details');
+    if (!time && !address) suggestions.push("Add pickup details");
 
     return { score, suggestions };
   }, [imageCount, title, description, category, tags.length, time, address]);
@@ -213,7 +231,7 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
   const showDescriptionError = touched.description && !description;
 
   // Log validation state when it changes
-  console.log('[useListingForm] 📋 Validation state:', {
+  console.log("[useListingForm] 📋 Validation state:", {
     isFormValid: !!isFormValid,
     category: !!category,
     title: !!title,
@@ -224,13 +242,20 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
     showDescriptionError,
   });
 
-  // Check for draft on mount
+  // Pre-fill address from user's saved address (only once when form opens)
   useEffect(() => {
-    const draft = localStorage.getItem(DRAFT_KEY);
-    if (draft) {
-      setHasDraft(true);
+    if (isOpen && userAddress && !addressInitializedRef.current) {
+      addressInitializedRef.current = true;
+      // Use microtask to avoid synchronous setState warning
+      queueMicrotask(() => {
+        setAddress((current) => current || userAddress);
+      });
     }
-  }, []);
+    // Reset ref when modal closes
+    if (!isOpen) {
+      addressInitializedRef.current = false;
+    }
+  }, [isOpen, userAddress]);
 
   // Auto-save draft (debounced)
   useEffect(() => {
@@ -259,9 +284,21 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
       return () => clearTimeout(timeoutId);
     }
   }, [
-    isOpen, category, title, description, time, address, metroStation,
-    quantity, expirationDate, tags, dietaryLabels, condition,
-    contactPreferences, scheduledDate, scheduledTime,
+    isOpen,
+    category,
+    title,
+    description,
+    time,
+    address,
+    metroStation,
+    quantity,
+    expirationDate,
+    tags,
+    dietaryLabels,
+    condition,
+    contactPreferences,
+    scheduledDate,
+    scheduledTime,
   ]);
 
   // Load draft
@@ -270,20 +307,20 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
     if (draft) {
       try {
         const parsed = JSON.parse(draft);
-        setCategory(parsed.category || '');
-        setTitle(parsed.title || '');
-        setDescription(parsed.description || '');
-        setTime(parsed.time || '');
-        setAddress(parsed.address || '');
-        setMetroStation(parsed.metroStation || '');
-        setQuantity(parsed.quantity || '');
-        setExpirationDate(parsed.expirationDate || '');
+        setCategory(parsed.category || "");
+        setTitle(parsed.title || "");
+        setDescription(parsed.description || "");
+        setTime(parsed.time || "");
+        setAddress(parsed.address || "");
+        setMetroStation(parsed.metroStation || "");
+        setQuantity(parsed.quantity || "");
+        setExpirationDate(parsed.expirationDate || "");
         setTags(parsed.tags || []);
         setDietaryLabels(parsed.dietaryLabels || []);
-        setCondition(parsed.condition || '');
-        setContactPreferences(parsed.contactPreferences || ['chat']);
-        setScheduledDate(parsed.scheduledDate || '');
-        setScheduledTime(parsed.scheduledTime || '');
+        setCondition(parsed.condition || "");
+        setContactPreferences(parsed.contactPreferences || ["chat"]);
+        setScheduledDate(parsed.scheduledDate || "");
+        setScheduledTime(parsed.scheduledTime || "");
       } catch {
         // Invalid draft
       }
@@ -316,47 +353,52 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
 
   // Touch all fields
   const touchAll = useCallback(() => {
-    console.log('[useListingForm] 👆 touchAll called - marking all fields as touched');
+    console.log("[useListingForm] 👆 touchAll called - marking all fields as touched");
     setTouched({ category: true, title: true, description: true, image: true });
   }, []);
 
   // Initialize from product
-  const initializeFromProduct = useCallback((product: {
-    post_type?: string;
-    post_name?: string;
-    post_description?: string;
-    available_hours?: string;
-    post_stripped_address?: string;
-    transportation?: string;
-    condition?: string;
-  } | null) => {
-    if (product) {
-      setCategory(product.post_type || '');
-      setTitle(product.post_name || '');
-      setDescription(product.post_description || '');
-      setTime(product.available_hours || '');
-      setAddress(product.post_stripped_address || '');
-      setMetroStation(product.transportation || '');
-      setCondition(product.condition || '');
-    }
-  }, []);
+  const initializeFromProduct = useCallback(
+    (
+      product: {
+        post_type?: string;
+        post_name?: string;
+        post_description?: string;
+        available_hours?: string;
+        post_stripped_address?: string;
+        transportation?: string;
+        condition?: string;
+      } | null
+    ) => {
+      if (product) {
+        setCategory(product.post_type || "");
+        setTitle(product.post_name || "");
+        setDescription(product.post_description || "");
+        setTime(product.available_hours || "");
+        setAddress(product.post_stripped_address || "");
+        setMetroStation(product.transportation || "");
+        setCondition(product.condition || "");
+      }
+    },
+    []
+  );
 
   // Reset form
   const resetForm = useCallback((initialCat?: string) => {
-    setCategory(initialCat || '');
-    setTitle('');
-    setDescription('');
-    setTime('');
-    setAddress('');
-    setMetroStation('');
-    setQuantity('');
-    setExpirationDate('');
+    setCategory(initialCat || "");
+    setTitle("");
+    setDescription("");
+    setTime("");
+    setAddress("");
+    setMetroStation("");
+    setQuantity("");
+    setExpirationDate("");
     setTags([]);
     setDietaryLabels([]);
-    setCondition('');
-    setContactPreferences(['chat']);
-    setScheduledDate('');
-    setScheduledTime('');
+    setCondition("");
+    setContactPreferences(["chat"]);
+    setScheduledDate("");
+    setScheduledTime("");
     setTouched({ category: false, title: false, description: false, image: false });
   }, []);
 

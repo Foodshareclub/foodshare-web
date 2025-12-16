@@ -9,13 +9,45 @@
  */
 
 import { unstable_cache } from "next/cache";
-import { createCachedClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
+import { createCachedClient } from "@/lib/supabase/server";
 import { PAGINATION } from "@/lib/constants";
 import type { InitialProductStateType, LocationType } from "@/types/product.types";
+import { approximateGeoJSON } from "@/utils/postgis";
 
 // Re-export types for consumers
 export type { InitialProductStateType, LocationType };
+
+// ============================================================================
+// Location Privacy Helper
+// ============================================================================
+
+/**
+ * Apply location approximation to products for user privacy
+ * Each location is offset by ~100-200m using a deterministic algorithm
+ * based on the post ID (consistent across requests)
+ */
+function applyLocationPrivacy<T extends { id: number; location_json?: unknown }>(
+  products: T[]
+): T[] {
+  return products.map((item) => ({
+    ...item,
+    location_json: approximateGeoJSON(item.location_json, item.id),
+  }));
+}
+
+/**
+ * Apply location approximation to a single product
+ */
+function applyLocationPrivacySingle<T extends { id: number; location_json?: unknown }>(
+  product: T | null
+): T | null {
+  if (!product) return null;
+  return {
+    ...product,
+    location_json: approximateGeoJSON(product.location_json, product.id),
+  };
+}
 
 // ============================================================================
 // Pagination Types
@@ -71,7 +103,8 @@ export async function getProducts(
           .limit(limit);
 
         if (error) throw new Error(error.message);
-        return data ?? [];
+        // Apply location privacy (~200m approximation) for user safety
+        return applyLocationPrivacy(data ?? []);
       },
       // Cache key includes type and limit for proper differentiation
       [`products-first-page-${normalizedType}-${limit}`],
@@ -96,7 +129,8 @@ export async function getProducts(
     .limit(limit);
 
   if (error) throw new Error(error.message);
-  return data ?? [];
+  // Apply location privacy (~200m approximation) for user safety
+  return applyLocationPrivacy(data ?? []);
 }
 
 /**
@@ -137,7 +171,8 @@ export async function getProductsPaginated(
     hasMore && resultItems.length > 0 ? resultItems[resultItems.length - 1].id : null;
 
   return {
-    data: resultItems,
+    // Apply location privacy (~200m approximation) for user safety
+    data: applyLocationPrivacy(resultItems),
     nextCursor,
     hasMore,
   };
@@ -157,7 +192,8 @@ export const getAllProducts = unstable_cache(
       .order("created_at", { ascending: false });
 
     if (error) throw new Error(error.message);
-    return data ?? [];
+    // Apply location privacy (~200m approximation) for user safety
+    return applyLocationPrivacy(data ?? []);
   },
   ["all-products"],
   {
@@ -186,7 +222,9 @@ export async function getProductById(productId: number): Promise<InitialProductS
         if (error.code === "PGRST116") return null;
         throw new Error(error.message);
       }
-      return data;
+      // Apply location privacy (~200m approximation) for user safety
+      // Note: Owner-specific exact location is handled at API route level
+      return applyLocationPrivacySingle(data);
     },
     [`product-by-id-${productId}`],
     {
@@ -213,7 +251,8 @@ export async function getProductLocations(productType: string): Promise<Location
         .eq("is_active", true);
 
       if (error) throw new Error(error.message);
-      return data ?? [];
+      // Apply location privacy (~200m approximation) for user safety
+      return applyLocationPrivacy(data ?? []);
     },
     [`product-locations-${normalizedType}`],
     {
@@ -236,7 +275,8 @@ export const getAllProductLocations = unstable_cache(
       .eq("is_active", true);
 
     if (error) throw new Error(error.message);
-    return data ?? [];
+    // Apply location privacy (~200m approximation) for user safety
+    return applyLocationPrivacy(data ?? []);
   },
   ["all-product-locations"],
   {
@@ -297,7 +337,8 @@ export const searchProducts = unstable_cache(
     const { data, error } = await query;
 
     if (error) throw new Error(error.message);
-    return data ?? [];
+    // Apply location privacy (~200m approximation) for user safety
+    return applyLocationPrivacy(data ?? []);
   },
   ["product-search"],
   {

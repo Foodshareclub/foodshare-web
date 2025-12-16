@@ -8,10 +8,35 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { type EmailLogEntry, type QueuedEmailEntry } from "@/api/admin/emailManagement";
 import { useEmailLogs, useQueuedEmails } from "@/hooks/useEmailManagement";
 import { PROVIDER_NAMES } from "@/lib/email/constants";
-import type { EmailProvider } from "@/lib/email/types";
+import type { EmailProvider, EmailType } from "@/lib/email/types";
+
+// Local type definitions (previously in @/api/admin/emailManagement)
+export interface EmailLogEntry {
+  id: string;
+  recipient_email: string;
+  email_type: EmailType;
+  subject: string;
+  provider: EmailProvider;
+  status: string;
+  sent_at: string;
+  provider_message_id?: string;
+  error?: string;
+}
+
+export interface QueuedEmailEntry {
+  id: string;
+  recipient_email: string;
+  email_type: EmailType;
+  template_name: string;
+  attempts: number;
+  max_attempts: number;
+  status: string;
+  last_error?: string;
+  next_retry_at?: string;
+  created_at: string;
+}
 
 interface EmailLogRowProps {
   log: EmailLogEntry;

@@ -6,9 +6,18 @@
 
 import React from "react";
 import { useTranslations } from "next-intl";
-import { type ProviderQuotaStatus } from "@/api/admin/emailManagement";
 import { useProviderQuotas } from "@/hooks/useEmailManagement";
-import { PROVIDER_NAMES, STATUS_COLORS } from "@/lib/email/constants";
+import { PROVIDER_NAMES } from "@/lib/email/constants";
+
+// Local type definitions (previously in @/api/admin/emailManagement)
+export interface ProviderQuotaStatus {
+  provider: string;
+  status: "ok" | "warning" | "exhausted";
+  usage_percentage: number;
+  emails_sent: number;
+  remaining: number;
+  daily_limit: number;
+}
 
 interface QuotaMeterProps {
   quota: ProviderQuotaStatus;
@@ -53,10 +62,10 @@ function QuotaMeter({ quota }: QuotaMeterProps) {
           className={`px-3 py-1 rounded-full text-xs font-medium uppercase ${getStatusBadgeColor()}`}
         >
           {quota.status === "exhausted"
-            ? t('exhausted')
+            ? t("exhausted")
             : quota.status === "warning"
-              ? t('warning')
-              : t('ok')}
+              ? t("warning")
+              : t("ok")}
         </span>
       </div>
 
@@ -73,15 +82,11 @@ function QuotaMeter({ quota }: QuotaMeterProps) {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-xs text-gray-500 mb-1">
-            Sent Today
-          </p>
+          <p className="text-xs text-gray-500 mb-1">Sent Today</p>
           <p className="text-2xl font-bold text-gray-800">{quota.emails_sent}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500 mb-1">
-            Remaining
-          </p>
+          <p className="text-xs text-gray-500 mb-1">Remaining</p>
           <p className="text-2xl font-bold text-gray-800">{quota.remaining}</p>
         </div>
       </div>
@@ -89,15 +94,11 @@ function QuotaMeter({ quota }: QuotaMeterProps) {
       {/* Limit Info */}
       <div className="mt-4 pt-4 border-t border-gray-100">
         <div className="flex justify-between items-center">
-          <p className="text-sm text-gray-600">
-            Daily Limit
-          </p>
+          <p className="text-sm text-gray-600">Daily Limit</p>
           <p className="text-sm font-medium text-gray-800">{quota.daily_limit}</p>
         </div>
         <div className="flex justify-between items-center mt-2">
-          <p className="text-sm text-gray-600">
-            Usage
-          </p>
+          <p className="text-sm text-gray-600">Usage</p>
           <p className="text-sm font-medium text-gray-800">{quota.usage_percentage.toFixed(1)}%</p>
         </div>
       </div>
@@ -106,7 +107,7 @@ function QuotaMeter({ quota }: QuotaMeterProps) {
 }
 
 export function EmailQuotaDashboard() {
-  const t = useTranslations();
+  const _t = useTranslations();
   // Use optimized hook with auto-refresh and request cancellation
   const { quotas, loading, error, lastUpdated, refetch } = useProviderQuotas(true);
 
@@ -121,9 +122,7 @@ export function EmailQuotaDashboard() {
     return (
       <div className="text-center py-12">
         <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-        <p className="mt-4 text-gray-600">
-          Loading quota data...
-        </p>
+        <p className="mt-4 text-gray-600">Loading quota data...</p>
       </div>
     );
   }
@@ -131,9 +130,7 @@ export function EmailQuotaDashboard() {
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-        <p className="text-red-800 font-medium">
-          Error loading quota data
-        </p>
+        <p className="text-red-800 font-medium">Error loading quota data</p>
         <p className="text-red-600 text-sm mt-2">{error}</p>
         <button
           onClick={refetch}
@@ -150,9 +147,7 @@ export function EmailQuotaDashboard() {
       {/* Header with refresh */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-bold text-gray-800">
-            Email Provider Quotas
-          </h2>
+          <h2 className="text-xl font-bold text-gray-800">Email Provider Quotas</h2>
           <p className="text-sm text-gray-500 mt-1">
             Last updated: {lastUpdated.toLocaleTimeString()}
           </p>
@@ -168,26 +163,18 @@ export function EmailQuotaDashboard() {
 
       {/* Total Capacity Summary */}
       <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-lg text-white shadow-lg">
-        <h3 className="text-lg font-bold mb-4">
-          Total Daily Capacity
-        </h3>
+        <h3 className="text-lg font-bold mb-4">Total Daily Capacity</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <p className="text-sm opacity-90 mb-1">
-              Total Limit
-            </p>
+            <p className="text-sm opacity-90 mb-1">Total Limit</p>
             <p className="text-3xl font-bold">{totalStats.totalCapacity}</p>
           </div>
           <div>
-            <p className="text-sm opacity-90 mb-1">
-              Used Today
-            </p>
+            <p className="text-sm opacity-90 mb-1">Used Today</p>
             <p className="text-3xl font-bold">{totalStats.totalUsed}</p>
           </div>
           <div>
-            <p className="text-sm opacity-90 mb-1">
-              Remaining
-            </p>
+            <p className="text-sm opacity-90 mb-1">Remaining</p>
             <p className="text-3xl font-bold">{totalStats.totalRemaining}</p>
           </div>
         </div>

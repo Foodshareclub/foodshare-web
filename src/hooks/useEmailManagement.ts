@@ -4,22 +4,75 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import {
-  getProviderQuotas,
-  getEmailStats,
-  getEmailLogs,
-  getQueuedEmails,
-  sendManualEmail,
-  retryEmail,
-  deleteQueuedEmail,
-  type ProviderQuotaStatus,
-  type EmailStats,
-  type EmailLogEntry,
-  type QueuedEmailEntry,
-  type ManualEmailRequest,
-} from "@/api/admin/emailManagement";
 import type { EmailProvider, EmailType } from "@/lib/email/types";
 import { REFRESH_INTERVALS } from "@/lib/email/constants";
+
+// Import types from their new locations
+import type { ProviderQuotaStatus } from "@/components/admin/EmailQuotaDashboard";
+import type { EmailLogEntry, QueuedEmailEntry } from "@/components/admin/EmailSendingHistory";
+import type { ManualEmailRequest } from "@/components/admin/ManualEmailSender";
+
+// Import Server Actions for mutations
+import {
+  retryEmail as retryEmailAction,
+  deleteQueuedEmail as deleteQueuedEmailAction,
+  sendManualEmail as sendManualEmailAction,
+} from "@/app/actions/admin-email";
+
+// EmailStats type (used by useEmailStats hook)
+export interface ProviderStat {
+  provider: string;
+  sent: number;
+  failed: number;
+  successRate: number;
+}
+
+export interface EmailStats {
+  totalSent24h: number;
+  totalFailed24h: number;
+  totalQueued: number;
+  successRate: number;
+  providerStats: ProviderStat[];
+}
+
+// Client-side data fetching functions (call API routes)
+async function getProviderQuotas(): Promise<ProviderQuotaStatus[]> {
+  const res = await fetch("/api/admin/email/quotas");
+  if (!res.ok) throw new Error("Failed to fetch quotas");
+  return res.json();
+}
+
+async function getEmailStats(): Promise<EmailStats> {
+  const res = await fetch("/api/admin/email/stats");
+  if (!res.ok) throw new Error("Failed to fetch stats");
+  return res.json();
+}
+
+async function getEmailLogs(params: {
+  provider?: EmailProvider;
+  emailType?: EmailType;
+  status?: string;
+  hours?: number;
+}): Promise<EmailLogEntry[]> {
+  const searchParams = new URLSearchParams();
+  if (params.provider) searchParams.set("provider", params.provider);
+  if (params.emailType) searchParams.set("emailType", params.emailType);
+  if (params.status) searchParams.set("status", params.status);
+  if (params.hours) searchParams.set("hours", params.hours.toString());
+
+  const res = await fetch(`/api/admin/email/logs?${searchParams}`);
+  if (!res.ok) throw new Error("Failed to fetch logs");
+  return res.json();
+}
+
+async function getQueuedEmails(params: { status?: string }): Promise<QueuedEmailEntry[]> {
+  const searchParams = new URLSearchParams();
+  if (params.status) searchParams.set("status", params.status);
+
+  const res = await fetch(`/api/admin/email/queue?${searchParams}`);
+  if (!res.ok) throw new Error("Failed to fetch queued emails");
+  return res.json();
+}
 
 // Hook for provider quotas with auto-refresh
 export function useProviderQuotas(autoRefresh = true) {
@@ -152,6 +205,7 @@ export function useEmailLogs(params: {
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Using individual params properties for granular control
   }, [params.provider, params.emailType, params.status, params.hours]);
 
   useEffect(() => {
@@ -208,9 +262,11 @@ export function useQueuedEmails(status?: string) {
   const handleRetry = useCallback(
     async (id: string) => {
       try {
-        await retryEmail(id);
-        await fetchQueue();
-        return { success: true };
+        const result = await retryEmailAction(id);
+        if (result.success) {
+          await fetchQueue();
+        }
+        return result;
       } catch (err) {
         return {
           success: false,
@@ -224,9 +280,11 @@ export function useQueuedEmails(status?: string) {
   const handleDelete = useCallback(
     async (id: string) => {
       try {
-        await deleteQueuedEmail(id);
-        await fetchQueue();
-        return { success: true };
+        const result = await deleteQueuedEmailAction(id);
+        if (result.success) {
+          await fetchQueue();
+        }
+        return result;
       } catch (err) {
         return {
           success: false,
@@ -257,14 +315,14 @@ export function useManualEmailSender() {
     setResult(null);
 
     try {
-      const response = await sendManualEmail(request);
+      const response = await sendManualEmailAction(request);
 
       if (response.success) {
         setResult({
           success: true,
-          message: `Email queued successfully! Message ID: ${response.messageId}`,
+          message: `Email queued successfully! Message ID: ${response.data?.messageId || "N/A"}`,
         });
-        return { success: true, messageId: response.messageId };
+        return { success: true, messageId: response.data?.messageId };
       } else {
         setResult({
           success: false,

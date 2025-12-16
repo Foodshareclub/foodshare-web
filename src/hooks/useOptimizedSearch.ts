@@ -31,7 +31,7 @@ interface UseOptimizedSearchReturn<T> {
   clear: () => void;
 }
 
-export function useOptimizedSearch<T = any>({
+export function useOptimizedSearch<T = unknown>({
   searchFn,
   debounceMs = 300,
   minQueryLength = 2,
@@ -104,10 +104,15 @@ export function useOptimizedSearch<T = any>({
   // Trigger search when debounced query changes
   useEffect(() => {
     if (debouncedQuery) {
-      performSearch(debouncedQuery);
+      // performSearch is async, so setState calls happen after await (not synchronous)
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Async function, setState happens after await
+      void performSearch(debouncedQuery);
     } else {
-      setResults(null);
-      setIsLoading(false);
+      // Use microtask to avoid synchronous setState warning in effect
+      queueMicrotask(() => {
+        setResults(null);
+        setIsLoading(false);
+      });
     }
 
     // Cleanup on unmount
@@ -146,15 +151,16 @@ export function useOptimizedSearch<T = any>({
 
 /**
  * Specialized hook for product search
+ * Uses API route which applies location privacy (~200m approximation)
  */
 export function useProductSearch() {
   return useOptimizedSearch({
     searchFn: async (query: string) => {
-      const { productAPI } = await import("@/api/productAPI");
-      const { data, error } = await productAPI.searchProducts(query, "all");
-
-      if (error) throw error;
-      return data;
+      const response = await fetch(`/api/products?search=${encodeURIComponent(query)}&type=all`);
+      if (!response.ok) {
+        throw new Error("Search failed");
+      }
+      return response.json();
     },
     cacheKey: "product-search",
     minQueryLength: 2,

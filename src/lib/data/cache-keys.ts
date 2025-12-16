@@ -113,6 +113,15 @@ export const CACHE_TAGS = {
   NOTIFICATIONS: "notifications",
   NOTIFICATIONS_UNREAD: "notifications-unread",
   USER_NOTIFICATIONS: (userId: string) => `user-notifications-${userId}`,
+
+  // Email System
+  EMAIL_HEALTH: "email-health",
+  PROVIDER_HEALTH: "provider-health",
+  PROVIDER_QUOTAS: "provider-quotas",
+  EMAIL_QUEUE: "email-queue",
+  EMAIL_LOGS: "email-logs",
+  EMAIL_STATS: "email-stats",
+  PROVIDER_METRICS: "provider-metrics",
 } as const;
 
 // ============================================================================
@@ -149,6 +158,15 @@ export const CACHE_DURATIONS = {
   SEGMENTS: 600, // 10 minutes
   AUTOMATIONS: 600, // 10 minutes
   STATIC_PAGES: 86400, // 24 hours
+
+  // Email system
+  EMAIL_HEALTH: 60, // 1 minute - health data needs to be fresh
+  PROVIDER_HEALTH: 60, // 1 minute
+  PROVIDER_QUOTAS: 30, // 30 seconds - quota data changes frequently
+  EMAIL_QUEUE: 30, // 30 seconds - queue changes frequently
+  EMAIL_LOGS: 300, // 5 minutes
+  EMAIL_STATS: 300, // 5 minutes
+  PROVIDER_METRICS: 120, // 2 minutes
 } as const;
 
 // ============================================================================
@@ -288,4 +306,26 @@ export function invalidateNewsletterCaches(): void {
     CACHE_TAGS.AUTOMATIONS,
     CACHE_TAGS.SUBSCRIBERS,
   ].forEach((tag) => invalidateTag(tag));
+}
+
+/**
+ * Get all email system tags
+ */
+export function getEmailTags(): string[] {
+  return [
+    CACHE_TAGS.EMAIL_HEALTH,
+    CACHE_TAGS.PROVIDER_HEALTH,
+    CACHE_TAGS.PROVIDER_QUOTAS,
+    CACHE_TAGS.EMAIL_QUEUE,
+    CACHE_TAGS.EMAIL_LOGS,
+    CACHE_TAGS.EMAIL_STATS,
+    CACHE_TAGS.PROVIDER_METRICS,
+  ];
+}
+
+/**
+ * Invalidate all email system caches
+ */
+export function invalidateEmailCaches(): void {
+  getEmailTags().forEach((tag) => invalidateTag(tag));
 }
