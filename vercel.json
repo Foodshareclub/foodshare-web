@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "installCommand": "npm install",
-  "buildCommand": "cat node_modules/duckdb/package.json | grep -A5 binary && npm run build"
+  "installCommand": "bun install && npx patch-package",
+  "buildCommand": "npm run build"
 }
