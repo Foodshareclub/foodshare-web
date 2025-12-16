@@ -121,6 +121,8 @@ export const getEmailDashboardStats = unstable_cache(
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+    const today = new Date().toISOString().split("T")[0];
+
     // Parallel fetch for performance
     const [
       subscribersRes,
@@ -130,6 +132,8 @@ export const getEmailDashboardStats = unstable_cache(
       automationsRes,
       suppressionRes,
       _bounceRes,
+      dailyQuotaRes,
+      monthlyQuotaRes,
     ] = await Promise.all([
       // Total newsletter subscribers (external)
       supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }),
@@ -159,10 +163,14 @@ export const getEmailDashboardStats = unstable_cache(
         .select("*", { count: "exact", head: true })
         .eq("event_type", "bounce")
         .gte("created_at", thirtyDaysAgo.toISOString()),
+      // Today's quota data
+      supabase.from("email_provider_quota").select("*").eq("date", today),
+      // Monthly quota data (last 30 days)
+      supabase
+        .from("email_provider_quota")
+        .select("provider, emails_sent")
+        .gte("date", thirtyDaysAgo.toISOString().split("T")[0]),
     ]);
-
-    // Fetch quota data using the existing function instead of non-existent RPC
-    const comprehensiveQuotaRes = { data: await getComprehensiveQuotaStatus() };
 
     // Calculate campaign aggregates
     const campaigns = campaignsRes.data || [];
@@ -172,23 +180,27 @@ export const getEmailDashboardStats = unstable_cache(
     const totalUnsubscribed = campaigns.reduce((sum, c) => sum + (c.total_unsubscribed || 0), 0);
     const totalBounced = campaigns.reduce((sum, c) => sum + (c.total_bounced || 0), 0);
 
-    // Process comprehensive quota data
-    const quotaData = comprehensiveQuotaRes.data || [];
-    let dailyUsed = 0,
-      dailyLimit = 0,
-      monthlyUsed = 0,
-      monthlyLimit = 0;
+    // Process quota data
+    const dailyQuota = dailyQuotaRes.data || [];
+    const monthlyQuota = monthlyQuotaRes.data || [];
 
-    for (const q of quotaData) {
-      dailyUsed += q.daily.sent || 0;
-      dailyLimit += q.daily.limit || 0;
-      monthlyUsed += q.monthly.sent || 0;
-      monthlyLimit += q.monthly.limit || 0;
+    // Calculate daily totals
+    let dailyUsed = 0;
+    let dailyLimit = 0;
+    for (const q of dailyQuota) {
+      dailyUsed += q.emails_sent || 0;
+      dailyLimit += q.daily_limit || 0;
+    }
+
+    // Calculate monthly totals
+    let monthlyUsed = 0;
+    for (const q of monthlyQuota) {
+      monthlyUsed += q.emails_sent || 0;
     }
 
     // Fallback defaults if no quota data
     if (dailyLimit === 0) dailyLimit = 500;
-    if (monthlyLimit === 0) monthlyLimit = 15000;
+    const monthlyLimit = 15000; // Default monthly limit
 
     // Combine newsletter subscribers + registered users with email prefs
     const totalSubs = (subscribersRes.count || 0) + (registeredUsersRes.count || 0);
@@ -225,34 +237,70 @@ export const getEmailDashboardStats = unstable_cache(
 export const getComprehensiveQuotaStatus = unstable_cache(
   async (): Promise<ProviderQuotaDetails[]> => {
     const supabase = await createClient();
+    const today = new Date().toISOString().split("T")[0];
 
-    const { data, error } = await supabase.rpc("get_comprehensive_quota_status");
+    // Get today's quota data for all providers (includes daily_limit AND monthly_limit)
+    const { data, error } = await supabase
+      .from("email_provider_quota")
+      .select("*")
+      .eq("date", today);
 
     if (error) {
-      console.error("Failed to fetch comprehensive quota:", error.message);
+      console.error("Failed to fetch quota data:", error.message);
       return getDefaultQuotaDetails();
     }
 
-    if (!data || data.length === 0) {
-      return getDefaultQuotaDetails();
-    }
+    // Get monthly totals (last 30 days) for each provider
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const { data: monthlyData } = await supabase
+      .from("email_provider_quota")
+      .select("provider, emails_sent")
+      .gte("date", thirtyDaysAgo.toISOString().split("T")[0]);
 
-    return data.map((q: Record<string, unknown>) => ({
-      provider: toEmailProvider(q.provider),
-      daily: {
-        sent: (q.daily_sent as number) || 0,
-        limit: (q.daily_limit as number) || 100,
-        remaining: (q.daily_remaining as number) || 100,
-        percentUsed: Number(q.daily_percent_used) || 0,
-      },
-      monthly: {
-        sent: (q.monthly_sent as number) || 0,
-        limit: (q.monthly_limit as number) || 3000,
-        remaining: (q.monthly_remaining as number) || 3000,
-        percentUsed: Number(q.monthly_percent_used) || 0,
-      },
-      isAvailable: (q.is_available as boolean) ?? true,
-    }));
+    // Calculate monthly totals per provider
+    const monthlyTotals = new Map<string, number>();
+    monthlyData?.forEach((row) => {
+      const current = monthlyTotals.get(row.provider) || 0;
+      monthlyTotals.set(row.provider, current + (row.emails_sent || 0));
+    });
+
+    const providers: EmailProvider[] = ["resend", "brevo", "mailersend", "aws_ses"];
+    const defaults = getDefaultQuotaDetails();
+
+    return providers.map((provider) => {
+      const quotaRow = data?.find((q) => q.provider === provider);
+      const defaultQuota = defaults.find((d) => d.provider === provider)!;
+
+      // Daily quota from database
+      const dailySent = quotaRow?.emails_sent || 0;
+      const dailyLimit = quotaRow?.daily_limit || defaultQuota.daily.limit;
+      const dailyRemaining = Math.max(0, dailyLimit - dailySent);
+      const dailyPercentUsed = dailyLimit > 0 ? (dailySent / dailyLimit) * 100 : 0;
+
+      // Monthly quota - sent is calculated, limit is from database
+      const monthlySent = monthlyTotals.get(provider) || 0;
+      const monthlyLimit = quotaRow?.monthly_limit || defaultQuota.monthly.limit;
+      const monthlyRemaining = Math.max(0, monthlyLimit - monthlySent);
+      const monthlyPercentUsed = monthlyLimit > 0 ? (monthlySent / monthlyLimit) * 100 : 0;
+
+      return {
+        provider,
+        daily: {
+          sent: dailySent,
+          limit: dailyLimit,
+          remaining: dailyRemaining,
+          percentUsed: Math.round(dailyPercentUsed * 10) / 10,
+        },
+        monthly: {
+          sent: monthlySent,
+          limit: monthlyLimit,
+          remaining: monthlyRemaining,
+          percentUsed: Math.round(monthlyPercentUsed * 10) / 10,
+        },
+        isAvailable: dailyPercentUsed < 95 && monthlyPercentUsed < 95,
+      };
+    });
   },
   ["comprehensive-quota-status"],
   {
