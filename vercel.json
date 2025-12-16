@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "installCommand": "bun install && npx patch-package --patch-dir patches"
+  "installCommand": "bun install && node -e \"const fs=require('fs'),p='node_modules/duckdb/package.json',j=JSON.parse(fs.readFileSync(p));j.binary.napi_versions=[6];fs.writeFileSync(p,JSON.stringify(j,null,2));console.log('Patched duckdb with napi_versions');\""
 }
