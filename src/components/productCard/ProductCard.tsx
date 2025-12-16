@@ -37,8 +37,8 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
   const [openEdit, setOpenEdit] = useState(false);
   const prefetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Product detail URL
-  const productUrl = `/${product.post_type}/${product.id}`;
+  // Product detail URL - all products use /food/[id] path
+  const productUrl = `/food/${product.id}`;
 
   // Prefetch on hover with debounce to avoid excessive prefetching
   const handleMouseEnter = () => {

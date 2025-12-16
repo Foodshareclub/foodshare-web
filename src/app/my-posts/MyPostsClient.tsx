@@ -470,7 +470,7 @@ function PostCard({ post, onEdit, onDelete, onToggleStatus, isUpdating }: PostCa
         !post.is_active && "opacity-60"
       )}
     >
-      <Link href={`/${post.post_type}/${post.id}`} className="block relative aspect-[4/3]">
+      <Link href={`/food/${post.id}`} className="block relative aspect-[4/3]">
         {post.images?.length > 0 && isValidImageUrl(post.images[0]) ? (
           <Image
             src={post.images[0]}

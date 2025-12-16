@@ -20,7 +20,7 @@ type ProductPopupProps = {
 
 export const ProductPopup: React.FC<ProductPopupProps> = ({
   id,
-  productType,
+  productType: _productType,
   name,
   type,
   description,
@@ -31,9 +31,8 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
   const router = useRouter();
 
   const handleViewDetails = () => {
-    // Ensure productType is a valid string before navigation
-    const safeProductType = typeof productType === 'string' ? productType : 'food';
-    router.push(`/${safeProductType}/${id}`);
+    // All products use /food/[id] path
+    router.push(`/food/${id}`);
   };
 
   return (
@@ -50,28 +49,17 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
 
       <h4 className="product-popup-title">{name}</h4>
 
-      {type && (
-        <span className="product-popup-badge">{type}</span>
-      )}
+      {type && <span className="product-popup-badge">{type}</span>}
 
-      {address && (
-        <p className="product-popup-address">📍 {address}</p>
-      )}
+      {address && <p className="product-popup-address">📍 {address}</p>}
 
-      {description && (
-        <p className="product-popup-description">{description}</p>
-      )}
+      {description && <p className="product-popup-description">{description}</p>}
 
       {distance !== undefined && (
-        <p className="product-popup-distance">
-          📍 {distance.toFixed(1)} km away
-        </p>
+        <p className="product-popup-distance">📍 {distance.toFixed(1)} km away</p>
       )}
 
-      <button
-        onClick={handleViewDetails}
-        className="product-popup-button"
-      >
+      <button onClick={handleViewDetails} className="product-popup-button">
         View Details
       </button>
     </div>

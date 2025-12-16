@@ -1,16 +1,15 @@
-'use client';
+"use client";
 
 import React, { useState } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { DeleteIcon } from "@/utils/icons";
 import type { InitialProductStateType } from "@/types/product.types";
 
 // Lazy load the heavy modal (3000+ lines)
-const PublishListingModal = dynamic(
-  () => import("@/components/modals/PublishListingModal"),
-  { ssr: false }
-);
+const PublishListingModal = dynamic(() => import("@/components/modals/PublishListingModal"), {
+  ssr: false,
+});
 
 type AsideProdType = {
   img: string;
@@ -28,8 +27,8 @@ const AsideProducts: React.FC<AsideProdType> = ({
   img,
   name,
   about,
-  available,
-  distance,
+  available: _available,
+  distance: _distance,
   deleteProductHandler,
 }) => {
   const pathname = usePathname();
@@ -37,7 +36,8 @@ const AsideProducts: React.FC<AsideProdType> = ({
   const router = useRouter();
 
   const goToProduct = () => {
-    router.push(`/one-product/${product?.post_type}/${product?.id}`);
+    // All products use /food/[id] path
+    router.push(`/food/${product?.id}`);
   };
 
   const deleteHandler = () => {
@@ -47,9 +47,7 @@ const AsideProducts: React.FC<AsideProdType> = ({
   };
 
   return (
-    <div
-      className="glass flex flex-col lg:flex-row overflow-hidden mt-4 mx-2 cursor-pointer rounded-2xl p-2 gpu"
-    >
+    <div className="glass flex flex-col lg:flex-row overflow-hidden mt-4 mx-2 cursor-pointer rounded-2xl p-2 gpu">
       <img
         className="rounded-xl object-cover p-2 h-[150px] min-w-[150px]"
         src={img}
