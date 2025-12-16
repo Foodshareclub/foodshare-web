@@ -3,22 +3,15 @@
  * Cookie-based session handling for Server Components and Server Actions
  */
 
-import { createServerClient } from '@supabase/ssr';
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
+import { createServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
 
-/**
- * Get Supabase config lazily to avoid build-time errors
- */
-function getSupabaseConfig() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing Supabase environment variables');
-  }
-
-  return { supabaseUrl, supabaseAnonKey };
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Missing Supabase environment variables");
 }
 
 /**
@@ -26,7 +19,6 @@ function getSupabaseConfig() {
  * Use this inside unstable_cache() where cookies() cannot be called
  */
 export function createCachedClient() {
-  const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig();
   return createSupabaseClient(supabaseUrl, supabaseAnonKey);
 }
 
@@ -39,21 +31,17 @@ function getSafeCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
     const allCookies = cookieStore.getAll();
     // Filter out potentially corrupted Supabase auth cookies
     return allCookies.filter((cookie) => {
-      if (cookie.name.startsWith('sb-')) {
+      if (cookie.name.startsWith("sb-")) {
         try {
           // Test if the value can be safely decoded
           // Supabase cookies are base64url encoded
           if (cookie.value) {
             // Simple validation - check for valid base64url characters
             const base64urlRegex = /^[A-Za-z0-9_-]*$/;
-            const parts = cookie.value.split('.');
-            const isValid = parts.every(
-              (part) => base64urlRegex.test(part) || part === ''
-            );
+            const parts = cookie.value.split(".");
+            const isValid = parts.every((part) => base64urlRegex.test(part) || part === "");
             if (!isValid) {
-              console.warn(
-                `Filtering corrupted Supabase cookie: ${cookie.name}`
-              );
+              console.warn(`Filtering corrupted Supabase cookie: ${cookie.name}`);
               return false;
             }
           }
@@ -66,7 +54,7 @@ function getSafeCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
       return true;
     });
   } catch (error) {
-    console.error('Error reading cookies:', error);
+    console.error("Error reading cookies:", error);
     return [];
   }
 }
@@ -77,7 +65,6 @@ function getSafeCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
  * Includes error handling for corrupted cookies
  */
 export async function createClient() {
-  const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig();
   const cookieStore = await cookies();
 
   return createServerClient(supabaseUrl, supabaseAnonKey, {
