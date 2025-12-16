@@ -55,6 +55,9 @@ export default function AdminEmailCRMPage() {
   const t = useTranslations();
   const { stats, providerHealth, campaigns, automations, segments, quotaDetails, bounceStats, isLoading } = useEmailCRMData();
 
+  // Show skeleton while loading or if data is not yet available
+  const hasData = stats && providerHealth && campaigns && automations && segments && quotaDetails && bounceStats;
+
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)] -mt-2">
       {/* Compact Header */}
@@ -76,7 +79,7 @@ export default function AdminEmailCRMPage() {
       </div>
 
       {/* CRM takes remaining height */}
-      {isLoading ? (
+      {isLoading || !hasData ? (
         <EmailSkeleton />
       ) : (
         <EmailCRMDashboard

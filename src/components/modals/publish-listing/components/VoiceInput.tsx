@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Mic, MicOff } from "lucide-react";
+import type { SpeechRecognition, SpeechRecognitionEvent } from "@/types/web-apis.types";
+import { getSpeechRecognition } from "@/types/web-apis.types";
 
 interface VoiceInputProps {
   onTranscript: (text: string) => void;
@@ -11,13 +13,10 @@ interface VoiceInputProps {
 export const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscript, disabled }) => {
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
-  // Using any for browser Speech Recognition API compatibility
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
-    const SpeechRecognitionAPI =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognitionAPI = getSpeechRecognition();
     if (!SpeechRecognitionAPI) {
       setIsSupported(false);
       return;
@@ -28,8 +27,7 @@ export const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscript, disabled }
     recognition.interimResults = true;
     recognition.lang = navigator.language || "en-US";
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       let finalTranscript = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         if (event.results[i].isFinal) {

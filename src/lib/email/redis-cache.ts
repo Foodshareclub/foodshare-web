@@ -106,9 +106,9 @@ export async function checkRateLimit(
 
     if (count >= maxAttempts) {
       // Get oldest attempt to calculate reset time
-      const oldest = await redis.zrange(key, 0, 0, { withScores: true });
+      const oldest = await redis.zrange<{ member: string; score: number }[]>(key, 0, 0, { withScores: true });
       const resetAt = oldest.length > 0
-        ? (oldest[0].score as number) + windowSeconds * 1000
+        ? oldest[0].score + windowSeconds * 1000
         : now + windowSeconds * 1000;
 
       return {
@@ -213,17 +213,17 @@ export async function getMetricsTimeSeries(hours: number = 24): Promise<MetricPo
     const redis = getRedis();
     const cutoff = Date.now() - hours * 60 * 60 * 1000;
 
-    const results = await redis.zrangebyscore("email:metrics:timeseries", cutoff, "+inf");
+    const results = await redis.zrange<string[]>("email:metrics:timeseries", cutoff, "+inf", { byScore: true });
 
     return results
-      .map((r) => {
+      .map((r: string): MetricPoint | null => {
         try {
-          return typeof r === "string" ? JSON.parse(r) : r;
+          return JSON.parse(r) as MetricPoint;
         } catch {
           return null;
         }
       })
-      .filter((r): r is MetricPoint => r !== null);
+      .filter((r: MetricPoint | null): r is MetricPoint => r !== null);
   } catch (error) {
     console.error("[redis-cache] Failed to get metrics time-series:", error);
     return [];

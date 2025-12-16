@@ -206,10 +206,10 @@ export const AnalyticsDashboard = () => {
                       borderColor: "hsl(var(--border))",
                       borderRadius: "var(--radius)",
                     }}
-                    formatter={(value: any, name: any, props: any) => {
-                      if (name === "dropoff")
+                    formatter={(value, name) => {
+                      if (name === "dropoff" && typeof value === "number")
                         return [(value * 100).toFixed(1) + "%", "Drop-off Rate"];
-                      return [value, "Count"];
+                      return [value ?? 0, "Count"];
                     }}
                   />
                   <Bar

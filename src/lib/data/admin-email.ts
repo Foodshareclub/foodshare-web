@@ -621,13 +621,13 @@ export const getAudienceSegments = unstable_cache(
 // ============================================================================
 
 export interface EmailCRMData {
-  stats: EmailDashboardStats;
-  providerHealth: ProviderHealth[];
-  campaigns: RecentCampaign[];
-  automations: ActiveAutomation[];
-  segments: AudienceSegment[];
-  quotaDetails: ProviderQuotaDetails[];
-  bounceStats: BounceStats;
+  stats?: EmailDashboardStats | undefined;
+  providerHealth?: ProviderHealth[] | undefined;
+  campaigns?: RecentCampaign[] | undefined;
+  automations?: ActiveAutomation[] | undefined;
+  segments?: AudienceSegment[] | undefined;
+  quotaDetails?: ProviderQuotaDetails[] | undefined;
+  bounceStats?: BounceStats | undefined;
 }
 
 export async function getEmailCRMData(): Promise<EmailCRMData> {

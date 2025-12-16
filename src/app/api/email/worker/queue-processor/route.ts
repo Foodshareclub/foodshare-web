@@ -34,18 +34,25 @@ interface QueuedEmail {
   max_attempts: number;
 }
 
+interface EmailProcessResult {
+  id: string;
+  success: boolean;
+  provider?: string;
+  error?: string;
+}
+
 async function processEmailBatch(
   emails: QueuedEmail[],
   supabase: Awaited<ReturnType<typeof createClient>>
-) {
-  const results = [];
+): Promise<PromiseSettledResult<EmailProcessResult>[]> {
+  const results: PromiseSettledResult<EmailProcessResult>[] = [];
 
   // Process in chunks for better concurrency
   for (let i = 0; i < emails.length; i += CONCURRENCY) {
     const chunk = emails.slice(i, i + CONCURRENCY);
 
-    const chunkResults = await Promise.allSettled(
-      chunk.map(async (email) => {
+    const chunkResults: PromiseSettledResult<EmailProcessResult>[] = await Promise.allSettled(
+      chunk.map(async (email): Promise<EmailProcessResult> => {
         try {
           // Call the email Edge Function
           const response = await fetch(
@@ -160,14 +167,15 @@ async function handler(req: NextRequest) {
 
       // Process emails with timeout
       const processPromise = processEmailBatch(emails, supabase);
-      const timeoutPromise = new Promise((_, reject) =>
+      const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("Processing timeout")), PROCESSING_TIMEOUT)
       );
 
       const results = await Promise.race([processPromise, timeoutPromise]);
 
       const successful = results.filter(
-        (r: any) => r.status === "fulfilled" && r.value?.success
+        (r): r is PromiseFulfilledResult<EmailProcessResult> =>
+          r.status === "fulfilled" && r.value?.success === true
       ).length;
       const failed = results.length - successful;
 

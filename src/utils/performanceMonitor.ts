@@ -7,12 +7,14 @@
 
 import { apiCache } from "@/lib/api-cache";
 import { createLogger } from "@/lib/logger";
+import type { PerformanceMemory } from "@/types/web-apis.types";
+import { getPerformanceMemory } from "@/types/web-apis.types";
 
 const logger = createLogger("PerformanceMonitor");
 
 interface PerformanceMetrics {
   cacheStats: ReturnType<typeof apiCache.getStats>;
-  memoryUsage?: any; // MemoryInfo type not available in all environments
+  memoryUsage?: PerformanceMemory;
   timing: PerformanceTiming;
   navigation: PerformanceNavigationTiming | null;
   resources: PerformanceResourceTiming[];
@@ -60,7 +62,7 @@ class PerformanceMonitor {
 
     return {
       cacheStats: apiCache.getStats(),
-      memoryUsage: (performance as any).memory,
+      memoryUsage: getPerformanceMemory(),
       timing,
       navigation,
       resources,

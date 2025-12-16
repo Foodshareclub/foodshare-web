@@ -5,6 +5,7 @@
 
 import { createLogger } from "@/lib/logger";
 import { productionErrorReporter } from "./productionErrorReporter";
+import { getPerformanceMemory } from "@/types/web-apis.types";
 
 const logger = createLogger("RealTimeMonitor");
 
@@ -196,8 +197,8 @@ class RealTimeMonitor {
    * Get memory usage percentage
    */
   private getMemoryUsage(): number {
-    if ("memory" in performance) {
-      const memory = (performance as any).memory;
+    const memory = getPerformanceMemory();
+    if (memory) {
       return Math.round((memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100);
     }
     return 0;

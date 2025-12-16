@@ -240,11 +240,12 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
           logger.error("Registration failed", new Error(result.error || "Registration failed"));
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message.toLowerCase() : "";
       if (
-        error?.message?.toLowerCase().includes("storage") ||
-        error?.message?.toLowerCase().includes("indexeddb") ||
-        error?.message?.toLowerCase().includes("ldb")
+        errorMessage.includes("storage") ||
+        errorMessage.includes("indexeddb") ||
+        errorMessage.includes("ldb")
       ) {
         await checkStorageAvailability();
       }
@@ -266,10 +267,11 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
       await loginWithProvider(provider);
       // Close modal immediately - callback page will handle the rest
       handleClose();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message.toLowerCase() : "";
       if (
-        error?.message?.toLowerCase().includes("storage") ||
-        error?.message?.toLowerCase().includes("indexeddb")
+        errorMessage.includes("storage") ||
+        errorMessage.includes("indexeddb")
       ) {
         await checkStorageAvailability();
       }
