@@ -46,7 +46,7 @@ export const categoryConfig = {
       description: "Describe what you're sharing, how it was prepared, and any dietary info...",
     },
   },
-  things: {
+  thing: {
     icon: FaBox,
     label: "Things",
     color: "text-blue-500",
@@ -126,7 +126,7 @@ export const categoryConfig = {
       description: "Describe the fridge location, operating hours, and what items are accepted...",
     },
   },
-  foodBank: {
+  foodbank: {
     icon: FaBox,
     label: "Food Bank",
     color: "text-amber-500",
@@ -186,7 +186,7 @@ export const categoryConfig = {
       description: "Describe the challenge, rules, timeline, and how to participate...",
     },
   },
-  "vegan-food": {
+  vegan: {
     icon: FaLeaf,
     label: "Vegan",
     color: "text-green-600",
@@ -259,7 +259,7 @@ export const templatePresets = {
       tags: ["baked", "homemade", "fresh"],
     },
   ],
-  things: [
+  thing: [
     {
       id: "furniture",
       name: "Furniture",
@@ -338,7 +338,7 @@ export const titleSuggestions = {
     "Leftover Party Food",
     "Organic Fruit",
   ],
-  things: [
+  thing: [
     "IKEA Furniture",
     "Winter Clothes",
     "Books Collection",

@@ -20,9 +20,10 @@ export const URL_TO_DB_MAP: Record<string, string> = {
   borrow: "borrow",
   // Wanted
   wanted: "wanted",
-  // Foodbank (singular and plural)
+  // Foodbank (singular, plural, and camelCase from categoryConfig)
   foodbank: "foodbank",
   foodbanks: "foodbank",
+  foodBank: "foodbank",
   // Fridge (singular and plural)
   fridge: "fridge",
   fridges: "fridge",
@@ -35,8 +36,9 @@ export const URL_TO_DB_MAP: Record<string, string> = {
   challenges: "challenge",
   // Zero Waste
   zerowaste: "zerowaste",
-  // Vegan
+  // Vegan (including hyphenated form from categoryConfig)
   vegan: "vegan",
+  "vegan-food": "vegan",
   // Forum
   forum: "forum",
 };

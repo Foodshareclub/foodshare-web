@@ -1,25 +1,57 @@
--- Fix post_activity_logs foreign key constraint to allow post deletion
+-- Fix ALL foreign key constraints to allow post deletion from database
 --
--- Problem: The trigger_log_post_changes() trigger fires on DELETE and tries to
--- insert an activity log, but the foreign key constraint fails because the post
--- is being deleted.
+-- Problem: Multiple tables have FK constraints to posts that block deletion
+-- Solution: Change all FKs to ON DELETE SET NULL or ON DELETE CASCADE
 --
--- Solution: Change the foreign key to ON DELETE SET NULL, which:
--- 1. Allows posts to be deleted without constraint violations
--- 2. Preserves the audit trail (logs remain with post_id = NULL)
--- 3. The trigger can still log the deletion before the FK check
+-- Tables affected:
+-- 1. post_activity_logs - SET NULL (preserve audit trail)
+-- 2. rooms - SET NULL (preserve chat history)
+-- 3. reviews - SET NULL (preserve reviews)
 
--- Step 1: Make post_id nullable (if not already)
+-- ============================================================================
+-- FIX 1: post_activity_logs
+-- ============================================================================
+
 ALTER TABLE post_activity_logs
   ALTER COLUMN post_id DROP NOT NULL;
 
--- Step 2: Drop the existing foreign key constraint
 ALTER TABLE post_activity_logs
   DROP CONSTRAINT IF EXISTS post_activity_logs_post_id_fkey;
 
--- Step 3: Re-add the foreign key with ON DELETE SET NULL
 ALTER TABLE post_activity_logs
   ADD CONSTRAINT post_activity_logs_post_id_fkey
+  FOREIGN KEY (post_id)
+  REFERENCES posts(id)
+  ON DELETE SET NULL;
+
+-- ============================================================================
+-- FIX 2: rooms (chat conversations)
+-- ============================================================================
+
+ALTER TABLE rooms
+  ALTER COLUMN post_id DROP NOT NULL;
+
+ALTER TABLE rooms
+  DROP CONSTRAINT IF EXISTS rooms_post_id_fkey;
+
+ALTER TABLE rooms
+  ADD CONSTRAINT rooms_post_id_fkey
+  FOREIGN KEY (post_id)
+  REFERENCES posts(id)
+  ON DELETE SET NULL;
+
+-- ============================================================================
+-- FIX 3: reviews
+-- ============================================================================
+
+ALTER TABLE reviews
+  ALTER COLUMN post_id DROP NOT NULL;
+
+ALTER TABLE reviews
+  DROP CONSTRAINT IF EXISTS reviews_post_id_fkey;
+
+ALTER TABLE reviews
+  ADD CONSTRAINT reviews_post_id_fkey
   FOREIGN KEY (post_id)
   REFERENCES posts(id)
   ON DELETE SET NULL;

@@ -277,55 +277,77 @@ export async function updateProduct(
 }
 
 /**
- * Delete a product
+ * Delete a product (soft delete - sets is_active = false)
+ * This unpublishes the listing rather than permanently deleting it
  */
 export async function deleteProduct(id: number): Promise<ActionResult<undefined>> {
+  console.log("[deleteProduct] 🚀 Starting soft delete for id:", id);
+
   return withErrorHandling(async () => {
     const supabase = await createClient();
 
     // Verify user is authenticated
+    console.log("[deleteProduct] 👤 Checking user authentication...");
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
+      console.log("[deleteProduct] ❌ User not authenticated");
       throw new Error("You must be signed in to delete a listing");
     }
+    console.log("[deleteProduct] ✅ User authenticated:", user.id);
 
-    // Get product info before deletion for cache invalidation and ownership check
+    // Get product info for cache invalidation and ownership check
+    console.log("[deleteProduct] 📝 Getting product info...");
     const { data: product } = await supabase
       .from("posts")
-      .select("post_type, profile_id")
+      .select("post_type, profile_id, is_active")
       .eq("id", id)
       .single();
 
-    // Verify ownership
-    if (product?.profile_id && product.profile_id !== user.id) {
-      throw new Error("Unauthorized: You can only delete your own listings");
+    if (!product) {
+      console.log("[deleteProduct] ❌ Product not found");
+      throw new Error("Listing not found");
     }
 
-    const { error } = await supabase.from("posts").delete().eq("id", id);
+    // Verify ownership
+    if (product.profile_id !== user.id) {
+      console.log("[deleteProduct] ❌ Ownership check failed");
+      throw new Error("Unauthorized: You can only delete your own listings");
+    }
+    console.log("[deleteProduct] ✅ Ownership verified");
 
-    if (error) throw new Error(error.message);
+    // Soft delete: set is_active = false
+    console.log("[deleteProduct] 💾 Soft deleting (setting is_active = false)...");
+    const { error } = await supabase.from("posts").update({ is_active: false }).eq("id", id);
+
+    if (error) {
+      console.error("[deleteProduct] ❌ Database error:", error);
+      throw new Error(error.message);
+    }
+    console.log("[deleteProduct] ✅ Post unpublished successfully");
 
     // Invalidate product caches
+    console.log("[deleteProduct] 🗑️ Invalidating caches...");
     invalidateTag(CACHE_TAGS.PRODUCTS);
     invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS);
     invalidateTag(CACHE_TAGS.PRODUCT(id));
 
     // Invalidate type-specific caches
-    if (product?.post_type) {
+    if (product.post_type) {
       invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(product.post_type));
       invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(product.post_type));
     }
 
     // Invalidate user-specific cache
-    if (product?.profile_id) {
+    if (product.profile_id) {
       invalidateTag(CACHE_TAGS.USER_PRODUCTS(product.profile_id));
     }
 
     // Invalidate activity caches
-    invalidatePostActivityCaches(id, product?.profile_id);
+    invalidatePostActivityCaches(id, product.profile_id);
 
+    console.log("[deleteProduct] ✅ SUCCESS!");
     return undefined;
   }, "deleteProduct");
 }
