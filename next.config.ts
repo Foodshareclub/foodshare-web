@@ -144,9 +144,35 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       // Category listing rewrites: /:type -> /food?type=:type
+      // Singular forms (canonical)
       {
         source: "/thing",
         destination: "/food?type=thing",
+      },
+      // Plural forms (user-friendly aliases)
+      {
+        source: "/things",
+        destination: "/food?type=thing",
+      },
+      {
+        source: "/fridges",
+        destination: "/food?type=fridge",
+      },
+      {
+        source: "/foodbanks",
+        destination: "/food?type=foodbank",
+      },
+      {
+        source: "/businesses",
+        destination: "/food?type=business",
+      },
+      {
+        source: "/volunteers",
+        destination: "/food?type=volunteer",
+      },
+      {
+        source: "/challenges",
+        destination: "/challenge",
       },
       {
         source: "/borrow",
