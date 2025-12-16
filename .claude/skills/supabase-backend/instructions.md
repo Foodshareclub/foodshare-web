@@ -1,371 +1,281 @@
-# Supabase Backend Integration Skill
+# Supabase with Next.js 16
 
 ## Overview
-Expert guidance for integrating Supabase as a backend service with authentication, PostgreSQL database, storage, and real-time subscriptions.
 
-## Tech Stack Context
-- **Supabase JS**: 2.84.0
-- **Features**: Auth, Database (PostgreSQL), Storage, Real-time, Edge Functions
+Supabase integration using Next.js 16 patterns: Server Components for reading, Server Actions for mutations.
 
-## Setup and Configuration
+## Client Setup
 
-### Client Initialization
+### Server-Side (Server Components & Actions)
+
 ```typescript
-import { createClient } from '@supabase/supabase-js';
+// src/lib/supabase/server.ts
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export async function createClient() {
+  const cookieStore = await cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => cookieStore.getAll(),
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
+}
 ```
 
-### Environment Variables
-```env
-VITE_SUPABASE_URL=your_project_url
-VITE_SUPABASE_ANON_KEY=your_anon_key
+### Client-Side (Client Components)
+
+```typescript
+// src/lib/supabase/client.ts
+import { createBrowserClient } from "@supabase/ssr";
+
+export function createClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
+```
+
+## Data Fetching Pattern
+
+### Data Layer (lib/data/)
+
+```typescript
+// src/lib/data/products.ts
+import { unstable_cache } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
+
+export const getProducts = unstable_cache(
+  async (productType: string) => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("posts_with_location")
+      .select("*")
+      .eq("post_type", productType)
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
+
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+  ["products-list"],
+  { revalidate: CACHE_DURATIONS.PRODUCTS, tags: [CACHE_TAGS.PRODUCTS] }
+);
+
+export const getProductById = unstable_cache(
+  async (id: string) => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("posts_with_location")
+      .select("*, profiles(*)")
+      .eq("id", id)
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data;
+  },
+  ["product-by-id"],
+  { revalidate: CACHE_DURATIONS.PRODUCT_DETAIL, tags: [CACHE_TAGS.PRODUCTS] }
+);
+```
+
+### Server Component Usage
+
+```typescript
+// src/app/food/page.tsx
+import { getProducts } from '@/lib/data/products';
+import { ProductGrid } from '@/components/products/ProductGrid';
+
+export default async function FoodPage() {
+  const products = await getProducts('food');
+  return <ProductGrid products={products} />;
+}
+```
+
+## Mutations with Server Actions
+
+### Server Action Pattern
+
+```typescript
+// src/app/actions/products.ts
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { revalidateTag } from "next/cache";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+
+export async function createProduct(formData: FormData) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { error } = await supabase.from("posts").insert({
+    user_id: user.id,
+    post_name: formData.get("post_name") as string,
+    post_description: formData.get("post_description") as string,
+    post_type: formData.get("post_type") as string,
+  });
+
+  if (error) throw new Error(error.message);
+
+  revalidateTag(CACHE_TAGS.PRODUCTS);
+}
+
+export async function deleteProduct(productId: string) {
+  const supabase = await createClient();
+
+  const { error } = await supabase.from("posts").delete().eq("id", productId);
+
+  if (error) throw new Error(error.message);
+
+  revalidateTag(CACHE_TAGS.PRODUCTS);
+}
+```
+
+### Using Server Actions in Client Components
+
+```typescript
+'use client';
+
+import { useTransition } from 'react';
+import { createProduct } from '@/app/actions/products';
+
+export function CreateProductForm() {
+  const [isPending, startTransition] = useTransition();
+
+  const handleSubmit = (formData: FormData) => {
+    startTransition(async () => {
+      await createProduct(formData);
+    });
+  };
+
+  return (
+    <form action={handleSubmit}>
+      <input name="post_name" required />
+      <Button type="submit" disabled={isPending}>
+        {isPending ? 'Creating...' : 'Create Product'}
+      </Button>
+    </form>
+  );
+}
 ```
 
 ## Authentication
 
-### Sign Up
+### Get Current User (Server)
+
 ```typescript
-const { data, error } = await supabase.auth.signUp({
-  email: 'user@example.com',
-  password: 'secure-password',
-  options: {
-    data: {
-      username: 'username',
-      avatar_url: 'url'
+// In Server Component or Server Action
+const supabase = await createClient();
+const {
+  data: { user },
+} = await supabase.auth.getUser();
+```
+
+### Auth in Middleware
+
+```typescript
+// src/middleware.ts
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+export async function middleware(request: NextRequest) {
+  const response = NextResponse.next();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => request.cookies.getAll(),
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
     }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user && request.nextUrl.pathname.startsWith("/profile")) {
+    return NextResponse.redirect(new URL("/auth/login", request.url));
   }
-});
-```
 
-### Sign In
-```typescript
-const { data, error } = await supabase.auth.signInWithPassword({
-  email: 'user@example.com',
-  password: 'password'
-});
-```
-
-### OAuth Providers
-```typescript
-const { data, error } = await supabase.auth.signInWithOAuth({
-  provider: 'google',
-  options: {
-    redirectTo: `${window.location.origin}/auth/callback`
-  }
-});
-```
-
-### Session Management
-```typescript
-// Get current session
-const { data: { session } } = await supabase.auth.getSession();
-
-// Listen to auth changes
-supabase.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN') {
-    // Handle sign in
-  }
-  if (event === 'SIGNED_OUT') {
-    // Handle sign out
-  }
-});
-```
-
-### Sign Out
-```typescript
-const { error } = await supabase.auth.signOut();
-```
-
-## Database Operations
-
-### Type-Safe Queries
-```typescript
-// Define database types
-interface Product {
-  id: string;
-  title: string;
-  description: string;
-  location: { lat: number; lng: number };
-  created_at: string;
-  user_id: string;
+  return response;
 }
-
-// Fetch data
-const { data, error } = await supabase
-  .from('products')
-  .select('*')
-  .eq('user_id', userId);
 ```
 
-### CRUD Operations
+## Real-time (Client Only)
 
-#### Create
 ```typescript
-const { data, error } = await supabase
-  .from('products')
-  .insert([
-    {
-      title: 'Fresh Apples',
-      description: 'Organic apples',
-      location: { lat: 40.7128, lng: -74.0060 }
-    }
-  ])
-  .select();
-```
+"use client";
 
-#### Read
-```typescript
-// Single row
-const { data, error } = await supabase
-  .from('products')
-  .select('*')
-  .eq('id', productId)
-  .single();
+import { useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 
-// Multiple rows with filters
-const { data, error } = await supabase
-  .from('products')
-  .select('*')
-  .eq('status', 'available')
-  .order('created_at', { ascending: false })
-  .limit(10);
-
-// Join tables
-const { data, error } = await supabase
-  .from('products')
-  .select(`
-    *,
-    users (
-      username,
-      avatar_url
-    )
-  `);
-```
-
-#### Update
-```typescript
-const { data, error } = await supabase
-  .from('products')
-  .update({ status: 'sold' })
-  .eq('id', productId)
-  .select();
-```
-
-#### Delete
-```typescript
-const { data, error } = await supabase
-  .from('products')
-  .delete()
-  .eq('id', productId);
-```
-
-### Geospatial Queries (PostGIS)
-```typescript
-// Find nearby products
-const { data, error } = await supabase.rpc('products_nearby', {
-  lat: 40.7128,
-  lng: -74.0060,
-  radius_km: 5
-});
-```
-
-## Storage
-
-### Upload Files
-```typescript
-const uploadImage = async (file: File, path: string) => {
-  const { data, error } = await supabase.storage
-    .from('product-images')
-    .upload(path, file, {
-      cacheControl: '3600',
-      upsert: false
-    });
-
-  if (error) throw error;
-
-  // Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from('product-images')
-    .getPublicUrl(path);
-
-  return publicUrl;
-};
-```
-
-### Download Files
-```typescript
-const { data, error } = await supabase.storage
-  .from('product-images')
-  .download('path/to/file.jpg');
-```
-
-### Delete Files
-```typescript
-const { data, error } = await supabase.storage
-  .from('product-images')
-  .remove(['path/to/file.jpg']);
-```
-
-## Real-time Subscriptions
-
-### Subscribe to Changes
-```typescript
-const channel = supabase
-  .channel('products-channel')
-  .on(
-    'postgres_changes',
-    {
-      event: '*',
-      schema: 'public',
-      table: 'products'
-    },
-    (payload) => {
-      console.log('Change received!', payload);
-      // Update local state
-    }
-  )
-  .subscribe();
-
-// Cleanup
-return () => {
-  supabase.removeChannel(channel);
-};
-```
-
-### Presence (User tracking)
-```typescript
-const channel = supabase.channel('online-users', {
-  config: {
-    presence: {
-      key: userId
-    }
-  }
-});
-
-channel
-  .on('presence', { event: 'sync' }, () => {
-    const state = channel.presenceState();
-    // Handle presence changes
-  })
-  .subscribe();
-```
-
-## Row Level Security (RLS)
-
-### Best Practices
-1. **Always enable RLS** on tables with sensitive data
-2. **Create policies** for different user roles
-3. **Use authenticated user** in policies: `auth.uid()`
-4. **Test policies** thoroughly
-
-### Example Policies
-```sql
--- Users can only read their own data
-CREATE POLICY "Users can view own products"
-ON products FOR SELECT
-USING (auth.uid() = user_id);
-
--- Users can insert their own products
-CREATE POLICY "Users can insert own products"
-ON products FOR INSERT
-WITH CHECK (auth.uid() = user_id);
-
--- Users can update their own products
-CREATE POLICY "Users can update own products"
-ON products FOR UPDATE
-USING (auth.uid() = user_id);
-```
-
-## Error Handling
-
-### Pattern
-```typescript
-const fetchProducts = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('products')
-      .select('*');
-
-    if (error) throw error;
-
-    return data;
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error('Error fetching products:', error.message);
-      // Handle specific errors
-      if (error.message.includes('JWT')) {
-        // Handle authentication error
-      }
-    }
-    throw error;
-  }
-};
-```
-
-## React Integration
-
-### Custom Hook Example
-```typescript
-import { useEffect, useState } from 'react';
-import { supabase } from './supabase';
-
-export const useProducts = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-
+export function useRealtimeProducts(onUpdate: () => void) {
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .order('created_at', { ascending: false });
+    const supabase = createClient();
 
-        if (error) throw error;
-        setProducts(data || []);
-      } catch (err) {
-        setError(err as Error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-
-    // Subscribe to changes
     const channel = supabase
-      .channel('products-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
-        fetchProducts();
-      })
+      .channel("products-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "posts" }, () => onUpdate())
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
-
-  return { products, loading, error };
-};
+  }, [onUpdate]);
+}
 ```
 
-## Performance Tips
-1. **Use select specific columns** instead of `*` when possible
-2. **Add indexes** on frequently queried columns
-3. **Use pagination** for large datasets
-4. **Cache data** appropriately
-5. **Debounce real-time updates** to prevent excessive re-renders
+## Geospatial Queries
+
+```typescript
+// Using PostGIS via RPC
+const { data } = await supabase.rpc("find_nearby_posts", {
+  user_lat: latitude,
+  user_lng: longitude,
+  radius_km: 10,
+});
+```
+
+## Error Handling
+
+```typescript
+export async function safeQuery<T>(
+  queryFn: () => Promise<{ data: T | null; error: Error | null }>
+): Promise<T> {
+  const { data, error } = await queryFn();
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("No data returned");
+  return data;
+}
+```
 
 ## When to Use This Skill
-- Setting up Supabase authentication
-- Creating database queries with proper types
-- Implementing real-time features
-- Handling file uploads/downloads
-- Writing Row Level Security policies
-- Integrating Supabase with React components
-- Debugging Supabase-related issues
+
+- Setting up Supabase with Next.js SSR
+- Creating cached data fetching functions
+- Writing Server Actions for mutations
+- Implementing authentication
+- Real-time subscriptions
+- Geospatial queries with PostGIS

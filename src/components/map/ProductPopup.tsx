@@ -6,6 +6,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
+import { getProductDetailUrl } from "@/utils/categoryMapping";
 
 type ProductPopupProps = {
   id: number;
@@ -20,7 +21,7 @@ type ProductPopupProps = {
 
 export const ProductPopup: React.FC<ProductPopupProps> = ({
   id,
-  productType: _productType,
+  productType,
   name,
   type,
   description,
@@ -31,8 +32,7 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
   const router = useRouter();
 
   const handleViewDetails = () => {
-    // All products use /food/[id] path
-    router.push(`/food/${id}`);
+    router.push(getProductDetailUrl(productType, id));
   };
 
   return (

@@ -1,0 +1,6 @@
+{
+  "name": "shadcn-ui",
+  "version": "1.0.0",
+  "description": "shadcn/ui components with Radix UI and Tailwind CSS 4",
+  "tags": ["shadcn-ui", "radix-ui", "tailwind", "components", "ui"]
+}

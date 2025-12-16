@@ -1,6 +1,6 @@
 {
   "name": "code-quality",
-  "version": "1.0.0",
-  "description": "Code quality tools: ESLint, Prettier, Lefthook for automated linting and formatting",
-  "tags": ["eslint", "prettier", "lefthook", "git-hooks", "code-quality", "linting"]
+  "version": "2.0.0",
+  "description": "Code quality with ESLint, Prettier, TypeScript strict mode for Next.js",
+  "tags": ["eslint", "prettier", "typescript", "nextjs", "code-quality"]
 }

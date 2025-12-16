@@ -1,187 +1,236 @@
 # FoodShare Claude Code Skills
 
-This directory contains custom Claude Code skills tailored for the FoodShare project. These skills provide expert guidance and best practices for our specific tech stack.
+This directory contains custom Claude Code skills tailored for the FoodShare project. These skills provide expert guidance and best practices for our Next.js 16 + App Router stack.
 
 ## Available Skills
 
-### 1. react-typescript
-Expert guidance for React 19 + TypeScript development with Vite and Chakra UI.
+### Core Framework Skills
+
+#### nextjs-app-router
+
+Expert guidance for Next.js 16 App Router architecture and patterns.
 
 **Topics Covered:**
-- Modern React patterns and hooks
-- TypeScript best practices
-- Chakra UI integration
-- Performance optimization
-- Component architecture
-- Error boundaries and error handling
 
-**When to Use:** Creating components, refactoring code, implementing React features
+- File-based routing (`page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`)
+- Server Components vs Client Components
+- Route groups, parallel routes, intercepting routes
+- Metadata API and SEO optimization
+- Streaming with Suspense
+- Route handlers and middleware
+
+**When to Use:** Creating pages, layouts, implementing routing patterns, error handling
 
 ---
 
-### 2. supabase-backend
-Comprehensive Supabase integration for authentication, database, and storage.
+#### server-actions
+
+Server Actions for mutations, form handling, and data revalidation.
 
 **Topics Covered:**
-- Authentication (email/password, OAuth)
-- Database CRUD operations
-- Real-time subscriptions
-- File storage and uploads
-- Row Level Security (RLS)
-- Custom React hooks for Supabase
 
-**When to Use:** Backend operations, authentication, database queries, real-time features
+- `'use server'` directive patterns
+- Form actions with progressive enhancement
+- Optimistic updates with `useOptimistic`
+- Revalidation (`revalidatePath`, `revalidateTag`)
+- Error handling and validation with Zod
+- Integration with React Query
+
+**When to Use:** Form submissions, mutations, data updates, cache invalidation
 
 ---
 
-### 3. vitest-testing
-Testing React applications with Vitest and React Testing Library.
+#### react-typescript
+
+React 19 + TypeScript development for Next.js applications.
 
 **Topics Covered:**
-- Component testing
-- Hook testing
-- Async behavior testing
-- Mocking (Supabase, React Router, Leaflet)
-- Coverage configuration
-- Testing best practices
 
-**When to Use:** Writing tests, improving coverage, debugging test failures
+- Server Component patterns (async/await, data fetching)
+- Client Component patterns (hooks, event handlers)
+- TypeScript strict mode best practices
+- Component composition and props
+- Performance optimization (memo, useMemo, useCallback)
+- Error boundaries
+
+**When to Use:** Creating components, TypeScript patterns, performance optimization
 
 ---
 
-### 4. leaflet-maps
-Interactive mapping with React Leaflet for location-based features.
+### UI & Styling Skills
+
+#### shadcn-ui
+
+Component library patterns with shadcn/ui and Radix UI.
 
 **Topics Covered:**
-- Map setup and configuration
+
+- Component installation (`npx shadcn@latest add`)
+- Customization with CSS variables
+- Dark mode with `next-themes`
+- Form integration with React Hook Form
+- Toast notifications
+- Modal dialogs and sheets
+- Data tables
+
+**When to Use:** UI components, styling, theming, accessibility
+
+---
+
+#### leaflet-maps
+
+Interactive mapping with React Leaflet in Next.js.
+
+**Topics Covered:**
+
+- Dynamic imports with `ssr: false`
+- Client Component wrapper patterns
 - Marker clustering
 - Custom markers and popups
-- Geolocation and user tracking
-- Location search
-- Map events and interactions
-- Performance optimization
+- Geolocation and location search
+- PostGIS integration
 
-**When to Use:** Map features, location tracking, marker customization, geospatial queries
+**When to Use:** Map features, location tracking, geospatial queries
 
 ---
 
-### 5. redux-toolkit
-Modern state management with Redux Toolkit and React Redux.
+### Internationalization
+
+#### next-intl
+
+Internationalization with next-intl (21 languages).
 
 **Topics Covered:**
-- Store configuration
-- Creating slices and reducers
-- Async thunks for data fetching
-- Memoized selectors
-- RTK Query (optional)
-- Performance optimization
-- Testing Redux logic
 
-**When to Use:** State management, global state, async data fetching, Redux debugging
-
----
-
-### 6. i18n-lingui
-Internationalization with Lingui for multi-language support.
-
-**Topics Covered:**
-- Lingui setup and configuration
-- Translation macros (Trans, msg)
+- Server Component: `getTranslations()`
+- Client Component: `useTranslations()`
+- Locale routing and detection
+- RTL support (Arabic)
 - Pluralization and formatting
-- Language switching
-- Dynamic loading of translations
-- CLI commands (extract, compile)
-- Testing multilingual features
+- Translation file structure
 
-**When to Use:** Adding translations, language switching, pluralization, date/number formatting
+**When to Use:** Adding translations, language switching, localization
 
 ---
 
-### 7. react-router
-React Router v7 navigation, routing, and data loading.
+### Backend & Data
+
+#### supabase-backend
+
+Supabase integration with Next.js Server Components and Actions.
 
 **Topics Covered:**
-- Route configuration and navigation
-- Data loaders and actions
-- Nested routes and layouts
-- Protected routes
-- URL and query parameters
-- Error boundaries
-- Type-safe navigation
 
-**When to Use:** Setting up routes, navigation, data loading, form submissions
+- Server client (`lib/supabase/server.ts`)
+- Client browser (`lib/supabase/client.ts`)
+- Cached data fetching with `unstable_cache`
+- Row Level Security (RLS) policies
+- Real-time subscriptions
+- File storage
+
+**When to Use:** Database operations, authentication, real-time features
 
 ---
 
-### 8. form-handling
-Form handling with React Hook Form and Chakra UI integration.
+#### form-handling
+
+Form handling with Server Actions and shadcn/ui.
 
 **Topics Covered:**
-- Form setup and validation
-- Error handling and display
-- Dynamic fields (arrays)
-- Controlled components
+
+- Progressive enhancement with `<form action={...}>`
+- Validation with Zod schemas
+- `useFormState` and `useFormStatus`
+- Error display with shadcn/ui components
 - File uploads
 - Multi-step forms
-- Chakra UI integration
-- Testing forms
 
-**When to Use:** Building forms, validation, complex form state, file uploads
+**When to Use:** Building forms, validation, file uploads
 
 ---
 
-### 9. code-quality
-Code quality tools: ESLint, Prettier, and Lefthook.
+### Testing & Quality
+
+#### jest-unit-testing
+
+Unit testing Next.js applications with Jest.
 
 **Topics Covered:**
-- ESLint configuration and rules
-- Prettier formatting setup
-- Lefthook git hooks
-- Conventional commits
-- CI/CD integration
-- VSCode integration
-- Troubleshooting linting issues
 
-**When to Use:** Setting up linting, formatting code, git hooks, enforcing code standards
+- Server Component testing
+- Client Component testing with React Testing Library
+- Server Action mocking
+- Supabase client mocking
+- Coverage configuration
+
+**When to Use:** Unit tests, component tests, improving coverage
 
 ---
 
-## How to Use Skills in Claude Code
+#### playwright-e2e
 
-Skills are automatically available when you're working with Claude Code. The AI will reference these guidelines when helping with related tasks.
+End-to-end testing with Playwright.
 
-You can also explicitly reference skills in your questions:
-- "Help me create a Supabase query for fetching nearby products"
-- "How do I add marker clustering to my Leaflet map?"
-- "Write tests for this React component using Vitest"
-- "Set up a Redux slice for managing user authentication"
+**Topics Covered:**
 
-## Installing Skills for Team Members
+- Browser automation and testing
+- Page Object Model patterns
+- Authentication testing
+- Map/Leaflet testing
+- API mocking
+- Visual regression testing
 
-Team members automatically get these skills when they clone the repository! Claude Code automatically detects skills in `.claude/skills/`.
+**When to Use:** E2E tests, integration tests, user flow testing
 
-Optionally, team members can also copy to their global skills directory:
-```bash
-cp -r .claude/skills/* ~/.claude/skills/
-```
+---
 
-## Updating Skills
+#### code-quality
 
-To update a skill:
-1. Edit the `instructions.md` file in the skill directory
-2. Commit changes to version control
-3. Team members sync via `git pull`
+Code quality with ESLint, Prettier, and Next.js conventions.
 
-## Adding New Skills
+**Topics Covered:**
 
-To add a new skill:
-1. Create a new directory in `.claude/skills/`
-2. Add `skill.json` with metadata
-3. Add `instructions.md` with detailed guidelines
-4. Commit and share with the team
+- Next.js ESLint configuration
+- Prettier formatting
+- TypeScript strict mode
+- Import organization
+- Pre-commit hooks
 
-## Skill Structure
+**When to Use:** Linting, formatting, enforcing code standards
 
-Each skill directory contains:
-- `skill.json` - Metadata (name, version, description, tags)
-- `instructions.md` - Detailed guidance, patterns, and examples
+---
+
+## How to Use Skills
+
+Skills are automatically available when working with Claude Code. Reference them explicitly:
+
+- "Help me create a Server Action for updating user profiles"
+- "How do I add marker clustering to my Leaflet map in Next.js?"
+- "Write tests for this Server Component"
+- "Set up translations for the settings page"
+
+## Slash Commands
+
+Common workflows are available as slash commands in `.claude/commands/`:
+
+- `/fix-issue` - Debug and fix GitHub issues
+- `/new-feature` - Implement new features
+- `/refactor` - Code refactoring workflow
+- `/add-translation` - Add translations
+- `/add-component` - Create UI components
+- `/db-migration` - Database migrations
+- `/debug` - Systematic debugging
+
+## Tech Stack Reference
+
+| Layer      | Technology                                |
+| ---------- | ----------------------------------------- |
+| Framework  | Next.js 16 (App Router)                   |
+| Language   | TypeScript 5 (strict)                     |
+| UI Library | shadcn/ui + Radix UI                      |
+| Styling    | Tailwind CSS 4                            |
+| State      | Server Components + React Query + Zustand |
+| i18n       | next-intl (21 languages)                  |
+| Backend    | Supabase (Postgres + Auth + Storage)      |
+| Maps       | React Leaflet + PostGIS                   |
+| Testing    | Vitest + React Testing Library            |

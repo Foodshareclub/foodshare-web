@@ -37,8 +37,15 @@ const categoryKeyMap: Record<string, keyof typeof categoryMetadata> = {
   fridges: "fridges",
   foodbank: "foodbanks",
   foodbanks: "foodbanks",
-  business: "business",
-  volunteer: "volunteer",
+  business: "organisations",
+  organisation: "organisations",
+  organisations: "organisations",
+  volunteer: "volunteers",
+  volunteers: "volunteers",
+  challenge: "challenges",
+  challenges: "challenges",
+  zerowaste: "zerowaste",
+  vegan: "vegan",
 };
 
 interface PageProps {

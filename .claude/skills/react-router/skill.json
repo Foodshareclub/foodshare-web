@@ -1,6 +1,0 @@
-{
-  "name": "react-router",
-  "version": "1.0.0",
-  "description": "React Router v7 navigation, routing, and data loading patterns",
-  "tags": ["react-router", "routing", "navigation", "loader", "action"]
-}

@@ -1,0 +1,6 @@
+{
+  "name": "server-actions",
+  "version": "1.0.0",
+  "description": "Next.js 16 Server Actions for mutations and form handling",
+  "tags": ["nextjs", "server-actions", "mutations", "forms", "revalidation"]
+}

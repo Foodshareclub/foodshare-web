@@ -190,19 +190,45 @@ export const categoryMetadata = {
     emoji: "❄️",
     keywords: ["community fridge", "free fridge", "public fridge", "food access"],
   },
-  business: {
-    title: "Business Donations",
+  organisations: {
+    title: "Organisation Donations",
     description:
-      "Businesses sharing surplus food and products. Connect with local businesses donating excess inventory to reduce waste.",
-    emoji: "🏢",
-    keywords: ["business food donation", "commercial surplus", "corporate giving"],
+      "Organisations sharing surplus food and products. Connect with local businesses and charities donating excess inventory to reduce waste.",
+    emoji: "🏛️",
+    keywords: [
+      "organisation food donation",
+      "commercial surplus",
+      "corporate giving",
+      "charity donations",
+    ],
   },
-  volunteer: {
+  volunteers: {
     title: "Volunteer Opportunities",
     description:
       "Join volunteer opportunities to fight food waste. Help distribute food, organize community events, and make a difference.",
     emoji: "🙋",
     keywords: ["volunteer", "food rescue volunteer", "community service"],
+  },
+  challenges: {
+    title: "Community Challenges",
+    description:
+      "Join food waste reduction challenges and community initiatives. Compete with neighbors and track your impact.",
+    emoji: "🏆",
+    keywords: ["food waste challenge", "sustainability challenge", "community initiative"],
+  },
+  zerowaste: {
+    title: "Zero Waste",
+    description:
+      "Discover zero waste products, tips, and resources. Join the movement to eliminate waste in your community.",
+    emoji: "♻️",
+    keywords: ["zero waste", "plastic free", "sustainable living", "waste reduction"],
+  },
+  vegan: {
+    title: "Vegan Food",
+    description:
+      "Share and find plant-based food in your community. Connect with fellow vegans and discover delicious vegan offerings.",
+    emoji: "🌱",
+    keywords: ["vegan food", "plant-based", "vegan sharing", "vegetarian"],
   },
 };
 
@@ -238,9 +264,7 @@ export function generatePageMetadata({
   };
 }): Metadata {
   const pageUrl = path ? `${siteConfig.url}${path}` : siteConfig.url;
-  const pageKeywords = keywords
-    ? [...siteConfig.keywords, ...keywords]
-    : siteConfig.keywords;
+  const pageKeywords = keywords ? [...siteConfig.keywords, ...keywords] : siteConfig.keywords;
 
   // Default image with type hint
   const defaultImages = [
@@ -253,10 +277,11 @@ export function generatePageMetadata({
     },
   ];
 
-  const ogImages = images?.map((img) => ({
-    ...img,
-    type: img.type || "image/jpeg",
-  })) || defaultImages;
+  const ogImages =
+    images?.map((img) => ({
+      ...img,
+      type: img.type || "image/jpeg",
+    })) || defaultImages;
 
   return {
     title,
@@ -276,12 +301,12 @@ export function generatePageMetadata({
       images: ogImages,
       ...(type === "article" && article
         ? {
-          publishedTime: article.publishedTime,
-          modifiedTime: article.modifiedTime,
-          authors: article.authors,
-          section: article.section,
-          tags: article.tags,
-        }
+            publishedTime: article.publishedTime,
+            modifiedTime: article.modifiedTime,
+            authors: article.authors,
+            section: article.section,
+            tags: article.tags,
+          }
         : {}),
     },
     // Twitter / X Cards
@@ -295,20 +320,20 @@ export function generatePageMetadata({
     },
     robots: noIndex
       ? {
-        index: false,
-        follow: false,
-      }
+          index: false,
+          follow: false,
+        }
       : {
-        index: true,
-        follow: true,
-        googleBot: {
           index: true,
           follow: true,
-          "max-video-preview": -1,
-          "max-image-preview": "large",
-          "max-snippet": -1,
+          googleBot: {
+            index: true,
+            follow: true,
+            "max-video-preview": -1,
+            "max-image-preview": "large",
+            "max-snippet": -1,
+          },
         },
-      },
   };
 }
 

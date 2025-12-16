@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
 import { DeleteIcon } from "@/utils/icons";
+import { getProductDetailUrl } from "@/utils/categoryMapping";
 import type { InitialProductStateType } from "@/types/product.types";
 
 // Lazy load the heavy modal (3000+ lines)
@@ -36,8 +37,7 @@ const AsideProducts: React.FC<AsideProdType> = ({
   const router = useRouter();
 
   const goToProduct = () => {
-    // All products use /food/[id] path
-    router.push(`/food/${product?.id}`);
+    router.push(getProductDetailUrl(product?.post_type, product?.id ?? 0));
   };
 
   const deleteHandler = () => {

@@ -1,6 +1,6 @@
 {
   "name": "form-handling",
-  "version": "1.0.0",
-  "description": "Form handling with React Hook Form, validation, and Chakra UI integration",
-  "tags": ["react-hook-form", "forms", "validation", "chakra-ui"]
+  "version": "2.0.0",
+  "description": "Form handling with React Hook Form, Server Actions, and shadcn/ui",
+  "tags": ["react-hook-form", "forms", "validation", "shadcn-ui", "server-actions"]
 }

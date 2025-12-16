@@ -1,6 +1,6 @@
 {
   "name": "react-typescript",
-  "version": "1.0.0",
-  "description": "Expert React 19 and TypeScript development for modern web applications",
-  "tags": ["react", "typescript", "frontend", "vite", "chakra-ui"]
+  "version": "2.0.0",
+  "description": "React 19 + TypeScript 5 with Next.js 16 App Router and shadcn/ui",
+  "tags": ["react", "typescript", "nextjs", "shadcn-ui", "tailwind"]
 }

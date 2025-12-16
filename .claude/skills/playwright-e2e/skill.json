@@ -1,0 +1,7 @@
+{
+  "name": "playwright-e2e",
+  "version": "1.0.0",
+  "description": "E2E testing with Playwright for Next.js applications",
+  "tags": ["testing", "e2e", "playwright", "automation", "browser"],
+  "globs": ["e2e/**/*.ts", "playwright.config.ts"]
+}

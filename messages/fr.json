@@ -235,6 +235,7 @@
   "loading_quota_data": "Chargement des données de quota...",
   "loading": "Chargement...",
   "locked": "Verrouillé",
+  "location_approximate_disclaimer": "L'emplacement affiché est approximatif (~200m) pour la confidentialité",
   "log_out": "Déconnexion",
   "logging_in": "Connexion en cours...",
   "login": "Connexion",

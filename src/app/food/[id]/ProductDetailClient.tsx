@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { StarIcon } from "@/utils/icons";
 import { ReportPostDialog } from "@/components/reports";
+import { ShareButton } from "@/components/share/ShareButton";
 import { cn } from "@/lib/utils";
 import type { InitialProductStateType } from "@/types/product.types";
 import type { AuthUser } from "@/app/actions/auth";
@@ -251,14 +252,20 @@ export function ProductDetailClient({ product, user, isAdmin = false }: ProductD
                 {/* Location */}
                 <div
                   className={cn(
-                    "flex items-center gap-3 mb-6 transform transition-all duration-500 delay-200",
+                    "flex flex-col gap-2 mb-6 transform transition-all duration-500 delay-200",
                     isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
                   )}
                 >
-                  <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/50 dark:to-emerald-950/30">
-                    <MapPin className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-teal-50 to-emerald-50 dark:from-teal-950/50 dark:to-emerald-950/30">
+                      <MapPin className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+                    </div>
+                    <p className="text-muted-foreground">{product.post_stripped_address}</p>
                   </div>
-                  <p className="text-muted-foreground">{product.post_stripped_address}</p>
+                  <p className="text-xs text-muted-foreground/70 flex items-center gap-1.5 ml-13">
+                    <span className="text-amber-500">&#9888;</span>
+                    {t("location_approximate_disclaimer")}
+                  </p>
                 </div>
 
                 <Separator className="my-6" />
@@ -407,6 +414,12 @@ export function ProductDetailClient({ product, user, isAdmin = false }: ProductD
                           </Button>
                         </Link>
                       )}
+                      {/* Share button for owners */}
+                      <ShareButton
+                        url={`https://foodshare.club/food/${product.id}`}
+                        title={product.post_name}
+                        description={product.post_description}
+                      />
                     </>
                   ) : (
                     <>
@@ -417,6 +430,12 @@ export function ProductDetailClient({ product, user, isAdmin = false }: ProductD
                       >
                         {isAuth ? t("contact_sharer") : t("login_to_contact")}
                       </Button>
+                      {/* Share button */}
+                      <ShareButton
+                        url={`https://foodshare.club/food/${product.id}`}
+                        title={product.post_name}
+                        description={product.post_description}
+                      />
                       {/* Report button - only for logged-in users */}
                       {isAuth && (
                         <ReportPostDialog

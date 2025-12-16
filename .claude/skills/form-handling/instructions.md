@@ -1,615 +1,299 @@
-# React Hook Form Skill
+# Form Handling with Server Actions
 
 ## Overview
-Expert guidance for building performant, accessible forms with React Hook Form, including validation, error handling, and Chakra UI integration.
 
-## Tech Stack Context
-- **React Hook Form**: 7.66.1
-- **UI Integration**: Chakra UI 3.29.0
-- **Features**: Type-safe forms, validation, error handling
+Forms in Next.js 16 using React Hook Form with Server Actions and shadcn/ui components.
 
-## Basic Setup
+## Basic Pattern: Server Action Form
 
-### Simple Form
+### Server Action
+
 ```typescript
-import { useForm, SubmitHandler } from 'react-hook-form';
+// src/app/actions/products.ts
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { revalidateTag } from "next/cache";
+import { redirect } from "next/navigation";
+
+export async function createProduct(formData: FormData) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { error } = await supabase.from("posts").insert({
+    user_id: user.id,
+    post_name: formData.get("post_name") as string,
+    post_description: formData.get("post_description") as string,
+  });
+
+  if (error) throw new Error(error.message);
+
+  revalidateTag("products");
+  redirect("/food");
+}
+```
+
+### Client Form with React Hook Form
+
+```typescript
+// src/components/products/CreateProductForm.tsx
+'use client';
+
+import { useForm } from 'react-hook-form';
+import { useTransition } from 'react';
+import { createProduct } from '@/app/actions/products';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface FormData {
-  title: string;
-  description: string;
-  price: number;
+  post_name: string;
+  post_description: string;
 }
 
-const ProductForm = () => {
+export function CreateProductForm() {
+  const [isPending, startTransition] = useTransition();
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
 
-  const onSubmit: SubmitHandler<FormData> = (data) => {
-    console.log(data);
+  const onSubmit = (data: FormData) => {
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+
+    startTransition(async () => {
+      await createProduct(formData);
+    });
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <input {...register('title')} />
-      <textarea {...register('description')} />
-      <input type="number" {...register('price')} />
-      <button type="submit">Submit</button>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="post_name">Title</Label>
+        <Input
+          id="post_name"
+          {...register('post_name', { required: 'Title is required' })}
+        />
+        {errors.post_name && (
+          <p className="text-sm text-destructive">{errors.post_name.message}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="post_description">Description</Label>
+        <Textarea
+          id="post_description"
+          {...register('post_description', { required: 'Description is required' })}
+        />
+        {errors.post_description && (
+          <p className="text-sm text-destructive">{errors.post_description.message}</p>
+        )}
+      </div>
+
+      <Button type="submit" disabled={isPending}>
+        {isPending ? 'Creating...' : 'Create Product'}
+      </Button>
     </form>
   );
-};
+}
 ```
 
-### With Default Values
+## shadcn/ui Form Components
+
+### Using Form Component (with Zod)
+
 ```typescript
-const { register, handleSubmit } = useForm<FormData>({
-  defaultValues: {
-    title: '',
-    description: '',
-    price: 0,
-    category: 'vegetables'
-  }
-});
-```
+'use client';
 
-## Validation
-
-### Built-in Validation
-```typescript
-<input
-  {...register('title', {
-    required: 'Title is required',
-    minLength: {
-      value: 3,
-      message: 'Title must be at least 3 characters'
-    },
-    maxLength: {
-      value: 100,
-      message: 'Title must not exceed 100 characters'
-    }
-  })}
-/>
-
-<input
-  type="email"
-  {...register('email', {
-    required: 'Email is required',
-    pattern: {
-      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-      message: 'Invalid email address'
-    }
-  })}
-/>
-
-<input
-  type="number"
-  {...register('price', {
-    required: 'Price is required',
-    min: {
-      value: 0,
-      message: 'Price must be positive'
-    },
-    max: {
-      value: 10000,
-      message: 'Price too high'
-    }
-  })}
-/>
-```
-
-### Custom Validation
-```typescript
-<input
-  {...register('username', {
-    required: 'Username is required',
-    validate: {
-      notAdmin: (value) => value !== 'admin' || 'Username cannot be admin',
-      unique: async (value) => {
-        const exists = await checkUsernameExists(value);
-        return !exists || 'Username already taken';
-      }
-    }
-  })}
-/>
-```
-
-### Cross-Field Validation
-```typescript
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
-const { register, watch, formState: { errors } } = useForm<FormData>();
-const password = watch('password');
+const formSchema = z.object({
+  post_name: z.string().min(3, 'Title must be at least 3 characters'),
+  post_description: z.string().min(10, 'Description must be at least 10 characters'),
+});
 
-<input
-  type="password"
-  {...register('confirmPassword', {
-    required: 'Please confirm password',
-    validate: (value) =>
-      value === password || 'Passwords do not match'
-  })}
-/>
-```
+type FormData = z.infer<typeof formSchema>;
 
-## Error Handling
+export function ProductForm() {
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      post_name: '',
+      post_description: '',
+    },
+  });
 
-### Display Errors
-```typescript
-const { register, formState: { errors } } = useForm<FormData>();
-
-<div>
-  <input {...register('title', { required: 'Title is required' })} />
-  {errors.title && <span>{errors.title.message}</span>}
-</div>
-```
-
-### Error Styling with Chakra UI
-```typescript
-import { Input, FormControl, FormLabel, FormErrorMessage } from '@chakra-ui/react';
-
-<FormControl isInvalid={!!errors.title}>
-  <FormLabel>Title</FormLabel>
-  <Input {...register('title', { required: 'Title is required' })} />
-  <FormErrorMessage>{errors.title?.message}</FormErrorMessage>
-</FormControl>
-```
-
-### Multiple Errors
-```typescript
-<input
-  {...register('title', {
-    required: 'Required',
-    minLength: { value: 3, message: 'Too short' },
-    maxLength: { value: 100, message: 'Too long' }
-  })}
-/>
-
-{errors.title && (
-  <ul>
-    {Object.values(errors.title).map((error, i) => (
-      <li key={i}>{error.message}</li>
-    ))}
-  </ul>
-)}
-```
-
-## Form State
-
-### Loading State
-```typescript
-const { handleSubmit, formState: { isSubmitting } } = useForm<FormData>();
-
-const onSubmit = async (data: FormData) => {
-  await createProduct(data);
-};
-
-<button type="submit" disabled={isSubmitting}>
-  {isSubmitting ? 'Submitting...' : 'Submit'}
-</button>
-```
-
-### Dirty State (Unsaved Changes)
-```typescript
-const { formState: { isDirty, dirtyFields } } = useForm<FormData>();
-
-<button type="submit" disabled={!isDirty}>
-  Save Changes
-</button>
-
-// Warn on navigation
-useEffect(() => {
-  const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-    if (isDirty) {
-      e.preventDefault();
-      e.returnValue = '';
-    }
+  const onSubmit = async (data: FormData) => {
+    // Handle submission
   };
 
-  window.addEventListener('beforeunload', handleBeforeUnload);
-  return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-}, [isDirty]);
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="post_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter title" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="post_description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Description</FormLabel>
+              <FormControl>
+                <Textarea placeholder="Enter description" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit" disabled={form.formState.isSubmitting}>
+          Submit
+        </Button>
+      </form>
+    </Form>
+  );
+}
 ```
 
-### Touched Fields
+## File Upload with Server Actions
+
 ```typescript
-const { formState: { touchedFields } } = useForm<FormData>();
+// Server Action
+'use server';
 
-<input
-  {...register('title')}
-  className={touchedFields.title ? 'touched' : ''}
-/>
-```
+export async function uploadImage(formData: FormData) {
+  const supabase = await createClient();
+  const file = formData.get('file') as File;
 
-## Advanced Patterns
+  const { data, error } = await supabase.storage
+    .from('product-images')
+    .upload(`${Date.now()}-${file.name}`, file);
 
-### Dynamic Fields (Array Fields)
-```typescript
-import { useFieldArray } from 'react-hook-form';
-
-interface FormData {
-  images: { url: string }[];
+  if (error) throw new Error(error.message);
+  return data.path;
 }
 
-const ImageForm = () => {
-  const { register, control } = useForm<FormData>({
-    defaultValues: {
-      images: [{ url: '' }]
-    }
-  });
+// Client Component
+'use client';
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'images'
-  });
+export function ImageUpload() {
+  const [isPending, startTransition] = useTransition();
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    startTransition(async () => {
+      await uploadImage(formData);
+    });
+  };
 
   return (
-    <div>
-      {fields.map((field, index) => (
-        <div key={field.id}>
-          <input {...register(`images.${index}.url`)} />
-          <button type="button" onClick={() => remove(index)}>
-            Remove
-          </button>
-        </div>
-      ))}
-      <button type="button" onClick={() => append({ url: '' })}>
-        Add Image
-      </button>
-    </div>
+    <Input
+      type="file"
+      accept="image/*"
+      onChange={handleFileChange}
+      disabled={isPending}
+    />
   );
-};
+}
 ```
 
-### Controlled Components
+## Select and Combobox
+
 ```typescript
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Controller } from 'react-hook-form';
-import { Select } from '@chakra-ui/react';
 
 <Controller
-  name="category"
   control={control}
-  rules={{ required: 'Category is required' }}
+  name="category"
   render={({ field }) => (
-    <Select {...field}>
-      <option value="">Select category</option>
-      <option value="vegetables">Vegetables</option>
-      <option value="fruits">Fruits</option>
+    <Select onValueChange={field.onChange} defaultValue={field.value}>
+      <SelectTrigger>
+        <SelectValue placeholder="Select category" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="vegetables">Vegetables</SelectItem>
+        <SelectItem value="fruits">Fruits</SelectItem>
+        <SelectItem value="grains">Grains</SelectItem>
+      </SelectContent>
     </Select>
   )}
 />
 ```
 
-### Watch Field Values
+## Error Handling with Server Actions
+
 ```typescript
-const { register, watch } = useForm<FormData>();
+// Server Action with error return
+"use server";
 
-// Watch specific field
-const category = watch('category');
-
-// Watch multiple fields
-const [title, description] = watch(['title', 'description']);
-
-// Watch all fields
-const watchedData = watch();
-
-useEffect(() => {
-  console.log('Category changed:', category);
-}, [category]);
-```
-
-### Conditional Fields
-```typescript
-const { register, watch } = useForm<FormData>();
-const showExtraField = watch('type') === 'premium';
-
-<div>
-  <select {...register('type')}>
-    <option value="basic">Basic</option>
-    <option value="premium">Premium</option>
-  </select>
-
-  {showExtraField && (
-    <input {...register('premiumFeature')} />
-  )}
-</div>
-```
-
-## Reset & Set Values
-
-### Reset Form
-```typescript
-const { reset } = useForm<FormData>();
-
-// Reset to default values
-const handleReset = () => {
-  reset();
-};
-
-// Reset to specific values
-const handleLoadProduct = (product: Product) => {
-  reset({
-    title: product.title,
-    description: product.description,
-    price: product.price
-  });
-};
-```
-
-### Set Individual Field Value
-```typescript
-const { setValue, getValues } = useForm<FormData>();
-
-// Set value
-setValue('title', 'New Title');
-
-// Set with validation
-setValue('title', 'New Title', {
-  shouldValidate: true,
-  shouldDirty: true,
-  shouldTouch: true
-});
-
-// Get value
-const currentTitle = getValues('title');
-const allValues = getValues();
-```
-
-## Integration with Chakra UI
-
-### Complete Chakra Form
-```typescript
-import {
-  FormControl,
-  FormLabel,
-  FormErrorMessage,
-  Input,
-  Textarea,
-  Button,
-  VStack
-} from '@chakra-ui/react';
-import { useForm } from 'react-hook-form';
-
-interface FormData {
-  title: string;
-  description: string;
-  price: number;
-}
-
-const ChakraForm = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting }
-  } = useForm<FormData>();
-
-  const onSubmit = async (data: FormData) => {
-    await createProduct(data);
-  };
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <VStack spacing={4} align="stretch">
-        <FormControl isInvalid={!!errors.title}>
-          <FormLabel>Product Title</FormLabel>
-          <Input
-            {...register('title', {
-              required: 'Title is required',
-              minLength: { value: 3, message: 'Minimum 3 characters' }
-            })}
-          />
-          <FormErrorMessage>{errors.title?.message}</FormErrorMessage>
-        </FormControl>
-
-        <FormControl isInvalid={!!errors.description}>
-          <FormLabel>Description</FormLabel>
-          <Textarea
-            {...register('description', {
-              required: 'Description is required'
-            })}
-          />
-          <FormErrorMessage>{errors.description?.message}</FormErrorMessage>
-        </FormControl>
-
-        <FormControl isInvalid={!!errors.price}>
-          <FormLabel>Price</FormLabel>
-          <Input
-            type="number"
-            {...register('price', {
-              required: 'Price is required',
-              min: { value: 0, message: 'Must be positive' }
-            })}
-          />
-          <FormErrorMessage>{errors.price?.message}</FormErrorMessage>
-        </FormControl>
-
-        <Button type="submit" colorScheme="blue" isLoading={isSubmitting}>
-          Submit
-        </Button>
-      </VStack>
-    </form>
-  );
-};
-```
-
-## File Upload
-
-### Single File Upload
-```typescript
-<input
-  type="file"
-  {...register('image', {
-    required: 'Image is required',
-    validate: {
-      fileType: (files) =>
-        files[0]?.type.startsWith('image/') || 'Must be an image',
-      fileSize: (files) =>
-        files[0]?.size < 5000000 || 'File must be less than 5MB'
-    }
-  })}
-/>
-```
-
-### Multiple Files
-```typescript
-<input
-  type="file"
-  multiple
-  {...register('images', {
-    validate: {
-      maxFiles: (files) =>
-        files.length <= 5 || 'Maximum 5 files allowed'
-    }
-  })}
-/>
-```
-
-## TypeScript Patterns
-
-### Type-Safe Form
-```typescript
-interface ProductFormData {
-  title: string;
-  description: string;
-  price: number;
-  category: 'vegetables' | 'fruits' | 'grains';
-  images: FileList;
-}
-
-const form = useForm<ProductFormData>();
-// All fields are now type-checked
-```
-
-### Infer Types from Schema
-```typescript
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-
-const schema = z.object({
-  title: z.string().min(3),
-  price: z.number().positive()
-});
-
-type FormData = z.infer<typeof schema>;
-
-const { register } = useForm<FormData>({
-  resolver: zodResolver(schema)
-});
-```
-
-## Performance Optimization
-
-### Mode Configuration
-```typescript
-// Validate on submit only (best performance)
-const form = useForm({ mode: 'onSubmit' });
-
-// Validate on blur
-const form = useForm({ mode: 'onBlur' });
-
-// Validate on change (most responsive)
-const form = useForm({ mode: 'onChange' });
-
-// Validate on blur, then on change
-const form = useForm({ mode: 'onTouched' });
-```
-
-### Unregister Unused Fields
-```typescript
-const { register, unregister } = useForm();
-
-useEffect(() => {
-  if (!showField) {
-    unregister('conditionalField');
-  }
-}, [showField, unregister]);
-```
-
-## Testing Forms
-
-### Test Form Submission
-```typescript
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-
-it('submits form with valid data', async () => {
-  const handleSubmit = vi.fn();
-  const { user } = setup(<ProductForm onSubmit={handleSubmit} />);
-
-  await user.type(screen.getByLabelText(/title/i), 'Fresh Apples');
-  await user.type(screen.getByLabelText(/price/i), '10');
-  await user.click(screen.getByRole('button', { name: /submit/i }));
-
-  await waitFor(() => {
-    expect(handleSubmit).toHaveBeenCalledWith({
-      title: 'Fresh Apples',
-      price: 10
-    });
-  });
-});
-```
-
-### Test Validation
-```typescript
-it('shows validation errors', async () => {
-  const { user } = setup(<ProductForm />);
-
-  await user.click(screen.getByRole('button', { name: /submit/i }));
-
-  expect(await screen.findByText(/title is required/i)).toBeInTheDocument();
-});
-```
-
-## Best Practices
-
-1. **Use TypeScript** - Type your form data for safety
-2. **Default values** - Always provide default values
-3. **Validation** - Validate on blur or submit for better UX
-4. **Error messages** - Provide clear, actionable error messages
-5. **Accessibility** - Use proper labels and ARIA attributes
-6. **Reset on success** - Clear form after successful submission
-7. **Loading states** - Disable submit during async operations
-8. **Unsaved changes** - Warn users before navigation
-
-## Common Patterns
-
-### Multi-Step Form
-```typescript
-const [step, setStep] = useState(1);
-const { register, trigger } = useForm<FormData>();
-
-const handleNext = async () => {
-  const isValid = await trigger(['title', 'description']);
-  if (isValid) setStep(2);
-};
-
-return (
-  <div>
-    {step === 1 && <Step1 register={register} />}
-    {step === 2 && <Step2 register={register} />}
-    <button onClick={handleNext}>Next</button>
-  </div>
-);
-```
-
-### Form with API Integration
-```typescript
-const onSubmit = async (data: FormData) => {
+export async function createProduct(formData: FormData) {
   try {
-    await createProduct(data);
-    toast.success('Product created!');
-    reset();
+    const supabase = await createClient();
+    // ... create logic
+    return { success: true };
   } catch (error) {
-    setError('root', {
-      message: 'Failed to create product'
-    });
+    return { success: false, error: (error as Error).message };
   }
+}
+
+// Client handling
+const onSubmit = async (data: FormData) => {
+  startTransition(async () => {
+    const result = await createProduct(formData);
+    if (!result.success) {
+      toast.error(result.error);
+    } else {
+      toast.success("Product created!");
+    }
+  });
 };
 ```
 
 ## When to Use This Skill
-- Building forms with validation
-- Integrating forms with Chakra UI
-- Handling complex form state
-- Implementing dynamic fields
-- Managing file uploads
-- Creating multi-step forms
-- Testing form behavior
-- Optimizing form performance
-- Type-safe form handling
+
+- Creating forms with Server Actions
+- Integrating React Hook Form with shadcn/ui
+- Form validation with Zod
+- File uploads
+- Error handling patterns

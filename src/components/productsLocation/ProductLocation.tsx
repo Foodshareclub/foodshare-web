@@ -3,15 +3,21 @@
  * Map view for individual product detail pages
  * Shows product location with custom marker and popup
  * Receives product as props from Server Component (no Redux)
+ *
+ * SECURITY: Applies 200m location approximation for user privacy
  */
+
+"use client";
 
 import React from "react";
 import { MapContainer, Marker, TileLayer, Popup, Circle } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { useTranslations } from "next-intl";
 
 import { ProductPopup } from "@/components/map/ProductPopup";
 import { useCustomMarkerIcon } from "@/hooks/useMarkerIcon";
 import { getCoordinates, type InitialProductStateType } from "@/types/product.types";
+import { approximateLocation, LOCATION_PRIVACY } from "@/utils/postgis";
 
 type LocationType = {
   indicator?: string;
@@ -22,6 +28,7 @@ type LocationType = {
 export const ProductsLocation: React.FC<LocationType> = ({ indicator, product }) => {
   const oneProduct = product;
   const defaultZoom = 15;
+  const t = useTranslations();
 
   // Custom animated marker with pulse
   const redMarker = useCustomMarkerIcon(false, false, true);
@@ -32,7 +39,9 @@ export const ProductsLocation: React.FC<LocationType> = ({ indicator, product })
   const coords = getCoordinates(oneProduct);
   if (!coords) return null;
 
-  const position: [number, number] = [coords.lat, coords.lng];
+  // SECURITY: Apply 200m approximation for privacy (deterministic based on post ID)
+  const approxCoords = approximateLocation(coords.lat, coords.lng, oneProduct.id);
+  const position: [number, number] = [approxCoords.lat, approxCoords.lng];
 
   return (
     <div
@@ -65,14 +74,14 @@ export const ProductsLocation: React.FC<LocationType> = ({ indicator, product })
           maxZoom={20}
         />
 
-        {/* Accuracy circle */}
+        {/* Privacy approximation circle (200m radius to match approximation) */}
         <Circle
           center={position}
-          radius={50}
+          radius={LOCATION_PRIVACY.RADIUS_METERS}
           pathOptions={{
-            fillColor: "#E53E3E",
-            fillOpacity: 0.1,
-            color: "#E53E3E",
+            fillColor: "#FF2D55",
+            fillOpacity: 0.08,
+            color: "#FF2D55",
             weight: 1,
             opacity: 0.3,
           }}
@@ -92,6 +101,16 @@ export const ProductsLocation: React.FC<LocationType> = ({ indicator, product })
           </Popup>
         </Marker>
       </MapContainer>
+
+      {/* Location approximation disclaimer */}
+      <div className="absolute bottom-3 left-3 right-3 z-[1000]">
+        <div className="bg-card/90 backdrop-blur-sm rounded-lg px-3 py-2 border border-border/50 shadow-sm">
+          <p className="text-xs text-muted-foreground/70 flex items-center gap-1.5">
+            <span className="text-amber-500">&#9888;</span>
+            {t("location_approximate_disclaimer")}
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

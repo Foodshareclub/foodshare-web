@@ -1,0 +1,6 @@
+{
+  "name": "nextjs-app-router",
+  "version": "1.0.0",
+  "description": "Next.js 16 App Router patterns: routing, layouts, loading, error handling",
+  "tags": ["nextjs", "app-router", "routing", "layouts", "streaming"]
+}

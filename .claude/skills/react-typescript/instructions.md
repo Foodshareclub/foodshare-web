@@ -1,151 +1,192 @@
-# React 19 + TypeScript Development Skill
+# React 19 + TypeScript with Next.js 16
 
 ## Overview
-Expert guidance for React 19 applications built with TypeScript, Vite, and modern tooling.
 
-## Tech Stack Context
-- **React**: 19.2.0 with latest features (useTransition, useOptimistic, etc.)
-- **TypeScript**: 5.9.3 with strict type checking
-- **Build Tool**: Vite 7.2.4
-- **UI Framework**: Chakra UI 3.29.0
-- **Routing**: React Router DOM 7.9.6
-- **State Management**: Redux Toolkit + React Redux
-- **Animation**: Framer Motion 12.23.24
-- **Forms**: React Hook Form 7.66.1
+Expert guidance for React 19 components in a Next.js 16 App Router application with TypeScript 5 and shadcn/ui.
 
-## Best Practices
+## Tech Stack
 
-### Component Development
-1. **Use functional components** with TypeScript interfaces for props
-2. **Prefer named exports** for better tree-shaking
-3. **Use proper typing** - avoid `any`, use specific types
-4. **Memoization** - Use `React.memo`, `useMemo`, `useCallback` wisely
-5. **Custom hooks** - Extract reusable logic into custom hooks
+- **React**: 19 with Server Components (default)
+- **TypeScript**: 5.x with strict mode
+- **Framework**: Next.js 16 App Router
+- **UI**: shadcn/ui + Radix UI + Tailwind CSS 4
+- **State**: Server Components + React Query + Zustand
 
-### TypeScript Patterns
+## Server vs Client Components
+
+### Server Components (Default)
+
 ```typescript
-// Props interface
+// src/app/products/page.tsx - NO 'use client' needed
+import { getProducts } from '@/lib/data/products';
+
+export default async function ProductsPage() {
+  const products = await getProducts();
+  return <ProductGrid products={products} />;
+}
+```
+
+### Client Components (Only When Needed)
+
+```typescript
+// src/components/products/ProductCard.tsx
+'use client';
+
+import { useState, useTransition } from 'react';
+import { deleteProduct } from '@/app/actions/products';
+
+interface ProductCardProps {
+  product: Product;
+}
+
+export function ProductCard({ product }: ProductCardProps) {
+  const [isPending, startTransition] = useTransition();
+
+  const handleDelete = () => {
+    startTransition(async () => {
+      await deleteProduct(product.id);
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{product.title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Button onClick={handleDelete} disabled={isPending}>
+          {isPending ? 'Deleting...' : 'Delete'}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+## When to Use 'use client'
+
+Add `'use client'` ONLY when you need:
+
+- Event handlers (onClick, onChange, onSubmit)
+- React hooks (useState, useEffect, useRef)
+- Browser APIs (localStorage, window)
+- React Query or Zustand
+- Third-party client libraries
+
+## TypeScript Patterns
+
+### Component Props
+
+```typescript
 interface ComponentProps {
   title: string;
   onAction: (id: string) => void;
   children?: React.ReactNode;
+  variant?: 'default' | 'destructive';
 }
 
-// Component with proper typing
-export const Component: React.FC<ComponentProps> = ({ title, onAction, children }) => {
-  // Implementation
+export function Component({ title, onAction, children, variant = 'default' }: ComponentProps) {
+  return <div className={cn('p-4', variant === 'destructive' && 'bg-red-100')}>{children}</div>;
+}
+```
+
+### Strict Typing Rules
+
+- Never use `any` - use `unknown` if type is truly unknown
+- Never use non-null assertions (`!`) - check existence first
+- Use `satisfies` for type-checking object literals
+- Define explicit return types for exported functions
+
+### Database Types
+
+```typescript
+// Use generated Supabase types
+import { Database } from "@/types/supabase";
+
+type Product = Database["public"]["Tables"]["posts"]["Row"];
+type InsertProduct = Database["public"]["Tables"]["posts"]["Insert"];
+```
+
+## React 19 Features
+
+### useTransition for Mutations
+
+```typescript
+const [isPending, startTransition] = useTransition();
+
+const handleSubmit = () => {
+  startTransition(async () => {
+    await serverAction(data);
+  });
 };
 ```
 
-### Performance
-- Use `lazy()` and `Suspense` for code splitting
-- Implement proper error boundaries
-- Optimize re-renders with proper dependency arrays
-- Use Vite's dynamic imports for route-based splitting
+### useOptimistic for Immediate UI
 
-### Chakra UI Integration
-- Use Chakra's theme tokens for consistency
-- Leverage responsive props (`base`, `md`, `lg`)
-- Combine with Emotion for custom styling when needed
-- Use Chakra icons from `@chakra-ui/icons`
+```typescript
+const [optimisticProducts, addOptimistic] = useOptimistic(products, (state, newProduct) => [
+  ...state,
+  newProduct,
+]);
+```
 
-### React 19 Features
-- **useTransition**: For non-blocking state updates
-- **useOptimistic**: For optimistic UI updates
-- **Server Components**: Ready for future migration
-- **Actions**: Use action functions for form handling
+### use() Hook for Promises
+
+```typescript
+// In client component
+const data = use(fetchPromise);
+```
+
+## Performance
+
+### Code Splitting
+
+```typescript
+// Dynamic imports for heavy components
+import dynamic from 'next/dynamic';
+
+const Map = dynamic(() => import('@/components/leaflet/Map'), {
+  ssr: false,
+  loading: () => <MapSkeleton />
+});
+```
+
+### Memoization (Use Sparingly)
+
+```typescript
+// Only when you have measured performance issues
+const MemoizedComponent = memo(ExpensiveComponent);
+
+// useMemo for expensive calculations
+const filtered = useMemo(
+  () => products.filter((p) => p.category === category),
+  [products, category]
+);
+```
 
 ## File Organization
+
 ```
 src/
+  app/                    # Next.js App Router
+    layout.tsx           # Root layout
+    page.tsx             # Home (Server Component)
+    actions/             # Server Actions
   components/
-    [feature]/
-      Component.tsx
-      Component.test.tsx
+    ui/                  # shadcn/ui primitives
+    [feature]/           # Feature components
   hooks/
-    useCustomHook.ts
-  pages/
-    [route]/
-      Page.tsx
-  store/
-    redux-store.ts
-    slices/
-  types/
-    [domain].types.ts
+    queries/             # React Query hooks
+  lib/
+    data/                # Data fetching (server-only)
+    utils.ts             # Utilities (cn, formatDate)
+  types/                 # TypeScript definitions
 ```
-
-## Common Patterns
-
-### Error Handling
-```typescript
-import { ErrorBoundary } from 'react-error-boundary';
-
-const ErrorFallback = ({ error }: { error: Error }) => (
-  <div>Something went wrong: {error.message}</div>
-);
-
-// Wrap components
-<ErrorBoundary FallbackComponent={ErrorFallback}>
-  <Component />
-</ErrorBoundary>
-```
-
-### Async Data Fetching
-```typescript
-const [data, setData] = useState<DataType | null>(null);
-const [loading, setLoading] = useState(false);
-const [error, setError] = useState<Error | null>(null);
-
-useEffect(() => {
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const result = await api.getData();
-      setData(result);
-    } catch (err) {
-      setError(err as Error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchData();
-}, []);
-```
-
-### Form Handling with React Hook Form
-```typescript
-import { useForm } from 'react-hook-form';
-
-interface FormData {
-  email: string;
-  password: string;
-}
-
-const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
-
-const onSubmit = (data: FormData) => {
-  // Handle form submission
-};
-```
-
-## Testing with Vitest
-- Write unit tests for components
-- Use `@testing-library/react` for component testing
-- Mock external dependencies appropriately
-- Aim for >80% coverage on critical paths
-
-## Key Commands
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run type-check` - Check TypeScript types
-- `npm run lint` - Lint code
-- `npm test` - Run tests
 
 ## When to Use This Skill
+
 - Creating new React components
-- Refactoring class components to functional
+- Converting client to server components
 - Implementing TypeScript types
 - Optimizing component performance
-- Setting up routing and navigation
-- Integrating with Chakra UI
-- Form handling and validation
+- Integrating shadcn/ui components

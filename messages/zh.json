@@ -241,6 +241,7 @@
   "loading_quota_data": "正在加载配额数据...",
   "loading": "加载中...",
   "locked": "已锁定",
+  "location_approximate_disclaimer": "显示的位置为隐私保护而进行了约200米的模糊处理",
   "log_out": "退出登录",
   "logging_in": "正在登录...",
   "login": "登录",

@@ -3,7 +3,7 @@
  */
 
 import { sendMessage, sendPhoto, sendLocation } from "../services/telegram-api.ts";
-import { getUserState, setUserState } from "../services/user-state.ts";
+import { setUserState } from "../services/user-state.ts";
 import { getProfileByTelegramId, requiresEmailVerification } from "../services/profile.ts";
 import { getUserImpactStats, getBadges } from "../services/impact.ts";
 import { extractCoordinates } from "../services/geocoding.ts";
@@ -14,6 +14,7 @@ import { getMainMenuKeyboard } from "../lib/keyboards.ts";
 import * as emoji from "../lib/emojis.ts";
 import * as msg from "../lib/messages.ts";
 import { APP_URL } from "../config/index.ts";
+import { approximateLocation } from "../../_shared/location-privacy.ts";
 import type { TelegramUser } from "../types/index.ts";
 
 export async function handleStartCommand(
@@ -318,7 +319,9 @@ export async function handleFindCommand(
     if (food.location) {
       const coords = await extractCoordinates(food.location);
       if (coords) {
-        await sendLocation(chatId, coords.latitude, coords.longitude);
+        // SECURITY: Apply 200m approximation for privacy
+        const approxCoords = approximateLocation(coords.latitude, coords.longitude, food.id);
+        await sendLocation(chatId, approxCoords.latitude, approxCoords.longitude);
       }
     }
   }

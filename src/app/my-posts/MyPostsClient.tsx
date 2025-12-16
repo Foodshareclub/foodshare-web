@@ -20,6 +20,7 @@ import { DeleteConfirmationModal } from "@/components/modals/ConfirmationModal";
 import { updateProduct, deleteProduct } from "@/app/actions/products";
 import { cn } from "@/lib/utils";
 import { isValidImageUrl } from "@/lib/image";
+import { getProductDetailUrl } from "@/utils/categoryMapping";
 import type { InitialProductStateType } from "@/types/product.types";
 
 // Lazy load the heavy modal
@@ -470,7 +471,10 @@ function PostCard({ post, onEdit, onDelete, onToggleStatus, isUpdating }: PostCa
         !post.is_active && "opacity-60"
       )}
     >
-      <Link href={`/food/${post.id}`} className="block relative aspect-[4/3]">
+      <Link
+        href={getProductDetailUrl(post.post_type, post.id)}
+        className="block relative aspect-[4/3]"
+      >
         {post.images?.length > 0 && isValidImageUrl(post.images[0]) ? (
           <Image
             src={post.images[0]}

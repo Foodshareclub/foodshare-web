@@ -1,307 +1,209 @@
-# Leaflet Maps Development Skill
+# Leaflet Maps in Next.js 16
 
 ## Overview
-Expert guidance for building interactive maps with React Leaflet, including marker clustering, geosearch, custom markers, and geolocation features.
 
-## Tech Stack Context
-- **Leaflet**: 1.9.4 (Core mapping library)
-- **React Leaflet**: 5.0.0 (React bindings)
-- **React Leaflet Cluster**: 4.0.0 (Marker clustering)
-- **Leaflet Geosearch**: 4.2.2 (Location search)
-- **TypeScript Types**: @types/leaflet 1.9.21
+Interactive maps with React Leaflet in Next.js 16. Maps require client components and dynamic imports to avoid SSR issues.
 
-## Setup and Configuration
+## Critical: Next.js Setup
 
-### Import Required CSS
+### Dynamic Import (Required)
+
 ```typescript
-import 'leaflet/dist/leaflet.css';
-import 'leaflet-geosearch/dist/geosearch.css';
+// src/components/leaflet/Map.tsx must be imported dynamically
+import dynamic from 'next/dynamic';
+
+const Map = dynamic(() => import('@/components/leaflet/Map'), {
+  ssr: false,
+  loading: () => <MapSkeleton />
+});
 ```
 
-### Basic Map Container
+### Client Component (Required)
+
 ```typescript
+// src/components/leaflet/Map.tsx
+'use client';
+
+import 'leaflet/dist/leaflet.css';
 import { MapContainer, TileLayer } from 'react-leaflet';
 
-export const Map = () => {
+export default function Map({ center, zoom }: MapProps) {
   return (
-    <MapContainer
-      center={[51.505, -0.09]}
-      zoom={13}
-      style={{ height: '100vh', width: '100%' }}
-    >
+    <MapContainer center={center} zoom={zoom} className="h-full w-full">
       <TileLayer
         attribution='&copy; OpenStreetMap'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
     </MapContainer>
   );
-};
+}
 ```
 
-## Core Components
+## Fix Default Marker Icons
 
-### Markers and Popups
 ```typescript
-import { Marker, Popup } from 'react-leaflet';
+// src/components/leaflet/MarkerIcon.ts
+import L from "leaflet";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
-<Marker position={[51.505, -0.09]}>
-  <Popup>
-    <ProductCard product={product} />
-  </Popup>
-</Marker>
-```
-
-### Custom Marker Icons
-```typescript
-import L from 'leaflet';
-import iconUrl from './marker-icon.png';
-
-const customIcon = L.icon({
-  iconUrl: iconUrl,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [0, -41]
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl: markerIcon.src,
+  iconRetinaUrl: markerIcon2x.src,
+  shadowUrl: markerShadow.src,
 });
-
-<Marker position={position} icon={customIcon} />
 ```
 
 ## Marker Clustering
 
-### Setup with React Leaflet Cluster
 ```typescript
+'use client';
+
 import MarkerClusterGroup from 'react-leaflet-cluster';
+import { Marker, Popup } from 'react-leaflet';
 
-<MapContainer center={center} zoom={zoom}>
-  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+interface Product {
+  id: string;
+  latitude: number;
+  longitude: number;
+  post_name: string;
+}
 
-  <MarkerClusterGroup
-    chunkedLoading
-    maxClusterRadius={50}
-    spiderfyOnMaxZoom
-    showCoverageOnHover
-  >
-    {products.map(product => (
-      <Marker key={product.id} position={[product.lat, product.lng]}>
-        <Popup>
-          <ProductPopup product={product} />
-        </Popup>
-      </Marker>
-    ))}
-  </MarkerClusterGroup>
-</MapContainer>
+export function ProductMarkers({ products }: { products: Product[] }) {
+  return (
+    <MarkerClusterGroup chunkedLoading maxClusterRadius={50}>
+      {products.map(product => (
+        <Marker
+          key={product.id}
+          position={[product.latitude, product.longitude]}
+        >
+          <Popup>
+            <div className="p-2">
+              <h3 className="font-semibold">{product.post_name}</h3>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+    </MarkerClusterGroup>
+  );
+}
 ```
 
-## Geolocation
+## User Location
 
-### User Location Tracking
 ```typescript
-import { useMap } from 'react-leaflet';
-import { useEffect, useState } from 'react';
+'use client';
 
-export const UserLocationMarker = () => {
+import { useEffect, useState } from 'react';
+import { Marker, Popup, useMap } from 'react-leaflet';
+
+export function UserLocationMarker() {
   const [position, setPosition] = useState<[number, number] | null>(null);
   const map = useMap();
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setPosition([latitude, longitude]);
-        map.flyTo([latitude, longitude], 13);
+        const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+        setPosition(coords);
+        map.flyTo(coords, 13);
       },
-      (error) => console.error('Location error:', error),
+      (error) => console.error('Geolocation error:', error),
       { enableHighAccuracy: true }
     );
   }, [map]);
 
-  return position ? (
+  if (!position) return null;
+
+  return (
     <Marker position={position}>
-      <Popup>You are here</Popup>
+      <Popup>Your location</Popup>
     </Marker>
-  ) : null;
-};
-```
-
-## Geosearch Integration
-
-### Search Control
-```typescript
-import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
-import { useMap } from 'react-leaflet';
-import { useEffect } from 'react';
-
-export const SearchControl = () => {
-  const map = useMap();
-
-  useEffect(() => {
-    const provider = new OpenStreetMapProvider();
-    const searchControl = GeoSearchControl({
-      provider,
-      style: 'bar',
-      showMarker: true,
-      autoClose: true,
-      searchLabel: 'Search location...'
-    });
-
-    map.addControl(searchControl);
-    return () => map.removeControl(searchControl);
-  }, [map]);
-
-  return null;
-};
+  );
+}
 ```
 
 ## Map Events
 
-### Click and Movement Events
 ```typescript
-import { useMapEvents } from 'react-leaflet';
+"use client";
 
-const MapEventHandler = () => {
+import { useMapEvents } from "react-leaflet";
+
+interface MapEventsProps {
+  onLocationSelect?: (lat: number, lng: number) => void;
+}
+
+export function MapEvents({ onLocationSelect }: MapEventsProps) {
   useMapEvents({
     click: (e) => {
-      const { lat, lng } = e.latlng;
-      console.log('Clicked at:', lat, lng);
+      onLocationSelect?.(e.latlng.lat, e.latlng.lng);
     },
-    moveend: (e) => {
-      const center = e.target.getCenter();
-      console.log('Map center:', center);
-    },
-    zoomend: (e) => {
-      const zoom = e.target.getZoom();
-      console.log('Zoom level:', zoom);
-    }
   });
-
   return null;
-};
+}
 ```
 
-## Performance Optimization
+## Integration with Server Actions
 
-### Filter Visible Markers
 ```typescript
-import { useMap } from 'react-leaflet';
-import { useMemo } from 'react';
+// Parent page (Server Component)
+import { getProductsNearby } from '@/lib/data/products';
 
-const VisibleMarkers = ({ products }: Props) => {
-  const map = useMap();
-  const bounds = map.getBounds();
+export default async function MapPage() {
+  const products = await getProductsNearby({ lat: 50.0, lng: 14.4, radius: 10 });
+  return <MapWrapper products={products} />;
+}
 
-  const visibleProducts = useMemo(() => {
-    return products.filter(product =>
-      bounds.contains([product.lat, product.lng])
-    );
-  }, [products, bounds]);
+// Client wrapper
+'use client';
 
+import dynamic from 'next/dynamic';
+const Map = dynamic(() => import('./Map'), { ssr: false });
+
+export function MapWrapper({ products }: { products: Product[] }) {
   return (
-    <>
-      {visibleProducts.map(product => (
-        <Marker key={product.id} position={[product.lat, product.lng]} />
-      ))}
-    </>
+    <div className="h-screen">
+      <Map products={products} />
+    </div>
   );
-};
-```
-
-## Common Utilities
-
-### Distance Calculation
-```typescript
-import L from 'leaflet';
-
-const calculateDistance = (
-  point1: [number, number],
-  point2: [number, number]
-): number => {
-  return L.latLng(point1).distanceTo(L.latLng(point2)); // meters
-};
-```
-
-### Fit Bounds to Markers
-```typescript
-import { useEffect } from 'react';
-import { useMap } from 'react-leaflet';
-import L from 'leaflet';
-
-const FitBounds = ({ products }: { products: Product[] }) => {
-  const map = useMap();
-
-  useEffect(() => {
-    if (products.length > 0) {
-      const bounds = L.latLngBounds(
-        products.map(p => [p.lat, p.lng])
-      );
-      map.fitBounds(bounds, { padding: [50, 50] });
-    }
-  }, [products, map]);
-
-  return null;
-};
-```
-
-## TypeScript Types
-
-### Common Interfaces
-```typescript
-import { LatLngExpression } from 'leaflet';
-
-interface MapPosition {
-  center: LatLngExpression;
-  zoom: number;
-}
-
-interface MarkerData {
-  id: string;
-  position: [number, number];
-  title: string;
-}
-
-interface MapBounds {
-  northEast: { lat: number; lng: number };
-  southWest: { lat: number; lng: number };
 }
 ```
 
-## Best Practices
+## Geospatial Data from Supabase
 
-1. **Fix Default Icons**: Leaflet's default marker icons don't work with bundlers, configure them properly
-2. **Cleanup**: Always cleanup map controls and event listeners in useEffect returns
-3. **Performance**: Use clustering for large marker sets (>100 markers)
-4. **Debounce**: Debounce map movement events to prevent excessive updates
-5. **Bounds**: Use fitBounds to show all markers on initial load
-6. **Error Handling**: Handle geolocation permission denials gracefully
+```typescript
+// In lib/data/products.ts
+export async function getProductsNearby({ lat, lng, radius }: GeoParams) {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("find_nearby_posts", {
+    user_lat: lat,
+    user_lng: lng,
+    radius_km: radius,
+  });
+  return data ?? [];
+}
+```
 
-## Styling Maps
+## Styling with Tailwind
 
-### Container Styling
 ```css
+/* In globals.css */
 .leaflet-container {
-  height: 100%;
-  width: 100%;
-  border-radius: 8px;
+  @apply h-full w-full rounded-lg;
 }
-```
 
-### Custom Cluster Styling
-```css
-.marker-cluster {
-  background-color: rgba(110, 204, 57, 0.6);
-  border-radius: 50%;
-  text-align: center;
-  color: white;
-  font-weight: bold;
+.leaflet-popup-content-wrapper {
+  @apply rounded-lg shadow-lg;
 }
 ```
 
 ## When to Use This Skill
-- Setting up interactive maps
+
+- Setting up maps in Next.js (dynamic import required)
 - Implementing marker clustering
 - Adding geolocation features
-- Creating custom markers
-- Integrating location search
-- Handling map events
-- Optimizing map performance
-- Calculating distances and bounds
-- Building location-based features
+- Handling map click events
+- Integrating with Supabase geospatial queries

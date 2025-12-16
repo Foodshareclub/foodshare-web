@@ -163,7 +163,7 @@ const nextConfig: NextConfig = {
         destination: "/food?type=foodbank",
       },
       {
-        source: "/businesses",
+        source: "/organisations",
         destination: "/food?type=business",
       },
       {
@@ -191,7 +191,7 @@ const nextConfig: NextConfig = {
         destination: "/food?type=foodbank",
       },
       {
-        source: "/business",
+        source: "/organisation",
         destination: "/food?type=business",
       },
       {
@@ -230,7 +230,7 @@ const nextConfig: NextConfig = {
         destination: "/food/:id",
       },
       {
-        source: "/business/:id",
+        source: "/organisation/:id",
         destination: "/food/:id",
       },
       {

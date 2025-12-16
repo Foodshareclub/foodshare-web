@@ -1,6 +1,0 @@
-{
-  "name": "vitest-testing",
-  "version": "1.0.0",
-  "description": "Testing React components and TypeScript code with Vitest and React Testing Library",
-  "tags": ["vitest", "testing", "react-testing-library", "unit-tests", "coverage"]
-}

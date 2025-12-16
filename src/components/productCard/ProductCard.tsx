@@ -8,6 +8,7 @@ import dynamic from "next/dynamic";
 import { Flag } from "lucide-react";
 
 import { DeleteIcon, EditIcon } from "@/utils/icons";
+import { getProductDetailUrl } from "@/utils/categoryMapping";
 import { useAuth } from "@/hooks/useAuth";
 import DeleteCardModal from "@/components/modals/DeleteCardModal";
 import { ReportPostDialog } from "@/components/reports";
@@ -37,8 +38,8 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
   const [openEdit, setOpenEdit] = useState(false);
   const prefetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Product detail URL - all products use /food/[id] path
-  const productUrl = `/food/${product.id}`;
+  // Product detail URL - use category-specific path based on post_type
+  const productUrl = getProductDetailUrl(product.post_type, product.id);
 
   // Prefetch on hover with debounce to avoid excessive prefetching
   const handleMouseEnter = () => {

@@ -1,0 +1,175 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+    - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+        - generic [ref=e10]:
+            - text: Compiling
+            - generic [ref=e11]:
+                - generic [ref=e12]: .
+                - generic [ref=e13]: .
+                - generic [ref=e14]: .
+    - alert [ref=e15]
+    - generic [ref=e16]:
+        - generic [ref=e17]:
+            - button "Go to homepage" [ref=e19] [cursor=pointer]:
+                - img "Foodshare logo" [ref=e20]
+                - generic [ref=e21]: Foodshare
+            - tablist "Category navigation" [ref=e23]:
+                - tab "Food" [selected] [ref=e25]:
+                    - img [ref=e26]: 🍎
+                    - generic [ref=e27]: Food
+                - tab "Things" [ref=e30]:
+                    - img [ref=e31]: 🎁
+                    - generic [ref=e32]: Things
+                - tab "Borrow" [ref=e34]:
+                    - img [ref=e35]: 🔧
+                    - generic [ref=e36]: Borrow
+                - tab "Wanted" [ref=e38]:
+                    - img [ref=e39]: 📦
+                    - generic [ref=e40]: Wanted
+                - tab "FoodBanks" [ref=e42]:
+                    - img [ref=e43]: 🏠
+                    - generic [ref=e44]: FoodBanks
+                - tab "Fridges" [ref=e46]:
+                    - img [ref=e47]: ❄️
+                    - generic [ref=e48]: Fridges
+                - tab "Zero Waste" [ref=e50]:
+                    - img [ref=e51]: ♻️
+                    - generic [ref=e52]: Zero Waste
+                - tab "Vegan" [ref=e54]:
+                    - img [ref=e55]: 🌱
+                    - generic [ref=e56]: Vegan
+                - tab "Organisations" [ref=e58]:
+                    - img [ref=e59]: 🏛️
+                    - generic [ref=e60]: Organisations
+                - tab "Volunteers" [ref=e62]:
+                    - img [ref=e63]: 🙌🏻
+                    - generic [ref=e64]: Volunteers
+                - tab "Challenges" [ref=e66]:
+                    - img [ref=e67]: 🏆
+                    - generic [ref=e68]: Challenges
+                - tab "Forum" [ref=e70]:
+                    - img [ref=e71]: 💬
+                    - generic [ref=e72]: Forum
+            - generic [ref=e74]:
+                - button "Add listing" [ref=e75]:
+                    - img [ref=e76]
+                    - text: Add listing
+                - generic [ref=e82] [cursor=pointer]: 🍓
+        - generic [ref=e86]:
+            - generic [ref=e87] [cursor=pointer]:
+                - generic [ref=e88]: What
+                - generic [ref=e89]: Search items
+            - generic [ref=e91] [cursor=pointer]:
+                - generic [ref=e92]: Distance
+                - generic [ref=e93]: Add distance
+            - generic [ref=e95] [cursor=pointer]:
+                - generic [ref=e96]: Category
+                - generic [ref=e97]: food
+            - generic [ref=e99] [cursor=pointer]:
+                - generic [ref=e100]: Search
+                - img [ref=e102]
+    - main [ref=e106]:
+        - generic [ref=e107]:
+            - generic [ref=e110]:
+                - link "FoodShare" [ref=e111] [cursor=pointer]:
+                    - /url: /
+                    - paragraph [ref=e112]: FoodShare
+                - paragraph [ref=e113]: Don't have an account? Sign up
+            - generic [ref=e115]:
+                - generic [ref=e116]:
+                    - generic [ref=e117]:
+                        - heading "Welcome back" [level=1] [ref=e118]
+                        - paragraph [ref=e119]: Log in to continue sharing and discovering food in your community
+                    - generic [ref=e121]:
+                        - generic [ref=e122]:
+                            - generic [ref=e123]: Email address
+                            - textbox "you@example.com" [ref=e124]
+                        - generic [ref=e125]:
+                            - generic [ref=e126]:
+                                - generic [ref=e127]: Password
+                                - link "Forgot password?" [ref=e128] [cursor=pointer]:
+                                    - /url: /auth/forgot-password
+                            - generic [ref=e129]:
+                                - textbox "Enter your password" [ref=e130]
+                                - button "Show password" [ref=e131]:
+                                    - img [ref=e132]
+                        - button "Log in" [ref=e135]
+                    - generic [ref=e137]: or continue with
+                    - generic [ref=e138]:
+                        - button "Google" [ref=e139]:
+                            - img
+                            - text: Google
+                        - generic [ref=e140]:
+                            - button "Facebook" [ref=e141]:
+                                - img
+                                - text: Facebook
+                            - button "Apple" [ref=e142]:
+                                - img
+                                - text: Apple
+                - paragraph [ref=e143]:
+                    - text: By continuing, you agree to FoodShare's
+                    - link "Terms of Service" [ref=e144] [cursor=pointer]:
+                        - /url: /terms
+                    - text: and
+                    - link "Privacy Policy" [ref=e145] [cursor=pointer]:
+                        - /url: /privacy
+    - contentinfo [ref=e146]:
+        - generic [ref=e147]:
+            - generic [ref=e148]:
+                - paragraph [ref=e149]: © 2025 Foodshare Club, Limited. All rights reserved
+                - generic [ref=e150]:
+                    - img [ref=e151]
+                    - combobox [ref=e154]:
+                        - generic:
+                            - generic:
+                                - generic: 🇬🇧
+                                - generic: English
+                        - img [ref=e155]
+            - generic [ref=e157]:
+                - generic [ref=e158]:
+                    - link "Twitter" [ref=e159] [cursor=pointer]:
+                        - /url: https://twitter.com/foodshareclub
+                        - button "Twitter" [ref=e160]:
+                            - generic [ref=e161]: Twitter
+                            - img "Twitter" [ref=e162]
+                    - link "facebook" [ref=e163] [cursor=pointer]:
+                        - /url: https://www.facebook.com/foodshareclub
+                        - button "facebook" [ref=e164]:
+                            - generic [ref=e165]: facebook
+                            - img "Facebook" [ref=e166]
+                    - link "Instagram" [ref=e167] [cursor=pointer]:
+                        - /url: https://www.instagram.com/foodshareclub/
+                        - button "Instagram" [ref=e168]:
+                            - generic [ref=e169]: Instagram
+                            - img "Instagram" [ref=e170]
+                    - link "linked" [ref=e171] [cursor=pointer]:
+                        - /url: https://www.linkedin.com/company/37215158
+                        - button "linked" [ref=e172]:
+                            - generic [ref=e173]: linked
+                            - img "LinkedIn" [ref=e174]
+                    - link "telegram" [ref=e175] [cursor=pointer]:
+                        - /url: https://t.me/foodshare_club
+                        - button "telegram" [ref=e176]:
+                            - generic [ref=e177]: telegram
+                            - img "Telegram" [ref=e178]
+                - generic [ref=e179]:
+                    - link "feedback" [ref=e180] [cursor=pointer]:
+                        - /url: /feedback
+                        - button "feedback" [ref=e181]:
+                            - generic [ref=e182]: feedback
+                            - img "Feedback" [ref=e183]
+                    - heading "Feedback" [level=2] [ref=e184]:
+                        - link "Feedback" [ref=e185] [cursor=pointer]:
+                            - /url: /feedback
+                    - link "donat" [ref=e186] [cursor=pointer]:
+                        - /url: /donation
+                        - button "donat" [ref=e187]:
+                            - generic [ref=e188]: donat
+                            - img "Donation" [ref=e189]
+                    - heading "Donation" [level=2] [ref=e190]:
+                        - link "Donation" [ref=e191] [cursor=pointer]:
+                            - /url: /donation
+    - button "🍽️" [ref=e192]
+```

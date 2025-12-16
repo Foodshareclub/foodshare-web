@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Leaflet Component
@@ -11,9 +11,11 @@ import { MapContainer, Marker, TileLayer, Popup, Circle } from "react-leaflet";
 import "./leaflet.css";
 import "./leaflet-glass.css";
 import "leaflet/dist/leaflet.css";
-import { Icon, DivIcon } from "leaflet";
+import { DivIcon } from "leaflet";
 import L from "leaflet";
 import { getCoordinates, type InitialProductStateType } from "@/types/product.types";
+import { approximateLocation } from "@/utils/postgis";
+import { useTranslations } from "next-intl";
 
 // Use Canvas renderer for GPU acceleration
 const _canvasRenderer = L.canvas({ padding: 0.5 });
@@ -26,6 +28,7 @@ type LeafletProps = {
 const Leaflet: React.FC<LeafletProps> = ({ product }) => {
   const oneProduct = product;
   const defaultZoom = 15;
+  const t = useTranslations();
 
   // Create a beautiful custom marker with pulse animation
   const customMarker = useMemo(
@@ -71,10 +74,15 @@ const Leaflet: React.FC<LeafletProps> = ({ product }) => {
     );
   }
 
-  const position: [number, number] = [coords.lat, coords.lng];
+  // Apply 200m approximation for privacy (deterministic based on post ID)
+  const approxCoords = approximateLocation(coords.lat, coords.lng, oneProduct.id);
+  const position: [number, number] = [approxCoords.lat, approxCoords.lng];
 
   return (
-    <div className="relative h-full" style={{ transform: "translateZ(0)", willChange: "transform" }}>
+    <div
+      className="relative h-full"
+      style={{ transform: "translateZ(0)", willChange: "transform" }}
+    >
       {/* Map Container */}
       <MapContainer
         style={{
@@ -97,7 +105,7 @@ const Leaflet: React.FC<LeafletProps> = ({ product }) => {
           updateWhenZooming={false}
           keepBuffer={2}
         />
-        
+
         {/* Subtle radius circle around location */}
         <Circle
           center={position}
@@ -110,7 +118,7 @@ const Leaflet: React.FC<LeafletProps> = ({ product }) => {
             opacity: 0.3,
           }}
         />
-        
+
         {/* Custom Marker with Popup */}
         <Marker icon={customMarker} position={position}>
           <Popup className="product-card-popup">
@@ -137,11 +145,22 @@ const Leaflet: React.FC<LeafletProps> = ({ product }) => {
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="font-semibold text-foreground truncate">{oneProduct.post_name}</h4>
-              <p className="text-sm text-muted-foreground truncate">{oneProduct.post_stripped_address}</p>
+              <p className="text-sm text-muted-foreground truncate">
+                {oneProduct.post_stripped_address}
+              </p>
               {oneProduct.available_hours && (
-                <p className="text-xs text-muted-foreground/70 mt-1">🕐 {oneProduct.available_hours}</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">
+                  🕐 {oneProduct.available_hours}
+                </p>
               )}
             </div>
+          </div>
+          {/* Location approximation disclaimer */}
+          <div className="mt-3 pt-3 border-t border-border/30">
+            <p className="text-xs text-muted-foreground/70 flex items-center gap-1.5">
+              <span className="text-amber-500">⚠</span>
+              {t("location_approximate_disclaimer")}
+            </p>
           </div>
         </div>
       </div>

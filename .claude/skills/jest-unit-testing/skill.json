@@ -1,0 +1,6 @@
+{
+  "name": "jest-unit-testing",
+  "version": "2.0.0",
+  "description": "Unit testing Next.js 16 applications with Jest and React Testing Library",
+  "tags": ["jest", "unit-testing", "react-testing-library", "nextjs", "server-components"]
+}
