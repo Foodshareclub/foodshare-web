@@ -4,22 +4,29 @@
  * App Providers
  *
  * Provides:
+ * - QueryClientProvider for React Query
  * - NextIntlClientProvider for i18n
  * - ThemeProvider for dark/light mode
  * - LocaleContext for dynamic locale switching
  * - ActionToastProvider for server action feedback toasts
- *
- * Note: TanStack Query has been removed. Data fetching is done via:
- * - Server Components with lib/data/* functions
- * - Server Actions for mutations
- * - Supabase client subscriptions for realtime (in individual components)
  */
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider } from "next-intl";
 import { ThemeProvider } from "next-themes";
 import { getBrowserLocale, type Locale } from "@/i18n/config";
 import { ActionToastProvider } from "@/hooks/useActionToast";
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000, // 1 minute
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // Loading component - renders before ThemeProvider, so we use inline styles
 // with CSS custom properties that respect the user's system preference
@@ -119,13 +126,15 @@ export function Providers({ children, initialLocale = "en" }: ProvidersProps) {
   }
 
   return (
-    <LocaleContext.Provider value={{ changeLocale, locale }}>
-      <NextIntlClientProvider key={locale} locale={locale} messages={messages} timeZone="UTC">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <ActionToastProvider>{children}</ActionToastProvider>
-        </ThemeProvider>
-      </NextIntlClientProvider>
-    </LocaleContext.Provider>
+    <QueryClientProvider client={queryClient}>
+      <LocaleContext.Provider value={{ changeLocale, locale }}>
+        <NextIntlClientProvider key={locale} locale={locale} messages={messages} timeZone="UTC">
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <ActionToastProvider>{children}</ActionToastProvider>
+          </ThemeProvider>
+        </NextIntlClientProvider>
+      </LocaleContext.Provider>
+    </QueryClientProvider>
   );
 }
 

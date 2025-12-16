@@ -1,9 +1,10 @@
-import { Suspense } from "react";
-import { getTranslations } from "next-intl/server";
+"use client";
+
 import { Mail, Sparkles } from "lucide-react";
 import { EmailCRMDashboard } from "@/components/admin/email/EmailCRMDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getEmailCRMData } from "@/lib/data/admin-email";
+import { useEmailCRMData } from "@/hooks/queries/useEmailCRM";
+import { useTranslations } from "next-intl";
 
 function EmailSkeleton() {
   return (
@@ -50,13 +51,9 @@ function EmailSkeleton() {
   );
 }
 
-async function EmailCRMWithData() {
-  const data = await getEmailCRMData();
-  return <EmailCRMDashboard initialData={data} />;
-}
-
-export default async function AdminEmailCRMPage() {
-  const t = await getTranslations();
+export default function AdminEmailCRMPage() {
+  const t = useTranslations();
+  const { stats, providerHealth, campaigns, automations, segments, quotaDetails, bounceStats, isLoading } = useEmailCRMData();
 
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)] -mt-2">
@@ -79,9 +76,21 @@ export default async function AdminEmailCRMPage() {
       </div>
 
       {/* CRM takes remaining height */}
-      <Suspense fallback={<EmailSkeleton />}>
-        <EmailCRMWithData />
-      </Suspense>
+      {isLoading ? (
+        <EmailSkeleton />
+      ) : (
+        <EmailCRMDashboard
+          initialData={{
+            stats,
+            providerHealth,
+            campaigns,
+            automations,
+            segments,
+            quotaDetails,
+            bounceStats,
+          }}
+        />
+      )}
     </div>
   );
 }

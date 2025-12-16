@@ -13,7 +13,6 @@ import { unstable_cache } from "next/cache";
 import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
 import { createClient } from "@/lib/supabase/server";
 import type { EmailProvider, EmailType } from "@/lib/email/types";
-import { toEmailProvider } from "@/lib/email/type-guards";
 
 // ============================================================================
 // Types
