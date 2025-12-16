@@ -5,12 +5,8 @@
  * Handles R2 uploads server-side where Vault credentials are accessible
  */
 
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import {
-  STORAGE_BUCKETS,
-  validateFile,
-  type StorageBucket as _StorageBucket,
-} from "@/constants/storage";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { STORAGE_BUCKETS, validateFile } from "@/constants/storage";
 import { uploadToR2, getR2Secrets, getPresignedUpload } from "@/lib/r2";
 
 export type UploadResult = {
@@ -90,11 +86,11 @@ export async function uploadToStorage(formData: FormData): Promise<UploadResult>
       console.warn("[Storage Action] ⚠️ R2 not configured, falling back to Supabase");
     }
 
-    // Fallback to Supabase direct upload
+    // Fallback to Supabase direct upload using service role key (server-side)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
       return { success: false, error: "Storage not configured" };
     }
 
@@ -104,8 +100,8 @@ export async function uploadToStorage(formData: FormData): Promise<UploadResult>
     const response = await fetch(uploadUrl, {
       method: "POST",
       headers: {
-        apikey: supabaseAnonKey,
-        Authorization: `Bearer ${supabaseAnonKey}`,
+        apikey: supabaseServiceRoleKey,
+        Authorization: `Bearer ${supabaseServiceRoleKey}`,
         "x-upsert": "true",
       },
       body: file,
@@ -193,7 +189,7 @@ export async function getDirectUploadUrl(
     }
 
     // Use admin client to bypass RLS for signed URL generation
-    const supabaseAdmin = createSupabaseClient(supabaseUrl, supabaseServiceRoleKey);
+    const supabaseAdmin = createAdminClient(supabaseUrl, supabaseServiceRoleKey);
 
     const { data, error } = await supabaseAdmin.storage
       .from(bucket)
