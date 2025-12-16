@@ -194,13 +194,19 @@ export const getEmailDashboardStats = unstable_cache(
 
     // Calculate monthly totals
     let monthlyUsed = 0;
+    let monthlyLimit = 0;
     for (const q of monthlyQuota) {
       monthlyUsed += q.emails_sent || 0;
     }
 
+    // Get monthly limit from today's quota data (all providers)
+    for (const q of dailyQuota) {
+      monthlyLimit += q.monthly_limit || 0;
+    }
+
     // Fallback defaults if no quota data
     if (dailyLimit === 0) dailyLimit = 500;
-    const monthlyLimit = 15000; // Default monthly limit
+    if (monthlyLimit === 0) monthlyLimit = 15000;
 
     // Combine newsletter subscribers + registered users with email prefs
     const totalSubs = (subscribersRes.count || 0) + (registeredUsersRes.count || 0);
