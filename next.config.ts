@@ -10,11 +10,6 @@ const nextConfig: NextConfig = {
   // Set Turbopack root to silence monorepo lockfile warning
   turbopack: {
     root: __dirname,
-    // Ignore native modules that Turbopack can't process
-    resolveAlias: {
-      duckdb: { browser: "./lib/duckdb-stub.js" },
-      "duckdb-async": { browser: "./lib/duckdb-stub.js" },
-    },
   },
 
   experimental: {
