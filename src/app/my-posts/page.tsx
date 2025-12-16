@@ -1,17 +1,17 @@
-import { redirect } from 'next/navigation';
-import { Suspense } from 'react';
-import { getUser } from '@/app/actions/auth';
-import { getUserProducts } from '@/lib/data/products';
-import { MyPostsClient } from './MyPostsClient';
-import { MyPostsSkeleton } from './MyPostsSkeleton';
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { MyPostsClient } from "./MyPostsClient";
+import { MyPostsSkeleton } from "./MyPostsSkeleton";
+import { getUser } from "@/app/actions/auth";
+import { getUserProducts } from "@/lib/data/products";
 
 export const metadata = {
-  title: 'My Posts | FoodShare',
-  description: 'Manage your food sharing posts - create, edit, and delete your listings',
+  title: "My Posts | FoodShare",
+  description: "Manage your food sharing posts - create, edit, and delete your listings",
 };
 
-// Route segment config for caching
-export const revalidate = 60;
+// Force dynamic rendering - user-specific content
+export const dynamic = "force-dynamic";
 
 /**
  * My Posts Page - Server Component
@@ -21,7 +21,7 @@ export default async function MyPostsPage() {
   const user = await getUser();
 
   if (!user) {
-    redirect('/auth/login?from=/my-posts');
+    redirect("/auth/login?from=/my-posts");
   }
 
   const posts = await getUserProducts(user.id);

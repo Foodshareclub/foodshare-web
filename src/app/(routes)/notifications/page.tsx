@@ -4,9 +4,12 @@
  */
 
 import { redirect } from "next/navigation";
+import { NotificationsPageClient } from "./NotificationsPageClient";
 import { createClient } from "@/lib/supabase/server";
 import { getUserNotifications, getUnreadNotificationCount } from "@/lib/data/notifications";
-import { NotificationsPageClient } from "./NotificationsPageClient";
+
+// Force dynamic rendering - user-specific content
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Notifications | FoodShare",

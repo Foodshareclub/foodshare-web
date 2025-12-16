@@ -7,6 +7,11 @@ const nextConfig: NextConfig = {
   // Enable React Compiler (stable in Next.js 16)
   reactCompiler: true,
 
+  // Set Turbopack root to silence monorepo lockfile warning
+  turbopack: {
+    root: __dirname,
+  },
+
   experimental: {
     // Optimize package imports for better tree-shaking
     optimizePackageImports: [

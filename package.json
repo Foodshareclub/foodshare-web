@@ -3,7 +3,8 @@
   "version": "3.0.1",
   "private": true,
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=24.0.0",
+    "bun": ">=1.1.0"
   },
   "scripts": {
     "dev": "next dev --turbopack -p 3000",
@@ -17,12 +18,15 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --maxWorkers=2",
-    "test:build": "npm run type-check && npm run lint && npm run build",
+    "test:build": "bun run type-check && bun run lint && npm run build",
     "clean": "rm -rf .next out node_modules/.cache",
     "postinstall": "patch-package",
     "import:foodbanks": "tsx scripts/foodbank-import/index.ts",
     "email:dev": "email dev -p 3001 --dir src/emails",
-    "email:export": "email export --outDir src/emails/templates/exported"
+    "email:export": "email export --outDir src/emails/templates/exported",
+    "dev:bun-runtime": "bun --bun next dev --turbopack -p 3000",
+    "build:bun-runtime": "bun --bun next build",
+    "start:bun-runtime": "bun --bun next start"
   },
   "dependencies": {
     "@ai-sdk/xai": "^2.0.39",

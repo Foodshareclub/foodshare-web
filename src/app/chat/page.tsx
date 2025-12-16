@@ -1,7 +1,10 @@
-import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
-import { getAllUserChats, getChatMessages } from '@/lib/data/chat';
-import { ChatPageClient } from './ChatPageClient';
+import { redirect } from "next/navigation";
+import { ChatPageClient } from "./ChatPageClient";
+import { createClient } from "@/lib/supabase/server";
+import { getAllUserChats, getChatMessages } from "@/lib/data/chat";
+
+// Force dynamic rendering - user-specific content
+export const dynamic = "force-dynamic";
 
 type SearchParams = Promise<{
   food?: string;
@@ -13,34 +16,33 @@ type SearchParams = Promise<{
  * Chat Page - Server Component
  * Fetches initial data on server, passes to client for real-time updates
  */
-export default async function ChatPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+export default async function ChatPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const supabase = await createClient();
-  
+
   // Get current user with profile
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
   if (authError || !user) {
-    redirect('/auth/login');
+    redirect("/auth/login");
   }
 
   // Get user profile for name and avatar
   const { data: profile } = await supabase
-    .from('profiles')
-    .select('first_name, second_name, avatar_url')
-    .eq('id', user.id)
+    .from("profiles")
+    .select("first_name, second_name, avatar_url")
+    .eq("id", user.id)
     .single();
 
-  const userName = profile ? `${profile.first_name || ''} ${profile.second_name || ''}`.trim() : '';
-  const userAvatar = profile?.avatar_url || '';
+  const userName = profile ? `${profile.first_name || ""} ${profile.second_name || ""}`.trim() : "";
+  const userAvatar = profile?.avatar_url || "";
 
   // Fetch all user chats (food sharing only for now)
   const chatRooms = await getAllUserChats(user.id);
-  
+
   // Determine active room
   let activeRoomId = params.room || null;
   let initialMessages: Array<{
@@ -57,7 +59,7 @@ export default async function ChatPage({
   // If food param provided, find the matching room
   if (params.food && !activeRoomId) {
     const foodRoom = chatRooms.find(
-      (r) => r.type === 'food' && r.postId === parseInt(params.food!, 10)
+      (r) => r.type === "food" && r.postId === parseInt(params.food!, 10)
     );
     if (foodRoom) {
       activeRoomId = foodRoom.id;
@@ -67,8 +69,8 @@ export default async function ChatPage({
   // Fetch messages for active room
   if (activeRoomId) {
     const activeChat = chatRooms.find((r) => r.id === activeRoomId);
-    
-    if (activeChat?.type === 'food') {
+
+    if (activeChat?.type === "food") {
       const messages = await getChatMessages(activeRoomId);
       initialMessages = messages.map((m) => ({
         id: m.id,
@@ -84,9 +86,7 @@ export default async function ChatPage({
   }
 
   // Find active chat room data
-  const activeChatRoom = activeRoomId 
-    ? chatRooms.find((r) => r.id === activeRoomId) || null
-    : null;
+  const activeChatRoom = activeRoomId ? chatRooms.find((r) => r.id === activeRoomId) || null : null;
 
   return (
     <ChatPageClient

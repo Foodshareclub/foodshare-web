@@ -127,7 +127,6 @@ export const getEmailDashboardStats = unstable_cache(
       activeSubsRes,
       registeredUsersRes,
       campaignsRes,
-      comprehensiveQuotaRes,
       automationsRes,
       suppressionRes,
       _bounceRes,
@@ -147,8 +146,6 @@ export const getEmailDashboardStats = unstable_cache(
         .select("total_sent, total_opened, total_clicked, total_unsubscribed, total_bounced")
         .eq("status", "sent")
         .gte("sent_at", thirtyDaysAgo.toISOString()),
-      // Comprehensive quota (daily + monthly) via RPC
-      supabase.rpc("get_comprehensive_quota_status"),
       // Active automations
       supabase
         .from("email_automation_flows")
@@ -163,6 +160,9 @@ export const getEmailDashboardStats = unstable_cache(
         .eq("event_type", "bounce")
         .gte("created_at", thirtyDaysAgo.toISOString()),
     ]);
+
+    // Fetch quota data using the existing function instead of non-existent RPC
+    const comprehensiveQuotaRes = { data: await getComprehensiveQuotaStatus() };
 
     // Calculate campaign aggregates
     const campaigns = campaignsRes.data || [];
@@ -180,10 +180,10 @@ export const getEmailDashboardStats = unstable_cache(
       monthlyLimit = 0;
 
     for (const q of quotaData) {
-      dailyUsed += q.daily_sent || 0;
-      dailyLimit += q.daily_limit || 0;
-      monthlyUsed += q.monthly_sent || 0;
-      monthlyLimit += q.monthly_limit || 0;
+      dailyUsed += q.daily.sent || 0;
+      dailyLimit += q.daily.limit || 0;
+      monthlyUsed += q.monthly.sent || 0;
+      monthlyLimit += q.monthly.limit || 0;
     }
 
     // Fallback defaults if no quota data

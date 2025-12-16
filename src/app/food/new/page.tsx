@@ -4,6 +4,9 @@ import { createClient } from "@/lib/supabase/server";
 import { generateNoIndexMetadata } from "@/lib/metadata";
 import { checkIsAdmin } from "@/lib/data/auth";
 
+// Force dynamic rendering - auth-required page
+export const dynamic = "force-dynamic";
+
 export const metadata = generateNoIndexMetadata(
   "Create New Listing",
   "Share food or items with your community"

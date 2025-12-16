@@ -1,14 +1,17 @@
-import { Database } from "duckdb-async";
 import { getMotherDuckToken } from "@/lib/email/vault";
 
-let dbInstance: Database | null = null;
+// Dynamic import to avoid Turbopack parsing native module at build time
+// Using Awaited<ReturnType> since Database.create() returns the instance
+type DuckDBModule = typeof import("duckdb-async");
+type DatabaseInstance = Awaited<ReturnType<DuckDBModule["Database"]["create"]>>;
+let dbInstance: DatabaseInstance | null = null;
 
 export class MotherDuckService {
   private static async matchToken(token: string): Promise<string> {
     return `md:?motherduck_token=${token}`;
   }
 
-  static async getConnection(): Promise<Database> {
+  static async getConnection(): Promise<DatabaseInstance> {
     if (dbInstance) return dbInstance;
 
     const token = await getMotherDuckToken();
@@ -27,6 +30,8 @@ export class MotherDuckService {
     // pooling or reuse, but for now a singleton is a good starting point for
     // persistent containers or long-running processes.
     try {
+      // Dynamic import at runtime to avoid Turbopack parsing native module
+      const { Database } = await import("duckdb-async");
       dbInstance = await Database.create(connectionString);
       return dbInstance;
     } catch (error) {
