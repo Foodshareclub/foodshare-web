@@ -86,10 +86,8 @@ const preferenceItems: NavItem[] = [
   {
     icon: Globe,
     label: "Language & region",
-    description: "Locale settings",
+    description: "Language, search radius",
     href: "/settings/language",
-    badge: "Soon",
-    disabled: true,
     gradient: "from-purple-500 to-violet-500",
   },
   {
@@ -679,18 +677,20 @@ export function SettingsClient() {
                   <span className="text-sm font-medium">Coming Soon</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {preferenceItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <div
-                        key={item.href}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted/50 text-muted-foreground text-xs"
-                      >
-                        <Icon className="w-3 h-3" />
-                        <span>{item.label}</span>
-                      </div>
-                    );
-                  })}
+                  {preferenceItems
+                    .filter((item) => item.disabled)
+                    .map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <div
+                          key={item.href}
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-muted/50 text-muted-foreground text-xs"
+                        >
+                          <Icon className="w-3 h-3" />
+                          <span>{item.label}</span>
+                        </div>
+                      );
+                    })}
                 </div>
               </Glass>
 
