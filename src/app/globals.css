@@ -263,7 +263,8 @@
   /* Animations */
   --animate-accordion-down: accordion-down var(--duration-normal) ease-out;
   --animate-accordion-up: accordion-up var(--duration-normal) ease-out;
-  --animate-shimmer: shimmer 2s infinite;
+  --animate-shimmer: shimmer 2s infinite linear;
+  --animate-holographic: holographic 3s ease infinite;
   --animate-pulse-subtle: pulse-subtle 2s ease-in-out infinite;
   --animate-fade-in: fade-in var(--duration-slow) ease-out;
   --animate-slide-up: slide-up var(--duration-slow) ease-out;
@@ -673,6 +674,16 @@
   }
   100% {
     transform: translateX(100%);
+  }
+}
+
+@keyframes holographic {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
   }
 }
 

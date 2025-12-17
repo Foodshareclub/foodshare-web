@@ -1,56 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
+import { motion } from "framer-motion";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
-import { Target, Users, TrendingUp, Zap, Award, ChevronRight, Star, Flame, Shuffle } from "lucide-react";
+import { Target, Users, TrendingUp, ChevronRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { ChallengeRevealModal } from "@/components/modals/challenge-reveal";
+import { ChallengeDeck } from "@/components/challenges/ChallengeDeck";
 import type { InitialProductStateType } from "@/types/product.types";
-import type { Challenge } from "@/lib/data/challenges";
 import type { AuthUser } from "@/app/actions/auth";
 
 interface ChallengesClientProps {
   challenges: InitialProductStateType[];
-  popularChallenges: Challenge[];
   user: AuthUser | null;
   stats: { totalChallenges: number; totalParticipants: number };
 }
 
-type Difficulty = "all" | "Easy" | "Medium" | "Hard";
-
-const DIFFICULTY_CONFIG = {
-  Easy: { color: "bg-green-500", text: "text-green-500", icon: Star, xp: 10 },
-  Medium: { color: "bg-yellow-500", text: "text-yellow-500", icon: Flame, xp: 25 },
-  Hard: { color: "bg-red-500", text: "text-red-500", icon: Zap, xp: 50 },
-} as const;
-
-export function ChallengesClient({
-  challenges,
-  popularChallenges,
-  user,
-  stats,
-}: ChallengesClientProps) {
-  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>("all");
+export function ChallengesClient({ challenges, user, stats }: ChallengesClientProps) {
   const [revealModalOpen, setRevealModalOpen] = useState(false);
-  const t = useTranslations("Common");
-
-  const filteredChallenges =
-    selectedDifficulty === "all"
-      ? challenges
-      : challenges.filter((c) => c.condition === selectedDifficulty);
-
   const isAuth = !!user;
 
   return (
     <>
-      {/* Hero Section */}
+      {/* Full-screen Hero with Deck as Centerpiece */}
       <HeroSection
         stats={stats}
         isAuth={isAuth}
+        challenges={challenges}
         onDiscoverClick={() => setRevealModalOpen(true)}
       />
 
@@ -60,126 +36,162 @@ export function ChallengesClient({
         onOpenChange={setRevealModalOpen}
         challenges={challenges}
       />
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Featured Challenges */}
-        {popularChallenges.length > 0 && <FeaturedSection challenges={popularChallenges} />}
-
-        {/* Filter Bar */}
-        <FilterBar
-          selected={selectedDifficulty}
-          onSelect={setSelectedDifficulty}
-          counts={{
-            all: challenges.length,
-            Easy: challenges.filter((c) => c.condition === "Easy").length,
-            Medium: challenges.filter((c) => c.condition === "Medium").length,
-            Hard: challenges.filter((c) => c.condition === "Hard").length,
-          }}
-        />
-
-        {/* Challenge Grid */}
-        <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-          <AnimatePresence mode="popLayout">
-            {filteredChallenges.map((challenge, index) => (
-              <ChallengeCard
-                key={challenge.id}
-                challenge={challenge}
-                index={index}
-                isAuth={!!user}
-              />
-            ))}
-          </AnimatePresence>
-        </motion.div>
-
-        {filteredChallenges.length === 0 && <EmptyState difficulty={selectedDifficulty} />}
-      </div>
     </>
   );
 }
 
 // ============================================================================
-// Hero Section
+// Hero Section - Immersive Full-Screen Experience
 // ============================================================================
 
 function HeroSection({
   stats,
   isAuth,
+  challenges,
   onDiscoverClick,
 }: {
   stats: { totalChallenges: number; totalParticipants: number };
   isAuth: boolean;
+  challenges: InitialProductStateType[];
   onDiscoverClick: () => void;
 }) {
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-teal-500/10 to-orange-500/10">
-      {/* Animated background elements */}
+    <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-gradient-to-br from-background via-primary/5 to-teal-500/5">
+      {/* Animated background orbs */}
       <div className="absolute inset-0 overflow-hidden">
+        {/* Large primary orb */}
         <motion.div
-          className="absolute -top-20 -right-20 w-64 h-64 bg-primary/20 rounded-full blur-3xl"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 4, repeat: Infinity }}
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[100px]"
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.3, 0.5, 0.3],
+            x: [0, 50, 0],
+            y: [0, -30, 0],
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
+        {/* Teal orb */}
         <motion.div
-          className="absolute -bottom-20 -left-20 w-64 h-64 bg-teal-500/20 rounded-full blur-3xl"
-          animate={{ scale: [1.2, 1, 1.2], opacity: [0.5, 0.3, 0.5] }}
-          transition={{ duration: 4, repeat: Infinity }}
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-teal-500/20 rounded-full blur-[80px]"
+          animate={{
+            scale: [1.2, 1, 1.2],
+            opacity: [0.4, 0.2, 0.4],
+            x: [0, -40, 0],
+            y: [0, 40, 0],
+          }}
+          transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }}
         />
+        {/* Orange accent orb */}
+        <motion.div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[120px]"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.15, 0.25, 0.15],
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+        />
+        {/* Floating particles */}
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-2 h-2 bg-primary/30 rounded-full"
+            style={{
+              left: `${20 + i * 12}%`,
+              top: `${30 + (i % 3) * 20}%`,
+            }}
+            animate={{
+              y: [0, -30, 0],
+              opacity: [0.3, 0.7, 0.3],
+              scale: [1, 1.5, 1],
+            }}
+            transition={{
+              duration: 3 + i * 0.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 0.3,
+            }}
+          />
+        ))}
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+      {/* Content */}
+      <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4 sm:px-6 lg:px-8 py-12">
+        {/* Top badge */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="mb-8"
+        >
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 backdrop-blur-sm border border-primary/20 text-primary">
+            <Sparkles className="w-4 h-4" />
+            <span className="text-sm font-medium">Discover Your Next Challenge</span>
+          </div>
+        </motion.div>
+
+        {/* Main headline */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center"
+          transition={{ delay: 0.3 }}
+          className="text-center mb-8"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-6">
-            <Target className="w-4 h-4" />
-            <span className="text-sm font-medium">Community Challenges</span>
-          </div>
-
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground mb-4">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground mb-4">
             Make the World{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-pink-500 to-teal-500 animate-pulse">
               Better
             </span>
           </h1>
-
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            Join challenges, earn XP, compete with the community, and create positive impact. Every
-            action counts!
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+            Shuffle through challenges, accept your mission, and earn XP while making a positive
+            impact.
           </p>
+        </motion.div>
 
-          {/* Stats */}
-          <div className="flex flex-wrap justify-center gap-3 mb-8">
-            <StatCard icon={Target} value={stats.totalChallenges} label="Active Challenges" />
-            <StatCard icon={Users} value={stats.totalParticipants} label="Participants" />
-            <StatCard icon={TrendingUp} value="2.5K" label="XP Earned" />
-          </div>
+        {/* The Star: Challenge Deck */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 20 }}
+          className="relative mb-12"
+        >
+          {/* Glow ring behind deck */}
+          <div className="absolute -inset-8 bg-gradient-to-r from-primary/20 via-teal-500/20 to-orange-500/20 rounded-[3rem] blur-2xl opacity-60" />
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap justify-center gap-3">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <ChallengeDeck
+            challenges={challenges}
+            onCardClick={onDiscoverClick}
+            autoShuffle
+            className="relative z-10"
+          />
+        </motion.div>
+
+        {/* Stats row */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          className="flex flex-wrap justify-center gap-4 mb-8"
+        >
+          <StatCard icon={Target} value={stats.totalChallenges} label="Challenges" />
+          <StatCard icon={Users} value={stats.totalParticipants} label="Participants" />
+          <StatCard icon={TrendingUp} value="2.5K" label="XP Earned" />
+        </motion.div>
+
+        {/* CTA for non-auth users */}
+        {!isAuth && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
+            <Link href="/auth/login">
               <Button
                 size="lg"
-                onClick={onDiscoverClick}
                 className="gap-2 bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 shadow-lg shadow-primary/25"
               >
-                <Shuffle className="w-4 h-4" />
-                Discover Random
+                Join the Movement
+                <ChevronRight className="w-4 h-4" />
               </Button>
-            </motion.div>
-
-            {!isAuth && (
-              <Link href="/auth/login">
-                <Button size="lg" variant="outline" className="gap-2">
-                  Join the Movement
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
-              </Link>
-            )}
-          </div>
-        </motion.div>
+            </Link>
+          </motion.div>
+        )}
       </div>
     </div>
   );
@@ -206,268 +218,6 @@ function StatCard({
         <div className="text-lg font-bold text-foreground">{value}</div>
         <div className="text-xs text-muted-foreground">{label}</div>
       </div>
-    </motion.div>
-  );
-}
-
-// ============================================================================
-// Featured Section
-// ============================================================================
-
-function FeaturedSection({ challenges }: { challenges: Challenge[] }) {
-  return (
-    <div className="mb-12">
-      <div className="flex items-center gap-2 mb-6">
-        <Flame className="w-5 h-5 text-orange-500" />
-        <h2 className="text-xl font-semibold text-foreground">Trending Now</h2>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {challenges.map((challenge, index) => (
-          <motion.div
-            key={challenge.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-          >
-            <Link href={`/challenge/${challenge.id}`}>
-              <div className="group relative h-48 rounded-2xl overflow-hidden cursor-pointer">
-                <Image
-                  src={challenge.challenge_image}
-                  alt={challenge.challenge_title}
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                {/* Rank badge */}
-                <div className="absolute top-3 left-3">
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-orange-500 text-white text-xs font-bold">
-                    <TrendingUp className="w-3 h-3" />#{index + 1}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="text-white font-semibold mb-1 line-clamp-1">
-                    {challenge.challenge_title}
-                  </h3>
-                  <div className="flex items-center gap-3 text-white/80 text-sm">
-                    <span className="flex items-center gap-1">
-                      <Users className="w-3 h-3" />
-                      {challenge.challenged_people}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Zap className="w-3 h-3" />
-                      {challenge.challenge_score} XP
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
-// Filter Bar
-// ============================================================================
-
-function FilterBar({
-  selected,
-  onSelect,
-  counts,
-}: {
-  selected: Difficulty;
-  onSelect: (d: Difficulty) => void;
-  counts: Record<Difficulty, number>;
-}) {
-  const filters: { key: Difficulty; label: string }[] = [
-    { key: "all", label: "All Challenges" },
-    { key: "Easy", label: "Easy" },
-    { key: "Medium", label: "Medium" },
-    { key: "Hard", label: "Hard" },
-  ];
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      {filters.map(({ key, label }) => {
-        const isActive = selected === key;
-        const config = key !== "all" ? DIFFICULTY_CONFIG[key] : null;
-
-        return (
-          <motion.button
-            key={key}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => onSelect(key)}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all",
-              isActive
-                ? "bg-primary text-primary-foreground shadow-lg"
-                : "bg-card hover:bg-accent text-foreground border border-border"
-            )}
-          >
-            {config && <config.icon className="w-4 h-4" />}
-            {label}
-            <span
-              className={cn(
-                "px-2 py-0.5 rounded-full text-xs",
-                isActive ? "bg-white/20" : "bg-muted"
-              )}
-            >
-              {counts[key]}
-            </span>
-          </motion.button>
-        );
-      })}
-    </div>
-  );
-}
-
-// ============================================================================
-// Challenge Card
-// ============================================================================
-
-function ChallengeCard({
-  challenge,
-  index,
-  isAuth,
-}: {
-  challenge: InitialProductStateType;
-  index: number;
-  isAuth: boolean;
-}) {
-  const difficulty = (challenge.condition as keyof typeof DIFFICULTY_CONFIG) || "Easy";
-  const config = DIFFICULTY_CONFIG[difficulty] || DIFFICULTY_CONFIG.Easy;
-  const DifficultyIcon = config.icon;
-
-  const imageUrl = challenge.images?.[0] || "/placeholder-challenge.webp";
-
-  return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      transition={{ delay: index * 0.05 }}
-      whileHover={{ y: -4 }}
-      className="group"
-    >
-      <Link href={`/challenge/${challenge.id}`}>
-        <div className="relative bg-card rounded-2xl overflow-hidden border border-border shadow-sm hover:shadow-xl transition-all duration-300">
-          {/* Image */}
-          <div className="relative h-48 overflow-hidden">
-            <Image
-              src={imageUrl}
-              alt={challenge.post_name}
-              fill
-              className="object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-            {/* XP Badge */}
-            <div className="absolute top-3 right-3">
-              <motion.div
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-sm text-white text-sm font-bold"
-              >
-                <Zap className="w-4 h-4 text-yellow-400" />
-                {config.xp} XP
-              </motion.div>
-            </div>
-
-            {/* Difficulty Badge */}
-            <div className="absolute top-3 left-3">
-              <div
-                className={cn(
-                  "flex items-center gap-1 px-2 py-1 rounded-full text-white text-xs font-medium",
-                  config.color
-                )}
-              >
-                <DifficultyIcon className="w-3 h-3" />
-                {difficulty}
-              </div>
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="p-4">
-            <h3 className="font-semibold text-foreground mb-2 line-clamp-1 group-hover:text-primary transition-colors">
-              {challenge.post_name}
-            </h3>
-
-            <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-              {challenge.post_description}
-            </p>
-
-            {/* Stats Row */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Users className="w-4 h-4" />
-                  {challenge.post_like_counter || 0}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Award className="w-4 h-4" />
-                  {challenge.post_views || 0} views
-                </span>
-              </div>
-            </div>
-
-            {/* Progress Bar (visual only for now) */}
-            <div className="mb-4">
-              <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                <span>Community Progress</span>
-                <span>
-                  {Math.min(((challenge.post_like_counter || 0) / 100) * 100, 100).toFixed(0)}%
-                </span>
-              </div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{
-                    width: `${Math.min(((challenge.post_like_counter || 0) / 100) * 100, 100)}%`,
-                  }}
-                  transition={{ duration: 1, delay: index * 0.1 }}
-                  className={cn("h-full rounded-full", config.color)}
-                />
-              </div>
-            </div>
-
-            {/* CTA Button */}
-            <Button
-              className="w-full gap-2 group-hover:bg-primary group-hover:text-primary-foreground"
-              variant="outline"
-            >
-              <Target className="w-4 h-4" />
-              {isAuth ? "Accept Challenge" : "View Challenge"}
-              <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </Button>
-          </div>
-        </div>
-      </Link>
-    </motion.div>
-  );
-}
-
-// ============================================================================
-// Empty State
-// ============================================================================
-
-function EmptyState({ difficulty }: { difficulty: Difficulty }) {
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
-      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
-        <Target className="w-8 h-8 text-muted-foreground" />
-      </div>
-      <h3 className="text-lg font-semibold text-foreground mb-2">
-        No {difficulty !== "all" ? difficulty : ""} Challenges Yet
-      </h3>
-      <p className="text-muted-foreground">Check back soon for new challenges to conquer!</p>
     </motion.div>
   );
 }

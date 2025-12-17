@@ -1,25 +1,22 @@
-import { Suspense } from 'react';
-import { getChallenges, getPopularChallenges } from '@/lib/data/challenges';
-import { getUser } from '@/app/actions/auth';
-import { ChallengesClient } from './ChallengesClient';
-import { Skeleton } from '@/components/ui/skeleton';
-import { generatePageMetadata } from '@/lib/metadata';
+import { Suspense } from "react";
+import { ChallengesClient } from "./ChallengesClient";
+import { getChallenges } from "@/lib/data/challenges";
+import { getUser } from "@/app/actions/auth";
+import { Skeleton } from "@/components/ui/skeleton";
+import { generatePageMetadata } from "@/lib/metadata";
 
 export const revalidate = 60;
 
 export const metadata = generatePageMetadata({
-  title: 'Community Challenges',
-  description: 'Join challenges to reduce waste, live healthier, and make the world a better place.',
-  keywords: ['challenges', 'sustainability', 'zero waste', 'community goals'],
-  path: '/challenge',
+  title: "Community Challenges",
+  description:
+    "Join challenges to reduce waste, live healthier, and make the world a better place.",
+  keywords: ["challenges", "sustainability", "zero waste", "community goals"],
+  path: "/challenge",
 });
 
 export default async function ChallengePage() {
-  const [challenges, popularChallenges, user] = await Promise.all([
-    getChallenges(),
-    getPopularChallenges(3),
-    getUser(),
-  ]);
+  const [challenges, user] = await Promise.all([getChallenges(), getUser()]);
 
   // Calculate community stats
   const totalChallenges = challenges.length;
@@ -32,7 +29,6 @@ export default async function ChallengePage() {
     <Suspense fallback={<ChallengeSkeleton />}>
       <ChallengesClient
         challenges={challenges}
-        popularChallenges={popularChallenges}
         user={user}
         stats={{ totalChallenges, totalParticipants }}
       />
@@ -42,14 +38,33 @@ export default async function ChallengePage() {
 
 function ChallengeSkeleton() {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="h-64 bg-gradient-to-br from-primary/20 to-teal-500/20 animate-pulse" />
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
-            <Skeleton key={i} className="h-80 rounded-2xl" />
-          ))}
+    <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-background via-primary/5 to-teal-500/5 flex flex-col items-center justify-center">
+      {/* Badge skeleton */}
+      <Skeleton className="h-10 w-48 rounded-full mb-8" />
+      {/* Title skeleton */}
+      <Skeleton className="h-16 w-80 rounded-lg mb-4" />
+      <Skeleton className="h-6 w-96 rounded-lg mb-8" />
+      {/* Deck skeleton */}
+      <div className="relative mb-12">
+        <Skeleton className="w-64 sm:w-72 rounded-2xl" style={{ aspectRatio: "3/4" }} />
+        <div className="absolute top-2 left-1 -z-10">
+          <Skeleton
+            className="w-64 sm:w-72 rounded-2xl opacity-70"
+            style={{ aspectRatio: "3/4" }}
+          />
         </div>
+        <div className="absolute top-4 left-2 -z-20">
+          <Skeleton
+            className="w-64 sm:w-72 rounded-2xl opacity-40"
+            style={{ aspectRatio: "3/4" }}
+          />
+        </div>
+      </div>
+      {/* Stats skeleton */}
+      <div className="flex gap-4">
+        <Skeleton className="h-16 w-32 rounded-xl" />
+        <Skeleton className="h-16 w-32 rounded-xl" />
+        <Skeleton className="h-16 w-32 rounded-xl" />
       </div>
     </div>
   );
