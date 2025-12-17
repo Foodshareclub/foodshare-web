@@ -12,7 +12,6 @@ import { getProductDetailUrl } from "@/utils/categoryMapping";
 import { useAuth } from "@/hooks/useAuth";
 import DeleteCardModal from "@/components/modals/DeleteCardModal";
 import { ReportPostDialog } from "@/components/reports";
-import { Glass } from "@/components/ui/glass";
 import type { InitialProductStateType } from "@/types/product.types";
 import { gpu120Interactive, gpu120Image } from "@/utils/gpuStyles";
 import { isValidImageUrl } from "@/lib/image";
@@ -67,29 +66,23 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
 
   return (
     <div className="col-span-1" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-      <Glass
-        variant="default"
-        rounded="2xl"
-        hoverEffect="subtle"
-        glow
-        gpu
-        className="relative overflow-hidden shadow-lg glass-fade-in"
-      >
-        {/* Image section */}
-        <div className="relative">
-          <div className="absolute top-2 right-2 z-10 flex items-end justify-end w-full gap-2">
-            {/* Report button - visible to logged-in users who don't own the post */}
+      {/* Airbnb-style card: clean, minimal with subtle shadow and hover lift */}
+      <div className="airbnb-card airbnb-card-hover relative">
+        {/* Image section - Airbnb uses near-square 20:19 ratio */}
+        <div className="relative airbnb-card-image">
+          <div className="absolute top-3 right-3 z-10 flex gap-2">
+            {/* Report button - Airbnb-style circular action button */}
             {userId && userId !== product.profile_id && !isAdmin && (
               <ReportPostDialog
                 postId={product.id}
                 postName={product.post_name}
                 trigger={
                   <button
-                    className="bg-background/90 backdrop-blur-[10px] p-2 rounded-md border border-border card-button-hover hover:bg-background/95"
+                    className="airbnb-action-btn airbnb-action-btn-hover"
                     aria-label="report"
                     style={gpu120Interactive}
                   >
-                    <Flag className="h-4 w-4 text-muted-foreground" />
+                    <Flag className="h-4 w-4 text-foreground" />
                   </button>
                 }
               />
@@ -98,7 +91,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
             {(userId === product.profile_id || isAdmin) && (
               <>
                 <button
-                  className="bg-background/90 backdrop-blur-[10px] p-2 rounded-md border border-border card-button-hover hover:bg-background/95"
+                  className="airbnb-action-btn airbnb-action-btn-hover"
                   onClick={onOpenEditModal}
                   aria-label="update"
                   style={gpu120Interactive}
@@ -112,7 +105,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
                   setOpenEdit={setOpenEdit}
                 />
                 <button
-                  className="bg-background/90 backdrop-blur-[10px] p-2 rounded-md border border-border card-button-hover hover:bg-background/95"
+                  className="airbnb-action-btn airbnb-action-btn-hover"
                   onClick={onOpen}
                   aria-label="delete"
                   style={gpu120Interactive}
@@ -126,8 +119,8 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
           <Link
             href={productUrl}
             className="relative w-full block cursor-pointer"
-            style={{ aspectRatio: "4/3" }}
-            prefetch={false} // We handle prefetch manually on hover
+            style={{ aspectRatio: "20/19" }}
+            prefetch={false}
           >
             {product.images && product.images.length > 0 && isValidImageUrl(product.images[0]) ? (
               <Image
@@ -146,30 +139,22 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
           </Link>
         </div>
 
-        {/* Glassmorphic content section */}
-        <Glass variant="subtle" rounded="none" className="p-4 h-[140px] border-t border-border/20">
-          <h3 className="text-xl font-semibold text-left font-body line-clamp-1 text-card-foreground">
-            {product.post_name}
-          </h3>
-          <div className="flex pt-2 items-center">
-            <p className="text-sm text-foreground/80 line-clamp-1">
-              {product.post_stripped_address}
-            </p>
-          </div>
-          <div className="flex pt-1">
-            <p className="text-sm text-muted-foreground">Available:</p>
-            <p className="ml-2 text-sm text-foreground/80 line-clamp-1">
-              {product.available_hours}
-            </p>
-          </div>
-          <div className="flex gap-[5px] items-center pt-1">
-            <div className="relative w-5 h-5">
-              <Image src={bus} alt="bus" fill sizes="20px" className="object-contain" />
+        {/* Content section - Airbnb-style typography with clean background */}
+        <div className="p-3 pt-3 pb-4">
+          <h3 className="text-card-title text-left font-body line-clamp-1">{product.post_name}</h3>
+          <p className="text-card-body line-clamp-1 mt-1">{product.post_stripped_address}</p>
+          <p className="text-card-small mt-1">
+            <span className="text-card-body">Available:</span>{" "}
+            <span className="text-card-body">{product.available_hours}</span>
+          </p>
+          <div className="flex gap-1 items-center mt-2">
+            <div className="relative w-4 h-4 opacity-70">
+              <Image src={bus} alt="bus" fill sizes="16px" className="object-contain" />
             </div>
-            <p className="text-sm text-foreground/80 line-clamp-1">{product.transportation}</p>
+            <p className="text-card-emphasis line-clamp-1">{product.transportation}</p>
           </div>
-        </Glass>
-      </Glass>
+        </div>
+      </div>
     </div>
   );
 }

@@ -49,14 +49,15 @@ async function ProductList() {
 
 ### Migration Progress
 
-| Hook                | Status                                       |
-| ------------------- | -------------------------------------------- |
-| `useAdminQueries`   | ✅ Removed - Use `@/app/actions/admin.ts`    |
-| `useProductQueries` | ⏳ Deprecated - Use `@/lib/data/products.ts` |
-| `useProfileQueries` | ⏳ Deprecated - Use `@/lib/data/profiles.ts` |
-| `useChatQueries`    | ⏳ Kept for realtime features                |
-| `useForumQueries`   | ⏳ Deprecated - Use `@/lib/data/forum.ts`    |
-| `useAuthQueries`    | ⏳ Deprecated - Use `@/hooks/useAuth.ts`     |
+| Hook                | Status                                         |
+| ------------------- | ---------------------------------------------- |
+| `useAdminQueries`   | ✅ Removed - Use `@/app/actions/admin.ts`      |
+| `useProductQueries` | ⏳ Deprecated - Use `@/lib/data/products.ts`   |
+| `useProfileQueries` | ⏳ Deprecated - Use `@/lib/data/profiles.ts`   |
+| `useChatQueries`    | ✅ Kept - Required for Supabase realtime       |
+| `useEmailCRM`       | ✅ Kept - Admin dashboard real-time monitoring |
+| `useForumQueries`   | ⏳ Deprecated - Use `@/lib/data/forum.ts`      |
+| `useAuthQueries`    | ⏳ Deprecated - Use `@/hooks/useAuth.ts`       |
 
 ### Timeline
 

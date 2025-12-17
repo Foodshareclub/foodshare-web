@@ -1,63 +1,33 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import Link from 'next/link';
+import { ErrorDisplay } from "@/components/error";
 
 /**
  * Auth Error Boundary Component
  * Handles errors during authentication flows
  */
-export default function Error({
+export default function AuthError({
   error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    console.error('Auth error:', error);
-  }, [error]);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-background flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-card rounded-2xl shadow-xl p-8 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full mb-4">
-          <span className="text-3xl">🔐</span>
-        </div>
-
-        <h1 className="text-2xl font-bold text-foreground mb-2">
-          Authentication Error
-        </h1>
-
-        <p className="text-muted-foreground mb-6">
-          {error.message || "We encountered an issue with authentication. Please try again."}
-        </p>
-
-        {error.digest && (
-          <p className="text-xs text-muted-foreground/60 mb-4">Error ID: {error.digest}</p>
-        )}
-
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={reset}
-            className="flex-1 px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors"
-          >
-            Try Again
-          </button>
-          <Link
-            href="/"
-            className="flex-1 px-6 py-3 bg-muted text-foreground rounded-lg font-semibold hover:bg-muted/80 transition-colors"
-          >
-            Go Home
-          </Link>
-        </div>
-
-        <div className="mt-6 pt-6 border-t border-border">
+    <ErrorDisplay
+      error={error}
+      reset={reset}
+      variant="default"
+      title="Authentication Error"
+      description="We encountered an issue with authentication. Please try again."
+      icon="🔐"
+      footerContent={
+        <div className="mb-6 text-center">
           <p className="text-sm text-muted-foreground">
             Having trouble? Try clearing your browser cookies or contact support.
           </p>
         </div>
-      </div>
-    </div>
+      }
+    />
   );
 }

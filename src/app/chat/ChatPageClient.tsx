@@ -7,17 +7,17 @@
  * The page itself doesn't scroll - only the left (chat list) and right (messages) segments scroll independently
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
+import { MessageCircle, Users } from "lucide-react";
 import { UnifiedChatList } from "@/components/chat/UnifiedChatList";
 import { UnifiedChatContainer } from "@/components/chat/UnifiedChatContainer";
 import { useMediaQuery } from "@/hooks";
 import { useOnlineStatus } from "@/hooks/useUnifiedChat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { MessageCircle, Users } from "lucide-react";
 import type { UnifiedChatRoom } from "@/lib/data/chat";
 
 const FALLBACK = {
@@ -64,7 +64,10 @@ export function ChatPageClient({
   const [selectedChat, setSelectedChat] = useState<UnifiedChatRoom | null>(activeChatRoom);
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [showList, setShowList] = useState(!activeChatRoom);
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isLoadingMessages, startMessageTransition] = useTransition();
+
+  // Track previous values to avoid cascading renders
+  const prevActiveChatRoomId = useRef(activeChatRoom?.id);
 
   useOnlineStatus(userId);
 
@@ -76,29 +79,32 @@ export function ChatPageClient({
     }
   };
 
-  // Sync with URL params
+  // Sync with URL params - only when activeChatRoom actually changes
   useEffect(() => {
-    if (activeChatRoom) {
-      setSelectedChat(activeChatRoom);
-      setMessages(initialMessages);
-      if (!isDesktop) setShowList(false);
+    if (activeChatRoom && activeChatRoom.id !== prevActiveChatRoomId.current) {
+      prevActiveChatRoomId.current = activeChatRoom.id;
+      // Use queueMicrotask to avoid synchronous setState in effect
+      queueMicrotask(() => {
+        setSelectedChat(activeChatRoom);
+        setMessages(initialMessages);
+        if (!isDesktop) setShowList(false);
+      });
     }
   }, [activeChatRoom, initialMessages, isDesktop]);
 
-  // Load messages when chat is selected
+  // Load messages when chat is selected (using useTransition for non-blocking UI)
   const loadMessages = async (chat: UnifiedChatRoom) => {
-    setIsLoadingMessages(true);
-    try {
-      const response = await fetch(`/api/chat/messages?roomId=${chat.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(data.messages || []);
+    startMessageTransition(async () => {
+      try {
+        const response = await fetch(`/api/chat/messages?roomId=${chat.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setMessages(data.messages || []);
+        }
+      } catch (error) {
+        console.error("Failed to load messages:", error);
       }
-    } catch (error) {
-      console.error("Failed to load messages:", error);
-    } finally {
-      setIsLoadingMessages(false);
-    }
+    });
   };
 
   const handleSelectChat = async (chat: UnifiedChatRoom) => {

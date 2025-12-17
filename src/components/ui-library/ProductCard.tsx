@@ -51,30 +51,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         )}
       </div>
 
-      {/* Card Body */}
+      {/* Card Body - Airbnb-style typography */}
       <div className="p-3">
         {/* Title & Rating */}
         <div className="flex justify-between items-center mb-1">
-          <p className="text-base font-semibold text-foreground line-clamp-1 flex-1">{title}</p>
+          <p className="text-card-title line-clamp-1 flex-1">{title}</p>
           {rating && (
             <div className="flex items-center gap-1 ml-2">
-              <span className="text-sm text-foreground">★</span>
-              <span className="text-sm font-medium text-foreground">{rating.toFixed(2)}</span>
-              {reviewCount && (
-                <span className="text-sm text-muted-foreground">({reviewCount})</span>
-              )}
+              <span className="text-card-body">★</span>
+              <span className="text-card-emphasis">{rating.toFixed(2)}</span>
+              {reviewCount && <span className="text-card-small">({reviewCount})</span>}
             </div>
           )}
         </div>
 
         {/* Subtitle */}
-        {subtitle && <p className="text-sm text-muted-foreground line-clamp-1 mb-1">{subtitle}</p>}
+        {subtitle && <p className="text-card-body line-clamp-1 mb-1">{subtitle}</p>}
 
         {/* Price */}
         {price && (
-          <div className="flex items-baseline gap-1 mt-2">
-            <span className="text-base font-semibold text-foreground">${price}</span>
-            <span className="text-sm text-muted-foreground">/ night</span>
+          <div className="flex items-baseline gap-1 mt-1">
+            <span className="text-card-emphasis">${price}</span>
+            <span className="text-card-body">/ night</span>
           </div>
         )}
       </div>
