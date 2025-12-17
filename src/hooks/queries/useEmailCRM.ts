@@ -15,6 +15,7 @@ import type {
   ProviderQuotaDetails,
   BounceStats,
 } from "@/lib/data/admin-email";
+import type { EmailTemplate } from "@/types/automations.types";
 
 // Query keys
 export const emailCRMKeys = {
@@ -26,6 +27,7 @@ export const emailCRMKeys = {
   segments: () => [...emailCRMKeys.all, "segments"] as const,
   quotas: () => [...emailCRMKeys.all, "quotas"] as const,
   bounces: () => [...emailCRMKeys.all, "bounces"] as const,
+  templates: () => [...emailCRMKeys.all, "templates"] as const,
 };
 
 // Fetch functions
@@ -68,6 +70,12 @@ async function fetchQuotas(): Promise<ProviderQuotaDetails[]> {
 async function fetchBounces(): Promise<BounceStats> {
   const res = await fetch("/api/admin/email/bounces");
   if (!res.ok) throw new Error("Failed to fetch bounce stats");
+  return res.json();
+}
+
+async function fetchTemplates(): Promise<EmailTemplate[]> {
+  const res = await fetch("/api/admin/email/templates");
+  if (!res.ok) throw new Error("Failed to fetch email templates");
   return res.json();
 }
 
@@ -132,6 +140,15 @@ export function useBounceStats() {
     queryFn: fetchBounces,
     refetchInterval: 60000,
     staleTime: 45000,
+  });
+}
+
+export function useEmailTemplates() {
+  return useQuery({
+    queryKey: emailCRMKeys.templates(),
+    queryFn: fetchTemplates,
+    refetchInterval: 300000, // Refresh every 5 minutes
+    staleTime: 240000,
   });
 }
 

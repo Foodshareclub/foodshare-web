@@ -59,6 +59,8 @@ import {
   Mail as _Mail,
 } from "lucide-react";
 import { useActionToast } from "@/hooks/useActionToast";
+import { useEmailTemplates } from "@/hooks/queries/useEmailCRM";
+import type { EmailTemplate } from "@/types/automations.types";
 
 // Lazy load the rich text editor to reduce initial bundle size
 const RichTextEditor = lazy(() =>
@@ -1929,62 +1931,17 @@ function ComposeTab() {
           </CardContent>
         </Card>
 
-        {/* Quick Templates */}
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Layers className="h-4 w-4 text-violet-500" />
-              Quick Templates
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0 space-y-2">
-            <QuickTemplateButton
-              label="Welcome Email"
-              description="New user onboarding"
-              icon={<UserPlus className="h-4 w-4" />}
-              color="emerald"
-              onClick={() => {
-                setFormData((prev) => ({
-                  ...prev,
-                  subject: "Welcome to FoodShare! 🍎",
-                  message:
-                    "<h2>Welcome to FoodShare!</h2><p>Hi there!</p><p>Welcome to FoodShare, your community food sharing platform.</p><p>Start exploring food near you today!</p>",
-                  emailType: "welcome",
-                }));
-              }}
-            />
-            <QuickTemplateButton
-              label="Newsletter"
-              description="Weekly updates"
-              icon={<FileText className="h-4 w-4" />}
-              color="blue"
-              onClick={() => {
-                setFormData((prev) => ({
-                  ...prev,
-                  subject: "This Week on FoodShare 📬",
-                  message:
-                    "<h2>This Week on FoodShare</h2><p>Hi!</p><p>Here's what's happening in your community this week...</p>",
-                  emailType: "newsletter",
-                }));
-              }}
-            />
-            <QuickTemplateButton
-              label="Food Alert"
-              description="New listing notification"
-              icon={<Heart className="h-4 w-4" />}
-              color="rose"
-              onClick={() => {
-                setFormData((prev) => ({
-                  ...prev,
-                  subject: "New Food Available Near You! 🥗",
-                  message:
-                    "<h2>New Food Available!</h2><p>Great news!</p><p>New food has been listed in your area. Check it out before it's gone!</p>",
-                  emailType: "food_listing",
-                }));
-              }}
-            />
-          </CardContent>
-        </Card>
+        {/* Quick Templates - Now fetched from database */}
+        <EmailTemplatesPanel
+          onSelectTemplate={(template) => {
+            setFormData((prev) => ({
+              ...prev,
+              subject: template.subject,
+              message: template.html_content,
+              emailType: template.category === "automation" ? "newsletter" : template.category,
+            }));
+          }}
+        />
 
         {/* Character Count */}
         <Card className="bg-card/50 backdrop-blur-sm border-border/50">
@@ -3014,8 +2971,8 @@ function RoutingRule({
   );
 }
 
-// QuickTemplateButton - Template button for compose sidebar
-function QuickTemplateButton({
+// QuickTemplateButton - Template button for compose sidebar (kept for potential future use)
+function _QuickTemplateButton({
   label,
   description,
   icon,
@@ -3050,5 +3007,138 @@ function QuickTemplateButton({
       </div>
       <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
     </button>
+  );
+}
+
+// ============================================================================
+// Email Templates Panel - Fetches templates from database
+// ============================================================================
+
+function EmailTemplatesPanel({
+  onSelectTemplate,
+}: {
+  onSelectTemplate: (template: EmailTemplate) => void;
+}) {
+  const { data: templates, isLoading } = useEmailTemplates();
+  const [previewTemplate, setPreviewTemplate] = useState<EmailTemplate | null>(null);
+
+  const getTemplateIcon = (slug: string) => {
+    if (slug.includes("welcome") || slug.includes("confirmation"))
+      return <UserPlus className="h-4 w-4" />;
+    if (slug.includes("food") || slug.includes("alert")) return <Heart className="h-4 w-4" />;
+    if (slug.includes("newsletter")) return <FileText className="h-4 w-4" />;
+    if (slug.includes("reengagement") || slug.includes("miss")) return <Star className="h-4 w-4" />;
+    return <Layers className="h-4 w-4" />;
+  };
+
+  const getTemplateColor = (slug: string): "emerald" | "blue" | "rose" | "amber" | "violet" => {
+    if (slug.includes("welcome") || slug.includes("confirmation")) return "emerald";
+    if (slug.includes("food") || slug.includes("alert")) return "rose";
+    if (slug.includes("newsletter")) return "blue";
+    if (slug.includes("reengagement")) return "amber";
+    return "violet";
+  };
+
+  return (
+    <>
+      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Layers className="h-4 w-4 text-violet-500" />
+            Email Templates
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Beautiful pre-designed templates from database
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-0 space-y-2">
+          {isLoading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 rounded-xl bg-muted/30 animate-pulse" />
+              ))}
+            </div>
+          ) : templates && templates.length > 0 ? (
+            templates
+              .filter((t) => t.is_active)
+              .map((template) => (
+                <div key={template.id} className="group">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewTemplate(template)}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/20 hover:bg-muted/40 hover:border-primary/30 hover:shadow-sm transition-all text-left"
+                  >
+                    <div
+                      className={cn(
+                        "p-2 rounded-lg",
+                        getTemplateColor(template.slug) === "emerald" &&
+                          "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+                        getTemplateColor(template.slug) === "blue" &&
+                          "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+                        getTemplateColor(template.slug) === "rose" &&
+                          "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+                        getTemplateColor(template.slug) === "amber" &&
+                          "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+                        getTemplateColor(template.slug) === "violet" &&
+                          "bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                      )}
+                    >
+                      {getTemplateIcon(template.slug)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium block truncate">{template.name}</span>
+                      <span className="text-xs text-muted-foreground truncate block">
+                        {template.subject}
+                      </span>
+                    </div>
+                    <Eye className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  </button>
+                </div>
+              ))
+          ) : (
+            <p className="text-xs text-muted-foreground text-center py-4">No templates available</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Template Preview Dialog */}
+      <Dialog open={!!previewTemplate} onOpenChange={() => setPreviewTemplate(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {previewTemplate && getTemplateIcon(previewTemplate.slug)}
+              {previewTemplate?.name}
+            </DialogTitle>
+            <DialogDescription>Subject: {previewTemplate?.subject}</DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto border rounded-lg bg-white">
+            {previewTemplate && (
+              <iframe
+                srcDoc={previewTemplate.html_content}
+                className="w-full h-[500px] border-0"
+                title="Email Preview"
+              />
+            )}
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setPreviewTemplate(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (previewTemplate) {
+                  onSelectTemplate(previewTemplate);
+                  setPreviewTemplate(null);
+                }
+              }}
+              className="gap-2"
+            >
+              <Copy className="h-4 w-4" />
+              Use This Template
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

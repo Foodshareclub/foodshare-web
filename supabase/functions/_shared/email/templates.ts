@@ -369,7 +369,7 @@ export function passwordResetEmail(params: PasswordResetParams): { subject: stri
 }
 
 // ============================================================================
-// Email Verification
+// Email Verification / Confirmation
 // ============================================================================
 
 interface EmailVerificationParams {
@@ -381,19 +381,40 @@ export function emailVerificationEmail(params: EmailVerificationParams): {
   subject: string;
   html: string;
 } {
+  const displayName = params.name || "there";
+
   const content = `
-    <p>Hey ${params.name},</p>
-    <p>Thanks for signing up! Please verify your email address to complete your registration:</p>
-    <p>Best regards,<br><strong>The FoodShare Team</strong></p>
+    <p>Hey ${displayName},</p>
+    <p>Thanks for signing up! You're just one click away from joining our community dedicated to <strong>reducing food waste</strong> and <strong>sharing delicious meals</strong> with neighbors.</p>
+    <p>Please confirm your email address to complete your registration:</p>
+    
+    <div style="background: #f8f8f8; border-radius: 8px; padding: 16px; margin: 20px 0; border-left: 4px solid #ff2d55;">
+      <p style="margin: 0; font-size: 14px; color: #666;">
+        <strong style="color: #ff2d55;">✨ What happens next?</strong><br>
+        Once confirmed, you'll have full access to share surplus food, discover items near you, and connect with your local community.
+      </p>
+    </div>
+    
+    <p><strong>🌱 What You Can Do on FoodShare:</strong></p>
+    <ul>
+      <li><strong style="color: #ff2d55;">🍎 Share Surplus Food</strong> - Post your extra groceries for neighbors to pick up for free.</li>
+      <li><strong style="color: #00A699;">🗺️ Discover Food Near You</strong> - Browse the map to find available food and community fridges.</li>
+      <li><strong style="color: #FC642D;">💬 Connect & Chat</strong> - Message members to coordinate pickups.</li>
+      <li><strong style="color: #8B5CF6;">🏆 Join Challenges</strong> - Participate in community challenges to reduce waste.</li>
+    </ul>
+    
+    <p style="margin-top: 20px; font-size: 13px; color: #999;">
+      <em>Didn't sign up? You can safely ignore this email.</em>
+    </p>
   `;
 
   return {
-    subject: "Verify your email address ✉️",
+    subject: "Confirm your email to join FoodShare! ✉️",
     html: baseTemplate({
-      title: "Verify Your Email",
-      preheader: "One click to verify your FoodShare account",
+      title: "Welcome to FoodShare! 🎉",
+      preheader: "One click to confirm your FoodShare account",
       content,
-      ctaText: "Verify Email",
+      ctaText: "✓ Confirm Your Email",
       ctaUrl: params.verifyUrl,
     }),
   };
