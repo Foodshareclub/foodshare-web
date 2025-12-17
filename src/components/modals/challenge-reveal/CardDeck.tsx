@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Sparkles, RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useMotionValue } from "framer-motion";
 import { SwipeableCard } from "./SwipeableCard";
 import { DeckStack } from "./DeckStack";
 import { SwipeIndicators } from "./SwipeIndicators";
@@ -12,7 +12,7 @@ import { CardBack } from "./CardFace";
 import { shuffleVariants, emptyStateVariants, nextCardVariants } from "./animations";
 import { DECK_CONFIG, ANIMATION_DURATIONS } from "./constants";
 import type { CardDeckProps, ChallengeItem } from "./types";
-import { useMotionValue } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 // Fisher-Yates shuffle
 function shuffleArray<T>(array: T[]): T[] {
@@ -24,11 +24,23 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-export function CardDeck({ challenges: initialChallenges, onAccept, onComplete }: CardDeckProps) {
+export function CardDeck({
+  challenges: initialChallenges,
+  activeChallenge,
+  onAccept,
+  onComplete,
+}: CardDeckProps) {
   const prefersReducedMotion = useReducedMotion();
-  const [challenges, setChallenges] = useState<ChallengeItem[]>(() =>
-    shuffleArray(initialChallenges)
-  );
+
+  // Order challenges with activeChallenge first, then shuffle the rest
+  const [challenges, setChallenges] = useState<ChallengeItem[]>(() => {
+    if (activeChallenge) {
+      // Filter out the active challenge and shuffle the rest
+      const otherChallenges = initialChallenges.filter((c) => c.id !== activeChallenge.id);
+      return [activeChallenge, ...shuffleArray(otherChallenges)];
+    }
+    return shuffleArray(initialChallenges);
+  });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isShuffling, setIsShuffling] = useState(false);
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
@@ -37,7 +49,10 @@ export function CardDeck({ challenges: initialChallenges, onAccept, onComplete }
   const dragX = useMotionValue(0);
 
   const currentChallenge = challenges[currentIndex];
-  const nextChallenges = challenges.slice(currentIndex + 1, currentIndex + 1 + DECK_CONFIG.VISIBLE_CARDS);
+  const nextChallenges = challenges.slice(
+    currentIndex + 1,
+    currentIndex + 1 + DECK_CONFIG.VISIBLE_CARDS
+  );
   const remainingCount = challenges.length - currentIndex;
   const isEmpty = currentIndex >= challenges.length;
 
@@ -137,9 +152,7 @@ export function CardDeck({ challenges: initialChallenges, onAccept, onComplete }
           />
         </div>
 
-        <h3 className="text-xl font-semibold text-foreground mb-2">
-          All Caught Up!
-        </h3>
+        <h3 className="text-xl font-semibold text-foreground mb-2">All Caught Up!</h3>
         <p className="text-muted-foreground mb-6 max-w-xs">
           You&apos;ve seen all the challenges. Shuffle the deck to go through them again!
         </p>
@@ -207,11 +220,7 @@ export function CardDeck({ challenges: initialChallenges, onAccept, onComplete }
 
         {/* Show card back during shuffle */}
         {isShuffling && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <CardBack />
           </motion.div>
         )}

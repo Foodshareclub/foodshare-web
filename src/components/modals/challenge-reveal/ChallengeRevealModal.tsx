@@ -3,6 +3,10 @@
 import { useCallback, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shuffle, Sparkles } from "lucide-react";
+import { CardDeck } from "./CardDeck";
+import { modalVariants } from "./animations";
+import type { ChallengeRevealModalProps } from "./types";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -10,16 +14,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import { CardDeck } from "./CardDeck";
-import { modalVariants } from "./animations";
-import type { ChallengeRevealModalProps } from "./types";
 import { acceptChallenge } from "@/app/actions/challenges";
 
 export function ChallengeRevealModal({
   open,
   onOpenChange,
   challenges,
+  activeChallenge,
   onAccept,
 }: ChallengeRevealModalProps) {
   const [isPending, startTransition] = useTransition();
@@ -92,7 +93,9 @@ export function ChallengeRevealModal({
               {/* Card Deck */}
               <div className="relative px-6 py-6">
                 <CardDeck
+                  key={activeChallenge?.id ?? "default"}
                   challenges={challenges}
+                  activeChallenge={activeChallenge}
                   onAccept={handleAcceptChallenge}
                   onComplete={handleClose}
                 />

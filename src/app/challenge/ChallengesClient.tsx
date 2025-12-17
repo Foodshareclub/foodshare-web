@@ -34,10 +34,17 @@ export function ChallengesClient({
   stats,
 }: ChallengesClientProps) {
   const [revealModalOpen, setRevealModalOpen] = useState(false);
+  const [activeChallenge, setActiveChallenge] = useState<InitialProductStateType | null>(null);
   const isAuth = !!user;
 
   // Use React Query with server-side initial data for optimal hydration
   const { data: challenges } = useDeckChallenges(initialChallenges, { limit: 12 });
+
+  // Handle deck card click - store the active card and open modal
+  const handleDeckCardClick = (challenge: InitialProductStateType) => {
+    setActiveChallenge(challenge);
+    setRevealModalOpen(true);
+  };
 
   return (
     <>
@@ -46,7 +53,7 @@ export function ChallengesClient({
         stats={stats}
         isAuth={isAuth}
         challenges={challenges}
-        onDiscoverClick={() => setRevealModalOpen(true)}
+        onCardClick={handleDeckCardClick}
       />
 
       {/* Challenge Reveal Modal */}
@@ -54,6 +61,7 @@ export function ChallengesClient({
         open={revealModalOpen}
         onOpenChange={setRevealModalOpen}
         challenges={challenges}
+        activeChallenge={activeChallenge}
       />
     </>
   );
@@ -67,12 +75,12 @@ function HeroSection({
   stats,
   isAuth,
   challenges,
-  onDiscoverClick,
+  onCardClick,
 }: {
   stats: { totalChallenges: number; totalParticipants: number; totalXpEarned: number };
   isAuth: boolean;
   challenges: InitialProductStateType[];
-  onDiscoverClick: () => void;
+  onCardClick: (challenge: InitialProductStateType) => void;
 }) {
   return (
     <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-gradient-to-br from-background via-primary/5 to-teal-500/5">
@@ -179,7 +187,7 @@ function HeroSection({
 
           <ChallengeDeck
             challenges={challenges}
-            onCardClick={onDiscoverClick}
+            onCardClick={onCardClick}
             autoShuffle
             className="relative z-10"
           />

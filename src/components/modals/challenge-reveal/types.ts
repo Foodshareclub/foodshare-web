@@ -23,6 +23,7 @@ export interface ChallengeRevealModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   challenges: ChallengeItem[];
+  activeChallenge?: ChallengeItem | null;
   onAccept?: (challengeId: number) => void;
 }
 
@@ -44,6 +45,7 @@ export interface DeckStackProps {
 
 export interface CardDeckProps {
   challenges: ChallengeItem[];
+  activeChallenge?: ChallengeItem | null;
   onAccept?: (challengeId: number) => void;
   onComplete?: () => void;
 }

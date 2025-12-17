@@ -21,7 +21,7 @@ import type { InitialProductStateType } from "@/types/product.types";
 
 interface ChallengeDeckProps {
   challenges: InitialProductStateType[];
-  onCardClick?: () => void;
+  onCardClick?: (activeChallenge: InitialProductStateType) => void;
   autoShuffle?: boolean;
   className?: string;
 }
@@ -105,17 +105,25 @@ export function ChallengeDeck({
     return () => clearTimeout(timer);
   }, [autoShuffle, prefersReducedMotion, hasAutoShuffled, handleShuffle]);
 
+  // Pass the active (top) card to the parent when clicked
+  const handleCardClick = useCallback(() => {
+    const currentTopCard = challenges[0];
+    if (currentTopCard && onCardClick) {
+      onCardClick(currentTopCard);
+    }
+  }, [challenges, onCardClick]);
+
   // Handle keyboard navigation
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        onCardClick?.();
+        handleCardClick();
       } else if (e.key === "s" || e.key === "S") {
         handleShuffle();
       }
     },
-    [onCardClick, handleShuffle]
+    [handleCardClick, handleShuffle]
   );
 
   if (challenges.length === 0) {
@@ -199,7 +207,7 @@ export function ChallengeDeck({
           className="relative cursor-pointer gpu-composite gpu-animate"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          onClick={onCardClick}
+          onClick={handleCardClick}
           onKeyDown={handleKeyDown}
           tabIndex={0}
           role="button"
