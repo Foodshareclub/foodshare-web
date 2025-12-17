@@ -3,9 +3,6 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import type { ForumPost } from "@/api/forumAPI";
-import { ForumCategoryBadge } from "./ForumCategoryBadge";
-import { ForumTagBadge } from "./ForumTagBadge";
 import {
   ArrowUp,
   TrendingUp,
@@ -19,9 +16,12 @@ import {
   Bookmark,
   Share2,
 } from "lucide-react";
+import { ForumCategoryBadge } from "./ForumCategoryBadge";
+import { ForumTagBadge } from "./ForumTagBadge";
+import type { ForumPost } from "@/api/forumAPI";
 
 // Icon aliases for consistency
-const FaArrowUp = ArrowUp;
+const _FaArrowUp = ArrowUp;
 const FaChartLine = TrendingUp;
 const FaCheckCircle = CheckCircle;
 const FaClock = Clock;
@@ -48,7 +48,7 @@ export function ForumPostCard({
   onMouseEnter,
   onMouseLeave,
   index = 0,
-  variant = "default",
+  variant: _variant = "default",
 }: ForumPostCardProps) {
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
@@ -74,7 +74,7 @@ export function ForumPostCard({
   };
 
   const isHot = (post.views_count || 0) > 100 || (post.forum_likes_counter || 0) > 10;
-  const isNew = Date.now() - new Date(post.forum_post_created_at).getTime() < 86400000;
+  const isNew = MODULE_LOAD_TIME - new Date(post.forum_post_created_at).getTime() < 86400000;
   const hasActivity = useMemo(() => {
     const lastActivityTime = new Date(
       post.last_activity_at || post.forum_post_created_at
@@ -133,7 +133,7 @@ export function ForumPostCard({
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
       >
         <div
-          className="relative bg-card rounded-2xl overflow-hidden cursor-pointer group border border-border/50 hover:border-primary/30 shadow-sm hover:shadow-xl transition-all duration-300"
+          className="relative bg-card rounded-2xl overflow-hidden cursor-pointer group border border-border/50 hover:border-primary/40 shadow-sm hover:shadow-xl transition-all duration-300"
           onClick={onNavigateToPost}
         >
           {/* Gradient border effect on hover */}
@@ -171,7 +171,7 @@ export function ForumPostCard({
                 src={post.forum_post_image}
                 alt={post.forum_post_name || "Forum post"}
                 onLoad={() => setImageLoaded(true)}
-                animate={{ scale: isHovered ? 1.08 : 1 }}
+                animate={{ scale: isHovered ? 1.05 : 1 }}
                 transition={{ duration: 0.5 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
@@ -292,6 +292,7 @@ export function ForumPostCard({
               <div className="flex items-center gap-3">
                 <div className="relative">
                   {post.profiles?.avatar_url ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                       src={post.profiles.avatar_url}
                       alt={post.profiles.nickname || "User"}

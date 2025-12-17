@@ -48,6 +48,7 @@ const AsideProducts: React.FC<AsideProdType> = ({
 
   return (
     <div className="glass flex flex-col lg:flex-row overflow-hidden mt-4 mx-2 cursor-pointer rounded-2xl p-2 gpu">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         className="rounded-xl object-cover p-2 h-[150px] min-w-[150px]"
         src={img}
@@ -67,7 +68,7 @@ const AsideProducts: React.FC<AsideProdType> = ({
           <PublishListingModal isOpen={isOpen} onClose={() => setIsOpen(false)} product={product} />
           <button
             onClick={deleteHandler}
-            className="ml-4 p-2 rounded-lg border border-border bg-background/20 backdrop-blur-md hover:bg-background/30 hover:scale-105 transition-all duration-200"
+            className="ml-4 p-2 rounded-lg border border-border bg-background/20 backdrop-blur-md hover:bg-background/30 card-button-hover"
             aria-label="delete"
           >
             <DeleteIcon />

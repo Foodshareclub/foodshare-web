@@ -80,7 +80,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
                 postName={product.post_name}
                 trigger={
                   <button
-                    className="bg-background/90 backdrop-blur-[10px] p-2 rounded-md border border-border transition-all hover:bg-background/95 hover:scale-105"
+                    className="bg-background/90 backdrop-blur-[10px] p-2 rounded-md border border-border card-button-hover hover:bg-background/95"
                     aria-label="report"
                     style={gpu120Interactive}
                   >
@@ -93,7 +93,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
             {(userId === product.profile_id || isAdmin) && (
               <>
                 <button
-                  className="bg-background/90 backdrop-blur-[10px] p-2 rounded-md border border-border transition-all hover:bg-background/95 hover:scale-105"
+                  className="bg-background/90 backdrop-blur-[10px] p-2 rounded-md border border-border card-button-hover hover:bg-background/95"
                   onClick={onOpenEditModal}
                   aria-label="update"
                   style={gpu120Interactive}
@@ -107,7 +107,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
                   setOpenEdit={setOpenEdit}
                 />
                 <button
-                  className="bg-background/90 backdrop-blur-[10px] p-2 rounded-md border border-border transition-all hover:bg-background/95 hover:scale-105"
+                  className="bg-background/90 backdrop-blur-[10px] p-2 rounded-md border border-border card-button-hover hover:bg-background/95"
                   onClick={onOpen}
                   aria-label="delete"
                   style={gpu120Interactive}
@@ -126,7 +126,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
           >
             {product.images && product.images.length > 0 && isValidImageUrl(product.images[0]) ? (
               <Image
-                className="object-cover transition-transform hover:scale-[1.02]"
+                className="object-cover transition-transform duration-300 hover:scale-105"
                 style={gpu120Image}
                 src={product.images[0]}
                 alt={`${product.post_name} - ${product.post_type} listing`}

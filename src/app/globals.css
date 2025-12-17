@@ -203,14 +203,14 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
-  
+
   /* Chart colors */
   --color-chart-1: hsl(var(--chart-1));
   --color-chart-2: hsl(var(--chart-2));
   --color-chart-3: hsl(var(--chart-3));
   --color-chart-4: hsl(var(--chart-4));
   --color-chart-5: hsl(var(--chart-5));
-  
+
   /* Sidebar colors */
   --color-sidebar: hsl(var(--sidebar-background));
   --color-sidebar-foreground: hsl(var(--sidebar-foreground));
@@ -220,7 +220,7 @@
   --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
   --color-sidebar-border: hsl(var(--sidebar-border));
   --color-sidebar-ring: hsl(var(--sidebar-ring));
-  
+
   /* Border radius */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -228,7 +228,7 @@
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
-  
+
   /* Fonts */
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
@@ -302,7 +302,7 @@
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   border: 1px solid hsl(var(--border) / 0.15);
-  box-shadow: 
+  box-shadow:
     0 4px 24px hsl(0 0% 0% / 0.06),
     0 1px 2px hsl(0 0% 0% / 0.04);
 }
@@ -342,7 +342,10 @@
 
 /* Glass transition utility */
 @utility glass-transition {
-  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 /* Glass animation utilities */
@@ -395,6 +398,93 @@
   }
   100% {
     transform: translateX(100%);
+  }
+}
+
+/* =============================================================================
+   CARD HOVER UTILITIES
+   Standardized hover effects for consistent card interactions across the app.
+   Use these instead of custom hover transforms for consistency.
+   ============================================================================= */
+
+/* Base card transition - apply to all interactive cards */
+@utility card-transition {
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform, box-shadow;
+}
+
+/* Subtle hover - minimal lift, small shadow increase */
+@utility card-hover-subtle {
+  &:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow:
+      0 8px 25px -5px hsl(0 0% 0% / 0.1),
+      0 4px 10px -6px hsl(0 0% 0% / 0.1);
+  }
+  &:active {
+    transform: translateY(-1px) scale(1.005);
+  }
+}
+
+/* Default hover - balanced lift and shadow for most cards */
+@utility card-hover {
+  &:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow:
+      0 12px 35px -5px hsl(0 0% 0% / 0.12),
+      0 6px 15px -8px hsl(0 0% 0% / 0.1);
+  }
+  &:active {
+    transform: translateY(-2px) scale(1.01);
+  }
+}
+
+/* Prominent hover - larger lift for featured cards */
+@utility card-hover-prominent {
+  &:hover {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow:
+      0 20px 45px -10px hsl(0 0% 0% / 0.15),
+      0 10px 20px -10px hsl(0 0% 0% / 0.1);
+  }
+  &:active {
+    transform: translateY(-3px) scale(1.015);
+  }
+}
+
+/* Border glow on hover - use with card-hover variants */
+@utility card-hover-glow {
+  &:hover {
+    border-color: hsl(var(--primary) / 0.4);
+  }
+}
+
+/* Image zoom on hover - for card images within group */
+@utility card-image-hover {
+  overflow: hidden;
+  & > img,
+  & > .card-image {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  &:hover > img,
+  &:hover > .card-image {
+    transform: scale(1.05);
+  }
+}
+
+/* Button scale for card action buttons */
+@utility card-button-hover {
+  transition:
+    transform 0.2s ease-out,
+    background-color 0.2s ease-out;
+  &:hover {
+    transform: scale(1.05);
+  }
+  &:active {
+    transform: scale(0.98);
   }
 }
 
@@ -499,38 +589,71 @@
    ============================================================================ */
 
 @keyframes accordion-down {
-  from { height: 0; }
-  to { height: var(--radix-accordion-content-height); }
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
 }
 
 @keyframes accordion-up {
-  from { height: var(--radix-accordion-content-height); }
-  to { height: 0; }
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes pulse-subtle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* ============================================================================
@@ -562,7 +685,10 @@
 
 .theme-transitioning,
 .theme-transitioning * {
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease !important;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease !important;
 }
 
 /* ============================================================================

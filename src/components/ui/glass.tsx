@@ -4,13 +4,22 @@ import { cn } from "@/lib/utils";
 
 /**
  * Glass Component - Tailwind v4 Implementation
- * 
+ *
  * Uses @utility classes defined in globals.css for true Tailwind integration.
  * Supports all Tailwind variants: hover:, dark:, md:, etc.
- * 
+ *
  * @example
+ * // Basic glass panel
  * <Glass variant="subtle" className="p-4 rounded-xl">Content</Glass>
- * <Glass variant="prominent" hover>Card with hover effect</Glass>
+ *
+ * // Card with standardized hover effect
+ * <Glass variant="default" hoverEffect="default" glow>Interactive card</Glass>
+ *
+ * // Prominent hover for featured cards
+ * <Glass variant="prominent" hoverEffect="prominent">Featured content</Glass>
+ *
+ * // Pre-configured card with hover
+ * <GlassCard>Card with default hover</GlassCard>
  */
 
 const glassVariants = cva("", {
@@ -35,18 +44,29 @@ const glassVariants = cva("", {
       "3xl": "rounded-3xl",
       full: "rounded-full",
     },
+    hoverEffect: {
+      none: "",
+      subtle: "card-transition card-hover-subtle",
+      default: "card-transition card-hover",
+      prominent: "card-transition card-hover-prominent",
+    },
   },
   defaultVariants: {
     variant: "default",
     rounded: "xl",
+    hoverEffect: "none",
   },
 });
 
 export interface GlassProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof glassVariants> {
-  /** Enable hover transition effects */
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof glassVariants> {
+  /**
+   * @deprecated Use hoverEffect="default" instead
+   * Enable hover transition effects (legacy, maps to hoverEffect="default")
+   */
   hover?: boolean;
+  /** Add border glow effect on hover */
+  glow?: boolean;
   /** Enable GPU acceleration for animations */
   gpu?: boolean;
   /** Render as a different element */
@@ -54,13 +74,19 @@ export interface GlassProps
 }
 
 const Glass = React.forwardRef<HTMLDivElement, GlassProps>(
-  ({ className, variant, rounded, hover, gpu, as: Component = "div", ...props }, ref) => {
+  (
+    { className, variant, rounded, hoverEffect, hover, glow, gpu, as: Component = "div", ...props },
+    ref
+  ) => {
+    // Map legacy hover prop to new hoverEffect system
+    const resolvedHoverEffect = hoverEffect ?? (hover ? "default" : "none");
+
     return (
       <Component
         ref={ref}
         className={cn(
-          glassVariants({ variant, rounded }),
-          hover && "glass-transition hover:shadow-lg",
+          glassVariants({ variant, rounded, hoverEffect: resolvedHoverEffect }),
+          glow && "card-hover-glow",
           gpu && "gpu",
           className
         )}
@@ -75,8 +101,15 @@ Glass.displayName = "Glass";
  * Pre-configured Glass variants for common use cases
  */
 const GlassCard = React.forwardRef<HTMLDivElement, Omit<GlassProps, "variant">>(
-  ({ className, ...props }, ref) => (
-    <Glass ref={ref} variant="default" hover className={cn("p-5", className)} {...props} />
+  ({ className, hoverEffect = "default", ...props }, ref) => (
+    <Glass
+      ref={ref}
+      variant="default"
+      hoverEffect={hoverEffect}
+      glow
+      className={cn("p-5", className)}
+      {...props}
+    />
   )
 );
 GlassCard.displayName = "GlassCard";
