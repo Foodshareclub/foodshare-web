@@ -9,6 +9,23 @@ import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { STORAGE_BUCKETS, validateFile } from "@/constants/storage";
 import { uploadToR2, getR2Secrets, getPresignedUpload } from "@/lib/r2";
 
+const IS_DEV = process.env.NODE_ENV === "development";
+
+/**
+ * Conditional logging - only logs in development
+ */
+function devLog(message: string, data?: unknown): void {
+  if (!IS_DEV) return;
+  const dataStr = data ? ` ${JSON.stringify(data)}` : "";
+  console.log(`[Storage] ${message}${dataStr}`);
+}
+
+function devWarn(message: string, data?: unknown): void {
+  if (!IS_DEV) return;
+  const dataStr = data ? ` ${JSON.stringify(data)}` : "";
+  console.warn(`[Storage] ${message}${dataStr}`);
+}
+
 export type UploadResult = {
   success: boolean;
   path?: string;
@@ -40,12 +57,7 @@ export async function uploadToStorage(formData: FormData): Promise<UploadResult>
     return { success: false, error: "Missing required fields" };
   }
 
-  console.log("[Storage Action] 🚀 Starting upload:", {
-    bucket,
-    filePath,
-    size: file.size,
-    type: file.type,
-  });
+  devLog("🚀 Starting upload", { bucket, filePath, size: file.size, type: file.type });
 
   try {
     // Validate file if not skipped
@@ -57,7 +69,7 @@ export async function uploadToStorage(formData: FormData): Promise<UploadResult>
       if (bucketKey) {
         const validation = validateFile(file, bucketKey);
         if (!validation.valid) {
-          console.log("[Storage Action] ❌ Validation failed:", validation.error);
+          devLog("❌ Validation failed", validation.error);
           return { success: false, error: validation.error };
         }
       }
@@ -67,12 +79,12 @@ export async function uploadToStorage(formData: FormData): Promise<UploadResult>
     const r2Config = await getR2Secrets();
 
     if (r2Config.accountId && r2Config.accessKeyId && r2Config.secretAccessKey) {
-      console.log("[Storage Action] 📤 Uploading to R2...");
+      devLog("📤 Uploading to R2...");
       const r2Path = `${bucket}/${filePath}`;
       const result = await uploadToR2(file, r2Path, file.type);
 
       if (result.success && result.path) {
-        console.log("[Storage Action] ✅ R2 upload successful:", result.publicUrl);
+        devLog("✅ R2 upload successful", result.publicUrl);
         return {
           success: true,
           path: result.path,
@@ -81,9 +93,9 @@ export async function uploadToStorage(formData: FormData): Promise<UploadResult>
         };
       }
 
-      console.warn("[Storage Action] ⚠️ R2 failed:", result.error);
+      devWarn("⚠️ R2 failed", result.error);
     } else {
-      console.warn("[Storage Action] ⚠️ R2 not configured, falling back to Supabase");
+      devWarn("⚠️ R2 not configured, falling back to Supabase");
     }
 
     // Fallback to Supabase direct upload using service role key (server-side)
@@ -94,7 +106,7 @@ export async function uploadToStorage(formData: FormData): Promise<UploadResult>
       return { success: false, error: "Storage not configured" };
     }
 
-    console.log("[Storage Action] 📤 Uploading to Supabase...");
+    devLog("📤 Uploading to Supabase...");
     const uploadUrl = `${supabaseUrl}/storage/v1/object/${bucket}/${filePath}`;
 
     const response = await fetch(uploadUrl, {
@@ -109,12 +121,12 @@ export async function uploadToStorage(formData: FormData): Promise<UploadResult>
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("[Storage Action] ❌ Supabase upload failed:", response.status, errorText);
+      console.error("[Storage] ❌ Supabase upload failed:", response.status, errorText);
       return { success: false, error: `Upload failed: ${response.status}` };
     }
 
     const result = await response.json();
-    console.log("[Storage Action] ✅ Supabase upload successful");
+    devLog("✅ Supabase upload successful");
 
     return {
       success: true,
@@ -122,7 +134,7 @@ export async function uploadToStorage(formData: FormData): Promise<UploadResult>
       storage: "supabase",
     };
   } catch (error) {
-    console.error("[Storage Action] ❌ Exception:", error);
+    console.error("[Storage] ❌ Exception:", error);
     return { success: false, error: (error as Error).message };
   }
 }
@@ -144,7 +156,7 @@ export async function getDirectUploadUrl(
   fileSize: number,
   forceSupabase: boolean = false
 ): Promise<DirectUploadResult> {
-  console.log("[Storage Action] 🚀 Getting direct upload URL:", {
+  devLog("🚀 Getting direct upload URL", {
     bucket,
     filePath,
     size: fileSize,
@@ -161,7 +173,7 @@ export async function getDirectUploadUrl(
         const presigned = await getPresignedUpload(`${bucket}/${filePath}`, fileType, fileSize);
 
         if (presigned) {
-          console.log("[Storage Action] ✅ Generated R2 presigned URL");
+          devLog("✅ Generated R2 presigned URL");
           return {
             success: true,
             url: presigned.url,
@@ -174,17 +186,13 @@ export async function getDirectUploadUrl(
     }
 
     // Fallback to Supabase (or forced)
-    console.log(
-      forceSupabase
-        ? "[Storage Action] 🔄 Using Supabase (forced fallback)"
-        : "[Storage Action] ⚠️ R2 not configured, falling back to Supabase"
-    );
+    devLog(forceSupabase ? "🔄 Using Supabase (forced)" : "⚠️ R2 not configured, using Supabase");
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !supabaseServiceRoleKey) {
-      console.error("[Storage Action] ❌ Missing Supabase admin credentials");
+      console.error("[Storage] ❌ Missing Supabase admin credentials");
       return { success: false, error: "Storage configuration error" };
     }
 
@@ -196,11 +204,11 @@ export async function getDirectUploadUrl(
       .createSignedUploadUrl(filePath);
 
     if (error || !data) {
-      console.error("[Storage Action] ❌ Supabase presign failed:", error);
+      console.error("[Storage] ❌ Supabase presign failed:", error);
       return { success: false, error: error?.message || "Failed to generate upload URL" };
     }
 
-    console.log("[Storage Action] ✅ Generated Supabase upload URL");
+    devLog("✅ Generated Supabase upload URL");
     return {
       success: true,
       url: data.signedUrl,
@@ -211,7 +219,7 @@ export async function getDirectUploadUrl(
       storage: "supabase",
     };
   } catch (error) {
-    console.error("[Storage Action] ❌ Exception:", error);
+    console.error("[Storage] ❌ Exception:", error);
     return { success: false, error: (error as Error).message };
   }
 }

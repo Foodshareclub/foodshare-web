@@ -4,29 +4,63 @@
  * App Providers
  *
  * Provides:
- * - QueryClientProvider for React Query
+ * - QueryClientProvider for React Query (used for client-side caching only)
  * - NextIntlClientProvider for i18n
  * - ThemeProvider for dark/light mode
  * - LocaleContext for dynamic locale switching
  * - ActionToastProvider for server action feedback toasts
+ *
+ * NOTE: Primary data fetching uses Server Components + lib/data functions.
+ * React Query is only used for client-side state management where needed.
  */
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useSyncExternalStore,
+} from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { NextIntlClientProvider } from "next-intl";
 import { ThemeProvider } from "next-themes";
 import { getBrowserLocale, type Locale } from "@/i18n/config";
 import { ActionToastProvider } from "@/hooks/useActionToast";
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 60 * 1000, // 1 minute
-      refetchOnWindowFocus: false,
+/**
+ * Create QueryClient with optimized defaults
+ * - staleTime: 1 minute (data considered fresh)
+ * - refetchOnWindowFocus: disabled (server data is authoritative)
+ * - retry: 1 attempt (fail fast for better UX)
+ */
+function makeQueryClient(): QueryClient {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000,
+        refetchOnWindowFocus: false,
+        retry: 1,
+      },
     },
-  },
-});
+  });
+}
+
+// Singleton for browser, new instance for each SSR request
+let browserQueryClient: QueryClient | undefined;
+
+function getQueryClient(): QueryClient {
+  if (typeof window === "undefined") {
+    // Server: always create a new QueryClient
+    return makeQueryClient();
+  }
+  // Browser: reuse singleton
+  if (!browserQueryClient) {
+    browserQueryClient = makeQueryClient();
+  }
+  return browserQueryClient;
+}
 
 // Loading component - renders before ThemeProvider, so we use inline styles
 // with CSS custom properties that respect the user's system preference
@@ -82,27 +116,52 @@ interface LocaleContextType {
 
 const LocaleContext = createContext<LocaleContextType | null>(null);
 
+/**
+ * Client detection using useSyncExternalStore
+ * This avoids the cascading render issue with setState in useEffect
+ */
+function subscribeToNothing(): () => void {
+  return () => {};
+}
+
+function getClientSnapshot(): boolean {
+  return true;
+}
+
+function getServerSnapshot(): boolean {
+  return false;
+}
+
+function useIsClient(): boolean {
+  return useSyncExternalStore(subscribeToNothing, getClientSnapshot, getServerSnapshot);
+}
+
 interface ProvidersProps {
   children: React.ReactNode;
   initialLocale?: Locale;
 }
 
 export function Providers({ children, initialLocale = "en" }: ProvidersProps) {
-  const [isClient, setIsClient] = useState(false);
+  const isClient = useIsClient();
   const [locale, setLocale] = useState<Locale>(initialLocale);
   const [messages, setMessages] = useState<Messages | null>(null);
+  const [isLocaleLoaded, setIsLocaleLoaded] = useState(false);
+
+  // Get or create QueryClient (singleton pattern for browser)
+  const queryClient = useMemo(() => getQueryClient(), []);
 
   useEffect(() => {
-    // This is intentional - we need to detect client-side hydration
-    // and load browser-specific locale preferences
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsClient(true);
-    // Detect and load browser locale (now checks saved preference first)
-    const browserLocale = getBrowserLocale();
-
-    setLocale(browserLocale);
-
-    loadMessages(browserLocale).then(setMessages);
+    // Load browser locale preferences on client
+    // Using async IIFE to batch state updates after async operation
+    const initLocale = async (): Promise<void> => {
+      const browserLocale = getBrowserLocale();
+      const msgs = await loadMessages(browserLocale);
+      // Batch updates together after async operation completes
+      setLocale(browserLocale);
+      setMessages(msgs);
+      setIsLocaleLoaded(true);
+    };
+    initLocale();
   }, []);
 
   const changeLocale = useCallback(async (newLocale: Locale) => {
@@ -120,14 +179,17 @@ export function Providers({ children, initialLocale = "en" }: ProvidersProps) {
     setMessages(newMessages);
   }, []);
 
-  // Show loading until both client-side rendering and messages are ready
-  if (!isClient || !messages) {
+  // Memoize context value to prevent unnecessary re-renders
+  const localeContextValue = useMemo(() => ({ changeLocale, locale }), [changeLocale, locale]);
+
+  // Show loading until client-side rendering and locale messages are ready
+  if (!isClient || !isLocaleLoaded || !messages) {
     return <LoadingSpinner />;
   }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LocaleContext.Provider value={{ changeLocale, locale }}>
+      <LocaleContext.Provider value={localeContextValue}>
         <NextIntlClientProvider key={locale} locale={locale} messages={messages} timeZone="UTC">
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <ActionToastProvider>{children}</ActionToastProvider>

@@ -79,20 +79,37 @@ export default async function FoodPage() {
 
 ### Invalidating Cache (Server Actions)
 
+The `products.ts` actions use a consolidated `invalidateProductCaches` helper for cleaner cache invalidation:
+
 ```typescript
 // app/actions/products.ts
 "use server";
 
-import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
+import { CACHE_TAGS, invalidateTag, getProductTags } from "@/lib/data/cache-keys";
+
+/**
+ * Batch invalidate product-related caches
+ */
+function invalidateProductCaches(productId?: number, postType?: string, profileId?: string): void {
+  // Use helper for consistent tag invalidation
+  getProductTags(productId, postType).forEach((tag) => invalidateTag(tag));
+
+  // Invalidate user-specific cache
+  if (profileId) {
+    invalidateTag(CACHE_TAGS.USER_PRODUCTS(profileId));
+  }
+
+  // Invalidate activity caches
+  if (productId && profileId) {
+    invalidatePostActivityCaches(productId, profileId);
+  }
+}
 
 export async function createProduct(formData: FormData) {
   // ... create product with post_type
 
-  // Invalidate relevant caches (granular by type)
-  invalidateTag(CACHE_TAGS.PRODUCTS);
-  invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS);
-  invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(post_type));
-  invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(post_type));
+  // Batch invalidate all product caches
+  invalidateProductCaches(undefined, post_type, user.id);
 }
 
 export async function updateProduct(id: number, data: ProductData) {
@@ -116,18 +133,18 @@ export async function updateProduct(id: number, data: ProductData) {
 
   // ... update product
 
-  // Invalidate product-specific and type-specific caches
-  invalidateTag(CACHE_TAGS.PRODUCT(id));
-  invalidateTag(CACHE_TAGS.PRODUCTS);
-  if (currentProduct?.post_type) {
-    invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(currentProduct.post_type));
-    invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(currentProduct.post_type));
-  }
+  // Batch invalidate all product caches
+  invalidateProductCaches(id, currentProduct?.post_type, currentProduct?.profile_id);
+}
 
-  // Invalidate user-specific cache so their product list updates
-  if (currentProduct?.profile_id) {
-    invalidateTag(CACHE_TAGS.USER_PRODUCTS(currentProduct.profile_id));
-  }
+export async function deleteProduct(id: number) {
+  // ... verify auth and ownership
+
+  // Soft delete: set is_active = false
+  await supabase.from("posts").update({ is_active: false }).eq("id", id);
+
+  // Batch invalidate all product caches
+  invalidateProductCaches(id, product.post_type, product.profile_id);
 }
 ```
 

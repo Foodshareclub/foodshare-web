@@ -23,13 +23,14 @@ interface PageProps {
 
 /**
  * Check if database is healthy before making any calls
+ * Uses a simple health check with timeout
  */
 async function isDatabaseHealthy(): Promise<boolean> {
-  try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !supabaseKey) return false;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseKey) return false;
 
+  try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000);
 
@@ -74,80 +75,17 @@ function parseLocationParams(params: {
     return null;
   }
 
-  const clampedRadius = Math.max(100, Math.min(100000, radius));
-  return { lat, lng, radius: clampedRadius };
+  return { lat, lng, radius: Math.max(100, Math.min(100000, radius)) };
 }
 
 /**
- * Home Page - Server Component
- * Supports location-based filtering via URL params: ?lat=X&lng=Y&radius=Z
+ * Generate all JSON-LD structured data in parallel
  */
-export default async function Home({ searchParams }: PageProps) {
-  const dbHealthy = await isDatabaseHealthy();
-
-  if (!dbHealthy) {
-    redirect("/maintenance");
-  }
-
-  const params = await searchParams;
-  const locationParams = parseLocationParams(params);
-  const isLocationFiltered = locationParams !== null;
-
-  // Generate JSON-LD structured data for SEO
+function generateJsonLdScripts(): React.ReactNode {
+  // Generate all JSON-LD data (these are synchronous)
   const organizationJsonLd = generateOrganizationJsonLd();
   const websiteJsonLd = generateWebsiteJsonLd();
   const softwareAppJsonLd = generateSoftwareApplicationJsonLd();
-
-  // If location params provided, fetch nearby posts using PostGIS
-  if (isLocationFiltered) {
-    let nearbyPosts: Awaited<ReturnType<typeof getNearbyPosts>>["data"] = [];
-    try {
-      const result = await getNearbyPosts({
-        lat: locationParams.lat,
-        lng: locationParams.lng,
-        radiusMeters: locationParams.radius,
-        postType: "food",
-        limit: 100,
-      });
-      nearbyPosts = result.data;
-    } catch {
-      redirect("/maintenance");
-    }
-
-    return (
-      <>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(organizationJsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(websiteJsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(softwareAppJsonLd) }}
-        />
-        <Suspense fallback={<HomePageSkeleton />}>
-          <HomeClient
-            initialProducts={[]}
-            productType="food"
-            nearbyPosts={nearbyPosts}
-            isLocationFiltered={true}
-            radiusMeters={locationParams.radius}
-          />
-        </Suspense>
-      </>
-    );
-  }
-
-  // No location filter - fetch all food products
-  let products: Awaited<ReturnType<typeof getProducts>> = [];
-  try {
-    products = await getProducts("food");
-  } catch {
-    redirect("/maintenance");
-  }
 
   return (
     <>
@@ -163,8 +101,79 @@ export default async function Home({ searchParams }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(softwareAppJsonLd) }}
       />
+    </>
+  );
+}
+
+/**
+ * Fetch data for the home page
+ * Returns null on error to trigger maintenance redirect
+ */
+async function fetchHomeData(locationParams: { lat: number; lng: number; radius: number } | null) {
+  try {
+    if (locationParams) {
+      // Location-based: fetch nearby posts using PostGIS
+      const result = await getNearbyPosts({
+        lat: locationParams.lat,
+        lng: locationParams.lng,
+        radiusMeters: locationParams.radius,
+        postType: "food",
+        limit: 100,
+      });
+      return { type: "nearby" as const, data: result.data, radius: locationParams.radius };
+    }
+
+    // No location filter - fetch all food products
+    const products = await getProducts("food");
+    return { type: "all" as const, data: products };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Home Page - Server Component
+ * Supports location-based filtering via URL params: ?lat=X&lng=Y&radius=Z
+ */
+export default async function Home({ searchParams }: PageProps) {
+  // Check DB health first
+  const dbHealthy = await isDatabaseHealthy();
+  if (!dbHealthy) {
+    redirect("/maintenance");
+  }
+
+  const params = await searchParams;
+  const locationParams = parseLocationParams(params);
+
+  // Fetch data outside of JSX rendering
+  const homeData = await fetchHomeData(locationParams);
+  if (!homeData) {
+    redirect("/maintenance");
+  }
+
+  // Render based on data type
+  if (homeData.type === "nearby") {
+    return (
+      <>
+        {generateJsonLdScripts()}
+        <Suspense fallback={<HomePageSkeleton />}>
+          <HomeClient
+            initialProducts={[]}
+            productType="food"
+            nearbyPosts={homeData.data}
+            isLocationFiltered={true}
+            radiusMeters={homeData.radius}
+          />
+        </Suspense>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {generateJsonLdScripts()}
       <Suspense fallback={<HomePageSkeleton />}>
-        <HomeClient initialProducts={products} productType="food" />
+        <HomeClient initialProducts={homeData.data} productType="food" />
       </Suspense>
     </>
   );

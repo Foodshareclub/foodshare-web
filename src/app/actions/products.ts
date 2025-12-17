@@ -3,13 +3,47 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { type ActionResult, withErrorHandling, validateWithSchema } from "@/lib/errors";
-import { CACHE_TAGS, invalidateTag, invalidatePostActivityCaches } from "@/lib/data/cache-keys";
+import {
+  CACHE_TAGS,
+  invalidateTag,
+  invalidatePostActivityCaches,
+  getProductTags,
+} from "@/lib/data/cache-keys";
 import { trackEvent } from "@/app/actions/analytics";
 import { logPostActivity as _logPostActivity } from "@/app/actions/post-activity";
 
 // NOTE: Data functions (getProducts, getAllProducts, etc.) should be imported
 // directly from '@/lib/data/products' - they cannot be re-exported from a
 // 'use server' file as only async server actions are allowed.
+
+const IS_DEV = process.env.NODE_ENV === "development";
+
+/**
+ * Conditional logging - only logs in development
+ */
+function devLog(context: string, message: string, data?: unknown): void {
+  if (!IS_DEV) return;
+  const dataStr = data ? ` ${JSON.stringify(data)}` : "";
+  console.log(`[${context}] ${message}${dataStr}`);
+}
+
+/**
+ * Batch invalidate product-related caches
+ */
+function invalidateProductCaches(productId?: number, postType?: string, profileId?: string): void {
+  // Use helper for consistent tag invalidation
+  getProductTags(productId, postType).forEach((tag) => invalidateTag(tag));
+
+  // Invalidate user-specific cache
+  if (profileId) {
+    invalidateTag(CACHE_TAGS.USER_PRODUCTS(profileId));
+  }
+
+  // Invalidate activity caches
+  if (productId && profileId) {
+    invalidatePostActivityCaches(productId, profileId);
+  }
+}
 
 // ============================================================================
 // Zod Schemas for validation
@@ -35,7 +69,7 @@ const updateProductSchema = createProductSchema.partial().extend({
  * Create a new product
  */
 export async function createProduct(formData: FormData): Promise<ActionResult<{ id: number }>> {
-  console.log("[createProduct] 🚀 Starting createProduct...");
+  devLog("createProduct", "🚀 Starting...");
 
   // Parse form data - convert null to undefined for optional fields
   const getString = (key: string): string => (formData.get(key) as string) ?? "";
@@ -56,66 +90,34 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     profile_id: getString("profile_id"),
   };
 
-  console.log("[createProduct] 📝 Raw data parsed:", {
+  devLog("createProduct", "📝 Parsed", {
     post_name: rawData.post_name,
-    post_name_length: rawData.post_name?.length,
-    post_description_length: rawData.post_description?.length,
     post_type: rawData.post_type,
-    post_address: rawData.post_address,
-    post_address_length: rawData.post_address?.length,
     images_count: rawData.images?.length,
-    profile_id: rawData.profile_id,
   });
-
-  // Validate with Zod - do manual validation first to get detailed errors
-  const zodResult = createProductSchema.safeParse(rawData);
-  if (!zodResult.success) {
-    const fieldErrors = zodResult.error.issues.map((e: z.ZodIssue) => ({
-      field: e.path.join("."),
-      message: e.message,
-      code: e.code,
-    }));
-    console.log(
-      "[createProduct] ❌ Zod validation failed - Field errors:",
-      JSON.stringify(fieldErrors, null, 2)
-    );
-  }
 
   // Validate with standard helper
   const validation = validateWithSchema(createProductSchema, rawData);
   if (!validation.success) {
-    console.log("[createProduct] ❌ Validation failed:", validation.error);
+    devLog("createProduct", "❌ Validation failed", validation.error);
     return validation;
   }
-  console.log("[createProduct] ✅ Validation passed");
 
   return withErrorHandling(async () => {
-    console.log("[createProduct] 🔐 Getting Supabase client...");
     const supabase = await createClient();
 
     // Verify user is authenticated and matches profile_id
-    console.log("[createProduct] 👤 Checking user authentication...");
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      console.log("[createProduct] ❌ User not authenticated");
       throw new Error("You must be signed in to create a listing");
     }
-    console.log("[createProduct] ✅ User authenticated:", user.id);
 
     if (user.id !== validation.data.profile_id) {
-      console.log(
-        "[createProduct] ❌ User ID mismatch:",
-        user.id,
-        "!=",
-        validation.data.profile_id
-      );
       throw new Error("Unauthorized: User ID mismatch");
     }
-    console.log("[createProduct] ✅ User ID matches profile_id");
 
-    console.log("[createProduct] 💾 Inserting into database...");
     const { data, error } = await supabase
       .from("posts")
       .insert({ ...validation.data, is_active: true })
@@ -123,38 +125,22 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
       .single();
 
     if (error) {
-      console.error("[createProduct] ❌ Database error:", error);
       throw new Error(error.message);
     }
-    console.log("[createProduct] ✅ Inserted, post ID:", data.id);
 
-    // Invalidate product caches
-    console.log("[createProduct] 🗑️ Invalidating caches...");
-    invalidateTag(CACHE_TAGS.PRODUCTS);
-    invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS);
-    invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(validation.data.post_type));
-    invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(validation.data.post_type));
+    // Batch invalidate all product caches
+    invalidateProductCaches(data.id, validation.data.post_type, validation.data.profile_id);
 
-    // Invalidate user-specific cache
-    if (validation.data.profile_id) {
-      invalidateTag(CACHE_TAGS.USER_PRODUCTS(validation.data.profile_id));
-    }
-
-    console.log("[createProduct] ✅ SUCCESS! Returning id:", data.id);
-
-    // Invalidate activity caches
-    invalidatePostActivityCaches(data.id, validation.data.profile_id);
-
+    devLog("createProduct", "✅ Created", { id: data.id });
     return { id: data.id };
   }, "createProduct").then(async (result) => {
     if (result.success && result.data) {
-      console.log("[createProduct] 📊 Tracking analytics event...");
-      await trackEvent("Listing Created", {
+      // Fire-and-forget analytics (don't block response)
+      trackEvent("Listing Created", {
         listingId: result.data.id,
         type: formData.get("post_type") as string,
-      });
+      }).catch(() => {});
     }
-    console.log("[createProduct] 🏁 Complete, result:", result.success ? "success" : "failed");
     return result;
   });
 }
@@ -166,7 +152,7 @@ export async function updateProduct(
   id: number,
   formData: FormData
 ): Promise<ActionResult<undefined>> {
-  console.log("[updateProduct] 🚀 Starting updateProduct for id:", id);
+  devLog("updateProduct", "🚀 Starting", { id });
 
   // Parse form data
   const rawData: Record<string, unknown> = {};
@@ -193,38 +179,25 @@ export async function updateProduct(
     rawData.images = JSON.parse(images as string);
   }
 
-  console.log("[updateProduct] 📝 Raw data parsed:", {
-    post_name: rawData.post_name,
-    post_type: rawData.post_type,
-    images_count: (rawData.images as string[])?.length,
-    is_active: rawData.is_active,
-  });
-
   // Validate with Zod (partial schema for updates)
   const validation = validateWithSchema(updateProductSchema, rawData);
   if (!validation.success) {
-    console.log("[updateProduct] ❌ Validation failed:", validation.error);
+    devLog("updateProduct", "❌ Validation failed", validation.error);
     return validation;
   }
-  console.log("[updateProduct] ✅ Validation passed");
 
   return withErrorHandling(async () => {
-    console.log("[updateProduct] 🔐 Getting Supabase client...");
     const supabase = await createClient();
 
     // Verify user is authenticated
-    console.log("[updateProduct] 👤 Checking user authentication...");
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      console.log("[updateProduct] ❌ User not authenticated");
       throw new Error("You must be signed in to update a listing");
     }
-    console.log("[updateProduct] ✅ User authenticated:", user.id);
 
     // Get current product info for cache invalidation and ownership check
-    console.log("[updateProduct] 📝 Getting current product...");
     const { data: currentProduct } = await supabase
       .from("posts")
       .select("post_type, profile_id")
@@ -233,45 +206,22 @@ export async function updateProduct(
 
     // Verify ownership
     if (currentProduct?.profile_id && currentProduct.profile_id !== user.id) {
-      console.log("[updateProduct] ❌ Ownership check failed");
       throw new Error("Unauthorized: You can only edit your own listings");
     }
-    console.log("[updateProduct] ✅ Ownership verified");
 
-    console.log("[updateProduct] 💾 Updating database...");
     const { error } = await supabase.from("posts").update(validation.data).eq("id", id);
 
     if (error) {
-      console.error("[updateProduct] ❌ Database error:", error);
       throw new Error(error.message);
     }
-    console.log("[updateProduct] ✅ Database updated");
 
-    // Invalidate product caches
-    console.log("[updateProduct] 🗑️ Invalidating caches...");
-    invalidateTag(CACHE_TAGS.PRODUCTS);
-    invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS);
-    invalidateTag(CACHE_TAGS.PRODUCT(id));
-
-    // Invalidate type-specific caches (both old and new type if changed)
-    if (currentProduct?.post_type) {
-      invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(currentProduct.post_type));
-      invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(currentProduct.post_type));
-    }
+    // Batch invalidate caches - handles both old and new type
+    invalidateProductCaches(id, currentProduct?.post_type, currentProduct?.profile_id);
     if (validation.data.post_type && validation.data.post_type !== currentProduct?.post_type) {
-      invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(validation.data.post_type));
-      invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(validation.data.post_type));
+      invalidateProductCaches(id, validation.data.post_type);
     }
 
-    // Invalidate user-specific cache
-    if (currentProduct?.profile_id) {
-      invalidateTag(CACHE_TAGS.USER_PRODUCTS(currentProduct.profile_id));
-    }
-
-    // Invalidate activity caches
-    invalidatePostActivityCaches(id, currentProduct?.profile_id);
-
-    console.log("[updateProduct] ✅ SUCCESS!");
+    devLog("updateProduct", "✅ Updated", { id });
     return undefined;
   }, "updateProduct");
 }
@@ -281,24 +231,20 @@ export async function updateProduct(
  * This unpublishes the listing rather than permanently deleting it
  */
 export async function deleteProduct(id: number): Promise<ActionResult<undefined>> {
-  console.log("[deleteProduct] 🚀 Starting soft delete for id:", id);
+  devLog("deleteProduct", "🚀 Starting soft delete", { id });
 
   return withErrorHandling(async () => {
     const supabase = await createClient();
 
     // Verify user is authenticated
-    console.log("[deleteProduct] 👤 Checking user authentication...");
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      console.log("[deleteProduct] ❌ User not authenticated");
       throw new Error("You must be signed in to delete a listing");
     }
-    console.log("[deleteProduct] ✅ User authenticated:", user.id);
 
     // Get product info for cache invalidation and ownership check
-    console.log("[deleteProduct] 📝 Getting product info...");
     const { data: product } = await supabase
       .from("posts")
       .select("post_type, profile_id, is_active")
@@ -306,48 +252,25 @@ export async function deleteProduct(id: number): Promise<ActionResult<undefined>
       .single();
 
     if (!product) {
-      console.log("[deleteProduct] ❌ Product not found");
       throw new Error("Listing not found");
     }
 
     // Verify ownership
     if (product.profile_id !== user.id) {
-      console.log("[deleteProduct] ❌ Ownership check failed");
       throw new Error("Unauthorized: You can only delete your own listings");
     }
-    console.log("[deleteProduct] ✅ Ownership verified");
 
     // Soft delete: set is_active = false
-    console.log("[deleteProduct] 💾 Soft deleting (setting is_active = false)...");
     const { error } = await supabase.from("posts").update({ is_active: false }).eq("id", id);
 
     if (error) {
-      console.error("[deleteProduct] ❌ Database error:", error);
       throw new Error(error.message);
     }
-    console.log("[deleteProduct] ✅ Post unpublished successfully");
 
-    // Invalidate product caches
-    console.log("[deleteProduct] 🗑️ Invalidating caches...");
-    invalidateTag(CACHE_TAGS.PRODUCTS);
-    invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS);
-    invalidateTag(CACHE_TAGS.PRODUCT(id));
+    // Batch invalidate all product caches
+    invalidateProductCaches(id, product.post_type, product.profile_id);
 
-    // Invalidate type-specific caches
-    if (product.post_type) {
-      invalidateTag(CACHE_TAGS.PRODUCTS_BY_TYPE(product.post_type));
-      invalidateTag(CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(product.post_type));
-    }
-
-    // Invalidate user-specific cache
-    if (product.profile_id) {
-      invalidateTag(CACHE_TAGS.USER_PRODUCTS(product.profile_id));
-    }
-
-    // Invalidate activity caches
-    invalidatePostActivityCaches(id, product.profile_id);
-
-    console.log("[deleteProduct] ✅ SUCCESS!");
+    devLog("deleteProduct", "✅ Unpublished", { id });
     return undefined;
   }, "deleteProduct");
 }
