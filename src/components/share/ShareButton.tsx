@@ -109,26 +109,7 @@ export function ShareButton({
     setIsOpen(false);
   };
 
-  // On mobile with native share support, use native share directly
-  if (canNativeShare && variant === "icon") {
-    return (
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={handleNativeShare}
-        className={cn(
-          "h-12 w-12 rounded-xl border-border/50 text-muted-foreground",
-          "hover:text-teal-600 hover:border-teal-500/50 hover:bg-teal-500/10",
-          "transition-all duration-300",
-          className
-        )}
-        aria-label="Share this listing"
-      >
-        <Share2 className="h-5 w-5" />
-      </Button>
-    );
-  }
-
+  // Always show dropdown to ensure copy link is accessible on all devices
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>

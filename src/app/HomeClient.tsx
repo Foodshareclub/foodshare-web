@@ -2,11 +2,22 @@
 
 import { useEffect, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useLocale } from "next-intl";
 import { ProductGrid } from "@/components/productCard/ProductGrid";
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
 import { useUIStore } from "@/store/zustand/useUIStore";
 import type { InitialProductStateType } from "@/types/product.types";
 import type { NearbyPost } from "@/lib/data/nearby-posts";
+
+/** Format distance for display - miles for US (en), km for others */
+function formatDistance(meters: number, locale: string): string {
+  if (locale === "en") {
+    const miles = meters / 1609.34;
+    return `${Math.round(miles)} miles`;
+  }
+  const km = meters / 1000;
+  return `${Math.round(km)} km`;
+}
 
 interface HomeClientProps {
   initialProducts: InitialProductStateType[];
@@ -41,6 +52,7 @@ export function HomeClient({
 }: HomeClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const locale = useLocale();
   const [isPending, startTransition] = useTransition();
 
   // Get stored location from Zustand (persisted across sessions)
@@ -125,7 +137,8 @@ export function HomeClient({
       />
       {isLocationFiltered && nearbyPosts && nearbyPosts.length === 0 && !isPending && (
         <div className="text-center py-8 text-muted-foreground">
-          No posts found within {Math.round(radiusMeters / 1000)} km of your location.
+          Nothing shared within {formatDistance(radiusMeters, locale)} yet — be the first to post in
+          your area!
         </div>
       )}
     </>
