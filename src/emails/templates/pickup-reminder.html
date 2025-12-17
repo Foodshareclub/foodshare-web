@@ -5,75 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Pickup Reminder - Foodshare</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f0f0f0; color: #363a57; -webkit-font-smoothing: antialiased;">
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f0f0f0; padding: 40px 20px;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f7; color: #1d1d1f; -webkit-font-smoothing: antialiased;">
+
+  <!-- Preheader Text (hidden) -->
+  <div style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">
+    Reminder: You have a pickup scheduled for {{ .PickupTime }} on {{ .PickupDate }}. Don't forget!
+  </div>
+
+  <!-- Email Container -->
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f7; padding: 60px 20px;">
     <tr>
       <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden;">
-          
-          <!-- Header -->
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 20px; overflow: hidden;">
+
+          <!-- Decorative Top Bar -->
           <tr>
-            <td style="background-color: #10b981; padding: 50px 30px; text-align: center;">
-              <img src="https://***REMOVED***.supabase.co/storage/v1/object/public/assets/logo-512.png" alt="Foodshare Logo" width="80" height="80" style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 20px; border: 4px solid rgba(255, 255, 255, 0.4); background: white; padding: 4px;">
-              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 800;">Pickup Reminder ⏰</h1>
-              <p style="margin: 12px 0 0; color: rgba(255, 255, 255, 0.95); font-size: 16px;">Don't forget your scheduled pickup!</p>
-            </td>
+            <td style="height: 6px; background-color: #10b981;"></td>
           </tr>
 
-          <!-- Content -->
+          <!-- Header -->
           <tr>
-            <td style="padding: 50px 40px; background-color: #fafafa;">
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: white; border-radius: 12px; border: 2px solid #f0f0f0;">
+            <td style="background-color: #10b981; padding: 55px 40px 45px; text-align: center;">
+              <!-- Logo Container -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td style="padding: 30px;">
-                    <!-- Time Alert -->
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ecfdf5; border-radius: 12px; margin-bottom: 25px;">
-                      <tr>
-                        <td style="padding: 25px; text-align: center;">
-                          <p style="margin: 0; font-size: 48px;">🕐</p>
-                          <p style="margin: 10px 0 0; font-size: 24px; font-weight: 800; color: #059669;">{{ .PickupTime }}</p>
-                          <p style="margin: 5px 0 0; font-size: 16px; color: #10b981; font-weight: 600;">{{ .PickupDate }}</p>
-                        </td>
-                      </tr>
-                    </table>
-                    
-                    <!-- Item Details -->
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8f8f8; border-radius: 12px; overflow: hidden;">
+                  <td align="center">
+                    <table cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 50%; padding: 6px;">
                       <tr>
                         <td>
-                          <img src="{{ .ListingImage }}" alt="{{ .ListingTitle }}" width="100%" style="width: 100%; height: 160px; object-fit: cover;">
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 20px;">
-                          <p style="margin: 0; font-size: 18px; font-weight: 700; color: #363a57;">{{ .ListingTitle }}</p>
-                          <p style="margin: 8px 0 0; font-size: 14px; color: #888888;">Shared by <strong style="color: #10b981;">{{ .SharerName }}</strong></p>
-                        </td>
-                      </tr>
-                    </table>
-                    
-                    <!-- Location -->
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0; background-color: #f0fdf4; border-radius: 8px; border-left: 4px solid #10b981;">
-                      <tr>
-                        <td style="padding: 20px;">
-                          <p style="margin: 0; font-size: 13px; font-weight: 600; color: #888888; text-transform: uppercase; letter-spacing: 1px;">📍 Pickup Location</p>
-                          <p style="margin: 8px 0 0; font-size: 16px; font-weight: 600; color: #363a57;">{{ .PickupAddress }}</p>
-                          <p style="margin: 5px 0 0; font-size: 14px; color: #666666;">{{ .PickupInstructions }}</p>
-                        </td>
-                      </tr>
-                    </table>
-                    
-                    <!-- CTA Buttons -->
-                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-                      <tr>
-                        <td align="center" style="padding: 15px 0 10px;">
-                          <a href="{{ .DirectionsURL }}" style="display: inline-block; padding: 18px 40px; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">🗺️ Get Directions</a>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td align="center" style="padding: 5px 0;">
-                          <a href="{{ .MessageURL }}" style="display: inline-block; padding: 14px 30px; background-color: transparent; color: #10b981; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 14px; border: 2px solid #10b981;">Message {{ .SharerName }}</a>
+                          <img src="https://***REMOVED***.supabase.co/storage/v1/object/public/assets/logo-512.png" alt="Foodshare Logo" width="70" height="70" style="width: 70px; height: 70px; border-radius: 50%; display: block;">
                         </td>
                       </tr>
                     </table>
@@ -81,15 +51,82 @@
                 </tr>
               </table>
 
-              <!-- Reminder Tips -->
-              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 20px 0 0; background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+              <h1 style="margin: 24px 0 0; color: #ffffff; font-size: 32px; font-weight: 800; letter-spacing: -0.5px;">Pickup Reminder</h1>
+              <p style="margin: 14px 0 0; color: rgba(255, 255, 255, 0.95); font-size: 17px; font-weight: 500;">Don't forget your scheduled pickup!</p>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 50px 45px; background-color: #ffffff;">
+              <!-- Time Alert Card -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ecfdf5; border-radius: 16px; border: 1px solid #a7f3d0; margin-bottom: 28px;">
                 <tr>
-                  <td style="padding: 20px;">
-                    <p style="margin: 0 0 10px; font-size: 14px; font-weight: 700; color: #363a57;">💡 Pickup Tips</p>
-                    <p style="margin: 0; font-size: 13px; line-height: 1.8; color: #666666;">
-                      • Bring a reusable bag or container<br>
-                      • Be on time - the sharer is waiting for you<br>
-                      • Can't make it? Let them know ASAP
+                  <td style="padding: 32px; text-align: center;">
+                    <p style="margin: 0 0 10px; font-size: 52px; line-height: 1;">&#128337;</p>
+                    <p style="margin: 0; font-size: 28px; font-weight: 800; color: #059669;">{{ .PickupTime }}</p>
+                    <p style="margin: 8px 0 0; font-size: 17px; color: #10b981; font-weight: 600;">{{ .PickupDate }}</p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Item Details Card -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fafafa; border-radius: 16px; border: 1px solid #e8e8ed; overflow: hidden; margin-bottom: 24px;">
+                <tr>
+                  <td>
+                    <img src="{{ .ListingImage }}" alt="{{ .ListingTitle }}" width="510" style="width: 100%; height: 180px; object-fit: cover; display: block;">
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 24px;">
+                    <p style="margin: 0; font-size: 20px; font-weight: 700; color: #1d1d1f;">{{ .ListingTitle }}</p>
+                    <p style="margin: 10px 0 0; font-size: 15px; color: #86868b;">Shared by <strong style="color: #10b981;">{{ .SharerName }}</strong></p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Location Card -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f0fdf4; border-radius: 12px; margin-bottom: 28px;">
+                <tr>
+                  <td style="padding: 24px; border-left: 4px solid #10b981;">
+                    <p style="margin: 0; font-size: 11px; font-weight: 700; color: #86868b; text-transform: uppercase; letter-spacing: 1.5px;">&#128205; Pickup Location</p>
+                    <p style="margin: 12px 0 0; font-size: 17px; font-weight: 600; color: #1d1d1f;">{{ .PickupAddress }}</p>
+                    <p style="margin: 8px 0 0; font-size: 14px; color: #6e6e73; line-height: 1.6;">{{ .PickupInstructions }}</p>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- CTA Buttons -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="padding: 5px 0;">
+                    <!--[if mso]>
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ .DirectionsURL }}" style="height:56px;v-text-anchor:middle;width:280px;" arcsize="50%" strokecolor="#10b981" fillcolor="#10b981">
+                      <w:anchorlock/>
+                      <center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:bold;">GET DIRECTIONS</center>
+                    </v:roundrect>
+                    <![endif]-->
+                    <!--[if !mso]><!-->
+                    <a href="{{ .DirectionsURL }}" style="display: inline-block; padding: 18px 48px; background-color: #10b981; color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 15px; text-transform: uppercase; letter-spacing: 1.5px;">Get Directions</a>
+                    <!--<![endif]-->
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding: 12px 0;">
+                    <a href="{{ .MessageURL }}" style="display: inline-block; padding: 14px 32px; background-color: transparent; color: #10b981; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 14px; border: 2px solid #10b981;">Message {{ .SharerName }}</a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Pickup Tips -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 28px 0 0; background-color: #f5f5f7; border-radius: 12px;">
+                <tr>
+                  <td style="padding: 24px;">
+                    <p style="margin: 0 0 14px; font-size: 15px; font-weight: 700; color: #1d1d1f;">Pickup Tips</p>
+                    <p style="margin: 0; font-size: 14px; line-height: 2; color: #6e6e73;">
+                      &#8226; Bring a reusable bag or container<br>
+                      &#8226; Be on time - the sharer is waiting for you<br>
+                      &#8226; Can't make it? Let them know ASAP
                     </p>
                   </td>
                 </tr>
@@ -99,11 +136,20 @@
 
           <!-- Footer -->
           <tr>
-            <td style="background-color: #10b981; padding: 30px; text-align: center;">
-              <img src="https://***REMOVED***.supabase.co/storage/v1/object/public/assets/logo-512.png" alt="Foodshare" width="40" height="40" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.4); background: white; padding: 2px;">
-              <p style="margin: 15px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.9);">Foodshare LLC &copy; 2025</p>
-              <p style="margin: 10px 0 0; font-size: 13px; color: rgba(255, 255, 255, 0.8);">
-                <a href="{{ .UnsubscribeURL }}" style="color: #ffffff; text-decoration: underline;">Manage reminders</a>
+            <td style="background-color: #1d1d1f; padding: 40px; text-align: center;">
+              <!-- Footer Logo -->
+              <table cellpadding="0" cellspacing="0" border="0" align="center">
+                <tr>
+                  <td style="background-color: #ffffff; border-radius: 50%; padding: 4px;">
+                    <img src="https://***REMOVED***.supabase.co/storage/v1/object/public/assets/logo-512.png" alt="Foodshare" width="36" height="36" style="width: 36px; height: 36px; border-radius: 50%; display: block;">
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 18px 0 0; font-size: 14px; color: #ffffff; font-weight: 600;">Foodshare LLC &copy; 2025</p>
+
+              <p style="margin: 16px 0 0; font-size: 13px; color: #86868b;">
+                <a href="{{ .UnsubscribeURL }}" style="color: #10b981; text-decoration: none;">Manage reminder preferences</a>
               </p>
             </td>
           </tr>
