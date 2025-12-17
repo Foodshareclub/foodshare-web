@@ -5,9 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Target, Users, TrendingUp, Zap, Award, ChevronRight, Star, Flame } from "lucide-react";
+import { Target, Users, TrendingUp, Zap, Award, ChevronRight, Star, Flame, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { ChallengeRevealModal } from "@/components/modals/challenge-reveal";
 import type { InitialProductStateType } from "@/types/product.types";
 import type { Challenge } from "@/lib/data/challenges";
 import type { AuthUser } from "@/app/actions/auth";
@@ -34,6 +35,7 @@ export function ChallengesClient({
   stats,
 }: ChallengesClientProps) {
   const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>("all");
+  const [revealModalOpen, setRevealModalOpen] = useState(false);
   const t = useTranslations("Common");
 
   const filteredChallenges =
@@ -46,7 +48,18 @@ export function ChallengesClient({
   return (
     <>
       {/* Hero Section */}
-      <HeroSection stats={stats} isAuth={isAuth} />
+      <HeroSection
+        stats={stats}
+        isAuth={isAuth}
+        onDiscoverClick={() => setRevealModalOpen(true)}
+      />
+
+      {/* Challenge Reveal Modal */}
+      <ChallengeRevealModal
+        open={revealModalOpen}
+        onOpenChange={setRevealModalOpen}
+        challenges={challenges}
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -92,9 +105,11 @@ export function ChallengesClient({
 function HeroSection({
   stats,
   isAuth,
+  onDiscoverClick,
 }: {
   stats: { totalChallenges: number; totalParticipants: number };
   isAuth: boolean;
+  onDiscoverClick: () => void;
 }) {
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-teal-500/10 to-orange-500/10">
@@ -142,14 +157,28 @@ function HeroSection({
             <StatCard icon={TrendingUp} value="2.5K" label="XP Earned" />
           </div>
 
-          {!isAuth && (
-            <Link href="/auth/login">
-              <Button size="lg" className="gap-2">
-                Join the Movement
-                <ChevronRight className="w-4 h-4" />
+          {/* Action Buttons */}
+          <div className="flex flex-wrap justify-center gap-3">
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Button
+                size="lg"
+                onClick={onDiscoverClick}
+                className="gap-2 bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 shadow-lg shadow-primary/25"
+              >
+                <Shuffle className="w-4 h-4" />
+                Discover Random
               </Button>
-            </Link>
-          )}
+            </motion.div>
+
+            {!isAuth && (
+              <Link href="/auth/login">
+                <Button size="lg" variant="outline" className="gap-2">
+                  Join the Movement
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            )}
+          </div>
         </motion.div>
       </div>
     </div>

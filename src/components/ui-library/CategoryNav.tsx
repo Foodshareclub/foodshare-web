@@ -138,7 +138,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
         <div className="flex gap-1.5 md:gap-2 items-center flex-shrink-0">
           {/* Search Button */}
           <button
-            role="button"
+            type="button"
             aria-label="Open search"
             className="flex items-center justify-center gap-1.5 px-2.5 md:px-3 py-1.5 md:py-2 border border-border rounded-[20px] cursor-pointer transition-all duration-200 bg-background min-w-[70px] md:min-w-[85px] hover:border-foreground hover:shadow-sm active:scale-[0.98] focus:outline-2 focus:outline-primary focus:outline-offset-2"
             onClick={onSearch}
@@ -149,7 +149,7 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
 
           {/* Filter Button */}
           <button
-            role="button"
+            type="button"
             aria-label="Open filters"
             className="flex items-center justify-center gap-1.5 px-2.5 md:px-3 py-1.5 md:py-2 border border-border rounded-[20px] cursor-pointer transition-all duration-200 bg-background min-w-[65px] md:min-w-[75px] hover:border-foreground hover:shadow-sm active:scale-[0.98] focus:outline-2 focus:outline-primary focus:outline-offset-2"
             onClick={onFilter}

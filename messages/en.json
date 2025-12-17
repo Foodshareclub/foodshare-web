@@ -657,5 +657,24 @@
   "audience": "Audience",
   "analytics": "Analytics",
   "automation": "Automation",
-  "ab_testing": "A/B Testing"
+  "ab_testing": "A/B Testing",
+  "ChallengeReveal": {
+    "title": "Discover Challenges",
+    "subtitle": "Swipe right to accept, left to skip",
+    "discoverRandom": "Discover Random",
+    "shuffle": "Shuffle",
+    "shuffleAgain": "Shuffle Again",
+    "skip": "Skip",
+    "accept": "Accept",
+    "challengesRemaining": "{count} challenges remaining",
+    "allCaughtUp": "All Caught Up!",
+    "allCaughtUpDescription": "You've seen all the challenges. Shuffle the deck to go through them again!",
+    "acceptingChallenge": "Accepting challenge...",
+    "tip": "Tip: Use arrow keys or drag to swipe through challenges",
+    "keyboardHints": {
+      "skip": "Skip",
+      "accept": "Accept",
+      "close": "Close"
+    }
+  }
 }

@@ -12,8 +12,9 @@ import { getProductDetailUrl } from "@/utils/categoryMapping";
 import { useAuth } from "@/hooks/useAuth";
 import DeleteCardModal from "@/components/modals/DeleteCardModal";
 import { ReportPostDialog } from "@/components/reports";
+import { Glass } from "@/components/ui/glass";
 import type { InitialProductStateType } from "@/types/product.types";
-import { gpu120Card, gpu120Interactive, gpu120Image } from "@/utils/gpuStyles";
+import { gpu120Interactive, gpu120Image } from "@/utils/gpuStyles";
 import { isValidImageUrl } from "@/lib/image";
 import bus from "@/assets/busIcon.png";
 
@@ -66,9 +67,13 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
 
   return (
     <div className="col-span-1" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-      <div
-        className="relative rounded-[20px] overflow-hidden shadow-lg glass-fade-in gpu"
-        style={gpu120Card}
+      <Glass
+        variant="default"
+        rounded="2xl"
+        hoverEffect="subtle"
+        glow
+        gpu
+        className="relative overflow-hidden shadow-lg glass-fade-in"
       >
         {/* Image section */}
         <div className="relative">
@@ -142,7 +147,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
         </div>
 
         {/* Glassmorphic content section */}
-        <div className="p-4 h-[140px] bg-card/70 backdrop-blur-xl backdrop-saturate-150 border-t border-border/20">
+        <Glass variant="subtle" rounded="none" className="p-4 h-[140px] border-t border-border/20">
           <h3 className="text-xl font-semibold text-left font-body line-clamp-1 text-card-foreground">
             {product.post_name}
           </h3>
@@ -163,8 +168,8 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
             </div>
             <p className="text-sm text-foreground/80 line-clamp-1">{product.transportation}</p>
           </div>
-        </div>
-      </div>
+        </Glass>
+      </Glass>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useCallback, useRef, useEffect } from "react";
 
@@ -159,7 +159,7 @@ export const CustomCategoryNav: React.FC<CustomCategoryNavProps> = ({
         <div className="flex gap-3 items-center flex-shrink-0">
           {showSearch && (
             <button
-              role="button"
+              type="button"
               aria-label="Open search"
               className="flex items-center gap-2 px-3 md:px-4 py-2 border border-border rounded-3xl cursor-pointer transition-all duration-200 bg-background hover:border-foreground hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm focus:outline-2 focus:outline-primary focus:outline-offset-2"
               onClick={onSearch}
@@ -173,12 +173,18 @@ export const CustomCategoryNav: React.FC<CustomCategoryNavProps> = ({
 
           {showFilter && (
             <button
-              role="button"
+              type="button"
               aria-label="Open filters"
               className="flex items-center gap-2 px-3 md:px-4 py-2 border border-border rounded-3xl cursor-pointer transition-all duration-200 bg-background hover:border-foreground hover:shadow-md hover:-translate-y-px active:translate-y-0 active:shadow-sm focus:outline-2 focus:outline-primary focus:outline-offset-2"
               onClick={onFilter}
             >
-              <svg width="16" height="16" fill="none" className="text-muted-foreground" aria-hidden="true">
+              <svg
+                width="16"
+                height="16"
+                fill="none"
+                className="text-muted-foreground"
+                aria-hidden="true"
+              >
                 <path
                   d="M2 4h12M4 8h8M6 12h4"
                   stroke="currentColor"

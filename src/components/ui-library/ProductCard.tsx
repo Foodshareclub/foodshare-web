@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -24,23 +24,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   reviewCount,
   badge,
   onClick,
-  hover = true,
+  hover: _hover = true,
 }) => {
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onClick?.();
-    }
-  };
-
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
+      type="button"
       aria-label={`View ${title} details`}
-      className="group cursor-pointer rounded-2xl transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+      className="group cursor-pointer rounded-2xl transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 text-left w-full"
       onClick={onClick}
-      onKeyDown={handleKeyDown}
     >
       {/* Image Container */}
       <div className="relative pb-[100%] overflow-hidden rounded-xl">
@@ -69,7 +60,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <div className="flex items-center gap-1 ml-2">
               <span className="text-sm text-foreground">★</span>
               <span className="text-sm font-medium text-foreground">{rating.toFixed(2)}</span>
-              {reviewCount && <span className="text-sm text-muted-foreground">({reviewCount})</span>}
+              {reviewCount && (
+                <span className="text-sm text-muted-foreground">({reviewCount})</span>
+              )}
             </div>
           )}
         </div>
@@ -85,6 +78,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </button>
   );
 };

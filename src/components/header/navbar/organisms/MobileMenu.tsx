@@ -138,61 +138,56 @@ export function MobileMenu({
               <div className="flex flex-col gap-3">
                 {/* Admin Dashboard Link */}
                 {isAdmin && onNavigateToDashboard && (
-                  <div
-                    className="glass-accent-primary rounded-xl p-4 cursor-pointer gpu flex items-center gap-4"
+                  <button
+                    type="button"
+                    className="glass-accent-primary rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     onClick={() => handleNavigation(onNavigateToDashboard)}
-                    role="button"
-                    tabIndex={0}
                   >
                     <LayoutGrid className="w-8 h-8 flex-shrink-0" />
-                    <p className="text-3xl font-semibold">Admin</p>
-                  </div>
+                    <span className="text-3xl font-semibold">Admin</span>
+                  </button>
                 )}
 
-                <div
-                  className="glass-subtle rounded-xl p-4 cursor-pointer gpu flex items-center gap-4"
+                <button
+                  type="button"
+                  className="glass-subtle rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   onClick={() => handleNavigation(onNavigateToMyLists)}
-                  role="button"
-                  tabIndex={0}
                 >
                   <ClipboardList className="w-8 h-8 flex-shrink-0" />
-                  <p className="text-3xl">My listings</p>
-                </div>
+                  <span className="text-3xl">My listings</span>
+                </button>
 
-                <div
-                  className="glass-subtle rounded-xl p-4 cursor-pointer gpu flex items-center gap-4"
+                <button
+                  type="button"
+                  className="glass-subtle rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   onClick={() => handleNavigation(onNavigateToAccSettings)}
-                  role="button"
-                  tabIndex={0}
                 >
                   <Settings className="w-8 h-8 flex-shrink-0" />
-                  <p className="text-3xl">Account settings</p>
-                </div>
+                  <span className="text-3xl">Account settings</span>
+                </button>
 
-                <div
-                  className={`${hasNotifications ? "glass-accent-primary" : "glass-subtle"} rounded-xl p-4 cursor-pointer gpu flex items-center gap-4`}
+                <button
+                  type="button"
+                  className={`${hasNotifications ? "glass-accent-primary" : "glass-subtle"} rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary`}
                   onClick={() => handleNavigation(onNavigateToMyMessages)}
-                  role="button"
-                  tabIndex={0}
                   aria-label={
                     hasNotifications ? `Chat (${signalOfNewMessage.length} unread)` : "Chat"
                   }
                 >
                   <MessageCircle className="w-8 h-8 flex-shrink-0" />
-                  <p className="text-3xl">
+                  <span className="text-3xl">
                     {hasNotifications ? `Chat (${signalOfNewMessage.length} new)` : "Chat"}
-                  </p>
-                </div>
+                  </span>
+                </button>
 
-                <div
-                  className="glass-subtle rounded-xl p-4 cursor-pointer gpu flex items-center gap-4"
+                <button
+                  type="button"
+                  className="glass-subtle rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   onClick={() => handleNavigation(onNavigateToLogout)}
-                  role="button"
-                  tabIndex={0}
                 >
                   <LogOut className="w-8 h-8 flex-shrink-0" />
-                  <p className="text-3xl">Log Out</p>
-                </div>
+                  <span className="text-3xl">Log Out</span>
+                </button>
               </div>
             ) : (
               /* Unauthenticated Menu */
@@ -203,25 +198,23 @@ export function MobileMenu({
             )}
 
             {/* Common Links */}
-            <div
-              className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3 flex items-center gap-4"
+            <button
+              type="button"
+              className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3 flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               onClick={() => handleNavigation(onNavigateToAboutUs)}
-              role="button"
-              tabIndex={0}
             >
               <Info className="w-8 h-8 flex-shrink-0" />
-              <p className="text-3xl">About Us</p>
-            </div>
+              <span className="text-3xl">About Us</span>
+            </button>
 
-            <div
-              className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3 flex items-center gap-4"
+            <button
+              type="button"
+              className="glass-subtle rounded-xl p-4 cursor-pointer gpu mt-3 flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               onClick={() => handleNavigation(onNavigateToHelp)}
-              role="button"
-              tabIndex={0}
             >
               <HelpCircle className="w-8 h-8 flex-shrink-0" />
-              <p className="text-3xl">Help</p>
-            </div>
+              <span className="text-3xl">Help</span>
+            </button>
 
             {/* Theme Switcher */}
             <div className="mt-6 pt-4 border-t border-border/30">

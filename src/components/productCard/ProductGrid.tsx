@@ -1,10 +1,9 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
-import { useGridSize } from '@/hooks';
-import { ProductCard } from './ProductCard';
-import SkeletonCard from './SkeletonCard';
-import type { InitialProductStateType } from '@/types/product.types';
+import { useEffect, useRef } from "react";
+import { ProductCard } from "./ProductCard";
+import SkeletonCard from "./SkeletonCard";
+import type { InitialProductStateType } from "@/types/product.types";
 
 interface ProductGridProps {
   products: InitialProductStateType[];
@@ -23,7 +22,13 @@ const LOADING_MORE_SKELETONS = Array.from({ length: 4 }, (_, i) => i);
 
 /**
  * ProductGrid - Displays products in a responsive grid with infinite scroll
- * Note: React Compiler handles memoization automatically
+ * Uses Tailwind responsive classes for grid columns:
+ * - Mobile: 1 column
+ * - sm (640px): 2 columns
+ * - md (768px): 3 columns
+ * - lg (1024px): 4 columns
+ * - xl (1280px): 5 columns
+ * - 2xl (1536px): 6 columns
  */
 export function ProductGrid({
   products,
@@ -32,7 +37,6 @@ export function ProductGrid({
   isFetchingMore = false,
   hasMore = false,
 }: ProductGridProps) {
-  const gridSize = useGridSize();
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // IntersectionObserver for infinite scroll
@@ -45,7 +49,7 @@ export function ProductGrid({
           onLoadMore();
         }
       },
-      { rootMargin: '200px' } // Trigger 200px before reaching the end
+      { rootMargin: "200px" } // Trigger 200px before reaching the end
     );
 
     const currentRef = loadMoreRef.current;
@@ -63,18 +67,13 @@ export function ProductGrid({
   return (
     <div
       className="overflow-y-auto"
-      style={{ transform: 'translateZ(0)', WebkitOverflowScrolling: 'touch' }}
+      style={{ transform: "translateZ(0)", WebkitOverflowScrolling: "touch" }}
     >
-      <div
-        className="grid gap-10 px-7 py-7 xl:px-20"
-        style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}
-      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-10 page-px py-7">
         {isLoading
           ? SKELETON_ITEMS.map((i) => <SkeletonCard key={i} isLoaded={false} />)
-          : products.map((product) => (
-              <ProductCard product={product} key={product.id} />
-            ))}
-        
+          : products.map((product) => <ProductCard product={product} key={product.id} />)}
+
         {/* Loading more skeletons */}
         {isFetchingMore &&
           LOADING_MORE_SKELETONS.map((i) => (
@@ -83,9 +82,7 @@ export function ProductGrid({
       </div>
 
       {/* Infinite scroll trigger */}
-      {hasMore && !isLoading && (
-        <div ref={loadMoreRef} className="h-10" aria-hidden="true" />
-      )}
+      {hasMore && !isLoading && <div ref={loadMoreRef} className="h-10" aria-hidden="true" />}
     </div>
   );
 }

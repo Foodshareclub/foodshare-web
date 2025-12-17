@@ -21,23 +21,17 @@ export default function NavbarLogo({ onNavigate, isCompact = false }: NavbarLogo
   };
 
   return (
-    <div
+    <button
+      type="button"
       onClick={handleClick}
       className={cn(
         "flex items-center gap-3 cursor-pointer",
         "transition-all duration-200 ease-in-out",
         "hover:opacity-80 hover:scale-[1.02]",
-        "active:scale-[0.98]"
+        "active:scale-[0.98]",
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-lg"
       )}
-      role="button"
       aria-label="Go to homepage"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleClick();
-        }
-      }}
     >
       <Image
         src="/straw.svg"
@@ -59,6 +53,6 @@ export default function NavbarLogo({ onNavigate, isCompact = false }: NavbarLogo
       >
         Foodshare
       </span>
-    </div>
+    </button>
   );
 }

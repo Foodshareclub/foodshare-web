@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Enhanced SearchBar Component with Real-time Suggestions
@@ -14,13 +14,13 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { SearchIcon } from "@/utils/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { gpu120Animation, gpu120Fade } from "@/utils/gpuStyles";
+import { gpu120Animation as _gpu120Animation, gpu120Fade } from "@/utils/gpuStyles";
 import { useSearchSuggestions } from "@/hooks/useSearchSuggestions";
 
 interface SearchBarProps {
@@ -30,7 +30,7 @@ interface SearchBarProps {
 }
 
 function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }: SearchBarProps) {
-  const t = useTranslations();
+  const _t = useTranslations();
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -122,26 +122,26 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
   // Compact search button (when scrolled)
   if (isCompact) {
     return (
-      <div
+      <button
+        type="button"
         className={cn(
           "flex items-center bg-background border rounded-[40px] shadow-sm",
           "transition-all duration-200 ease-in-out cursor-pointer",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
           isHovered ? "border-foreground shadow-md" : "border-border"
         )}
         onClick={onSearchClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        role="button"
         aria-label="Open search"
-        tabIndex={0}
         style={{ transform: "translate3d(0, 0, 0)" }}
       >
         {/* What Section */}
         <div className="flex flex-col px-4 py-2 flex-1 min-w-0">
-          <span className="text-[10px] font-semibold text-foreground">
-            What
+          <span className="text-[10px] font-semibold text-foreground">What</span>
+          <span className="text-xs text-muted-foreground truncate">
+            {searchTerm || "Search items"}
           </span>
-          <span className="text-xs text-muted-foreground truncate">{searchTerm || "Search items"}</span>
         </div>
 
         {/* Separator */}
@@ -149,9 +149,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
 
         {/* Distance Section */}
         <div className="flex flex-col px-4 py-2 flex-1 min-w-0">
-          <span className="text-[10px] font-semibold text-foreground">
-            Distance
-          </span>
+          <span className="text-[10px] font-semibold text-foreground">Distance</span>
           <span className="text-xs text-muted-foreground truncate">
             {selectedDistance || "Add distance"}
           </span>
@@ -162,9 +160,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
 
         {/* Category Section */}
         <div className="flex flex-col px-4 py-2 flex-1 min-w-0">
-          <span className="text-[10px] font-semibold text-foreground">
-            Category
-          </span>
+          <span className="text-[10px] font-semibold text-foreground">Category</span>
           <span className="text-xs text-muted-foreground truncate">{selectedCategory}</span>
         </div>
 
@@ -172,7 +168,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
         <div className="flex items-center justify-center bg-primary text-primary-foreground rounded-full w-8 h-8 m-2 flex-shrink-0">
           <SearchIcon className="text-sm" />
         </div>
-      </div>
+      </button>
     );
   }
 
@@ -205,10 +201,10 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
             setTimeout(() => inputRef.current?.focus(), 100);
           }}
         >
-          <span className="text-xs font-semibold text-foreground mb-0.5">
-            What
+          <span className="text-xs font-semibold text-foreground mb-0.5">What</span>
+          <span className="text-sm text-muted-foreground truncate">
+            {searchTerm || "Search items"}
           </span>
-          <span className="text-sm text-muted-foreground truncate">{searchTerm || "Search items"}</span>
         </div>
 
         {/* Separator */}
@@ -225,9 +221,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           style={{ transform: "translate3d(0, 0, 0)", willChange: "background-color" }}
           onClick={() => setActiveSection(activeSection === "distance" ? null : "distance")}
         >
-          <span className="text-xs font-semibold text-foreground mb-0.5">
-            Distance
-          </span>
+          <span className="text-xs font-semibold text-foreground mb-0.5">Distance</span>
           <span className="text-sm text-muted-foreground truncate">
             {selectedDistance || "Add distance"}
           </span>
@@ -247,9 +241,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           style={{ transform: "translate3d(0, 0, 0)", willChange: "background-color" }}
           onClick={() => setActiveSection(activeSection === "category" ? null : "category")}
         >
-          <span className="text-xs font-semibold text-foreground mb-0.5">
-            Category
-          </span>
+          <span className="text-xs font-semibold text-foreground mb-0.5">Category</span>
           <span className="text-sm text-muted-foreground truncate">
             {selectedCategory === "all" ? "All categories" : selectedCategory}
           </span>
@@ -323,19 +315,14 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
             <div>
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-semibold text-muted-foreground">
-                  {searchTerm ? (
-                    "Suggestions"
-                  ) : recentSearches.length > 0 ? (
-                    "Recent searches"
-                  ) : (
-                    "Popular searches"
-                  )}
+                  {searchTerm
+                    ? "Suggestions"
+                    : recentSearches.length > 0
+                      ? "Recent searches"
+                      : "Popular searches"}
                 </p>
                 {!searchTerm && recentSearches.length > 0 && (
-                  <button
-                    onClick={clearHistory}
-                    className="text-xs text-primary hover:underline"
-                  >
+                  <button onClick={clearHistory} className="text-xs text-primary hover:underline">
                     Clear all
                   </button>
                 )}
@@ -448,9 +435,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold text-foreground">
-              Distance Filter
-            </h3>
+            <h3 className="text-lg font-semibold text-foreground">Distance Filter</h3>
             <Button
               variant="ghost"
               size="sm"
@@ -464,9 +449,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
             </Button>
           </div>
 
-          <p className="text-sm text-muted-foreground mb-4">
-            Select distance range
-          </p>
+          <p className="text-sm text-muted-foreground mb-4">Select distance range</p>
 
           {/* Distance Options */}
           <div className="flex flex-col gap-2">
@@ -510,9 +493,7 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
           )}
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="text-sm font-semibold text-foreground mb-3">
-            Select a category
-          </p>
+          <p className="text-sm font-semibold text-foreground mb-3">Select a category</p>
           <div className="flex flex-col gap-2">
             {[
               { id: "all", label: "All Categories", icon: "🔍" },

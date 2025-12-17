@@ -1,7 +1,6 @@
-'use client';
+"use client";
 
 import React, { useRef, useEffect } from "react";
-import { useGridSize } from "@/hooks";
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
 import { ProductCard } from "@/components/productCard/ProductCard";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
@@ -37,7 +36,6 @@ export const Main: React.FC<MainProps> = ({
   isFetchingMore = false,
   hasMore = false,
 }) => {
-  const gridSize = useGridSize();
   const messagesAnchorRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const loaded = !isLoading;
@@ -52,7 +50,7 @@ export const Main: React.FC<MainProps> = ({
           onLoadMore();
         }
       },
-      { rootMargin: '200px' }
+      { rootMargin: "200px" }
     );
 
     const currentRef = loadMoreRef.current;
@@ -83,9 +81,8 @@ export const Main: React.FC<MainProps> = ({
         }}
       >
         <div
-          className={`grid gap-10 px-7 py-7 xl:px-20`}
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-10 page-px py-7"
           style={{
-            gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`,
             transform: "translateZ(0)",
             willChange: "contents",
           }}
@@ -95,7 +92,7 @@ export const Main: React.FC<MainProps> = ({
             : products.map((product: InitialProductStateType) => (
                 <ProductCard product={product} key={product.id} />
               ))}
-          
+
           {/* Loading more skeletons */}
           {isFetchingMore &&
             LOADING_MORE_SKELETONS.map((i) => (
@@ -104,9 +101,7 @@ export const Main: React.FC<MainProps> = ({
         </div>
 
         {/* Infinite scroll trigger */}
-        {hasMore && !isLoading && (
-          <div ref={loadMoreRef} className="h-10" aria-hidden="true" />
-        )}
+        {hasMore && !isLoading && <div ref={loadMoreRef} className="h-10" aria-hidden="true" />}
       </div>
     </>
   );

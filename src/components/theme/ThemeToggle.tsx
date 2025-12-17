@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * ThemeToggle Component
@@ -282,237 +282,232 @@ const ThemeMenuItem: React.FC<{
 );
 
 // Main Toggle Component
-function ThemeToggle({
-  className,
-  size = "md",
-  showDropdown = true,
-}: ThemeToggleProps) {
-    const { theme, isDark, toggleTheme, setTheme, isSystem } = useTheme();
-    const [isOpen, setIsOpen] = useState(false);
+function ThemeToggle({ className, size = "md", showDropdown = true }: ThemeToggleProps) {
+  const { theme, isDark, toggleTheme, setTheme, isSystem } = useTheme();
+  const [isOpen, setIsOpen] = useState(false);
 
-    // Close dropdown when clicking outside
-    useEffect(() => {
-      const handleClickOutside = (e: MouseEvent) => {
-        const target = e.target as HTMLElement;
-        if (!target.closest("[data-theme-toggle]")) {
-          setIsOpen(false);
-        }
-      };
-
-      if (isOpen) {
-        document.addEventListener("click", handleClickOutside);
-        return () => document.removeEventListener("click", handleClickOutside);
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-theme-toggle]")) {
+        setIsOpen(false);
       }
-    }, [isOpen]);
+    };
 
-    // Keyboard shortcut: Ctrl/Cmd + Shift + L
-    useEffect(() => {
-      const handleKeyDown = (e: KeyboardEvent) => {
-        if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "l") {
-          e.preventDefault();
-          toggleTheme();
-        }
-      };
+    if (isOpen) {
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  }, [isOpen]);
 
-      document.addEventListener("keydown", handleKeyDown);
-      return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [toggleTheme]);
-
-    const handleToggleClick = useCallback(() => {
-      if (showDropdown) {
-        setIsOpen((prev) => !prev);
-      } else {
+  // Keyboard shortcut: Ctrl/Cmd + Shift + L
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === "l") {
+        e.preventDefault();
         toggleTheme();
       }
-    }, [showDropdown, toggleTheme]);
+    };
 
-    const handleThemeSelect = useCallback(
-      (newTheme: Theme) => {
-        setTheme(newTheme);
-        setIsOpen(false);
-      },
-      [setTheme]
-    );
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [toggleTheme]);
 
-    return (
-      <div className="relative" data-theme-toggle>
-        {/* Main Toggle Button */}
-        <motion.button
-          onClick={handleToggleClick}
-          className={cn(
-            "relative rounded-full p-0.5 overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background shadow-lg",
-            sizeClasses[size],
-            className
-          )}
-          style={{
-            background: isDark
-              ? "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)"
-              : "linear-gradient(135deg, #38bdf8 0%, #60a5fa 50%, #818cf8 100%)",
-          }}
-          whileHover={{
-            scale: 1.05,
-            boxShadow: isDark
-              ? "0 0 20px rgba(99, 102, 241, 0.3)"
-              : "0 0 20px rgba(251, 191, 36, 0.4)",
-          }}
-          whileTap={{ scale: 0.95 }}
-          aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-          aria-expanded={isOpen}
-          role="button"
-          title="Toggle theme (Ctrl+Shift+L)"
-        >
-          {/* Background Effects */}
-          <AnimatePresence mode="wait">
-            {isDark ? (
-              <motion.div
-                key="night"
-                className="absolute inset-0 overflow-hidden"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Stars />
-                {/* Moon glow */}
-                <motion.div
-                  className="absolute rounded-full bg-blue-400/20 blur-md"
-                  style={{ width: 20, height: 20, top: "20%", right: "10%" }}
-                  animate={{ opacity: [0.3, 0.6, 0.3] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="day"
-                className="absolute inset-0 overflow-hidden"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Clouds />
-                {/* Sun rays */}
-                <motion.div
-                  className="absolute rounded-full bg-yellow-300/30 blur-sm"
-                  style={{ width: 16, height: 16, top: "30%", left: "5%" }}
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+  const handleToggleClick = useCallback(() => {
+    if (showDropdown) {
+      setIsOpen((prev) => !prev);
+    } else {
+      toggleTheme();
+    }
+  }, [showDropdown, toggleTheme]);
 
-          {/* Toggle Knob */}
-          <motion.div
-            className={cn(
-              "relative z-10 flex items-center justify-center rounded-full shadow-xl",
-              knobSizeClasses[size]
-            )}
-            style={{
-              background: isDark
-                ? "linear-gradient(145deg, #475569, #334155)"
-                : "linear-gradient(145deg, #fef3c7, #fbbf24)",
-              boxShadow: isDark
-                ? "inset 2px 2px 4px rgba(255,255,255,0.1), inset -2px -2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.4)"
-                : "inset 2px 2px 4px rgba(255,255,255,0.8), inset -2px -2px 4px rgba(0,0,0,0.1), 0 4px 12px rgba(251,191,36,0.5)",
-            }}
-            animate={{
-              x: isDark ? knobTranslate[size] : 0,
-              rotate: isDark ? 0 : 360,
-            }}
-            transition={{
-              x: { type: "spring", stiffness: 400, damping: 25 },
-              rotate: { duration: 0.5, ease: "easeOut" },
-            }}
-          >
-            <AnimatePresence mode="wait">
-              {isDark ? (
-                <motion.div
-                  key="moon-icon"
-                  initial={{ opacity: 0, rotate: -90, scale: 0 }}
-                  animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                  exit={{ opacity: 0, rotate: 90, scale: 0 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  <MoonIcon className={cn(iconSizeClasses[size], "text-blue-200")} />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="sun-icon"
-                  initial={{ opacity: 0, rotate: 90, scale: 0 }}
-                  animate={{ opacity: 1, rotate: 0, scale: 1 }}
-                  exit={{ opacity: 0, rotate: -90, scale: 0 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  <SunIcon className={cn(iconSizeClasses[size], "text-amber-600")} animate />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+  const handleThemeSelect = useCallback(
+    (newTheme: Theme) => {
+      setTheme(newTheme);
+      setIsOpen(false);
+    },
+    [setTheme]
+  );
 
-          {/* System indicator dot */}
-          {isSystem && (
+  return (
+    <div className="relative" data-theme-toggle>
+      {/* Main Toggle Button */}
+      <motion.button
+        onClick={handleToggleClick}
+        className={cn(
+          "relative rounded-full p-0.5 overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background shadow-lg",
+          sizeClasses[size],
+          className
+        )}
+        style={{
+          background: isDark
+            ? "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)"
+            : "linear-gradient(135deg, #38bdf8 0%, #60a5fa 50%, #818cf8 100%)",
+        }}
+        whileHover={{
+          scale: 1.05,
+          boxShadow: isDark
+            ? "0 0 20px rgba(99, 102, 241, 0.3)"
+            : "0 0 20px rgba(251, 191, 36, 0.4)",
+        }}
+        whileTap={{ scale: 0.95 }}
+        aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+        aria-expanded={isOpen}
+        title="Toggle theme (Ctrl+Shift+L)"
+      >
+        {/* Background Effects */}
+        <AnimatePresence mode="wait">
+          {isDark ? (
             <motion.div
-              className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              title="Following system preference"
-            />
-          )}
-        </motion.button>
-
-        {/* Dropdown Menu */}
-        <AnimatePresence>
-          {isOpen && showDropdown && (
-            <motion.div
-              className="absolute right-0 mt-2 w-48 py-2 bg-card/95 backdrop-blur-xl rounded-xl shadow-2xl border border-border/50 z-50"
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              key="night"
+              className="absolute inset-0 overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
             >
-              <div className="px-3 pb-2 mb-2 border-b border-border/50">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Theme
-                </p>
-              </div>
-              <div className="px-1 space-y-0.5">
-                <ThemeMenuItem
-                  theme="light"
-                  currentTheme={theme}
-                  label="Light"
-                  icon={<SunIcon className="w-4 h-4 text-amber-500" />}
-                  onClick={() => handleThemeSelect("light")}
-                />
-                <ThemeMenuItem
-                  theme="dark"
-                  currentTheme={theme}
-                  label="Dark"
-                  icon={<MoonIcon className="w-4 h-4 text-blue-400" />}
-                  onClick={() => handleThemeSelect("dark")}
-                />
-                <ThemeMenuItem
-                  theme="system"
-                  currentTheme={theme}
-                  label="System"
-                  icon={<MonitorIcon className="w-4 h-4 text-muted-foreground" />}
-                  onClick={() => handleThemeSelect("system")}
-                />
-              </div>
-              <div className="px-3 pt-2 mt-2 border-t border-border/50">
-                <p className="text-[10px] text-muted-foreground">
-                  <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Ctrl</kbd>
-                  {" + "}
-                  <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Shift</kbd>
-                  {" + "}
-                  <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">L</kbd>
-                </p>
-              </div>
+              <Stars />
+              {/* Moon glow */}
+              <motion.div
+                className="absolute rounded-full bg-blue-400/20 blur-md"
+                style={{ width: 20, height: 20, top: "20%", right: "10%" }}
+                animate={{ opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 3, repeat: Infinity }}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="day"
+              className="absolute inset-0 overflow-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Clouds />
+              {/* Sun rays */}
+              <motion.div
+                className="absolute rounded-full bg-yellow-300/30 blur-sm"
+                style={{ width: 16, height: 16, top: "30%", left: "5%" }}
+                animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
-    );
+
+        {/* Toggle Knob */}
+        <motion.div
+          className={cn(
+            "relative z-10 flex items-center justify-center rounded-full shadow-xl",
+            knobSizeClasses[size]
+          )}
+          style={{
+            background: isDark
+              ? "linear-gradient(145deg, #475569, #334155)"
+              : "linear-gradient(145deg, #fef3c7, #fbbf24)",
+            boxShadow: isDark
+              ? "inset 2px 2px 4px rgba(255,255,255,0.1), inset -2px -2px 4px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.4)"
+              : "inset 2px 2px 4px rgba(255,255,255,0.8), inset -2px -2px 4px rgba(0,0,0,0.1), 0 4px 12px rgba(251,191,36,0.5)",
+          }}
+          animate={{
+            x: isDark ? knobTranslate[size] : 0,
+            rotate: isDark ? 0 : 360,
+          }}
+          transition={{
+            x: { type: "spring", stiffness: 400, damping: 25 },
+            rotate: { duration: 0.5, ease: "easeOut" },
+          }}
+        >
+          <AnimatePresence mode="wait">
+            {isDark ? (
+              <motion.div
+                key="moon-icon"
+                initial={{ opacity: 0, rotate: -90, scale: 0 }}
+                animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                exit={{ opacity: 0, rotate: 90, scale: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <MoonIcon className={cn(iconSizeClasses[size], "text-blue-200")} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="sun-icon"
+                initial={{ opacity: 0, rotate: 90, scale: 0 }}
+                animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                exit={{ opacity: 0, rotate: -90, scale: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <SunIcon className={cn(iconSizeClasses[size], "text-amber-600")} animate />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* System indicator dot */}
+        {isSystem && (
+          <motion.div
+            className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            title="Following system preference"
+          />
+        )}
+      </motion.button>
+
+      {/* Dropdown Menu */}
+      <AnimatePresence>
+        {isOpen && showDropdown && (
+          <motion.div
+            className="absolute right-0 mt-2 w-48 py-2 bg-card/95 backdrop-blur-xl rounded-xl shadow-2xl border border-border/50 z-50"
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          >
+            <div className="px-3 pb-2 mb-2 border-b border-border/50">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Theme
+              </p>
+            </div>
+            <div className="px-1 space-y-0.5">
+              <ThemeMenuItem
+                theme="light"
+                currentTheme={theme}
+                label="Light"
+                icon={<SunIcon className="w-4 h-4 text-amber-500" />}
+                onClick={() => handleThemeSelect("light")}
+              />
+              <ThemeMenuItem
+                theme="dark"
+                currentTheme={theme}
+                label="Dark"
+                icon={<MoonIcon className="w-4 h-4 text-blue-400" />}
+                onClick={() => handleThemeSelect("dark")}
+              />
+              <ThemeMenuItem
+                theme="system"
+                currentTheme={theme}
+                label="System"
+                icon={<MonitorIcon className="w-4 h-4 text-muted-foreground" />}
+                onClick={() => handleThemeSelect("system")}
+              />
+            </div>
+            <div className="px-3 pt-2 mt-2 border-t border-border/50">
+              <p className="text-[10px] text-muted-foreground">
+                <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Ctrl</kbd>
+                {" + "}
+                <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Shift</kbd>
+                {" + "}
+                <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">L</kbd>
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }
 
 // Simple inline toggle for mobile drawer
