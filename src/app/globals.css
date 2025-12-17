@@ -374,6 +374,226 @@
   will-change: auto;
 }
 
+/* Enhanced GPU acceleration for heavy animations */
+@utility gpu-heavy {
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* GPU acceleration for opacity animations */
+@utility gpu-opacity {
+  will-change: opacity;
+  backface-visibility: hidden;
+}
+
+/* GPU layer for complex compositing */
+@utility gpu-layer {
+  transform: translateZ(0);
+  isolation: isolate;
+  contain: layout style paint;
+}
+
+/* Deck-specific GPU optimizations */
+@utility deck-gpu {
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  perspective: 1200px;
+}
+
+/* Card GPU optimizations */
+@utility card-gpu {
+  transform: translateZ(0);
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+  contain: layout style;
+}
+
+/* Smooth 60fps animations */
+@utility animate-smooth {
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: both;
+}
+
+/* Performance containment for cards */
+@utility contain-card {
+  contain: layout style paint;
+  content-visibility: auto;
+}
+
+/* ============================================================================
+   Advanced GPU Acceleration Utilities
+   ============================================================================
+   These utilities leverage modern browser compositing for 60fps+ animations.
+   Use sparingly on elements that actually animate to avoid memory overhead.
+   ============================================================================ */
+
+/* Force element onto its own compositor layer */
+@utility gpu-composite {
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity, filter;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  isolation: isolate;
+}
+
+/* GPU-accelerated blur animations */
+@utility gpu-blur {
+  transform: translateZ(0);
+  will-change: filter, backdrop-filter;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* GPU-accelerated shadow/glow effects */
+@utility gpu-glow {
+  transform: translateZ(0);
+  will-change: box-shadow, filter;
+  backface-visibility: hidden;
+  contain: layout style;
+}
+
+/* 3D perspective container - optimized */
+@utility gpu-3d-container {
+  transform-style: preserve-3d;
+  perspective: 1200px;
+  perspective-origin: center center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 3D child element optimization */
+@utility gpu-3d-child {
+  transform: translateZ(0);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Ultra-smooth 60fps animation layer */
+@utility gpu-animate {
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Particle/effects layer - many small animated elements */
+@utility gpu-particles {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  contain: strict;
+  pointer-events: none;
+}
+
+/* Gradient animation optimization */
+@utility gpu-gradient {
+  transform: translateZ(0);
+  will-change: background-position, opacity;
+  backface-visibility: hidden;
+}
+
+/* Scale/zoom animations */
+@utility gpu-scale {
+  transform: translateZ(0);
+  will-change: transform;
+  transform-origin: center center;
+  backface-visibility: hidden;
+}
+
+/* Rotation animations */
+@utility gpu-rotate {
+  transform: translateZ(0);
+  will-change: transform;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Stacking context isolation - prevents layer pollution */
+@utility gpu-isolated {
+  isolation: isolate;
+  contain: layout style paint;
+  z-index: 0;
+}
+
+/* Full paint containment for complex cards */
+@utility contain-strict {
+  contain: strict;
+}
+
+/* Layout-only containment */
+@utility contain-layout {
+  contain: layout;
+}
+
+/* Paint containment for visual-only updates */
+@utility contain-paint {
+  contain: paint;
+}
+
+/* Content visibility for off-screen optimization */
+@utility content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
+}
+
+/* Smooth sub-pixel rendering */
+@utility render-smooth {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Hardware-accelerated transitions */
+@utility transition-gpu {
+  transition-property: transform, opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+  will-change: transform, opacity;
+}
+
+/* Spring-like GPU transition */
+@utility transition-gpu-spring {
+  transition-property: transform, opacity;
+  transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition-duration: 400ms;
+  will-change: transform, opacity;
+}
+
+/* Optimized hover state preparation */
+@utility hover-ready {
+  transform: translateZ(0);
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out;
+  will-change: auto;
+  &:hover {
+    will-change: transform, box-shadow;
+  }
+}
+
+/* Deck-specific optimizations - enhanced */
+@utility deck-container {
+  perspective: 1200px;
+  perspective-origin: center 40%;
+  transform-style: preserve-3d;
+}
+
+/* Card stack optimization */
+@utility card-stack-item {
+  transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
 /* Glass transition utility */
 @utility glass-transition {
   transition:
@@ -684,6 +904,58 @@
   }
   50% {
     background-position: 100% 50%;
+  }
+}
+
+@keyframes fireGlow {
+  0% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes fireFlicker {
+  0% {
+    opacity: 0.5;
+    transform: scale(1) rotate(-2deg);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.1) rotate(2deg);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scale(1.05) rotate(-1deg);
+  }
+}
+
+@keyframes flameRise {
+  0% {
+    opacity: 0.8;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-4px) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px) scale(0.5);
+  }
+}
+
+@keyframes fireIcon {
+  0% {
+    transform: scale(1) rotate(-3deg);
+    filter: drop-shadow(0 0 4px rgba(251, 146, 60, 0.8));
+  }
+  100% {
+    transform: scale(1.15) rotate(3deg);
+    filter: drop-shadow(0 0 8px rgba(251, 146, 60, 1));
   }
 }
 

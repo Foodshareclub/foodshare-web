@@ -7,18 +7,37 @@ import { Target, Users, TrendingUp, ChevronRight, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { ChallengeRevealModal } from "@/components/modals/challenge-reveal";
 import { ChallengeDeck } from "@/components/challenges/ChallengeDeck";
+import { useDeckChallenges } from "@/hooks/queries/useChallenges";
 import type { InitialProductStateType } from "@/types/product.types";
 import type { AuthUser } from "@/app/actions/auth";
 
 interface ChallengesClientProps {
   challenges: InitialProductStateType[];
   user: AuthUser | null;
-  stats: { totalChallenges: number; totalParticipants: number };
+  stats: { totalChallenges: number; totalParticipants: number; totalXpEarned: number };
 }
 
-export function ChallengesClient({ challenges, user, stats }: ChallengesClientProps) {
+// Format large numbers with K/M suffix
+function formatNumber(num: number): string {
+  if (num >= 1_000_000) {
+    return `${(num / 1_000_000).toFixed(1).replace(/\.0$/, "")}M`;
+  }
+  if (num >= 1_000) {
+    return `${(num / 1_000).toFixed(1).replace(/\.0$/, "")}K`;
+  }
+  return num.toString();
+}
+
+export function ChallengesClient({
+  challenges: initialChallenges,
+  user,
+  stats,
+}: ChallengesClientProps) {
   const [revealModalOpen, setRevealModalOpen] = useState(false);
   const isAuth = !!user;
+
+  // Use React Query with server-side initial data for optimal hydration
+  const { data: challenges } = useDeckChallenges(initialChallenges, { limit: 12 });
 
   return (
     <>
@@ -50,7 +69,7 @@ function HeroSection({
   challenges,
   onDiscoverClick,
 }: {
-  stats: { totalChallenges: number; totalParticipants: number };
+  stats: { totalChallenges: number; totalParticipants: number; totalXpEarned: number };
   isAuth: boolean;
   challenges: InitialProductStateType[];
   onDiscoverClick: () => void;
@@ -175,7 +194,7 @@ function HeroSection({
         >
           <StatCard icon={Target} value={stats.totalChallenges} label="Challenges" />
           <StatCard icon={Users} value={stats.totalParticipants} label="Participants" />
-          <StatCard icon={TrendingUp} value="2.5K" label="XP Earned" />
+          <StatCard icon={TrendingUp} value={formatNumber(stats.totalXpEarned)} label="XP Earned" />
         </motion.div>
 
         {/* CTA for non-auth users */}

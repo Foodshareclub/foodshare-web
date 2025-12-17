@@ -1,7 +1,18 @@
 import { Variants } from "framer-motion";
 import { HERO_DECK_CONFIG, ANIMATION_DURATIONS } from "./constants";
 
-// Hero deck entrance animation - More dramatic with 3D
+/**
+ * GPU-Optimized Animation Variants
+ *
+ * All animations use only GPU-accelerated properties:
+ * - transform (translate, rotate, scale)
+ * - opacity
+ *
+ * This ensures 60fps performance by keeping animations
+ * on the compositor thread, avoiding layout/paint triggers.
+ */
+
+// Hero deck entrance animation - GPU accelerated 3D transforms
 export const heroEntryVariants: Variants = {
   hidden: {
     opacity: 0,
@@ -226,7 +237,7 @@ export const glowPulseVariants: Variants = {
   },
 };
 
-// Interactive hint bounce
+// Interactive hint bounce - GPU translate only
 export const hintBounceVariants: Variants = {
   idle: {
     y: [0, -6, 0],
@@ -235,6 +246,85 @@ export const hintBounceVariants: Variants = {
       duration: 2,
       repeat: Infinity,
       ease: "easeInOut",
+    },
+  },
+};
+
+// GPU-optimized spring config for smooth 60fps
+export const gpuSpringConfig = {
+  type: "spring" as const,
+  stiffness: 300,
+  damping: 25,
+  mass: 1,
+};
+
+// GPU-optimized tween config
+export const gpuTweenConfig = {
+  type: "tween" as const,
+  duration: 0.3,
+  ease: [0.4, 0, 0.2, 1] as const, // ease-out cubic
+};
+
+// Shimmer sweep animation - GPU gradient position
+export const shimmerVariants: Variants = {
+  idle: {
+    backgroundPosition: ["-200% 0", "200% 0"],
+    transition: {
+      duration: 2.5,
+      repeat: Infinity,
+      ease: "linear",
+    },
+  },
+};
+
+// Scale pulse for interactive elements - GPU transform only
+export const scalePulseVariants: Variants = {
+  idle: {
+    scale: [1, 1.02, 1],
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+      ease: "easeInOut",
+    },
+  },
+};
+
+// 3D card flip - GPU accelerated
+export const cardFlipVariants: Variants = {
+  faceUp: {
+    rotateY: 0,
+    opacity: 1,
+    transition: gpuSpringConfig,
+  },
+  faceDown: {
+    rotateY: 180,
+    opacity: 0,
+    transition: gpuSpringConfig,
+  },
+};
+
+// Stagger children animation config
+export const staggerContainerVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+// GPU-optimized fade in for children
+export const fadeInChildVariants: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 400,
+      damping: 30,
     },
   },
 };

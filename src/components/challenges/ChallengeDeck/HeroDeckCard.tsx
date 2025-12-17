@@ -36,9 +36,9 @@ export function HeroDeckCard({
 
   return (
     <div className={cn("relative", className)}>
-      {/* Holographic border effect */}
+      {/* Holographic border effect - GPU gradient animation */}
       <div
-        className="absolute -inset-[2px] rounded-[20px] opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        className="absolute -inset-[2px] rounded-[20px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 gpu-gradient"
         style={{
           background:
             "linear-gradient(45deg, hsl(var(--primary)), hsl(173 58% 39%), hsl(27 87% 59%), hsl(var(--primary)))",
@@ -47,21 +47,21 @@ export function HeroDeckCard({
         }}
       />
 
-      {/* Main card */}
+      {/* Main card - GPU composite with containment */}
       <div
         className={cn(
           "relative overflow-hidden rounded-2xl",
           "bg-card/95 backdrop-blur-xl",
           "border border-border/50",
           "shadow-2xl shadow-black/30",
-          "gpu",
-          isLarge ? "w-72 sm:w-80 md:w-96" : "w-64 sm:w-72"
+          "gpu-composite contain-card render-smooth",
+          isLarge ? "w-64 sm:w-72 md:w-80" : "w-56 sm:w-64"
         )}
         style={{ aspectRatio: "3/4" }}
       >
-        {/* Shimmer overlay effect */}
+        {/* Shimmer overlay effect - GPU gradient */}
         <div
-          className="absolute inset-0 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          className="absolute inset-0 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 gpu-gradient"
           style={{
             background:
               "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.2) 45%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0.2) 55%, transparent 60%)",
@@ -70,9 +70,9 @@ export function HeroDeckCard({
           }}
         />
 
-        {/* Rainbow edge glow on hover */}
+        {/* Rainbow edge glow on hover - GPU gradient */}
         <div
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none gpu-gradient"
           style={{
             background:
               "linear-gradient(90deg, rgba(255,45,85,0.1), rgba(0,166,153,0.1), rgba(252,100,45,0.1))",
@@ -125,19 +125,72 @@ export function HeroDeckCard({
             </div>
           </div>
 
-          {/* Difficulty Badge - Enhanced */}
+          {/* Difficulty Badge - Enhanced with intense fire for Hard */}
           <div className="absolute top-3 left-3">
             <div className="relative">
+              {/* Intense multi-layer fire glow for Hard difficulty - GPU optimized */}
+              {difficulty === "Hard" && (
+                <>
+                  {/* Outer fire burst */}
+                  <div
+                    className="absolute -inset-3 rounded-full bg-gradient-to-t from-red-600 via-orange-500 to-yellow-400 opacity-60 blur-xl gpu-glow"
+                    style={{ animation: "fireGlow 1s ease-in-out infinite alternate" }}
+                  />
+                  {/* Mid fire ring */}
+                  <div
+                    className="absolute -inset-2 rounded-full bg-gradient-to-r from-orange-600 via-red-500 to-orange-600 opacity-70 blur-lg gpu-glow"
+                    style={{ animation: "fireFlicker 0.8s ease-in-out infinite alternate-reverse" }}
+                  />
+                  {/* Inner intense glow */}
+                  <div
+                    className="absolute -inset-1.5 rounded-full bg-gradient-to-t from-red-500 via-orange-400 to-yellow-300 opacity-80 blur-md gpu-glow"
+                    style={{ animation: "fireGlow 0.6s ease-in-out infinite alternate" }}
+                  />
+                  {/* Core ember */}
+                  <div className="absolute -inset-0.5 rounded-full bg-gradient-to-br from-yellow-400 via-orange-500 to-red-600 opacity-50 blur-sm animate-pulse gpu-glow" />
+                  {/* Rising flame particles - GPU particles layer */}
+                  <div
+                    className="absolute -top-2 left-1/2 -translate-x-1/2 w-1.5 h-3 bg-gradient-to-t from-orange-500 to-yellow-300 rounded-full opacity-70 blur-[2px] gpu-particles"
+                    style={{ animation: "flameRise 0.7s ease-out infinite" }}
+                  />
+                  <div
+                    className="absolute -top-1 left-1/4 w-1 h-2 bg-gradient-to-t from-red-500 to-orange-400 rounded-full opacity-60 blur-[1px] gpu-particles"
+                    style={{ animation: "flameRise 0.9s ease-out infinite 0.2s" }}
+                  />
+                  <div
+                    className="absolute -top-1.5 right-1/4 w-1 h-2.5 bg-gradient-to-t from-orange-600 to-yellow-400 rounded-full opacity-60 blur-[1px] gpu-particles"
+                    style={{ animation: "flameRise 0.8s ease-out infinite 0.4s" }}
+                  />
+                </>
+              )}
               <div
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-xs font-semibold",
+                  "relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-white text-xs font-semibold",
                   "backdrop-blur-md border shadow-lg",
                   config.color,
-                  config.borderColor
+                  config.borderColor,
+                  difficulty === "Hard" && "border-orange-400/70 shadow-orange-500/50"
                 )}
               >
-                <DifficultyIcon className="w-3.5 h-3.5" />
-                {difficulty}
+                <DifficultyIcon
+                  className={cn(
+                    "w-3.5 h-3.5",
+                    difficulty === "Hard" &&
+                      "text-yellow-300 drop-shadow-[0_0_6px_rgba(251,146,60,1)]"
+                  )}
+                  style={
+                    difficulty === "Hard"
+                      ? { animation: "fireIcon 0.5s ease-in-out infinite alternate" }
+                      : undefined
+                  }
+                />
+                <span
+                  className={cn(
+                    difficulty === "Hard" && "drop-shadow-[0_0_4px_rgba(251,146,60,0.8)]"
+                  )}
+                >
+                  {difficulty}
+                </span>
               </div>
             </div>
           </div>
@@ -190,9 +243,9 @@ export function HeroDeckCard({
           </div>
         </div>
 
-        {/* Bottom gradient accent - Animated */}
+        {/* Bottom gradient accent - GPU animated */}
         <div
-          className="absolute bottom-0 left-0 right-0 h-1.5"
+          className="absolute bottom-0 left-0 right-0 h-1.5 gpu-gradient"
           style={{
             background:
               "linear-gradient(90deg, hsl(var(--primary)), hsl(173 58% 39%), hsl(27 87% 59%))",
@@ -205,7 +258,7 @@ export function HeroDeckCard({
   );
 }
 
-// Elegant card back for deck stack - Enhanced
+// Elegant card back for deck stack - GPU composite layer
 function CardBack({ className, isLarge = false }: { className?: string; isLarge?: boolean }) {
   return (
     <div
@@ -214,7 +267,8 @@ function CardBack({ className, isLarge = false }: { className?: string; isLarge?
         "bg-gradient-to-br from-primary/25 via-card to-teal-500/25",
         "border border-border/50",
         "shadow-xl shadow-black/20",
-        isLarge ? "w-72 sm:w-80 md:w-96" : "w-64 sm:w-72",
+        "gpu-composite contain-card render-smooth",
+        isLarge ? "w-64 sm:w-72 md:w-80" : "w-56 sm:w-64",
         className
       )}
       style={{ aspectRatio: "3/4" }}
@@ -236,13 +290,13 @@ function CardBack({ className, isLarge = false }: { className?: string; isLarge?
       {/* Gradient mesh background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-teal-500/10" />
 
-      {/* Center logo/icon with enhanced glow */}
+      {/* Center logo/icon with enhanced glow - GPU optimized */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative">
+        <div className="relative gpu-isolated">
           {/* Outer glow ring */}
-          <div className="absolute -inset-8 bg-gradient-to-r from-primary/30 to-teal-500/30 rounded-full blur-2xl animate-pulse" />
+          <div className="absolute -inset-8 bg-gradient-to-r from-primary/30 to-teal-500/30 rounded-full blur-2xl animate-pulse gpu-glow" />
           {/* Middle glow */}
-          <div className="absolute -inset-4 bg-primary/25 rounded-full blur-xl" />
+          <div className="absolute -inset-4 bg-primary/25 rounded-full blur-xl gpu-blur" />
           {/* Icon container */}
           <div
             className={cn(

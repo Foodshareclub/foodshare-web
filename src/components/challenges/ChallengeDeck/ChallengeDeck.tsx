@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Shuffle, Sparkles, Layers, Wand2 } from "lucide-react";
+import { Shuffle, Sparkles, Wand2 } from "lucide-react";
 import { HeroDeckCard } from "./HeroDeckCard";
 import {
   heroEntryVariants,
@@ -136,14 +136,14 @@ export function ChallengeDeck({
         {!isShuffling && topCard && `Showing: ${topCard.post_name}`}
       </div>
 
-      {/* Ambient glow behind deck */}
+      {/* Ambient glow behind deck - GPU composite layer */}
       <motion.div
         variants={prefersReducedMotion ? undefined : glowPulseVariants}
         animate="idle"
-        className="absolute -inset-16 rounded-[4rem] bg-gradient-conic from-primary/30 via-teal-500/20 via-50% to-orange-500/30 blur-3xl opacity-60 -z-10"
+        className="absolute -inset-16 rounded-[4rem] bg-gradient-conic from-primary/30 via-teal-500/20 via-50% to-orange-500/30 blur-3xl opacity-60 -z-10 gpu-glow gpu-isolated"
       />
 
-      {/* Secondary rotating glow */}
+      {/* Secondary rotating glow - GPU rotation layer */}
       <motion.div
         animate={
           prefersReducedMotion
@@ -157,16 +157,15 @@ export function ChallengeDeck({
           rotate: { duration: 20, repeat: Infinity, ease: "linear" },
           scale: { duration: 4, repeat: Infinity, ease: "easeInOut" },
         }}
-        className="absolute -inset-12 rounded-full bg-gradient-to-r from-primary/20 via-transparent to-teal-500/20 blur-2xl -z-10"
+        className="absolute -inset-12 rounded-full bg-gradient-to-r from-primary/20 via-transparent to-teal-500/20 blur-2xl -z-10 gpu-rotate gpu-blur"
       />
 
-      {/* Main deck container */}
+      {/* Main deck container - GPU 3D container */}
       <motion.div
         variants={prefersReducedMotion ? undefined : heroEntryVariants}
         initial="hidden"
         animate="visible"
-        className="relative"
-        style={{ transformStyle: "preserve-3d" }}
+        className="relative deck-container gpu-3d-container"
       >
         {/* Particle burst on shuffle */}
         <AnimatePresence>
@@ -180,7 +179,7 @@ export function ChallengeDeck({
                   animate="burst"
                   exit={{ opacity: 0 }}
                   className={cn(
-                    "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full z-30",
+                    "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full z-30 gpu-particles",
                     particle.color
                   )}
                   style={{
@@ -193,12 +192,11 @@ export function ChallengeDeck({
           )}
         </AnimatePresence>
 
-        {/* Deck with cards */}
+        {/* Deck with cards - GPU composite layer */}
         <motion.div
           variants={prefersReducedMotion ? undefined : shuffleDeckVariants}
           animate={isShuffling ? "shuffle" : "idle"}
-          className="relative cursor-pointer"
-          style={{ transformStyle: "preserve-3d" }}
+          className="relative cursor-pointer gpu-composite gpu-animate"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onClick={onCardClick}
@@ -211,75 +209,54 @@ export function ChallengeDeck({
           <motion.div
             variants={prefersReducedMotion ? undefined : idleWobbleVariants}
             animate={!isShuffling && !isHovered ? "idle" : undefined}
-            style={{ transformStyle: "preserve-3d" }}
+            className="relative"
           >
-            {/* Background stacked cards (rendered first, behind) */}
-            <AnimatePresence mode="popLayout">
-              {visibleCards
-                .slice(1)
-                .reverse()
-                .map((challenge, reverseIndex) => {
-                  const index = visibleCards.length - 1 - reverseIndex;
-                  return (
-                    <motion.div
-                      key={`bg-${challenge.id}`}
-                      className="absolute top-0 left-0"
-                      variants={
-                        prefersReducedMotion
-                          ? undefined
-                          : isShuffling
-                            ? shuffleFlyVariants(index)
-                            : stackCardVariants(index)
-                      }
-                      initial="idle"
-                      animate={isShuffling ? "fly" : "stacked"}
-                      style={{
-                        zIndex: 10 - index,
-                        transformStyle: "preserve-3d",
-                      }}
-                    >
-                      <HeroDeckCard challenge={challenge} isFaceUp={false} />
-                    </motion.div>
-                  );
-                })}
-            </AnimatePresence>
-
-            {/* Top face-up card */}
+            {/* Top face-up card - rendered first to establish position */}
             <motion.div
               variants={prefersReducedMotion ? undefined : hoverFloatVariants}
               animate={isHovered && !isShuffling ? "hover" : "idle"}
-              className="relative z-10"
-              style={{ transformStyle: "preserve-3d" }}
+              className="relative z-20 gpu-3d-child"
             >
               <HeroDeckCard challenge={topCard} isFaceUp={true} className="group" isLarge />
 
-              {/* Hover glow effect - More dramatic */}
+              {/* Hover glow effect - GPU optimized */}
               <motion.div
                 animate={{
                   opacity: isHovered ? 1 : 0,
                   scale: isHovered ? 1 : 0.95,
                 }}
                 transition={{ duration: 0.3 }}
-                className="absolute -inset-3 rounded-3xl bg-gradient-to-r from-primary/30 via-teal-500/25 to-orange-500/30 blur-xl -z-10"
+                className="absolute -inset-3 rounded-3xl bg-gradient-to-r from-primary/30 via-teal-500/25 to-orange-500/30 blur-xl -z-10 gpu-glow"
               />
             </motion.div>
-          </motion.div>
-        </motion.div>
 
-        {/* Card counter badge - Enhanced */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: -10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
-          className="absolute -top-5 -right-5 z-20"
-        >
-          <div className="relative">
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary to-teal-500 rounded-full blur-sm opacity-60" />
-            <div className="relative flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-primary to-teal-500 text-white text-sm font-bold shadow-xl shadow-primary/40">
-              <Layers className="w-4 h-4" />
-              <span>{challenges.length}</span>
-            </div>
-          </div>
+            {/* Background stacked cards (rendered after, positioned behind with lower z-index) */}
+            <AnimatePresence mode="popLayout">
+              {visibleCards.slice(1).map((challenge, idx) => {
+                const index = idx + 1;
+                return (
+                  <motion.div
+                    key={`bg-${challenge.id}`}
+                    className="absolute top-0 left-0 card-stack-item"
+                    variants={
+                      prefersReducedMotion
+                        ? undefined
+                        : isShuffling
+                          ? shuffleFlyVariants(index)
+                          : stackCardVariants(index)
+                    }
+                    initial="idle"
+                    animate={isShuffling ? "fly" : "stacked"}
+                    style={{
+                      zIndex: 10 - index,
+                    }}
+                  >
+                    <HeroDeckCard challenge={challenge} isFaceUp={false} />
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </motion.div>
         </motion.div>
 
         {/* Enhanced shuffle button with gradient border and glow */}
@@ -379,10 +356,10 @@ export function ChallengeDeck({
           )}
         </AnimatePresence>
 
-        {/* Idle pulsing glow effect - Enhanced */}
+        {/* Idle pulsing glow effect - GPU optimized */}
         {!isHovered && !prefersReducedMotion && (
           <motion.div
-            className="absolute -inset-6 rounded-[2rem] bg-gradient-to-r from-primary/15 via-teal-500/15 to-orange-500/15 blur-2xl -z-10"
+            className="absolute -inset-6 rounded-[2rem] bg-gradient-to-r from-primary/15 via-teal-500/15 to-orange-500/15 blur-2xl -z-10 gpu-glow gpu-scale"
             animate={{
               opacity: [0.4, 0.7, 0.4],
               scale: [1, 1.06, 1],
