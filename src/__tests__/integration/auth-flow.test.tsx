@@ -6,9 +6,10 @@
  * Full end-to-end auth testing should be done with Playwright/Cypress.
  */
 
-import { renderHook, waitFor, act } from '@testing-library/react';
-import React from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { renderHook, waitFor, act } from "@testing-library/react";
+import React from "react";
+import { useAuth } from "@/hooks/useAuth";
+import * as authActions from "@/app/actions/auth";
 
 // Define result type for tests
 interface AuthResult {
@@ -17,7 +18,7 @@ interface AuthResult {
 }
 
 // Mock modules
-jest.mock('next/navigation', () => ({
+jest.mock("next/navigation", () => ({
   useRouter: () => ({
     push: jest.fn(),
     replace: jest.fn(),
@@ -27,13 +28,13 @@ jest.mock('next/navigation', () => ({
 }));
 
 // Mock Server Actions
-jest.mock('@/app/actions/auth', () => ({
+jest.mock("@/app/actions/auth", () => ({
   signInWithPassword: jest.fn(() => Promise.resolve({ success: true })),
   signUp: jest.fn(() => Promise.resolve({ success: true })),
   signOut: jest.fn(() => Promise.resolve()),
   resetPassword: jest.fn(() => Promise.resolve({ success: true })),
   updatePassword: jest.fn(() => Promise.resolve({ success: true })),
-  getOAuthSignInUrl: jest.fn(() => Promise.resolve({ url: 'https://example.com/oauth' })),
+  getOAuthSignInUrl: jest.fn(() => Promise.resolve({ url: "https://example.com/oauth" })),
 }));
 
 // Create a shared mock state
@@ -43,17 +44,21 @@ const mockAuthState = {
 };
 
 // Mock Supabase client
-jest.mock('@/lib/supabase/client', () => ({
+jest.mock("@/lib/supabase/client", () => ({
   createClient: () => ({
     auth: {
-      getSession: jest.fn(() => Promise.resolve({
-        data: { session: mockAuthState.session },
-        error: null,
-      })),
-      getUser: jest.fn(() => Promise.resolve({
-        data: { user: mockAuthState.user },
-        error: null,
-      })),
+      getSession: jest.fn(() =>
+        Promise.resolve({
+          data: { session: mockAuthState.session },
+          error: null,
+        })
+      ),
+      getUser: jest.fn(() =>
+        Promise.resolve({
+          data: { user: mockAuthState.user },
+          error: null,
+        })
+      ),
       signInWithOtp: jest.fn(() => Promise.resolve({ data: {}, error: null })),
       onAuthStateChange: jest.fn(() => ({
         data: { subscription: { unsubscribe: jest.fn() } },
@@ -71,37 +76,71 @@ jest.mock('@/lib/supabase/client', () => ({
   }),
 }));
 
-// Mock Zustand store
-jest.mock('@/store/zustand', () => ({
-  useAuthStore: jest.fn(() => ({
-    isAdmin: false,
-    roles: [],
-    adminCheckStatus: 'idle',
-    setAdmin: jest.fn(),
-    setAdminCheckStatus: jest.fn(),
-    reset: jest.fn(),
-  })),
-}));
+// Mock Zustand store with proper selector support
+// Define state object that can be accessed by tests
+const mockAuthStoreState = {
+  user: null as unknown,
+  session: null as unknown,
+  isAuthenticated: false,
+  isLoading: false,
+  error: null as string | null,
+  isAdmin: false,
+  roles: [] as string[],
+  adminCheckStatus: "idle" as "idle" | "loading" | "succeeded" | "failed",
+  setUser: jest.fn(),
+  setSession: jest.fn(),
+  setAuth: jest.fn(),
+  setLoading: jest.fn(),
+  setError: jest.fn(),
+  setAdmin: jest.fn(),
+  setAdminCheckStatus: jest.fn(),
+  clearError: jest.fn(),
+  reset: jest.fn(),
+};
+
+jest.mock("@/store/zustand", () => {
+  // Create mock store function that handles selectors
+  const mockStore = (selector?: (state: typeof mockAuthStoreState) => unknown) => {
+    if (typeof selector === "function") {
+      return selector(mockAuthStoreState);
+    }
+    return mockAuthStoreState;
+  };
+  // Add getState method for Zustand compatibility
+  mockStore.getState = () => mockAuthStoreState;
+  return {
+    useAuthStore: mockStore,
+  };
+});
 
 // Test wrapper - no longer needs QueryClientProvider
 function TestWrapper({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-describe('Auth Flow Integration Tests', () => {
+describe("Auth Flow Integration Tests", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Reset mock state
     mockAuthState.session = null;
     mockAuthState.user = null;
+    // Reset Zustand mock state
+    mockAuthStoreState.user = null;
+    mockAuthStoreState.session = null;
+    mockAuthStoreState.isAuthenticated = false;
+    mockAuthStoreState.isLoading = false; // Start as not loading for tests
+    mockAuthStoreState.error = null;
+    mockAuthStoreState.isAdmin = false;
+    mockAuthStoreState.roles = [];
+    mockAuthStoreState.adminCheckStatus = "idle";
   });
 
   // ==========================================================================
   // Hook Interface Tests
   // ==========================================================================
 
-  describe('Hook Interface', () => {
-    it('should expose all required auth methods', async () => {
+  describe("Hook Interface", () => {
+    it("should expose all required auth methods", async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: TestWrapper,
       });
@@ -111,16 +150,16 @@ describe('Auth Flow Integration Tests', () => {
       });
 
       // Verify all auth methods exist
-      expect(typeof result.current.loginWithPassword).toBe('function');
-      expect(typeof result.current.register).toBe('function');
-      expect(typeof result.current.logout).toBe('function');
-      expect(typeof result.current.recoverPassword).toBe('function');
-      expect(typeof result.current.updatePassword).toBe('function');
-      expect(typeof result.current.checkSession).toBe('function');
-      expect(typeof result.current.clearError).toBe('function');
+      expect(typeof result.current.loginWithPassword).toBe("function");
+      expect(typeof result.current.register).toBe("function");
+      expect(typeof result.current.logout).toBe("function");
+      expect(typeof result.current.recoverPassword).toBe("function");
+      expect(typeof result.current.updatePassword).toBe("function");
+      expect(typeof result.current.checkSession).toBe("function");
+      expect(typeof result.current.clearError).toBe("function");
     });
 
-    it('should expose auth state properties', async () => {
+    it("should expose auth state properties", async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: TestWrapper,
       });
@@ -130,11 +169,11 @@ describe('Auth Flow Integration Tests', () => {
       });
 
       // Verify state properties exist
-      expect('isAuthenticated' in result.current).toBe(true);
-      expect('isLoading' in result.current).toBe(true);
-      expect('user' in result.current).toBe(true);
-      expect('session' in result.current).toBe(true);
-      expect('error' in result.current).toBe(true);
+      expect("isAuthenticated" in result.current).toBe(true);
+      expect("isLoading" in result.current).toBe(true);
+      expect("user" in result.current).toBe(true);
+      expect("session" in result.current).toBe(true);
+      expect("error" in result.current).toBe(true);
     });
   });
 
@@ -142,8 +181,8 @@ describe('Auth Flow Integration Tests', () => {
   // Initial State Tests
   // ==========================================================================
 
-  describe('Initial Auth State', () => {
-    it('should start with unauthenticated state when no session', async () => {
+  describe("Initial Auth State", () => {
+    it("should start with unauthenticated state when no session", async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: TestWrapper,
       });
@@ -157,7 +196,10 @@ describe('Auth Flow Integration Tests', () => {
       expect(result.current.session).toBeNull();
     });
 
-    it('should have loading state initially', () => {
+    it("should have loading state initially", () => {
+      // Set up mock to simulate initial loading state
+      mockAuthStoreState.isLoading = true;
+
       const { result } = renderHook(() => useAuth(), {
         wrapper: TestWrapper,
       });
@@ -171,13 +213,12 @@ describe('Auth Flow Integration Tests', () => {
   // Login Flow Tests
   // ==========================================================================
 
-  describe('Login with Password Flow', () => {
-    it('should return failure result on invalid credentials', async () => {
+  describe("Login with Password Flow", () => {
+    it("should return failure result on invalid credentials", async () => {
       // Setup mock to return error
-      const { signInWithPassword } = require('@/app/actions/auth');
-      signInWithPassword.mockResolvedValueOnce({
+      jest.mocked(authActions.signInWithPassword).mockResolvedValueOnce({
         success: false,
-        error: 'Invalid login credentials',
+        error: "Invalid login credentials",
       });
 
       const { result } = renderHook(() => useAuth(), {
@@ -190,19 +231,14 @@ describe('Auth Flow Integration Tests', () => {
 
       let loginResult: AuthResult;
       await act(async () => {
-        loginResult = await result.current.loginWithPassword(
-          'test@example.com',
-          'wrongpassword'
-        );
+        loginResult = await result.current.loginWithPassword("test@example.com", "wrongpassword");
       });
 
       expect(loginResult!.success).toBe(false);
       expect(loginResult!.error).toBeDefined();
     });
 
-    it('should call Server Action with correct params', async () => {
-      const { signInWithPassword } = require('@/app/actions/auth');
-
+    it("should call Server Action with correct params", async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: TestWrapper,
       });
@@ -212,11 +248,11 @@ describe('Auth Flow Integration Tests', () => {
       });
 
       await act(async () => {
-        await result.current.loginWithPassword('test@example.com', 'password123');
+        await result.current.loginWithPassword("test@example.com", "password123");
       });
 
       // Verify the Server Action was called
-      expect(signInWithPassword).toHaveBeenCalled();
+      expect(authActions.signInWithPassword).toHaveBeenCalled();
     });
   });
 
@@ -224,13 +260,12 @@ describe('Auth Flow Integration Tests', () => {
   // Registration Flow Tests
   // ==========================================================================
 
-  describe('Registration Flow', () => {
-    it('should return failure result on registration error', async () => {
+  describe("Registration Flow", () => {
+    it("should return failure result on registration error", async () => {
       // Setup mock to return error
-      const { signUp } = require('@/app/actions/auth');
-      signUp.mockResolvedValueOnce({
+      jest.mocked(authActions.signUp).mockResolvedValueOnce({
         success: false,
-        error: 'User already registered',
+        error: "User already registered",
       });
 
       const { result } = renderHook(() => useAuth(), {
@@ -244,8 +279,8 @@ describe('Auth Flow Integration Tests', () => {
       let registerResult: AuthResult;
       await act(async () => {
         registerResult = await result.current.register({
-          email: 'existing@example.com',
-          password: 'password123',
+          email: "existing@example.com",
+          password: "password123",
         });
       });
 
@@ -253,7 +288,7 @@ describe('Auth Flow Integration Tests', () => {
       expect(registerResult!.error).toBeDefined();
     });
 
-    it('should accept registration options', async () => {
+    it("should accept registration options", async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: TestWrapper,
       });
@@ -266,8 +301,8 @@ describe('Auth Flow Integration Tests', () => {
       await expect(
         act(async () => {
           await result.current.register({
-            email: 'newuser@example.com',
-            password: 'password123',
+            email: "newuser@example.com",
+            password: "password123",
           });
         })
       ).resolves.not.toThrow();
@@ -278,8 +313,8 @@ describe('Auth Flow Integration Tests', () => {
   // Logout Flow Tests
   // ==========================================================================
 
-  describe('Logout Flow', () => {
-    it('should have logout function available', async () => {
+  describe("Logout Flow", () => {
+    it("should have logout function available", async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: TestWrapper,
       });
@@ -288,7 +323,7 @@ describe('Auth Flow Integration Tests', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(typeof result.current.logout).toBe('function');
+      expect(typeof result.current.logout).toBe("function");
     });
   });
 
@@ -296,8 +331,8 @@ describe('Auth Flow Integration Tests', () => {
   // Password Recovery Flow Tests
   // ==========================================================================
 
-  describe('Password Recovery Flow', () => {
-    it('should have recoverPassword method available', async () => {
+  describe("Password Recovery Flow", () => {
+    it("should have recoverPassword method available", async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: TestWrapper,
       });
@@ -306,10 +341,10 @@ describe('Auth Flow Integration Tests', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(typeof result.current.recoverPassword).toBe('function');
+      expect(typeof result.current.recoverPassword).toBe("function");
     });
 
-    it('should have updatePassword method available', async () => {
+    it("should have updatePassword method available", async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: TestWrapper,
       });
@@ -318,7 +353,7 @@ describe('Auth Flow Integration Tests', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(typeof result.current.updatePassword).toBe('function');
+      expect(typeof result.current.updatePassword).toBe("function");
     });
   });
 
@@ -326,8 +361,8 @@ describe('Auth Flow Integration Tests', () => {
   // Error Handling Tests
   // ==========================================================================
 
-  describe('Error Handling', () => {
-    it('should have clearError method that can be called', async () => {
+  describe("Error Handling", () => {
+    it("should have clearError method that can be called", async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: TestWrapper,
       });
@@ -344,7 +379,7 @@ describe('Auth Flow Integration Tests', () => {
       }).not.toThrow();
     });
 
-    it('should handle network errors gracefully', async () => {
+    it("should handle network errors gracefully", async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: TestWrapper,
       });
@@ -362,8 +397,8 @@ describe('Auth Flow Integration Tests', () => {
   // Session Check Tests
   // ==========================================================================
 
-  describe('Session Management', () => {
-    it('should have checkSession method available', async () => {
+  describe("Session Management", () => {
+    it("should have checkSession method available", async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: TestWrapper,
       });
@@ -372,10 +407,10 @@ describe('Auth Flow Integration Tests', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(typeof result.current.checkSession).toBe('function');
+      expect(typeof result.current.checkSession).toBe("function");
     });
 
-    it('should be able to call checkSession', async () => {
+    it("should be able to call checkSession", async () => {
       const { result } = renderHook(() => useAuth(), {
         wrapper: TestWrapper,
       });
