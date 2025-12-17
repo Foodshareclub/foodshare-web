@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { HomeClient } from "./HomeClient";
 import { getProducts } from "@/lib/data/products";
 import { getNearbyPosts } from "@/lib/data/nearby-posts";
+import { isDatabaseHealthy } from "@/lib/data/health";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
 import {
   generateOrganizationJsonLd,
@@ -19,35 +20,6 @@ interface PageProps {
     lng?: string;
     radius?: string;
   }>;
-}
-
-/**
- * Check if database is healthy before making any calls
- * Uses a simple health check with timeout
- */
-async function isDatabaseHealthy(): Promise<boolean> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !supabaseKey) return false;
-
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-    const response = await fetch(`${supabaseUrl}/rest/v1/profiles?select=id&limit=1`, {
-      headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-      },
-      signal: controller.signal,
-      cache: "no-store",
-    });
-
-    clearTimeout(timeoutId);
-    return response.ok || response.status < 500;
-  } catch {
-    return false;
-  }
 }
 
 /**

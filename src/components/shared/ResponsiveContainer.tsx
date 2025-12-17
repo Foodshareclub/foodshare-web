@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState, type ReactNode } from 'react';
-import { useMediaQuery } from '@/hooks';
-import UniversalDrawer, { type PlacementType } from '@/components/universalDrawer/UniversalDrawer';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import React, { useState, type ReactNode } from "react";
+import { useMediaQuery } from "@/hooks";
+import UniversalDrawer, { type PlacementType } from "@/components/universalDrawer/UniversalDrawer";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 // ============================================================================
 // Types
@@ -17,11 +17,11 @@ type ResponsiveContainerProps = {
   /** Drawer placement when in mobile mode */
   drawerPlacement?: PlacementType;
   /** Drawer size */
-  drawerSize?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  drawerSize?: "xs" | "sm" | "md" | "lg" | "xl" | "full";
   /** Custom trigger button */
   trigger?: ReactNode;
   /** Trigger button position */
-  triggerPosition?: 'left' | 'right';
+  triggerPosition?: "left" | "right";
   /** Trigger button icon */
   triggerIcon?: ReactNode;
   /** Additional class for the container */
@@ -31,16 +31,16 @@ type ResponsiveContainerProps = {
 };
 
 // ============================================================================
-// Default Icons
+// Default Icons (Static elements - reused without re-creation)
 // ============================================================================
 
-const ArrowRightIcon = () => (
+const ArrowRightIconElement = (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M9 18l6-6-6-6" />
   </svg>
 );
 
-const ArrowLeftIcon = () => (
+const ArrowLeftIconElement = (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <path d="M15 18l-6-6 6-6" />
   </svg>
@@ -56,11 +56,11 @@ const ArrowLeftIcon = () => (
  */
 export function ResponsiveContainer({
   children,
-  breakpoint = '(min-width: 1200px)',
-  drawerPlacement = 'start',
-  drawerSize = 'md',
+  breakpoint = "(min-width: 1200px)",
+  drawerPlacement = "start",
+  drawerSize = "md",
   trigger,
-  triggerPosition = 'left',
+  triggerPosition = "left",
   triggerIcon,
   className,
   drawerHeader,
@@ -68,13 +68,11 @@ export function ResponsiveContainer({
   const [isOpen, setIsOpen] = useState(false);
   const isDesktop = useMediaQuery(breakpoint);
 
-  // Default icon based on placement
+  // Default icon based on placement (static elements - no re-creation)
   const defaultIcon =
-    drawerPlacement === 'start' || drawerPlacement === 'top' ? (
-      <ArrowRightIcon />
-    ) : (
-      <ArrowLeftIcon />
-    );
+    drawerPlacement === "start" || drawerPlacement === "top"
+      ? ArrowRightIconElement
+      : ArrowLeftIconElement;
 
   const icon = triggerIcon ?? defaultIcon;
 
@@ -91,8 +89,8 @@ export function ResponsiveContainer({
         <Button
           onClick={() => setIsOpen(true)}
           className={cn(
-            'fixed w-11 h-11 rounded-full z-10 bg-orange-500 hover:bg-orange-600',
-            triggerPosition === 'left' ? 'left-[-10px]' : 'right-4'
+            "fixed w-11 h-11 rounded-full z-10 bg-orange-500 hover:bg-orange-600",
+            triggerPosition === "left" ? "left-[-10px]" : "right-4"
           )}
           size="icon"
         >

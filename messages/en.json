@@ -14,6 +14,13 @@
     "challenges": "Challenges",
     "forum": "Forum"
   },
+  "profile": {
+    "avatar": {
+      "selectFile": "Select a file or drag and drop here",
+      "fileSizeLimit": "JPG or PNG file size no more than 10MB",
+      "upload": "Upload"
+    }
+  },
   "0_views": "{0} views",
   "buttonvalue": "{buttonValue}",
   "text": "{text}",

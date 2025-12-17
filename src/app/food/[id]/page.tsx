@@ -1,10 +1,11 @@
-import { Suspense } from 'react';
-import { notFound, redirect } from 'next/navigation';
-import { getProductById, getPopularProductIds } from '@/lib/data/products';
-import { getChallengeById } from '@/lib/data/challenges';
-import { ProductDetailClient } from './ProductDetailClient';
-import type { InitialProductStateType } from '@/types/product.types';
-import { generateProductJsonLd, generateBreadcrumbJsonLd, safeJsonLdStringify } from '@/lib/jsonld';
+import { Suspense } from "react";
+import { notFound, redirect } from "next/navigation";
+import { ProductDetailClient } from "./ProductDetailClient";
+import { getProductById, getPopularProductIds } from "@/lib/data/products";
+import { getChallengeById } from "@/lib/data/challenges";
+import type { InitialProductStateType } from "@/types/product.types";
+import { generateProductJsonLd, generateBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
+import { isDatabaseHealthy } from "@/lib/data/health";
 
 export const revalidate = 120;
 
@@ -23,39 +24,11 @@ interface PageProps {
 }
 
 /**
- * Check if database is healthy
- */
-async function isDatabaseHealthy(): Promise<boolean> {
-  try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !supabaseKey) return false;
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-    const response = await fetch(`${supabaseUrl}/rest/v1/profiles?select=id&limit=1`, {
-      headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-      },
-      signal: controller.signal,
-      cache: 'no-store',
-    });
-
-    clearTimeout(timeoutId);
-    return response.ok || response.status < 500;
-  } catch {
-    return false;
-  }
-}
-
-/**
  * Safely get user - only if DB is healthy
  */
 async function safeGetUser() {
   try {
-    const { getUser } = await import('@/app/actions/auth');
+    const { getUser } = await import("@/app/actions/auth");
     return await getUser();
   } catch {
     return null;
@@ -67,7 +40,7 @@ async function safeGetUser() {
  */
 async function safeCheckIsAdmin() {
   try {
-    const { checkIsAdmin } = await import('@/app/actions/auth');
+    const { checkIsAdmin } = await import("@/app/actions/auth");
     return await checkIsAdmin();
   } catch {
     return false;
@@ -79,22 +52,22 @@ function transformChallengeToProduct(
 ): InitialProductStateType {
   return {
     id: challenge.id,
-    post_name: challenge.challenge_title || '',
-    post_description: challenge.challenge_description || '',
+    post_name: challenge.challenge_title || "",
+    post_description: challenge.challenge_description || "",
     images: challenge.challenge_image ? [challenge.challenge_image] : [],
-    post_type: 'challenge',
+    post_type: "challenge",
     post_views: Number(challenge.challenge_views) || 0,
     post_like_counter: Number(challenge.challenge_likes_counter) || 0,
     profile_id: challenge.profile_id,
     created_at: challenge.challenge_created_at,
     is_active: challenge.challenge_published,
     is_arranged: false,
-    post_address: '',
-    post_stripped_address: challenge.challenge_difficulty || '',
-    available_hours: '',
-    condition: challenge.challenge_difficulty || '',
-    transportation: '',
-    location: null as unknown as InitialProductStateType['location'],
+    post_address: "",
+    post_stripped_address: challenge.challenge_difficulty || "",
+    available_hours: "",
+    condition: challenge.challenge_difficulty || "",
+    transportation: "",
+    location: null as unknown as InitialProductStateType["location"],
     five_star: null,
     four_star: null,
   };
@@ -109,13 +82,13 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
   const dbHealthy = await isDatabaseHealthy();
 
   if (!dbHealthy) {
-    redirect('/maintenance');
+    redirect("/maintenance");
   }
 
   try {
     const [{ id }, search] = await Promise.all([params, searchParams]);
     const productId = parseInt(id, 10);
-    const isChallenge = search.type === 'challenge';
+    const isChallenge = search.type === "challenge";
 
     if (isNaN(productId)) {
       notFound();
@@ -125,12 +98,10 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
     let product;
     try {
       product = isChallenge
-        ? await getChallengeById(productId).then((c) =>
-          c ? transformChallengeToProduct(c) : null
-        )
+        ? await getChallengeById(productId).then((c) => (c ? transformChallengeToProduct(c) : null))
         : await getProductById(productId);
     } catch {
-      redirect('/maintenance');
+      redirect("/maintenance");
     }
 
     if (!product) {
@@ -138,26 +109,23 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
     }
 
     // Only fetch user and admin status if product succeeded
-    const [user, isAdmin] = await Promise.all([
-      safeGetUser(),
-      safeCheckIsAdmin(),
-    ]);
+    const [user, isAdmin] = await Promise.all([safeGetUser(), safeCheckIsAdmin()]);
 
     // Generate JSON-LD structured data for SEO
     const jsonLd = generateProductJsonLd({
       id: product.id,
-      name: product.post_name || 'Food Item',
-      description: product.post_description || 'Available for sharing',
+      name: product.post_name || "Food Item",
+      description: product.post_description || "Available for sharing",
       image: product.images?.[0],
-      category: product.post_type || 'Food',
+      category: product.post_type || "Food",
       datePosted: product.created_at,
       location: product.post_stripped_address,
     });
 
     const breadcrumbJsonLd = generateBreadcrumbJsonLd([
-      { name: 'Home', url: 'https://foodshare.club' },
-      { name: 'Food', url: 'https://foodshare.club/food' },
-      { name: product.post_name || 'Item', url: `https://foodshare.club/food/${product.id}` },
+      { name: "Home", url: "https://foodshare.club" },
+      { name: "Food", url: "https://foodshare.club/food" },
+      { name: product.post_name || "Item", url: `https://foodshare.club/food/${product.id}` },
     ]);
 
     return (
@@ -176,7 +144,7 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
       </>
     );
   } catch {
-    redirect('/maintenance');
+    redirect("/maintenance");
   }
 }
 
@@ -184,25 +152,28 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
   try {
     const [{ id }, search] = await Promise.all([params, searchParams]);
     const productId = parseInt(id, 10);
-    const isChallenge = search.type === 'challenge';
+    const isChallenge = search.type === "challenge";
 
     if (isNaN(productId)) {
-      return { title: 'Not Found' };
+      return { title: "Not Found" };
     }
 
-    const product = await (isChallenge
-      ? getChallengeById(productId).then((c) => (c ? transformChallengeToProduct(c) : null))
-      : getProductById(productId)
+    const product = await (
+      isChallenge
+        ? getChallengeById(productId).then((c) => (c ? transformChallengeToProduct(c) : null))
+        : getProductById(productId)
     ).catch(() => null);
 
     if (!product) {
-      return { title: 'Not Found' };
+      return { title: "Not Found" };
     }
 
-    const title = product.post_name || 'Food Item';
-    const description = product.post_description?.slice(0, 160) || `${product.post_type || 'Food'} available for sharing`;
+    const title = product.post_name || "Food Item";
+    const description =
+      product.post_description?.slice(0, 160) ||
+      `${product.post_type || "Food"} available for sharing`;
     const pageUrl = `https://foodshare.club/food/${productId}`;
-    const imageUrl = product.images?.[0] || 'https://foodshare.club/og-image.jpg';
+    const imageUrl = product.images?.[0] || "https://foodshare.club/og-image.jpg";
 
     return {
       title: isChallenge ? `${title} Challenge` : title,
@@ -212,10 +183,10 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
       },
       // OpenGraph: Facebook, LinkedIn, WhatsApp, Telegram, iMessage
       openGraph: {
-        type: 'article',
-        locale: 'en_US',
+        type: "article",
+        locale: "en_US",
         url: pageUrl,
-        siteName: 'FoodShare',
+        siteName: "FoodShare",
         title,
         description,
         images: [
@@ -224,17 +195,17 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
             width: 1200,
             height: 630,
             alt: `${title} - Free on FoodShare`,
-            type: 'image/jpeg',
+            type: "image/jpeg",
           },
         ],
         publishedTime: product.created_at,
-        section: product.post_type || 'Food',
+        section: product.post_type || "Food",
       },
       // Twitter / X Cards
       twitter: {
-        card: 'summary_large_image',
-        site: '@foodshareapp',
-        creator: '@foodshareapp',
+        card: "summary_large_image",
+        site: "@foodshareapp",
+        creator: "@foodshareapp",
         title: `${title} | FoodShare`,
         description,
         images: [
@@ -246,7 +217,7 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
       },
     };
   } catch {
-    return { title: 'FoodShare' };
+    return { title: "FoodShare" };
   }
 }
 

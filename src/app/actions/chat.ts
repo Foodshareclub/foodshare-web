@@ -120,6 +120,7 @@ export async function sendFoodChatMessage(formData: FormData): Promise<ServerAct
     invalidateTag(CACHE_TAGS.CHATS);
     invalidateTag(CACHE_TAGS.CHAT(validated.data.roomId));
     invalidateTag(CACHE_TAGS.CHAT_MESSAGES(validated.data.roomId));
+    invalidateTag(CACHE_TAGS.USER_NOTIFICATIONS(user.id));
 
     return successVoid();
   } catch (error) {
@@ -239,6 +240,7 @@ export async function createFoodChatRoom(
     }
 
     invalidateTag(CACHE_TAGS.CHATS);
+    invalidateTag(CACHE_TAGS.USER_NOTIFICATIONS(validated.data.sharerId));
     invalidatePostActivityCaches(validated.data.postId, user.id);
 
     // Log post contact activity

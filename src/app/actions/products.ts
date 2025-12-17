@@ -311,6 +311,11 @@ export async function toggleProductFavorite(
       const { error } = await supabase.from("favorites").delete().eq("id", existing.id);
 
       if (error) throw new Error(error.message);
+
+      // Invalidate caches for immediate UI update
+      invalidateTag(CACHE_TAGS.PRODUCT(productId));
+      invalidateTag(CACHE_TAGS.USER_PRODUCTS(userId));
+
       return { isFavorited: false };
     } else {
       // Add favorite
@@ -319,6 +324,11 @@ export async function toggleProductFavorite(
         .insert({ product_id: productId, user_id: userId });
 
       if (error) throw new Error(error.message);
+
+      // Invalidate caches for immediate UI update
+      invalidateTag(CACHE_TAGS.PRODUCT(productId));
+      invalidateTag(CACHE_TAGS.USER_PRODUCTS(userId));
+
       return { isFavorited: true };
     }
   }, "toggleProductFavorite");

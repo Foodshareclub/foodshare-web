@@ -1,39 +1,59 @@
-'use client';
+"use client";
 
 import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-type NameBlockType = {
+interface NameBlockProps {
   firstName: string;
   setFirstName: (firstName: string) => void;
   secondName: string;
   setSecondName: (secondName: string) => void;
   onSaveHandler: () => void;
-  b: boolean;
-  c: boolean;
-  d: boolean;
-  a: boolean;
-  setB: (value: boolean) => void;
-  setC: (value: boolean) => void;
-  setD: (value: boolean) => void;
-};
+  /** Whether the name edit button should be disabled (another field is being edited) */
+  disableNameEdit: boolean;
+  /** Current state of email edit disable flag */
+  disableEmailEdit: boolean;
+  /** Current state of phone edit disable flag */
+  disablePhoneEdit: boolean;
+  /** Current state of address edit disable flag */
+  disableAddressEdit: boolean;
+  /** Toggle email edit disable state */
+  setDisableEmailEdit: (value: boolean) => void;
+  /** Toggle phone edit disable state */
+  setDisablePhoneEdit: (value: boolean) => void;
+  /** Toggle address edit disable state */
+  setDisableAddressEdit: (value: boolean) => void;
+}
 
-export const NameBlock: React.FC<NameBlockType> = ({
-  setB,
-  setC,
-  setD,
-  a,
-  b,
-  c,
-  d,
+export const NameBlock: React.FC<NameBlockProps> = ({
   firstName,
   setFirstName,
   secondName,
   setSecondName,
   onSaveHandler,
+  disableNameEdit,
+  disableEmailEdit,
+  disablePhoneEdit,
+  disableAddressEdit,
+  setDisableEmailEdit,
+  setDisablePhoneEdit,
+  setDisableAddressEdit,
 }) => {
   const [edit, setEdit] = useState(false);
+
+  const toggleEditMode = () => {
+    // Toggle edit mode and disable/enable other blocks
+    setDisableEmailEdit(!disableEmailEdit);
+    setDisablePhoneEdit(!disablePhoneEdit);
+    setDisableAddressEdit(!disableAddressEdit);
+    setEdit(!edit);
+  };
+
+  const handleSave = () => {
+    onSaveHandler();
+    toggleEditMode();
+  };
 
   return (
     <div className="glass-subtle flex border-b border-white/20 rounded-xl p-4 mb-3 animate-fade-in">
@@ -53,17 +73,7 @@ export const NameBlock: React.FC<NameBlockType> = ({
                 onChange={(e) => setSecondName(e.currentTarget.value)}
               />
             </div>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                onSaveHandler();
-                setEdit(!edit);
-                setB(!b);
-                setC(!c);
-                setD(!d);
-              }}
-              className="my-3"
-            >
+            <Button variant="ghost" onClick={handleSave} className="my-3">
               Save
             </Button>
           </>
@@ -76,13 +86,8 @@ export const NameBlock: React.FC<NameBlockType> = ({
       <Button
         variant="ghost"
         className="self-start cursor-pointer"
-        disabled={a}
-        onClick={() => {
-          setB(!b);
-          setC(!c);
-          setD(!d);
-          setEdit(!edit);
-        }}
+        disabled={disableNameEdit}
+        onClick={toggleEditMode}
       >
         {edit ? "Cancel" : "Edit"}
       </Button>

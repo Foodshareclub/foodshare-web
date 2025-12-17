@@ -7,6 +7,7 @@ import { getNearbyPosts } from "@/lib/data/nearby-posts";
 import { HomeClient } from "@/app/HomeClient";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
 import { categoryMetadata, generatePageMetadata } from "@/lib/metadata";
+import { isDatabaseHealthy } from "@/lib/data/health";
 
 // Route segment config for caching
 export const revalidate = 60;
@@ -69,34 +70,6 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     keywords: category.keywords,
     path: type === "food" ? "/food" : `/food?type=${type}`,
   });
-}
-
-/**
- * Check if database is healthy before making auth calls
- */
-async function isDatabaseHealthy(): Promise<boolean> {
-  try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !supabaseKey) return false;
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-    const response = await fetch(`${supabaseUrl}/rest/v1/profiles?select=id&limit=1`, {
-      headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-      },
-      signal: controller.signal,
-      cache: "no-store",
-    });
-
-    clearTimeout(timeoutId);
-    return response.ok || response.status < 500;
-  } catch {
-    return false;
-  }
 }
 
 /**

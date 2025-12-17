@@ -10,9 +10,9 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AddressBlock, EmailBlock, NameBlock, PhoneNumberBlock } from "@/components/profile";
-import { ChevronRight } from "lucide-react";
 
 // Icon alias for consistency
 const FaChevronRight = ChevronRight;
@@ -54,17 +54,18 @@ export default function ProfileEditPage({ initialProfile, initialAddress }: Prof
   const address = initialAddress;
   const isLoading = !initialProfile && isAuthenticated;
 
-  // Local state for form fields
-  const [firstName, setFirstName] = useState("");
-  const [secondName, setSecondName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  // Local state for form fields - initialized from server data
+  const [firstName, setFirstName] = useState(currentProfile?.first_name || "");
+  const [secondName, setSecondName] = useState(currentProfile?.second_name || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [phone, setPhone] = useState(currentProfile?.phone || "");
 
   // State for controlling which block is being edited
-  const [a, setA] = useState(false);
-  const [b, setB] = useState(false);
-  const [c, setC] = useState(false);
-  const [d, setD] = useState(false);
+  // When one block is in edit mode, it disables the others
+  const [disableNameEdit, setDisableNameEdit] = useState(false);
+  const [disableEmailEdit, setDisableEmailEdit] = useState(false);
+  const [disablePhoneEdit, setDisablePhoneEdit] = useState(false);
+  const [disableAddressEdit, setDisableAddressEdit] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -73,19 +74,8 @@ export default function ProfileEditPage({ initialProfile, initialAddress }: Prof
     }
   }, [isAuthenticated, router]);
 
-  // React Query handles fetching automatically via useCurrentProfile
-
-  // Update local state when profile loads
-  useEffect(() => {
-    if (currentProfile) {
-      setFirstName(currentProfile.first_name || "");
-      setSecondName(currentProfile.second_name || "");
-      setPhone(currentProfile.phone || "");
-    }
-    if (user?.email) {
-      setEmail(user.email);
-    }
-  }, [currentProfile, user]);
+  // Note: State is initialized from server-provided props above
+  // No need for useEffect to sync - props are the source of truth
 
   // Handle profile save
   const onSaveHandler = async () => {
@@ -138,45 +128,45 @@ export default function ProfileEditPage({ initialProfile, initialAddress }: Prof
                 setFirstName={setFirstName}
                 setSecondName={setSecondName}
                 onSaveHandler={onSaveHandler}
-                a={a}
-                b={b}
-                c={c}
-                d={d}
-                setB={setB}
-                setC={setC}
-                setD={setD}
+                disableNameEdit={disableNameEdit}
+                disableEmailEdit={disableEmailEdit}
+                disablePhoneEdit={disablePhoneEdit}
+                disableAddressEdit={disableAddressEdit}
+                setDisableEmailEdit={setDisableEmailEdit}
+                setDisablePhoneEdit={setDisablePhoneEdit}
+                setDisableAddressEdit={setDisableAddressEdit}
               />
             </div>
 
             {/* Email Block */}
             <div className="mt-5">
               <EmailBlock
-                setC={setC}
-                setD={setD}
-                a={a}
-                b={b}
-                c={c}
-                d={d}
                 email={email}
-                onSaveHandler={onSaveHandler}
                 setEmail={setEmail}
-                setA={setA}
+                onSaveHandler={onSaveHandler}
+                disableNameEdit={disableNameEdit}
+                disableEmailEdit={disableEmailEdit}
+                disablePhoneEdit={disablePhoneEdit}
+                disableAddressEdit={disableAddressEdit}
+                setDisableNameEdit={setDisableNameEdit}
+                setDisablePhoneEdit={setDisablePhoneEdit}
+                setDisableAddressEdit={setDisableAddressEdit}
               />
             </div>
 
             {/* Phone Block */}
             <div className="mt-5">
               <PhoneNumberBlock
-                a={a}
-                b={b}
-                c={c}
-                d={d}
                 phone={phone}
                 setPhone={setPhone}
                 onSaveHandler={onSaveHandler}
-                setA={setA}
-                setB={setB}
-                setD={setD}
+                disableNameEdit={disableNameEdit}
+                disableEmailEdit={disableEmailEdit}
+                disablePhoneEdit={disablePhoneEdit}
+                disableAddressEdit={disableAddressEdit}
+                setDisableNameEdit={setDisableNameEdit}
+                setDisableEmailEdit={setDisableEmailEdit}
+                setDisableAddressEdit={setDisableAddressEdit}
               />
             </div>
 
@@ -184,13 +174,13 @@ export default function ProfileEditPage({ initialProfile, initialAddress }: Prof
             <div className="mt-5">
               <AddressBlock
                 address={address}
-                a={a}
-                b={b}
-                c={c}
-                d={d}
-                setA={setA}
-                setB={setB}
-                setC={setC}
+                disableNameEdit={disableNameEdit}
+                disableEmailEdit={disableEmailEdit}
+                disablePhoneEdit={disablePhoneEdit}
+                disableAddressEdit={disableAddressEdit}
+                setDisableNameEdit={setDisableNameEdit}
+                setDisableEmailEdit={setDisableEmailEdit}
+                setDisablePhoneEdit={setDisablePhoneEdit}
               />
             </div>
           </>

@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
 import type { ChangeEvent } from "react";
 import React, { useRef, useState } from "react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import cloud from "@/assets/cloud.svg";
 import { createPhotoUrl } from "@/utils";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ type PropsType = {
  * Receives avatar URL as prop from Server Component
  */
 const Avatar: React.FC<PropsType> = ({ size, onUpload, avatarUrl: propAvatarUrl }) => {
+  const t = useTranslations("profile.avatar");
   // Use prop avatar URL directly
   const imgUrl = propAvatarUrl;
 
@@ -54,12 +56,8 @@ const Avatar: React.FC<PropsType> = ({ size, onUpload, avatarUrl: propAvatarUrl 
             </div>
 
             <div className="flex-1">
-              <p className="font-medium">
-                "Select a file or drag and drop here"
-              </p>
-              <p className="text-sm text-muted-foreground">
-                "JPG or PNG file size no more than 10MB"
-              </p>
+              <p className="font-medium">{t("selectFile")}</p>
+              <p className="text-sm text-muted-foreground">{t("fileSizeLimit")}</p>
             </div>
           </>
         )}
@@ -72,8 +70,12 @@ const Avatar: React.FC<PropsType> = ({ size, onUpload, avatarUrl: propAvatarUrl 
             onChange={(e) => uploadAvatar(e)}
           />
 
-          <Button onClick={() => inputFileRef?.current?.click()} variant="glass" className="glass-accent-orange">
-            "Download"
+          <Button
+            onClick={() => inputFileRef?.current?.click()}
+            variant="glass"
+            className="glass-accent-orange"
+          >
+            {t("upload")}
           </Button>
         </div>
       </div>
