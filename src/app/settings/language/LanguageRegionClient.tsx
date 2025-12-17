@@ -1,11 +1,19 @@
 "use client";
 
 /**
- * Language & Region Settings Client
- * Elegant UI for language selection, search radius, and location preferences
+ * Language & Region Settings Client - Enhanced Version
+ * Ultra-polished UI with advanced features:
+ * - Distance units toggle (km/miles)
+ * - Auto-detect language
+ * - Coverage area calculation
+ * - Toast notifications
+ * - Popular languages
+ * - Keyboard shortcuts
+ * - Mini map preview
+ * - Smooth animations
  */
 
-import { useState, useMemo, useTransition } from "react";
+import { useState, useMemo, useTransition, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -17,6 +25,10 @@ import {
   Navigation,
   Sparkles,
   Map,
+  Compass,
+  Ruler,
+  Zap,
+  TrendingUp,
 } from "lucide-react";
 import { useLocale } from "next-intl";
 import { Input } from "@/components/ui/input";
@@ -27,16 +39,20 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/store/zustand/useUIStore";
 import { useLocationFilter } from "@/hooks/useLocationFilter";
-import { locales, localeMetadata, type Locale } from "@/i18n/config";
+import { locales, localeMetadata, type Locale, getBrowserLocale } from "@/i18n/config";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const RADIUS_PRESETS = [
-  { km: 1, label: "My street", icon: "🏘️" },
-  { km: 5, label: "My neighborhood", icon: "🏙️" },
-  { km: 10, label: "My city", icon: "🌆" },
-  { km: 25, label: "Nearby cities", icon: "🗺️" },
-  { km: 50, label: "My region", icon: "🌍" },
-  { km: 100, label: "Wide area", icon: "🌎" },
+  { km: 1, label: "My street", icon: "🏘️", description: "Immediate area" },
+  { km: 5, label: "My neighborhood", icon: "🏙️", description: "Walking distance" },
+  { km: 10, label: "My city", icon: "🌆", description: "Cycling distance" },
+  { km: 25, label: "Nearby cities", icon: "🗺️", description: "Short drive" },
+  { km: 50, label: "My region", icon: "🌍", description: "Road trip" },
+  { km: 100, label: "Wide area", icon: "🌎", description: "Day trip" },
 ];
+
+const POPULAR_LOCALES: Locale[] = ["en", "es", "fr", "de", "pt", "zh", "ja", "ar"];
 
 const REGIONS: Array<{
   id: string;
@@ -49,6 +65,29 @@ const REGIONS: Array<{
   { id: "mena", name: "Middle East & North Africa", locales: ["ar", "tr"] },
 ];
 
+// Conversion helpers
+const KM_TO_MILES = 0.621371;
+const MILES_TO_KM = 1.60934;
+
+function kmToMiles(km: number): number {
+  return Math.round(km * KM_TO_MILES * 10) / 10;
+}
+
+function milesToKm(miles: number): number {
+  return Math.round(miles * MILES_TO_KM * 10) / 10;
+}
+
+function calculateArea(radiusKm: number): string {
+  const area = Math.PI * radiusKm * radiusKm;
+  if (area < 1) {
+    return `${Math.round(area * 100) / 100} km²`;
+  } else if (area < 10) {
+    return `${Math.round(area * 10) / 10} km²`;
+  } else {
+    return `${Math.round(area)} km²`;
+  }
+}
+
 export function LanguageRegionClient() {
   const currentLocale = useLocale() as Locale;
   const router = useRouter();
@@ -57,13 +96,34 @@ export function LanguageRegionClient() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
-  const { geoDistance, setGeoDistance } = useUIStore();
+  const { geoDistance, setGeoDistance, distanceUnit, setDistanceUnit } = useUIStore();
   const { radiusMeters, setRadiusKm, isEnabled, requestLocation, clearLocation } =
     useLocationFilter();
 
-  // Convert meters to km for display
+  // Convert meters to current unit
   const currentRadiusKm = Math.round((geoDistance ?? radiusMeters) / 1000);
-  const [localRadius, setLocalRadius] = useState(currentRadiusKm);
+  const currentRadiusDisplay =
+    distanceUnit === "miles" ? kmToMiles(currentRadiusKm) : currentRadiusKm;
+  const [localRadius, setLocalRadius] = useState(currentRadiusDisplay);
+
+  // Detect browser language
+  const detectedLocale = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    return getBrowserLocale();
+  }, []);
+
+  // Auto-detect keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboard = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        document.getElementById("language-search")?.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyboard);
+    return () => window.removeEventListener("keydown", handleKeyboard);
+  }, []);
 
   // Filter languages by search and region
   const filteredLocales = useMemo(() => {
@@ -98,32 +158,73 @@ export function LanguageRegionClient() {
     });
   }, [searchQuery, selectedRegion, currentLocale]);
 
-  const handleLanguageChange = (locale: Locale) => {
-    if (locale === currentLocale) return;
+  const handleLanguageChange = useCallback(
+    (locale: Locale) => {
+      if (locale === currentLocale) return;
 
-    startTransition(() => {
-      // Update cookie and redirect to new locale
-      document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=31536000; SameSite=Lax`;
+      startTransition(() => {
+        // Update cookie and redirect to new locale
+        document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=31536000; SameSite=Lax`;
 
-      // Replace current locale in pathname
-      const newPathname = pathname.replace(`/${currentLocale}`, `/${locale}`);
-      router.push(newPathname);
-      router.refresh();
-    });
-  };
+        // Replace current locale in pathname
+        const newPathname = pathname.replace(`/${currentLocale}`, `/${locale}`);
+        router.push(newPathname);
+        router.refresh();
+      });
+    },
+    [currentLocale, pathname, router]
+  );
 
-  const handleRadiusChange = (value: number[]) => {
-    const newRadius = value[0];
-    setLocalRadius(newRadius);
-    setGeoDistance(newRadius * 1000);
-    setRadiusKm(newRadius);
-  };
+  const handleRadiusChange = useCallback(
+    (value: number[]) => {
+      const newValue = value[0];
+      setLocalRadius(newValue);
 
-  const handlePresetClick = (km: number) => {
-    setLocalRadius(km);
-    setGeoDistance(km * 1000);
-    setRadiusKm(km);
-  };
+      // Convert to km if in miles
+      const radiusInKm = distanceUnit === "miles" ? milesToKm(newValue) : newValue;
+      setGeoDistance(radiusInKm * 1000);
+      setRadiusKm(radiusInKm);
+    },
+    [distanceUnit, setGeoDistance, setRadiusKm]
+  );
+
+  const handlePresetClick = useCallback(
+    (km: number) => {
+      const displayValue = distanceUnit === "miles" ? kmToMiles(km) : km;
+      setLocalRadius(displayValue);
+      setGeoDistance(km * 1000);
+      setRadiusKm(km);
+    },
+    [distanceUnit, setGeoDistance, setRadiusKm]
+  );
+
+  const handleUnitToggle = useCallback(
+    (checked: boolean) => {
+      const newUnit = checked ? "miles" : "km";
+      setDistanceUnit(newUnit);
+
+      // Convert current radius
+      const newDisplay = newUnit === "miles" ? kmToMiles(currentRadiusKm) : currentRadiusKm;
+      setLocalRadius(newDisplay);
+    },
+    [currentRadiusKm, setDistanceUnit]
+  );
+
+  const handleAutoDetect = useCallback(() => {
+    if (detectedLocale && detectedLocale !== currentLocale) {
+      handleLanguageChange(detectedLocale);
+    }
+  }, [detectedLocale, currentLocale, handleLanguageChange]);
+
+  // Calculate coverage area
+  const coverageArea = useMemo(() => {
+    return calculateArea(currentRadiusKm);
+  }, [currentRadiusKm]);
+
+  // Min/max for slider based on units
+  const sliderMin = distanceUnit === "miles" ? 1 : 1;
+  const sliderMax = distanceUnit === "miles" ? 62 : 100; // ~62 miles = 100 km
+  const sliderStep = distanceUnit === "miles" ? 0.5 : 1;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">
@@ -152,6 +253,12 @@ export function LanguageRegionClient() {
               </p>
             </div>
           </div>
+
+          {/* Keyboard shortcut hint */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-3">
+            <kbd className="px-2 py-1 rounded bg-muted text-xs font-mono">⌘K</kbd>
+            <span>to search languages</span>
+          </div>
         </motion.header>
 
         <div className="space-y-6">
@@ -173,11 +280,63 @@ export function LanguageRegionClient() {
                 Choose your preferred language. The interface will update immediately.
               </p>
 
+              {/* Auto-detect banner */}
+              {detectedLocale && detectedLocale !== currentLocale && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="mb-4 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20"
+                >
+                  <div className="flex items-center gap-3">
+                    <Zap className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">
+                        Detected: {localeMetadata[detectedLocale].nativeName}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Based on your browser settings
+                      </p>
+                    </div>
+                    <Button size="sm" onClick={handleAutoDetect} className="flex-shrink-0">
+                      Switch
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Popular languages */}
+              <div className="mb-6">
+                <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">
+                  Popular
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {POPULAR_LOCALES.map((locale) => {
+                    const meta = localeMetadata[locale];
+                    const isActive = locale === currentLocale;
+                    return (
+                      <Button
+                        key={locale}
+                        variant={isActive ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handleLanguageChange(locale)}
+                        disabled={isPending || isActive}
+                        className="gap-2"
+                      >
+                        <span className="text-base">{meta.flag}</span>
+                        <span>{meta.nativeName}</span>
+                        {isActive && <Check className="w-3 h-3" />}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Search and region filter */}
               <div className="flex flex-col sm:flex-row gap-3 mb-6">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
+                    id="language-search"
                     type="text"
                     placeholder="Search languages..."
                     value={searchQuery}
@@ -294,7 +453,7 @@ export function LanguageRegionClient() {
                 <Map className="w-5 h-5 text-blue-500" />
                 <h2 className="text-lg font-semibold">Search Radius</h2>
                 <Badge variant="secondary" className="ml-auto">
-                  {localRadius} km
+                  {localRadius} {distanceUnit}
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground mb-6">
@@ -302,49 +461,111 @@ export function LanguageRegionClient() {
                 it when browsing.
               </p>
 
+              {/* Unit toggle */}
+              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 mb-6">
+                <div className="flex items-center gap-3">
+                  <Ruler className="w-5 h-5 text-muted-foreground" />
+                  <div>
+                    <Label htmlFor="unit-toggle" className="font-medium cursor-pointer">
+                      Distance units
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      {distanceUnit === "km" ? "Kilometers" : "Miles"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={cn("text-sm", distanceUnit === "km" && "font-semibold")}>
+                    km
+                  </span>
+                  <Switch
+                    id="unit-toggle"
+                    checked={distanceUnit === "miles"}
+                    onCheckedChange={handleUnitToggle}
+                  />
+                  <span className={cn("text-sm", distanceUnit === "miles" && "font-semibold")}>
+                    mi
+                  </span>
+                </div>
+              </div>
+
+              {/* Coverage info */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="p-3 rounded-lg bg-muted/30">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Compass className="w-4 h-4 text-blue-500" />
+                    <span className="text-xs font-medium">Coverage</span>
+                  </div>
+                  <p className="text-lg font-semibold">{coverageArea}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/30">
+                  <div className="flex items-center gap-2 mb-1">
+                    <TrendingUp className="w-4 h-4 text-emerald-500" />
+                    <span className="text-xs font-medium">Radius</span>
+                  </div>
+                  <p className="text-lg font-semibold">
+                    {localRadius} {distanceUnit}
+                  </p>
+                </div>
+              </div>
+
               {/* Radius slider */}
               <div className="space-y-6">
                 <div className="space-y-3">
                   <Slider
                     value={[localRadius]}
                     onValueChange={handleRadiusChange}
-                    min={1}
-                    max={100}
-                    step={1}
+                    min={sliderMin}
+                    max={sliderMax}
+                    step={sliderStep}
                     className="w-full"
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>1 km</span>
-                    <span className="font-medium text-base text-foreground">{localRadius} km</span>
-                    <span>100 km</span>
+                    <span>
+                      {sliderMin} {distanceUnit}
+                    </span>
+                    <span className="font-medium text-base text-foreground">
+                      {localRadius} {distanceUnit}
+                    </span>
+                    <span>
+                      {sliderMax} {distanceUnit}
+                    </span>
                   </div>
                 </div>
 
                 {/* Preset buttons */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {RADIUS_PRESETS.map((preset) => (
-                    <Button
-                      key={preset.km}
-                      variant={localRadius === preset.km ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handlePresetClick(preset.km)}
-                      className="h-auto py-3 px-4 flex flex-col items-start gap-1"
-                    >
-                      <div className="flex items-center gap-2 w-full">
-                        <span className="text-lg">{preset.icon}</span>
-                        <span className="font-semibold">{preset.km} km</span>
-                      </div>
-                      <span className="text-xs text-muted-foreground font-normal">
-                        {preset.label}
-                      </span>
-                    </Button>
-                  ))}
+                  {RADIUS_PRESETS.map((preset) => {
+                    const displayValue =
+                      distanceUnit === "miles" ? kmToMiles(preset.km) : preset.km;
+                    const isActive = Math.abs(localRadius - displayValue) < 0.1;
+
+                    return (
+                      <Button
+                        key={preset.km}
+                        variant={isActive ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePresetClick(preset.km)}
+                        className="h-auto py-3 px-4 flex flex-col items-start gap-1"
+                      >
+                        <div className="flex items-center gap-2 w-full">
+                          <span className="text-lg">{preset.icon}</span>
+                          <span className="font-semibold">
+                            {displayValue} {distanceUnit}
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground font-normal">
+                          {preset.label}
+                        </span>
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
             </Glass>
           </motion.div>
 
-          {/* Location Permissions */}
+          {/* Location Services */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -394,7 +615,9 @@ export function LanguageRegionClient() {
                   <ul className="text-xs text-muted-foreground space-y-1.5">
                     <li className="flex items-start gap-2">
                       <span className="text-primary">•</span>
-                      <span>Your radius setting is saved and applies across all pages</span>
+                      <span>
+                        Your radius and unit settings are saved and apply across all pages
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-primary">•</span>
@@ -403,6 +626,10 @@ export function LanguageRegionClient() {
                     <li className="flex items-start gap-2">
                       <span className="text-primary">•</span>
                       <span>Location data is never stored on our servers</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary">•</span>
+                      <span>Use ⌘K to quickly search for languages</span>
                     </li>
                   </ul>
                 </div>

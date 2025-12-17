@@ -55,6 +55,8 @@ export interface AccentColorConfig {
 
 export type ThemeTransition = "instant" | "smooth" | "radial";
 
+export type DistanceUnit = "km" | "miles";
+
 // ============================================================================
 // Default Values
 // ============================================================================
@@ -83,6 +85,10 @@ interface UIState {
   // Geo Distance Filter (for product search radius)
   geoDistance: number | null;
   setGeoDistance: (distance: number | null) => void;
+
+  // Distance Unit Preference
+  distanceUnit: DistanceUnit;
+  setDistanceUnit: (unit: DistanceUnit) => void;
 
   // Theme
   theme: Theme;
@@ -144,6 +150,10 @@ export const useUIStore = create<UIState>()(
       geoDistance: null,
       setGeoDistance: (distance) => set({ geoDistance: distance }),
 
+      // Distance Unit
+      distanceUnit: "km",
+      setDistanceUnit: (unit) => set({ distanceUnit: unit }),
+
       // Theme
       theme: "system",
       setTheme: (theme) => set({ theme }),
@@ -198,6 +208,7 @@ export const useUIStore = create<UIState>()(
           language: "en",
           userLocation: null,
           geoDistance: null,
+          distanceUnit: "km",
           theme: "system",
           themeSchedule: {
             enabled: false,
@@ -213,11 +224,12 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: "foodshare-ui",
-      version: 2, // Bump version to reset accent color to new brand default
+      version: 3, // v3: Add distance unit preference
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         // Only persist these fields
         language: state.language,
+        distanceUnit: state.distanceUnit,
         theme: state.theme,
         themeSchedule: state.themeSchedule,
         themeTransition: state.themeTransition,
@@ -228,12 +240,19 @@ export const useUIStore = create<UIState>()(
         // Note: userLocation is NOT persisted (privacy)
       }),
       migrate: (persistedState, version) => {
+        const state = persistedState as Record<string, unknown>;
+
         // Migration from v1 to v2: Reset accent color to brand pink
         if (version < 2) {
-          const state = persistedState as Record<string, unknown>;
           state.accentColor = defaultAccentColor;
           state.themePreset = "default";
         }
+
+        // Migration from v2 to v3: Add distance unit
+        if (version < 3) {
+          state.distanceUnit = "km";
+        }
+
         return persistedState as UIState;
       },
     }
@@ -250,6 +269,7 @@ export const selectUserLocation = (state: UIState) => state.userLocation;
 export const selectLanguage = (state: UIState) => state.language;
 export const selectReducedMotion = (state: UIState) => state.reducedMotion;
 export const selectGeoDistance = (state: UIState) => state.geoDistance;
+export const selectDistanceUnit = (state: UIState) => state.distanceUnit;
 
 // ============================================================================
 // Custom Hooks (convenience hooks for common selections)
@@ -261,3 +281,4 @@ export const useUserLocationUI = () => useUIStore(selectUserLocation);
 export const useLanguage = () => useUIStore(selectLanguage);
 export const useReducedMotion = () => useUIStore(selectReducedMotion);
 export const useGeoDistance = () => useUIStore(selectGeoDistance);
+export const useDistanceUnit = () => useUIStore(selectDistanceUnit);
