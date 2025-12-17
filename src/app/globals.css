@@ -75,6 +75,11 @@
   --glass-saturation: 180%;
   --glass-bg-opacity: 0.7;
   --glass-border-opacity: 0.3;
+  --glass-bg: var(--background);
+  --glass-bg-subtle: var(--background);
+  --glass-bg-strong: var(--card);
+  --glass-border: var(--border);
+  --glass-shadow: 0 0% 0%;
 
   /* Brand colors - FoodShare palette */
   --brand-primary: 345 100% 59%; /* #FF2D55 */
@@ -179,6 +184,11 @@
   /* Glass morphism - warm dark */
   --glass-bg-opacity: 0.7;
   --glass-border-opacity: 0.2;
+  --glass-bg: var(--card);
+  --glass-bg-subtle: var(--popover);
+  --glass-bg-strong: 22 10% 16%;
+  --glass-border: var(--border);
+  --glass-shadow: 20 15% 8%;
 
   /* Brand colors - Dark mode warm adjustments */
   --brand-primary: 345 85% 60%;
@@ -596,22 +606,23 @@
 
 /* ============================================================================
    Dark Mode Glass Adjustments (Claude AI warm palette)
+   Uses CSS variables for maintainability - change .dark variables to adjust
    ============================================================================ */
 
 .dark .glass-prominent {
-  background: hsl(22 10% 17% / 0.88);
-  box-shadow: 0 4px 30px hsl(20 15% 8% / 0.5);
+  background: hsl(var(--glass-bg) / 0.88);
+  box-shadow: 0 4px 30px hsl(var(--glass-shadow) / 0.5);
 }
 
 .dark .glass-strong {
-  background: hsl(22 10% 16% / 0.92);
-  box-shadow: 0 8px 32px hsl(20 15% 8% / 0.6);
+  background: hsl(var(--glass-bg-strong) / 0.92);
+  box-shadow: 0 8px 32px hsl(var(--glass-shadow) / 0.6);
 }
 
 .dark .glass-overlay {
-  background: hsl(20 10% 15% / 0.95);
-  border: 1px solid hsl(25 10% 28% / 0.35);
-  box-shadow: 0 8px 40px hsl(20 15% 8% / 0.7);
+  background: hsl(var(--background) / 0.95);
+  border: 1px solid hsl(var(--glass-border) / 0.35);
+  box-shadow: 0 8px 40px hsl(var(--glass-shadow) / 0.7);
 }
 
 .dark .glass-accent-primary {
@@ -619,13 +630,13 @@
 }
 
 .dark .glass-accent-orange {
-  background: hsl(25 70% 55% / 0.18);
+  background: hsl(var(--brand-orange) / 0.18);
 }
 
 /* Warm glow effect for dark mode */
 .dark .glass-subtle {
-  background: hsl(22 10% 16% / 0.65);
-  border: 1px solid hsl(25 10% 28% / 0.2);
+  background: hsl(var(--glass-bg-subtle) / 0.65);
+  border: 1px solid hsl(var(--glass-border) / 0.2);
 }
 
 /* Glass input focus state */

@@ -2,7 +2,7 @@
 
 /**
  * AdminSidebar - Persistent navigation sidebar for admin pages
- * Enhanced with CRM navigation and improved UX
+ * Enhanced with CRM navigation, improved UX, and mobile drawer support
  */
 
 import { usePathname } from "next/navigation";
@@ -22,12 +22,21 @@ import {
   Send,
   Target,
   Workflow,
+  Menu,
+  X,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface NavGroup {
   label: string;
@@ -74,14 +83,21 @@ const NAV_GROUPS: NavGroup[] = [
   },
 ];
 
-export function AdminSidebar() {
+/**
+ * Shared navigation content used by both desktop sidebar and mobile drawer
+ */
+function AdminNavContent({
+  collapsed = false,
+  onNavigate,
+}: {
+  collapsed?: boolean;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   const t = useTranslations();
-  const [collapsed, setCollapsed] = useState(false);
 
   const isActive = (href: string) => {
     if (href === "/admin") return pathname === "/admin";
-    // Handle email sub-routes
     if (href.startsWith("/admin/email/")) {
       return pathname === href;
     }
@@ -92,33 +108,7 @@ export function AdminSidebar() {
   };
 
   return (
-    <aside
-      className={cn(
-        "h-screen sticky top-0 bg-background/95 backdrop-blur-sm border-r border-border/50 flex flex-col transition-all duration-300",
-        collapsed ? "w-16" : "w-60"
-      )}
-    >
-      {/* Header */}
-      <div className="p-4 border-b border-border/50 flex items-center justify-between">
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <LayoutDashboard className="h-4 w-4 text-primary" />
-            </div>
-            <span className="font-semibold text-foreground">Admin</span>
-          </div>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setCollapsed(!collapsed)}
-          className="h-8 w-8 hover:bg-muted/80"
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
-      </div>
-
-      {/* Navigation */}
+    <>
       <ScrollArea className="flex-1">
         <nav className="p-2 space-y-4">
           {NAV_GROUPS.map((group) => (
@@ -136,6 +126,7 @@ export function AdminSidebar() {
                     <Link
                       key={item.href}
                       href={item.href}
+                      onClick={onNavigate}
                       className={cn(
                         "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                         collapsed && "justify-center px-2",
@@ -166,6 +157,7 @@ export function AdminSidebar() {
       <div className="p-2 border-t border-border/50">
         <Link
           href="/settings"
+          onClick={onNavigate}
           className={cn(
             "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
             collapsed && "justify-center px-2",
@@ -177,6 +169,90 @@ export function AdminSidebar() {
           {!collapsed && <span>{t("settings")}</span>}
         </Link>
       </div>
+    </>
+  );
+}
+
+/**
+ * Desktop sidebar - hidden on mobile
+ */
+export function AdminSidebar() {
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <aside
+      className={cn(
+        "hidden md:flex h-screen sticky top-0 bg-background/95 backdrop-blur-sm border-r border-border/50 flex-col transition-all duration-300",
+        collapsed ? "w-16" : "w-60"
+      )}
+    >
+      {/* Header */}
+      <div className="p-4 border-b border-border/50 flex items-center justify-between">
+        {!collapsed && (
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <LayoutDashboard className="h-4 w-4 text-primary" />
+            </div>
+            <span className="font-semibold text-foreground">Admin</span>
+          </div>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setCollapsed(!collapsed)}
+          className="h-8 w-8 hover:bg-muted/80"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </Button>
+      </div>
+
+      <AdminNavContent collapsed={collapsed} />
     </aside>
+  );
+}
+
+/**
+ * Mobile header with drawer - visible only on mobile
+ */
+export function AdminMobileHeader() {
+  const [open, setOpen] = useState(false);
+  const t = useTranslations();
+
+  return (
+    <div className="md:hidden flex items-center justify-between p-4 border-b border-border/50 bg-background/95 backdrop-blur-sm sticky top-0 z-40">
+      <div className="flex items-center gap-2">
+        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+          <LayoutDashboard className="h-4 w-4 text-primary" />
+        </div>
+        <span className="font-semibold text-foreground">Admin</span>
+      </div>
+
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9"
+            aria-label="Open navigation menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="w-72 p-0">
+          <SheetHeader className="p-4 border-b border-border/50">
+            <SheetTitle className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <LayoutDashboard className="h-4 w-4 text-primary" />
+              </div>
+              <span>Admin Panel</span>
+            </SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col h-[calc(100%-73px)]">
+            <AdminNavContent onNavigate={() => setOpen(false)} />
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
   );
 }

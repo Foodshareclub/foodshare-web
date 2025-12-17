@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getAuthSession } from "@/lib/data/auth";
 import { generateNoIndexMetadata } from "@/lib/metadata";
-import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AdminSidebar, AdminMobileHeader } from "@/components/admin/AdminSidebar";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 
 export const metadata = generateNoIndexMetadata(
@@ -27,13 +27,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="flex h-screen bg-muted/30 overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen bg-muted/30 overflow-hidden">
+      {/* Mobile header with drawer */}
+      <AdminMobileHeader />
+
+      {/* Desktop sidebar */}
       <AdminSidebar />
+
       <main className="flex-1 overflow-hidden flex flex-col">
-        <div className="flex-shrink-0 px-6 pt-4">
+        <div className="flex-shrink-0 px-4 md:px-6 pt-4">
           <AdminBreadcrumb />
         </div>
-        <div className="flex-1 overflow-hidden px-6 pb-6">{children}</div>
+        <div className="flex-1 overflow-hidden px-4 md:px-6 pb-6">{children}</div>
       </main>
     </div>
   );
