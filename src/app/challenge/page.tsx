@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { ChallengesClient } from "./ChallengesClient";
 import { getChallenges, getChallengeStats } from "@/lib/data/challenges";
+import { getChallengeLeaderboard, getCurrentUserRank } from "@/lib/data/challenge-leaderboard";
 import { getUser } from "@/app/actions/auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { generatePageMetadata } from "@/lib/metadata";
@@ -16,15 +17,23 @@ export const metadata = generatePageMetadata({
 });
 
 export default async function ChallengePage() {
-  const [challenges, user, stats] = await Promise.all([
+  const [challenges, user, stats, leaderboard, userRank] = await Promise.all([
     getChallenges(),
     getUser(),
     getChallengeStats(),
+    getChallengeLeaderboard(),
+    getCurrentUserRank(),
   ]);
 
   return (
     <Suspense fallback={<ChallengeSkeleton />}>
-      <ChallengesClient challenges={challenges} user={user} stats={stats} />
+      <ChallengesClient
+        challenges={challenges}
+        user={user}
+        stats={stats}
+        leaderboard={leaderboard}
+        currentUserRank={userRank}
+      />
     </Suspense>
   );
 }

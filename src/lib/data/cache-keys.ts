@@ -69,6 +69,8 @@ export const CACHE_TAGS = {
   CHALLENGES: "challenges",
   CHALLENGE: (id: number) => `challenge-${id}`,
   USER_CHALLENGES: (userId: string) => `user-challenges-${userId}`,
+  CHALLENGE_LEADERBOARD: "challenge-leaderboard",
+  LEADERBOARD_USER: (id: string) => `leaderboard-user-${id}`,
 
   // Forum
   FORUM: "forum",
@@ -151,6 +153,7 @@ export const CACHE_DURATIONS = {
   VOLUNTEERS: 3600, // 1 hour
   CHALLENGES: 300, // 5 minutes
   CHALLENGE_DETAIL: 300, // 5 minutes
+  CHALLENGE_LEADERBOARD: 120, // 2 minutes - leaderboard updates frequently
   FORUM: 120, // 2 minutes
   ADMIN_STATS: 300, // 5 minutes
   NEWSLETTER: 300, // 5 minutes

@@ -7,14 +7,19 @@ import { Target, Users, TrendingUp, ChevronRight, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { ChallengeRevealModal } from "@/components/modals/challenge-reveal";
 import { ChallengeDeck } from "@/components/challenges/ChallengeDeck";
+import { ChallengeLeaderboard } from "@/components/challenges/ChallengeLeaderboard";
+import { ActiveChallenges } from "@/components/challenges/ActiveChallenges";
 import { useDeckChallenges } from "@/hooks/queries/useChallenges";
 import type { InitialProductStateType } from "@/types/product.types";
 import type { AuthUser } from "@/app/actions/auth";
+import type { LeaderboardUser, UserRankInfo } from "@/components/challenges/ChallengeLeaderboard";
 
 interface ChallengesClientProps {
   challenges: InitialProductStateType[];
   user: AuthUser | null;
   stats: { totalChallenges: number; totalParticipants: number; totalXpEarned: number };
+  leaderboard: LeaderboardUser[];
+  currentUserRank: UserRankInfo | null;
 }
 
 // Format large numbers with K/M suffix
@@ -32,6 +37,8 @@ export function ChallengesClient({
   challenges: initialChallenges,
   user,
   stats,
+  leaderboard,
+  currentUserRank,
 }: ChallengesClientProps) {
   const [revealModalOpen, setRevealModalOpen] = useState(false);
   const [activeChallenge, setActiveChallenge] = useState<InitialProductStateType | null>(null);
@@ -54,6 +61,8 @@ export function ChallengesClient({
         isAuth={isAuth}
         challenges={challenges}
         onCardClick={handleDeckCardClick}
+        leaderboard={leaderboard}
+        currentUserRank={currentUserRank}
       />
 
       {/* Challenge Reveal Modal */}
@@ -76,11 +85,15 @@ function HeroSection({
   isAuth,
   challenges,
   onCardClick,
+  leaderboard,
+  currentUserRank,
 }: {
   stats: { totalChallenges: number; totalParticipants: number; totalXpEarned: number };
   isAuth: boolean;
   challenges: InitialProductStateType[];
   onCardClick: (challenge: InitialProductStateType) => void;
+  leaderboard: LeaderboardUser[];
+  currentUserRank: UserRankInfo | null;
 }) {
   return (
     <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-gradient-to-br from-background via-primary/5 to-teal-500/5">
@@ -142,83 +155,111 @@ function HeroSection({
       </div>
 
       {/* Content */}
-      <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4 sm:px-6 lg:px-8 py-12">
-        {/* Top badge */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-8"
-        >
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 backdrop-blur-sm border border-primary/20 text-primary">
-            <Sparkles className="w-4 h-4" />
-            <span className="text-sm font-medium">Discover Your Next Challenge</span>
-          </div>
-        </motion.div>
+      <div className="relative min-h-[calc(100vh-4rem)] px-4 sm:px-6 lg:px-8 py-12">
+        {/* Main content wrapper with sidebar layout on large screens */}
+        <div className="flex flex-col xl:flex-row xl:items-start xl:justify-center gap-8 xl:gap-12 max-w-7xl mx-auto">
+          {/* Main content area */}
+          <div className="flex flex-col items-center justify-center flex-1">
+            {/* Top badge */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="mb-8"
+            >
+              <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 backdrop-blur-sm border border-primary/20 text-primary">
+                <Sparkles className="w-4 h-4" />
+                <span className="text-sm font-medium">Discover Your Next Challenge</span>
+              </div>
+            </motion.div>
 
-        {/* Main headline */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="text-center mb-8"
-        >
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground mb-4">
-            Make the World{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-pink-500 to-teal-500 animate-pulse">
-              Better
-            </span>
-          </h1>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-            Shuffle through challenges, accept your mission, and earn XP while making a positive
-            impact.
-          </p>
-        </motion.div>
+            {/* Main headline */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-center mb-8"
+            >
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-5xl font-bold text-foreground mb-4">
+                Make the World{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-pink-500 to-teal-500 animate-pulse">
+                  Better
+                </span>
+              </h1>
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+                Shuffle through challenges, accept your mission, and earn XP while making a positive
+                impact.
+              </p>
+            </motion.div>
 
-        {/* The Star: Challenge Deck */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 20 }}
-          className="relative mb-12"
-        >
-          {/* Glow ring behind deck */}
-          <div className="absolute -inset-8 bg-gradient-to-r from-primary/20 via-teal-500/20 to-orange-500/20 rounded-[3rem] blur-2xl opacity-60" />
+            {/* The Star: Challenge Deck */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 20 }}
+              className="relative mb-12"
+            >
+              {/* Glow ring behind deck */}
+              <div className="absolute -inset-8 bg-gradient-to-r from-primary/20 via-teal-500/20 to-orange-500/20 rounded-[3rem] blur-2xl opacity-60" />
 
-          <ChallengeDeck
-            challenges={challenges}
-            onCardClick={onCardClick}
-            autoShuffle
-            className="relative z-10"
-          />
-        </motion.div>
+              <ChallengeDeck
+                challenges={challenges}
+                onCardClick={onCardClick}
+                autoShuffle
+                className="relative z-10"
+              />
+            </motion.div>
 
-        {/* Stats row */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7 }}
-          className="flex flex-wrap justify-center gap-4 mb-8"
-        >
-          <StatCard icon={Target} value={stats.totalChallenges} label="Challenges" />
-          <StatCard icon={Users} value={stats.totalParticipants} label="Participants" />
-          <StatCard icon={TrendingUp} value={formatNumber(stats.totalXpEarned)} label="XP Earned" />
-        </motion.div>
+            {/* Stats row */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="flex flex-wrap justify-center gap-4 mb-8"
+            >
+              <StatCard icon={Target} value={stats.totalChallenges} label="Challenges" />
+              <StatCard icon={Users} value={stats.totalParticipants} label="Participants" />
+              <StatCard
+                icon={TrendingUp}
+                value={formatNumber(stats.totalXpEarned)}
+                label="XP Earned"
+              />
+            </motion.div>
 
-        {/* CTA for non-auth users */}
-        {!isAuth && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}>
-            <Link href="/auth/login">
-              <Button
-                size="lg"
-                className="gap-2 bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 shadow-lg shadow-primary/25"
+            {/* CTA for non-auth users */}
+            {!isAuth && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.9 }}
               >
-                Join the Movement
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </Link>
-          </motion.div>
-        )}
+                <Link href="/auth/login">
+                  <Button
+                    size="lg"
+                    className="gap-2 bg-gradient-to-r from-primary to-teal-500 hover:from-primary/90 hover:to-teal-500/90 shadow-lg shadow-primary/25"
+                  >
+                    Join the Movement
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Sidebar: Active Challenges + Leaderboard */}
+          <motion.aside
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6, type: "spring", stiffness: 200, damping: 25 }}
+            className="w-full xl:w-80 xl:shrink-0 xl:sticky xl:top-24 space-y-4"
+          >
+            {/* Active Challenges (only shown when authenticated) */}
+            {isAuth && <ActiveChallenges />}
+
+            {/* Leaderboard */}
+            <ChallengeLeaderboard initialData={leaderboard} currentUserRank={currentUserRank} />
+          </motion.aside>
+        </div>
       </div>
     </div>
   );

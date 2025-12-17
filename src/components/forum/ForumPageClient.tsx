@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,10 +12,8 @@ import {
   Clock,
   MessageCircle,
   Heart,
-  TrendingUp,
   Filter,
   X,
-  Users,
   Lightbulb,
   HelpCircle,
   Trophy,
@@ -47,10 +46,8 @@ const FaFire = Flame;
 const FaClock = Clock;
 const FaCommentDots = MessageCircle;
 const FaHeart = Heart;
-const FaChartLine = TrendingUp;
 const FaFilter = Filter;
 const FaTimes = X;
-const FaUsers = Users;
 const FaLightbulb = Lightbulb;
 const FaQuestion = HelpCircle;
 const FaTrophy = Trophy;
@@ -89,7 +86,7 @@ interface ForumPageClientProps {
 // Sub-components
 // ============================================================================
 
-function StatCard({
+function _StatCard({
   icon: Icon,
   label,
   value,
@@ -184,9 +181,11 @@ function LeaderboardCard({ user, rank }: { user: LeaderboardUser; rank: number }
     >
       <div className={`relative ${badge.bg} p-1 rounded-full`}>
         {user.avatar_url ? (
-          <img
+          <Image
             src={user.avatar_url}
             alt={user.nickname || "User"}
+            width={40}
+            height={40}
             className="w-10 h-10 rounded-full object-cover"
           />
         ) : (
@@ -236,7 +235,13 @@ function ActivityItem({ post }: { post: ForumPost }) {
       className="flex items-start gap-3 py-2"
     >
       {post.profiles?.avatar_url ? (
-        <img src={post.profiles.avatar_url} alt="" className="w-8 h-8 rounded-full object-cover" />
+        <Image
+          src={post.profiles.avatar_url}
+          alt=""
+          width={32}
+          height={32}
+          className="w-8 h-8 rounded-full object-cover"
+        />
       ) : (
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
           <span className="text-xs font-bold text-white">
@@ -279,10 +284,11 @@ function CategoryCard({
       onClick={onClick}
       aria-pressed={isSelected}
       aria-label={`Filter by category: ${category.name}`}
-      className={`w-full text-left p-3 rounded-xl transition-all ${isSelected
+      className={`w-full text-left p-3 rounded-xl transition-all ${
+        isSelected
           ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/25"
           : "glass hover:bg-accent"
-        }`}
+      }`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -316,10 +322,11 @@ function TagPill({
       onClick={onClick}
       aria-pressed={isSelected}
       aria-label={`Filter by tag: ${tag.name}`}
-      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${isSelected
+      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+        isSelected
           ? "bg-primary text-primary-foreground shadow-md"
           : "bg-muted hover:bg-accent border border-transparent hover:border-primary/20"
-        }`}
+      }`}
       style={!isSelected ? { borderLeft: `3px solid ${tag.color}` } : {}}
     >
       <FaHashtag className="inline w-3 h-3 mr-1 opacity-60" />
@@ -366,7 +373,7 @@ export function ForumPageClient({
   posts,
   categories,
   tags,
-  stats,
+  stats: _stats,
   leaderboard,
   trendingPosts,
   recentActivity,
@@ -440,31 +447,6 @@ export function ForumPageClient({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-primary/90 via-primary to-primary/80 text-white">
-        <div className="absolute inset-0 bg-[url('/images/pattern.svg')] opacity-10" />
-        <div className="container mx-auto px-4 py-12 relative z-10">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">
-                {t("forum_title", { defaultValue: "Community Forum" })}
-              </h1>
-              <p className="text-white/80 text-lg">
-                {t("forum_subtitle", {
-                  defaultValue: "Share ideas, ask questions, connect with the community",
-                })}
-              </p>
-            </div>
-            <Link href="/forum/new">
-              <Button size="lg" variant="secondary" className="gap-2 shadow-lg">
-                <FaPlus className="w-4 h-4" />
-                {t("forum_new_post", { defaultValue: "New Post" })}
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
