@@ -6,7 +6,7 @@
 
 import { unstable_cache } from "next/cache";
 import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createCachedClient } from "@/lib/supabase/server";
 
 // ============================================================================
 // Types
@@ -243,7 +243,7 @@ export async function getAdminListingById(id: number): Promise<AdminListing | nu
  */
 export const getListingStats = unstable_cache(
   async (): Promise<ListingStats> => {
-    const supabase = await createClient();
+    const supabase = createCachedClient();
 
     const [
       { count: total },

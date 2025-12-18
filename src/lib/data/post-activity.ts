@@ -12,7 +12,7 @@
  */
 
 import { unstable_cache } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createCachedClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, CACHE_DURATIONS, logCacheOperation } from "@/lib/data/cache-keys";
 import type {
   PostActivityLog,
@@ -46,7 +46,7 @@ export async function getPostActivityTimeline(
   const getCachedTimeline = unstable_cache(
     async (): Promise<PostActivityTimelineItem[]> => {
       logCacheOperation("miss", cacheKey);
-      const supabase = await createClient();
+      const supabase = createCachedClient();
 
       const { data, error } = await supabase.rpc("get_post_activity_timeline", {
         p_post_id: postId,
@@ -90,7 +90,7 @@ export async function getRecentPostActivities(
   const getCachedActivities = unstable_cache(
     async (): Promise<PostActivityLog[]> => {
       logCacheOperation("miss", cacheKey);
-      const supabase = await createClient();
+      const supabase = createCachedClient();
 
       const { data, error } = await supabase
         .from("post_activity_logs")
@@ -134,7 +134,7 @@ export async function getUserActivitySummary(
   const getCachedSummary = unstable_cache(
     async (): Promise<UserActivitySummary[]> => {
       logCacheOperation("miss", cacheKey);
-      const supabase = await createClient();
+      const supabase = createCachedClient();
 
       const { data, error } = await supabase.rpc("get_user_post_activity_summary", {
         p_user_id: userId,
@@ -175,7 +175,7 @@ export async function getPostActivityCounts(
   const getCachedCounts = unstable_cache(
     async (): Promise<Partial<Record<PostActivityType, number>>> => {
       logCacheOperation("miss", cacheKey);
-      const supabase = await createClient();
+      const supabase = createCachedClient();
 
       const { data, error } = await supabase
         .from("post_activity_logs")
@@ -227,7 +227,7 @@ export async function getDailyActivityStats(
   const getCachedStats = unstable_cache(
     async (): Promise<PostActivityDailyStats[]> => {
       logCacheOperation("miss", cacheKey);
-      const supabase = await createClient();
+      const supabase = createCachedClient();
 
       let query = supabase
         .from("post_activity_daily_stats")
@@ -397,7 +397,7 @@ export async function getActivityDashboardStats(): Promise<ActivityDashboardStat
   const getCachedDashboardStats = unstable_cache(
     async (): Promise<ActivityDashboardStats> => {
       logCacheOperation("miss", cacheKey);
-      const supabase = await createClient();
+      const supabase = createCachedClient();
 
       const now = new Date();
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();

@@ -5,7 +5,7 @@
 
 import { unstable_cache } from "next/cache";
 import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createCachedClient } from "@/lib/supabase/server";
 
 // ============================================================================
 // Types
@@ -193,7 +193,7 @@ export async function getAdminUserById(id: string): Promise<AdminUserProfile | n
  */
 export const getUserStats = unstable_cache(
   async (): Promise<UserStats> => {
-    const supabase = await createClient();
+    const supabase = createCachedClient();
 
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);

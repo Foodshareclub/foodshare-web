@@ -7,7 +7,7 @@
 
 import { unstable_cache } from "next/cache";
 import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createCachedClient } from "@/lib/supabase/server";
 
 // ============================================================================
 // Types
@@ -70,7 +70,7 @@ export interface ProfileReview {
 export async function getProfile(userId: string): Promise<Profile | null> {
   return unstable_cache(
     async (): Promise<Profile | null> => {
-      const supabase = await createClient();
+      const supabase = createCachedClient();
 
       const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
 
@@ -95,7 +95,7 @@ export async function getProfile(userId: string): Promise<Profile | null> {
 export async function getPublicProfile(userId: string): Promise<PublicProfile | null> {
   return unstable_cache(
     async (): Promise<PublicProfile | null> => {
-      const supabase = await createClient();
+      const supabase = createCachedClient();
 
       const { data, error } = await supabase
         .from("profiles")
@@ -126,7 +126,7 @@ export async function getPublicProfile(userId: string): Promise<PublicProfile | 
 export async function getUserStats(userId: string): Promise<ProfileStats> {
   return unstable_cache(
     async (): Promise<ProfileStats> => {
-      const supabase = await createClient();
+      const supabase = createCachedClient();
 
       const [{ count: totalProducts }, { count: activeProducts }, { data: reviews }] =
         await Promise.all([
@@ -169,7 +169,7 @@ export async function getUserStats(userId: string): Promise<ProfileStats> {
  */
 export const getVolunteers = unstable_cache(
   async (): Promise<Profile[]> => {
-    const supabase = await createClient();
+    const supabase = createCachedClient();
 
     // Get volunteer profile IDs from user_roles
     const { data: volunteerRoles, error: rolesError } = await supabase
@@ -239,7 +239,7 @@ export async function getUserRoles(userId: string): Promise<string[]> {
 export async function getProfileReviews(userId: string): Promise<ProfileReview[]> {
   return unstable_cache(
     async (): Promise<ProfileReview[]> => {
-      const supabase = await createClient();
+      const supabase = createCachedClient();
 
       const { data, error } = await supabase
         .from("reviews")
