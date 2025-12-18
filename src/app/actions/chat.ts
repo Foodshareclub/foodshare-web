@@ -38,6 +38,10 @@ const WriteReviewSchema = z.object({
   feedback: z.string().max(2000).optional().default(""),
 });
 
+const AcceptRequestSchema = z.object({
+  roomId: z.string().uuid("Invalid room ID"),
+});
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -90,6 +94,34 @@ export async function sendFoodChatMessage(formData: FormData): Promise<ServerAct
     if (!validated.success) {
       const firstError = validated.error.issues[0];
       return serverActionError(firstError.message, "VALIDATION_ERROR");
+    }
+
+    // Verify user is a participant in this room
+    const { data: room, error: roomError } = await supabase
+      .from("rooms")
+      .select("sharer, requester")
+      .eq("id", validated.data.roomId)
+      .single();
+
+    if (roomError || !room) {
+      return serverActionError("Chat room not found", "NOT_FOUND");
+    }
+
+    if (room.sharer !== user.id && room.requester !== user.id) {
+      return serverActionError("You are not a participant in this chat", "FORBIDDEN");
+    }
+
+    // Check rate limit (10 messages per minute per room)
+    const oneMinuteAgo = new Date(Date.now() - 60000).toISOString();
+    const { count: messageCount } = await supabase
+      .from("room_participants")
+      .select("*", { count: "exact", head: true })
+      .eq("room_id", validated.data.roomId)
+      .eq("profile_id", user.id)
+      .gte("timestamp", oneMinuteAgo);
+
+    if (messageCount && messageCount >= 10) {
+      return serverActionError("Too many messages. Please wait a moment.", "RATE_LIMIT");
     }
 
     // Insert message
@@ -396,6 +428,263 @@ export async function writeReview(formData: FormData): Promise<ServerActionResul
   } catch (error) {
     console.error("Failed to write review:", error);
     return serverActionError("Failed to submit review", "UNKNOWN_ERROR");
+  }
+}
+
+/**
+ * Accept a food request and share pickup address
+ * Only the sharer can accept requests
+ */
+export async function acceptRequestAndShareAddress(
+  roomId: string
+): Promise<ServerActionResult<{ address: string }>> {
+  try {
+    const validated = AcceptRequestSchema.safeParse({ roomId });
+    if (!validated.success) {
+      return serverActionError(validated.error.issues[0].message, "VALIDATION_ERROR");
+    }
+
+    const { supabase, user, error: authError } = await verifyAuth();
+    if (authError || !supabase || !user) {
+      return serverActionError(authError || "Not authenticated", "UNAUTHORIZED");
+    }
+
+    // Get room with post details
+    const { data: room, error: roomError } = await supabase
+      .from("rooms")
+      .select(
+        `
+        id, sharer, requester, post_id, post_arranged_to,
+        posts:post_id (id, post_name, post_address, profile_id)
+      `
+      )
+      .eq("id", validated.data.roomId)
+      .single();
+
+    if (roomError || !room) {
+      return serverActionError("Chat room not found", "NOT_FOUND");
+    }
+
+    // Verify user is the sharer
+    if (room.sharer !== user.id) {
+      return serverActionError("Only the food owner can accept requests", "FORBIDDEN");
+    }
+
+    // Check if already accepted
+    if (room.post_arranged_to) {
+      return serverActionError("This request has already been accepted", "CONFLICT");
+    }
+
+    const postData = room.posts as
+      | { id: number; post_name: string; post_address: string; profile_id: string }[]
+      | { id: number; post_name: string; post_address: string; profile_id: string }
+      | null;
+    const post = Array.isArray(postData) ? postData[0] : postData;
+    if (!post) {
+      return serverActionError("Post not found", "NOT_FOUND");
+    }
+
+    const pickupAddress = post.post_address || "Address not set - please contact the sharer";
+
+    // Update room to mark as arranged
+    const { error: updateError } = await supabase
+      .from("rooms")
+      .update({
+        post_arranged_to: room.requester,
+        post_arranged_at: new Date().toISOString(),
+      })
+      .eq("id", validated.data.roomId);
+
+    if (updateError) {
+      console.error("Failed to update room:", updateError);
+      return serverActionError("Failed to accept request", "DATABASE_ERROR");
+    }
+
+    // Send address as a formatted message
+    const addressMessage = `🎉 Request Accepted!\n\n📍 Pickup Address:\n${pickupAddress}\n\nPlease arrange a convenient time to collect "${post.post_name}". Thank you for sharing food!`;
+
+    const { error: messageError } = await supabase.from("room_participants").insert({
+      room_id: validated.data.roomId,
+      profile_id: user.id,
+      text: addressMessage,
+    });
+
+    if (messageError) {
+      console.error("Failed to send address message:", messageError);
+      // Don't fail the whole operation if message fails
+    }
+
+    // Update room with last message
+    await supabase
+      .from("rooms")
+      .update({
+        last_message: addressMessage.substring(0, 100) + "...",
+        last_message_sent_by: user.id,
+        last_message_seen_by: user.id,
+        last_message_time: new Date().toISOString(),
+      })
+      .eq("id", validated.data.roomId);
+
+    // Log the arrangement
+    await logPostArrangement(post.id, room.requester, validated.data.roomId);
+
+    // Invalidate caches
+    invalidateTag(CACHE_TAGS.CHATS);
+    invalidateTag(CACHE_TAGS.CHAT(validated.data.roomId));
+    invalidateTag(CACHE_TAGS.CHAT_MESSAGES(validated.data.roomId));
+    invalidatePostActivityCaches(post.id, user.id);
+
+    // Track analytics
+    await trackEvent("Food Request Accepted", {
+      roomId: validated.data.roomId,
+      postId: post.id,
+      sharerId: user.id,
+      requesterId: room.requester,
+    });
+
+    return {
+      success: true,
+      data: { address: pickupAddress },
+    };
+  } catch (error) {
+    console.error("Failed to accept request:", error);
+    return serverActionError("Failed to accept request", "UNKNOWN_ERROR");
+  }
+}
+
+/**
+ * Mark a food exchange as complete and notify both parties
+ */
+export async function completeExchange(roomId: string): Promise<ServerActionResult<void>> {
+  try {
+    if (!roomId || !z.string().uuid().safeParse(roomId).success) {
+      return serverActionError("Invalid room ID", "VALIDATION_ERROR");
+    }
+
+    const { supabase, user, error: authError } = await verifyAuth();
+    if (authError || !supabase || !user) {
+      return serverActionError(authError || "Not authenticated", "UNAUTHORIZED");
+    }
+
+    // Get room with all details
+    const { data: room, error: roomError } = await supabase
+      .from("rooms")
+      .select(
+        `
+        id, sharer, requester, post_id, post_arranged_to,
+        posts:post_id (id, post_name, images),
+        sharer_profile:sharer (id, first_name, second_name, email),
+        requester_profile:requester (id, first_name, second_name, email)
+      `
+      )
+      .eq("id", roomId)
+      .single();
+
+    if (roomError || !room) {
+      return serverActionError("Chat room not found", "NOT_FOUND");
+    }
+
+    // Verify user is a participant
+    if (room.sharer !== user.id && room.requester !== user.id) {
+      return serverActionError("You are not a participant in this chat", "FORBIDDEN");
+    }
+
+    // Verify request was accepted first
+    if (!room.post_arranged_to) {
+      return serverActionError("Request must be accepted before completing", "VALIDATION_ERROR");
+    }
+
+    const postData = room.posts as
+      | { id: number; post_name: string; images: string[] }[]
+      | { id: number; post_name: string; images: string[] }
+      | null;
+    const post = Array.isArray(postData) ? postData[0] : postData;
+
+    type ProfileType = { id: string; first_name: string; second_name: string; email: string };
+    const sharerData = room.sharer_profile as ProfileType[] | ProfileType | null;
+    const sharerProfile = Array.isArray(sharerData) ? sharerData[0] : sharerData;
+
+    const requesterData = room.requester_profile as ProfileType[] | ProfileType | null;
+    const requesterProfile = Array.isArray(requesterData) ? requesterData[0] : requesterData;
+
+    // Mark post as arranged/completed
+    if (post) {
+      await supabase.from("posts").update({ is_arranged: true }).eq("id", post.id);
+    }
+
+    // Send completion message
+    const completionMessage =
+      "✅ Exchange Complete! Thank you for sharing food and reducing waste. Consider leaving a review to help build trust in the community!";
+
+    await supabase.from("room_participants").insert({
+      room_id: roomId,
+      profile_id: user.id,
+      text: completionMessage,
+    });
+
+    // Update room
+    await supabase
+      .from("rooms")
+      .update({
+        last_message: completionMessage,
+        last_message_sent_by: user.id,
+        last_message_seen_by: user.id,
+        last_message_time: new Date().toISOString(),
+      })
+      .eq("id", roomId);
+
+    // Send completion emails to both parties
+    if (sharerProfile?.email && requesterProfile?.email && post) {
+      // Queue emails (using existing email infrastructure)
+      try {
+        const { sendExchangeCompletionEmail } = await import("@/app/actions/email");
+
+        // Email to sharer
+        await sendExchangeCompletionEmail({
+          to: sharerProfile.email,
+          recipientName: sharerProfile.first_name,
+          otherPartyName: `${requesterProfile.first_name} ${requesterProfile.second_name}`,
+          itemName: post.post_name,
+          role: "sharer",
+          roomId,
+        });
+
+        // Email to requester
+        await sendExchangeCompletionEmail({
+          to: requesterProfile.email,
+          recipientName: requesterProfile.first_name,
+          otherPartyName: `${sharerProfile.first_name} ${sharerProfile.second_name}`,
+          itemName: post.post_name,
+          role: "requester",
+          roomId,
+        });
+      } catch (emailError) {
+        console.error("Failed to send completion emails:", emailError);
+        // Don't fail the whole operation if emails fail
+      }
+    }
+
+    // Invalidate caches
+    invalidateTag(CACHE_TAGS.CHATS);
+    invalidateTag(CACHE_TAGS.CHAT(roomId));
+    if (post) {
+      invalidateTag(CACHE_TAGS.PRODUCTS);
+      invalidatePostActivityCaches(post.id, user.id);
+    }
+
+    // Track analytics
+    await trackEvent("Food Exchange Completed", {
+      roomId,
+      postId: post?.id,
+      sharerId: room.sharer,
+      requesterId: room.requester,
+      completedBy: user.id,
+    });
+
+    return successVoid();
+  } catch (error) {
+    console.error("Failed to complete exchange:", error);
+    return serverActionError("Failed to complete exchange", "UNKNOWN_ERROR");
   }
 }
 

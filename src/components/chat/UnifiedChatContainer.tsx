@@ -6,13 +6,34 @@
  * Features: typing indicators, image upload, real-time messages
  */
 
-import React, { useState, useEffect, useRef, useTransition } from "react";
+import React, { useState, useEffect, useRef, useTransition, useMemo, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ImageIcon, MoreVertical, ArrowLeft, Check, Smile, BadgeCheck } from "lucide-react";
+import {
+  Send,
+  ImageIcon,
+  MoreVertical,
+  ArrowLeft,
+  Check,
+  Smile,
+  BadgeCheck,
+  RotateCcw,
+  AlertCircle,
+  MapPin,
+  CheckCircle2,
+  Sparkles,
+  PartyPopper,
+  Mail,
+} from "lucide-react";
 import { useUnifiedChat } from "@/hooks/useUnifiedChat";
-import { sendFoodChatMessage, markFoodChatAsRead } from "@/app/actions/chat";
+import { useActionToast } from "@/hooks/useActionToast";
+import {
+  sendFoodChatMessage,
+  markFoodChatAsRead,
+  acceptRequestAndShareAddress,
+  completeExchange,
+} from "@/app/actions/chat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -90,9 +111,17 @@ export function UnifiedChatContainer({
   const [inputValue, setInputValue] = useState("");
   const [isPending, startTransition] = useTransition();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [failedMessages, setFailedMessages] = useState<
+    Map<string, { text: string; retries: number }>
+  >(new Map());
+  const [isAccepting, setIsAccepting] = useState(false);
+  const [localIsAccepted, setLocalIsAccepted] = useState(chatRoom.isAccepted ?? false);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const toast = useActionToast();
 
   const { typingUsers, onlineUsers, sendTypingIndicator, sendReadReceipt } = useUnifiedChat({
     userId,
@@ -138,11 +167,14 @@ export function UnifiedChatContainer({
     sendTypingIndicator(e.target.value.length > 0);
   };
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() || isPending) return;
-    const messageText = inputValue.trim();
-    setInputValue("");
-    sendTypingIndicator(false);
+  const handleSendMessage = async (retryText?: string) => {
+    const messageText = retryText || inputValue.trim();
+    if (!messageText || isPending) return;
+
+    if (!retryText) {
+      setInputValue("");
+      sendTypingIndicator(false);
+    }
 
     const optimisticMessage: Message = {
       id: `temp-${Date.now()}`,
@@ -159,10 +191,100 @@ export function UnifiedChatContainer({
       formData.set("text", messageText);
       const result = await sendFoodChatMessage(formData);
       if (!result.success) {
+        // Remove optimistic message
         setMessages((prev) => prev.filter((m) => m.id !== optimisticMessage.id));
+
+        // Track failed message for retry
+        const existingRetry = failedMessages.get(optimisticMessage.id);
+        const retries = existingRetry?.retries || 0;
+
+        if (retries < 3) {
+          setFailedMessages((prev) =>
+            new Map(prev).set(optimisticMessage.id, {
+              text: messageText,
+              retries: retries + 1,
+            })
+          );
+          toast.error("Failed to send message", "Tap retry to try again");
+        } else {
+          // Max retries reached
+          setFailedMessages((prev) => {
+            const next = new Map(prev);
+            next.delete(optimisticMessage.id);
+            return next;
+          });
+          toast.error("Message failed", "Please try again later");
+        }
+      } else {
+        // Success - remove from failed messages if it was a retry
+        if (retryText) {
+          setFailedMessages((prev) => {
+            const next = new Map(prev);
+            // Remove all entries with this text
+            for (const [key, val] of next) {
+              if (val.text === retryText) next.delete(key);
+            }
+            return next;
+          });
+        }
       }
     });
     inputRef.current?.focus();
+  };
+
+  // Retry a failed message
+  const handleRetryMessage = useCallback(
+    (failedId: string) => {
+      const failed = failedMessages.get(failedId);
+      if (failed) {
+        handleSendMessage(failed.text);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [failedMessages]
+  );
+
+  // Accept request and share address
+  const handleAcceptAndShareAddress = async () => {
+    if (isAccepting || localIsAccepted) return;
+
+    setIsAccepting(true);
+    try {
+      const result = await acceptRequestAndShareAddress(chatRoom.id);
+      if (result.success) {
+        setLocalIsAccepted(true);
+        toast.success(
+          "Request accepted!",
+          "Your pickup address has been shared with the requester."
+        );
+      } else {
+        toast.error("Failed to accept request", result.error?.message || "Please try again.");
+      }
+    } catch {
+      toast.error("Failed to accept request", "Please try again.");
+    } finally {
+      setIsAccepting(false);
+    }
+  };
+
+  // Mark exchange as complete and send emails to both parties
+  const handleCompleteExchange = async () => {
+    if (isCompleting || isCompleted) return;
+
+    setIsCompleting(true);
+    try {
+      const result = await completeExchange(chatRoom.id);
+      if (result.success) {
+        setIsCompleted(true);
+        toast.success("Exchange complete!", "Completion emails have been sent to both parties.");
+      } else {
+        toast.error("Failed to complete exchange", result.error?.message || "Please try again.");
+      }
+    } catch {
+      toast.error("Failed to complete exchange", "Please try again.");
+    } finally {
+      setIsCompleting(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -172,14 +294,19 @@ export function UnifiedChatContainer({
     }
   };
 
-  const groupedMessages = messages.reduce(
-    (groups, message) => {
-      const date = new Date(message.timestamp).toDateString();
-      if (!groups[date]) groups[date] = [];
-      groups[date].push(message);
-      return groups;
-    },
-    {} as Record<string, Message[]>
+  // Memoize grouped messages for performance
+  const groupedMessages = useMemo(
+    () =>
+      messages.reduce(
+        (groups, message) => {
+          const date = new Date(message.timestamp).toDateString();
+          if (!groups[date]) groups[date] = [];
+          groups[date].push(message);
+          return groups;
+        },
+        {} as Record<string, Message[]>
+      ),
+    [messages]
   );
 
   const formatDateHeader = (dateString: string) => {
@@ -274,6 +401,129 @@ export function UnifiedChatContainer({
         </TooltipProvider>
       </header>
 
+      {/* Share Address Action Bar - Only for sharer when not yet accepted */}
+      <AnimatePresence>
+        {chatRoom.isSharer && !localIsAccepted && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="border-b border-border overflow-hidden"
+          >
+            <div className="px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                  <MapPin className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">Ready to share your food?</p>
+                  <p className="text-xs text-muted-foreground">
+                    Accept this request to share your pickup address
+                  </p>
+                </div>
+                <Button
+                  onClick={handleAcceptAndShareAddress}
+                  disabled={isAccepting}
+                  className="flex-shrink-0 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25 border-0 gap-2"
+                >
+                  {isAccepting ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Sparkles className="h-4 w-4" />
+                      </motion.div>
+                      Accepting...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-4 w-4" />
+                      Accept & Share Address
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Mark as Complete Action Bar - Shows after request accepted, before completion */}
+      <AnimatePresence>
+        {localIsAccepted && !isCompleted && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="border-b border-border overflow-hidden"
+          >
+            <div className="px-4 py-3 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/25">
+                  <PartyPopper className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">Did the pickup happen?</p>
+                  <p className="text-xs text-muted-foreground">
+                    Mark complete to notify both parties via email
+                  </p>
+                </div>
+                <Button
+                  onClick={handleCompleteExchange}
+                  disabled={isCompleting}
+                  className="flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shadow-lg shadow-amber-500/25 border-0 gap-2"
+                >
+                  {isCompleting ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Sparkles className="h-4 w-4" />
+                      </motion.div>
+                      Completing...
+                    </>
+                  ) : (
+                    <>
+                      <Mail className="h-4 w-4" />
+                      Mark Complete
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Exchange Completed Banner */}
+      <AnimatePresence>
+        {isCompleted && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="border-b border-border overflow-hidden"
+          >
+            <div className="px-4 py-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 flex items-center gap-3">
+              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/25">
+                <CheckCircle2 className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium text-green-700 dark:text-green-300">
+                  Exchange complete!
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-400">
+                  Completion emails sent to both you and{" "}
+                  {otherParticipant?.firstName || "the other party"}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto px-4 py-4 scroll-smooth relative bg-muted/30">
         {isLoadingMessages ? (
@@ -315,6 +565,43 @@ export function UnifiedChatContainer({
                 </AnimatePresence>
               </div>
             ))}
+
+            {/* Failed messages with retry */}
+            <AnimatePresence>
+              {failedMessages.size > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-2 py-2"
+                >
+                  {Array.from(failedMessages.entries()).map(([id, { text, retries }]) => (
+                    <div key={id} className="flex items-center justify-end gap-2">
+                      <div className="flex items-center gap-2 max-w-[75%] sm:max-w-[65%]">
+                        <div className="rounded-2xl px-4 py-2.5 bg-destructive/10 border border-destructive/30 rounded-br-md">
+                          <p className="text-sm text-destructive break-words">{text}</p>
+                          <div className="flex items-center gap-1.5 mt-1.5 justify-end">
+                            <AlertCircle className="h-3 w-3 text-destructive" />
+                            <span className="text-[10px] text-destructive font-medium">
+                              Failed to send {retries > 1 ? `(${retries}/3)` : ""}
+                            </span>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleRetryMessage(id)}
+                          disabled={isPending}
+                        >
+                          <RotateCcw className={cn("h-4 w-4", isPending && "animate-spin")} />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Typing indicator */}
             <AnimatePresence>
@@ -440,7 +727,7 @@ export function UnifiedChatContainer({
             animate={{ scale: inputValue.trim() ? 1 : 0.9, opacity: inputValue.trim() ? 1 : 0.5 }}
           >
             <Button
-              onClick={handleSendMessage}
+              onClick={() => handleSendMessage()}
               disabled={!inputValue.trim() || isPending}
               size="icon"
               className={cn(

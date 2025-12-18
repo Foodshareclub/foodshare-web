@@ -11,12 +11,14 @@ import { useState, useEffect, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageCircle, Users } from "lucide-react";
+import { MessageCircle, Users, WifiOff } from "lucide-react";
 import { UnifiedChatList } from "@/components/chat/UnifiedChatList";
 import { UnifiedChatContainer } from "@/components/chat/UnifiedChatContainer";
+import { ChatErrorBoundary } from "@/components/chat/ChatErrorBoundary";
 import { useMediaQuery } from "@/hooks";
-import { useOnlineStatus } from "@/hooks/useUnifiedChat";
+import { useOnlineStatus, useUnifiedChat, useUnreadCount } from "@/hooks/useUnifiedChat";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { UnifiedChatRoom } from "@/lib/data/chat";
 
@@ -69,7 +71,28 @@ export function ChatPageClient({
   // Track previous values to avoid cascading renders
   const prevActiveChatRoomId = useRef(activeChatRoom?.id);
 
+  // Track user online status
   useOnlineStatus(userId);
+
+  // Subscribe to global unread count (values used by child components via context)
+  const { unreadCount: _unreadCount, refetch: _refetchUnread } = useUnreadCount(userId);
+
+  // Subscribe to all rooms for real-time updates
+  const { subscribeToAllRooms, connectionStatus } = useUnifiedChat({
+    userId,
+    userName,
+    userAvatar,
+  });
+
+  // Set up global room subscription on mount
+  useEffect(() => {
+    const channel = subscribeToAllRooms();
+    return () => {
+      if (channel) {
+        // Cleanup handled by the hook
+      }
+    };
+  }, [subscribeToAllRooms]);
 
   const getText = (key: keyof typeof FALLBACK) => {
     try {
@@ -196,16 +219,31 @@ export function ChatPageClient({
                   isDesktop && "rounded-2xl border border-border bg-card shadow-sm"
                 )}
               >
+                {/* Connection status indicator */}
+                {connectionStatus === "reconnecting" && (
+                  <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50">
+                    <Badge
+                      variant="outline"
+                      className="bg-amber-500/10 text-amber-600 border-amber-500/30 gap-1.5"
+                    >
+                      <WifiOff className="h-3 w-3" />
+                      Reconnecting...
+                    </Badge>
+                  </div>
+                )}
+
                 {selectedChat ? (
-                  <UnifiedChatContainer
-                    userId={userId}
-                    userName={userName}
-                    userAvatar={userAvatar}
-                    chatRoom={selectedChat}
-                    initialMessages={messages}
-                    onBack={!isDesktop ? handleBackToList : undefined}
-                    isLoadingMessages={isLoadingMessages}
-                  />
+                  <ChatErrorBoundary>
+                    <UnifiedChatContainer
+                      userId={userId}
+                      userName={userName}
+                      userAvatar={userAvatar}
+                      chatRoom={selectedChat}
+                      initialMessages={messages}
+                      onBack={!isDesktop ? handleBackToList : undefined}
+                      isLoadingMessages={isLoadingMessages}
+                    />
+                  </ChatErrorBoundary>
                 ) : (
                   <EmptyState
                     hasChats={chatRooms.length > 0}

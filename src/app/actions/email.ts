@@ -364,6 +364,121 @@ export async function sendListingExpiredNotification(
 }
 
 // ============================================================================
+// Exchange Completion Emails
+// ============================================================================
+
+export type ExchangeCompletionEmailData = {
+  to: string;
+  recipientName: string;
+  otherPartyName: string;
+  itemName: string;
+  role: "sharer" | "requester";
+  roomId: string;
+};
+
+/**
+ * Send an exchange completion email to a user
+ * Called when a food exchange is marked as complete
+ */
+export async function sendExchangeCompletionEmail(
+  data: ExchangeCompletionEmailData
+): Promise<ServerActionResult<SendEmailResult>> {
+  try {
+    const emailValidation = EmailAddressSchema.safeParse(data.to);
+    if (!emailValidation.success) {
+      return serverActionError("Invalid recipient email address", "VALIDATION_ERROR");
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://foodshare.club";
+    const reviewUrl = `${baseUrl}/chat?room=${data.roomId}&action=review`;
+
+    const roleText =
+      data.role === "sharer"
+        ? `You shared "${data.itemName}" with ${data.otherPartyName}`
+        : `You received "${data.itemName}" from ${data.otherPartyName}`;
+
+    const subject = `🎉 Exchange Complete - ${data.itemName}`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #22c55e;">🎉 Exchange Complete!</h1>
+        <p>Hi ${data.recipientName},</p>
+        <p>${roleText}. Thank you for being part of our food sharing community!</p>
+
+        <div style="background: #f3f4f6; padding: 20px; border-radius: 12px; margin: 20px 0;">
+          <h3 style="margin-top: 0;">Impact Summary</h3>
+          <p>By participating in this exchange, you've helped:</p>
+          <ul>
+            <li>🍎 Reduce food waste</li>
+            <li>🤝 Strengthen your local community</li>
+            <li>🌍 Lower environmental impact</li>
+          </ul>
+        </div>
+
+        <p>Would you like to leave a review for ${data.otherPartyName}? Reviews help build trust in our community.</p>
+
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${reviewUrl}"
+             style="display: inline-block; background: #22c55e; color: white; padding: 12px 30px;
+                    text-decoration: none; border-radius: 8px; font-weight: bold;">
+            Leave a Review
+          </a>
+        </div>
+
+        <p style="color: #6b7280; font-size: 14px;">
+          Thank you for making a difference!<br>
+          The FoodShare Team
+        </p>
+      </div>
+    `;
+
+    const text = `
+Exchange Complete! 🎉
+
+Hi ${data.recipientName},
+
+${roleText}. Thank you for being part of our food sharing community!
+
+By participating in this exchange, you've helped reduce food waste and strengthen your local community.
+
+Would you like to leave a review for ${data.otherPartyName}? Visit: ${reviewUrl}
+
+Thank you for making a difference!
+The FoodShare Team
+    `.trim();
+
+    const { createUnifiedEmailService } = await import("@/lib/email/unified-service");
+    const service = await createUnifiedEmailService();
+
+    const result = await service.sendEmail({
+      emailType: "food_listing",
+      content: { subject, html, text },
+      options: {
+        to: { email: emailValidation.data },
+        from: {
+          email: process.env.EMAIL_FROM || "noreply@foodshare.club",
+          name: process.env.EMAIL_FROM_NAME || "FoodShare",
+        },
+      },
+    });
+
+    if (!result.success) {
+      return serverActionError(result.error || "Failed to send email", "INTERNAL_ERROR");
+    }
+
+    return {
+      success: true,
+      data: { messageId: result.messageId },
+    };
+  } catch (error) {
+    console.error("Failed to send exchange completion email:", error);
+    return serverActionError(
+      error instanceof Error ? error.message : "Failed to send email",
+      "INTERNAL_ERROR"
+    );
+  }
+}
+
+// ============================================================================
 // Admin-Only Actions
 // ============================================================================
 

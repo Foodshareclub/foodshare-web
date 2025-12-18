@@ -3,7 +3,7 @@
  * Server-side data fetching for food sharing chat system
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from "@/lib/supabase/server";
 
 // ============================================================================
 // Types
@@ -72,20 +72,22 @@ export type ChatMessage = {
  */
 export async function getUserChatRooms(userId: string): Promise<ChatRoom[]> {
   const supabase = await createClient();
-  
+
   const { data, error } = await supabase
-    .from('rooms')
-    .select(`
+    .from("rooms")
+    .select(
+      `
       *,
       posts:post_id (id, post_name, images, post_type),
       sharer_profile:sharer (id, first_name, second_name, avatar_url),
       requester_profile:requester (id, first_name, second_name, avatar_url)
-    `)
+    `
+    )
     .or(`sharer.eq.${userId},requester.eq.${userId}`)
-    .order('last_message_time', { ascending: false });
+    .order("last_message_time", { ascending: false });
 
   if (error) {
-    console.error('Error fetching chat rooms:', error);
+    console.error("Error fetching chat rooms:", error);
     return [];
   }
 
@@ -97,20 +99,22 @@ export async function getUserChatRooms(userId: string): Promise<ChatRoom[]> {
  */
 export async function getChatRoom(roomId: string): Promise<ChatRoom | null> {
   const supabase = await createClient();
-  
+
   const { data, error } = await supabase
-    .from('rooms')
-    .select(`
+    .from("rooms")
+    .select(
+      `
       *,
       posts:post_id (id, post_name, images, post_type),
       sharer_profile:sharer (id, first_name, second_name, avatar_url),
       requester_profile:requester (id, first_name, second_name, avatar_url)
-    `)
-    .eq('id', roomId)
+    `
+    )
+    .eq("id", roomId)
     .single();
 
   if (error) {
-    console.error('Error fetching chat room:', error);
+    console.error("Error fetching chat room:", error);
     return null;
   }
 
@@ -126,19 +130,21 @@ export async function getOrCreateChatRoom(
   requesterId: string
 ): Promise<ChatRoom | null> {
   const supabase = await createClient();
-  
+
   // First, check if room exists
   const { data: existingRoom } = await supabase
-    .from('rooms')
-    .select(`
+    .from("rooms")
+    .select(
+      `
       *,
       posts:post_id (id, post_name, images, post_type),
       sharer_profile:sharer (id, first_name, second_name, avatar_url),
       requester_profile:requester (id, first_name, second_name, avatar_url)
-    `)
-    .eq('post_id', postId)
-    .eq('sharer', sharerId)
-    .eq('requester', requesterId)
+    `
+    )
+    .eq("post_id", postId)
+    .eq("sharer", sharerId)
+    .eq("requester", requesterId)
     .single();
 
   if (existingRoom) {
@@ -147,25 +153,27 @@ export async function getOrCreateChatRoom(
 
   // Create new room
   const { data: newRoom, error } = await supabase
-    .from('rooms')
+    .from("rooms")
     .insert({
       post_id: postId,
       sharer: sharerId,
       requester: requesterId,
-      last_message: '',
+      last_message: "",
       last_message_sent_by: requesterId,
       last_message_seen_by: requesterId,
     })
-    .select(`
+    .select(
+      `
       *,
       posts:post_id (id, post_name, images, post_type),
       sharer_profile:sharer (id, first_name, second_name, avatar_url),
       requester_profile:requester (id, first_name, second_name, avatar_url)
-    `)
+    `
+    )
     .single();
 
   if (error) {
-    console.error('Error creating chat room:', error);
+    console.error("Error creating chat room:", error);
     return null;
   }
 
@@ -181,19 +189,21 @@ export async function getChatMessages(
   offset = 0
 ): Promise<ChatMessage[]> {
   const supabase = await createClient();
-  
+
   const { data, error } = await supabase
-    .from('room_participants')
-    .select(`
+    .from("room_participants")
+    .select(
+      `
       *,
       profiles:profile_id (id, first_name, second_name, avatar_url)
-    `)
-    .eq('room_id', roomId)
-    .order('timestamp', { ascending: false })
+    `
+    )
+    .eq("room_id", roomId)
+    .order("timestamp", { ascending: false })
     .range(offset, offset + limit - 1);
 
   if (error) {
-    console.error('Error fetching messages:', error);
+    console.error("Error fetching messages:", error);
     return [];
   }
 
@@ -206,16 +216,16 @@ export async function getChatMessages(
  */
 export async function getUnreadMessageCount(userId: string): Promise<number> {
   const supabase = await createClient();
-  
+
   const { data, error } = await supabase
-    .from('rooms')
-    .select('id')
+    .from("rooms")
+    .select("id")
     .or(`sharer.eq.${userId},requester.eq.${userId}`)
-    .neq('last_message_seen_by', userId)
-    .neq('last_message', '');
+    .neq("last_message_seen_by", userId)
+    .neq("last_message", "");
 
   if (error) {
-    console.error('Error fetching unread count:', error);
+    console.error("Error fetching unread count:", error);
     return 0;
   }
 
@@ -228,7 +238,7 @@ export async function getUnreadMessageCount(userId: string): Promise<number> {
 
 export type UnifiedChatRoom = {
   id: string;
-  type: 'food';
+  type: "food";
   title: string;
   lastMessage: string | null;
   lastMessageTime: string | null;
@@ -248,6 +258,9 @@ export type UnifiedChatRoom = {
   isSharer?: boolean;
   sharerId?: string;
   requesterId?: string;
+  // Request acceptance status
+  isAccepted?: boolean;
+  arrangedAt?: string | null;
 };
 
 /**
@@ -263,28 +276,34 @@ export async function getAllUserChats(userId: string): Promise<UnifiedChatRoom[]
   for (const room of foodRooms) {
     const isSharer = room.sharer === userId;
     const otherUser = isSharer ? room.requester_profile : room.sharer_profile;
-    
+
     unifiedRooms.push({
       id: room.id,
-      type: 'food',
-      title: room.posts?.post_name || 'Food Chat',
+      type: "food",
+      title: room.posts?.post_name || "Food Chat",
       lastMessage: room.last_message || null,
       lastMessageTime: room.last_message_time || null,
       hasUnread: room.last_message_seen_by !== userId && !!room.last_message,
-      participants: otherUser ? [{
-        id: otherUser.id,
-        firstName: otherUser.first_name,
-        secondName: otherUser.second_name,
-        avatarUrl: otherUser.avatar_url,
-      }] : [],
+      participants: otherUser
+        ? [
+            {
+              id: otherUser.id,
+              firstName: otherUser.first_name,
+              secondName: otherUser.second_name,
+              avatarUrl: otherUser.avatar_url,
+            },
+          ]
+        : [],
       postId: room.post_id,
       postName: room.posts?.post_name,
       postImage: room.posts?.images?.[0],
-      postType: room.posts?.post_type || 'food', // Category of the listing
+      postType: room.posts?.post_type || "food", // Category of the listing
       // Role info
       isSharer,
       sharerId: room.sharer,
       requesterId: room.requester,
+      // Request acceptance status
+      isAccepted: !!room.post_arranged_to,
     });
   }
 

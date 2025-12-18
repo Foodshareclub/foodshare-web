@@ -7,16 +7,10 @@
  * Supports dark/light themes with glassmorphism effects
  */
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback, memo } from "react";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-
-import { cn } from "@/lib/utils";
 import {
   Search,
   MessageCircle,
@@ -32,6 +26,12 @@ import {
   Leaf,
   Warehouse,
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+
+import { cn } from "@/lib/utils";
 
 // Icon aliases for consistency
 const FiSearch = Search;
@@ -94,13 +94,16 @@ export function UnifiedChatList({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  const getText = (key: keyof typeof FALLBACK) => {
-    try {
-      return t(key);
-    } catch {
-      return FALLBACK[key];
-    }
-  };
+  const getText = useCallback(
+    (key: keyof typeof FALLBACK) => {
+      try {
+        return t(key);
+      } catch {
+        return FALLBACK[key];
+      }
+    },
+    [t]
+  );
 
   // Get available categories from chat rooms (only show tabs for categories that have chats)
   const availableCategories = useMemo(() => {
@@ -146,24 +149,27 @@ export function UnifiedChatList({
       });
   }, [chatRooms, searchQuery, selectedCategory]);
 
-  const formatTime = (timestamp: string | null) => {
-    if (!timestamp) return "";
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+  const formatTime = useCallback(
+    (timestamp: string | null) => {
+      if (!timestamp) return "";
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) {
-      return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    } else if (diffDays === 1) {
-      return getText("yesterday");
-    } else if (diffDays < 7) {
-      return date.toLocaleDateString([], { weekday: "short" });
-    } else {
-      return date.toLocaleDateString([], { month: "short", day: "numeric" });
-    }
-  };
+      if (diffDays === 0) {
+        return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      } else if (diffDays === 1) {
+        return getText("yesterday");
+      } else if (diffDays < 7) {
+        return date.toLocaleDateString([], { weekday: "short" });
+      } else {
+        return date.toLocaleDateString([], { month: "short", day: "numeric" });
+      }
+    },
+    [getText]
+  );
 
-  const totalUnread = chatRooms.filter((c) => c.hasUnread).length;
+  const totalUnread = useMemo(() => chatRooms.filter((c) => c.hasUnread).length, [chatRooms]);
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-card">
@@ -256,7 +262,7 @@ export function UnifiedChatList({
 
       {/* Chat List - Scrollable */}
       <div className="flex-1 overflow-y-auto min-h-0 px-2 py-2 scroll-smooth">
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence mode="sync" initial={false}>
           {filteredChats.length === 0 ? (
             <motion.div
               initial={{ opacity: 0 }}
@@ -300,7 +306,7 @@ export function UnifiedChatList({
   );
 }
 
-// Chat List Item Component
+// Chat List Item Component - Memoized for performance
 type ChatListItemProps = {
   chat: UnifiedChatRoom;
   isActive: boolean;
@@ -311,125 +317,138 @@ type ChatListItemProps = {
   currentUserId?: string;
 };
 
-function ChatListItem({
-  chat,
-  isActive,
-  isOnline,
-  onClick,
-  formatTime,
-  getText,
-  currentUserId,
-}: ChatListItemProps) {
-  const otherParticipant = chat.participants[0];
-  const participantName = otherParticipant
-    ? `${otherParticipant.firstName} ${otherParticipant.secondName}`.trim()
-    : "Unknown";
+const ChatListItem = memo(
+  function ChatListItem({
+    chat,
+    isActive,
+    isOnline,
+    onClick,
+    formatTime,
+    getText,
+    currentUserId: _currentUserId,
+  }: ChatListItemProps) {
+    const otherParticipant = chat.participants[0];
+    const participantName = otherParticipant
+      ? `${otherParticipant.firstName} ${otherParticipant.secondName}`.trim()
+      : "Unknown";
 
-  // Determine user's role in this chat
-  const isSharer = chat.isSharer;
-  const roleLabel = isSharer ? "Your listing" : "Requested";
+    // Determine user's role in this chat
+    const isSharer = chat.isSharer;
+    const roleLabel = isSharer ? "Your listing" : "Requested";
 
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "w-full flex items-start gap-3 p-3 rounded-xl transition-all duration-200",
-        "hover:bg-muted/70 active:scale-[0.98]",
-        isActive && "bg-primary/10 hover:bg-primary/15 ring-1 ring-primary/20",
-        chat.hasUnread && !isActive && "bg-muted/40"
-      )}
-    >
-      {/* Avatar / Image */}
-      <div className="relative flex-shrink-0">
-        {chat.postImage ? (
-          <div className="relative h-12 w-12 rounded-xl overflow-hidden ring-2 ring-green-500/20 shadow-sm">
-            <Image src={chat.postImage} alt={chat.postName || ""} fill className="object-cover" />
-          </div>
-        ) : (
-          <Avatar className="h-12 w-12 ring-2 ring-border">
-            <AvatarImage src={otherParticipant?.avatarUrl || ""} />
-            <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-medium">
-              {otherParticipant?.firstName?.[0]}
-              {otherParticipant?.secondName?.[0]}
-            </AvatarFallback>
-          </Avatar>
+    return (
+      <button
+        onClick={onClick}
+        className={cn(
+          "w-full flex items-start gap-3 p-3 rounded-xl transition-all duration-200",
+          "hover:bg-muted/70 active:scale-[0.98]",
+          isActive && "bg-primary/10 hover:bg-primary/15 ring-1 ring-primary/20",
+          chat.hasUnread && !isActive && "bg-muted/40"
         )}
+      >
+        {/* Avatar / Image */}
+        <div className="relative flex-shrink-0">
+          {chat.postImage ? (
+            <div className="relative h-12 w-12 rounded-xl overflow-hidden ring-2 ring-green-500/20 shadow-sm">
+              <Image src={chat.postImage} alt={chat.postName || ""} fill className="object-cover" />
+            </div>
+          ) : (
+            <Avatar className="h-12 w-12 ring-2 ring-border">
+              <AvatarImage src={otherParticipant?.avatarUrl || ""} />
+              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-medium">
+                {otherParticipant?.firstName?.[0]}
+                {otherParticipant?.secondName?.[0]}
+              </AvatarFallback>
+            </Avatar>
+          )}
 
-        {/* Online indicator */}
-        {isOnline && (
-          <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-background shadow-sm" />
-        )}
+          {/* Online indicator */}
+          {isOnline && (
+            <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-background shadow-sm" />
+          )}
 
-        {/* Food chat badge */}
-        {!isOnline && (
-          <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center shadow-sm border-2 border-background bg-green-500">
-            <FiPackage className="h-2.5 w-2.5 text-white" />
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0 text-left">
-        {/* Post name / Title with role badge */}
-        <div className="flex items-center justify-between gap-2 mb-0.5">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span
-              className={cn(
-                "truncate text-sm",
-                chat.hasUnread ? "font-bold text-foreground" : "font-semibold text-foreground/90"
-              )}
-            >
-              {chat.title}
-            </span>
-            <span
-              className={cn(
-                "px-1.5 py-0.5 text-[9px] font-medium rounded flex-shrink-0",
-                isSharer
-                  ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400"
-                  : "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400"
-              )}
-            >
-              {roleLabel}
-            </span>
-          </div>
-          <span
-            className={cn(
-              "text-[10px] flex-shrink-0 font-medium",
-              chat.hasUnread ? "text-primary" : "text-muted-foreground"
-            )}
-          >
-            {formatTime(chat.lastMessageTime)}
-          </span>
-        </div>
-
-        {/* Participant name - Who you're chatting with */}
-        <div className="flex items-center gap-1.5 mb-1">
-          <FiUser className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-          <span className="text-xs text-muted-foreground truncate">{participantName}</span>
-          {isOnline && <span className="text-[10px] text-green-500 font-medium">• online</span>}
-          {/* Category badge */}
-          {chat.postType && chat.postType !== "food" && (
-            <span className="px-1.5 py-0.5 text-[9px] font-medium rounded bg-muted text-muted-foreground capitalize">
-              {chat.postType}
-            </span>
+          {/* Food chat badge */}
+          {!isOnline && (
+            <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full flex items-center justify-center shadow-sm border-2 border-background bg-green-500">
+              <FiPackage className="h-2.5 w-2.5 text-white" />
+            </div>
           )}
         </div>
 
-        {/* Last message preview */}
-        <div className="flex items-center justify-between gap-2">
-          <p
-            className={cn(
-              "text-xs truncate",
-              chat.hasUnread ? "text-foreground/80 font-medium" : "text-muted-foreground"
+        {/* Content */}
+        <div className="flex-1 min-w-0 text-left">
+          {/* Post name / Title with role badge */}
+          <div className="flex items-center justify-between gap-2 mb-0.5">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span
+                className={cn(
+                  "truncate text-sm",
+                  chat.hasUnread ? "font-bold text-foreground" : "font-semibold text-foreground/90"
+                )}
+              >
+                {chat.title}
+              </span>
+              <span
+                className={cn(
+                  "px-1.5 py-0.5 text-[9px] font-medium rounded flex-shrink-0",
+                  isSharer
+                    ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400"
+                    : "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400"
+                )}
+              >
+                {roleLabel}
+              </span>
+            </div>
+            <span
+              className={cn(
+                "text-[10px] flex-shrink-0 font-medium",
+                chat.hasUnread ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              {formatTime(chat.lastMessageTime)}
+            </span>
+          </div>
+
+          {/* Participant name - Who you're chatting with */}
+          <div className="flex items-center gap-1.5 mb-1">
+            <FiUser className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+            <span className="text-xs text-muted-foreground truncate">{participantName}</span>
+            {isOnline && <span className="text-[10px] text-green-500 font-medium">• online</span>}
+            {/* Category badge */}
+            {chat.postType && chat.postType !== "food" && (
+              <span className="px-1.5 py-0.5 text-[9px] font-medium rounded bg-muted text-muted-foreground capitalize">
+                {chat.postType}
+              </span>
             )}
-          >
-            {chat.lastMessage || getText("noMessages")}
-          </p>
-          {chat.hasUnread && (
-            <span className="h-2.5 w-2.5 rounded-full bg-primary flex-shrink-0 animate-pulse" />
-          )}
+          </div>
+
+          {/* Last message preview */}
+          <div className="flex items-center justify-between gap-2">
+            <p
+              className={cn(
+                "text-xs truncate",
+                chat.hasUnread ? "text-foreground/80 font-medium" : "text-muted-foreground"
+              )}
+            >
+              {chat.lastMessage || getText("noMessages")}
+            </p>
+            {chat.hasUnread && (
+              <span className="h-2.5 w-2.5 rounded-full bg-primary flex-shrink-0 animate-pulse" />
+            )}
+          </div>
         </div>
-      </div>
-    </button>
-  );
-}
+      </button>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison for memo - only re-render when relevant props change
+    return (
+      prevProps.chat.id === nextProps.chat.id &&
+      prevProps.chat.lastMessage === nextProps.chat.lastMessage &&
+      prevProps.chat.lastMessageTime === nextProps.chat.lastMessageTime &&
+      prevProps.chat.hasUnread === nextProps.chat.hasUnread &&
+      prevProps.isActive === nextProps.isActive &&
+      prevProps.isOnline === nextProps.isOnline
+    );
+  }
+);

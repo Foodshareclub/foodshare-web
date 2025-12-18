@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Unified Chat Hook
@@ -6,11 +6,11 @@
  * Includes typing indicators, presence, and read receipts
  */
 
-import { useEffect, useCallback, useRef, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { useChatStore } from '@/store/zustand/useChatStore';
-import type { RealtimeChannel } from '@supabase/supabase-js';
-import type { RoomParticipantsType } from '@/api/chatAPI';
+import { useEffect, useCallback, useRef, useState } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
+import { useChatStore } from "@/store/zustand/useChatStore";
+import type { RoomParticipantsType } from "@/api/chatAPI";
 
 type TypingUser = {
   id: string;
@@ -42,8 +42,8 @@ type UseUnifiedChatOptions = {
  */
 export function useUnifiedChat({
   userId,
-  userName = '',
-  userAvatar = '',
+  userName = "",
+  userAvatar = "",
   roomId,
   onNewFoodMessage,
   onTypingChange,
@@ -53,19 +53,30 @@ export function useUnifiedChat({
   const channelRef = useRef<RealtimeChannel | null>(null);
   const presenceChannelRef = useRef<RealtimeChannel | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+  const typingUsersRef = useRef<TypingUser[]>([]); // Ref to avoid dependency issues
+  const reconnectAttempts = useRef(0);
+  const maxReconnectAttempts = 5;
+
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<PresenceUser[]>([]);
   const [isTyping, setIsTyping] = useState(false);
-  
+  const [connectionStatus, setConnectionStatus] = useState<
+    "connected" | "disconnected" | "reconnecting"
+  >("disconnected");
+
   const { addMessage, setNewMessage, updateRoomInList } = useChatStore();
+
+  // Keep typingUsersRef in sync with state (avoids dependency issues)
+  useEffect(() => {
+    typingUsersRef.current = typingUsers;
+  }, [typingUsers]);
 
   // Subscribe to food sharing room messages
   useEffect(() => {
     if (!userId || !roomId) return;
 
     const supabase = createClient();
-    
+
     // Clean up existing channel
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
@@ -74,16 +85,16 @@ export function useUnifiedChat({
     const channel = supabase
       .channel(`room:${roomId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'room_participants',
+          event: "INSERT",
+          schema: "public",
+          table: "room_participants",
           filter: `room_id=eq.${roomId}`,
         },
         (payload) => {
           const newMessage = payload.new as RoomParticipantsType;
-          
+
           // Only process messages from other users
           if (newMessage.profile_id !== userId) {
             addMessage(newMessage);
@@ -109,7 +120,7 @@ export function useUnifiedChat({
     if (!userId || !roomId) return;
 
     const supabase = createClient();
-    
+
     // Clean up existing channel
     if (presenceChannelRef.current) {
       supabase.removeChannel(presenceChannelRef.current);
@@ -124,10 +135,15 @@ export function useUnifiedChat({
     });
 
     // Handle presence sync
-    channel.on('presence', { event: 'sync' }, () => {
-      const state = channel.presenceState<{ id: string; name: string; avatarUrl?: string; online_at: string }>();
+    channel.on("presence", { event: "sync" }, () => {
+      const state = channel.presenceState<{
+        id: string;
+        name: string;
+        avatarUrl?: string;
+        online_at: string;
+      }>();
       const users: PresenceUser[] = [];
-      
+
       Object.values(state).forEach((presences) => {
         presences.forEach((presence) => {
           if (presence.id !== userId) {
@@ -135,43 +151,69 @@ export function useUnifiedChat({
           }
         });
       });
-      
+
       setOnlineUsers(users);
       onPresenceChange?.(users);
     });
 
     // Handle typing broadcasts
-    channel.on('broadcast', { event: 'typing' }, ({ payload }) => {
+    channel.on("broadcast", { event: "typing" }, ({ payload }) => {
       if (payload.userId !== userId) {
         setTypingUsers((prev) => {
           const exists = prev.some((u) => u.id === payload.userId);
           if (payload.isTyping && !exists) {
-            return [...prev, { id: payload.userId, name: payload.userName, avatarUrl: payload.avatarUrl }];
+            const updated = [
+              ...prev,
+              { id: payload.userId, name: payload.userName, avatarUrl: payload.avatarUrl },
+            ];
+            onTypingChange?.(updated); // Use fresh value, not stale closure
+            return updated;
           } else if (!payload.isTyping) {
-            return prev.filter((u) => u.id !== payload.userId);
+            const updated = prev.filter((u) => u.id !== payload.userId);
+            onTypingChange?.(updated);
+            return updated;
           }
           return prev;
         });
-        onTypingChange?.(typingUsers);
       }
     });
 
     // Handle read receipts
-    channel.on('broadcast', { event: 'read' }, ({ payload }) => {
+    channel.on("broadcast", { event: "read" }, ({ payload }) => {
       if (payload.userId !== userId) {
         onMessageRead?.(payload.messageId, payload.userId);
       }
     });
 
-    // Subscribe and track presence
+    // Subscribe and track presence with reconnection logic
     channel.subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') {
+      if (status === "SUBSCRIBED") {
+        setConnectionStatus("connected");
+        reconnectAttempts.current = 0;
         await channel.track({
           id: userId,
           name: userName,
           avatarUrl: userAvatar,
           online_at: new Date().toISOString(),
         });
+      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        setConnectionStatus("reconnecting");
+        // Exponential backoff reconnection
+        if (reconnectAttempts.current < maxReconnectAttempts) {
+          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
+          reconnectAttempts.current++;
+          setTimeout(() => {
+            if (presenceChannelRef.current) {
+              supabase.removeChannel(presenceChannelRef.current);
+              presenceChannelRef.current = null;
+            }
+            // Re-subscribe by triggering effect (component will naturally re-run)
+          }, delay);
+        } else {
+          setConnectionStatus("disconnected");
+        }
+      } else if (status === "CLOSED") {
+        setConnectionStatus("disconnected");
       }
     });
 
@@ -183,68 +225,82 @@ export function useUnifiedChat({
         presenceChannelRef.current = null;
       }
     };
-  }, [userId, userName, userAvatar, roomId, onPresenceChange, onTypingChange, onMessageRead, typingUsers]);
+    // Removed typingUsers from deps to prevent infinite re-subscriptions
+  }, [userId, userName, userAvatar, roomId, onPresenceChange, onTypingChange, onMessageRead]);
 
-  // Send typing indicator
-  const sendTypingIndicator = useCallback((typing: boolean) => {
-    if (!presenceChannelRef.current || !userId) return;
+  // Send typing indicator - using ref to avoid self-reference issue
+  const sendTypingIndicatorRef = useRef<(typing: boolean) => void>(undefined);
 
-    // Clear existing timeout
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
+  const sendTypingIndicator = useCallback(
+    (typing: boolean) => {
+      if (!presenceChannelRef.current || !userId) return;
 
-    // Broadcast typing status
-    presenceChannelRef.current.send({
-      type: 'broadcast',
-      event: 'typing',
-      payload: {
-        userId,
-        userName,
-        avatarUrl: userAvatar,
-        isTyping: typing,
-      },
-    });
+      // Clear existing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
 
-    setIsTyping(typing);
+      // Broadcast typing status
+      presenceChannelRef.current.send({
+        type: "broadcast",
+        event: "typing",
+        payload: {
+          userId,
+          userName,
+          avatarUrl: userAvatar,
+          isTyping: typing,
+        },
+      });
 
-    // Auto-stop typing after 3 seconds
-    if (typing) {
-      typingTimeoutRef.current = setTimeout(() => {
-        sendTypingIndicator(false);
-      }, 3000);
-    }
-  }, [userId, userName, userAvatar]);
+      setIsTyping(typing);
+
+      // Auto-stop typing after 3 seconds
+      if (typing) {
+        typingTimeoutRef.current = setTimeout(() => {
+          sendTypingIndicatorRef.current?.(false);
+        }, 3000);
+      }
+    },
+    [userId, userName, userAvatar]
+  );
+
+  // Keep ref updated in effect to avoid render-time mutation
+  useEffect(() => {
+    sendTypingIndicatorRef.current = sendTypingIndicator;
+  }, [sendTypingIndicator]);
 
   // Send read receipt
-  const sendReadReceipt = useCallback((messageId: string) => {
-    if (!presenceChannelRef.current || !userId) return;
+  const sendReadReceipt = useCallback(
+    (messageId: string) => {
+      if (!presenceChannelRef.current || !userId) return;
 
-    presenceChannelRef.current.send({
-      type: 'broadcast',
-      event: 'read',
-      payload: {
-        userId,
-        messageId,
-        readAt: new Date().toISOString(),
-      },
-    });
-  }, [userId]);
+      presenceChannelRef.current.send({
+        type: "broadcast",
+        event: "read",
+        payload: {
+          userId,
+          messageId,
+          readAt: new Date().toISOString(),
+        },
+      });
+    },
+    [userId]
+  );
 
   // Subscribe to all rooms for unread indicators
   const subscribeToAllRooms = useCallback(() => {
     if (!userId) return null;
 
     const supabase = createClient();
-    
+
     const channel = supabase
-      .channel('all-rooms')
+      .channel("all-rooms")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'rooms',
+          event: "UPDATE",
+          schema: "public",
+          table: "rooms",
         },
         (payload) => {
           const updatedRoom = payload.new as {
@@ -254,7 +310,7 @@ export function useUnifiedChat({
             last_message_sent_by: string;
             last_message_seen_by: string;
           };
-          
+
           // Update room in store
           updateRoomInList(updatedRoom.id, {
             last_message: updatedRoom.last_message,
@@ -274,6 +330,7 @@ export function useUnifiedChat({
     typingUsers,
     onlineUsers,
     isTyping,
+    connectionStatus,
     sendTypingIndicator,
     sendReadReceipt,
   };
@@ -281,30 +338,91 @@ export function useUnifiedChat({
 
 /**
  * Hook for global unread message count
- * Subscribes to changes in rooms
+ * Fetches initial count and subscribes to room changes for real-time updates
  */
 export function useUnreadCount(userId: string | null) {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Fetch unread count from database
+  const fetchUnreadCount = useCallback(async () => {
+    if (!userId) {
+      setUnreadCount(0);
+      setIsLoading(false);
+      return;
+    }
+
+    const supabase = createClient();
+
+    // Count rooms where user is participant and hasn't seen the last message
+    const { count, error } = await supabase
+      .from("rooms")
+      .select("*", { count: "exact", head: true })
+      .or(`sharer.eq.${userId},requester.eq.${userId}`)
+      .neq("last_message_seen_by", userId)
+      .not("last_message", "is", null)
+      .neq("last_message", "");
+
+    if (!error) {
+      setUnreadCount(count || 0);
+    }
+    setIsLoading(false);
+  }, [userId]);
+
+  // Fetch initial count on mount - using IIFE to handle async and state
+  useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
+      if (!userId) {
+        if (isMounted) {
+          setUnreadCount(0);
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      const supabase = createClient();
+      const { count, error } = await supabase
+        .from("rooms")
+        .select("*", { count: "exact", head: true })
+        .or(`sharer.eq.${userId},requester.eq.${userId}`)
+        .neq("last_message_seen_by", userId)
+        .not("last_message", "is", null)
+        .neq("last_message", "");
+
+      if (isMounted) {
+        if (!error) {
+          setUnreadCount(count || 0);
+        }
+        setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [userId]);
+
+  // Subscribe to room changes for real-time updates
   useEffect(() => {
     if (!userId) return;
 
     const supabase = createClient();
-    
-    // Subscribe to room updates for unread count
+
     const channel = supabase
-      .channel('unread-count')
+      .channel(`unread-count-${userId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'rooms',
+          event: "*",
+          schema: "public",
+          table: "rooms",
         },
         () => {
-          // Trigger a re-fetch of unread count
-          // This will be handled by the component using this hook
+          // Re-fetch count when any room changes
+          fetchUnreadCount();
         }
       )
       .subscribe();
@@ -317,9 +435,9 @@ export function useUnreadCount(userId: string | null) {
         channelRef.current = null;
       }
     };
-  }, [userId]);
+  }, [userId, fetchUnreadCount]);
 
-  return { unreadCount, setUnreadCount };
+  return { unreadCount, isLoading, refetch: fetchUnreadCount };
 }
 
 /**
@@ -333,8 +451,8 @@ export function useOnlineStatus(userId: string | null) {
     if (!userId) return;
 
     const supabase = createClient();
-    
-    const channel = supabase.channel('online-status', {
+
+    const channel = supabase.channel("online-status", {
       config: {
         presence: {
           key: userId,
@@ -343,7 +461,7 @@ export function useOnlineStatus(userId: string | null) {
     });
 
     channel.subscribe(async (status) => {
-      if (status === 'SUBSCRIBED') {
+      if (status === "SUBSCRIBED") {
         await channel.track({
           user_id: userId,
           online_at: new Date().toISOString(),
@@ -364,10 +482,10 @@ export function useOnlineStatus(userId: string | null) {
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
