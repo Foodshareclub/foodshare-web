@@ -6,7 +6,7 @@
 
 import { unstable_cache } from "next/cache";
 import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createCachedClient } from "@/lib/supabase/server";
 import {
   type LeaderboardUser,
   type LeaderboardUserProfile,
@@ -40,7 +40,7 @@ interface RawLeaderboardRow {
  */
 export const getChallengeLeaderboard = unstable_cache(
   async (limit: number = LEADERBOARD_LIMIT): Promise<LeaderboardUser[]> => {
-    const supabase = await createClient();
+    const supabase = createCachedClient();
 
     // Query with optimized RPC function
     const { data, error } = await supabase.rpc("get_challenge_leaderboard", {
@@ -71,7 +71,7 @@ export const getChallengeLeaderboard = unstable_cache(
  * Manual leaderboard query fallback
  */
 async function getLeaderboardManual(limit: number): Promise<LeaderboardUser[]> {
-  const supabase = await createClient();
+  const supabase = createCachedClient();
 
   // Get all participants with their challenge data
   const { data: participants, error } = await supabase.from("challenge_participants").select(`
@@ -194,7 +194,7 @@ function transformLeaderboardData(data: RawLeaderboardRow[]): LeaderboardUser[] 
  */
 export const getLeaderboardUserProfile = unstable_cache(
   async (userId: string): Promise<LeaderboardUserProfile | null> => {
-    const supabase = await createClient();
+    const supabase = createCachedClient();
 
     // Try RPC function first
     const { data: rpcData, error: rpcError } = await supabase.rpc("get_leaderboard_user_profile", {
@@ -253,7 +253,7 @@ export const getLeaderboardUserProfile = unstable_cache(
 async function getLeaderboardUserProfileManual(
   userId: string
 ): Promise<LeaderboardUserProfile | null> {
-  const supabase = await createClient();
+  const supabase = createCachedClient();
 
   // Get user profile
   const { data: profile, error: profileError } = await supabase
