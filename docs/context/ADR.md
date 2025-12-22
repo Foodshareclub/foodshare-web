@@ -1364,23 +1364,23 @@ Don't create an ADR for:
 
 ## Summary Table
 
-| ADR | Title                      | Status      | Date            |
-| --- | -------------------------- | ----------- | --------------- |
-| 001 | Next.js as Framework       | ✅ Accepted | Q3 2024 → Q4 2025 |
-| 002 | React 19 with TypeScript   | ✅ Accepted | Q3 2024         |
-| 003 | shadcn/ui for Components   | ✅ Accepted | Q3 2024 → Q4 2025 |
-| 004 | Hybrid State Management    | ✅ Accepted | Q3 2024 → Q4 2025 |
-| 005 | Supabase as Backend        | ✅ Accepted | Q3 2024         |
-| 006 | Leaflet for Maps           | ✅ Accepted | Q3 2024         |
-| 007 | Lingui for i18n            | ✅ Accepted | Q3 2024         |
-| 008 | App Router for Routing     | ✅ Accepted | Q3 2024 → Q4 2025 |
-| 009 | PostgreSQL Database        | ✅ Accepted | Q3 2024         |
-| 010 | Row Level Security         | ✅ Accepted | Q3 2024         |
-| 011 | Supabase Realtime          | ✅ Accepted | Q3 2024         |
-| 012 | Feature-Based Structure    | ✅ Accepted | Q3 2024         |
-| 013 | API Layer Abstraction      | ✅ Accepted | Q3 2024         |
-| 014 | Server Components and SSR  | ✅ Accepted | Q3 2024 → Q4 2025 |
-| 015 | Vercel Hosting             | ✅ Accepted | Q3 2024         |
+| ADR | Title                     | Status      | Date              |
+| --- | ------------------------- | ----------- | ----------------- |
+| 001 | Next.js as Framework      | ✅ Accepted | Q3 2024 → Q4 2025 |
+| 002 | React 19 with TypeScript  | ✅ Accepted | Q3 2024           |
+| 003 | shadcn/ui for Components  | ✅ Accepted | Q3 2024 → Q4 2025 |
+| 004 | Hybrid State Management   | ✅ Accepted | Q3 2024 → Q4 2025 |
+| 005 | Supabase as Backend       | ✅ Accepted | Q3 2024           |
+| 006 | Leaflet for Maps          | ✅ Accepted | Q3 2024           |
+| 007 | Lingui for i18n           | ✅ Accepted | Q3 2024           |
+| 008 | App Router for Routing    | ✅ Accepted | Q3 2024 → Q4 2025 |
+| 009 | PostgreSQL Database       | ✅ Accepted | Q3 2024           |
+| 010 | Row Level Security        | ✅ Accepted | Q3 2024           |
+| 011 | Supabase Realtime         | ✅ Accepted | Q3 2024           |
+| 012 | Feature-Based Structure   | ✅ Accepted | Q3 2024           |
+| 013 | API Layer Abstraction     | ✅ Accepted | Q3 2024           |
+| 014 | Server Components and SSR | ✅ Accepted | Q3 2024 → Q4 2025 |
+| 015 | Vercel Hosting            | ✅ Accepted | Q3 2024           |
 
 ---
 

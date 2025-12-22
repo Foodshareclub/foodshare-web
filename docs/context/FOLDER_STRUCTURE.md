@@ -55,31 +55,31 @@ foodshare-nextjs/
 
 ### Configuration Files
 
-| File                  | Purpose                           | Key Settings                                           |
-| --------------------- | --------------------------------- | ------------------------------------------------------ |
-| **next.config.ts**    | Next.js configuration             | React Compiler, optimized imports, security headers    |
-| **tsconfig.json**     | TypeScript compiler settings      | Strict mode, path aliases (@/*), ES2017 target         |
-| **package.json**      | Project metadata and dependencies | Scripts, React 19, Next.js 16, all dependencies        |
-| **components.json**   | shadcn/ui configuration           | New York style, CSS variables, aliases                 |
-| **eslint.config.mjs** | ESLint 9 flat config              | Next.js rules, TypeScript rules                        |
-| **postcss.config.mjs**| PostCSS plugins                   | Tailwind CSS 4                                         |
-| **.prettierrc**       | Prettier formatting               | Semicolons, double quotes, trailing commas             |
-| **lefthook.yml**      | Git hooks                         | Pre-commit linting                                     |
+| File                   | Purpose                           | Key Settings                                        |
+| ---------------------- | --------------------------------- | --------------------------------------------------- |
+| **next.config.ts**     | Next.js configuration             | React Compiler, optimized imports, security headers |
+| **tsconfig.json**      | TypeScript compiler settings      | Strict mode, path aliases (@/\*), ES2017 target     |
+| **package.json**       | Project metadata and dependencies | Scripts, React 19, Next.js 16, all dependencies     |
+| **components.json**    | shadcn/ui configuration           | New York style, CSS variables, aliases              |
+| **eslint.config.mjs**  | ESLint 9 flat config              | Next.js rules, TypeScript rules                     |
+| **postcss.config.mjs** | PostCSS plugins                   | Tailwind CSS 4                                      |
+| **.prettierrc**        | Prettier formatting               | Semicolons, double quotes, trailing commas          |
+| **lefthook.yml**       | Git hooks                         | Pre-commit linting                                  |
 
 ### Directories
 
-| Directory         | Purpose                          | Git Tracked        |
-| ----------------- | -------------------------------- | ------------------ |
-| **src/**          | Application source code          | Yes                |
-| **messages/**     | next-intl translation JSON files | Yes                |
-| **public/**       | Static assets (images, manifest) | Yes                |
-| **context/**      | Project documentation            | Yes                |
-| **docs/**         | Additional documentation         | Yes                |
-| **scripts/**      | Build and utility scripts        | Yes                |
-| **supabase/**     | DB migrations and Edge Functions | Yes                |
-| **.github/**      | GitHub Actions workflows         | Yes                |
-| **node_modules/** | npm dependencies                 | No (.gitignore)    |
-| **.next/**        | Next.js build output             | No (.gitignore)    |
+| Directory         | Purpose                          | Git Tracked     |
+| ----------------- | -------------------------------- | --------------- |
+| **src/**          | Application source code          | Yes             |
+| **messages/**     | next-intl translation JSON files | Yes             |
+| **public/**       | Static assets (images, manifest) | Yes             |
+| **context/**      | Project documentation            | Yes             |
+| **docs/**         | Additional documentation         | Yes             |
+| **scripts/**      | Build and utility scripts        | Yes             |
+| **supabase/**     | DB migrations and Edge Functions | Yes             |
+| **.github/**      | GitHub Actions workflows         | Yes             |
+| **node_modules/** | npm dependencies                 | No (.gitignore) |
+| **.next/**        | Next.js build output             | No (.gitignore) |
 
 ---
 
@@ -314,18 +314,12 @@ messages/
 // Next.js configuration with React Compiler
 const nextConfig: NextConfig = {
   experimental: {
-    reactCompiler: true,            // Enable React Compiler
-    webVitalsAttribution: ['CLS', 'LCP', 'FCP', 'FID', 'TTFB'],
+    reactCompiler: true, // Enable React Compiler
+    webVitalsAttribution: ["CLS", "LCP", "FCP", "FID", "TTFB"],
   },
-  optimizePackageImports: [
-    '@radix-ui/react-icons',
-    'react-icons',
-    'framer-motion',
-  ],
+  optimizePackageImports: ["@radix-ui/react-icons", "react-icons", "framer-motion"],
   images: {
-    remotePatterns: [
-      { hostname: '*.supabase.co' },
-    ],
+    remotePatterns: [{ hostname: "*.supabase.co" }],
   },
   headers: async () => [
     // Security headers (CSP, HSTS, etc.)
@@ -475,11 +469,13 @@ src/app/[category]/page.tsx      → Redirects /{category} to /s/{category}
 **Valid Categories:** `things`, `borrow`, `wanted`, `fridges`, `foodbanks`, `organisations`, `volunteers`, `challenges`, `zerowaste`, `vegan`, `community`
 
 **Note:** Some categories have dedicated routes and are excluded from the redirect handler:
+
 - `/food` → Has its own route at `src/app/food/`
 - `/challenge` → Has its own route at `src/app/challenge/`
 - `/forum` → Has its own route at `src/app/forum/`
 
 **Special Redirects:**
+
 - `/community` → Redirects to `/forum`
 - `/s/challenges` → Redirects to `/challenge` (challenges use a dedicated table)
 
@@ -490,17 +486,17 @@ src/app/[category]/page.tsx      → Redirects /{category} to /s/{category}
 ```typescript
 // src/app/actions/[entity].ts
 // camelCase function names, grouped by entity
-src/app/actions/products.ts       // createProduct, updateProduct, deleteProduct
-src/app/actions/auth.ts           // login, logout, signup
-src/app/actions/profile.ts        // updateProfile, updateAvatar
+src / app / actions / products.ts; // createProduct, updateProduct, deleteProduct
+src / app / actions / auth.ts; // login, logout, signup
+src / app / actions / profile.ts; // updateProfile, updateAvatar
 ```
 
 ### Components
 
 ```typescript
 // PascalCase for component files
-ComponentName.tsx                 // Component implementation
-ComponentName.test.tsx            // Component tests (if any)
+ComponentName.tsx; // Component implementation
+ComponentName.test.tsx; // Component tests (if any)
 ```
 
 **Examples:**
@@ -513,8 +509,8 @@ ComponentName.test.tsx            // Component tests (if any)
 
 ```typescript
 // camelCase for utilities
-functionName.ts                   // Utility function
-useFunctionName.ts                // Custom hook (use prefix)
+functionName.ts; // Utility function
+useFunctionName.ts; // Custom hook (use prefix)
 ```
 
 **Examples:**
@@ -541,34 +537,34 @@ useFilterStore.ts
 
 ### "Where do I find...?"
 
-| What You Need            | Where to Look                                        |
-| ------------------------ | ---------------------------------------------------- |
-| **Add a new page**       | `src/app/[route]/page.tsx`                          |
+| What You Need            | Where to Look                                           |
+| ------------------------ | ------------------------------------------------------- |
+| **Add a new page**       | `src/app/[route]/page.tsx`                              |
 | **Add category page**    | `src/app/s/[category]/page.tsx` (add to CATEGORY_PATHS) |
-| **Add a Server Action**  | `src/app/actions/[entity].ts`                       |
-| **Add a component**      | `src/components/[category]/ComponentName.tsx`        |
-| **Add shadcn component** | Run `npx shadcn@latest add [component]`             |
-| **Add Zustand store**    | `src/store/zustand/use[Name]Store.ts`               |
-| **Add React Query hook** | `src/hooks/queries/use[Entity]Queries.ts`           |
-| **Add custom hook**      | `src/hooks/use[HookName].ts`                        |
-| **Add utility function** | `src/utils/functionName.ts`                         |
-| **Add translation**      | Edit `messages/{locale}.json`                       |
-| **Configure Next.js**    | `next.config.ts`                                    |
-| **Configure TypeScript** | `tsconfig.json`                                     |
-| **Add npm dependency**   | `npm install package-name`                          |
+| **Add a Server Action**  | `src/app/actions/[entity].ts`                           |
+| **Add a component**      | `src/components/[category]/ComponentName.tsx`           |
+| **Add shadcn component** | Run `npx shadcn@latest add [component]`                 |
+| **Add Zustand store**    | `src/store/zustand/use[Name]Store.ts`                   |
+| **Add React Query hook** | `src/hooks/queries/use[Entity]Queries.ts`               |
+| **Add custom hook**      | `src/hooks/use[HookName].ts`                            |
+| **Add utility function** | `src/utils/functionName.ts`                             |
+| **Add translation**      | Edit `messages/{locale}.json`                           |
+| **Configure Next.js**    | `next.config.ts`                                        |
+| **Configure TypeScript** | `tsconfig.json`                                         |
+| **Add npm dependency**   | `npm install package-name`                              |
 
 ### "How do I...?"
 
-| Task                     | Steps                                                                |
-| ------------------------ | -------------------------------------------------------------------- |
-| **Create a new page**    | Create `src/app/[route]/page.tsx` with async default export         |
-| **Create a mutation**    | Create Server Action in `src/app/actions/[entity].ts`               |
-| **Create a new feature** | 1. Create page 2. Add Server Actions 3. Create components          |
-| **Add a new language**   | Add JSON file to `messages/` → Update i18n config                   |
-| **Add shadcn component** | `npx shadcn@latest add [component-name]`                            |
-| **Change env vars**      | Update `.env.local` → Restart dev server                            |
-| **Deploy to production** | `npm run build` → Deploy `.next/` to Vercel                         |
-| **Debug client state**   | Install React Query DevTools / use Zustand devtools                 |
+| Task                     | Steps                                                       |
+| ------------------------ | ----------------------------------------------------------- |
+| **Create a new page**    | Create `src/app/[route]/page.tsx` with async default export |
+| **Create a mutation**    | Create Server Action in `src/app/actions/[entity].ts`       |
+| **Create a new feature** | 1. Create page 2. Add Server Actions 3. Create components   |
+| **Add a new language**   | Add JSON file to `messages/` → Update i18n config           |
+| **Add shadcn component** | `npx shadcn@latest add [component-name]`                    |
+| **Change env vars**      | Update `.env.local` → Restart dev server                    |
+| **Deploy to production** | `npm run build` → Deploy `.next/` to Vercel                 |
+| **Debug client state**   | Install React Query DevTools / use Zustand devtools         |
 
 ---
 
@@ -598,22 +594,22 @@ export default async function FoodPage() {
 
 ```typescript
 // src/app/actions/products.ts
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
 
-  const { error } = await supabase.from('products').insert({
-    title: formData.get('title') as string,
-    description: formData.get('description') as string,
+  const { error } = await supabase.from("products").insert({
+    title: formData.get("title") as string,
+    description: formData.get("description") as string,
   });
 
   if (error) return { error: error.message };
 
-  revalidatePath('/food');
+  revalidatePath("/food");
   return { success: true };
 }
 ```
@@ -673,7 +669,7 @@ export default function AdminLayout({
 
 ```typescript
 // src/store/zustand/useUIStore.ts
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface UIStore {
   sidebarOpen: boolean;
@@ -696,20 +692,17 @@ export const useUIStore = create<UIStore>((set) => ({
 
 ```typescript
 // src/hooks/queries/useChatQueries.ts
-'use client';
+"use client";
 
-import { useQuery } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase/client';
+import { useQuery } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase/client";
 
 export function useRealtimeMessages(chatId: string) {
   return useQuery({
-    queryKey: ['messages', chatId],
+    queryKey: ["messages", chatId],
     queryFn: async () => {
       const supabase = createClient();
-      const { data } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('chat_id', chatId);
+      const { data } = await supabase.from("messages").select("*").eq("chat_id", chatId);
       return data;
     },
     refetchInterval: 3000, // Poll for real-time
@@ -741,17 +734,17 @@ supabase/
 
 ## Key Differences from Vite SPA
 
-| Aspect           | FoodShare (Next.js 16)      | Vite SPA               |
-| ---------------- | --------------------------- | ---------------------- |
-| **Routing**      | File-based (App Router)     | React Router           |
-| **Entry Point**  | `src/app/layout.tsx`        | `index.html`           |
-| **Dev Server**   | Next.js + Turbopack (3000)  | Vite (5173)            |
-| **Build Output** | `.next/`                    | `dist/`                |
-| **SSR**          | Built-in SSR/RSC            | None (pure SPA)        |
-| **Mutations**    | Server Actions              | API calls              |
-| **Env Vars**     | `NEXT_PUBLIC_` prefix       | `VITE_` prefix         |
-| **Config File**  | `next.config.ts`            | `vite.config.ts`       |
-| **Components**   | Server + Client Components  | All Client Components  |
+| Aspect           | FoodShare (Next.js 16)     | Vite SPA              |
+| ---------------- | -------------------------- | --------------------- |
+| **Routing**      | File-based (App Router)    | React Router          |
+| **Entry Point**  | `src/app/layout.tsx`       | `index.html`          |
+| **Dev Server**   | Next.js + Turbopack (3000) | Vite (5173)           |
+| **Build Output** | `.next/`                   | `dist/`               |
+| **SSR**          | Built-in SSR/RSC           | None (pure SPA)       |
+| **Mutations**    | Server Actions             | API calls             |
+| **Env Vars**     | `NEXT_PUBLIC_` prefix      | `VITE_` prefix        |
+| **Config File**  | `next.config.ts`           | `vite.config.ts`      |
+| **Components**   | Server + Client Components | All Client Components |
 
 ---
 

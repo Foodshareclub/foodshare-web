@@ -49,6 +49,7 @@ FoodShare follows a modern **Next.js 16 App Router** architecture with **React S
 ### Server Components (Default)
 
 Every component is a Server Component by default. They:
+
 - Run only on the server
 - Can directly access databases, file systems
 - Have zero JavaScript sent to the client
@@ -76,6 +77,7 @@ export default async function ProductsPage() {
 ### Client Components
 
 Add `'use client'` only when you need:
+
 - Event handlers (onClick, onChange)
 - React hooks (useState, useEffect)
 - Browser APIs (localStorage, geolocation)
@@ -108,22 +110,22 @@ Cached data fetching functions live in `lib/data/`. They use `unstable_cache` fo
 
 ```typescript
 // src/lib/data/products.ts - Cached data fetching
-import { unstable_cache } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
-import { CACHE_TAGS, CACHE_DURATIONS } from './cache-keys';
+import { unstable_cache } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
 
 export const getProducts = unstable_cache(
   async (productType: string) => {
     const supabase = await createClient();
     const { data, error } = await supabase
-      .from('posts_with_location')
-      .select('*')
-      .eq('post_type', productType)
-      .eq('is_active', true);
+      .from("posts_with_location")
+      .select("*")
+      .eq("post_type", productType)
+      .eq("is_active", true);
     if (error) throw new Error(error.message);
     return data ?? [];
   },
-  ['products-by-type'],
+  ["products-by-type"],
   { revalidate: CACHE_DURATIONS.PRODUCTS, tags: [CACHE_TAGS.PRODUCTS] }
 );
 ```
@@ -134,37 +136,39 @@ Server Actions handle mutations only. They live in `app/actions/` and use `inval
 
 ```typescript
 // src/app/actions/products.ts - Mutations only
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
-import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
+import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 
 // Mutation with cache invalidation
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/auth/login');
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/login");
 
-  const { error } = await supabase.from('posts').insert({
-    post_name: formData.get('post_name') as string,
-    post_description: formData.get('post_description') as string,
-    post_type: formData.get('post_type') as string,
+  const { error } = await supabase.from("posts").insert({
+    post_name: formData.get("post_name") as string,
+    post_description: formData.get("post_description") as string,
+    post_type: formData.get("post_type") as string,
     profile_id: user.id,
   });
 
   if (error) throw new Error(error.message);
 
   invalidateTag(CACHE_TAGS.PRODUCTS); // Invalidate cache
-  redirect('/food');
+  redirect("/food");
 }
 
 // Delete with cache invalidation
 export async function deleteProduct(id: number) {
   const supabase = await createClient();
 
-  const { error } = await supabase.from('posts').delete().eq('id', id);
+  const { error } = await supabase.from("posts").delete().eq("id", id);
   if (error) throw new Error(error.message);
 
   invalidateTag(CACHE_TAGS.PRODUCTS);
@@ -332,21 +336,21 @@ When you need client-side caching, polling, or optimistic updates.
 
 ```typescript
 // src/hooks/queries/useProducts.ts
-'use client';
+"use client";
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createProduct } from '@/app/actions/products';  // Mutations via Server Actions
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createProduct } from "@/app/actions/products"; // Mutations via Server Actions
 
 // Fetch via API route (client-safe)
 async function fetchProducts(type: string) {
   const res = await fetch(`/api/products?type=${encodeURIComponent(type)}`);
-  if (!res.ok) throw new Error('Failed to fetch products');
+  if (!res.ok) throw new Error("Failed to fetch products");
   return res.json();
 }
 
 export function useProducts(type: string) {
   return useQuery({
-    queryKey: ['products', type],
+    queryKey: ["products", type],
     queryFn: () => fetchProducts(type),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -358,7 +362,7 @@ export function useCreateProduct() {
   return useMutation({
     mutationFn: createProduct,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     },
   });
 }
@@ -370,7 +374,7 @@ For ephemeral client state that doesn't need server sync.
 
 ```typescript
 // src/store/zustand/useUIStore.ts
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface UIStore {
   sidebarOpen: boolean;
@@ -399,11 +403,11 @@ For live updates (chat, notifications).
 
 ```typescript
 // src/hooks/useRealtimeMessages.ts
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { useQueryClient } from '@tanstack/react-query';
+import { useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function useRealtimeMessages(chatId: string) {
   const queryClient = useQueryClient();
@@ -413,16 +417,16 @@ export function useRealtimeMessages(chatId: string) {
     const channel = supabase
       .channel(`chat:${chatId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
           filter: `chat_id=eq.${chatId}`,
         },
         () => {
           // Invalidate React Query cache to refetch
-          queryClient.invalidateQueries({ queryKey: ['messages', chatId] });
+          queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
         }
       )
       .subscribe();
@@ -469,17 +473,19 @@ The middleware (`src/middleware.ts`) provides edge-level authentication:
 
 ```typescript
 // src/app/actions/auth.ts
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
 export async function requireAuth() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/auth/login');
+    redirect("/auth/login");
   }
 
   return user;
@@ -487,7 +493,9 @@ export async function requireAuth() {
 
 export async function getCurrentUser() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   return user;
 }
 ```
@@ -570,7 +578,7 @@ FoodShare uses a centralized cache key system in `src/lib/data/cache-keys.ts` fo
 
 ```typescript
 // src/lib/data/cache-keys.ts - Centralized cache tags
-import { CACHE_TAGS, CACHE_DURATIONS } from '@/lib/data/cache-keys';
+import { CACHE_TAGS, CACHE_DURATIONS } from "@/lib/data/cache-keys";
 
 // Available tags:
 // CACHE_TAGS.PRODUCTS, CACHE_TAGS.PRODUCT(id), CACHE_TAGS.PRODUCTS_BY_TYPE(type)
@@ -584,15 +592,15 @@ import { CACHE_TAGS, CACHE_DURATIONS } from '@/lib/data/cache-keys';
 
 ```typescript
 // src/lib/data/products.ts - Cached data fetching
-import { unstable_cache } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
-import { CACHE_TAGS, CACHE_DURATIONS } from '@/lib/data/cache-keys';
+import { unstable_cache } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import { CACHE_TAGS, CACHE_DURATIONS } from "@/lib/data/cache-keys";
 
 // Cached data fetching with centralized tags
 export const getProducts = unstable_cache(
   async (filters?: ProductFilters) => {
     const supabase = await createClient();
-    const { data } = await supabase.from('products').select('*');
+    const { data } = await supabase.from("products").select("*");
     return data ?? [];
   },
   [CACHE_TAGS.PRODUCTS],
@@ -603,15 +611,15 @@ export const getProducts = unstable_cache(
 );
 
 // src/app/actions/products.ts - Mutations only
-'use server';
+("use server");
 
-import { CACHE_TAGS, invalidateTag, getProductTags } from '@/lib/data/cache-keys';
+import { CACHE_TAGS, invalidateTag, getProductTags } from "@/lib/data/cache-keys";
 
 // Revalidate after mutation using helper
 export async function createProduct(formData: FormData) {
   // ... create product
   const tags = getProductTags(); // Returns all product-related tags
-  tags.forEach(tag => invalidateTag(tag));
+  tags.forEach((tag) => invalidateTag(tag));
 }
 ```
 
@@ -677,9 +685,9 @@ export default function FoodError({
 
 ```typescript
 // src/app/actions/products.ts
-'use server';
+"use server";
 
-import { z } from 'zod';
+import { z } from "zod";
 
 const productSchema = z.object({
   title: z.string().min(1).max(100),
@@ -689,8 +697,8 @@ const productSchema = z.object({
 export async function createProduct(formData: FormData) {
   // Validate input
   const validatedFields = productSchema.safeParse({
-    title: formData.get('title'),
-    description: formData.get('description'),
+    title: formData.get("title"),
+    description: formData.get("description"),
   });
 
   if (!validatedFields.success) {
@@ -702,14 +710,14 @@ export async function createProduct(formData: FormData) {
 
   try {
     const supabase = await createClient();
-    await supabase.from('products').insert(validatedFields.data);
+    await supabase.from("products").insert(validatedFields.data);
 
-    revalidatePath('/products');
+    revalidatePath("/products");
     return { success: true };
   } catch (error) {
     return {
       success: false,
-      errors: { _form: ['Failed to create product'] },
+      errors: { _form: ["Failed to create product"] },
     };
   }
 }
@@ -806,6 +814,7 @@ SUPABASE_SERVICE_ROLE_KEY=xxx  # Server-only
 ---
 
 **Next Steps:**
+
 - [Tech Stack](TECH_STACK.md) - Technology details
 - [Database Schema](DATABASE_SCHEMA.md) - Data structure
 - [Development Guide](DEVELOPMENT_GUIDE.md) - Workflows

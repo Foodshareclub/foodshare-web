@@ -142,16 +142,16 @@ Documentation about documentation:
 
 **Important:** FoodShare is a **Next.js 16 application with App Router**, not a Vite SPA:
 
-| Aspect           | FoodShare (Next.js 16)     | Vite SPA             |
-| ---------------- | -------------------------- | -------------------- |
-| **Routing**      | File-based (App Router)    | React Router         |
-| **Entry**        | `src/app/layout.tsx`       | `index.html`         |
-| **Dev Server**   | Next.js + Turbopack (3000) | Vite (5173)          |
-| **Build Output** | `.next/`                   | `dist/`              |
-| **SSR**          | Built-in SSR/RSC           | None (pure SPA)      |
-| **Env Vars**     | `NEXT_PUBLIC_` prefix      | `VITE_` prefix       |
-| **Config**       | `next.config.ts`           | `vite.config.ts`     |
-| **Components**   | Server + Client Components | All Client           |
+| Aspect           | FoodShare (Next.js 16)     | Vite SPA         |
+| ---------------- | -------------------------- | ---------------- |
+| **Routing**      | File-based (App Router)    | React Router     |
+| **Entry**        | `src/app/layout.tsx`       | `index.html`     |
+| **Dev Server**   | Next.js + Turbopack (3000) | Vite (5173)      |
+| **Build Output** | `.next/`                   | `dist/`          |
+| **SSR**          | Built-in SSR/RSC           | None (pure SPA)  |
+| **Env Vars**     | `NEXT_PUBLIC_` prefix      | `VITE_` prefix   |
+| **Config**       | `next.config.ts`           | `vite.config.ts` |
+| **Components**   | Server + Client Components | All Client       |
 
 See [Tech Stack](TECH_STACK.md) for full details.
 

@@ -215,6 +215,7 @@ gh pr create --draft --title "WIP: Feature name" --body "Work in progress"
 Feature: Add food item to favorites
 
 Data Flow:
+
 - Server Component fetches existing favorites
 - User clicks "favorite" button (Client Component)
 - Server Action: addToFavorites(itemId)
@@ -222,6 +223,7 @@ Data Flow:
 - Show success toast
 
 Files to Create:
+
 - src/app/actions/favorites.ts (Server Actions)
 - src/components/favoriteButton/FavoriteButton.tsx
 - Update ProductCard to include button
@@ -256,50 +258,52 @@ touch src/app/actions/favorites.ts
 
 ```typescript
 // src/app/actions/favorites.ts
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export async function addToFavorites(itemId: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: 'Must be logged in' };
+    return { error: "Must be logged in" };
   }
 
-  const { error } = await supabase
-    .from('favorites')
-    .insert({ item_id: itemId, user_id: user.id });
+  const { error } = await supabase.from("favorites").insert({ item_id: itemId, user_id: user.id });
 
   if (error) {
     return { error: error.message };
   }
 
-  revalidatePath('/food');
+  revalidatePath("/food");
   return { success: true };
 }
 
 export async function removeFromFavorites(itemId: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: 'Must be logged in' };
+    return { error: "Must be logged in" };
   }
 
   const { error } = await supabase
-    .from('favorites')
+    .from("favorites")
     .delete()
-    .eq('item_id', itemId)
-    .eq('user_id', user.id);
+    .eq("item_id", itemId)
+    .eq("user_id", user.id);
 
   if (error) {
     return { error: error.message };
   }
 
-  revalidatePath('/food');
+  revalidatePath("/food");
   return { success: true };
 }
 ```
@@ -535,6 +539,7 @@ Closes #123"
 ### When to Use Server Actions
 
 **Use Server Actions for:**
+
 - Creating new records
 - Updating existing records
 - Deleting records
@@ -542,6 +547,7 @@ Closes #123"
 - Any mutation that changes data
 
 **Do NOT use Server Actions for:**
+
 - Reading data (use Server Components instead)
 - Client-side only operations
 
@@ -557,31 +563,33 @@ touch src/app/actions/[entity].ts
 
 ```typescript
 // src/app/actions/products.ts
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
 
-  const title = formData.get('title') as string;
-  const description = formData.get('description') as string;
+  const title = formData.get("title") as string;
+  const description = formData.get("description") as string;
 
   // Validate
   if (!title) {
-    return { error: 'Title is required' };
+    return { error: "Title is required" };
   }
 
   // Get current user
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    return { error: 'Must be logged in' };
+    return { error: "Must be logged in" };
   }
 
   // Insert
   const { data, error } = await supabase
-    .from('products')
+    .from("products")
     .insert({
       title,
       description,
@@ -594,7 +602,7 @@ export async function createProduct(formData: FormData) {
     return { error: error.message };
   }
 
-  revalidatePath('/food');
+  revalidatePath("/food");
   return { success: true, data };
 }
 ```
@@ -766,7 +774,7 @@ Need to read data from database?
 
 ```typescript
 // src/store/zustand/useUIStore.ts
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface UIStore {
   sidebarOpen: boolean;
@@ -791,21 +799,21 @@ Only use when you need client-side caching or polling:
 
 ```typescript
 // src/hooks/queries/useChatQueries.ts
-'use client';
+"use client";
 
-import { useQuery } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase/client';
+import { useQuery } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase/client";
 
 export function useRealtimeMessages(chatId: string) {
   return useQuery({
-    queryKey: ['messages', chatId],
+    queryKey: ["messages", chatId],
     queryFn: async () => {
       const supabase = createClient();
       const { data } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('chat_id', chatId)
-        .order('created_at', { ascending: true });
+        .from("messages")
+        .select("*")
+        .eq("chat_id", chatId)
+        .order("created_at", { ascending: true });
       return data;
     },
     refetchInterval: 3000, // Poll every 3 seconds
@@ -1066,13 +1074,13 @@ npm run build
 
 ```typescript
 // Correct Server Action
-'use server';
+"use server";
 
-import { revalidatePath } from 'next/cache';
+import { revalidatePath } from "next/cache";
 
 export async function myAction(formData: FormData) {
   // ... do something
-  revalidatePath('/path');
+  revalidatePath("/path");
   return { success: true };
 }
 ```

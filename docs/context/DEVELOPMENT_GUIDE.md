@@ -181,37 +181,37 @@ touch src/app/actions/myFeature.ts
 
 ```typescript
 // src/app/actions/myFeature.ts
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export async function createItem(formData: FormData) {
   const supabase = await createClient();
 
-  const name = formData.get('name') as string;
-  const description = formData.get('description') as string;
+  const name = formData.get("name") as string;
+  const description = formData.get("description") as string;
 
-  const { error } = await supabase.from('items').insert({ name, description });
+  const { error } = await supabase.from("items").insert({ name, description });
 
   if (error) {
     return { error: error.message };
   }
 
-  revalidatePath('/my-feature');
+  revalidatePath("/my-feature");
   return { success: true };
 }
 
 export async function deleteItem(id: string) {
   const supabase = await createClient();
 
-  const { error } = await supabase.from('items').delete().eq('id', id);
+  const { error } = await supabase.from("items").delete().eq("id", id);
 
   if (error) {
     return { error: error.message };
   }
 
-  revalidatePath('/my-feature');
+  revalidatePath("/my-feature");
   return { success: true };
 }
 ```
@@ -318,7 +318,7 @@ npx shadcn@latest add input
 
 ```typescript
 // src/store/zustand/useMyFeatureStore.ts
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface MyFeatureStore {
   isOpen: boolean;
@@ -341,21 +341,21 @@ Only use React Query when you need client-side caching, polling, or optimistic u
 
 ```typescript
 // src/hooks/queries/useRealtimeMessages.ts
-'use client';
+"use client";
 
-import { useQuery } from '@tanstack/react-query';
-import { createClient } from '@/lib/supabase/client';
+import { useQuery } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase/client";
 
 export function useRealtimeMessages(chatId: string) {
   return useQuery({
-    queryKey: ['messages', chatId],
+    queryKey: ["messages", chatId],
     queryFn: async () => {
       const supabase = createClient();
       const { data } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('chat_id', chatId)
-        .order('created_at', { ascending: true });
+        .from("messages")
+        .select("*")
+        .eq("chat_id", chatId)
+        .order("created_at", { ascending: true });
       return data;
     },
     refetchInterval: 3000, // Poll every 3 seconds for real-time feel
@@ -384,11 +384,11 @@ Does the component need...
 ```tsx
 // src/app/products/page.tsx
 // No 'use client' directive = Server Component
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from "@/lib/supabase/server";
 
 export default async function ProductsPage() {
   const supabase = await createClient();
-  const { data: products } = await supabase.from('products').select('*');
+  const { data: products } = await supabase.from("products").select("*");
 
   return (
     <div>
@@ -404,10 +404,10 @@ export default async function ProductsPage() {
 
 ```tsx
 // src/components/productCard/ProductCard.tsx
-'use client'; // Required for client-side interactivity
+"use client"; // Required for client-side interactivity
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function ProductCard({ product }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -460,23 +460,23 @@ Edit `/messages/{locale}.json`:
 #### 2. Use in Server Components
 
 ```tsx
-import { getTranslations } from 'next-intl/server';
+import { getTranslations } from "next-intl/server";
 
 export default async function Page() {
-  const t = await getTranslations('myFeature');
-  return <h1>{t('title')}</h1>;
+  const t = await getTranslations("myFeature");
+  return <h1>{t("title")}</h1>;
 }
 ```
 
 #### 3. Use in Client Components
 
 ```tsx
-'use client';
-import { useTranslations } from 'next-intl';
+"use client";
+import { useTranslations } from "next-intl";
 
 function ClientComponent() {
-  const t = useTranslations('myFeature');
-  return <p>{t('count', { count: 5 })}</p>;
+  const t = useTranslations("myFeature");
+  return <p>{t("count", { count: 5 })}</p>;
 }
 ```
 
@@ -533,17 +533,17 @@ function ClientComponent() {
 
 ```typescript
 // src/app/actions/products.ts
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
 
-  const { error } = await supabase.from('products').insert({
-    title: formData.get('title') as string,
-    description: formData.get('description') as string,
+  const { error } = await supabase.from("products").insert({
+    title: formData.get("title") as string,
+    description: formData.get("description") as string,
     user_id: (await supabase.auth.getUser()).data.user?.id,
   });
 
@@ -551,7 +551,7 @@ export async function createProduct(formData: FormData) {
     return { error: error.message };
   }
 
-  revalidatePath('/products');
+  revalidatePath("/products");
   return { success: true };
 }
 ```
@@ -560,21 +560,19 @@ export async function createProduct(formData: FormData) {
 
 ```typescript
 // src/app/actions/upload.ts
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from "@/lib/supabase/server";
 
 export async function uploadImage(formData: FormData) {
   const supabase = await createClient();
-  const file = formData.get('file') as File;
+  const file = formData.get("file") as File;
 
-  const fileExt = file.name.split('.').pop();
+  const fileExt = file.name.split(".").pop();
   const fileName = `${crypto.randomUUID()}.${fileExt}`;
   const filePath = `images/${fileName}`;
 
-  const { error } = await supabase.storage
-    .from('public-images')
-    .upload(filePath, file);
+  const { error } = await supabase.storage.from("public-images").upload(filePath, file);
 
   if (error) {
     return { error: error.message };
@@ -582,7 +580,7 @@ export async function uploadImage(formData: FormData) {
 
   const {
     data: { publicUrl },
-  } = supabase.storage.from('public-images').getPublicUrl(filePath);
+  } = supabase.storage.from("public-images").getPublicUrl(filePath);
 
   return { url: publicUrl };
 }
@@ -607,13 +605,13 @@ export async function uploadImage(formData: FormData) {
 ### Using cn() for Conditional Classes
 
 ```tsx
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 
 <div
   className={cn(
-    'p-4 rounded-lg',
-    isActive && 'bg-blue-500 text-white',
-    isDisabled && 'opacity-50 cursor-not-allowed'
+    "p-4 rounded-lg",
+    isActive && "bg-blue-500 text-white",
+    isDisabled && "opacity-50 cursor-not-allowed"
   )}
 >
   Content
@@ -633,9 +631,7 @@ import { cn } from '@/lib/utils';
 
 ```tsx
 // Dark mode classes are automatic with next-themes
-<div className="bg-white dark:bg-gray-900 text-black dark:text-white">
-  Content adapts to theme
-</div>
+<div className="bg-white dark:bg-gray-900 text-black dark:text-white">Content adapts to theme</div>
 ```
 
 ---
@@ -776,7 +772,7 @@ Server Components are the primary performance optimization in Next.js 16:
 ### Streaming with Suspense
 
 ```tsx
-import { Suspense } from 'react';
+import { Suspense } from "react";
 
 export default function Page() {
   return (
@@ -818,7 +814,7 @@ const HeavyComponent = dynamic(() => import('./HeavyComponent'), {
 ### Image Optimization
 
 ```tsx
-import Image from 'next/image';
+import Image from "next/image";
 
 <Image
   src="/images/product.jpg"
