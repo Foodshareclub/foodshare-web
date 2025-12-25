@@ -26,6 +26,7 @@ supabase db push
 ```
 
 **Expected output:**
+
 - `location_update_queue` table created
 - Queue management functions created
 - Trigger `trigger_queue_location_update` created on `posts` table
@@ -140,6 +141,7 @@ curl -X POST "$SUPABASE_URL/functions/v1/update-post-coordinates" \
 ```
 
 **Expected response:**
+
 ```json
 {
   "message": "Processed 1 items: 1 successful, 0 failed",
@@ -270,6 +272,7 @@ curl -X POST "$SUPABASE_URL/functions/v1/update-post-coordinates" \
 ```
 
 **Expected response:**
+
 ```json
 {
   "message": "Queue statistics",
@@ -348,6 +351,7 @@ Set up alerts (via Supabase or external monitoring) for:
 **Solutions:**
 
 1. Check pg_cron is enabled and job exists:
+
    ```sql
    SELECT * FROM cron.job WHERE jobname = 'geocode-posts-batch';
    ```
@@ -368,6 +372,7 @@ Set up alerts (via Supabase or external monitoring) for:
 **Solutions:**
 
 1. Check error messages:
+
    ```sql
    SELECT error_message, COUNT(*)
    FROM location_update_queue
@@ -410,8 +415,8 @@ Create `.github/workflows/geocode-posts.yml`:
 name: Geocode Posts Batch
 on:
   schedule:
-    - cron: '*/5 * * * *'  # Every 5 minutes
-  workflow_dispatch:  # Allow manual trigger
+    - cron: "*/5 * * * *" # Every 5 minutes
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
   geocode:
@@ -430,24 +435,24 @@ jobs:
 Create `src/app/api/cron/geocode/route.ts`:
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   // Verify cron secret
-  const authHeader = request.headers.get('authorization');
+  const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/update-post-coordinates`,
     {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ operation: 'BATCH_UPDATE' }),
+      body: JSON.stringify({ operation: "BATCH_UPDATE" }),
     }
   );
 
@@ -510,6 +515,7 @@ After successful deployment:
 ## Support
 
 For issues:
+
 1. Check Supabase Dashboard → Functions → update-post-coordinates → Logs
 2. Query queue: `SELECT * FROM location_update_queue ORDER BY created_at DESC LIMIT 20;`
 3. Review Edge Function README: `/supabase/functions/update-post-coordinates/README.md`
