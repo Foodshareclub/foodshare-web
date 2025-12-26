@@ -3,8 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 
-// Type for forum comments (defined locally since not exported from data layer)
-export interface ForumComment {
+// Type for forum comments (defined locally, not exported from "use server" file)
+interface ForumComment {
   id: string;
   post_id: string;
   content: string;
@@ -12,12 +12,6 @@ export interface ForumComment {
   author_id: string;
   author: { name: string; avatar_url: string | null } | null;
 }
-
-// Re-export types from API layer
-export type { ForumPost } from "@/api/forumAPI";
-
-// Re-export cached data functions from data layer
-export { getForumPosts } from "@/lib/data/forum";
 
 // Helper to extract first item from Supabase join array
 function extractFirst<T>(data: T[] | T | null | undefined): T | null {
