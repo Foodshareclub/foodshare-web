@@ -164,7 +164,10 @@ export function RichTextEditor({
         heading: { levels: [2, 3] },
       }),
       Placeholder.configure({ placeholder }),
-      Link.configure({ openOnClick: false, HTMLAttributes: { class: "text-primary underline" } }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: { class: "text-primary underline" },
+      }).extend({ name: "customLink" }),
       Image.configure({ HTMLAttributes: { class: "rounded-lg max-w-full" } }),
     ],
     content,
