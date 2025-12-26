@@ -75,10 +75,13 @@ export async function uploadToStorage(formData: FormData): Promise<UploadResult>
       }
     }
 
-    // Get R2 config from Vault
+    // Get R2 config - checks both:
+    // 1. Environment variables (Vercel env vars / Supabase Edge Function secrets)
+    // 2. Supabase Vault (for secrets stored in database)
     const r2Config = await getR2Secrets();
 
-    if (r2Config.accountId && r2Config.accessKeyId && r2Config.secretAccessKey) {
+    // If R2 is fully configured, try R2 first
+    if (r2Config.accountId && r2Config.accessKeyId && r2Config.secretAccessKey && r2Config.publicUrl) {
       devLog("📤 Uploading to R2...");
       const r2Path = `${bucket}/${filePath}`;
       const result = await uploadToR2(file, r2Path, file.type);
@@ -93,9 +96,10 @@ export async function uploadToStorage(formData: FormData): Promise<UploadResult>
         };
       }
 
-      devWarn("⚠️ R2 failed", result.error);
+      // Log R2 failure but continue to Supabase fallback
+      console.warn("[Storage] ⚠️ R2 upload failed, falling back to Supabase:", result.error);
     } else {
-      devWarn("⚠️ R2 not configured, falling back to Supabase");
+      devLog("ℹ️ R2 not configured, using Supabase storage");
     }
 
     // Fallback to Supabase direct upload using service role key (server-side)
@@ -171,9 +175,10 @@ export async function getDirectUploadUrl(
   try {
     // Try R2 first (unless forced to use Supabase)
     if (!forceSupabase) {
+      // Get R2 config - checks both env vars and Supabase Vault
       const r2Config = await getR2Secrets();
 
-      if (r2Config.accountId && r2Config.accessKeyId && r2Config.secretAccessKey) {
+      if (r2Config.accountId && r2Config.accessKeyId && r2Config.secretAccessKey && r2Config.publicUrl) {
         const presigned = await getPresignedUpload(`${bucket}/${filePath}`, fileType, fileSize);
 
         if (presigned) {
@@ -190,7 +195,7 @@ export async function getDirectUploadUrl(
     }
 
     // Fallback to Supabase (or forced)
-    devLog(forceSupabase ? "🔄 Using Supabase (forced)" : "⚠️ R2 not configured, using Supabase");
+    devLog(forceSupabase ? "🔄 Using Supabase (forced)" : "ℹ️ R2 not configured, using Supabase");
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

@@ -78,8 +78,8 @@ export async function getR2Secrets(): Promise<R2Secrets> {
     return secretsCache;
   }
 
-  // Public URL is always from env (not sensitive)
-  const publicUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || "";
+  // Public URL can come from env (NEXT_PUBLIC_ for client, R2_PUBLIC_URL for server)
+  const publicUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || process.env.R2_PUBLIC_URL || "";
 
   // Default empty secrets
   const emptySecrets: R2Secrets = {
@@ -97,7 +97,7 @@ export async function getR2Secrets(): Promise<R2Secrets> {
       accessKeyId: process.env.R2_ACCESS_KEY_ID || null,
       secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || null,
       bucketName: process.env.R2_BUCKET_NAME || "foodshare",
-      publicUrl: process.env.NEXT_PUBLIC_R2_PUBLIC_URL || publicUrl,
+      publicUrl: process.env.NEXT_PUBLIC_R2_PUBLIC_URL || process.env.R2_PUBLIC_URL || publicUrl,
     };
 
     if (envSecrets.accountId && envSecrets.accessKeyId && envSecrets.secretAccessKey) {
@@ -147,6 +147,7 @@ export async function getR2Secrets(): Promise<R2Secrets> {
       accessKeyId: maskSecret(secrets.accessKeyId),
       hasSecretKey: !!secrets.secretAccessKey,
       bucketName: secrets.bucketName,
+      publicUrl: secrets.publicUrl ? `${secrets.publicUrl.slice(0, 30)}...` : "NOT SET",
     });
 
     secretsCache = secrets;

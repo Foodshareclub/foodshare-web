@@ -87,11 +87,14 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
       if (result.success && result.publicUrl) {
         setImageUrl(result.publicUrl);
       } else {
-        setError(result.error || "Failed to upload image");
+        console.error("[CreatePostForm] Upload failed:", result.error);
+        setError(result.error || "Failed to upload image. Please try again.");
         setImagePreview(null);
       }
-    } catch {
-      setError("Failed to upload image");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+      console.error("[CreatePostForm] Upload exception:", errorMessage);
+      setError(`Upload failed: ${errorMessage}`);
       setImagePreview(null);
     } finally {
       setUploading(false);
