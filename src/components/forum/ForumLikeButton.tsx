@@ -37,7 +37,7 @@ export function ForumLikeButton({
     setLikeCount((prev) => (isLiked ? prev - 1 : prev + 1));
 
     startTransition(async () => {
-      const result = await toggleForumLike(String(forumId));
+      const result = await toggleForumLike(forumId);
       if (!result.success) {
         // Revert on error
         setIsLiked((prev) => !prev);
