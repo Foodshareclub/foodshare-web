@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { Send, Upload, Loader2, X } from "lucide-react";
 import { RichTextEditor } from "./RichTextEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,11 +16,10 @@ import {
 } from "@/components/ui/select";
 import type { ForumCategory, ForumPostType } from "@/api/forumAPI";
 import { createClient } from "@/lib/supabase/client";
-import { Send, ImageIcon } from "lucide-react";
+import { uploadToStorage } from "@/app/actions/storage";
 
 // Icon aliases for consistency
 const FaPaperPlane = Send;
-const FaImage = ImageIcon;
 
 type CreatePostFormProps = {
   categories: ForumCategory[];
@@ -43,6 +43,63 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
   const [categoryId, setCategoryId] = useState<string>("");
   const [postType, setPostType] = useState<ForumPostType>("discussion");
   const [imageUrl, setImageUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image must be less than 5MB");
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = (e) => setImagePreview(e.target?.result as string);
+    reader.readAsDataURL(file);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("bucket", "forum");
+      formData.append("filePath", `covers/${userId}/${Date.now()}-${file.name}`);
+
+      const result = await uploadToStorage(formData);
+
+      if (result.success && result.publicUrl) {
+        setImageUrl(result.publicUrl);
+      } else {
+        setError(result.error || "Failed to upload image");
+        setImagePreview(null);
+      }
+    } catch {
+      setError("Failed to upload image");
+      setImagePreview(null);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const clearImage = () => {
+    setImageUrl("");
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,18 +201,50 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
 
       {/* Cover Image */}
       <div className="space-y-2">
-        <Label htmlFor="image">Cover Image URL (optional)</Label>
-        <div className="flex gap-2">
-          <Input
-            id="image"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://example.com/image.jpg"
-          />
-          <Button type="button" variant="outline" size="icon">
-            <FaImage className="h-4 w-4" />
-          </Button>
-        </div>
+        <Label>Cover Image (optional)</Label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="hidden"
+          id="forum-image-upload"
+        />
+
+        {imagePreview || imageUrl ? (
+          <div className="relative w-full h-48 rounded-lg overflow-hidden border bg-muted">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imagePreview || imageUrl}
+              alt="Cover preview"
+              className="w-full h-full object-cover"
+            />
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute top-2 right-2"
+              onClick={clearImage}
+              disabled={uploading}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            {uploading && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-white" />
+              </div>
+            )}
+          </div>
+        ) : (
+          <label
+            htmlFor="forum-image-upload"
+            className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-muted/50 hover:bg-muted transition-colors"
+          >
+            <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+            <span className="text-sm text-muted-foreground">Click to upload cover image</span>
+            <span className="text-xs text-muted-foreground mt-1">Max 5MB</span>
+          </label>
+        )}
       </div>
 
       {/* Content */}
