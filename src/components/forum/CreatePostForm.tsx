@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Send, Upload, Loader2, X } from "lucide-react";
 import { RichTextEditor } from "./RichTextEditor";
@@ -36,6 +36,9 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Pre-generate a UUID for the forum post to use in image path
+  const postId = useMemo(() => crypto.randomUUID(), []);
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -74,8 +77,10 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      // Get file extension
+      const ext = file.name.split(".").pop() || "jpg";
       formData.append("bucket", "forum");
-      formData.append("filePath", `covers/${userId}/${Date.now()}-${file.name}`);
+      formData.append("filePath", `${postId}/cover.${ext}`);
 
       const result = await uploadToStorage(formData);
 
@@ -124,6 +129,7 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
     const { data, error: insertError } = await supabase
       .from("forum")
       .insert({
+        id: postId,
         profile_id: userId,
         forum_post_name: title,
         forum_post_description: content,
