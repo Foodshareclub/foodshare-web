@@ -129,6 +129,28 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
         `[CreatePostForm] ⏱️ Client created in ${(performance.now() - clientStart).toFixed(0)}ms`
       );
 
+      // Check auth status
+      const authStart = performance.now();
+      const {
+        data: { session },
+        error: authError,
+      } = await supabase.auth.getSession();
+      console.log(
+        `[CreatePostForm] 🔐 Auth check in ${(performance.now() - authStart).toFixed(0)}ms`,
+        {
+          hasSession: !!session,
+          authError: authError?.message,
+          userId: session?.user?.id?.slice(0, 8) + "...",
+        }
+      );
+
+      if (!session) {
+        console.error("[CreatePostForm] ❌ No session found!");
+        setError("Please log in to create a post");
+        setSubmitting(false);
+        return;
+      }
+
       // Generate slug client-side - we know it will be unique due to timestamp
       const slug =
         title
@@ -138,11 +160,8 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
         "-" +
         Date.now();
 
-      // Insert without .select() for faster response
-      const insertStart = performance.now();
-      console.log("[CreatePostForm] 📝 Starting database insert...");
-
-      const { error: insertError } = await supabase.from("forum").insert({
+      // Log payload size
+      const payload = {
         profile_id: userId,
         forum_post_name: title,
         forum_post_description: content,
@@ -152,7 +171,27 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
         forum_post_image: imageUrl || null,
         slug,
         forum_published: true,
+      };
+      const payloadSize = JSON.stringify(payload).length;
+      console.log(`[CreatePostForm] 📦 Payload size: ${(payloadSize / 1024).toFixed(1)}KB`, {
+        titleLength: title.length,
+        contentLength: content.length,
+        richContentSize: JSON.stringify(richContent).length,
       });
+
+      // Insert without .select() for faster response
+      const insertStart = performance.now();
+      console.log("[CreatePostForm] 📝 Starting database insert...");
+
+      // Add timeout wrapper
+      const insertPromise = supabase.from("forum").insert(payload);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Insert timeout after 30s")), 30000)
+      );
+
+      const { error: insertError } = (await Promise.race([insertPromise, timeoutPromise])) as {
+        error: { message: string } | null;
+      };
 
       const insertTime = performance.now() - insertStart;
       console.log(`[CreatePostForm] ⏱️ Database insert completed in ${insertTime.toFixed(0)}ms`);
