@@ -128,9 +128,13 @@ export async function uploadToStorage(formData: FormData): Promise<UploadResult>
     const result = await response.json();
     devLog("✅ Supabase upload successful");
 
+    // Construct public URL for Supabase storage
+    const publicUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${filePath}`;
+
     return {
       success: true,
       path: result.Key || filePath,
+      publicUrl,
       storage: "supabase",
     };
   } catch (error) {
