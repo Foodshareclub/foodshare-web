@@ -1,8 +1,8 @@
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
-import type { ForumPost } from '@/api/forumAPI';
+import { createClient } from "@/lib/supabase/server";
+import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
+import type { ForumPost } from "@/api/forumAPI";
 
 // Type for forum comments (defined locally since not exported from data layer)
 export interface ForumComment {
@@ -15,10 +15,10 @@ export interface ForumComment {
 }
 
 // Re-export types from API layer
-export type { ForumPost } from '@/api/forumAPI';
+export type { ForumPost } from "@/api/forumAPI";
 
 // Re-export cached data functions from data layer
-export { getForumPosts } from '@/lib/data/forum';
+export { getForumPosts } from "@/lib/data/forum";
 
 // Helper to extract first item from Supabase join array
 function extractFirst<T>(data: T[] | T | null | undefined): T | null {
@@ -31,23 +31,44 @@ function extractFirst<T>(data: T[] | T | null | undefined): T | null {
  */
 export async function createForumPost(
   formData: FormData
-): Promise<{ success: boolean; id?: string; error?: string }> {
+): Promise<{ success: boolean; id?: number; slug?: string; error?: string }> {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    return { success: false, error: 'Not authenticated' };
+    return { success: false, error: "Not authenticated" };
   }
 
+  const title = formData.get("title") as string;
+  const content = formData.get("content") as string;
+  const categoryId = formData.get("category") as string;
+  const postType = (formData.get("postType") as string) || "discussion";
+  const imageUrl = formData.get("imageUrl") as string | null;
+
+  // Generate slug from title
+  const slug =
+    title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "") +
+    "-" +
+    Date.now();
+
   const { data, error } = await supabase
-    .from('forum_posts')
+    .from("forum")
     .insert({
-      title: formData.get('title') as string,
-      content: formData.get('content') as string,
-      category: formData.get('category') as string,
-      author_id: user.id,
+      profile_id: user.id,
+      forum_post_name: title,
+      forum_post_description: content,
+      category_id: categoryId ? parseInt(categoryId) : null,
+      post_type: postType,
+      forum_post_image: imageUrl || null,
+      slug,
+      forum_published: true,
     })
-    .select('id')
+    .select("id, slug")
     .single();
 
   if (error) {
@@ -56,50 +77,51 @@ export async function createForumPost(
 
   invalidateTag(CACHE_TAGS.FORUM);
 
-  return { success: true, id: data.id };
+  return { success: true, id: data.id, slug: data.slug };
 }
 
 /**
  * Update a forum post
  */
 export async function updateForumPost(
-  id: string,
+  id: number,
   formData: FormData
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    return { success: false, error: 'Not authenticated' };
+    return { success: false, error: "Not authenticated" };
   }
 
   // Verify ownership
-  const { data: post } = await supabase
-    .from('forum_posts')
-    .select('author_id')
-    .eq('id', id)
-    .single();
+  const { data: post } = await supabase.from("forum").select("profile_id").eq("id", id).single();
 
-  if (post?.author_id !== user.id) {
-    return { success: false, error: 'Not authorized to edit this post' };
+  if (post?.profile_id !== user.id) {
+    return { success: false, error: "Not authorized to edit this post" };
   }
 
   const { error } = await supabase
-    .from('forum_posts')
+    .from("forum")
     .update({
-      title: formData.get('title') as string,
-      content: formData.get('content') as string,
-      category: formData.get('category') as string,
-      updated_at: new Date().toISOString(),
+      forum_post_name: formData.get("title") as string,
+      forum_post_description: formData.get("content") as string,
+      category_id: formData.get("category")
+        ? parseInt(formData.get("category") as string)
+        : undefined,
+      is_edited: true,
+      forum_post_updated_at: new Date().toISOString(),
     })
-    .eq('id', id);
+    .eq("id", id);
 
   if (error) {
     return { success: false, error: error.message };
   }
 
   invalidateTag(CACHE_TAGS.FORUM);
-  invalidateTag(CACHE_TAGS.FORUM_POST(Number(id)));
+  invalidateTag(CACHE_TAGS.FORUM_POST(id));
 
   return { success: true };
 }
@@ -107,38 +129,33 @@ export async function updateForumPost(
 /**
  * Delete a forum post
  */
-export async function deleteForumPost(id: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteForumPost(id: number): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    return { success: false, error: 'Not authenticated' };
+    return { success: false, error: "Not authenticated" };
   }
 
   // Verify ownership or admin
-  const { data: post } = await supabase
-    .from('forum_posts')
-    .select('author_id')
-    .eq('id', id)
-    .single();
+  const { data: post } = await supabase.from("forum").select("profile_id").eq("id", id).single();
 
   const { data: userRole } = await supabase
-    .from('user_roles')
-    .select('roles!inner(name)')
-    .eq('profile_id', user.id)
-    .in('roles.name', ['admin', 'superadmin'])
+    .from("user_roles")
+    .select("roles!inner(name)")
+    .eq("profile_id", user.id)
+    .in("roles.name", ["admin", "superadmin"])
     .maybeSingle();
 
   const isAdmin = !!userRole;
 
-  if (post?.author_id !== user.id && !isAdmin) {
-    return { success: false, error: 'Not authorized to delete this post' };
+  if (post?.profile_id !== user.id && !isAdmin) {
+    return { success: false, error: "Not authorized to delete this post" };
   }
 
-  const { error } = await supabase
-    .from('forum_posts')
-    .delete()
-    .eq('id', id);
+  const { error } = await supabase.from("forum").delete().eq("id", id);
 
   if (error) {
     return { success: false, error: error.message };
@@ -153,47 +170,58 @@ export async function deleteForumPost(id: string): Promise<{ success: boolean; e
  * Add a comment to a forum post
  */
 export async function addComment(
-  postId: string,
+  postId: number,
   formData: FormData
 ): Promise<{ success: boolean; comment?: ForumComment; error?: string }> {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    return { success: false, error: 'Not authenticated' };
+    return { success: false, error: "Not authenticated" };
   }
 
   const { data, error } = await supabase
-    .from('forum_comments')
+    .from("comments")
     .insert({
-      post_id: postId,
-      content: formData.get('content') as string,
-      author_id: user.id,
+      forum_id: postId,
+      comment: formData.get("content") as string,
+      user_id: user.id,
     })
-    .select(`
+    .select(
+      `
       id,
-      post_id,
-      content,
-      created_at,
-      author_id,
-      author:profiles!author_id(name, avatar_url)
-    `)
+      forum_id,
+      comment,
+      comment_created_at,
+      user_id,
+      profiles:user_id(first_name, second_name, avatar_url)
+    `
+    )
     .single();
 
   if (error) {
     return { success: false, error: error.message };
   }
 
-  invalidateTag(CACHE_TAGS.FORUM_POST(Number(postId)));
-  invalidateTag(CACHE_TAGS.FORUM_COMMENTS(Number(postId)));
+  invalidateTag(CACHE_TAGS.FORUM_POST(postId));
+  invalidateTag(CACHE_TAGS.FORUM_COMMENTS(postId));
 
   const comment: ForumComment = {
-    id: data.id,
-    post_id: data.post_id,
-    content: data.content,
-    created_at: data.created_at,
-    author_id: data.author_id,
-    author: extractFirst(data.author as Array<{ name: string; avatar_url: string | null }>),
+    id: data.id.toString(),
+    post_id: data.forum_id?.toString() || "",
+    content: data.comment || "",
+    created_at: data.comment_created_at,
+    author_id: data.user_id,
+    author: extractFirst(
+      data.profiles as Array<{ first_name: string; second_name: string; avatar_url: string | null }>
+    )
+      ? {
+          name: `${(data.profiles as { first_name: string; second_name: string }[])?.[0]?.first_name || ""} ${(data.profiles as { first_name: string; second_name: string }[])?.[0]?.second_name || ""}`.trim(),
+          avatar_url: (data.profiles as { avatar_url: string | null }[])?.[0]?.avatar_url || null,
+        }
+      : null,
   };
 
   return { success: true, comment };
@@ -203,26 +231,26 @@ export async function addComment(
  * Delete a comment
  * Optimized: Parallel fetch for comment and profile data
  */
-export async function deleteComment(commentId: string): Promise<{ success: boolean; error?: string }> {
+export async function deleteComment(
+  commentId: number
+): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    return { success: false, error: 'Not authenticated' };
+    return { success: false, error: "Not authenticated" };
   }
 
   // Fetch comment and profile in parallel to avoid waterfall
   const [commentResult, profileResult] = await Promise.all([
+    supabase.from("comments").select("user_id, forum_id").eq("id", commentId).single(),
     supabase
-      .from('forum_comments')
-      .select('author_id, post_id')
-      .eq('id', commentId)
-      .single(),
-    supabase
-      .from('user_roles')
-      .select('roles!inner(name)')
-      .eq('profile_id', user.id)
-      .in('roles.name', ['admin', 'superadmin'])
+      .from("user_roles")
+      .select("roles!inner(name)")
+      .eq("profile_id", user.id)
+      .in("roles.name", ["admin", "superadmin"])
       .maybeSingle(),
   ]);
 
@@ -230,22 +258,19 @@ export async function deleteComment(commentId: string): Promise<{ success: boole
   const userRole = profileResult.data;
   const isAdmin = !!userRole;
 
-  if (comment?.author_id !== user.id && !isAdmin) {
-    return { success: false, error: 'Not authorized to delete this comment' };
+  if (comment?.user_id !== user.id && !isAdmin) {
+    return { success: false, error: "Not authorized to delete this comment" };
   }
 
-  const { error } = await supabase
-    .from('forum_comments')
-    .delete()
-    .eq('id', commentId);
+  const { error } = await supabase.from("comments").delete().eq("id", commentId);
 
   if (error) {
     return { success: false, error: error.message };
   }
 
-  if (comment?.post_id) {
-    invalidateTag(CACHE_TAGS.FORUM_POST(Number(comment.post_id)));
-    invalidateTag(CACHE_TAGS.FORUM_COMMENTS(Number(comment.post_id)));
+  if (comment?.forum_id) {
+    invalidateTag(CACHE_TAGS.FORUM_POST(comment.forum_id));
+    invalidateTag(CACHE_TAGS.FORUM_COMMENTS(comment.forum_id));
   }
 
   return { success: true };
@@ -255,43 +280,42 @@ export async function deleteComment(commentId: string): Promise<{ success: boole
  * Toggle like on a forum post
  */
 export async function toggleForumLike(
-  postId: string
+  postId: number
 ): Promise<{ success: boolean; isLiked: boolean; error?: string }> {
   const supabase = await createClient();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
-    return { success: false, isLiked: false, error: 'Not authenticated' };
+    return { success: false, isLiked: false, error: "Not authenticated" };
   }
 
   // Check if already liked
   const { data: existing } = await supabase
-    .from('forum_likes')
-    .select('id')
-    .eq('post_id', postId)
-    .eq('user_id', user.id)
+    .from("likes")
+    .select("id")
+    .eq("forum_id", postId)
+    .eq("profile_id", user.id)
     .single();
 
   if (existing) {
     // Remove like
-    const { error } = await supabase
-      .from('forum_likes')
-      .delete()
-      .eq('id', existing.id);
+    const { error } = await supabase.from("likes").delete().eq("id", existing.id);
 
     if (error) return { success: false, isLiked: true, error: error.message };
 
-    invalidateTag(CACHE_TAGS.FORUM_POST(Number(postId)));
+    invalidateTag(CACHE_TAGS.FORUM_POST(postId));
     return { success: true, isLiked: false };
   } else {
     // Add like
     const { error } = await supabase
-      .from('forum_likes')
-      .insert({ post_id: postId, user_id: user.id });
+      .from("likes")
+      .insert({ forum_id: postId, profile_id: user.id });
 
     if (error) return { success: false, isLiked: false, error: error.message };
 
-    invalidateTag(CACHE_TAGS.FORUM_POST(Number(postId)));
+    invalidateTag(CACHE_TAGS.FORUM_POST(postId));
     return { success: true, isLiked: true };
   }
 }

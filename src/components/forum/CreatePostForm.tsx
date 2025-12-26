@@ -37,8 +37,8 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Pre-generate a UUID for the forum post to use in image path
-  const postId = useMemo(() => crypto.randomUUID(), []);
+  // Pre-generate a UUID for the image path (not the post ID which is auto-generated bigint)
+  const imagePathId = useMemo(() => crypto.randomUUID(), []);
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -80,7 +80,7 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
       // Get file extension
       const ext = file.name.split(".").pop() || "jpg";
       formData.append("bucket", "forum");
-      formData.append("filePath", `${postId}/cover.${ext}`);
+      formData.append("filePath", `${imagePathId}/cover.${ext}`);
 
       const result = await uploadToStorage(formData);
 
@@ -129,7 +129,6 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
     const { data, error: insertError } = await supabase
       .from("forum")
       .insert({
-        id: postId,
         profile_id: userId,
         forum_post_name: title,
         forum_post_description: content,
