@@ -116,39 +116,45 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
     setSubmitting(true);
     setError(null);
 
-    const supabase = createClient();
+    try {
+      const supabase = createClient();
 
-    const slug =
-      title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "") +
-      "-" +
-      Date.now();
+      const slug =
+        title
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/(^-|-$)/g, "") +
+        "-" +
+        Date.now();
 
-    const { data, error: insertError } = await supabase
-      .from("forum")
-      .insert({
-        profile_id: userId,
-        forum_post_name: title,
-        forum_post_description: content,
-        rich_content: richContent,
-        category_id: parseInt(categoryId),
-        post_type: postType,
-        forum_post_image: imageUrl || null,
-        slug,
-        forum_published: true,
-      })
-      .select("slug")
-      .single();
+      const { data, error: insertError } = await supabase
+        .from("forum")
+        .insert({
+          profile_id: userId,
+          forum_post_name: title,
+          forum_post_description: content,
+          rich_content: richContent,
+          category_id: parseInt(categoryId),
+          post_type: postType,
+          forum_post_image: imageUrl || null,
+          slug,
+          forum_published: true,
+        })
+        .select("slug")
+        .single();
 
-    if (insertError) {
-      setError(insertError.message);
+      if (insertError) {
+        setError(insertError.message);
+        setSubmitting(false);
+        return;
+      }
+
+      // Use replace to avoid adding to history stack, making navigation faster
+      router.replace(`/forum/${data.slug}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create post");
       setSubmitting(false);
-      return;
     }
-
-    router.push(`/forum/${data.slug}`);
   };
 
   return (
