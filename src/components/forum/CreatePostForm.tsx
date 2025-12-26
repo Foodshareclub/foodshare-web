@@ -119,8 +119,15 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
     setSubmitting(true);
     setError(null);
 
+    const totalStart = performance.now();
+    console.log("[CreatePostForm] 🚀 Starting forum post submission...");
+
     try {
+      const clientStart = performance.now();
       const supabase = createClient();
+      console.log(
+        `[CreatePostForm] ⏱️ Client created in ${(performance.now() - clientStart).toFixed(0)}ms`
+      );
 
       // Generate slug client-side - we know it will be unique due to timestamp
       const slug =
@@ -132,6 +139,9 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
         Date.now();
 
       // Insert without .select() for faster response
+      const insertStart = performance.now();
+      console.log("[CreatePostForm] 📝 Starting database insert...");
+
       const { error: insertError } = await supabase.from("forum").insert({
         profile_id: userId,
         forum_post_name: title,
@@ -144,15 +154,32 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
         forum_published: true,
       });
 
+      const insertTime = performance.now() - insertStart;
+      console.log(`[CreatePostForm] ⏱️ Database insert completed in ${insertTime.toFixed(0)}ms`);
+
       if (insertError) {
+        console.error("[CreatePostForm] ❌ Insert error:", insertError);
         setError(insertError.message);
         setSubmitting(false);
         return;
       }
 
+      console.log(
+        `[CreatePostForm] ✅ Post created successfully. Total API time: ${(performance.now() - totalStart).toFixed(0)}ms`
+      );
+
       // Navigate using the slug we generated
+      const navStart = performance.now();
+      console.log("[CreatePostForm] 🔄 Starting navigation to:", `/forum/${slug}`);
       router.replace(`/forum/${slug}`);
+      console.log(
+        `[CreatePostForm] ⏱️ Navigation initiated in ${(performance.now() - navStart).toFixed(0)}ms`
+      );
+      console.log(
+        `[CreatePostForm] 📊 TOTAL TIME: ${(performance.now() - totalStart).toFixed(0)}ms`
+      );
     } catch (err) {
+      console.error("[CreatePostForm] ❌ Exception:", err);
       setError(err instanceof Error ? err.message : "Failed to create post");
       setSubmitting(false);
     }
