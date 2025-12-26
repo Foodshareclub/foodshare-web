@@ -5,21 +5,30 @@ const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const botToken = Deno.env.get("BOT_TOKEN")!;
 const adminChatId = Deno.env.get("ADMIN_CHAT_ID")!;
 const channelUsername = "@foodshare_club";
+// Topic/thread ID for forum-enabled channels (optional - posts to General if not set)
+const channelThreadId = Deno.env.get("CHANNEL_THREAD_ID");
 const appUrl = Deno.env.get("APP_URL") || "https://foodshare.club";
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function sendTelegramMessage(chatId: string, text: string) {
+async function sendTelegramMessage(chatId: string, text: string, threadId?: string) {
   try {
+    const payload: Record<string, unknown> = {
+      chat_id: chatId,
+      text,
+      parse_mode: "HTML",
+      disable_web_page_preview: false,
+    };
+
+    // Add thread ID for forum-enabled channels/groups
+    if (threadId) {
+      payload.message_thread_id = parseInt(threadId);
+    }
+
     const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        parse_mode: "HTML",
-        disable_web_page_preview: false,
-      }),
+      body: JSON.stringify(payload),
     });
 
     const result = await response.json();
@@ -148,8 +157,8 @@ Deno.serve(async (req) => {
 
       if (superAdmin) {
         const channelMessage = formatChannelMessage(post, profile);
-        channelSent = await sendTelegramMessage(channelUsername, channelMessage);
-        console.log("Channel notification sent:", channelSent);
+        channelSent = await sendTelegramMessage(channelUsername, channelMessage, channelThreadId);
+        console.log("Channel notification sent:", channelSent, "threadId:", channelThreadId);
       }
     }
 
