@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
-import type { ForumPost } from "@/api/forumAPI";
 
 // Type for forum comments (defined locally since not exported from data layer)
 export interface ForumComment {
@@ -27,7 +26,7 @@ function extractFirst<T>(data: T[] | T | null | undefined): T | null {
 }
 
 /**
- * Create a new forum post
+ * Create a new forum post (FormData version - legacy)
  */
 export async function createForumPost(
   formData: FormData
@@ -78,6 +77,60 @@ export async function createForumPost(
   invalidateTag(CACHE_TAGS.FORUM);
 
   return { success: true, id: data.id, slug: data.slug };
+}
+
+/**
+ * Create a new forum post - FAST version using Server Action
+ * This bypasses the slow browser Supabase client and uses server-side auth
+ */
+export async function createForumPostFast(data: {
+  title: string;
+  content: string;
+  richContent?: Record<string, unknown>;
+  categoryId: number;
+  postType: string;
+  imageUrl?: string | null;
+}): Promise<{ success: boolean; slug?: string; error?: string }> {
+  const supabase = await createClient();
+
+  // Server-side auth is FAST (no browser cookie overhead)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  // Generate slug server-side
+  const slug =
+    data.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "") +
+    "-" +
+    Date.now();
+
+  // Insert WITHOUT .select() for fastest response
+  const { error } = await supabase.from("forum").insert({
+    profile_id: user.id,
+    forum_post_name: data.title,
+    forum_post_description: data.content,
+    rich_content: data.richContent || null,
+    category_id: data.categoryId,
+    post_type: data.postType,
+    forum_post_image: data.imageUrl || null,
+    slug,
+    forum_published: true,
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  invalidateTag(CACHE_TAGS.FORUM);
+
+  return { success: true, slug };
 }
 
 /**

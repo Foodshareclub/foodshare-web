@@ -15,15 +15,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ForumCategory, ForumPostType } from "@/api/forumAPI";
-import { createClient } from "@/lib/supabase/client";
 import { uploadToStorage } from "@/app/actions/storage";
+import { createForumPostFast } from "@/app/actions/forum";
 
 // Icon aliases for consistency
 const FaPaperPlane = Send;
 
 type CreatePostFormProps = {
   categories: ForumCategory[];
-  userId: string;
 };
 
 const POST_TYPES: { value: ForumPostType; label: string }[] = [
@@ -32,7 +31,7 @@ const POST_TYPES: { value: ForumPostType; label: string }[] = [
   { value: "guide", label: "Guide" },
 ];
 
-export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
+export function CreatePostForm({ categories }: CreatePostFormProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -119,104 +118,25 @@ export function CreatePostForm({ categories, userId }: CreatePostFormProps) {
     setSubmitting(true);
     setError(null);
 
-    const totalStart = performance.now();
-    console.log("[CreatePostForm] 🚀 Starting forum post submission...");
-
     try {
-      const clientStart = performance.now();
-      const supabase = createClient();
-      console.log(
-        `[CreatePostForm] ⏱️ Client created in ${(performance.now() - clientStart).toFixed(0)}ms`
-      );
-
-      // Check auth status
-      const authStart = performance.now();
-      const {
-        data: { session },
-        error: authError,
-      } = await supabase.auth.getSession();
-      console.log(
-        `[CreatePostForm] 🔐 Auth check in ${(performance.now() - authStart).toFixed(0)}ms`,
-        {
-          hasSession: !!session,
-          authError: authError?.message,
-          userId: session?.user?.id?.slice(0, 8) + "...",
-        }
-      );
-
-      if (!session) {
-        console.error("[CreatePostForm] ❌ No session found!");
-        setError("Please log in to create a post");
-        setSubmitting(false);
-        return;
-      }
-
-      // Generate slug client-side - we know it will be unique due to timestamp
-      const slug =
-        title
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/(^-|-$)/g, "") +
-        "-" +
-        Date.now();
-
-      // Log payload size
-      const payload = {
-        profile_id: userId,
-        forum_post_name: title,
-        forum_post_description: content,
-        rich_content: richContent,
-        category_id: parseInt(categoryId),
-        post_type: postType,
-        forum_post_image: imageUrl || null,
-        slug,
-        forum_published: true,
-      };
-      const payloadSize = JSON.stringify(payload).length;
-      console.log(`[CreatePostForm] 📦 Payload size: ${(payloadSize / 1024).toFixed(1)}KB`, {
-        titleLength: title.length,
-        contentLength: content.length,
-        richContentSize: JSON.stringify(richContent).length,
+      // Use Server Action - bypasses slow browser Supabase client
+      const result = await createForumPostFast({
+        title,
+        content,
+        richContent,
+        categoryId: parseInt(categoryId),
+        postType,
+        imageUrl: imageUrl || null,
       });
 
-      // Insert without .select() for faster response
-      const insertStart = performance.now();
-      console.log("[CreatePostForm] 📝 Starting database insert...");
-
-      // Add timeout wrapper
-      const insertPromise = supabase.from("forum").insert(payload);
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Insert timeout after 30s")), 30000)
-      );
-
-      const { error: insertError } = (await Promise.race([insertPromise, timeoutPromise])) as {
-        error: { message: string } | null;
-      };
-
-      const insertTime = performance.now() - insertStart;
-      console.log(`[CreatePostForm] ⏱️ Database insert completed in ${insertTime.toFixed(0)}ms`);
-
-      if (insertError) {
-        console.error("[CreatePostForm] ❌ Insert error:", insertError);
-        setError(insertError.message);
+      if (!result.success) {
+        setError(result.error || "Failed to create post");
         setSubmitting(false);
         return;
       }
 
-      console.log(
-        `[CreatePostForm] ✅ Post created successfully. Total API time: ${(performance.now() - totalStart).toFixed(0)}ms`
-      );
-
-      // Navigate using the slug we generated
-      const navStart = performance.now();
-      console.log("[CreatePostForm] 🔄 Starting navigation to:", `/forum/${slug}`);
-      router.replace(`/forum/${slug}`);
-      console.log(
-        `[CreatePostForm] ⏱️ Navigation initiated in ${(performance.now() - navStart).toFixed(0)}ms`
-      );
-      console.log(
-        `[CreatePostForm] 📊 TOTAL TIME: ${(performance.now() - totalStart).toFixed(0)}ms`
-      );
+      // Navigate to the new post
+      router.replace(`/forum/${result.slug}`);
     } catch (err) {
       console.error("[CreatePostForm] ❌ Exception:", err);
       setError(err instanceof Error ? err.message : "Failed to create post");
