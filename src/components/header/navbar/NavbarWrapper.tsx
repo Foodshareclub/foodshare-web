@@ -42,7 +42,7 @@ export function NavbarWrapper({
 
   // Client-side auth for real-time updates (login/logout)
   // Must be called before any conditional returns (React hooks rules)
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isAdmin: clientIsAdmin } = useAuth();
 
   // Don't render navbar on map pages - MapClient renders its own navbar
   if (pathname?.startsWith("/map")) {
@@ -64,8 +64,8 @@ export function NavbarWrapper({
   // Auth state: client takes precedence for real-time updates
   const effectiveIsAuth = isAuthenticated || !!initialUser;
 
-  // Use server-provided admin status (from user_roles table)
-  const isAdmin = initialIsAdmin;
+  // Use client admin status (from useAuth) with server fallback
+  const isAdmin = clientIsAdmin || initialIsAdmin;
 
   const handleRouteChange = (route: string) => {
     router.push(`/${route}`);

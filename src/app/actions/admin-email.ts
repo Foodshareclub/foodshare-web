@@ -1,6 +1,7 @@
 /**
  * Admin Email Server Actions
  * Mutations for email management from admin CRM
+ * All actions require admin/superadmin role
  */
 
 "use server";
@@ -28,15 +29,57 @@ export interface ActionResult<T = void> {
 }
 
 // ============================================================================
+// Helper: Verify Admin Access
+// ============================================================================
+
+async function verifyAdminAccess(): Promise<
+  { error: string } | { supabase: Awaited<ReturnType<typeof createClient>>; userId: string }
+> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { error: "You must be logged in" };
+  }
+
+  const { data: userRoles } = await supabase
+    .from("user_roles")
+    .select("roles!inner(name)")
+    .eq("profile_id", user.id);
+
+  const roles = (userRoles || [])
+    .map((r) => (r.roles as unknown as { name: string })?.name)
+    .filter(Boolean);
+
+  const isAdmin = roles.includes("admin") || roles.includes("superadmin");
+
+  if (!isAdmin) {
+    return { error: "Admin access required" };
+  }
+
+  return { supabase, userId: user.id };
+}
+
+// ============================================================================
 // Email Queue Actions
 // ============================================================================
 
 /**
  * Retry a failed email from the queue
+ * Requires admin access
  */
 export async function retryEmail(queueId: string): Promise<ActionResult> {
   try {
-    const supabase = await createClient();
+    const auth = await verifyAdminAccess();
+    if ("error" in auth) {
+      return { success: false, error: auth.error };
+    }
+
+    const { supabase } = auth;
 
     const { error } = await supabase
       .from("email_queue")
@@ -65,10 +108,16 @@ export async function retryEmail(queueId: string): Promise<ActionResult> {
 
 /**
  * Delete a failed email from the queue
+ * Requires admin access
  */
 export async function deleteQueuedEmail(queueId: string): Promise<ActionResult> {
   try {
-    const supabase = await createClient();
+    const auth = await verifyAdminAccess();
+    if ("error" in auth) {
+      return { success: false, error: auth.error };
+    }
+
+    const { supabase } = auth;
 
     const { error } = await supabase.from("email_queue").delete().eq("id", queueId);
 
@@ -90,12 +139,18 @@ export async function deleteQueuedEmail(queueId: string): Promise<ActionResult> 
 
 /**
  * Send a manual email (admin only)
+ * Requires admin access
  */
 export async function sendManualEmail(
   request: ManualEmailRequest
 ): Promise<ActionResult<{ messageId: string }>> {
   try {
-    const supabase = await createClient();
+    const auth = await verifyAdminAccess();
+    if ("error" in auth) {
+      return { success: false, error: auth.error };
+    }
+
+    const { supabase } = auth;
 
     // Queue the email for processing
     const { data, error } = await supabase
@@ -138,14 +193,19 @@ export async function sendManualEmail(
 
 /**
  * Reset provider quota (admin only - use with caution)
+ * Requires admin access
  */
 export async function resetProviderQuota(
   provider: EmailProvider,
   date?: string
 ): Promise<ActionResult> {
   try {
-    const supabase = await createClient();
+    const auth = await verifyAdminAccess();
+    if ("error" in auth) {
+      return { success: false, error: auth.error };
+    }
 
+    const { supabase } = auth;
     const targetDate = date || new Date().toISOString().split("T")[0];
 
     const { error } = await supabase
@@ -174,13 +234,19 @@ export async function resetProviderQuota(
 
 /**
  * Update provider availability (enable/disable)
+ * Requires admin access
  */
 export async function updateProviderAvailability(
   provider: EmailProvider,
   isAvailable: boolean
 ): Promise<ActionResult> {
   try {
-    const supabase = await createClient();
+    const auth = await verifyAdminAccess();
+    if ("error" in auth) {
+      return { success: false, error: auth.error };
+    }
+
+    const { supabase } = auth;
 
     // Update circuit breaker state
     const { error } = await supabase.from("email_circuit_breaker").upsert(
@@ -211,10 +277,16 @@ export async function updateProviderAvailability(
 
 /**
  * Reset circuit breaker for a provider
+ * Requires admin access
  */
 export async function resetCircuitBreaker(provider: EmailProvider): Promise<ActionResult> {
   try {
-    const supabase = await createClient();
+    const auth = await verifyAdminAccess();
+    if ("error" in auth) {
+      return { success: false, error: auth.error };
+    }
+
+    const { supabase } = auth;
 
     const { error } = await supabase
       .from("email_circuit_breaker")
@@ -257,7 +329,12 @@ export async function addToSuppressionList(
   notes?: string
 ): Promise<ActionResult> {
   try {
-    const supabase = await createClient();
+    const auth = await verifyAdminAccess();
+    if ("error" in auth) {
+      return { success: false, error: auth.error };
+    }
+
+    const { supabase } = auth;
 
     const { error } = await supabase.from("email_suppression_list").insert({
       email: email.toLowerCase(),
@@ -291,7 +368,12 @@ export async function addToSuppressionList(
  */
 export async function removeFromSuppressionList(email: string): Promise<ActionResult> {
   try {
-    const supabase = await createClient();
+    const auth = await verifyAdminAccess();
+    if ("error" in auth) {
+      return { success: false, error: auth.error };
+    }
+
+    const { supabase } = auth;
 
     const { error } = await supabase
       .from("email_suppression_list")

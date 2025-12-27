@@ -73,6 +73,13 @@ const MONTHLY_LIMITS: Record<EmailProvider, number> = {
 // Request coalescing for quota checks
 const pendingQuotaChecks = new Map<string, Promise<ProviderHealth[]>>();
 
+// Simple email validation regex (RFC 5322 simplified)
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function isValidEmail(email: string): boolean {
+  return EMAIL_REGEX.test(email) && email.length <= 254;
+}
+
 // Metrics buffer (non-blocking writes)
 const metricsBuffer: Array<{
   provider: EmailProvider;
@@ -106,12 +113,21 @@ export class UnifiedEmailService {
     const startTime = performance.now();
 
     try {
+      // Validate recipient email
+      const recipient = Array.isArray(request.options.to)
+        ? request.options.to[0]
+        : request.options.to;
+
+      if (!isValidEmail(recipient.email)) {
+        return {
+          success: false,
+          provider: "brevo",
+          error: `Invalid email address format: ${recipient.email}`,
+        };
+      }
+
       // Check suppression list (unless explicitly skipped for transactional emails)
       if (!request.skipSuppressionCheck) {
-        const recipient = Array.isArray(request.options.to)
-          ? request.options.to[0]
-          : request.options.to;
-
         const isSuppressed = await this.checkSuppression(recipient.email);
         if (isSuppressed) {
           return {

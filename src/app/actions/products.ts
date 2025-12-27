@@ -78,6 +78,17 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     return value ? (value as string) : undefined;
   };
 
+  // Parse images JSON safely
+  let images: string[] = [];
+  try {
+    images = JSON.parse((formData.get("images") as string) || "[]");
+  } catch {
+    return {
+      success: false,
+      error: { code: "VALIDATION_ERROR", message: "Invalid images format" },
+    };
+  }
+
   const rawData = {
     post_name: getString("post_name"),
     post_description: getString("post_description"),
@@ -86,7 +97,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     available_hours: getOptionalString("available_hours"),
     transportation: getOptionalString("transportation"),
     condition: getOptionalString("condition"),
-    images: JSON.parse((formData.get("images") as string) || "[]"),
+    images,
     profile_id: getString("profile_id"),
   };
 
@@ -174,9 +185,16 @@ export async function updateProduct(
     }
   }
 
-  const images = formData.get("images");
-  if (images) {
-    rawData.images = JSON.parse(images as string);
+  const imagesStr = formData.get("images");
+  if (imagesStr) {
+    try {
+      rawData.images = JSON.parse(imagesStr as string);
+    } catch {
+      return {
+        success: false,
+        error: { code: "VALIDATION_ERROR", message: "Invalid images format" },
+      };
+    }
   }
 
   // Validate with Zod (partial schema for updates)
