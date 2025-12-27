@@ -11,8 +11,8 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { supabase } from "@/lib/supabase/client";
 import { useDebounce } from "./useDebounce";
+import { supabase } from "@/lib/supabase/client";
 
 export interface SearchSuggestion {
   id: string;
@@ -29,7 +29,7 @@ interface UseSearchSuggestionsOptions {
   debounceMs?: number;
 }
 
-interface UseSearchSuggestionsReturn {
+export interface UseSearchSuggestionsReturn {
   searchTerm: string;
   setSearchTerm: React.Dispatch<React.SetStateAction<string>>;
   suggestions: SearchSuggestion[];
@@ -138,7 +138,7 @@ export function useSearchSuggestions(
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
 
   const debouncedSearchTerm = useDebounce(searchTerm, debounceMs);
   const abortControllerRef = useRef<AbortController | null>(null);

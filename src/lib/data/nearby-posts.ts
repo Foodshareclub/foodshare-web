@@ -197,7 +197,7 @@ export async function getNearbyPostsCounts(options: {
 
       return (data ?? []) as PostTypeCount[];
     },
-    [`nearby-counts-${lat.toFixed(2)}-${lng.toFixed(2)}-${radiusMeters}`],
+    [`nearby-counts-${lat.toFixed(3)}-${lng.toFixed(3)}-${radiusMeters}`],
     {
       revalidate: CACHE_DURATIONS.SHORT, // 30 seconds
       tags: [CACHE_TAGS.PRODUCTS],

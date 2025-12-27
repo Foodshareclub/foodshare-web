@@ -40,7 +40,6 @@ type ModalType = {
   fullScreen?: boolean;
   oneProductComponent?: boolean;
   becomeSharerBlock?: boolean;
-  thunk?: any; // Legacy support - ignored
   isOpen?: boolean; // Controlled mode - external open state
   onClose?: () => void; // Controlled mode - external close handler
 };
@@ -269,10 +268,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
       handleClose();
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message.toLowerCase() : "";
-      if (
-        errorMessage.includes("storage") ||
-        errorMessage.includes("indexeddb")
-      ) {
+      if (errorMessage.includes("storage") || errorMessage.includes("indexeddb")) {
         await checkStorageAvailability();
       }
     }

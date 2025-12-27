@@ -342,7 +342,7 @@ export const searchProducts = unstable_cache(
   },
   ["product-search"],
   {
-    revalidate: CACHE_DURATIONS.SHORT,
+    revalidate: CACHE_DURATIONS.MEDIUM, // 5 minutes - search results don't change rapidly
     tags: [CACHE_TAGS.PRODUCT_SEARCH, CACHE_TAGS.PRODUCTS],
   }
 );

@@ -161,6 +161,8 @@ export const CACHE_DURATIONS = {
   SEGMENTS: 600, // 10 minutes
   AUTOMATIONS: 600, // 10 minutes
   STATIC_PAGES: 86400, // 24 hours
+  CHATS: 30, // 30 seconds - chat data changes frequently
+  CHAT_MESSAGES: 30, // 30 seconds
 
   // Email system
   EMAIL_HEALTH: 60, // 1 minute - health data needs to be fresh

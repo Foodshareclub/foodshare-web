@@ -1,17 +1,20 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
-export function useEvent<T extends (...args: any[]) => any>(fn: T) {
+/**
+ * A hook that returns a stable callback reference that always calls the latest version of the function.
+ * Useful for event handlers that need to access latest state without causing re-renders.
+ */
+export function useEvent<TArgs extends unknown[], TReturn>(
+  fn: (...args: TArgs) => TReturn
+): (...args: TArgs) => TReturn {
   const handlerRef = useRef(fn);
   useLayoutEffect(() => {
     handlerRef.current = fn;
   }, [fn]);
 
-  return useCallback(
-    (...args: Parameters<T>) => {
-      return handlerRef.current.apply(null, args);
-    },
-    [handlerRef]
-  );
+  return useCallback((...args: TArgs): TReturn => {
+    return handlerRef.current(...args);
+  }, []);
 }
 
 type GetWindowEvent<Type extends string> = Type extends keyof WindowEventMap

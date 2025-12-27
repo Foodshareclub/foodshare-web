@@ -1,8 +1,9 @@
 /**
  * Navbar Hooks
  *
- * Custom hooks specific to navbar functionality
+ * Re-exports from canonical hook locations for backwards compatibility.
+ * The actual implementations live in src/hooks/
  */
 
-export { useSearchSuggestions, clearSearchHistory } from "./useSearchSuggestions";
-export type { SearchSuggestion, UseSearchSuggestionsReturn } from "./useSearchSuggestions";
+export { useSearchSuggestions, clearSearchHistory } from "@/hooks/useSearchSuggestions";
+export type { SearchSuggestion, UseSearchSuggestionsReturn } from "@/hooks/useSearchSuggestions";
