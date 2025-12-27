@@ -1,17 +1,12 @@
 "use client";
 
-/**
- * CampaignsTab - Campaign management with list/grid views
- */
-
 import { useState } from "react";
-import { Search, Filter, LayoutGrid, List, Plus, Megaphone } from "lucide-react";
-import { EmptyState } from "../components";
-import { CampaignCard, CampaignTableRow, CampaignForm } from "../cards";
-import type { CampaignsTabProps, ViewMode } from "../types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { Search, Plus, List, LayoutGrid, Mail } from "lucide-react";
+import { GlassCard } from "../shared/GlassCard";
+import { EmptyState } from "../shared/EmptyState";
+import { CampaignRow } from "../campaign/CampaignRow";
+import { CampaignCard } from "../campaign/CampaignCard";
+import type { RecentCampaign } from "../types";
 import {
   Select,
   SelectContent,
@@ -19,21 +14,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
-
-export function CampaignsTab({ campaigns }: CampaignsTabProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>("list");
+export function CampaignsTab({ campaigns }: { campaigns: RecentCampaign[] }) {
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   const filteredCampaigns = campaigns.filter((c) => {
     const matchesSearch =
@@ -44,9 +31,9 @@ export function CampaignsTab({ campaigns }: CampaignsTabProps) {
   });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-1">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -54,12 +41,11 @@ export function CampaignsTab({ campaigns }: CampaignsTabProps) {
               placeholder="Search campaigns..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-card/50"
+              className="pl-9"
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[130px] bg-card/50">
-              <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+            <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -73,93 +59,68 @@ export function CampaignsTab({ campaigns }: CampaignsTabProps) {
           </Select>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex border border-border/50 rounded-lg p-0.5 bg-muted/30">
+          <div className="flex border rounded-lg p-1">
             <Button
               variant={viewMode === "list" ? "secondary" : "ghost"}
               size="icon"
-              className="h-7 w-7"
+              className="h-8 w-8"
               onClick={() => setViewMode("list")}
             >
-              <List className="h-3.5 w-3.5" />
+              <List className="h-4 w-4" />
             </Button>
             <Button
               variant={viewMode === "grid" ? "secondary" : "ghost"}
               size="icon"
-              className="h-7 w-7"
+              className="h-8 w-8"
               onClick={() => setViewMode("grid")}
             >
-              <LayoutGrid className="h-3.5 w-3.5" />
+              <LayoutGrid className="h-4 w-4" />
             </Button>
           </div>
-          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 shadow-sm">
-                <Plus className="h-4 w-4" />
-                New Campaign
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Create New Campaign</DialogTitle>
-                <DialogDescription>
-                  Set up a new email campaign to reach your audience
-                </DialogDescription>
-              </DialogHeader>
-              <CampaignForm onClose={() => setShowCreateDialog(false)} />
-            </DialogContent>
-          </Dialog>
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
+            New Campaign
+          </Button>
         </div>
       </div>
 
       {/* Campaign List/Grid */}
       {viewMode === "list" ? (
-        <Card className="bg-card/50 backdrop-blur-sm border-border/50 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted/30 border-b border-border/50">
-                <tr>
-                  <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Campaign
-                  </th>
-                  <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Recipients
-                  </th>
-                  <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Open Rate
-                  </th>
-                  <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Click Rate
-                  </th>
-                  <th className="text-left p-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="text-right p-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50">
-                {filteredCampaigns.map((campaign) => (
-                  <CampaignTableRow key={campaign.id} campaign={campaign} />
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <GlassCard className="p-0 overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-muted/50">
+              <tr>
+                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
+                  Campaign
+                </th>
+                <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
+                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
+                  Recipients
+                </th>
+                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
+                  Open Rate
+                </th>
+                <th className="text-left p-4 text-sm font-medium text-muted-foreground">
+                  Click Rate
+                </th>
+                <th className="text-left p-4 text-sm font-medium text-muted-foreground">Date</th>
+                <th className="text-right p-4 text-sm font-medium text-muted-foreground">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filteredCampaigns.map((campaign) => (
+                <CampaignRow key={campaign.id} campaign={campaign} />
+              ))}
+            </tbody>
+          </table>
           {filteredCampaigns.length === 0 && (
             <div className="p-12">
-              <EmptyState
-                icon={<Megaphone className="h-10 w-10" />}
-                title="No campaigns found"
-                description={
-                  searchQuery ? "Try adjusting your search" : "Create your first campaign"
-                }
-              />
+              <EmptyState icon={<Mail />} message="No campaigns found" />
             </div>
           )}
-        </Card>
+        </GlassCard>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredCampaigns.map((campaign) => (
@@ -167,15 +128,9 @@ export function CampaignsTab({ campaigns }: CampaignsTabProps) {
           ))}
           {filteredCampaigns.length === 0 && (
             <div className="col-span-full">
-              <Card className="p-12 bg-card/50">
-                <EmptyState
-                  icon={<Megaphone className="h-10 w-10" />}
-                  title="No campaigns found"
-                  description={
-                    searchQuery ? "Try adjusting your search" : "Create your first campaign"
-                  }
-                />
-              </Card>
+              <GlassCard className="p-12">
+                <EmptyState icon={<Mail />} message="No campaigns found" />
+              </GlassCard>
             </div>
           )}
         </div>

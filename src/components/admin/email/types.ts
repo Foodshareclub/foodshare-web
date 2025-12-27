@@ -26,6 +26,7 @@ export type {
  * Tab type for the main dashboard navigation
  */
 export type TabType =
+  | "dashboard"
   | "overview"
   | "campaigns"
   | "automation"
@@ -49,6 +50,13 @@ export interface EmailFormData {
  * Props for the main EmailCRMDashboard component
  */
 export interface EmailCRMDashboardProps {
+  initialData?: EmailCRMData;
+}
+
+/**
+ * Props for EmailCRMClient component
+ */
+export interface Props {
   initialData?: EmailCRMData;
 }
 

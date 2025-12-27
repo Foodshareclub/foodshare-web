@@ -1,82 +1,59 @@
 "use client";
 
-/**
- * ProvidersTab - Email provider management and configuration
- */
-
 import { Settings, Globe } from "lucide-react";
+import { GlassCard } from "../shared/GlassCard";
+import { ProviderDetailCard, ProviderConfigCard } from "../shared/ProviderComponents";
+import { RoutingRule } from "../shared/RoutingRule";
+import type { ProviderHealth } from "../types";
 
-import { DEFAULT_PROVIDER_HEALTH } from "../constants";
-import { ProviderDetailCard, ProviderConfigCard, RoutingRule } from "../cards";
-import type { ProvidersTabProps } from "../types";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-
-export function ProvidersTab({ providerHealth }: ProvidersTabProps) {
-  const providers =
-    providerHealth.length > 0 ? providerHealth : DEFAULT_PROVIDER_HEALTH.slice(0, 3); // brevo, resend, aws_ses
-
+export function ProvidersTab({ providerHealth }: { providerHealth: ProviderHealth[] }) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Provider Cards */}
-      <div className="grid md:grid-cols-3 gap-5">
-        {providers.map((provider) => (
+      <div className="grid md:grid-cols-3 gap-6">
+        {providerHealth.map((provider) => (
           <ProviderDetailCard key={provider.provider} provider={provider} />
         ))}
       </div>
 
       {/* Configuration */}
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Settings className="h-4 w-4 text-primary" />
-            Provider Configuration
-          </CardTitle>
-          <CardDescription>Manage email provider settings and priorities</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <ProviderConfigCard
-              name="Brevo"
-              status="configured"
-              dailyLimit={300}
-              priority={1}
-              description="Primary provider for app notifications and newsletters"
-            />
-            <ProviderConfigCard
-              name="Resend"
-              status="configured"
-              dailyLimit={100}
-              priority={2}
-              description="Optimized for authentication and transactional emails"
-            />
-            <ProviderConfigCard
-              name="MailerSend"
-              status="configured"
-              dailyLimit={400}
-              priority={3}
-              description="High-volume email provider with 12,000 emails/month free tier"
-            />
-            <ProviderConfigCard
-              name="AWS SES"
-              status="configured"
-              dailyLimit={100}
-              priority={4}
-              description="Failover provider when primary quotas are exhausted"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <GlassCard>
+        <h3 className="font-semibold mb-4 flex items-center gap-2">
+          <Settings className="h-4 w-4 text-primary" />
+          Provider Configuration
+        </h3>
+        <div className="grid md:grid-cols-3 gap-6">
+          <ProviderConfigCard
+            name="Brevo"
+            status="configured"
+            dailyLimit={300}
+            priority={1}
+            description="Primary provider for app notifications and newsletters"
+          />
+          <ProviderConfigCard
+            name="Resend"
+            status="configured"
+            dailyLimit={100}
+            priority={2}
+            description="Optimized for authentication and transactional emails"
+          />
+          <ProviderConfigCard
+            name="AWS SES"
+            status="configured"
+            dailyLimit={100}
+            priority={3}
+            description="Failover provider when primary quotas are exhausted"
+          />
+        </div>
+      </GlassCard>
 
       {/* Routing Rules */}
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Globe className="h-4 w-4 text-primary" />
-            Smart Routing Rules
-          </CardTitle>
-          <CardDescription>Automatic email routing based on type and availability</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-0 space-y-3">
+      <GlassCard>
+        <h3 className="font-semibold mb-4 flex items-center gap-2">
+          <Globe className="h-4 w-4 text-primary" />
+          Smart Routing Rules
+        </h3>
+        <div className="space-y-3">
           <RoutingRule condition="Email type = auth" action="Route to Resend" priority="High" />
           <RoutingRule
             condition="Email type = newsletter"
@@ -93,8 +70,8 @@ export function ProvidersTab({ providerHealth }: ProvidersTabProps) {
             action="Queue for next day"
             priority="Last resort"
           />
-        </CardContent>
-      </Card>
+        </div>
+      </GlassCard>
     </div>
   );
 }

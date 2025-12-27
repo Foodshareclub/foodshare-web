@@ -1,11 +1,7 @@
-/**
- * Email CRM Dashboard Tabs
- * Tab components for the main dashboard navigation
- */
-
+export { DashboardTab } from "./DashboardTab";
 export { OverviewTab } from "./OverviewTab";
-export { AudienceTab } from "./AudienceTab";
-export { ProvidersTab } from "./ProvidersTab";
 export { CampaignsTab } from "./CampaignsTab";
 export { AutomationTab } from "./AutomationTab";
+export { AudienceTab } from "./AudienceTab";
 export { ComposeTab } from "./ComposeTab";
+export { ProvidersTab } from "./ProvidersTab";

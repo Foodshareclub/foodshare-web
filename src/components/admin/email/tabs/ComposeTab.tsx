@@ -400,10 +400,7 @@ export function ComposeTab() {
                       <SelectContent>
                         {EMAIL_TYPES.map((type) => (
                           <SelectItem key={type.value} value={type.value}>
-                            <div className="flex items-center gap-2">
-                              <span className="text-muted-foreground">{type.icon}</span>
-                              {type.label}
-                            </div>
+                            {type.label}
                           </SelectItem>
                         ))}
                       </SelectContent>

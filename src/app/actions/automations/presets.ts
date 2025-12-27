@@ -1,0 +1,92 @@
+"use server";
+
+/**
+ * Preset Automations
+ * Create pre-configured automation flows (welcome, reengagement, food_alert)
+ */
+
+import { createAutomationFlow } from "./flow-crud";
+import { error, type ActionResult } from "./types";
+
+// ============================================================================
+// Preset Automations
+// ============================================================================
+
+export async function createPresetAutomation(
+  preset: "welcome" | "reengagement" | "food_alert"
+): Promise<ActionResult<{ id: string; name: string }>> {
+  const presets = {
+    welcome: {
+      name: "Welcome Series",
+      description: "Onboard new subscribers with a 3-email sequence",
+      trigger_type: "user_signup",
+      steps: [
+        {
+          type: "email" as const,
+          delay_minutes: 0,
+          template_slug: "welcome",
+          subject: "Welcome to FoodShare! 🍎",
+        },
+        { type: "delay" as const, delay_minutes: 2880 },
+        {
+          type: "email" as const,
+          delay_minutes: 0,
+          template_slug: "complete-profile",
+          subject: "Complete your FoodShare profile 📝",
+        },
+        { type: "delay" as const, delay_minutes: 7200 },
+        {
+          type: "email" as const,
+          delay_minutes: 0,
+          template_slug: "first-share-tips",
+          subject: "Ready to share your first food? 🥗",
+        },
+      ],
+    },
+    reengagement: {
+      name: "Re-engagement Campaign",
+      description: "Win back inactive users after 30 days",
+      trigger_type: "inactivity",
+      trigger_config: { days_inactive: 30 },
+      steps: [
+        {
+          type: "email" as const,
+          delay_minutes: 0,
+          template_slug: "reengagement",
+          subject: "We miss you at FoodShare! 💚",
+        },
+        { type: "delay" as const, delay_minutes: 10080 },
+        {
+          type: "condition" as const,
+          condition: { field: "last_seen_at", operator: "older_than", value: "7d" },
+        },
+        {
+          type: "email" as const,
+          delay_minutes: 0,
+          subject: "Here's what you're missing on FoodShare",
+        },
+      ],
+    },
+    food_alert: {
+      name: "Food Alert",
+      description: "Notify users when food is available nearby",
+      trigger_type: "food_listed_nearby",
+      trigger_config: { radius_km: 5, max_per_day: 3 },
+      steps: [
+        {
+          type: "email" as const,
+          delay_minutes: 0,
+          template_slug: "food-alert",
+          subject: "New food available near you! 🍽️",
+        },
+      ],
+    },
+  };
+
+  const config = presets[preset];
+  if (!config) {
+    return error("Invalid preset type", "INVALID_PRESET");
+  }
+
+  return createAutomationFlow(config);
+}

@@ -17,7 +17,7 @@ import {
 
 import { MetricCard, EmptyState } from "../components";
 import { DEFAULT_PROVIDER_HEALTH } from "../constants";
-import type { OverviewTabProps } from "../types";
+import type { OverviewTabProps, ProviderHealth } from "../types";
 
 // Import card components (to be extracted next)
 import { CampaignListItem } from "../cards/CampaignListItem";
@@ -135,7 +135,7 @@ export function OverviewTab({ stats, campaigns, automations, providerHealth }: O
         <CardContent className="pt-0">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {(providerHealth.length > 0 ? providerHealth : DEFAULT_PROVIDER_HEALTH).map(
-              (provider) => (
+              (provider: ProviderHealth) => (
                 <ProviderPerformanceCard key={provider.provider} provider={provider} />
               )
             )}
