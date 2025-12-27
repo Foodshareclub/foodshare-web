@@ -211,6 +211,7 @@ export function UnifiedChatList({
               size="icon"
               className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 hover:bg-transparent"
               onClick={() => setSearchQuery("")}
+              aria-label="Clear search"
             >
               <FiX className="h-4 w-4" />
             </Button>

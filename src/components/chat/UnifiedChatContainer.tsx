@@ -332,6 +332,7 @@ export function UnifiedChatContainer({
             size="icon"
             className="lg:hidden -ml-2 hover:bg-muted transition-colors"
             onClick={onBack}
+            aria-label="Go back"
           >
             <FiArrowLeft className="h-5 w-5 text-muted-foreground" />
           </Button>
@@ -392,6 +393,7 @@ export function UnifiedChatContainer({
                 variant="ghost"
                 size="icon"
                 className="text-muted-foreground hover:text-foreground"
+                aria-label="More options"
               >
                 <FiMoreVertical className="h-4 w-4" />
               </Button>
@@ -593,6 +595,7 @@ export function UnifiedChatContainer({
                           className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                           onClick={() => handleRetryMessage(id)}
                           disabled={isPending}
+                          aria-label="Retry sending message"
                         >
                           <RotateCcw className={cn("h-4 w-4", isPending && "animate-spin")} />
                         </Button>
@@ -665,6 +668,7 @@ export function UnifiedChatContainer({
                   size="icon"
                   className="flex-shrink-0 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                   onClick={() => fileInputRef.current?.click()}
+                  aria-label="Attach image"
                 >
                   <FiImage className="h-5 w-5" />
                 </Button>
@@ -678,6 +682,7 @@ export function UnifiedChatContainer({
                   size="icon"
                   className="flex-shrink-0 text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  aria-label="Add emoji"
                 >
                   <FiSmile className="h-5 w-5" />
                 </Button>
@@ -730,6 +735,7 @@ export function UnifiedChatContainer({
               onClick={() => handleSendMessage()}
               disabled={!inputValue.trim() || isPending}
               size="icon"
+              aria-label="Send message"
               className={cn(
                 "flex-shrink-0 rounded-xl transition-all duration-200",
                 inputValue.trim()

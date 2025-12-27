@@ -9,6 +9,8 @@ import React, { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
+import { Search, MoreVertical, Pencil, Trash2, Check, X, Eye, RefreshCw } from "lucide-react";
+import { ListingEditModal } from "./ListingEditModal";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,11 +37,9 @@ import {
   bulkDeactivateListings,
   bulkDeleteListings,
 } from "@/app/actions/admin-listings";
-import { ListingEditModal } from "./ListingEditModal";
 import type { AdminListing, ListingStats, AdminListingsFilter } from "@/lib/data/admin-listings";
 
 // Icons
-import { Search, MoreVertical, Pencil, Trash2, Check, X, Eye, RefreshCw } from "lucide-react";
 
 // Icon aliases for minimal code changes
 const FiSearch = Search;
@@ -75,7 +75,7 @@ const CATEGORIES = [
 
 export function AdminListingsClient({
   initialListings,
-  initialTotal,
+  initialTotal: _initialTotal,
   initialPage,
   totalPages,
   stats,
@@ -203,7 +203,7 @@ export function AdminListingsClient({
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               className="flex-1"
             />
-            <Button onClick={handleSearch} variant="outline" size="icon">
+            <Button onClick={handleSearch} variant="outline" size="icon" aria-label="Search">
               <FiSearch className="h-4 w-4" />
             </Button>
           </div>
@@ -266,6 +266,7 @@ export function AdminListingsClient({
             size="icon"
             onClick={() => router.refresh()}
             disabled={isPending}
+            aria-label="Refresh listings"
           >
             <FiRefreshCw className={cn("h-4 w-4", isPending && "animate-spin")} />
           </Button>
