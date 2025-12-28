@@ -11,6 +11,7 @@ import { getMenuActionAllLangs, getMainMenuKeyboard } from "../lib/keyboards.ts"
 import * as emoji from "../lib/emojis.ts";
 import * as msg from "../lib/messages.ts";
 import type { TelegramMessage } from "../types/index.ts";
+import { safeExecute } from "../utils/errors.ts";
 import {
   handleShareViaChat,
   handleStartCommand,
@@ -144,10 +145,21 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
     const verified = await handleVerificationCode(text, message.from, chatId);
     if (verified) {
       // Check if there was a pending action
+      // Use safeExecute to handle async errors in setTimeout
       if (userState?.data?.next_action === "share_food") {
-        setTimeout(() => handleShareViaChat(chatId, userId, message.from!), 1000);
+        setTimeout(() => {
+          safeExecute(
+            () => handleShareViaChat(chatId, userId, message.from!),
+            "post-verification-share"
+          );
+        }, 1000);
       } else {
-        setTimeout(() => handleStartCommand(chatId, userId, message.from!), 1000);
+        setTimeout(() => {
+          safeExecute(
+            () => handleStartCommand(chatId, userId, message.from!),
+            "post-verification-start"
+          );
+        }, 1000);
       }
     }
     return;

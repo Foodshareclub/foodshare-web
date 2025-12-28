@@ -20,14 +20,34 @@ export interface TelegramCallbackQuery {
   data: string;
 }
 
+export interface TelegramPhotoSize {
+  file_id: string;
+  file_unique_id: string;
+  width: number;
+  height: number;
+  file_size?: number;
+}
+
+export interface TelegramVideo {
+  file_id: string;
+  file_unique_id: string;
+  width: number;
+  height: number;
+  duration: number;
+  thumb?: TelegramPhotoSize;
+  file_name?: string;
+  mime_type?: string;
+  file_size?: number;
+}
+
 export interface TelegramMessage {
   message_id: number;
   from?: TelegramUser;
   chat: TelegramChat;
   date: number;
   text?: string;
-  photo?: any[];
-  video?: any;
+  photo?: TelegramPhotoSize[];
+  video?: TelegramVideo;
   location?: { latitude: number; longitude: number };
   caption?: string;
   reply_to_message?: TelegramMessage;
@@ -77,10 +97,23 @@ export interface Profile {
   created_time?: string;
 }
 
+export interface UserStateData {
+  email?: string;
+  profile_id?: string;
+  existing_profile_id?: string;
+  next_action?: string;
+  photo?: string;
+  description?: string;
+  caption?: string;
+  language?: string;
+  [key: string]: string | undefined;
+}
+
 export interface UserState {
   action: string;
-  data: any;
+  data: UserStateData;
   step?: string;
+  language?: string;
 }
 
 export interface ImpactStats {

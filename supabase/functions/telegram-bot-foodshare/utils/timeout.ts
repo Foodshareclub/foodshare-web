@@ -1,8 +1,14 @@
 /**
  * Timeout utility for preventing long-running operations
+ *
+ * Note: withRetry is re-exported from errors.ts to avoid duplication.
+ * Use the consolidated version for all retry logic.
  */
 
-import { TimeoutError, logError } from "./errors.ts";
+import { TimeoutError, withRetry as withRetryBase, type RetryOptions } from "./errors.ts";
+
+// Re-export the consolidated retry function
+export { withRetryBase as withRetry, type RetryOptions };
 
 export async function withTimeout<T>(
   promise: Promise<T>,
@@ -13,44 +19,6 @@ export async function withTimeout<T>(
     setTimeout(() => reject(new TimeoutError(errorMessage, errorMessage)), timeoutMs)
   );
   return Promise.race([promise, timeout]);
-}
-
-export async function withRetry<T>(
-  fn: () => Promise<T>,
-  options: {
-    maxRetries?: number;
-    delayMs?: number;
-    exponentialBackoff?: boolean;
-    onRetry?: (attempt: number, error: unknown) => void;
-  } = {}
-): Promise<T> {
-  const { maxRetries = 3, delayMs = 1000, exponentialBackoff = true, onRetry } = options;
-
-  let lastError: unknown;
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (error) {
-      lastError = error;
-
-      if (attempt === maxRetries) {
-        logError(error, { context: "withRetry", attempt, maxRetries });
-        throw error;
-      }
-
-      const delay = exponentialBackoff ? delayMs * Math.pow(2, attempt - 1) : delayMs;
-
-      if (onRetry) {
-        onRetry(attempt, error);
-      }
-
-      console.log(`Retry attempt ${attempt}/${maxRetries} after ${delay}ms`);
-      await new Promise((resolve) => setTimeout(resolve, delay));
-    }
-  }
-
-  throw lastError || new Error("Max retries exceeded");
 }
 
 /**

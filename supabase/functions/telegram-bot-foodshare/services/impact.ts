@@ -1,20 +1,21 @@
 /**
- * Impact statistics service
+ * Impact statistics service with optimized parallel queries
  */
 
-import { getSupabaseClient } from "./supabase.ts";
 import type { ImpactStats } from "../types/index.ts";
+import { getSupabaseClient } from "./supabase.ts";
 
 export async function getUserImpactStats(userId: number): Promise<ImpactStats> {
   const supabase = getSupabaseClient();
 
-  const { data: profile } = await supabase
+  // First, get the profile (required for subsequent queries)
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("id, created_time")
     .eq("telegram_id", userId)
     .single();
 
-  if (!profile) {
+  if (profileError || !profile) {
     return {
       foodsShared: 0,
       foodsClaimed: 0,
@@ -26,39 +27,41 @@ export async function getUserImpactStats(userId: number): Promise<ImpactStats> {
     };
   }
 
-  // Get shared food count
-  const { count: sharedCount } = await supabase
-    .from("posts")
-    .select("*", { count: "exact", head: true })
-    .eq("profile_id", profile.id)
-    .eq("post_type", "food");
+  // Run all remaining queries in parallel for better performance
+  const [sharedResult, claimedResult, activityResult] = await Promise.all([
+    // Get shared food count
+    supabase
+      .from("posts")
+      .select("*", { count: "exact", head: true })
+      .eq("profile_id", profile.id)
+      .eq("post_type", "food"),
 
-  // Get claimed food count (from messages/interactions)
-  const { count: claimedCount } = await supabase
-    .from("messages")
-    .select("*", { count: "exact", head: true })
-    .eq("sender_id", profile.id);
+    // Get claimed food count (from messages/interactions)
+    supabase
+      .from("messages")
+      .select("*", { count: "exact", head: true })
+      .eq("sender_id", profile.id),
+
+    // Get activity stats
+    supabase.from("telegram_user_activity").select("active_days").eq("user_id", userId).single(),
+  ]);
+
+  const sharedCount = sharedResult.count || 0;
+  const claimedCount = claimedResult.count || 0;
 
   // Estimate impact (average food item = 0.5kg, CO2 = 2.5kg per kg food)
-  const kgSaved = (sharedCount || 0) * 0.5;
+  const kgSaved = sharedCount * 0.5;
   const co2Saved = kgSaved * 2.5;
   const moneySaved = kgSaved * 5; // $5 per kg average
 
-  // Get activity stats
-  const { data: activity } = await supabase
-    .from("telegram_user_activity")
-    .select("active_days")
-    .eq("user_id", userId)
-    .single();
-
   return {
-    foodsShared: sharedCount || 0,
-    foodsClaimed: claimedCount || 0,
+    foodsShared: sharedCount,
+    foodsClaimed: claimedCount,
     kgSaved: Math.round(kgSaved * 10) / 10,
     co2Saved: Math.round(co2Saved * 10) / 10,
     moneySaved: Math.round(moneySaved),
     memberSince: new Date(profile.created_time).toLocaleDateString(),
-    activeDays: activity?.active_days?.length || 0,
+    activeDays: activityResult.data?.active_days?.length || 0,
   };
 }
 

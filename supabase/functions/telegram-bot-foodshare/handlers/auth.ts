@@ -22,6 +22,46 @@ import type { TelegramUser } from "../types/index.ts";
 const MAX_VERIFICATION_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MINUTES = 15;
 
+// Rate limiting for resend code (3 requests per hour per user)
+const RESEND_RATE_LIMIT_MAX = 3;
+const RESEND_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const resendRateLimitMap = new Map<number, { count: number; resetAt: number }>();
+
+/**
+ * Check if user can resend verification code
+ */
+function checkResendRateLimit(userId: number): { allowed: boolean; remainingMinutes?: number } {
+  const now = Date.now();
+  const limit = resendRateLimitMap.get(userId);
+
+  // Clean up expired entry
+  if (limit && limit.resetAt < now) {
+    resendRateLimitMap.delete(userId);
+  }
+
+  const current = resendRateLimitMap.get(userId);
+
+  if (!current) {
+    // First request in window
+    resendRateLimitMap.set(userId, {
+      count: 1,
+      resetAt: now + RESEND_RATE_LIMIT_WINDOW_MS,
+    });
+    return { allowed: true };
+  }
+
+  if (current.count >= RESEND_RATE_LIMIT_MAX) {
+    const remainingMs = current.resetAt - now;
+    const remainingMinutes = Math.ceil(remainingMs / 60000);
+    return { allowed: false, remainingMinutes };
+  }
+
+  // Increment count
+  current.count++;
+  resendRateLimitMap.set(userId, current);
+  return { allowed: true };
+}
+
 /**
  * Check if account is locked due to too many failed attempts
  */
@@ -733,6 +773,21 @@ export async function handleVerificationCode(
 }
 
 export async function handleResendCode(telegramUser: TelegramUser, chatId: number): Promise<void> {
+  // Check rate limit first
+  const rateLimit = checkResendRateLimit(telegramUser.id);
+  if (!rateLimit.allowed) {
+    await sendMessage(
+      chatId,
+      msg.errorMessage(
+        "Too Many Requests",
+        `You've requested too many verification codes.\n\n` +
+          `${emoji.CLOCK} Please wait ${rateLimit.remainingMinutes} minutes before trying again.\n\n` +
+          `${emoji.INFO} This limit helps prevent spam and protects your account.`
+      )
+    );
+    return;
+  }
+
   const userState = await getUserState(telegramUser.id);
 
   // Check if we're in a verification flow

@@ -1,28 +1,122 @@
 /**
- * Profile management service
+ * Profile management service with error classification
  */
 
-import { getSupabaseClient } from "./supabase.ts";
 import type { Profile } from "../types/index.ts";
+import { getSupabaseClient } from "./supabase.ts";
+
+/**
+ * Database error types for proper error handling
+ */
+export enum DatabaseErrorType {
+  NOT_FOUND = "NOT_FOUND",
+  TRANSIENT = "TRANSIENT", // Retryable errors (connection issues, timeouts)
+  PERMANENT = "PERMANENT", // Non-retryable errors (constraint violations)
+  UNKNOWN = "UNKNOWN",
+}
+
+export interface DatabaseResult<T> {
+  data: T | null;
+  error: {
+    type: DatabaseErrorType;
+    message: string;
+    code?: string;
+  } | null;
+}
+
+/**
+ * Classify database errors for proper handling
+ */
+function classifyError(error: { code?: string; message?: string }): DatabaseErrorType {
+  const code = error.code || "";
+  const message = (error.message || "").toLowerCase();
+
+  // Not found errors
+  if (code === "PGRST116" || message.includes("no rows")) {
+    return DatabaseErrorType.NOT_FOUND;
+  }
+
+  // Transient errors (retryable)
+  if (
+    code.startsWith("08") || // Connection errors
+    code.startsWith("53") || // Insufficient resources
+    code.startsWith("57") || // Operator intervention
+    message.includes("timeout") ||
+    message.includes("connection") ||
+    message.includes("network") ||
+    message.includes("temporarily")
+  ) {
+    return DatabaseErrorType.TRANSIENT;
+  }
+
+  // Permanent errors (non-retryable)
+  if (
+    code.startsWith("22") || // Data exception
+    code.startsWith("23") || // Integrity constraint violation
+    code.startsWith("42") // Syntax error
+  ) {
+    return DatabaseErrorType.PERMANENT;
+  }
+
+  return DatabaseErrorType.UNKNOWN;
+}
+
+/**
+ * Log database errors with context
+ */
+function logDatabaseError(
+  operation: string,
+  error: { code?: string; message?: string },
+  context: Record<string, unknown> = {}
+): void {
+  const errorType = classifyError(error);
+  console.error(
+    JSON.stringify({
+      level: errorType === DatabaseErrorType.TRANSIENT ? "warn" : "error",
+      message: `Database ${operation} failed`,
+      errorType,
+      errorCode: error.code,
+      errorMessage: error.message,
+      ...context,
+      timestamp: new Date().toISOString(),
+    })
+  );
+}
 
 export async function getProfileByTelegramId(telegramId: number): Promise<Profile | null> {
   const supabase = getSupabaseClient();
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("profiles")
     .select("*")
     .eq("telegram_id", telegramId)
     .single();
 
-  return data as Profile | null;
+  if (error) {
+    const errorType = classifyError(error);
+    if (errorType !== DatabaseErrorType.NOT_FOUND) {
+      logDatabaseError("getProfileByTelegramId", error, { telegramId });
+    }
+    return null;
+  }
+
+  return data as Profile;
 }
 
 export async function getProfileByEmail(email: string): Promise<Profile | null> {
   const supabase = getSupabaseClient();
 
-  const { data } = await supabase.from("profiles").select("*").eq("email", email).single();
+  const { data, error } = await supabase.from("profiles").select("*").eq("email", email).single();
 
-  return data as Profile | null;
+  if (error) {
+    const errorType = classifyError(error);
+    if (errorType !== DatabaseErrorType.NOT_FOUND) {
+      logDatabaseError("getProfileByEmail", error, { email: email.substring(0, 3) + "***" });
+    }
+    return null;
+  }
+
+  return data as Profile;
 }
 
 export function requiresEmailVerification(profile: Profile): boolean {
@@ -54,7 +148,7 @@ export async function createProfile(data: {
     .single();
 
   if (error) {
-    console.error("Failed to create profile:", error);
+    logDatabaseError("createProfile", error, { telegramId: data.telegram_id });
     return null;
   }
 
@@ -69,7 +163,12 @@ export async function updateProfile(
 
   const { error } = await supabase.from("profiles").update(updates).eq("id", profileId);
 
-  return !error;
+  if (error) {
+    logDatabaseError("updateProfile", error, { profileId });
+    return false;
+  }
+
+  return true;
 }
 
 export async function deleteProfile(profileId: string): Promise<boolean> {
@@ -77,5 +176,10 @@ export async function deleteProfile(profileId: string): Promise<boolean> {
 
   const { error } = await supabase.from("profiles").delete().eq("id", profileId);
 
-  return !error;
+  if (error) {
+    logDatabaseError("deleteProfile", error, { profileId });
+    return false;
+  }
+
+  return true;
 }

@@ -2,9 +2,10 @@
  * Telegram Bot FoodShare - Main Entry Point
  *
  * Enterprise-ready with:
+ * - Webhook signature verification for security
  * - Distributed rate limiting with proper 429 responses
  * - Request correlation IDs for debugging
- * - Structured JSON logging
+ * - Structured JSON logging with metrics
  * - Enhanced health checks
  * - Automatic state cleanup
  *
@@ -33,9 +34,109 @@ import {
 } from "./handlers/commands.ts";
 import { checkRateLimitDistributed } from "./services/rate-limiter.ts";
 import { cleanupExpiredStates } from "./services/user-state.ts";
+import { cleanupExpiredCache, getCacheStats } from "./services/cache.ts";
 import type { TelegramUpdate } from "./types/index.ts";
 
-const VERSION = "3.2.0";
+const VERSION = "3.4.0";
+
+// Webhook secret for verifying requests from Telegram
+const WEBHOOK_SECRET = Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
+
+// ============================================================================
+// Metrics Collection
+// ============================================================================
+
+interface Metrics {
+  requestsTotal: number;
+  requestsSuccess: number;
+  requestsError: number;
+  requests429: number;
+  latencySum: number;
+  latencyCount: number;
+  commandCounts: Record<string, number>;
+  lastReset: Date;
+}
+
+const metrics: Metrics = {
+  requestsTotal: 0,
+  requestsSuccess: 0,
+  requestsError: 0,
+  requests429: 0,
+  latencySum: 0,
+  latencyCount: 0,
+  commandCounts: {},
+  lastReset: new Date(),
+};
+
+function recordMetric(
+  type: "success" | "error" | "ratelimit",
+  latencyMs: number,
+  command?: string
+): void {
+  metrics.requestsTotal++;
+  metrics.latencySum += latencyMs;
+  metrics.latencyCount++;
+
+  if (type === "success") metrics.requestsSuccess++;
+  else if (type === "error") metrics.requestsError++;
+  else if (type === "ratelimit") metrics.requests429++;
+
+  if (command) {
+    metrics.commandCounts[command] = (metrics.commandCounts[command] || 0) + 1;
+  }
+}
+
+function getMetrics(): Record<string, unknown> {
+  const avgLatency = metrics.latencyCount > 0 ? metrics.latencySum / metrics.latencyCount : 0;
+  return {
+    requestsTotal: metrics.requestsTotal,
+    requestsSuccess: metrics.requestsSuccess,
+    requestsError: metrics.requestsError,
+    requests429: metrics.requests429,
+    avgLatencyMs: Math.round(avgLatency * 100) / 100,
+    commandCounts: metrics.commandCounts,
+    uptime: Date.now() - metrics.lastReset.getTime(),
+  };
+}
+
+// ============================================================================
+// Security: Webhook Signature Verification
+// ============================================================================
+
+/**
+ * Constant-time string comparison to prevent timing attacks
+ */
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  const encoder = new TextEncoder();
+  const aBytes = encoder.encode(a);
+  const bBytes = encoder.encode(b);
+
+  let result = 0;
+  for (let i = 0; i < aBytes.length; i++) {
+    result |= aBytes[i] ^ bBytes[i];
+  }
+
+  return result === 0;
+}
+
+function verifyWebhookSignature(req: Request): boolean {
+  // If no secret configured, skip verification (development mode)
+  if (!WEBHOOK_SECRET) {
+    return true;
+  }
+
+  const token = req.headers.get("X-Telegram-Bot-Api-Secret-Token");
+  if (!token) {
+    return false;
+  }
+
+  // Use constant-time comparison to prevent timing attacks
+  return timingSafeEqual(token, WEBHOOK_SECRET);
+}
 
 // ============================================================================
 // Initialization Check
@@ -152,12 +253,29 @@ Deno.serve(async (req) => {
     );
   }
 
+  // Metrics endpoint
+  if (pathname === "/metrics" || pathname.endsWith("/metrics")) {
+    return new Response(
+      JSON.stringify({
+        ...getMetrics(),
+        cache: getCacheStats(),
+        timestamp: new Date().toISOString(),
+        requestId,
+      }),
+      {
+        headers: { "Content-Type": "application/json", "X-Request-ID": requestId },
+      }
+    );
+  }
+
   // Enhanced health check endpoint
   if (pathname === "/health" || pathname.endsWith("/health") || req.method === "GET") {
-    // Optionally cleanup expired states on health check
+    // Cleanup expired states and cache on health check
     let cleanedStates = 0;
+    let cleanedCache = 0;
     try {
       cleanedStates = await cleanupExpiredStates();
+      cleanedCache = cleanupExpiredCache();
     } catch {
       // Ignore cleanup errors in health check
     }
@@ -180,7 +298,9 @@ Deno.serve(async (req) => {
         },
         maintenance: {
           expiredStatesCleaned: cleanedStates,
+          expiredCacheCleaned: cleanedCache,
         },
+        metrics: getMetrics(),
       }),
       {
         headers: { "Content-Type": "application/json", "X-Request-ID": requestId },
@@ -191,6 +311,15 @@ Deno.serve(async (req) => {
 
   // Handle Telegram webhook updates
   if (req.method === "POST") {
+    // Verify webhook signature for security
+    if (!verifyWebhookSignature(req)) {
+      log("warn", "Invalid webhook signature", { requestId });
+      return new Response(JSON.stringify({ ok: false, error: "Unauthorized", requestId }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", "X-Request-ID": requestId },
+      });
+    }
+
     let update: TelegramUpdate | undefined;
 
     try {
@@ -202,6 +331,8 @@ Deno.serve(async (req) => {
         const rateLimit = await checkRateLimitDistributed(userId);
 
         if (!rateLimit.allowed) {
+          const latency = Date.now() - startTime;
+          recordMetric("ratelimit", latency);
           log("warn", "Rate limit exceeded", {
             requestId,
             userId,
@@ -372,10 +503,14 @@ Deno.serve(async (req) => {
         }
       }
 
+      const latency = Date.now() - startTime;
+      recordMetric("success", latency);
       return new Response(JSON.stringify({ ok: true, requestId }), {
         headers: { "Content-Type": "application/json", "X-Request-ID": requestId },
       });
     } catch (error) {
+      const latency = Date.now() - startTime;
+      recordMetric("error", latency);
       const errorMessage = error instanceof Error ? error.message : String(error);
       const errorStack = error instanceof Error ? error.stack : undefined;
 
@@ -384,7 +519,7 @@ Deno.serve(async (req) => {
         error: errorMessage,
         stack: errorStack,
         updatePreview: update ? JSON.stringify(update).substring(0, 300) : "parse_failed",
-        durationMs: Date.now() - startTime,
+        durationMs: latency,
       });
 
       return new Response(
