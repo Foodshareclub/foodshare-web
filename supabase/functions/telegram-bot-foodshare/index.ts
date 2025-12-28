@@ -1,11 +1,17 @@
 /**
  * Telegram Bot FoodShare - Main Entry Point
  *
- * Modular architecture with clean separation of concerns.
+ * Enterprise-ready with:
+ * - Distributed rate limiting with proper 429 responses
+ * - Request correlation IDs for debugging
+ * - Structured JSON logging
+ * - Enhanced health checks
+ * - Automatic state cleanup
+ *
  * See README.md for architecture documentation.
  */
 
-import { setWebhook } from "./services/telegram-api.ts";
+import { setWebhook, getTelegramApiStatus } from "./services/telegram-api.ts";
 import { handleCallbackQuery } from "./handlers/callbacks.ts";
 import {
   handleTextMessage,
@@ -25,7 +31,11 @@ import {
   handleLeaderboardCommand,
   handleLanguageCommand,
 } from "./handlers/commands.ts";
+import { checkRateLimitDistributed } from "./services/rate-limiter.ts";
+import { cleanupExpiredStates } from "./services/user-state.ts";
 import type { TelegramUpdate } from "./types/index.ts";
+
+const VERSION = "3.2.0";
 
 // ============================================================================
 // Initialization Check
@@ -35,7 +45,6 @@ let isInitialized = false;
 let initError: Error | null = null;
 
 try {
-  // Verify critical environment variables (check both naming conventions)
   const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN") || Deno.env.get("BOT_TOKEN");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -51,10 +60,43 @@ try {
   }
 
   isInitialized = true;
-  console.log("✅ Telegram bot initialized successfully");
+  console.log(
+    JSON.stringify({
+      level: "info",
+      message: "Telegram bot initialized successfully",
+      version: VERSION,
+      timestamp: new Date().toISOString(),
+    })
+  );
 } catch (error) {
   initError = error instanceof Error ? error : new Error(String(error));
-  console.error("❌ Initialization failed:", initError);
+  console.error(
+    JSON.stringify({
+      level: "error",
+      message: "Initialization failed",
+      error: initError.message,
+      timestamp: new Date().toISOString(),
+    })
+  );
+}
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+function generateRequestId(): string {
+  return crypto.randomUUID();
+}
+
+function log(level: string, message: string, context: Record<string, unknown> = {}): void {
+  console.log(
+    JSON.stringify({
+      level,
+      message,
+      ...context,
+      timestamp: new Date().toISOString(),
+    })
+  );
 }
 
 // ============================================================================
@@ -62,85 +104,142 @@ try {
 // ============================================================================
 
 Deno.serve(async (req) => {
+  const requestId = generateRequestId();
+  const startTime = Date.now();
+
   // Check initialization status
   if (!isInitialized) {
-    console.error("Function not initialized:", initError?.message);
+    log("error", "Function not initialized", { requestId, error: initError?.message });
     return new Response(
       JSON.stringify({
         error: "Service temporarily unavailable",
         details: initError?.message,
+        requestId,
       }),
       {
         status: 503,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Request-ID": requestId },
       }
     );
   }
+
   const url = new URL(req.url);
   const pathname = url.pathname;
 
-  // Webhook setup endpoint (must be before general POST handler)
+  // Webhook setup endpoint
   if (pathname.endsWith("/setup-webhook")) {
     const webhookUrl = url.searchParams.get("url");
     if (!webhookUrl) {
-      return new Response(JSON.stringify({ error: "Missing webhook URL parameter" }), {
+      return new Response(JSON.stringify({ error: "Missing webhook URL parameter", requestId }), {
         status: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Request-ID": requestId },
       });
     }
 
     const success = await setWebhook(webhookUrl);
+    log(success ? "info" : "error", "Webhook setup", { requestId, success, webhookUrl });
+
     return new Response(
       JSON.stringify({
         success,
         message: success ? "Webhook set successfully" : "Failed to set webhook",
+        requestId,
       }),
       {
         status: success ? 200 : 500,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Request-ID": requestId },
       }
     );
   }
 
-  // Health check endpoint
+  // Enhanced health check endpoint
   if (pathname === "/health" || pathname.endsWith("/health") || req.method === "GET") {
+    // Optionally cleanup expired states on health check
+    let cleanedStates = 0;
+    try {
+      cleanedStates = await cleanupExpiredStates();
+    } catch {
+      // Ignore cleanup errors in health check
+    }
+
+    const telegramStatus = getTelegramApiStatus();
+    const overallStatus = telegramStatus.status === "OPEN" ? "degraded" : "healthy";
+
     return new Response(
       JSON.stringify({
-        status: "ok",
+        status: overallStatus,
         service: "telegram-bot-foodshare",
-        version: "3.0.0",
+        version: VERSION,
         timestamp: new Date().toISOString(),
+        requestId,
+        dependencies: {
+          telegram: {
+            status: telegramStatus.status,
+            failures: telegramStatus.failures,
+          },
+        },
+        maintenance: {
+          expiredStatesCleaned: cleanedStates,
+        },
       }),
       {
-        headers: { "Content-Type": "application/json" },
-        status: 200,
+        headers: { "Content-Type": "application/json", "X-Request-ID": requestId },
+        status: overallStatus === "healthy" ? 200 : 503,
       }
     );
   }
 
   // Handle Telegram webhook updates
   if (req.method === "POST") {
+    let update: TelegramUpdate | undefined;
+
     try {
-      const update: TelegramUpdate = await req.json();
+      update = await req.json();
+      const userId = update.message?.from?.id || update.callback_query?.from?.id;
 
-      // Rate limiting check
-      if (update.message?.from?.id || update.callback_query?.from?.id) {
-        const userId = update.message?.from?.id || update.callback_query?.from?.id;
-        const { checkRateLimit } = await import("./services/rate-limiter.ts");
+      // Distributed rate limiting with proper 429 response
+      if (userId) {
+        const rateLimit = await checkRateLimitDistributed(userId);
 
-        if (!checkRateLimit(userId!)) {
-          console.warn(`Rate limit exceeded for user ${userId}`);
-          return new Response(JSON.stringify({ ok: true }), {
-            headers: { "Content-Type": "application/json" },
+        if (!rateLimit.allowed) {
+          log("warn", "Rate limit exceeded", {
+            requestId,
+            userId,
+            retryAfter: rateLimit.retryAfterSeconds,
           });
+
+          return new Response(
+            JSON.stringify({
+              ok: false,
+              error: "Rate limit exceeded",
+              retryAfter: rateLimit.retryAfterSeconds,
+              requestId,
+            }),
+            {
+              status: 429,
+              headers: {
+                "Content-Type": "application/json",
+                "X-Request-ID": requestId,
+                "Retry-After": String(rateLimit.retryAfterSeconds || 60),
+                "X-RateLimit-Remaining": String(rateLimit.remaining),
+                "X-RateLimit-Reset": rateLimit.resetAt.toISOString(),
+              },
+            }
+          );
         }
       }
 
       // Handle callback queries (inline button clicks)
       if (update.callback_query) {
         await handleCallbackQuery(update.callback_query);
-        return new Response(JSON.stringify({ ok: true }), {
-          headers: { "Content-Type": "application/json" },
+        log("info", "Callback query handled", {
+          requestId,
+          userId,
+          action: update.callback_query.data,
+          durationMs: Date.now() - startTime,
+        });
+        return new Response(JSON.stringify({ ok: true, requestId }), {
+          headers: { "Content-Type": "application/json", "X-Request-ID": requestId },
         });
       }
 
@@ -148,7 +247,7 @@ Deno.serve(async (req) => {
       if (update.message) {
         const message = update.message;
         const chatId = message.chat.id;
-        const userId = message.from?.id;
+        const msgUserId = message.from?.id;
         const text = message.text?.trim();
 
         // Handle commands
@@ -158,8 +257,13 @@ Deno.serve(async (req) => {
 
           switch (command) {
             case "/start":
-              if (userId && message.from) {
-                await handleStartCommand(chatId, userId, message.from, message.from.language_code);
+              if (msgUserId && message.from) {
+                await handleStartCommand(
+                  chatId,
+                  msgUserId,
+                  message.from,
+                  message.from.language_code
+                );
               }
               break;
 
@@ -168,8 +272,13 @@ Deno.serve(async (req) => {
               break;
 
             case "/share":
-              if (userId && message.from) {
-                await handleShareCommand(chatId, userId, message.from, message.from.language_code);
+              if (msgUserId && message.from) {
+                await handleShareCommand(
+                  chatId,
+                  msgUserId,
+                  message.from,
+                  message.from.language_code
+                );
               }
               break;
 
@@ -178,26 +287,26 @@ Deno.serve(async (req) => {
               break;
 
             case "/nearby":
-              if (userId) {
-                await handleNearbyCommand(chatId, userId);
+              if (msgUserId) {
+                await handleNearbyCommand(chatId, msgUserId);
               }
               break;
 
             case "/profile":
-              if (userId) {
-                await handleProfileCommand(chatId, userId);
+              if (msgUserId) {
+                await handleProfileCommand(chatId, msgUserId);
               }
               break;
 
             case "/impact":
-              if (userId) {
-                await handleImpactCommand(chatId, userId);
+              if (msgUserId) {
+                await handleImpactCommand(chatId, msgUserId);
               }
               break;
 
             case "/stats":
-              if (userId) {
-                await handleStatsCommand(chatId, userId, message.from?.language_code);
+              if (msgUserId) {
+                await handleStatsCommand(chatId, msgUserId, message.from?.language_code);
               }
               break;
 
@@ -207,8 +316,8 @@ Deno.serve(async (req) => {
 
             case "/language":
             case "/lang":
-              if (userId) {
-                await handleLanguageCommand(chatId, userId);
+              if (msgUserId) {
+                await handleLanguageCommand(chatId, msgUserId);
               }
               break;
 
@@ -219,57 +328,82 @@ Deno.serve(async (req) => {
               break;
 
             case "/cancel":
-              // Handled in handleTextMessage
               await handleTextMessage(message);
               break;
 
             default:
-              // Unknown command - ignore or send help
+              // Unknown command - ignore
               break;
           }
+
+          log("info", "Command handled", {
+            requestId,
+            userId: msgUserId,
+            command,
+            durationMs: Date.now() - startTime,
+          });
         }
         // Handle location messages
         else if (message.location) {
           await handleLocationMessage(message);
+          log("info", "Location message handled", {
+            requestId,
+            userId: msgUserId,
+            durationMs: Date.now() - startTime,
+          });
         }
         // Handle photo messages
         else if (message.photo) {
           await handlePhotoMessage(message);
+          log("info", "Photo message handled", {
+            requestId,
+            userId: msgUserId,
+            durationMs: Date.now() - startTime,
+          });
         }
         // Handle text messages
         else if (text) {
           await handleTextMessage(message);
+          log("info", "Text message handled", {
+            requestId,
+            userId: msgUserId,
+            durationMs: Date.now() - startTime,
+          });
         }
       }
 
-      return new Response(JSON.stringify({ ok: true }), {
-        headers: { "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ ok: true, requestId }), {
+        headers: { "Content-Type": "application/json", "X-Request-ID": requestId },
       });
     } catch (error) {
-      // Log detailed error information
-      console.error("Error processing update:", {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        update: JSON.stringify(update).substring(0, 500), // First 500 chars
-        timestamp: new Date().toISOString(),
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+
+      log("error", "Error processing update", {
+        requestId,
+        error: errorMessage,
+        stack: errorStack,
+        updatePreview: update ? JSON.stringify(update).substring(0, 300) : "parse_failed",
+        durationMs: Date.now() - startTime,
       });
 
       return new Response(
         JSON.stringify({
           ok: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: errorMessage,
+          requestId,
         }),
         {
           status: 500,
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Request-ID": requestId },
         }
       );
     }
   }
 
   // Method not allowed
-  return new Response(JSON.stringify({ error: "Method not allowed" }), {
+  return new Response(JSON.stringify({ error: "Method not allowed", requestId }), {
     status: 405,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-Request-ID": requestId },
   });
 });

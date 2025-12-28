@@ -5,9 +5,10 @@
 import { sendMessage, answerCallbackQuery } from "../services/telegram-api.ts";
 import { setUserState } from "../services/user-state.ts";
 import { getProfileByTelegramId, requiresEmailVerification } from "../services/profile.ts";
-import { getSupabaseClient } from "../services/supabase.ts";
 import * as emoji from "../lib/emojis.ts";
 import * as msg from "../lib/messages.ts";
+import { getUserLanguage } from "../lib/i18n.ts";
+import type { TelegramCallbackQuery } from "../types/index.ts";
 import {
   handleStartCommand,
   handleShareCommand,
@@ -18,7 +19,18 @@ import {
   handleStatsCommand,
   handleLeaderboardCommand,
 } from "./commands.ts";
-import type { TelegramCallbackQuery } from "../types/index.ts";
+import { requireAuth } from "./messages.ts";
+
+// Callbacks that require authorization
+const PROTECTED_CALLBACKS = new Set([
+  "action_share",
+  "share_via_chat",
+  "action_nearby",
+  "action_profile",
+  "profile_location",
+  "profile_radius",
+  "action_stats",
+]);
 
 export async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery): Promise<void> {
   const chatId = callbackQuery.message.chat.id;
@@ -27,6 +39,15 @@ export async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery):
 
   // Answer callback query to remove loading state
   await answerCallbackQuery(callbackQuery.id);
+
+  // Check auth for protected callbacks
+  if (PROTECTED_CALLBACKS.has(data)) {
+    const lang = await getUserLanguage(userId, callbackQuery.from?.language_code);
+    // Extract action name for friendly message (e.g., "action_share" -> "share")
+    const actionName = data.replace("action_", "").replace("_via_chat", "");
+    const auth = await requireAuth(userId, chatId, lang, actionName);
+    if (!auth.authorized) return;
+  }
 
   switch (data) {
     case "action_share":
@@ -95,9 +116,9 @@ async function handleLanguageSelection(
   chatId: number,
   userId: number,
   language: string,
-  telegramUser: any
+  telegramUser: { id: number; first_name: string; language_code?: string }
 ): Promise<void> {
-  const { saveUserLanguage, t } = await import("../lib/i18n.ts");
+  const { saveUserLanguage } = await import("../lib/i18n.ts");
 
   // Save language preference
   await saveUserLanguage(userId, language as "en" | "ru" | "de");
@@ -152,4 +173,3 @@ async function handleProfileRadiusUpdate(chatId: number, userId: number): Promis
   );
   await setUserState(userId, { action: "setting_radius", data: {} });
 }
-

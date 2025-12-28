@@ -1,281 +1,186 @@
-# Telegram Bot FoodShare - Componentized Architecture
+# FoodShare Telegram Bot
 
-## Overview
+Telegram bot for the FoodShare platform - enabling users to share and find surplus food via Telegram.
 
-The Telegram bot has been refactored into a modular, maintainable architecture with clear separation of concerns.
+## Features
 
-## Directory Structure
+- **Share Food** - Post surplus food with photo, description, and location
+- **Find Food** - Search for available food nearby
+- **User Profiles** - Link Telegram account to FoodShare profile via email verification
+- **Impact Tracking** - View environmental impact statistics
+- **Multi-language** - Supports English, Russian, and German
+- **Leaderboard** - See top contributors
+
+## Commands
+
+| Command         | Description                      |
+| --------------- | -------------------------------- |
+| `/start`        | Start the bot and register/login |
+| `/share`        | Share surplus food               |
+| `/find [query]` | Search for food                  |
+| `/nearby`       | Find food near your location     |
+| `/profile`      | View your profile                |
+| `/impact`       | View your environmental impact   |
+| `/stats`        | View your activity statistics    |
+| `/leaderboard`  | See top contributors             |
+| `/language`     | Change bot language              |
+| `/help`         | Show all commands                |
+| `/cancel`       | Cancel current action            |
+| `/resend`       | Resend verification code         |
+
+## Architecture
 
 ```
 telegram-bot-foodshare/
-├── index.ts                    # Main entry point (Deno.serve handler)
-├── README.md                   # This file
-│
+├── index.ts              # Main entry point (Deno.serve)
+├── config.toml           # Supabase function config
 ├── config/
-│   └── index.ts               # Environment variables and configuration
-│
+│   ├── index.ts          # Environment config
+│   └── constants.ts      # App constants
 ├── types/
-│   └── index.ts               # TypeScript type definitions
-│
+│   └── index.ts          # TypeScript definitions
 ├── lib/
-│   ├── i18n.ts                # Internationalization utilities
-│   ├── emojis.ts              # Emoji constants
-│   └── messages.ts            # Message formatting utilities
-│
+│   ├── i18n.ts           # Internationalization
+│   ├── keyboards.ts      # Telegram keyboard builders
+│   ├── messages.ts       # Message formatting
+│   └── emojis.ts         # Emoji constants
+├── locales/
+│   ├── en.ts             # English translations
+│   ├── ru.ts             # Russian translations
+│   └── de.ts             # German translations
 ├── services/
-│   ├── supabase.ts            # Supabase client with connection pooling
-│   ├── cache.ts               # In-memory caching service
-│   ├── telegram-api.ts        # Telegram Bot API wrapper
-│   ├── user-state.ts          # User state management
-│   ├── profile.ts             # Profile CRUD operations
-│   ├── email.ts               # Email verification service
-│   ├── geocoding.ts           # Location and geocoding utilities
-│   ├── tracking.ts            # Activity tracking
-│   └── impact.ts              # Impact statistics calculations
-│
+│   ├── supabase.ts       # Database client
+│   ├── telegram-api.ts   # Telegram Bot API
+│   ├── telegram-files.ts # File upload handling
+│   ├── profile.ts        # User profile management
+│   ├── email.ts          # Email verification
+│   ├── user-state.ts     # Conversation state
+│   ├── geocoding.ts      # Location services
+│   ├── impact.ts         # Impact calculations
+│   ├── tracking.ts       # Activity tracking
+│   ├── cache.ts          # In-memory caching
+│   └── rate-limiter.ts   # Rate limiting
 ├── handlers/
-│   ├── auth.ts                # Authentication flow handlers
-│   ├── commands.ts            # Command handlers (/start, /help, etc.)
-│   ├── messages.ts            # Message handlers (text, photo, location)
-│   └── callbacks.ts           # Callback query handlers
-│
+│   ├── commands.ts       # Command handlers
+│   ├── messages.ts       # Text/photo/location handlers
+│   ├── callbacks.ts      # Inline button handlers
+│   └── auth.ts           # Email verification flow
 └── utils/
-    ├── validators.ts          # Input validation utilities
-    └── formatters.ts          # Data formatting utilities
+    ├── validation.ts     # Input validation
+    ├── errors.ts         # Error handling
+    ├── timeout.ts        # Async timeouts
+    └── circuit-breaker.ts # Fault tolerance
 ```
 
-## Architecture Principles
+## Deployment
 
-### 1. **Separation of Concerns**
+### Prerequisites
 
-- **Services**: Business logic and external API interactions
-- **Handlers**: Request/response handling and user interaction flow
-- **Utils**: Pure functions for data transformation
-- **Config**: Centralized configuration management
+- Supabase CLI installed
+- Project linked: `supabase link --project-ref <project-id>`
 
-### 2. **Single Responsibility**
+### Environment Variables
 
-Each module has one clear purpose:
+Set these secrets in Supabase:
 
-- `services/profile.ts` - Only profile-related database operations
-- `services/email.ts` - Only email sending functionality
-- `handlers/auth.ts` - Only authentication flow logic
-
-### 3. **Dependency Injection**
-
-Services are imported where needed, making testing and mocking easier:
-
-```typescript
-import { sendMessage } from "../services/telegram-api.ts";
-import { getProfileByTelegramId } from "../services/profile.ts";
+```bash
+supabase secrets set BOT_TOKEN=<telegram-bot-token>
+supabase secrets set SUPABASE_URL=<supabase-url>
+supabase secrets set SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+supabase secrets set APP_URL=https://foodshare.club
 ```
 
-### 4. **Type Safety**
+### Deploy
 
-All types are centralized in `types/index.ts` and exported for reuse across modules.
-
-### 5. **Error Handling**
-
-Each service handles its own errors and returns appropriate values or throws typed errors.
-
-## Key Services
-
-### Supabase Service (`services/supabase.ts`)
-
-- Connection pooling for performance
-- Single client instance reused across requests
-- Lazy initialization
-
-### Cache Service (`services/cache.ts`)
-
-- In-memory caching with TTL
-- Generic type support
-- Automatic expiration
-
-### Telegram API Service (`services/telegram-api.ts`)
-
-- Wrapper around Telegram Bot API
-- Consistent error handling
-- Type-safe method signatures
-
-### Profile Service (`services/profile.ts`)
-
-- CRUD operations for user profiles
-- Email verification logic
-- Profile lookup by telegram_id or email
-
-### Email Service (`services/email.ts`)
-
-- Verification email sending
-- Integration with Resend edge function
-- HTML email templates
-
-## Handler Pattern
-
-Handlers follow a consistent pattern:
-
-```typescript
-export async function handleCommand(
-  chatId: number,
-  userId: number,
-  telegramUser: TelegramUser,
-  lang?: string
-): Promise<void> {
-  // 1. Get user language
-  const language = await getUserLanguage(userId, lang);
-
-  // 2. Fetch required data
-  const profile = await getProfileByTelegramId(userId);
-
-  // 3. Validate and check permissions
-  if (!profile || requiresEmailVerification(profile)) {
-    await sendMessage(chatId, msg.errorMessage(...));
-    return;
-  }
-
-  // 4. Execute business logic
-  const result = await someService.doSomething();
-
-  // 5. Send response
-  await sendMessage(chatId, formatResponse(result));
-}
+```bash
+supabase functions deploy telegram-bot-foodshare
 ```
 
-## Benefits of This Architecture
+### Setup Webhook
 
-### 1. **Maintainability**
+After deployment, set the Telegram webhook:
 
-- Easy to locate and fix bugs
-- Clear module boundaries
-- Self-documenting code structure
-
-### 2. **Testability**
-
-- Services can be unit tested in isolation
-- Handlers can be tested with mocked services
-- Pure functions are easy to test
-
-### 3. **Scalability**
-
-- Easy to add new commands/features
-- Services can be extracted to separate edge functions if needed
-- Clear extension points
-
-### 4. **Reusability**
-
-- Services can be shared across multiple handlers
-- Utilities can be used anywhere
-- Types ensure consistency
-
-### 5. **Performance**
-
-- Connection pooling reduces overhead
-- Caching reduces database queries
-- Lazy loading of services
-
-## Adding New Features
-
-### Adding a New Command
-
-1. Create handler in `handlers/commands.ts`:
-
-```typescript
-export async function handleMyCommand(
-  chatId: number,
-  userId: number,
-  telegramUser: TelegramUser
-): Promise<void> {
-  // Implementation
-}
+```bash
+curl "https://<project-id>.supabase.co/functions/v1/telegram-bot-foodshare/setup-webhook?url=https://<project-id>.supabase.co/functions/v1/telegram-bot-foodshare"
 ```
 
-2. Register in main router (`index.ts`):
+### Health Check
 
-```typescript
-case "/mycommand":
-  await handleMyCommand(chatId, userId, telegramUser);
-  break;
+```bash
+curl "https://<project-id>.supabase.co/functions/v1/telegram-bot-foodshare/health"
 ```
 
-### Adding a New Service
+## User Flow
 
-1. Create service file in `services/`:
+### New User Registration
 
-```typescript
-// services/my-service.ts
-import { getSupabaseClient } from "./supabase.ts";
+1. User sends `/start`
+2. Bot asks for email
+3. User enters email
+4. Bot sends 6-digit verification code
+5. User enters code
+6. Profile linked, menu buttons appear
 
-export async function doSomething(): Promise<Result> {
-  const supabase = getSupabaseClient();
-  // Implementation
-}
-```
+### Existing User Sign-In
 
-2. Import and use in handlers:
+1. User sends `/start`
+2. Bot detects existing email, asks to verify
+3. User enters verification code
+4. Telegram account linked to existing profile
 
-```typescript
-import { doSomething } from "../services/my-service.ts";
-```
+### Sharing Food
 
-## Migration Path
+1. User clicks "Share" or sends `/share`
+2. Bot asks for photo
+3. User sends photo
+4. Bot asks for description
+5. User enters description
+6. Bot asks for location (GPS or address)
+7. Post created and published
 
-The original monolithic `index.ts` file can be gradually migrated:
+## Database Requirements
 
-1. ✅ Extract types → `types/index.ts`
-2. ✅ Extract config → `config/index.ts`
-3. ✅ Extract services → `services/*.ts`
-4. ✅ Extract auth handlers → `handlers/auth.ts`
-5. ⏳ Extract command handlers → `handlers/commands.ts`
-6. ⏳ Extract message handlers → `handlers/messages.ts`
-7. ⏳ Extract callback handlers → `handlers/callbacks.ts`
-8. ⏳ Update main `index.ts` to use new modules
+The `profiles` table must have:
 
-## Testing Strategy
+- `id` (uuid, primary key)
+- `telegram_id` (bigint, nullable, unique)
+- `email` (text)
+- `email_verified` (boolean)
+- `first_name` (text)
+- `nickname` (text)
+- `verification_code` (text)
+- `verification_code_expires_at` (timestamptz)
+- `language` (text)
+- `location` (geography/point)
 
-### Unit Tests
+## Security
 
-```typescript
-// Test services in isolation
-import { assertEquals } from "https://deno.land/std/testing/asserts.ts";
-import { generateVerificationCode } from "./services/profile.ts";
+- `verify_jwt = false` in config.toml (required for Telegram webhooks)
+- Email verification required for posting
+- Rate limiting on requests
+- Location privacy (200m approximation for shared locations)
+- Input validation on all user inputs
 
-Deno.test("generateVerificationCode returns 6 digits", () => {
-  const code = generateVerificationCode();
-  assertEquals(code.length, 6);
-  assertEquals(/^\d{6}$/.test(code), true);
-});
-```
+## Troubleshooting
 
-### Integration Tests
+### Bot not responding
 
-```typescript
-// Test handlers with mocked services
-import { handleEmailInput } from "./handlers/auth.ts";
-// Mock services and test flow
-```
+1. Check webhook: `curl .../health`
+2. Verify BOT_TOKEN is set correctly
+3. Check function logs in Supabase dashboard
 
-## Performance Considerations
+### Menu buttons not working
 
-- **Connection Pooling**: Single Supabase client reused
-- **Caching**: Frequently accessed data cached with TTL
-- **Lazy Loading**: Services initialized only when needed
-- **Async/Await**: Non-blocking I/O operations
-- **Error Boundaries**: Graceful degradation on service failures
+1. User needs to complete email verification
+2. Send `/cancel` to clear stuck state
+3. Send `/start` to re-register
 
-## Security Best Practices
+### Verification emails not arriving
 
-- Environment variables for sensitive data
-- Input validation in handlers
-- SQL injection prevention via Supabase client
-- Rate limiting (to be implemented)
-- Email verification required for sensitive operations
+1. Check Resend edge function is deployed
+2. Verify RESEND_API_KEY is set
+3. Check spam folder
 
-## Next Steps
+## Version
 
-1. Complete migration of remaining handlers
-2. Add comprehensive error logging
-3. Implement rate limiting
-4. Add unit tests for all services
-5. Add integration tests for critical flows
-6. Document API contracts
-7. Add monitoring and alerting
+**v3.1** - Modular architecture with email verification

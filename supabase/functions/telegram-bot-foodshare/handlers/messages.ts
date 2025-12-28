@@ -5,7 +5,12 @@
 import { sendMessage } from "../services/telegram-api.ts";
 import { getUserState, setUserState } from "../services/user-state.ts";
 import { getProfileByTelegramId, updateProfile } from "../services/profile.ts";
-import { handleEmailInput, handleVerificationCode } from "./auth.ts";
+import { trackMessage } from "../services/tracking.ts";
+import { getUserLanguage, t } from "../lib/i18n.ts";
+import { getMenuActionAllLangs, getMainMenuKeyboard } from "../lib/keyboards.ts";
+import * as emoji from "../lib/emojis.ts";
+import * as msg from "../lib/messages.ts";
+import type { TelegramMessage } from "../types/index.ts";
 import {
   handleShareViaChat,
   handleStartCommand,
@@ -19,12 +24,58 @@ import {
   handleLanguageCommand,
   handleLeaderboardCommand,
 } from "./commands.ts";
-import { trackMessage } from "../services/tracking.ts";
-import { getUserLanguage, t } from "../lib/i18n.ts";
-import { getMenuActionAllLangs } from "../lib/keyboards.ts";
-import * as emoji from "../lib/emojis.ts";
-import * as msg from "../lib/messages.ts";
-import type { TelegramMessage } from "../types/index.ts";
+import { handleEmailInput, handleVerificationCode } from "./auth.ts";
+
+// Actions that require authorization
+const PROTECTED_ACTIONS = new Set(["share", "nearby", "profile", "impact", "stats", "language"]);
+// Public actions that don't require auth (kept for documentation)
+const _PUBLIC_ACTIONS = new Set(["find", "help", "leaderboard"]);
+
+/**
+ * Check if user is authorized (has verified email)
+ * If not, sends a friendly prompt to register
+ */
+export async function requireAuth(
+  telegramUserId: number,
+  chatId: number,
+  lang: string,
+  action?: string
+): Promise<{
+  authorized: boolean;
+  profile?: ReturnType<typeof getProfileByTelegramId> extends Promise<infer T> ? T : never;
+}> {
+  const profile = await getProfileByTelegramId(telegramUserId);
+
+  if (!profile || !profile.email_verified) {
+    const actionMessages: Record<string, string> = {
+      share: `${emoji.FOOD} To share food with the community, please register first!`,
+      nearby: `${emoji.LOCATION} To find food nearby, please register first!`,
+      profile: `${emoji.USER} To view your profile, please register first!`,
+      impact: `${emoji.LEAF} To see your environmental impact, please register first!`,
+      stats: `${emoji.CHART} To view your activity stats, please register first!`,
+      language: `${emoji.GLOBE} To change your language, please register first!`,
+    };
+
+    const message =
+      actionMessages[action || ""] ||
+      `${emoji.LOCK} Please complete registration to use this feature!`;
+
+    await sendMessage(
+      chatId,
+      msg.infoMessage(
+        t(lang, "auth.registrationRequired") || "Registration Required",
+        `${message}\n\n` +
+          `${emoji.INFO} Use /start to register or sign in.\n\n` +
+          `${emoji.SPARKLES} It only takes a minute!`
+      ),
+      { reply_markup: getMainMenuKeyboard(lang) }
+    );
+
+    return { authorized: false };
+  }
+
+  return { authorized: true, profile };
+}
 
 export async function handleTextMessage(message: TelegramMessage): Promise<void> {
   const userId = message.from?.id;
@@ -51,6 +102,12 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
   // Handle menu button clicks (check all languages)
   const menuAction = getMenuActionAllLangs(text);
   if (menuAction && !userState?.action) {
+    // Check auth for protected actions
+    if (PROTECTED_ACTIONS.has(menuAction)) {
+      const auth = await requireAuth(userId, chatId, lang, menuAction);
+      if (!auth.authorized) return;
+    }
+
     switch (menuAction) {
       case "share":
         return handleShareCommand(chatId, userId, message.from!, message.from?.language_code);
@@ -65,7 +122,7 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
       case "stats":
         return handleStatsCommand(chatId, userId, message.from?.language_code);
       case "help":
-        return handleHelpCommand(chatId);
+        return handleHelpCommand(chatId, message.from?.language_code);
       case "language":
         return handleLanguageCommand(chatId, userId);
       case "leaderboard":
@@ -272,6 +329,21 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
     await setUserState(userId, null);
     return;
   }
+
+  // Default response for unrecognized messages - always show menu
+  // This ensures new users see the menu on ANY first interaction
+  await sendMessage(
+    chatId,
+    msg.infoMessage(
+      t(lang, "common.welcome") || "Welcome to FoodShare!",
+      `${emoji.SPARKLES} Use the menu buttons below to get started!\n\n` +
+        `${emoji.FOOD} <b>Share Food</b> - Share surplus food\n` +
+        `${emoji.SEARCH} <b>Find Food</b> - Discover free food nearby\n` +
+        `${emoji.USER} <b>Profile</b> - View your profile\n\n` +
+        `${emoji.INFO} Or use /start to register or sign in.`
+    ),
+    { reply_markup: getMainMenuKeyboard(lang) }
+  );
 }
 
 export async function handlePhotoMessage(message: TelegramMessage): Promise<void> {

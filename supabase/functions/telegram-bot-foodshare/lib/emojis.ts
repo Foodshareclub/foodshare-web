@@ -95,6 +95,7 @@ export const DOWN = "⬇️";
 
 // Additional
 export const KEY = "🔑";
+export const LOCK = "🔒";
 export const REFRESH = "🔄";
 export const SUPPORT = "💬";
 export const CHAT = "💬";

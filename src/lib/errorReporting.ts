@@ -1,8 +1,8 @@
 /**
  * Error Reporting Service
- * Provides unified error tracking and reporting
- * Ready for integration with Sentry, LogRocket, or other services
+ * Provides unified error tracking and reporting via Sentry
  */
+import * as Sentry from "@sentry/nextjs";
 
 // ============================================================================
 // Types
@@ -31,7 +31,7 @@ export interface ErrorReport {
   /** Timestamp */
   timestamp: string;
   /** Error severity */
-  severity: 'info' | 'warning' | 'error' | 'fatal';
+  severity: "info" | "warning" | "error" | "fatal";
   /** Browser/environment info */
   environment: {
     userAgent?: string;
@@ -57,8 +57,8 @@ const config = {
 // Helper Functions
 // ============================================================================
 
-function getEnvironmentInfo(): ErrorReport['environment'] {
-  const isServer = typeof window === 'undefined';
+function getEnvironmentInfo(): ErrorReport["environment"] {
+  const isServer = typeof window === "undefined";
 
   return {
     userAgent: isServer ? undefined : navigator.userAgent,
@@ -67,12 +67,12 @@ function getEnvironmentInfo(): ErrorReport['environment'] {
   };
 }
 
-function shouldReport(severity: ErrorReport['severity']): boolean {
+function shouldReport(severity: ErrorReport["severity"]): boolean {
   // Always report fatal errors
-  if (severity === 'fatal') return true;
+  if (severity === "fatal") return true;
 
   // In production, apply sample rate
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     return Math.random() < config.sampleRate;
   }
 
@@ -82,27 +82,27 @@ function shouldReport(severity: ErrorReport['severity']): boolean {
 
 function formatErrorForConsole(report: ErrorReport): void {
   const emoji = {
-    info: 'ℹ️',
-    warning: '⚠️',
-    error: '❌',
-    fatal: '💀',
+    info: "ℹ️",
+    warning: "⚠️",
+    error: "❌",
+    fatal: "💀",
   }[report.severity];
 
-  const style = {
-    info: 'color: #3b82f6',
-    warning: 'color: #f59e0b',
-    error: 'color: #ef4444',
-    fatal: 'color: #dc2626; font-weight: bold',
+  const _style = {
+    info: "color: #3b82f6",
+    warning: "color: #f59e0b",
+    error: "color: #ef4444",
+    fatal: "color: #dc2626; font-weight: bold",
   }[report.severity];
 
   console.groupCollapsed(`${emoji} [${report.severity.toUpperCase()}] ${report.message}`);
-  console.log('%cTimestamp:', 'font-weight: bold', report.timestamp);
-  console.log('%cContext:', 'font-weight: bold', report.context);
+  console.log("%cTimestamp:", "font-weight: bold", report.timestamp);
+  console.log("%cContext:", "font-weight: bold", report.context);
   if (report.stack) {
-    console.log('%cStack Trace:', 'font-weight: bold');
+    console.log("%cStack Trace:", "font-weight: bold");
     console.log(report.stack);
   }
-  console.log('%cEnvironment:', 'font-weight: bold', report.environment);
+  console.log("%cEnvironment:", "font-weight: bold", report.environment);
   console.groupEnd();
 }
 
@@ -114,10 +114,34 @@ let errorQueue: ErrorReport[] = [];
 let flushTimeout: NodeJS.Timeout | null = null;
 
 function queueError(report: ErrorReport): void {
+  // Send directly to Sentry instead of queuing
+  const sentryLevel = {
+    info: "info" as const,
+    warning: "warning" as const,
+    error: "error" as const,
+    fatal: "fatal" as const,
+  }[report.severity];
+
+  Sentry.captureMessage(report.message, {
+    level: sentryLevel,
+    tags: {
+      component: report.context.componentName,
+      action: report.context.action,
+      route: report.context.route,
+    },
+    extra: {
+      ...report.context.metadata,
+      environment: report.environment,
+      timestamp: report.timestamp,
+    },
+    user: report.context.userId ? { id: report.context.userId } : undefined,
+  });
+
+  // Also add to legacy queue for backwards compatibility
   errorQueue.push(report);
 
   // Flush immediately for fatal errors
-  if (report.severity === 'fatal') {
+  if (report.severity === "fatal") {
     flushErrorQueue();
     return;
   }
@@ -131,23 +155,8 @@ function queueError(report: ErrorReport): void {
 
 async function flushErrorQueue(): Promise<void> {
   if (errorQueue.length === 0) return;
-
-  const errors = [...errorQueue];
+  // Clear queue - Sentry handles sending
   errorQueue = [];
-
-  // In production, send to error reporting service
-  if (process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_ERROR_REPORTING_ENDPOINT) {
-    try {
-      await fetch(process.env.NEXT_PUBLIC_ERROR_REPORTING_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ errors }),
-      });
-    } catch {
-      // Silently fail - don't cause more errors
-      console.warn('Failed to send error reports');
-    }
-  }
 }
 
 // ============================================================================
@@ -160,7 +169,7 @@ async function flushErrorQueue(): Promise<void> {
 export function reportError(
   error: Error | string,
   context: ErrorContext = {},
-  severity: ErrorReport['severity'] = 'error'
+  severity: ErrorReport["severity"] = "error"
 ): void {
   if (!shouldReport(severity)) return;
 
@@ -184,21 +193,21 @@ export function reportError(
  * Report an info-level event
  */
 export function reportInfo(message: string, context: ErrorContext = {}): void {
-  reportError(message, context, 'info');
+  reportError(message, context, "info");
 }
 
 /**
  * Report a warning
  */
 export function reportWarning(message: string, context: ErrorContext = {}): void {
-  reportError(message, context, 'warning');
+  reportError(message, context, "warning");
 }
 
 /**
  * Report a fatal error (always reported)
  */
 export function reportFatal(error: Error | string, context: ErrorContext = {}): void {
-  reportError(error, context, 'fatal');
+  reportError(error, context, "fatal");
 }
 
 // ============================================================================
@@ -208,14 +217,15 @@ export function reportFatal(error: Error | string, context: ErrorContext = {}): 
 /**
  * Report error from React Error Boundary
  */
-export function reportBoundaryError(
-  error: Error,
-  errorInfo: { componentStack?: string }
-): void {
-  reportError(error, {
-    componentName: 'ErrorBoundary',
-    metadata: { componentStack: errorInfo.componentStack },
-  }, 'fatal');
+export function reportBoundaryError(error: Error, errorInfo: { componentStack?: string }): void {
+  reportError(
+    error,
+    {
+      componentName: "ErrorBoundary",
+      metadata: { componentStack: errorInfo.componentStack },
+    },
+    "fatal"
+  );
 }
 
 // ============================================================================
@@ -236,7 +246,7 @@ export function withErrorReporting<T extends unknown[], R>(
       reportError(
         error instanceof Error ? error : new Error(String(error)),
         { action: actionName, metadata: { args } },
-        'error'
+        "error"
       );
       throw error;
     }
@@ -251,35 +261,35 @@ export function withErrorReporting<T extends unknown[], R>(
  * Initialize global error handlers (call once at app startup)
  */
 export function initializeErrorReporting(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
   // Catch unhandled promise rejections
-  window.addEventListener('unhandledrejection', (event) => {
+  window.addEventListener("unhandledrejection", (event) => {
     reportError(
       event.reason instanceof Error ? event.reason : new Error(String(event.reason)),
-      { action: 'unhandledrejection' },
-      'error'
+      { action: "unhandledrejection" },
+      "error"
     );
   });
 
   // Catch global errors
-  window.addEventListener('error', (event) => {
+  window.addEventListener("error", (event) => {
     reportError(
       event.error instanceof Error ? event.error : new Error(event.message),
       {
-        action: 'globalError',
+        action: "globalError",
         metadata: {
           filename: event.filename,
           lineno: event.lineno,
           colno: event.colno,
         },
       },
-      'error'
+      "error"
     );
   });
 
   // Flush on page unload
-  window.addEventListener('beforeunload', () => {
+  window.addEventListener("beforeunload", () => {
     flushErrorQueue();
   });
 }
@@ -295,6 +305,12 @@ let currentUserId: string | undefined;
  */
 export function setErrorReportingUser(userId: string | undefined): void {
   currentUserId = userId;
+  // Also set Sentry user context
+  if (userId) {
+    Sentry.setUser({ id: userId });
+  } else {
+    Sentry.setUser(null);
+  }
 }
 
 /**

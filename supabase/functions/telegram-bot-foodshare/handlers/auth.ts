@@ -1,5 +1,5 @@
 /**
- * Authentication handlers
+ * Authentication handlers with brute-force protection
  */
 
 import { sendMessage } from "../services/telegram-api.ts";
@@ -17,6 +17,76 @@ import { getMainMenuKeyboard } from "../lib/keyboards.ts";
 import * as emoji from "../lib/emojis.ts";
 import * as msg from "../lib/messages.ts";
 import type { TelegramUser } from "../types/index.ts";
+
+// Brute-force protection constants
+const MAX_VERIFICATION_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MINUTES = 15;
+
+/**
+ * Check if account is locked due to too many failed attempts
+ */
+function isAccountLocked(profile: {
+  verification_attempts?: number;
+  verification_locked_until?: string | null;
+}): { locked: boolean; remainingMinutes?: number } {
+  if (!profile.verification_locked_until) {
+    return { locked: false };
+  }
+
+  const lockedUntil = new Date(profile.verification_locked_until);
+  const now = new Date();
+
+  if (lockedUntil > now) {
+    const remainingMs = lockedUntil.getTime() - now.getTime();
+    const remainingMinutes = Math.ceil(remainingMs / 60000);
+    return { locked: true, remainingMinutes };
+  }
+
+  return { locked: false };
+}
+
+/**
+ * Increment failed verification attempts and lock if threshold exceeded
+ */
+async function incrementFailedAttempts(
+  profileId: string,
+  currentAttempts: number = 0
+): Promise<void> {
+  const newAttempts = currentAttempts + 1;
+
+  if (newAttempts >= MAX_VERIFICATION_ATTEMPTS) {
+    // Lock the account
+    const lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000);
+    await updateProfile(profileId, {
+      verification_attempts: newAttempts,
+      verification_locked_until: lockedUntil.toISOString(),
+    });
+    console.log(
+      JSON.stringify({
+        level: "warn",
+        message: "Account locked due to too many failed verification attempts",
+        profileId,
+        attempts: newAttempts,
+        lockedUntil: lockedUntil.toISOString(),
+        timestamp: new Date().toISOString(),
+      })
+    );
+  } else {
+    await updateProfile(profileId, {
+      verification_attempts: newAttempts,
+    });
+  }
+}
+
+/**
+ * Reset verification attempts on successful verification
+ */
+async function _resetVerificationAttempts(profileId: string): Promise<void> {
+  await updateProfile(profileId, {
+    verification_attempts: 0,
+    verification_locked_until: null,
+  });
+}
 
 export async function handleEmailInput(
   email: string,
@@ -472,14 +542,39 @@ export async function handleVerificationCode(
       return false;
     }
 
+    // Check if account is locked
+    const lockStatus = isAccountLocked(existingProfile);
+    if (lockStatus.locked) {
+      await sendMessage(
+        chatId,
+        msg.errorMessage(
+          "Account Temporarily Locked",
+          `Too many failed verification attempts.\n\n` +
+            `${emoji.CLOCK} Please wait ${lockStatus.remainingMinutes} minutes before trying again.\n\n` +
+            `${emoji.INFO} This is a security measure to protect your account.`
+        )
+      );
+      return false;
+    }
+
     // Check if code matches and hasn't expired
     if (existingProfile.verification_code !== code) {
+      await incrementFailedAttempts(
+        existing_profile_id,
+        existingProfile.verification_attempts || 0
+      );
+      const attemptsLeft =
+        MAX_VERIFICATION_ATTEMPTS - ((existingProfile.verification_attempts || 0) + 1);
+
       await sendMessage(
         chatId,
         msg.errorMessage(
           "Incorrect Code",
           "The code you entered doesn't match.\n\n" +
             `${emoji.INFO} Please check your email and try again.\n\n` +
+            (attemptsLeft > 0
+              ? `${emoji.WARNING} ${attemptsLeft} attempts remaining.\n\n`
+              : `${emoji.WARNING} Account will be locked after next failed attempt.\n\n`) +
             `${emoji.REFRESH} Type /resend to get a new code`
         )
       );
@@ -501,7 +596,7 @@ export async function handleVerificationCode(
       return false;
     }
 
-    // Link the Telegram account to the existing profile
+    // Link the Telegram account to the existing profile and reset attempts
     await updateProfile(existing_profile_id, {
       telegram_id: telegramUser.id,
       first_name: telegramUser.first_name,
@@ -509,6 +604,8 @@ export async function handleVerificationCode(
       email_verified: true,
       verification_code: null,
       verification_code_expires_at: null,
+      verification_attempts: 0,
+      verification_locked_until: null,
     });
 
     const lang = await getUserLanguage(telegramUser.id);
@@ -546,13 +643,34 @@ export async function handleVerificationCode(
       return false;
     }
 
+    // Check if account is locked
+    const lockStatus = isAccountLocked(profile);
+    if (lockStatus.locked) {
+      await sendMessage(
+        chatId,
+        msg.errorMessage(
+          "Account Temporarily Locked",
+          `Too many failed verification attempts.\n\n` +
+            `${emoji.CLOCK} Please wait ${lockStatus.remainingMinutes} minutes before trying again.\n\n` +
+            `${emoji.INFO} This is a security measure to protect your account.`
+        )
+      );
+      return false;
+    }
+
     if (profile.verification_code !== code) {
+      await incrementFailedAttempts(profile_id, profile.verification_attempts || 0);
+      const attemptsLeft = MAX_VERIFICATION_ATTEMPTS - ((profile.verification_attempts || 0) + 1);
+
       await sendMessage(
         chatId,
         msg.errorMessage(
           "Incorrect Code",
           "The code you entered doesn't match.\n\n" +
             `${emoji.INFO} Please check your email and try again.\n\n` +
+            (attemptsLeft > 0
+              ? `${emoji.WARNING} ${attemptsLeft} attempts remaining.\n\n`
+              : `${emoji.WARNING} Account will be locked after next failed attempt.\n\n`) +
             `${emoji.REFRESH} Type /resend to get a new code`
         )
       );
@@ -574,11 +692,13 @@ export async function handleVerificationCode(
       return false;
     }
 
-    // Verify email and clear verification code
+    // Verify email, clear verification code, and reset attempts
     await updateProfile(profile_id, {
       email_verified: true,
       verification_code: null,
       verification_code_expires_at: null,
+      verification_attempts: 0,
+      verification_locked_until: null,
     });
 
     const lang = await getUserLanguage(telegramUser.id);

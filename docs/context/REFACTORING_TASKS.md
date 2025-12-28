@@ -310,6 +310,63 @@ src/utils/
 18. Add explicit return types to exported functions
 19. Replace `any` with `unknown` where type is truly unknown
 
+## Enterprise Hardening (December 2025)
+
+### Completed Improvements
+
+1. **Sentry Error Tracking Integration**
+   - ✅ Installed `@sentry/nextjs` package
+   - ✅ Created `sentry.client.config.ts` - Browser-side error tracking with replay
+   - ✅ Created `sentry.server.config.ts` - Server-side error tracking
+   - ✅ Created `sentry.edge.config.ts` - Edge runtime error tracking
+   - ✅ Created `src/instrumentation.ts` - Next.js instrumentation for Sentry init
+   - ✅ Updated `next.config.ts` with `withSentryConfig` wrapper
+   - ✅ Updated `src/lib/errorReporting.ts` to use Sentry
+
+2. **Rate Limiting Infrastructure**
+   - ✅ Installed `@upstash/ratelimit` package
+   - ✅ Created `src/lib/security/rateLimit.ts` - Rate limiting utilities for Server Actions
+   - ✅ Created `middleware.ts` - Edge-level rate limiting with Upstash Redis
+   - ✅ Created `src/lib/supabase/middleware.ts` - Supabase session management
+
+3. **Security Headers (Already Present)**
+   - ✅ CSP headers configured in `next.config.ts`
+   - ✅ HSTS, X-Frame-Options, X-Content-Type-Options configured
+   - ✅ Permissions-Policy configured
+
+4. **Test Coverage Improvements**
+   - ✅ Added `src/__tests__/lib/data/auth.test.ts` - Auth data function tests
+   - ✅ E2E tests already comprehensive (6 spec files)
+
+### Environment Variables Required
+
+```bash
+# Sentry (production error tracking)
+NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
+SENTRY_ORG=your_org
+SENTRY_PROJECT=your_project
+SENTRY_AUTH_TOKEN=your_auth_token
+
+# Upstash Redis (rate limiting)
+UPSTASH_REDIS_REST_URL=your_upstash_url
+UPSTASH_REDIS_REST_TOKEN=your_upstash_token
+```
+
+### Usage Examples
+
+**Rate Limiting in Server Actions:**
+
+```typescript
+// src/app/actions/example.ts
+"use server";
+import { requireRateLimit } from "@/lib/security/rateLimit";
+
+export async function sensitiveAction(data: FormData) {
+  await requireRateLimit("sensitive"); // 5 requests/minute
+  // ... action logic
+}
+```
+
 ## Metrics to Track
 
 - TypeScript strict mode errors: Target 0
@@ -317,3 +374,5 @@ src/utils/
 - Client Component pages: Target < 5 (auth, chat, realtime only)
 - Test coverage: Target > 80%
 - Bundle size: Monitor for regressions
+- Error rate in Sentry: Monitor for regressions
+- Rate limit violations: Monitor abuse patterns

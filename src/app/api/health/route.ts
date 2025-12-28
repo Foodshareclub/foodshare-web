@@ -13,7 +13,6 @@ export const runtime = "edge";
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
-const DB_TIMEOUT_MS = 30000; // 30s for Supabase cold-start on free tier
 const API_TIMEOUT_MS = 30000; // 30s for Management API
 
 interface HealthStatus {
@@ -26,15 +25,51 @@ interface HealthStatus {
     database: "up" | "down" | "degraded";
     auth: "up" | "down" | "unknown";
     storage: "up" | "down" | "unknown";
+    redis?: "up" | "down" | "unknown";
   };
   upgradeStatus?: {
     status: string;
     progress?: string;
     targetVersion?: string;
   };
+  latency?: {
+    database?: number;
+    redis?: number;
+  };
 }
 
 const MAINTENANCE_MESSAGE = "We're sprucing things up! Back shortly — thanks for your patience! 💚";
+
+/**
+ * Check Redis (Upstash) connectivity for rate limiting
+ */
+async function checkRedisHealth(): Promise<{ ok: boolean; latency: number }> {
+  const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+  const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!redisUrl || !redisToken) {
+    return { ok: true, latency: 0 }; // Redis not configured, skip check
+  }
+
+  const start = Date.now();
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const response = await fetch(`${redisUrl}/ping`, {
+      headers: {
+        Authorization: `Bearer ${redisToken}`,
+      },
+      signal: controller.signal,
+      cache: "no-store",
+    });
+
+    clearTimeout(timeoutId);
+    return { ok: response.ok, latency: Date.now() - start };
+  } catch {
+    return { ok: false, latency: Date.now() - start };
+  }
+}
 
 /**
  * Check Supabase project health via Management API
@@ -247,10 +282,11 @@ export async function GET(): Promise<NextResponse<HealthStatus>> {
     }
 
     // Check all sources in parallel
-    const [dbResult, projectHealth, upgradeInfo] = await Promise.all([
+    const [dbResult, projectHealth, upgradeInfo, redisResult] = await Promise.all([
       checkDatabaseConnectivity(supabaseUrl, supabaseKey),
       checkProjectHealth(),
       checkUpgradeStatus(),
+      checkRedisHealth(),
     ]);
 
     // Check if upgrade is in progress
@@ -300,8 +336,24 @@ export async function GET(): Promise<NextResponse<HealthStatus>> {
       );
     }
 
-    // All good
-    return createResponse("healthy", true, { database: "up", auth: "up", storage: "up" });
+    // Determine Redis status
+    const redisConfigured = !!(
+      process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    );
+    const redisStatus: "up" | "down" | "unknown" = redisConfigured
+      ? redisResult.ok
+        ? "up"
+        : "down"
+      : "unknown";
+
+    // All good (or degraded if Redis is down but DB is up)
+    const overallStatus = !redisConfigured || redisResult.ok ? "healthy" : "degraded";
+    return createResponse(overallStatus, true, {
+      database: "up",
+      auth: "up",
+      storage: "up",
+      ...(redisConfigured && { redis: redisStatus }),
+    });
   } catch {
     return createResponse(
       "maintenance",
