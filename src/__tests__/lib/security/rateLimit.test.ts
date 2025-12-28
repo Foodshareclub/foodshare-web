@@ -3,7 +3,9 @@
  * Unit tests for rate limiting service
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+/* eslint-disable @typescript-eslint/no-require-imports */
+
+import { describe, it, expect, beforeEach, jest } from "@jest/globals";
 
 // Mock state
 const mockState = {
@@ -22,7 +24,7 @@ const mockLimiter = {
 };
 
 // Mock headers from next/headers
-jest.mock('next/headers', () => ({
+jest.mock("next/headers", () => ({
   headers: jest.fn(() =>
     Promise.resolve({
       get: (name: string) => mockState.headersMap.get(name) || null,
@@ -31,16 +33,16 @@ jest.mock('next/headers', () => ({
 }));
 
 // Mock Upstash Redis
-jest.mock('@upstash/redis', () => ({
+jest.mock("@upstash/redis", () => ({
   Redis: jest.fn().mockImplementation(() => ({})),
 }));
 
 // Mock Upstash Ratelimit with static methods
-jest.mock('@upstash/ratelimit', () => ({
+jest.mock("@upstash/ratelimit", () => ({
   Ratelimit: Object.assign(
     jest.fn().mockImplementation(() => mockLimiter),
     {
-      slidingWindow: jest.fn().mockReturnValue('sliding-window-config'),
+      slidingWindow: jest.fn().mockReturnValue("sliding-window-config"),
     }
   ),
 }));
@@ -48,7 +50,12 @@ jest.mock('@upstash/ratelimit', () => ({
 // Store original env
 const originalEnv = process.env;
 
-describe('Rate Limiting', () => {
+// Helper to set NODE_ENV (workaround for TypeScript readonly property)
+function setNodeEnv(value: string): void {
+  (process.env as Record<string, string | undefined>).NODE_ENV = value;
+}
+
+describe("Rate Limiting", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockState.headersMap.clear();
@@ -70,35 +77,35 @@ describe('Rate Limiting', () => {
   // checkRateLimit Tests
   // ==========================================================================
 
-  describe('checkRateLimit', () => {
-    it('should return success in development mode', async () => {
-      process.env.NODE_ENV = 'development';
+  describe("checkRateLimit", () => {
+    it("should return success in development mode", async () => {
+      setNodeEnv("development");
 
-      const { checkRateLimit } = require('@/lib/security/rateLimit');
+      const { checkRateLimit } = require("@/lib/security/rateLimit");
 
-      const result = await checkRateLimit('standard');
+      const result = await checkRateLimit("standard");
 
       expect(result.success).toBe(true);
       expect(result.limit).toBe(999);
       expect(result.remaining).toBe(999);
     });
 
-    it('should return success when Redis not configured', async () => {
-      process.env.NODE_ENV = 'production';
-      process.env.UPSTASH_REDIS_REST_URL = '';
+    it("should return success when Redis not configured", async () => {
+      setNodeEnv("production");
+      process.env.UPSTASH_REDIS_REST_URL = "";
 
-      const { checkRateLimit } = require('@/lib/security/rateLimit');
+      const { checkRateLimit } = require("@/lib/security/rateLimit");
 
-      const result = await checkRateLimit('standard');
+      const result = await checkRateLimit("standard");
 
       expect(result.success).toBe(true);
       expect(result.limit).toBe(999);
     });
 
-    it('should check rate limit with standard limiter in production', async () => {
-      process.env.NODE_ENV = 'production';
-      process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example.com';
-      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
+    it("should check rate limit with standard limiter in production", async () => {
+      setNodeEnv("production");
+      process.env.UPSTASH_REDIS_REST_URL = "https://redis.example.com";
+      process.env.UPSTASH_REDIS_REST_TOKEN = "test-token";
 
       mockState.rateLimitResult = {
         success: true,
@@ -107,17 +114,17 @@ describe('Rate Limiting', () => {
         reset: Date.now() + 10000,
       };
 
-      const { checkRateLimit } = require('@/lib/security/rateLimit');
+      const { checkRateLimit } = require("@/lib/security/rateLimit");
 
-      const result = await checkRateLimit('standard');
+      const result = await checkRateLimit("standard");
 
       expect(result.success).toBe(true);
     });
 
-    it('should return failure when rate limit exceeded', async () => {
-      process.env.NODE_ENV = 'production';
-      process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example.com';
-      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
+    it("should return failure when rate limit exceeded", async () => {
+      setNodeEnv("production");
+      process.env.UPSTASH_REDIS_REST_URL = "https://redis.example.com";
+      process.env.UPSTASH_REDIS_REST_TOKEN = "test-token";
 
       mockState.rateLimitResult = {
         success: false,
@@ -126,36 +133,36 @@ describe('Rate Limiting', () => {
         reset: Date.now() + 60000,
       };
 
-      const { checkRateLimit } = require('@/lib/security/rateLimit');
+      const { checkRateLimit } = require("@/lib/security/rateLimit");
 
-      const result = await checkRateLimit('standard');
+      const result = await checkRateLimit("standard");
 
       expect(result.success).toBe(false);
       expect(result.remaining).toBe(0);
     });
 
-    it('should use custom identifier when provided', async () => {
-      process.env.NODE_ENV = 'production';
-      process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example.com';
-      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
+    it("should use custom identifier when provided", async () => {
+      setNodeEnv("production");
+      process.env.UPSTASH_REDIS_REST_URL = "https://redis.example.com";
+      process.env.UPSTASH_REDIS_REST_TOKEN = "test-token";
 
-      const { checkRateLimit } = require('@/lib/security/rateLimit');
+      const { checkRateLimit } = require("@/lib/security/rateLimit");
 
-      const result = await checkRateLimit('standard', 'user-123');
+      const result = await checkRateLimit("standard", "user-123");
 
       expect(result.success).toBe(true);
     });
 
-    it('should handle different rate limit types', async () => {
-      process.env.NODE_ENV = 'development';
+    it("should handle different rate limit types", async () => {
+      setNodeEnv("development");
 
-      const { checkRateLimit } = require('@/lib/security/rateLimit');
+      const { checkRateLimit } = require("@/lib/security/rateLimit");
 
       // All should work in development mode
-      const standardResult = await checkRateLimit('standard');
-      const sensitiveResult = await checkRateLimit('sensitive');
-      const writeResult = await checkRateLimit('write');
-      const strictResult = await checkRateLimit('strict');
+      const standardResult = await checkRateLimit("standard");
+      const sensitiveResult = await checkRateLimit("sensitive");
+      const writeResult = await checkRateLimit("write");
+      const strictResult = await checkRateLimit("strict");
 
       expect(standardResult.success).toBe(true);
       expect(sensitiveResult.success).toBe(true);
@@ -168,54 +175,54 @@ describe('Rate Limiting', () => {
   // Client Identifier Tests
   // ==========================================================================
 
-  describe('getClientIdentifier (via checkRateLimit)', () => {
+  describe("getClientIdentifier (via checkRateLimit)", () => {
     beforeEach(() => {
-      process.env.NODE_ENV = 'production';
-      process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example.com';
-      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
+      setNodeEnv("production");
+      process.env.UPSTASH_REDIS_REST_URL = "https://redis.example.com";
+      process.env.UPSTASH_REDIS_REST_TOKEN = "test-token";
     });
 
-    it('should use cf-connecting-ip header when available', async () => {
-      mockState.headersMap.set('cf-connecting-ip', '1.2.3.4');
-      mockState.headersMap.set('x-real-ip', '5.6.7.8');
-      mockState.headersMap.set('x-forwarded-for', '9.10.11.12');
+    it("should use cf-connecting-ip header when available", async () => {
+      mockState.headersMap.set("cf-connecting-ip", "1.2.3.4");
+      mockState.headersMap.set("x-real-ip", "5.6.7.8");
+      mockState.headersMap.set("x-forwarded-for", "9.10.11.12");
 
-      const { checkRateLimit } = require('@/lib/security/rateLimit');
+      const { checkRateLimit } = require("@/lib/security/rateLimit");
 
       // The function should use cf-connecting-ip first
-      await checkRateLimit('standard');
+      await checkRateLimit("standard");
 
       // Verify it ran without error
       expect(mockLimiter.limit).toHaveBeenCalled();
     });
 
-    it('should use x-real-ip header when cf-connecting-ip not available', async () => {
-      mockState.headersMap.set('x-real-ip', '5.6.7.8');
-      mockState.headersMap.set('x-forwarded-for', '9.10.11.12');
+    it("should use x-real-ip header when cf-connecting-ip not available", async () => {
+      mockState.headersMap.set("x-real-ip", "5.6.7.8");
+      mockState.headersMap.set("x-forwarded-for", "9.10.11.12");
 
-      const { checkRateLimit } = require('@/lib/security/rateLimit');
+      const { checkRateLimit } = require("@/lib/security/rateLimit");
 
-      await checkRateLimit('standard');
-
-      expect(mockLimiter.limit).toHaveBeenCalled();
-    });
-
-    it('should use x-forwarded-for header as fallback', async () => {
-      mockState.headersMap.set('x-forwarded-for', '9.10.11.12, 13.14.15.16');
-
-      const { checkRateLimit } = require('@/lib/security/rateLimit');
-
-      await checkRateLimit('standard');
+      await checkRateLimit("standard");
 
       expect(mockLimiter.limit).toHaveBeenCalled();
     });
 
-    it('should use anonymous when no headers available', async () => {
+    it("should use x-forwarded-for header as fallback", async () => {
+      mockState.headersMap.set("x-forwarded-for", "9.10.11.12, 13.14.15.16");
+
+      const { checkRateLimit } = require("@/lib/security/rateLimit");
+
+      await checkRateLimit("standard");
+
+      expect(mockLimiter.limit).toHaveBeenCalled();
+    });
+
+    it("should use anonymous when no headers available", async () => {
       // No headers set
 
-      const { checkRateLimit } = require('@/lib/security/rateLimit');
+      const { checkRateLimit } = require("@/lib/security/rateLimit");
 
-      await checkRateLimit('standard');
+      await checkRateLimit("standard");
 
       expect(mockLimiter.limit).toHaveBeenCalled();
     });
@@ -225,11 +232,11 @@ describe('Rate Limiting', () => {
   // requireRateLimit Tests
   // ==========================================================================
 
-  describe('requireRateLimit', () => {
-    it('should not throw when under rate limit', async () => {
-      process.env.NODE_ENV = 'production';
-      process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example.com';
-      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
+  describe("requireRateLimit", () => {
+    it("should not throw when under rate limit", async () => {
+      setNodeEnv("production");
+      process.env.UPSTASH_REDIS_REST_URL = "https://redis.example.com";
+      process.env.UPSTASH_REDIS_REST_TOKEN = "test-token";
 
       mockState.rateLimitResult = {
         success: true,
@@ -238,15 +245,15 @@ describe('Rate Limiting', () => {
         reset: Date.now() + 10000,
       };
 
-      const { requireRateLimit } = require('@/lib/security/rateLimit');
+      const { requireRateLimit } = require("@/lib/security/rateLimit");
 
-      await expect(requireRateLimit('standard')).resolves.toBeUndefined();
+      await expect(requireRateLimit("standard")).resolves.toBeUndefined();
     });
 
-    it('should throw when rate limit exceeded', async () => {
-      process.env.NODE_ENV = 'production';
-      process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example.com';
-      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
+    it("should throw when rate limit exceeded", async () => {
+      setNodeEnv("production");
+      process.env.UPSTASH_REDIS_REST_URL = "https://redis.example.com";
+      process.env.UPSTASH_REDIS_REST_TOKEN = "test-token";
 
       const resetTime = Date.now() + 30000; // 30 seconds from now
       mockState.rateLimitResult = {
@@ -256,17 +263,15 @@ describe('Rate Limiting', () => {
         reset: resetTime,
       };
 
-      const { requireRateLimit } = require('@/lib/security/rateLimit');
+      const { requireRateLimit } = require("@/lib/security/rateLimit");
 
-      await expect(requireRateLimit('standard')).rejects.toThrow(
-        /Rate limit exceeded/
-      );
+      await expect(requireRateLimit("standard")).rejects.toThrow(/Rate limit exceeded/);
     });
 
-    it('should include reset time in error message', async () => {
-      process.env.NODE_ENV = 'production';
-      process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example.com';
-      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
+    it("should include reset time in error message", async () => {
+      setNodeEnv("production");
+      process.env.UPSTASH_REDIS_REST_URL = "https://redis.example.com";
+      process.env.UPSTASH_REDIS_REST_TOKEN = "test-token";
 
       const resetTime = Date.now() + 45000; // 45 seconds from now
       mockState.rateLimitResult = {
@@ -276,19 +281,17 @@ describe('Rate Limiting', () => {
         reset: resetTime,
       };
 
-      const { requireRateLimit } = require('@/lib/security/rateLimit');
+      const { requireRateLimit } = require("@/lib/security/rateLimit");
 
-      await expect(requireRateLimit('standard')).rejects.toThrow(
-        /try again in \d+ seconds/
-      );
+      await expect(requireRateLimit("standard")).rejects.toThrow(/try again in \d+ seconds/);
     });
 
-    it('should not throw in development mode', async () => {
-      process.env.NODE_ENV = 'development';
+    it("should not throw in development mode", async () => {
+      setNodeEnv("development");
 
-      const { requireRateLimit } = require('@/lib/security/rateLimit');
+      const { requireRateLimit } = require("@/lib/security/rateLimit");
 
-      await expect(requireRateLimit('strict')).resolves.toBeUndefined();
+      await expect(requireRateLimit("strict")).resolves.toBeUndefined();
     });
   });
 
@@ -296,25 +299,27 @@ describe('Rate Limiting', () => {
   // withRateLimit Tests
   // ==========================================================================
 
-  describe('withRateLimit', () => {
-    it('should execute action when under rate limit', async () => {
-      process.env.NODE_ENV = 'development';
+  describe("withRateLimit", () => {
+    it("should execute action when under rate limit", async () => {
+      setNodeEnv("development");
 
-      const { withRateLimit } = require('@/lib/security/rateLimit');
+      const { withRateLimit } = require("@/lib/security/rateLimit");
 
-      const mockAction = jest.fn().mockResolvedValue('success');
-      const wrappedAction = withRateLimit(mockAction, 'standard');
+      const mockAction = jest
+        .fn<(...args: unknown[]) => Promise<string>>()
+        .mockResolvedValue("success");
+      const wrappedAction = withRateLimit(mockAction, "standard");
 
-      const result = await wrappedAction('arg1', 'arg2');
+      const result = await wrappedAction("arg1", "arg2");
 
-      expect(result).toBe('success');
-      expect(mockAction).toHaveBeenCalledWith('arg1', 'arg2');
+      expect(result).toBe("success");
+      expect(mockAction).toHaveBeenCalledWith("arg1", "arg2");
     });
 
-    it('should not execute action when rate limited', async () => {
-      process.env.NODE_ENV = 'production';
-      process.env.UPSTASH_REDIS_REST_URL = 'https://redis.example.com';
-      process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
+    it("should not execute action when rate limited", async () => {
+      setNodeEnv("production");
+      process.env.UPSTASH_REDIS_REST_URL = "https://redis.example.com";
+      process.env.UPSTASH_REDIS_REST_TOKEN = "test-token";
 
       mockState.rateLimitResult = {
         success: false,
@@ -323,56 +328,56 @@ describe('Rate Limiting', () => {
         reset: Date.now() + 30000,
       };
 
-      const { withRateLimit } = require('@/lib/security/rateLimit');
+      const { withRateLimit } = require("@/lib/security/rateLimit");
 
-      const mockAction = jest.fn().mockResolvedValue('success');
-      const wrappedAction = withRateLimit(mockAction, 'standard');
+      const mockAction = jest.fn<() => Promise<string>>().mockResolvedValue("success");
+      const wrappedAction = withRateLimit(mockAction, "standard");
 
       await expect(wrappedAction()).rejects.toThrow(/Rate limit exceeded/);
       expect(mockAction).not.toHaveBeenCalled();
     });
 
-    it('should pass through action errors', async () => {
-      process.env.NODE_ENV = 'development';
+    it("should pass through action errors", async () => {
+      setNodeEnv("development");
 
-      const { withRateLimit } = require('@/lib/security/rateLimit');
+      const { withRateLimit } = require("@/lib/security/rateLimit");
 
       const mockAction = jest
-        .fn()
-        .mockRejectedValue(new Error('Action failed'));
-      const wrappedAction = withRateLimit(mockAction, 'standard');
+        .fn<() => Promise<never>>()
+        .mockRejectedValue(new Error("Action failed"));
+      const wrappedAction = withRateLimit(mockAction, "standard");
 
-      await expect(wrappedAction()).rejects.toThrow('Action failed');
+      await expect(wrappedAction()).rejects.toThrow("Action failed");
     });
 
-    it('should preserve action return type', async () => {
-      process.env.NODE_ENV = 'development';
+    it("should preserve action return type", async () => {
+      setNodeEnv("development");
 
-      const { withRateLimit } = require('@/lib/security/rateLimit');
+      const { withRateLimit } = require("@/lib/security/rateLimit");
 
       interface ActionResult {
         id: string;
         data: number[];
       }
 
-      const mockAction = jest.fn().mockResolvedValue({
-        id: 'test',
+      const mockAction = jest.fn<() => Promise<ActionResult>>().mockResolvedValue({
+        id: "test",
         data: [1, 2, 3],
-      } as ActionResult);
+      });
 
-      const wrappedAction = withRateLimit(mockAction, 'standard');
+      const wrappedAction = withRateLimit(mockAction, "standard");
       const result = await wrappedAction();
 
-      expect(result).toEqual({ id: 'test', data: [1, 2, 3] });
+      expect(result).toEqual({ id: "test", data: [1, 2, 3] });
     });
 
-    it('should use specified rate limit type', async () => {
-      process.env.NODE_ENV = 'development';
+    it("should use specified rate limit type", async () => {
+      setNodeEnv("development");
 
-      const { withRateLimit } = require('@/lib/security/rateLimit');
+      const { withRateLimit } = require("@/lib/security/rateLimit");
 
-      const mockAction = jest.fn().mockResolvedValue('done');
-      const wrappedAction = withRateLimit(mockAction, 'strict');
+      const mockAction = jest.fn<() => Promise<string>>().mockResolvedValue("done");
+      const wrappedAction = withRateLimit(mockAction, "strict");
 
       await wrappedAction();
 
@@ -384,17 +389,17 @@ describe('Rate Limiting', () => {
   // RateLimitType Tests
   // ==========================================================================
 
-  describe('RateLimitType', () => {
-    it('should export correct rate limit types', async () => {
-      const { checkRateLimit } = require('@/lib/security/rateLimit');
+  describe("RateLimitType", () => {
+    it("should export correct rate limit types", async () => {
+      const { checkRateLimit } = require("@/lib/security/rateLimit");
 
       // These should all be valid types in development
-      process.env.NODE_ENV = 'development';
+      setNodeEnv("development");
 
-      await checkRateLimit('standard');
-      await checkRateLimit('sensitive');
-      await checkRateLimit('write');
-      await checkRateLimit('strict');
+      await checkRateLimit("standard");
+      await checkRateLimit("sensitive");
+      await checkRateLimit("write");
+      await checkRateLimit("strict");
 
       expect(true).toBe(true);
     });
@@ -404,23 +409,23 @@ describe('Rate Limiting', () => {
   // Edge Cases
   // ==========================================================================
 
-  describe('Edge Cases', () => {
-    it('should handle undefined identifier gracefully', async () => {
-      process.env.NODE_ENV = 'development';
+  describe("Edge Cases", () => {
+    it("should handle undefined identifier gracefully", async () => {
+      setNodeEnv("development");
 
-      const { checkRateLimit } = require('@/lib/security/rateLimit');
+      const { checkRateLimit } = require("@/lib/security/rateLimit");
 
-      const result = await checkRateLimit('standard', undefined);
+      const result = await checkRateLimit("standard", undefined);
 
       expect(result.success).toBe(true);
     });
 
-    it('should handle empty string identifier', async () => {
-      process.env.NODE_ENV = 'development';
+    it("should handle empty string identifier", async () => {
+      setNodeEnv("development");
 
-      const { checkRateLimit } = require('@/lib/security/rateLimit');
+      const { checkRateLimit } = require("@/lib/security/rateLimit");
 
-      const result = await checkRateLimit('standard', '');
+      const result = await checkRateLimit("standard", "");
 
       expect(result.success).toBe(true);
     });

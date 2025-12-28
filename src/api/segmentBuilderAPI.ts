@@ -103,8 +103,17 @@ export async function getSampleMembers(filters: SegmentFilters, limit: number = 
       ltv_score: number | null;
       total_interactions: number | null;
       last_interaction_at: string | null;
-      profiles: { first_name: string | null; second_name: string | null; email: string | null; avatar_url: string | null }[];
-      profile_stats: { items_shared: number | null; items_received: number | null; rating_average: number | null }[];
+      profiles: {
+        first_name: string | null;
+        second_name: string | null;
+        email: string | null;
+        avatar_url: string | null;
+      }[];
+      profile_stats: {
+        items_shared: number | null;
+        items_received: number | null;
+        rating_average: number | null;
+      }[];
       crm_customer_tag_assignments: Array<{ tag: { id: string; name: string; color: string }[] }>;
     }
 
@@ -112,7 +121,10 @@ export async function getSampleMembers(filters: SegmentFilters, limit: number = 
       (data as unknown as RawCustomerData[] | null)?.map((customer) => ({
         customer_id: customer.id,
         profile_id: customer.profile_id,
-        full_name: [customer.profiles?.[0]?.first_name, customer.profiles?.[0]?.second_name].filter(Boolean).join(' ') || "Unknown",
+        full_name:
+          [customer.profiles?.[0]?.first_name, customer.profiles?.[0]?.second_name]
+            .filter(Boolean)
+            .join(" ") || "Unknown",
         email: customer.profiles?.[0]?.email || "",
         avatar_url: customer.profiles?.[0]?.avatar_url || null,
         customer_type: customer.customer_type,
@@ -123,7 +135,10 @@ export async function getSampleMembers(filters: SegmentFilters, limit: number = 
         items_shared: customer.profile_stats?.[0]?.items_shared || 0,
         items_received: customer.profile_stats?.[0]?.items_received || 0,
         rating_average: customer.profile_stats?.[0]?.rating_average || null,
-        tags: customer.crm_customer_tag_assignments?.map((assignment) => assignment.tag?.[0]).filter(Boolean) || [],
+        tags:
+          customer.crm_customer_tag_assignments
+            ?.map((assignment) => assignment.tag?.[0])
+            .filter(Boolean) || [],
         total_interactions: customer.total_interactions || 0,
         last_interaction_at: customer.last_interaction_at,
       })) || [];
@@ -424,12 +439,19 @@ export function validateSegmentFilters(filters: SegmentFilters): {
 /**
  * Apply segment filters to a Supabase query
  * Internal helper function to consistently apply filters across all queries
+ * Uses generic type to preserve Supabase query builder chain type
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function applySegmentFilters(
-  query: any,
-  filters: SegmentFilters
-): any {
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
+function applySegmentFilters<
+  T extends {
+    eq: Function;
+    gte: Function;
+    lte: Function;
+    in: Function;
+    contains: Function;
+  },
+>(query: T, filters: SegmentFilters): T {
+  /* eslint-enable @typescript-eslint/no-unsafe-function-type */
   // Customer type
   if (filters.customer_type && filters.customer_type !== "all") {
     query = query.eq("customer_type", filters.customer_type);

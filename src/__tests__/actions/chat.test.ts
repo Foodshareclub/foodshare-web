@@ -14,7 +14,12 @@ const mockState = {
     post_arranged_to?: string | null;
     posts?: { id: number; post_name: string; post_address: string; profile_id: string } | null;
     sharer_profile?: { id: string; first_name: string; second_name: string; email: string } | null;
-    requester_profile?: { id: string; first_name: string; second_name: string; email: string } | null;
+    requester_profile?: {
+      id: string;
+      first_name: string;
+      second_name: string;
+      email: string;
+    } | null;
   } | null,
   post: null as { id: number; profile_id: string } | null,
   existingRoom: null as { id: string } | null,
@@ -25,39 +30,39 @@ const mockState = {
 };
 
 // Mock next/cache
-jest.mock('next/cache', () => ({
+jest.mock("next/cache", () => ({
   revalidatePath: jest.fn(),
   revalidateTag: jest.fn(),
 }));
 
 // Mock cache-keys
-jest.mock('@/lib/data/cache-keys', () => ({
+jest.mock("@/lib/data/cache-keys", () => ({
   CACHE_TAGS: {
-    CHATS: 'chats',
+    CHATS: "chats",
     CHAT: (id: string) => `chat-${id}`,
     CHAT_MESSAGES: (id: string) => `chat-messages-${id}`,
     USER_NOTIFICATIONS: (id: string) => `user-notifications-${id}`,
-    PROFILES: 'profiles',
+    PROFILES: "profiles",
     PROFILE: (id: string) => `profile-${id}`,
-    PRODUCTS: 'products',
+    PRODUCTS: "products",
   },
   invalidateTag: jest.fn(),
   invalidatePostActivityCaches: jest.fn(),
 }));
 
 // Mock analytics
-jest.mock('@/app/actions/analytics', () => ({
+jest.mock("@/app/actions/analytics", () => ({
   trackEvent: jest.fn(() => Promise.resolve()),
 }));
 
 // Mock post-activity
-jest.mock('@/app/actions/post-activity', () => ({
+jest.mock("@/app/actions/post-activity", () => ({
   logPostContact: jest.fn(() => Promise.resolve()),
   logPostArrangement: jest.fn(() => Promise.resolve()),
 }));
 
 // Mock email
-jest.mock('@/app/actions/email', () => ({
+jest.mock("@/app/actions/email", () => ({
   sendExchangeCompletionEmail: jest.fn(() => Promise.resolve()),
 }));
 
@@ -72,7 +77,7 @@ interface MockChain {
 }
 
 // Mock Supabase server
-jest.mock('@/lib/supabase/server', () => ({
+jest.mock("@/lib/supabase/server", () => ({
   createClient: jest.fn(() => {
     const createSelectChain = (tableName?: string): MockChain => {
       const chain: MockChain = {
@@ -80,13 +85,13 @@ jest.mock('@/lib/supabase/server', () => ({
         eq: jest.fn(() => chain),
         gte: jest.fn(() => chain),
         single: jest.fn(() => {
-          if (tableName === 'rooms') {
+          if (tableName === "rooms") {
             return Promise.resolve({
               data: mockState.room,
               error: mockState.dbError,
             });
           }
-          if (tableName === 'posts') {
+          if (tableName === "posts") {
             return Promise.resolve({
               data: mockState.post,
               error: mockState.dbError,
@@ -98,7 +103,7 @@ jest.mock('@/lib/supabase/server', () => ({
           eq: jest.fn(() => Promise.resolve({ data: null, error: mockState.dbError })),
         })),
         insert: jest.fn(() => {
-          if (tableName === 'rooms' && mockState.newRoom) {
+          if (tableName === "rooms" && mockState.newRoom) {
             return {
               select: jest.fn(() => ({
                 single: jest.fn(() =>
@@ -112,7 +117,7 @@ jest.mock('@/lib/supabase/server', () => ({
       };
 
       // For message count query
-      if (tableName === 'room_participants') {
+      if (tableName === "room_participants") {
         Object.assign(chain, {
           then: (resolve: (value: unknown) => void) =>
             resolve({
@@ -123,7 +128,7 @@ jest.mock('@/lib/supabase/server', () => ({
       }
 
       // For existing room check
-      if (tableName === 'rooms' && mockState.existingRoom) {
+      if (tableName === "rooms" && mockState.existingRoom) {
         chain.single = jest.fn(() =>
           Promise.resolve({
             data: mockState.existingRoom,
@@ -149,7 +154,7 @@ jest.mock('@/lib/supabase/server', () => ({
   }),
 }));
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from "@jest/globals";
 
 // Import actions after mocks
 import {
@@ -161,14 +166,22 @@ import {
   acceptRequestAndShareAddress,
   completeExchange,
   archiveChatRoom,
-} from '@/app/actions/chat';
+} from "@/app/actions/chat";
 
-describe('Chat Server Actions', () => {
+// Helper type to extract error from failed result
+type FailedResult = { success: false; error: { message: string; code: string } };
+
+// Type guard for failed results
+function isFailedResult(result: { success: boolean }): result is FailedResult {
+  return result.success === false;
+}
+
+describe("Chat Server Actions", () => {
   // Valid UUIDs for testing
-  const validUserId = '550e8400-e29b-41d4-a716-446655440001';
-  const validSharerId = '550e8400-e29b-41d4-a716-446655440002';
-  const validRoomId = '550e8400-e29b-41d4-a716-446655440003';
-  const validProfileId = '550e8400-e29b-41d4-a716-446655440004';
+  const validUserId = "550e8400-e29b-41d4-a716-446655440001";
+  const validSharerId = "550e8400-e29b-41d4-a716-446655440002";
+  const validRoomId = "550e8400-e29b-41d4-a716-446655440003";
+  const validProfileId = "550e8400-e29b-41d4-a716-446655440004";
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -186,7 +199,7 @@ describe('Chat Server Actions', () => {
   // sendFoodChatMessage Tests
   // ==========================================================================
 
-  describe('sendFoodChatMessage', () => {
+  describe("sendFoodChatMessage", () => {
     const createFormData = (data: Record<string, string | null>) => {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
@@ -195,98 +208,110 @@ describe('Chat Server Actions', () => {
       return formData;
     };
 
-    it('should reject unauthenticated users', async () => {
+    it("should reject unauthenticated users", async () => {
       mockState.user = null;
 
       const formData = createFormData({
         roomId: validRoomId,
-        text: 'Hello',
+        text: "Hello",
       });
 
       const result = await sendFoodChatMessage(formData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You must be logged in' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You must be logged in" });
+      }
     });
 
-    it('should validate room ID format', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should validate room ID format", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
       const formData = createFormData({
-        roomId: 'invalid-uuid',
-        text: 'Hello',
+        roomId: "invalid-uuid",
+        text: "Hello",
       });
 
       const result = await sendFoodChatMessage(formData);
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid room ID');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Invalid room ID");
+      }
     });
 
-    it('should reject empty messages', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
-
-      const formData = createFormData({
-        roomId: validRoomId,
-        text: '',
-      });
-
-      const result = await sendFoodChatMessage(formData);
-
-      expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Message cannot be empty');
-    });
-
-    it('should reject messages that are too long', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject empty messages", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
       const formData = createFormData({
         roomId: validRoomId,
-        text: 'a'.repeat(5001),
+        text: "",
       });
 
       const result = await sendFoodChatMessage(formData);
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Message too long');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Message cannot be empty");
+      }
     });
 
-    it('should reject if room not found', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject messages that are too long", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
+
+      const formData = createFormData({
+        roomId: validRoomId,
+        text: "a".repeat(5001),
+      });
+
+      const result = await sendFoodChatMessage(formData);
+
+      expect(result.success).toBe(false);
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Message too long");
+      }
+    });
+
+    it("should reject if room not found", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.room = null;
 
       const formData = createFormData({
         roomId: validRoomId,
-        text: 'Hello',
+        text: "Hello",
       });
 
       const result = await sendFoodChatMessage(formData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Chat room not found' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Chat room not found" });
+      }
     });
 
-    it('should reject if user is not a participant', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject if user is not a participant", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.room = {
         id: validRoomId,
         sharer: validSharerId,
-        requester: '550e8400-e29b-41d4-a716-446655440099', // Different user
+        requester: "550e8400-e29b-41d4-a716-446655440099", // Different user
       };
 
       const formData = createFormData({
         roomId: validRoomId,
-        text: 'Hello',
+        text: "Hello",
       });
 
       const result = await sendFoodChatMessage(formData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You are not a participant in this chat' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You are not a participant in this chat" });
+      }
     });
 
-    it('should send message successfully as sharer', async () => {
-      mockState.user = { id: validSharerId, email: 'sharer@example.com' };
+    it("should send message successfully as sharer", async () => {
+      mockState.user = { id: validSharerId, email: "sharer@example.com" };
       mockState.room = {
         id: validRoomId,
         sharer: validSharerId,
@@ -296,7 +321,7 @@ describe('Chat Server Actions', () => {
 
       const formData = createFormData({
         roomId: validRoomId,
-        text: 'Hello from sharer',
+        text: "Hello from sharer",
       });
 
       const result = await sendFoodChatMessage(formData);
@@ -304,8 +329,8 @@ describe('Chat Server Actions', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should send message successfully as requester', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should send message successfully as requester", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.room = {
         id: validRoomId,
         sharer: validSharerId,
@@ -315,7 +340,7 @@ describe('Chat Server Actions', () => {
 
       const formData = createFormData({
         roomId: validRoomId,
-        text: 'Hello from requester',
+        text: "Hello from requester",
       });
 
       const result = await sendFoodChatMessage(formData);
@@ -328,45 +353,51 @@ describe('Chat Server Actions', () => {
   // markFoodChatAsRead Tests
   // ==========================================================================
 
-  describe('markFoodChatAsRead', () => {
-    it('should reject unauthenticated users', async () => {
+  describe("markFoodChatAsRead", () => {
+    it("should reject unauthenticated users", async () => {
       mockState.user = null;
 
       const result = await markFoodChatAsRead(validRoomId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You must be logged in' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You must be logged in" });
+      }
     });
 
-    it('should reject invalid room ID', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject invalid room ID", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
-      const result = await markFoodChatAsRead('invalid-uuid');
+      const result = await markFoodChatAsRead("invalid-uuid");
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Invalid room ID' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Invalid room ID" });
+      }
     });
 
-    it('should reject empty room ID', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject empty room ID", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
-      const result = await markFoodChatAsRead('');
+      const result = await markFoodChatAsRead("");
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Invalid room ID' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Invalid room ID" });
+      }
     });
 
-    it('should mark room as read successfully', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should mark room as read successfully", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
       const result = await markFoodChatAsRead(validRoomId);
 
       expect(result.success).toBe(true);
     });
 
-    it('should handle database error', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
-      mockState.dbError = { message: 'Database connection failed' };
+    it("should handle database error", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
+      mockState.dbError = { message: "Database connection failed" };
 
       const result = await markFoodChatAsRead(validRoomId);
 
@@ -378,68 +409,80 @@ describe('Chat Server Actions', () => {
   // createFoodChatRoom Tests
   // ==========================================================================
 
-  describe('createFoodChatRoom', () => {
-    it('should reject unauthenticated users', async () => {
+  describe("createFoodChatRoom", () => {
+    it("should reject unauthenticated users", async () => {
       mockState.user = null;
 
       const result = await createFoodChatRoom(1, validSharerId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You must be logged in' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You must be logged in" });
+      }
     });
 
-    it('should reject invalid post ID', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject invalid post ID", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
       const result = await createFoodChatRoom(0, validSharerId);
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid post ID');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Invalid post ID");
+      }
     });
 
-    it('should reject negative post ID', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject negative post ID", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
       const result = await createFoodChatRoom(-5, validSharerId);
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid post ID');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Invalid post ID");
+      }
     });
 
-    it('should reject invalid sharer ID', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject invalid sharer ID", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
-      const result = await createFoodChatRoom(1, 'invalid-uuid');
+      const result = await createFoodChatRoom(1, "invalid-uuid");
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid sharer ID');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Invalid sharer ID");
+      }
     });
 
-    it('should prevent self-chat', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should prevent self-chat", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
       const result = await createFoodChatRoom(1, validUserId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({
-        message: 'You cannot chat with yourself about your own listing',
-      });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({
+          message: "You cannot chat with yourself about your own listing",
+        });
+      }
     });
 
-    it('should prevent requesting own listing', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should prevent requesting own listing", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.post = { id: 1, profile_id: validUserId };
 
       const result = await createFoodChatRoom(1, validSharerId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({
-        message: 'You cannot request your own listing',
-      });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({
+          message: "You cannot request your own listing",
+        });
+      }
     });
 
-    it('should return existing room if already exists', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should return existing room if already exists", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.post = { id: 1, profile_id: validSharerId };
       mockState.existingRoom = { id: validRoomId };
 
@@ -451,8 +494,8 @@ describe('Chat Server Actions', () => {
       }
     });
 
-    it('should create new room successfully', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should create new room successfully", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.post = { id: 1, profile_id: validSharerId };
       mockState.existingRoom = null;
       mockState.newRoom = { id: validRoomId };
@@ -470,7 +513,7 @@ describe('Chat Server Actions', () => {
   // updateRoom Tests
   // ==========================================================================
 
-  describe('updateRoom', () => {
+  describe("updateRoom", () => {
     const createFormData = (data: Record<string, string>) => {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
@@ -479,7 +522,7 @@ describe('Chat Server Actions', () => {
       return formData;
     };
 
-    it('should reject unauthenticated users', async () => {
+    it("should reject unauthenticated users", async () => {
       mockState.user = null;
 
       const formData = createFormData({
@@ -489,36 +532,47 @@ describe('Chat Server Actions', () => {
       const result = await updateRoom(validRoomId, formData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You must be logged in' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You must be logged in" });
+      }
     });
 
-    it('should reject invalid room ID', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject invalid room ID", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
       const formData = createFormData({
         post_arranged_to: validUserId,
       });
 
-      const result = await updateRoom('invalid-uuid', formData);
+      const result = await updateRoom("invalid-uuid", formData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Invalid room ID' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Invalid room ID" });
+      }
     });
 
-    it('should reject empty update data', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject empty update data", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
       const formData = new FormData();
 
       const result = await updateRoom(validRoomId, formData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'No update data provided' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "No update data provided" });
+      }
     });
 
-    it('should update room successfully', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
-      mockState.room = { id: validRoomId, post_id: 1, sharer: validSharerId, requester: validUserId };
+    it("should update room successfully", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
+      mockState.room = {
+        id: validRoomId,
+        post_id: 1,
+        sharer: validSharerId,
+        requester: validUserId,
+      };
 
       const formData = createFormData({
         post_arranged_to: validUserId,
@@ -529,9 +583,9 @@ describe('Chat Server Actions', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should handle database error', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
-      mockState.dbError = { message: 'Database error' };
+    it("should handle database error", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
+      mockState.dbError = { message: "Database error" };
 
       const formData = createFormData({
         post_arranged_to: validUserId,
@@ -547,7 +601,7 @@ describe('Chat Server Actions', () => {
   // writeReview Tests
   // ==========================================================================
 
-  describe('writeReview', () => {
+  describe("writeReview", () => {
     const createFormData = (data: Record<string, string>) => {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
@@ -556,77 +610,68 @@ describe('Chat Server Actions', () => {
       return formData;
     };
 
-    it('should reject unauthenticated users', async () => {
+    it("should reject unauthenticated users", async () => {
       mockState.user = null;
 
       const formData = createFormData({
         profile_id: validProfileId,
-        post_id: '1',
-        reviewed_rating: '5',
-        feedback: 'Great exchange!',
+        post_id: "1",
+        reviewed_rating: "5",
+        feedback: "Great exchange!",
       });
 
       const result = await writeReview(formData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You must be logged in' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You must be logged in" });
+      }
     });
 
-    it('should reject invalid profile ID', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject invalid profile ID", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
       const formData = createFormData({
-        profile_id: 'invalid-uuid',
-        post_id: '1',
-        reviewed_rating: '5',
-        feedback: 'Great!',
+        profile_id: "invalid-uuid",
+        post_id: "1",
+        reviewed_rating: "5",
+        feedback: "Great!",
       });
 
       const result = await writeReview(formData);
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid profile ID');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Invalid profile ID");
+      }
     });
 
-    it('should reject invalid post ID', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
-
-      const formData = createFormData({
-        profile_id: validProfileId,
-        post_id: '0',
-        reviewed_rating: '5',
-        feedback: 'Great!',
-      });
-
-      const result = await writeReview(formData);
-
-      expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid post ID');
-    });
-
-    it('should reject rating below 1', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject invalid post ID", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
       const formData = createFormData({
         profile_id: validProfileId,
-        post_id: '1',
-        reviewed_rating: '0',
-        feedback: 'Bad!',
+        post_id: "0",
+        reviewed_rating: "5",
+        feedback: "Great!",
       });
 
       const result = await writeReview(formData);
 
       expect(result.success).toBe(false);
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Invalid post ID");
+      }
     });
 
-    it('should reject rating above 5', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject rating below 1", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
       const formData = createFormData({
         profile_id: validProfileId,
-        post_id: '1',
-        reviewed_rating: '6',
-        feedback: 'Amazing!',
+        post_id: "1",
+        reviewed_rating: "0",
+        feedback: "Bad!",
       });
 
       const result = await writeReview(formData);
@@ -634,30 +679,47 @@ describe('Chat Server Actions', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should prevent self-review', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject rating above 5", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
+
+      const formData = createFormData({
+        profile_id: validProfileId,
+        post_id: "1",
+        reviewed_rating: "6",
+        feedback: "Amazing!",
+      });
+
+      const result = await writeReview(formData);
+
+      expect(result.success).toBe(false);
+    });
+
+    it("should prevent self-review", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
       const formData = createFormData({
         profile_id: validUserId, // Same as user
-        post_id: '1',
-        reviewed_rating: '5',
-        feedback: 'Great!',
+        post_id: "1",
+        reviewed_rating: "5",
+        feedback: "Great!",
       });
 
       const result = await writeReview(formData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You cannot review yourself' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You cannot review yourself" });
+      }
     });
 
-    it('should submit review successfully', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should submit review successfully", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
       const formData = createFormData({
         profile_id: validProfileId,
-        post_id: '1',
-        reviewed_rating: '5',
-        feedback: 'Great exchange!',
+        post_id: "1",
+        reviewed_rating: "5",
+        feedback: "Great exchange!",
       });
 
       const result = await writeReview(formData);
@@ -665,21 +727,23 @@ describe('Chat Server Actions', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should handle duplicate review', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
-      mockState.dbError = { message: 'Duplicate key', code: '23505' };
+    it("should handle duplicate review", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
+      mockState.dbError = { message: "Duplicate key", code: "23505" };
 
       const formData = createFormData({
         profile_id: validProfileId,
-        post_id: '1',
-        reviewed_rating: '5',
-        feedback: 'Great!',
+        post_id: "1",
+        reviewed_rating: "5",
+        feedback: "Great!",
       });
 
       const result = await writeReview(formData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You have already reviewed this exchange' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You have already reviewed this exchange" });
+      }
     });
   });
 
@@ -687,37 +751,43 @@ describe('Chat Server Actions', () => {
   // acceptRequestAndShareAddress Tests
   // ==========================================================================
 
-  describe('acceptRequestAndShareAddress', () => {
-    it('should reject unauthenticated users', async () => {
+  describe("acceptRequestAndShareAddress", () => {
+    it("should reject unauthenticated users", async () => {
       mockState.user = null;
 
       const result = await acceptRequestAndShareAddress(validRoomId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You must be logged in' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You must be logged in" });
+      }
     });
 
-    it('should reject invalid room ID', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject invalid room ID", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
-      const result = await acceptRequestAndShareAddress('invalid-uuid');
+      const result = await acceptRequestAndShareAddress("invalid-uuid");
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid room ID');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Invalid room ID");
+      }
     });
 
-    it('should reject if room not found', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject if room not found", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.room = null;
 
       const result = await acceptRequestAndShareAddress(validRoomId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Chat room not found' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Chat room not found" });
+      }
     });
 
-    it('should reject if user is not the sharer', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject if user is not the sharer", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.room = {
         id: validRoomId,
         sharer: validSharerId, // Different from user
@@ -729,11 +799,13 @@ describe('Chat Server Actions', () => {
       const result = await acceptRequestAndShareAddress(validRoomId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Only the food owner can accept requests' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Only the food owner can accept requests" });
+      }
     });
 
-    it('should reject if already accepted', async () => {
-      mockState.user = { id: validSharerId, email: 'sharer@example.com' };
+    it("should reject if already accepted", async () => {
+      mockState.user = { id: validSharerId, email: "sharer@example.com" };
       mockState.room = {
         id: validRoomId,
         sharer: validSharerId,
@@ -745,11 +817,13 @@ describe('Chat Server Actions', () => {
       const result = await acceptRequestAndShareAddress(validRoomId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'This request has already been accepted' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "This request has already been accepted" });
+      }
     });
 
-    it('should accept request successfully', async () => {
-      mockState.user = { id: validSharerId, email: 'sharer@example.com' };
+    it("should accept request successfully", async () => {
+      mockState.user = { id: validSharerId, email: "sharer@example.com" };
       mockState.room = {
         id: validRoomId,
         sharer: validSharerId,
@@ -758,8 +832,8 @@ describe('Chat Server Actions', () => {
         post_arranged_to: null,
         posts: {
           id: 1,
-          post_name: 'Fresh Vegetables',
-          post_address: '123 Food Street',
+          post_name: "Fresh Vegetables",
+          post_address: "123 Food Street",
           profile_id: validSharerId,
         },
       };
@@ -768,7 +842,7 @@ describe('Chat Server Actions', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.address).toBe('123 Food Street');
+        expect(result.data.address).toBe("123 Food Street");
       }
     });
   });
@@ -777,53 +851,61 @@ describe('Chat Server Actions', () => {
   // completeExchange Tests
   // ==========================================================================
 
-  describe('completeExchange', () => {
-    it('should reject unauthenticated users', async () => {
+  describe("completeExchange", () => {
+    it("should reject unauthenticated users", async () => {
       mockState.user = null;
 
       const result = await completeExchange(validRoomId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You must be logged in' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You must be logged in" });
+      }
     });
 
-    it('should reject invalid room ID', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject invalid room ID", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
-      const result = await completeExchange('invalid-uuid');
+      const result = await completeExchange("invalid-uuid");
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Invalid room ID' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Invalid room ID" });
+      }
     });
 
-    it('should reject if room not found', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject if room not found", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.room = null;
 
       const result = await completeExchange(validRoomId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Chat room not found' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Chat room not found" });
+      }
     });
 
-    it('should reject if user is not a participant', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject if user is not a participant", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.room = {
         id: validRoomId,
         sharer: validSharerId,
-        requester: '550e8400-e29b-41d4-a716-446655440099', // Different user
+        requester: "550e8400-e29b-41d4-a716-446655440099", // Different user
         post_id: 1,
-        post_arranged_to: '550e8400-e29b-41d4-a716-446655440099',
+        post_arranged_to: "550e8400-e29b-41d4-a716-446655440099",
       };
 
       const result = await completeExchange(validRoomId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You are not a participant in this chat' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You are not a participant in this chat" });
+      }
     });
 
-    it('should reject if request not yet accepted', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject if request not yet accepted", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.room = {
         id: validRoomId,
         sharer: validSharerId,
@@ -835,11 +917,15 @@ describe('Chat Server Actions', () => {
       const result = await completeExchange(validRoomId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Request must be accepted before completing' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({
+          message: "Request must be accepted before completing",
+        });
+      }
     });
 
-    it('should complete exchange successfully as sharer', async () => {
-      mockState.user = { id: validSharerId, email: 'sharer@example.com' };
+    it("should complete exchange successfully as sharer", async () => {
+      mockState.user = { id: validSharerId, email: "sharer@example.com" };
       mockState.room = {
         id: validRoomId,
         sharer: validSharerId,
@@ -848,15 +934,15 @@ describe('Chat Server Actions', () => {
         post_arranged_to: validUserId,
         sharer_profile: {
           id: validSharerId,
-          first_name: 'John',
-          second_name: 'Sharer',
-          email: 'sharer@example.com',
+          first_name: "John",
+          second_name: "Sharer",
+          email: "sharer@example.com",
         },
         requester_profile: {
           id: validUserId,
-          first_name: 'Jane',
-          second_name: 'Requester',
-          email: 'requester@example.com',
+          first_name: "Jane",
+          second_name: "Requester",
+          email: "requester@example.com",
         },
       };
 
@@ -865,8 +951,8 @@ describe('Chat Server Actions', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should complete exchange successfully as requester', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should complete exchange successfully as requester", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.room = {
         id: validRoomId,
         sharer: validSharerId,
@@ -885,60 +971,70 @@ describe('Chat Server Actions', () => {
   // archiveChatRoom Tests
   // ==========================================================================
 
-  describe('archiveChatRoom', () => {
-    it('should reject unauthenticated users', async () => {
+  describe("archiveChatRoom", () => {
+    it("should reject unauthenticated users", async () => {
       mockState.user = null;
 
       const result = await archiveChatRoom(validRoomId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You must be logged in' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You must be logged in" });
+      }
     });
 
-    it('should reject invalid room ID', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject invalid room ID", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
-      const result = await archiveChatRoom('invalid-uuid');
+      const result = await archiveChatRoom("invalid-uuid");
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Invalid room ID' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Invalid room ID" });
+      }
     });
 
-    it('should reject empty room ID', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject empty room ID", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
 
-      const result = await archiveChatRoom('');
+      const result = await archiveChatRoom("");
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Invalid room ID' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Invalid room ID" });
+      }
     });
 
-    it('should reject if room not found', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject if room not found", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.room = null;
 
       const result = await archiveChatRoom(validRoomId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Chat room not found' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Chat room not found" });
+      }
     });
 
-    it('should reject if user is not a participant', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should reject if user is not a participant", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.room = {
         id: validRoomId,
         sharer: validSharerId,
-        requester: '550e8400-e29b-41d4-a716-446655440099', // Different user
+        requester: "550e8400-e29b-41d4-a716-446655440099", // Different user
       };
 
       const result = await archiveChatRoom(validRoomId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You are not part of this chat' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You are not part of this chat" });
+      }
     });
 
-    it('should archive room successfully as sharer', async () => {
-      mockState.user = { id: validSharerId, email: 'sharer@example.com' };
+    it("should archive room successfully as sharer", async () => {
+      mockState.user = { id: validSharerId, email: "sharer@example.com" };
       mockState.room = {
         id: validRoomId,
         sharer: validSharerId,
@@ -950,8 +1046,8 @@ describe('Chat Server Actions', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should archive room successfully as requester', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should archive room successfully as requester", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.room = {
         id: validRoomId,
         sharer: validSharerId,
@@ -963,14 +1059,14 @@ describe('Chat Server Actions', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should handle database error', async () => {
-      mockState.user = { id: validUserId, email: 'user@example.com' };
+    it("should handle database error", async () => {
+      mockState.user = { id: validUserId, email: "user@example.com" };
       mockState.room = {
         id: validRoomId,
         sharer: validSharerId,
         requester: validUserId,
       };
-      mockState.dbError = { message: 'Database error' };
+      mockState.dbError = { message: "Database error" };
 
       const result = await archiveChatRoom(validRoomId);
 

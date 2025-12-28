@@ -10,33 +10,33 @@ const mockState = {
   authError: null as { message: string } | null,
   emailSendResult: {
     success: true,
-    messageId: 'msg-123',
+    messageId: "msg-123",
   } as { success: boolean; messageId?: string; error?: string },
   emailPreviewResult: {
-    html: '<p>Preview</p>',
-    text: 'Preview',
-    subject: 'Test Subject',
+    html: "<p>Preview</p>",
+    text: "Preview",
+    subject: "Test Subject",
   },
   unifiedEmailResult: {
     success: true,
-    messageId: 'unified-msg-123',
+    messageId: "unified-msg-123",
   } as { success: boolean; messageId?: string; error?: string },
 };
 
 // Mock next/cache
-jest.mock('next/cache', () => ({
+jest.mock("next/cache", () => ({
   revalidatePath: jest.fn(),
   revalidateTag: jest.fn(),
 }));
 
 // Mock email send module
-jest.mock('@/lib/email/send', () => ({
+jest.mock("@/lib/email/send", () => ({
   sendTemplateEmail: jest.fn(() => Promise.resolve(mockState.emailSendResult)),
   previewEmail: jest.fn(() => Promise.resolve(mockState.emailPreviewResult)),
 }));
 
 // Mock unified email service
-jest.mock('@/lib/email/unified-service', () => ({
+jest.mock("@/lib/email/unified-service", () => ({
   createUnifiedEmailService: jest.fn(() =>
     Promise.resolve({
       sendEmail: jest.fn(() => Promise.resolve(mockState.unifiedEmailResult)),
@@ -52,7 +52,7 @@ interface MockChain {
 }
 
 // Mock Supabase server
-jest.mock('@/lib/supabase/server', () => ({
+jest.mock("@/lib/supabase/server", () => ({
   createClient: jest.fn(() => {
     const createSelectChain = (tableName?: string): MockChain => {
       const chain: MockChain = {
@@ -62,7 +62,7 @@ jest.mock('@/lib/supabase/server', () => ({
       };
 
       // For user_roles table (array result)
-      if (tableName === 'user_roles') {
+      if (tableName === "user_roles") {
         Object.assign(chain, {
           then: (resolve: (value: unknown) => void) =>
             resolve({
@@ -89,7 +89,7 @@ jest.mock('@/lib/supabase/server', () => ({
   }),
 }));
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from "@jest/globals";
 
 // Import actions after mocks
 import {
@@ -102,9 +102,17 @@ import {
   previewEmailTemplate,
   sendAdminEmail,
   sendTestEmailDirect,
-} from '@/app/actions/email';
+} from "@/app/actions/email";
 
-describe('Email Server Actions', () => {
+// Helper type to extract error from failed result
+type FailedResult = { success: false; error: { message: string; code: string } };
+
+// Type guard for failed results
+function isFailedResult(result: { success: boolean }): result is FailedResult {
+  return result.success === false;
+}
+
+describe("Email Server Actions", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockState.user = null;
@@ -112,11 +120,11 @@ describe('Email Server Actions', () => {
     mockState.authError = null;
     mockState.emailSendResult = {
       success: true,
-      messageId: 'msg-123',
+      messageId: "msg-123",
     };
     mockState.unifiedEmailResult = {
       success: true,
-      messageId: 'unified-msg-123',
+      messageId: "unified-msg-123",
     };
   });
 
@@ -124,80 +132,92 @@ describe('Email Server Actions', () => {
   // sendNewMessageNotification Tests
   // ==========================================================================
 
-  describe('sendNewMessageNotification', () => {
+  describe("sendNewMessageNotification", () => {
     const validData = {
-      senderName: 'John Doe',
-      senderAvatar: 'https://example.com/avatar.jpg',
-      messagePreview: 'Hello, I am interested in your food listing!',
-      conversationUrl: 'https://foodshare.club/chat/123',
-      listingTitle: 'Fresh Vegetables',
-      listingImage: 'https://example.com/vegetables.jpg',
-      listingType: 'food',
+      senderName: "John Doe",
+      senderAvatar: "https://example.com/avatar.jpg",
+      messagePreview: "Hello, I am interested in your food listing!",
+      conversationUrl: "https://foodshare.club/chat/123",
+      listingTitle: "Fresh Vegetables",
+      listingImage: "https://example.com/vegetables.jpg",
+      listingType: "food",
     };
 
-    it('should reject invalid email address', async () => {
-      const result = await sendNewMessageNotification('invalid-email', validData);
+    it("should reject invalid email address", async () => {
+      const result = await sendNewMessageNotification("invalid-email", validData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Invalid recipient email address' });
-    });
-
-    it('should reject empty email address', async () => {
-      const result = await sendNewMessageNotification('', validData);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Invalid recipient email address' });
-    });
-
-    it('should reject missing sender name', async () => {
-      const result = await sendNewMessageNotification('test@example.com', {
-        ...validData,
-        senderName: '',
-      });
-
-      expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Sender name is required');
-    });
-
-    it('should reject missing message preview', async () => {
-      const result = await sendNewMessageNotification('test@example.com', {
-        ...validData,
-        messagePreview: '',
-      });
-
-      expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Message preview is required');
-    });
-
-    it('should reject invalid conversation URL', async () => {
-      const result = await sendNewMessageNotification('test@example.com', {
-        ...validData,
-        conversationUrl: 'not-a-url',
-      });
-
-      expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid conversation URL');
-    });
-
-    it('should send email successfully', async () => {
-      const result = await sendNewMessageNotification('test@example.com', validData);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.messageId).toBe('msg-123');
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Invalid recipient email address" });
       }
     });
 
-    it('should handle email send failure', async () => {
-      mockState.emailSendResult = {
-        success: false,
-        error: 'Email provider error',
-      };
-
-      const result = await sendNewMessageNotification('test@example.com', validData);
+    it("should reject empty email address", async () => {
+      const result = await sendNewMessageNotification("", validData);
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Email provider error');
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Invalid recipient email address" });
+      }
+    });
+
+    it("should reject missing sender name", async () => {
+      const result = await sendNewMessageNotification("test@example.com", {
+        ...validData,
+        senderName: "",
+      });
+
+      expect(result.success).toBe(false);
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Sender name is required");
+      }
+    });
+
+    it("should reject missing message preview", async () => {
+      const result = await sendNewMessageNotification("test@example.com", {
+        ...validData,
+        messagePreview: "",
+      });
+
+      expect(result.success).toBe(false);
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Message preview is required");
+      }
+    });
+
+    it("should reject invalid conversation URL", async () => {
+      const result = await sendNewMessageNotification("test@example.com", {
+        ...validData,
+        conversationUrl: "not-a-url",
+      });
+
+      expect(result.success).toBe(false);
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Invalid conversation URL");
+      }
+    });
+
+    it("should send email successfully", async () => {
+      const result = await sendNewMessageNotification("test@example.com", validData);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.messageId).toBe("msg-123");
+      }
+    });
+
+    it("should handle email send failure", async () => {
+      mockState.emailSendResult = {
+        success: false,
+        error: "Email provider error",
+      };
+
+      const result = await sendNewMessageNotification("test@example.com", validData);
+
+      expect(result.success).toBe(false);
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Email provider error");
+      }
     });
   });
 
@@ -205,70 +225,72 @@ describe('Email Server Actions', () => {
   // sendListingInterestNotification Tests
   // ==========================================================================
 
-  describe('sendListingInterestNotification', () => {
+  describe("sendListingInterestNotification", () => {
     const validData = {
-      interestedUserName: 'Jane Smith',
-      interestedUserAvatar: 'https://example.com/jane.jpg',
-      interestedUserRating: '4.8',
-      interestedUserShares: '15',
-      listingTitle: 'Homemade Bread',
-      listingImage: 'https://example.com/bread.jpg',
-      listingType: 'food',
-      listingLocation: 'Prague, Czech Republic',
-      messageUrl: 'https://foodshare.club/chat/456',
-      listingUrl: 'https://foodshare.club/food/789',
+      interestedUserName: "Jane Smith",
+      interestedUserAvatar: "https://example.com/jane.jpg",
+      interestedUserRating: "4.8",
+      interestedUserShares: "15",
+      listingTitle: "Homemade Bread",
+      listingImage: "https://example.com/bread.jpg",
+      listingType: "food",
+      listingLocation: "Prague, Czech Republic",
+      messageUrl: "https://foodshare.club/chat/456",
+      listingUrl: "https://foodshare.club/food/789",
     };
 
-    it('should reject invalid email address', async () => {
-      const result = await sendListingInterestNotification('bad-email', validData);
+    it("should reject invalid email address", async () => {
+      const result = await sendListingInterestNotification("bad-email", validData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Invalid recipient email address' });
-    });
-
-    it('should reject missing interested user name', async () => {
-      const result = await sendListingInterestNotification('test@example.com', {
-        ...validData,
-        interestedUserName: '',
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it('should reject missing listing title', async () => {
-      const result = await sendListingInterestNotification('test@example.com', {
-        ...validData,
-        listingTitle: '',
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it('should reject invalid message URL', async () => {
-      const result = await sendListingInterestNotification('test@example.com', {
-        ...validData,
-        messageUrl: 'invalid',
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it('should send email successfully', async () => {
-      const result = await sendListingInterestNotification('test@example.com', validData);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.messageId).toBe('msg-123');
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Invalid recipient email address" });
       }
     });
 
-    it('should handle email send failure', async () => {
+    it("should reject missing interested user name", async () => {
+      const result = await sendListingInterestNotification("test@example.com", {
+        ...validData,
+        interestedUserName: "",
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("should reject missing listing title", async () => {
+      const result = await sendListingInterestNotification("test@example.com", {
+        ...validData,
+        listingTitle: "",
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("should reject invalid message URL", async () => {
+      const result = await sendListingInterestNotification("test@example.com", {
+        ...validData,
+        messageUrl: "invalid",
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("should send email successfully", async () => {
+      const result = await sendListingInterestNotification("test@example.com", validData);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.messageId).toBe("msg-123");
+      }
+    });
+
+    it("should handle email send failure", async () => {
       mockState.emailSendResult = {
         success: false,
-        error: 'SMTP connection failed',
+        error: "SMTP connection failed",
       };
 
-      const result = await sendListingInterestNotification('test@example.com', validData);
+      const result = await sendListingInterestNotification("test@example.com", validData);
 
       expect(result.success).toBe(false);
     });
@@ -278,68 +300,70 @@ describe('Email Server Actions', () => {
   // sendPickupReminder Tests
   // ==========================================================================
 
-  describe('sendPickupReminder', () => {
+  describe("sendPickupReminder", () => {
     const validData = {
-      pickupTime: '14:00',
-      pickupDate: '2024-12-28',
-      listingTitle: 'Fresh Produce',
-      listingImage: 'https://example.com/produce.jpg',
-      sharerName: 'Bob Wilson',
-      pickupAddress: '123 Food Street, Prague',
-      pickupInstructions: 'Ring the bell twice',
-      directionsUrl: 'https://maps.google.com/abc',
-      messageUrl: 'https://foodshare.club/chat/789',
+      pickupTime: "14:00",
+      pickupDate: "2024-12-28",
+      listingTitle: "Fresh Produce",
+      listingImage: "https://example.com/produce.jpg",
+      sharerName: "Bob Wilson",
+      pickupAddress: "123 Food Street, Prague",
+      pickupInstructions: "Ring the bell twice",
+      directionsUrl: "https://maps.google.com/abc",
+      messageUrl: "https://foodshare.club/chat/789",
     };
 
-    it('should reject invalid email address', async () => {
-      const result = await sendPickupReminder('notanemail', validData);
+    it("should reject invalid email address", async () => {
+      const result = await sendPickupReminder("notanemail", validData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Invalid recipient email address' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Invalid recipient email address" });
+      }
     });
 
-    it('should reject missing pickup time', async () => {
-      const result = await sendPickupReminder('test@example.com', {
+    it("should reject missing pickup time", async () => {
+      const result = await sendPickupReminder("test@example.com", {
         ...validData,
-        pickupTime: '',
+        pickupTime: "",
       });
 
       expect(result.success).toBe(false);
     });
 
-    it('should reject missing pickup date', async () => {
-      const result = await sendPickupReminder('test@example.com', {
+    it("should reject missing pickup date", async () => {
+      const result = await sendPickupReminder("test@example.com", {
         ...validData,
-        pickupDate: '',
+        pickupDate: "",
       });
 
       expect(result.success).toBe(false);
     });
 
-    it('should reject missing sharer name', async () => {
-      const result = await sendPickupReminder('test@example.com', {
+    it("should reject missing sharer name", async () => {
+      const result = await sendPickupReminder("test@example.com", {
         ...validData,
-        sharerName: '',
+        sharerName: "",
       });
 
       expect(result.success).toBe(false);
     });
 
-    it('should reject invalid directions URL', async () => {
-      const result = await sendPickupReminder('test@example.com', {
+    it("should reject invalid directions URL", async () => {
+      const result = await sendPickupReminder("test@example.com", {
         ...validData,
-        directionsUrl: 'not-a-url',
+        directionsUrl: "not-a-url",
       });
 
       expect(result.success).toBe(false);
     });
 
-    it('should send email successfully', async () => {
-      const result = await sendPickupReminder('test@example.com', validData);
+    it("should send email successfully", async () => {
+      const result = await sendPickupReminder("test@example.com", validData);
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.messageId).toBe('msg-123');
+        expect(result.data.messageId).toBe("msg-123");
       }
     });
   });
@@ -348,65 +372,67 @@ describe('Email Server Actions', () => {
   // sendReviewRequest Tests
   // ==========================================================================
 
-  describe('sendReviewRequest', () => {
+  describe("sendReviewRequest", () => {
     const validData = {
-      recipientName: 'Alice Johnson',
-      sharerName: 'Bob Smith',
-      listingTitle: 'Organic Fruits',
-      listingImage: 'https://example.com/fruits.jpg',
-      pickupDate: '2024-12-25',
-      reviewUrl: 'https://foodshare.club/review/123',
+      recipientName: "Alice Johnson",
+      sharerName: "Bob Smith",
+      listingTitle: "Organic Fruits",
+      listingImage: "https://example.com/fruits.jpg",
+      pickupDate: "2024-12-25",
+      reviewUrl: "https://foodshare.club/review/123",
     };
 
-    it('should reject invalid email address', async () => {
-      const result = await sendReviewRequest('@invalid', validData);
+    it("should reject invalid email address", async () => {
+      const result = await sendReviewRequest("@invalid", validData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Invalid recipient email address' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Invalid recipient email address" });
+      }
     });
 
-    it('should reject missing recipient name', async () => {
-      const result = await sendReviewRequest('test@example.com', {
+    it("should reject missing recipient name", async () => {
+      const result = await sendReviewRequest("test@example.com", {
         ...validData,
-        recipientName: '',
+        recipientName: "",
       });
 
       expect(result.success).toBe(false);
     });
 
-    it('should reject missing sharer name', async () => {
-      const result = await sendReviewRequest('test@example.com', {
+    it("should reject missing sharer name", async () => {
+      const result = await sendReviewRequest("test@example.com", {
         ...validData,
-        sharerName: '',
+        sharerName: "",
       });
 
       expect(result.success).toBe(false);
     });
 
-    it('should reject missing listing title', async () => {
-      const result = await sendReviewRequest('test@example.com', {
+    it("should reject missing listing title", async () => {
+      const result = await sendReviewRequest("test@example.com", {
         ...validData,
-        listingTitle: '',
+        listingTitle: "",
       });
 
       expect(result.success).toBe(false);
     });
 
-    it('should reject invalid review URL', async () => {
-      const result = await sendReviewRequest('test@example.com', {
+    it("should reject invalid review URL", async () => {
+      const result = await sendReviewRequest("test@example.com", {
         ...validData,
-        reviewUrl: 'bad-url',
+        reviewUrl: "bad-url",
       });
 
       expect(result.success).toBe(false);
     });
 
-    it('should send email successfully with star rating URLs', async () => {
-      const result = await sendReviewRequest('test@example.com', validData);
+    it("should send email successfully with star rating URLs", async () => {
+      const result = await sendReviewRequest("test@example.com", validData);
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.messageId).toBe('msg-123');
+        expect(result.data.messageId).toBe("msg-123");
       }
     });
   });
@@ -415,68 +441,70 @@ describe('Email Server Actions', () => {
   // sendListingExpiredNotification Tests
   // ==========================================================================
 
-  describe('sendListingExpiredNotification', () => {
+  describe("sendListingExpiredNotification", () => {
     const validData = {
-      userName: 'Charlie Brown',
-      listingTitle: 'Leftover Pizza',
-      listingImage: 'https://example.com/pizza.jpg',
-      listingType: 'food',
-      expiryDate: '2024-12-27',
-      renewUrl: 'https://foodshare.club/food/123/renew',
-      editUrl: 'https://foodshare.club/food/123/edit',
-      markSharedUrl: 'https://foodshare.club/food/123/shared',
+      userName: "Charlie Brown",
+      listingTitle: "Leftover Pizza",
+      listingImage: "https://example.com/pizza.jpg",
+      listingType: "food",
+      expiryDate: "2024-12-27",
+      renewUrl: "https://foodshare.club/food/123/renew",
+      editUrl: "https://foodshare.club/food/123/edit",
+      markSharedUrl: "https://foodshare.club/food/123/shared",
     };
 
-    it('should reject invalid email address', async () => {
-      const result = await sendListingExpiredNotification('wrong', validData);
+    it("should reject invalid email address", async () => {
+      const result = await sendListingExpiredNotification("wrong", validData);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Invalid recipient email address' });
-    });
-
-    it('should reject missing user name', async () => {
-      const result = await sendListingExpiredNotification('test@example.com', {
-        ...validData,
-        userName: '',
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it('should reject missing listing title', async () => {
-      const result = await sendListingExpiredNotification('test@example.com', {
-        ...validData,
-        listingTitle: '',
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it('should reject invalid renew URL', async () => {
-      const result = await sendListingExpiredNotification('test@example.com', {
-        ...validData,
-        renewUrl: 'not-valid',
-      });
-
-      expect(result.success).toBe(false);
-    });
-
-    it('should send email successfully', async () => {
-      const result = await sendListingExpiredNotification('test@example.com', validData);
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.messageId).toBe('msg-123');
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Invalid recipient email address" });
       }
     });
 
-    it('should handle email provider failure', async () => {
+    it("should reject missing user name", async () => {
+      const result = await sendListingExpiredNotification("test@example.com", {
+        ...validData,
+        userName: "",
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("should reject missing listing title", async () => {
+      const result = await sendListingExpiredNotification("test@example.com", {
+        ...validData,
+        listingTitle: "",
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("should reject invalid renew URL", async () => {
+      const result = await sendListingExpiredNotification("test@example.com", {
+        ...validData,
+        renewUrl: "not-valid",
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it("should send email successfully", async () => {
+      const result = await sendListingExpiredNotification("test@example.com", validData);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.messageId).toBe("msg-123");
+      }
+    });
+
+    it("should handle email provider failure", async () => {
       mockState.emailSendResult = {
         success: false,
-        error: 'Rate limit exceeded',
+        error: "Rate limit exceeded",
       };
 
-      const result = await sendListingExpiredNotification('test@example.com', validData);
+      const result = await sendListingExpiredNotification("test@example.com", validData);
 
       expect(result.success).toBe(false);
     });
@@ -486,54 +514,58 @@ describe('Email Server Actions', () => {
   // sendExchangeCompletionEmail Tests
   // ==========================================================================
 
-  describe('sendExchangeCompletionEmail', () => {
+  describe("sendExchangeCompletionEmail", () => {
     const validData = {
-      to: 'sharer@example.com',
-      recipientName: 'John',
-      otherPartyName: 'Jane Requester',
-      itemName: 'Fresh Vegetables',
-      role: 'sharer' as const,
-      roomId: '550e8400-e29b-41d4-a716-446655440001',
+      to: "sharer@example.com",
+      recipientName: "John",
+      otherPartyName: "Jane Requester",
+      itemName: "Fresh Vegetables",
+      role: "sharer" as const,
+      roomId: "550e8400-e29b-41d4-a716-446655440001",
     };
 
-    it('should reject invalid email address', async () => {
+    it("should reject invalid email address", async () => {
       const result = await sendExchangeCompletionEmail({
         ...validData,
-        to: 'not-an-email',
+        to: "not-an-email",
       });
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Invalid recipient email address' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Invalid recipient email address" });
+      }
     });
 
-    it('should send email successfully for sharer role', async () => {
+    it("should send email successfully for sharer role", async () => {
       const result = await sendExchangeCompletionEmail(validData);
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.messageId).toBe('unified-msg-123');
+        expect(result.data.messageId).toBe("unified-msg-123");
       }
     });
 
-    it('should send email successfully for requester role', async () => {
+    it("should send email successfully for requester role", async () => {
       const result = await sendExchangeCompletionEmail({
         ...validData,
-        role: 'requester',
+        role: "requester",
       });
 
       expect(result.success).toBe(true);
     });
 
-    it('should handle email service failure', async () => {
+    it("should handle email service failure", async () => {
       mockState.unifiedEmailResult = {
         success: false,
-        error: 'Service unavailable',
+        error: "Service unavailable",
       };
 
       const result = await sendExchangeCompletionEmail(validData);
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Service unavailable');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Service unavailable");
+      }
     });
   });
 
@@ -541,55 +573,55 @@ describe('Email Server Actions', () => {
   // previewEmailTemplate Tests (Admin Only)
   // ==========================================================================
 
-  describe('previewEmailTemplate', () => {
-    it('should reject unauthenticated users', async () => {
+  describe("previewEmailTemplate", () => {
+    it("should reject unauthenticated users", async () => {
       mockState.user = null;
 
-      const result = await previewEmailTemplate('welcome', {
-        userName: 'Test',
-        dashboardUrl: 'https://example.com',
+      const result = await previewEmailTemplate("welcome-confirmation", {
+        confirmationUrl: "https://example.com/confirm",
       });
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You must be logged in' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You must be logged in" });
+      }
     });
 
-    it('should reject non-admin users', async () => {
-      mockState.user = { id: 'user-123', email: 'user@example.com' };
-      mockState.userRoles = [{ roles: { name: 'user' } }];
+    it("should reject non-admin users", async () => {
+      mockState.user = { id: "user-123", email: "user@example.com" };
+      mockState.userRoles = [{ roles: { name: "user" } }];
 
-      const result = await previewEmailTemplate('welcome', {
-        userName: 'Test',
-        dashboardUrl: 'https://example.com',
+      const result = await previewEmailTemplate("welcome-confirmation", {
+        confirmationUrl: "https://example.com/confirm",
       });
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Admin access required' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Admin access required" });
+      }
     });
 
-    it('should allow admin to preview template', async () => {
-      mockState.user = { id: 'admin-123', email: 'admin@example.com' };
-      mockState.userRoles = [{ roles: { name: 'admin' } }];
+    it("should allow admin to preview template", async () => {
+      mockState.user = { id: "admin-123", email: "admin@example.com" };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
 
-      const result = await previewEmailTemplate('welcome', {
-        userName: 'Test',
-        dashboardUrl: 'https://example.com',
+      const result = await previewEmailTemplate("welcome-confirmation", {
+        confirmationUrl: "https://example.com/confirm",
       });
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.html).toBe('<p>Preview</p>');
-        expect(result.data.subject).toBe('Test Subject');
+        expect(result.data.html).toBe("<p>Preview</p>");
+        expect(result.data.subject).toBe("Test Subject");
       }
     });
 
-    it('should allow superadmin to preview template', async () => {
-      mockState.user = { id: 'super-123', email: 'super@example.com' };
-      mockState.userRoles = [{ roles: { name: 'superadmin' } }];
+    it("should allow superadmin to preview template", async () => {
+      mockState.user = { id: "super-123", email: "super@example.com" };
+      mockState.userRoles = [{ roles: { name: "superadmin" } }];
 
-      const result = await previewEmailTemplate('welcome', {
-        userName: 'Test',
-        dashboardUrl: 'https://example.com',
+      const result = await previewEmailTemplate("welcome-confirmation", {
+        confirmationUrl: "https://example.com/confirm",
       });
 
       expect(result.success).toBe(true);
@@ -600,105 +632,115 @@ describe('Email Server Actions', () => {
   // sendAdminEmail Tests
   // ==========================================================================
 
-  describe('sendAdminEmail', () => {
+  describe("sendAdminEmail", () => {
     const validInput = {
-      to: 'recipient@example.com',
-      subject: 'Test Subject',
-      message: 'Test message content',
-      emailType: 'newsletter',
-      provider: 'auto',
+      to: "recipient@example.com",
+      subject: "Test Subject",
+      message: "Test message content",
+      emailType: "newsletter",
+      provider: "auto",
       useHtml: false,
     };
 
-    it('should reject unauthenticated users', async () => {
+    it("should reject unauthenticated users", async () => {
       mockState.user = null;
 
       const result = await sendAdminEmail(validInput);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You must be logged in' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You must be logged in" });
+      }
     });
 
-    it('should reject non-admin users', async () => {
-      mockState.user = { id: 'user-123', email: 'user@example.com' };
-      mockState.userRoles = [{ roles: { name: 'user' } }];
+    it("should reject non-admin users", async () => {
+      mockState.user = { id: "user-123", email: "user@example.com" };
+      mockState.userRoles = [{ roles: { name: "user" } }];
 
       const result = await sendAdminEmail(validInput);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Admin access required' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Admin access required" });
+      }
     });
 
-    it('should reject invalid email address', async () => {
-      mockState.user = { id: 'admin-123', email: 'admin@example.com' };
-      mockState.userRoles = [{ roles: { name: 'admin' } }];
+    it("should reject invalid email address", async () => {
+      mockState.user = { id: "admin-123", email: "admin@example.com" };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
 
       const result = await sendAdminEmail({
         ...validInput,
-        to: 'invalid',
+        to: "invalid",
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid email address');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Invalid email address");
+      }
     });
 
-    it('should reject empty subject', async () => {
-      mockState.user = { id: 'admin-123', email: 'admin@example.com' };
-      mockState.userRoles = [{ roles: { name: 'admin' } }];
+    it("should reject empty subject", async () => {
+      mockState.user = { id: "admin-123", email: "admin@example.com" };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
 
       const result = await sendAdminEmail({
         ...validInput,
-        subject: '',
+        subject: "",
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Subject is required');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Subject is required");
+      }
     });
 
-    it('should reject empty message', async () => {
-      mockState.user = { id: 'admin-123', email: 'admin@example.com' };
-      mockState.userRoles = [{ roles: { name: 'admin' } }];
+    it("should reject empty message", async () => {
+      mockState.user = { id: "admin-123", email: "admin@example.com" };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
 
       const result = await sendAdminEmail({
         ...validInput,
-        message: '',
+        message: "",
       });
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Message is required');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Message is required");
+      }
     });
 
-    it('should send email successfully as admin', async () => {
-      mockState.user = { id: 'admin-123', email: 'admin@example.com' };
-      mockState.userRoles = [{ roles: { name: 'admin' } }];
+    it("should send email successfully as admin", async () => {
+      mockState.user = { id: "admin-123", email: "admin@example.com" };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
 
       const result = await sendAdminEmail(validInput);
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.messageId).toBe('unified-msg-123');
+        expect(result.data.messageId).toBe("unified-msg-123");
       }
     });
 
-    it('should send HTML email when useHtml is true', async () => {
-      mockState.user = { id: 'admin-123', email: 'admin@example.com' };
-      mockState.userRoles = [{ roles: { name: 'admin' } }];
+    it("should send HTML email when useHtml is true", async () => {
+      mockState.user = { id: "admin-123", email: "admin@example.com" };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
 
       const result = await sendAdminEmail({
         ...validInput,
-        message: '<h1>HTML Content</h1>',
+        message: "<h1>HTML Content</h1>",
         useHtml: true,
       });
 
       expect(result.success).toBe(true);
     });
 
-    it('should handle email service failure', async () => {
-      mockState.user = { id: 'admin-123', email: 'admin@example.com' };
-      mockState.userRoles = [{ roles: { name: 'admin' } }];
+    it("should handle email service failure", async () => {
+      mockState.user = { id: "admin-123", email: "admin@example.com" };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
       mockState.unifiedEmailResult = {
         success: false,
-        error: 'SMTP error',
+        error: "SMTP error",
       };
 
       const result = await sendAdminEmail(validInput);
@@ -711,56 +753,48 @@ describe('Email Server Actions', () => {
   // sendTestEmailDirect Tests
   // ==========================================================================
 
-  describe('sendTestEmailDirect', () => {
-    it('should reject unauthenticated users', async () => {
+  describe("sendTestEmailDirect", () => {
+    it("should reject unauthenticated users", async () => {
       mockState.user = null;
 
-      const result = await sendTestEmailDirect(
-        'test@example.com',
-        'Test Subject',
-        'Test message'
-      );
+      const result = await sendTestEmailDirect("test@example.com", "Test Subject", "Test message");
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You must be logged in' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You must be logged in" });
+      }
     });
 
-    it('should reject non-admin users', async () => {
-      mockState.user = { id: 'user-123', email: 'user@example.com' };
-      mockState.userRoles = [{ roles: { name: 'user' } }];
+    it("should reject non-admin users", async () => {
+      mockState.user = { id: "user-123", email: "user@example.com" };
+      mockState.userRoles = [{ roles: { name: "user" } }];
 
-      const result = await sendTestEmailDirect(
-        'test@example.com',
-        'Test Subject',
-        'Test message'
-      );
+      const result = await sendTestEmailDirect("test@example.com", "Test Subject", "Test message");
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Admin access required' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Admin access required" });
+      }
     });
 
-    it('should send test email successfully as admin', async () => {
-      mockState.user = { id: 'admin-123', email: 'admin@example.com' };
-      mockState.userRoles = [{ roles: { name: 'admin' } }];
+    it("should send test email successfully as admin", async () => {
+      mockState.user = { id: "admin-123", email: "admin@example.com" };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
 
       const result = await sendTestEmailDirect(
-        'test@example.com',
-        'Test Subject',
-        'Test message body'
+        "test@example.com",
+        "Test Subject",
+        "Test message body"
       );
 
       expect(result.success).toBe(true);
     });
 
-    it('should reject invalid email', async () => {
-      mockState.user = { id: 'admin-123', email: 'admin@example.com' };
-      mockState.userRoles = [{ roles: { name: 'admin' } }];
+    it("should reject invalid email", async () => {
+      mockState.user = { id: "admin-123", email: "admin@example.com" };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
 
-      const result = await sendTestEmailDirect(
-        'not-valid',
-        'Test Subject',
-        'Test message'
-      );
+      const result = await sendTestEmailDirect("not-valid", "Test Subject", "Test message");
 
       expect(result.success).toBe(false);
     });

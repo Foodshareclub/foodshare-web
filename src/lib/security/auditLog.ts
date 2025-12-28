@@ -12,21 +12,21 @@
  * @module lib/security/auditLog
  */
 
-import { supabase } from '@/lib/supabase/client';
-import { MFAService } from './mfa';
+import { MFAService } from "./mfa";
+import { supabase } from "@/lib/supabase/client";
 
 export interface AuditLogEntry {
   admin_id: string;
   action: string;
   resource_type: string;
   resource_id?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   ip_address?: string;
   user_agent?: string;
   success: boolean;
   error_message?: string;
   mfa_verified?: boolean;
-  aal_level?: 'aal1' | 'aal2';
+  aal_level?: "aal1" | "aal2";
   session_id?: string;
   risk_score?: number;
 }
@@ -35,7 +35,7 @@ export class AuditLogService {
   /**
    * Log an admin action
    */
-  static async logAction(entry: Omit<AuditLogEntry, 'mfa_verified' | 'aal_level'>): Promise<void> {
+  static async logAction(entry: Omit<AuditLogEntry, "mfa_verified" | "aal_level">): Promise<void> {
     try {
       // Get current AAL level
       const currentAAL = await MFAService.getCurrentAAL(entry.admin_id);
@@ -51,9 +51,9 @@ export class AuditLogService {
       });
 
       // Create audit log entry
-      const { error } = await supabase.from('admin_audit_log').insert({
+      const { error } = await supabase.from("admin_audit_log").insert({
         ...entry,
-        mfa_verified: currentAAL === 'aal2',
+        mfa_verified: currentAAL === "aal2",
         aal_level: currentAAL,
         session_id: session?.session_id,
         risk_score: riskScore,
@@ -61,10 +61,10 @@ export class AuditLogService {
       });
 
       if (error) {
-        console.error('[AuditLog] Failed to log action:', error);
+        console.error("[AuditLog] Failed to log action:", error);
       }
     } catch (error) {
-      console.error('[AuditLog] Exception logging action:', error);
+      console.error("[AuditLog] Exception logging action:", error);
     }
   }
 
@@ -76,7 +76,7 @@ export class AuditLogService {
     action: string,
     resourceType: string,
     resourceId?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<void> {
     await this.logAction({
       admin_id: adminId,
@@ -99,7 +99,7 @@ export class AuditLogService {
     resourceType: string,
     errorMessage: string,
     resourceId?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<void> {
     await this.logAction({
       admin_id: adminId,
@@ -117,19 +117,16 @@ export class AuditLogService {
   /**
    * Get recent audit logs for an admin
    */
-  static async getAdminLogs(
-    adminId: string,
-    limit: number = 50
-  ): Promise<AuditLogEntry[]> {
+  static async getAdminLogs(adminId: string, limit: number = 50): Promise<AuditLogEntry[]> {
     const { data, error } = await supabase
-      .from('admin_audit_log')
-      .select('*')
-      .eq('admin_id', adminId)
-      .order('created_at', { ascending: false })
+      .from("admin_audit_log")
+      .select("*")
+      .eq("admin_id", adminId)
+      .order("created_at", { ascending: false })
       .limit(limit);
 
     if (error) {
-      console.error('[AuditLog] Error fetching logs:', error);
+      console.error("[AuditLog] Error fetching logs:", error);
       return [];
     }
 
@@ -144,42 +141,42 @@ export class AuditLogService {
       action?: string;
       resource_type?: string;
       success?: boolean;
-      aal_level?: 'aal1' | 'aal2';
+      aal_level?: "aal1" | "aal2";
       start_date?: string;
       end_date?: string;
     },
     limit: number = 100
   ): Promise<AuditLogEntry[]> {
     let query = supabase
-      .from('admin_audit_log')
-      .select('*')
-      .order('created_at', { ascending: false })
+      .from("admin_audit_log")
+      .select("*")
+      .order("created_at", { ascending: false })
       .limit(limit);
 
     // Apply filters
     if (filters?.action) {
-      query = query.eq('action', filters.action);
+      query = query.eq("action", filters.action);
     }
     if (filters?.resource_type) {
-      query = query.eq('resource_type', filters.resource_type);
+      query = query.eq("resource_type", filters.resource_type);
     }
     if (filters?.success !== undefined) {
-      query = query.eq('success', filters.success);
+      query = query.eq("success", filters.success);
     }
     if (filters?.aal_level) {
-      query = query.eq('aal_level', filters.aal_level);
+      query = query.eq("aal_level", filters.aal_level);
     }
     if (filters?.start_date) {
-      query = query.gte('created_at', filters.start_date);
+      query = query.gte("created_at", filters.start_date);
     }
     if (filters?.end_date) {
-      query = query.lte('created_at', filters.end_date);
+      query = query.lte("created_at", filters.end_date);
     }
 
     const { data, error } = await query;
 
     if (error) {
-      console.error('[AuditLog] Error fetching all logs:', error);
+      console.error("[AuditLog] Error fetching all logs:", error);
       return [];
     }
 
@@ -192,25 +189,21 @@ export class AuditLogService {
    */
   private static calculateRiskScore(params: {
     action: string;
-    aal_level: 'aal1' | 'aal2';
+    aal_level: "aal1" | "aal2";
     success: boolean;
   }): number {
     let score = 0;
 
     // Base score by action type
     const highRiskActions = [
-      'user_delete',
-      'role_change',
-      'circuit_breaker_reset',
-      'email_manual_send',
-      'config_change',
+      "user_delete",
+      "role_change",
+      "circuit_breaker_reset",
+      "email_manual_send",
+      "config_change",
     ];
 
-    const mediumRiskActions = [
-      'user_update',
-      'email_view',
-      'quota_adjust',
-    ];
+    const mediumRiskActions = ["user_update", "email_view", "quota_adjust"];
 
     if (highRiskActions.includes(params.action)) {
       score += 60;
@@ -221,7 +214,7 @@ export class AuditLogService {
     }
 
     // Add score if not using MFA
-    if (params.aal_level === 'aal1') {
+    if (params.aal_level === "aal1") {
       score += 30;
     }
 
@@ -239,7 +232,7 @@ export class AuditLogService {
   private static async getClientIP(): Promise<string> {
     // In production, get this from server-side headers
     // For now, return placeholder
-    return '0.0.0.0';
+    return "0.0.0.0";
   }
 }
 
@@ -247,27 +240,18 @@ export class AuditLogService {
  * Decorator to automatically log admin actions
  */
 export function LogAdminAction(action: string, resourceType: string) {
-  return function (
-    target: any,
-    propertyKey: string,
-    descriptor: PropertyDescriptor
-  ) {
+  return function (target: object, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
-    descriptor.value = async function (...args: any[]) {
-      const adminId = args[0]; // Assume first arg is admin ID
+    descriptor.value = async function (...args: unknown[]) {
+      const adminId = String(args[0] ?? ""); // Assume first arg is admin ID
+      const resourceId = String(args[1] ?? ""); // Assume second arg is resource ID
 
       try {
         const result = await originalMethod.apply(this, args);
 
         // Log success
-        await AuditLogService.logSuccess(
-          adminId,
-          action,
-          resourceType,
-          args[1], // Assume second arg is resource ID
-          { args }
-        );
+        await AuditLogService.logSuccess(adminId, action, resourceType, resourceId, { args });
 
         return result;
       } catch (error) {
@@ -276,8 +260,8 @@ export function LogAdminAction(action: string, resourceType: string) {
           adminId,
           action,
           resourceType,
-          error instanceof Error ? error.message : 'Unknown error',
-          args[1],
+          error instanceof Error ? error.message : "Unknown error",
+          resourceId,
           { args }
         );
 

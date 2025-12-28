@@ -5,8 +5,8 @@
  */
 
 // Dynamic import to avoid build-time errors with web-vitals API changes
-import { createLogger } from "@/lib/logger";
 import type { Metric } from "web-vitals";
+import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("WebVitals");
 
@@ -29,7 +29,7 @@ export const reportWebVitals = async (onPerfEntry?: (metric: Metric) => void) =>
  * Log Web Vitals to console (development only)
  */
 export const logWebVitals = () => {
-  if (process.env.NODE_ENV !== 'production') {
+  if (process.env.NODE_ENV !== "production") {
     reportWebVitals((metric) => {
       const { name, value, rating } = metric;
       const emoji = rating === "good" ? "✅" : rating === "needs-improvement" ? "⚠️" : "❌";
@@ -44,10 +44,10 @@ export const logWebVitals = () => {
  */
 export const sendToAnalytics = (metric: Metric) => {
   // Send to Google Analytics 4
-  if (typeof window !== 'undefined' && window.gtag) {
-    window.gtag('event', metric.name, {
-      value: Math.round(metric.name === 'CLS' ? metric.value * 1000 : metric.value),
-      event_category: 'Web Vitals',
+  if (typeof window !== "undefined" && window.gtag) {
+    window.gtag("event", metric.name, {
+      value: Math.round(metric.name === "CLS" ? metric.value * 1000 : metric.value),
+      event_category: "Web Vitals",
       event_label: metric.id,
       metric_rating: metric.rating,
       non_interaction: true,
@@ -55,8 +55,8 @@ export const sendToAnalytics = (metric: Metric) => {
   }
 
   // Also log in development
-  if (process.env.NODE_ENV !== 'production') {
-    logger.debug("Web Vital", metric);
+  if (process.env.NODE_ENV !== "production") {
+    logger.debug("Web Vital", { ...metric });
   }
 };
 
@@ -64,7 +64,7 @@ export const sendToAnalytics = (metric: Metric) => {
  * Monitor long tasks (>50ms) that block the main thread
  */
 export const monitorLongTasks = () => {
-  if (process.env.NODE_ENV !== 'production' && "PerformanceObserver" in window) {
+  if (process.env.NODE_ENV !== "production" && "PerformanceObserver" in window) {
     try {
       const observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
@@ -79,7 +79,7 @@ export const monitorLongTasks = () => {
       });
 
       observer.observe({ entryTypes: ["longtask"] });
-    } catch (e) {
+    } catch {
       // Long task API not supported
     }
   }
@@ -89,7 +89,7 @@ export const monitorLongTasks = () => {
  * Monitor layout shifts (CLS contributors)
  */
 export const monitorLayoutShifts = () => {
-  if (process.env.NODE_ENV !== 'production' && "PerformanceObserver" in window) {
+  if (process.env.NODE_ENV !== "production" && "PerformanceObserver" in window) {
     try {
       interface LayoutShiftEntry extends PerformanceEntry {
         hadRecentInput: boolean;
@@ -110,7 +110,7 @@ export const monitorLayoutShifts = () => {
       });
 
       observer.observe({ entryTypes: ["layout-shift"] });
-    } catch (e) {
+    } catch {
       // Layout shift API not supported
     }
   }

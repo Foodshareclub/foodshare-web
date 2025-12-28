@@ -286,7 +286,7 @@ function showWhiteScreenRecovery() {
 export function logBuildInfo() {
   const buildInfo = getBuildInfo();
 
-  logger.info("📦 Build Information", buildInfo);
+  logger.info("📦 Build Information", { ...buildInfo });
 
   // Store for debugging
   try {

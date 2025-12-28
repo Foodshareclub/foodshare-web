@@ -30,19 +30,19 @@ const mockState = {
 };
 
 // Mock next/cache
-jest.mock('next/cache', () => ({
+jest.mock("next/cache", () => ({
   revalidatePath: jest.fn(),
   revalidateTag: jest.fn(),
 }));
 
 // Mock cache-keys
-jest.mock('@/lib/data/cache-keys', () => ({
+jest.mock("@/lib/data/cache-keys", () => ({
   CACHE_TAGS: {
-    ADMIN: 'admin',
-    ADMIN_LISTINGS: 'admin-listings',
-    PRODUCTS: 'products',
+    ADMIN: "admin",
+    ADMIN_LISTINGS: "admin-listings",
+    PRODUCTS: "products",
     PRODUCT: (id: number) => `product-${id}`,
-    PROFILES: 'profiles',
+    PROFILES: "profiles",
   },
   invalidateTag: jest.fn(),
 }));
@@ -62,7 +62,7 @@ interface MockChain {
 }
 
 // Mock Supabase server
-jest.mock('@/lib/supabase/server', () => ({
+jest.mock("@/lib/supabase/server", () => ({
   createClient: jest.fn(() => {
     const createSelectChain = (tableName?: string): MockChain => {
       const chain: MockChain = {
@@ -72,19 +72,19 @@ jest.mock('@/lib/supabase/server', () => ({
         order: jest.fn(() => chain),
         range: jest.fn(() => chain),
         single: jest.fn(() => {
-          if (tableName === 'profiles') {
+          if (tableName === "profiles") {
             return Promise.resolve({
               data: mockState.profile,
               error: mockState.dbError,
             });
           }
-          if (tableName === 'posts') {
+          if (tableName === "posts") {
             return Promise.resolve({
               data: mockState.listing,
               error: mockState.dbError,
             });
           }
-          if (tableName === 'roles') {
+          if (tableName === "roles") {
             return Promise.resolve({
               data: mockState.roleData,
               error: mockState.dbError,
@@ -103,7 +103,7 @@ jest.mock('@/lib/supabase/server', () => ({
       };
 
       // For user_roles table (array result)
-      if (tableName === 'user_roles') {
+      if (tableName === "user_roles") {
         Object.assign(chain, {
           then: (resolve: (value: unknown) => void) =>
             resolve({
@@ -114,7 +114,7 @@ jest.mock('@/lib/supabase/server', () => ({
       }
 
       // For profiles list query
-      if (tableName === 'profiles' && mockState.usersData.length > 0) {
+      if (tableName === "profiles" && mockState.usersData.length > 0) {
         Object.assign(chain, {
           then: (resolve: (value: unknown) => void) =>
             resolve({
@@ -143,7 +143,7 @@ jest.mock('@/lib/supabase/server', () => ({
   }),
 }));
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach } from "@jest/globals";
 
 // Import actions after mocks
 import {
@@ -153,9 +153,17 @@ import {
   banUser,
   unbanUser,
   getUsers,
-} from '@/app/actions/admin';
+} from "@/app/actions/admin";
 
-describe('Admin Server Actions', () => {
+// Helper type to extract error from failed result
+type FailedResult = { success: false; error: { message: string; code: string } };
+
+// Type guard for failed results
+function isFailedResult(result: { success: boolean }): result is FailedResult {
+  return result.success === false;
+}
+
+describe("Admin Server Actions", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockState.user = null;
@@ -173,40 +181,44 @@ describe('Admin Server Actions', () => {
   // verifyAdminAccess Tests (via action calls)
   // ==========================================================================
 
-  describe('Admin Access Verification', () => {
-    it('should reject unauthenticated users', async () => {
+  describe("Admin Access Verification", () => {
+    it("should reject unauthenticated users", async () => {
       mockState.user = null;
 
       const result = await approveListing(1);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'You must be logged in' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "You must be logged in" });
+      }
     });
 
-    it('should reject non-admin users', async () => {
-      mockState.user = { id: 'user-123', email: 'user@example.com' };
-      mockState.userRoles = [{ roles: { name: 'user' } }];
+    it("should reject non-admin users", async () => {
+      mockState.user = { id: "user-123", email: "user@example.com" };
+      mockState.userRoles = [{ roles: { name: "user" } }];
 
       const result = await approveListing(1);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Admin access required' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Admin access required" });
+      }
     });
 
-    it('should allow admin users', async () => {
-      mockState.user = { id: 'admin-123', email: 'admin@example.com' };
-      mockState.userRoles = [{ roles: { name: 'admin' } }];
-      mockState.listing = { id: 1, post_name: 'Test Listing', profile_id: 'owner-123' };
+    it("should allow admin users", async () => {
+      mockState.user = { id: "admin-123", email: "admin@example.com" };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
+      mockState.listing = { id: 1, post_name: "Test Listing", profile_id: "owner-123" };
 
       const result = await approveListing(1);
 
       expect(result.success).toBe(true);
     });
 
-    it('should allow superadmin users', async () => {
-      mockState.user = { id: 'super-123', email: 'super@example.com' };
-      mockState.userRoles = [{ roles: { name: 'superadmin' } }];
-      mockState.listing = { id: 1, post_name: 'Test Listing', profile_id: 'owner-123' };
+    it("should allow superadmin users", async () => {
+      mockState.user = { id: "super-123", email: "super@example.com" };
+      mockState.userRoles = [{ roles: { name: "superadmin" } }];
+      mockState.listing = { id: 1, post_name: "Test Listing", profile_id: "owner-123" };
 
       const result = await approveListing(1);
 
@@ -218,46 +230,52 @@ describe('Admin Server Actions', () => {
   // approveListing Tests
   // ==========================================================================
 
-  describe('approveListing', () => {
+  describe("approveListing", () => {
     beforeEach(() => {
-      mockState.user = { id: 'admin-123', email: 'admin@example.com' };
-      mockState.userRoles = [{ roles: { name: 'admin' } }];
+      mockState.user = { id: "admin-123", email: "admin@example.com" };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
     });
 
-    it('should approve valid listing', async () => {
-      mockState.listing = { id: 1, post_name: 'Food Item', profile_id: 'owner-123' };
+    it("should approve valid listing", async () => {
+      mockState.listing = { id: 1, post_name: "Food Item", profile_id: "owner-123" };
 
       const result = await approveListing(1);
 
       expect(result.success).toBe(true);
     });
 
-    it('should reject invalid listing ID', async () => {
+    it("should reject invalid listing ID", async () => {
       const result = await approveListing(0);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Invalid listing ID' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Invalid listing ID" });
+      }
     });
 
-    it('should reject negative listing ID', async () => {
+    it("should reject negative listing ID", async () => {
       const result = await approveListing(-1);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Invalid listing ID' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Invalid listing ID" });
+      }
     });
 
-    it('should return not found for non-existent listing', async () => {
+    it("should return not found for non-existent listing", async () => {
       mockState.listing = null;
 
       const result = await approveListing(999);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Listing not found' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Listing not found" });
+      }
     });
 
-    it('should handle database error', async () => {
-      mockState.listing = { id: 1, post_name: 'Test', profile_id: 'owner-123' };
-      mockState.dbError = { message: 'Database connection failed' };
+    it("should handle database error", async () => {
+      mockState.listing = { id: 1, post_name: "Test", profile_id: "owner-123" };
+      mockState.dbError = { message: "Database connection failed" };
 
       const result = await approveListing(1);
 
@@ -269,41 +287,47 @@ describe('Admin Server Actions', () => {
   // rejectListing Tests
   // ==========================================================================
 
-  describe('rejectListing', () => {
+  describe("rejectListing", () => {
     beforeEach(() => {
-      mockState.user = { id: 'admin-123', email: 'admin@example.com' };
-      mockState.userRoles = [{ roles: { name: 'admin' } }];
+      mockState.user = { id: "admin-123", email: "admin@example.com" };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
     });
 
-    it('should reject listing with valid reason', async () => {
-      mockState.listing = { id: 1, post_name: 'Food Item', profile_id: 'owner-123' };
+    it("should reject listing with valid reason", async () => {
+      mockState.listing = { id: 1, post_name: "Food Item", profile_id: "owner-123" };
 
-      const result = await rejectListing(1, 'Inappropriate content');
+      const result = await rejectListing(1, "Inappropriate content");
 
       expect(result.success).toBe(true);
     });
 
-    it('should fail with empty reason', async () => {
-      const result = await rejectListing(1, '');
+    it("should fail with empty reason", async () => {
+      const result = await rejectListing(1, "");
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Rejection reason is required');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Rejection reason is required");
+      }
     });
 
-    it('should fail with invalid listing ID', async () => {
-      const result = await rejectListing(0, 'Some reason');
+    it("should fail with invalid listing ID", async () => {
+      const result = await rejectListing(0, "Some reason");
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid listing ID');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Invalid listing ID");
+      }
     });
 
-    it('should return not found for non-existent listing', async () => {
+    it("should return not found for non-existent listing", async () => {
       mockState.listing = null;
 
-      const result = await rejectListing(999, 'Reason');
+      const result = await rejectListing(999, "Reason");
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Listing not found' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Listing not found" });
+      }
     });
   });
 
@@ -311,51 +335,59 @@ describe('Admin Server Actions', () => {
   // updateUserRole Tests
   // ==========================================================================
 
-  describe('updateUserRole', () => {
-    const validUserId = '550e8400-e29b-41d4-a716-446655440001';
-    const adminId = '550e8400-e29b-41d4-a716-446655440099';
+  describe("updateUserRole", () => {
+    const validUserId = "550e8400-e29b-41d4-a716-446655440001";
+    const adminId = "550e8400-e29b-41d4-a716-446655440099";
 
     beforeEach(() => {
-      mockState.user = { id: adminId, email: 'admin@example.com' };
-      mockState.userRoles = [{ roles: { name: 'admin' } }];
+      mockState.user = { id: adminId, email: "admin@example.com" };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
     });
 
-    it('should update user role successfully', async () => {
-      mockState.roleData = { id: 'role-123' };
+    it("should update user role successfully", async () => {
+      mockState.roleData = { id: "role-123" };
 
-      const result = await updateUserRole(validUserId, 'moderator');
+      const result = await updateUserRole(validUserId, "moderator");
 
       expect(result.success).toBe(true);
     });
 
-    it('should prevent changing own role', async () => {
-      const result = await updateUserRole(adminId, 'user');
+    it("should prevent changing own role", async () => {
+      const result = await updateUserRole(adminId, "user");
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Cannot change your own role' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Cannot change your own role" });
+      }
     });
 
-    it('should fail with invalid user ID', async () => {
-      const result = await updateUserRole('invalid-id', 'admin');
+    it("should fail with invalid user ID", async () => {
+      const result = await updateUserRole("invalid-id", "admin");
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid user ID');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Invalid user ID");
+      }
     });
 
-    it('should fail with empty role', async () => {
-      const result = await updateUserRole(validUserId, '');
+    it("should fail with empty role", async () => {
+      const result = await updateUserRole(validUserId, "");
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Role is required');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Role is required");
+      }
     });
 
-    it('should fail when role not found', async () => {
+    it("should fail when role not found", async () => {
       mockState.roleData = null;
 
-      const result = await updateUserRole(validUserId, 'nonexistent');
+      const result = await updateUserRole(validUserId, "nonexistent");
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain("not found");
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("not found");
+      }
     });
   });
 
@@ -363,57 +395,65 @@ describe('Admin Server Actions', () => {
   // banUser Tests
   // ==========================================================================
 
-  describe('banUser', () => {
-    const validUserId = '550e8400-e29b-41d4-a716-446655440002';
-    const adminId = '550e8400-e29b-41d4-a716-446655440098';
+  describe("banUser", () => {
+    const validUserId = "550e8400-e29b-41d4-a716-446655440002";
+    const adminId = "550e8400-e29b-41d4-a716-446655440098";
 
     beforeEach(() => {
-      mockState.user = { id: adminId, email: 'admin@example.com' };
-      mockState.userRoles = [{ roles: { name: 'admin' } }];
+      mockState.user = { id: adminId, email: "admin@example.com" };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
     });
 
-    it('should ban user with valid reason', async () => {
+    it("should ban user with valid reason", async () => {
       mockState.profile = {
         id: validUserId,
-        first_name: 'John',
-        second_name: 'Doe',
-        email: 'john@example.com',
+        first_name: "John",
+        second_name: "Doe",
+        email: "john@example.com",
         is_active: true,
       };
 
-      const result = await banUser(validUserId, 'Violating terms of service');
+      const result = await banUser(validUserId, "Violating terms of service");
 
       expect(result.success).toBe(true);
     });
 
-    it('should prevent banning yourself', async () => {
-      const result = await banUser(adminId, 'Some reason');
+    it("should prevent banning yourself", async () => {
+      const result = await banUser(adminId, "Some reason");
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Cannot ban yourself' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Cannot ban yourself" });
+      }
     });
 
-    it('should fail with invalid user ID', async () => {
-      const result = await banUser('invalid-id', 'Some reason');
+    it("should fail with invalid user ID", async () => {
+      const result = await banUser("invalid-id", "Some reason");
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Invalid user ID');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Invalid user ID");
+      }
     });
 
-    it('should fail with empty reason', async () => {
-      const result = await banUser(validUserId, '');
+    it("should fail with empty reason", async () => {
+      const result = await banUser(validUserId, "");
 
       expect(result.success).toBe(false);
-      expect(result.error?.message).toContain('Ban reason is required');
+      if (isFailedResult(result)) {
+        expect(result.error.message).toContain("Ban reason is required");
+      }
     });
 
-    it('should return not found for non-existent user', async () => {
+    it("should return not found for non-existent user", async () => {
       mockState.profile = null;
 
-      const result = await banUser(validUserId, 'Reason');
+      const result = await banUser(validUserId, "Reason");
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'User not found' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "User not found" });
+      }
     });
   });
 
@@ -421,20 +461,20 @@ describe('Admin Server Actions', () => {
   // unbanUser Tests
   // ==========================================================================
 
-  describe('unbanUser', () => {
-    const validUserId = '550e8400-e29b-41d4-a716-446655440000';
+  describe("unbanUser", () => {
+    const validUserId = "550e8400-e29b-41d4-a716-446655440000";
 
     beforeEach(() => {
-      mockState.user = { id: 'admin-123', email: 'admin@example.com' };
-      mockState.userRoles = [{ roles: { name: 'admin' } }];
+      mockState.user = { id: "admin-123", email: "admin@example.com" };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
     });
 
-    it('should unban banned user', async () => {
+    it("should unban banned user", async () => {
       mockState.profile = {
         id: validUserId,
-        first_name: 'John',
-        second_name: 'Doe',
-        email: 'john@example.com',
+        first_name: "John",
+        second_name: "Doe",
+        email: "john@example.com",
         is_active: false,
       };
 
@@ -443,35 +483,41 @@ describe('Admin Server Actions', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should fail if user is already active', async () => {
+    it("should fail if user is already active", async () => {
       mockState.profile = {
         id: validUserId,
-        first_name: 'John',
-        second_name: 'Doe',
-        email: 'john@example.com',
+        first_name: "John",
+        second_name: "Doe",
+        email: "john@example.com",
         is_active: true,
       };
 
       const result = await unbanUser(validUserId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'User is not banned' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "User is not banned" });
+      }
     });
 
-    it('should fail with invalid user ID', async () => {
-      const result = await unbanUser('invalid-id');
+    it("should fail with invalid user ID", async () => {
+      const result = await unbanUser("invalid-id");
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Invalid user ID' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Invalid user ID" });
+      }
     });
 
-    it('should return not found for non-existent user', async () => {
+    it("should return not found for non-existent user", async () => {
       mockState.profile = null;
 
       const result = await unbanUser(validUserId);
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'User not found' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "User not found" });
+      }
     });
   });
 
@@ -479,20 +525,20 @@ describe('Admin Server Actions', () => {
   // getUsers Tests
   // ==========================================================================
 
-  describe('getUsers', () => {
+  describe("getUsers", () => {
     beforeEach(() => {
-      mockState.user = { id: 'admin-123', email: 'admin@example.com' };
-      mockState.userRoles = [{ roles: { name: 'admin' } }];
+      mockState.user = { id: "admin-123", email: "admin@example.com" };
+      mockState.userRoles = [{ roles: { name: "admin" } }];
     });
 
-    it('should return users with default pagination', async () => {
+    it("should return users with default pagination", async () => {
       mockState.usersData = [
         {
-          id: 'user-1',
-          first_name: 'John',
-          second_name: 'Doe',
-          email: 'john@example.com',
-          created_time: '2024-01-01',
+          id: "user-1",
+          first_name: "John",
+          second_name: "Doe",
+          email: "john@example.com",
+          created_time: "2024-01-01",
           is_active: true,
         },
       ];
@@ -503,46 +549,48 @@ describe('Admin Server Actions', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject non-admin users', async () => {
-      mockState.userRoles = [{ roles: { name: 'user' } }];
+    it("should reject non-admin users", async () => {
+      mockState.userRoles = [{ roles: { name: "user" } }];
 
       const result = await getUsers();
 
       expect(result.success).toBe(false);
-      expect(result.error).toMatchObject({ message: 'Admin access required' });
+      if (isFailedResult(result)) {
+        expect(result.error).toMatchObject({ message: "Admin access required" });
+      }
     });
 
-    it('should validate page parameter', async () => {
+    it("should validate page parameter", async () => {
       const result = await getUsers({ page: 0 });
 
       expect(result.success).toBe(false);
     });
 
-    it('should validate limit parameter', async () => {
+    it("should validate limit parameter", async () => {
       const result = await getUsers({ limit: 200 });
 
       expect(result.success).toBe(false);
     });
 
-    it('should handle search filter', async () => {
+    it("should handle search filter", async () => {
       mockState.usersData = [
         {
-          id: 'user-1',
-          first_name: 'John',
-          second_name: 'Doe',
-          email: 'john@example.com',
-          created_time: '2024-01-01',
+          id: "user-1",
+          first_name: "John",
+          second_name: "Doe",
+          email: "john@example.com",
+          created_time: "2024-01-01",
           is_active: true,
         },
       ];
       mockState.usersCount = 1;
 
-      const result = await getUsers({ search: 'john' });
+      const result = await getUsers({ search: "john" });
 
       expect(result.success).toBe(true);
     });
 
-    it('should handle is_active filter', async () => {
+    it("should handle is_active filter", async () => {
       mockState.usersData = [];
       mockState.usersCount = 0;
 
