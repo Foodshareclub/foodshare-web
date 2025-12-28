@@ -176,16 +176,38 @@ export async function sendLocation(
 
 export async function setWebhook(url: string): Promise<boolean> {
   try {
+    // Include secret_token for webhook signature verification
+    const webhookSecret = Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
+
+    const webhookConfig: Record<string, unknown> = {
+      url,
+      allowed_updates: ["message", "callback_query"],
+    };
+
+    // Add secret_token if configured
+    if (webhookSecret) {
+      webhookConfig.secret_token = webhookSecret;
+    }
+
     const response = await fetch(`${TELEGRAM_API}/setWebhook`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        url,
-        allowed_updates: ["message", "callback_query"],
-      }),
+      body: JSON.stringify(webhookConfig),
     });
 
     const result = await response.json();
+
+    if (result.ok) {
+      console.log(
+        JSON.stringify({
+          level: "info",
+          message: "Webhook configured successfully",
+          hasSecretToken: !!webhookSecret,
+          timestamp: new Date().toISOString(),
+        })
+      );
+    }
+
     return result.ok;
   } catch (error) {
     console.error("Set webhook error:", error);
