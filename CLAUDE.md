@@ -230,14 +230,18 @@ src/
 ├── app/                    # Next.js App Router
 │   ├── layout.tsx         # Root layout (providers, metadata)
 │   ├── page.tsx           # Home page (Server Component)
+│   ├── opengraph-image.tsx # Dynamic OG image (edge runtime)
+│   ├── twitter-image.tsx  # Dynamic Twitter card image
 │   ├── actions/           # Server Actions
 │   │   ├── products.ts
-│   │   ├── auth.ts
+│   │   ├── auth.ts        # Auth actions (don't re-export types from here!)
 │   │   └── chat.ts
 │   ├── admin/             # Admin routes
 │   ├── auth/              # Auth routes
 │   ├── map/               # Map view
 │   ├── food/              # Food listings
+│   │   └── [id]/
+│   │       └── opengraph-image.tsx  # Food-specific OG image
 │   ├── profile/           # User profile
 │   └── settings/          # Settings
 ├── components/             # React components
@@ -247,15 +251,21 @@ src/
 ├── hooks/                  # Custom hooks
 │   └── queries/           # React Query hooks
 ├── lib/                    # Utilities
+│   ├── data/              # Data fetching functions
+│   │   ├── auth.ts        # AuthUser type defined here
+│   │   ├── og-stats.ts    # OG image stats fetching
+│   │   └── products.ts    # Product queries
 │   ├── supabase/          # Supabase clients
 │   │   ├── client.ts      # Client-side (browser)
-│   │   └── server.ts      # Server-side (Server Components, Actions)
+│   │   ├── server.ts      # Server-side (Server Components, Actions)
+│   │   └── middleware.ts  # Supabase session update helper
 │   └── utils.ts           # cn(), formatDate(), etc.
 ├── store/                  # State (Zustand only)
 │   └── zustand/           # UI stores
 ├── types/                  # TypeScript definitions
 └── utils/                  # Helper functions
 
+proxy.ts                    # Next.js 16 Proxy (formerly middleware.ts)
 messages/                   # next-intl translations
 supabase/
 ├── functions/             # Edge Functions (Deno)
@@ -382,6 +392,65 @@ Detailed docs in `context/`:
 - `WORKFLOWS.md` - Development workflows
 - `ultrathink.md` - Architecture principles
 
+## Next.js 16 Specific: Proxy (formerly Middleware)
+
+In Next.js 16, `middleware.ts` was renamed to `proxy.ts`:
+
+```typescript
+// proxy.ts (root level) - NOT middleware.ts!
+import { type NextRequest, NextResponse } from "next/server";
+
+export async function proxy(request: NextRequest) {
+  // Rate limiting, auth session refresh, security
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+};
+```
+
+**Key differences from middleware:**
+- File: `proxy.ts` (not `middleware.ts`)
+- Function: `export async function proxy()` (not `middleware()`)
+- Runtime: Node.js (not Edge) - direct imports work, no dynamic import needed
+
+## Next.js 16 Specific: Type Exports from Server Actions
+
+**CRITICAL**: Next.js 16 does NOT allow type re-exports from server action files (`'use server'`).
+
+```typescript
+// ❌ WRONG - Don't do this in src/app/actions/auth.ts
+'use server';
+import type { AuthUser } from '@/lib/data/auth';
+export type { AuthUser };  // This BREAKS the build!
+
+// ✅ CORRECT - Import AuthUser directly from lib/data/auth
+import type { AuthUser } from '@/lib/data/auth';
+```
+
+The `AuthUser` type is defined in `src/lib/data/auth.ts`. Always import it from there, never from `src/app/actions/auth.ts`.
+
+## Dynamic OpenGraph Images
+
+OG images use edge runtime and fetch live stats:
+
+```typescript
+// src/app/opengraph-image.tsx
+import { ImageResponse } from "next/og";
+import { getOGStats, getSeasonalTheme } from "@/lib/data/og-stats";
+
+export const runtime = "edge";
+export const size = { width: 1200, height: 630 };
+
+export default async function Image() {
+  const stats = await getOGStats();  // Live stats from Supabase
+  const seasonal = getSeasonalTheme();  // Winter/Spring/Summer/Fall theming
+
+  return new ImageResponse(/* JSX */);
+}
+```
+
 ## Common Issues
 
 **Module not found**: Check imports use `@/` alias (tsconfig paths)
@@ -396,3 +465,7 @@ const Map = dynamic(() => import('@/components/leaflet/Map'), { ssr: false });
 **Server Action errors**: Ensure `'use server'` is at top of file or function
 
 **Hydration mismatch**: Check for client-only code in Server Components
+
+**AuthUser import error**: Import from `@/lib/data/auth`, NOT from `@/app/actions/auth`
+
+**Middleware build error**: Use `proxy.ts` instead of `middleware.ts` in Next.js 16
