@@ -6,6 +6,9 @@ export const alt = "FoodShare Listing";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+// ISR: Regenerate image every 5 minutes
+export const revalidate = 300;
+
 const typeEmojis: Record<string, string> = {
   food: "🍽️",
   thing: "📦",
@@ -223,6 +226,11 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         </span>
       </div>
     </div>,
-    { ...size }
+    {
+      ...size,
+      headers: {
+        "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=600",
+      },
+    }
   );
 }

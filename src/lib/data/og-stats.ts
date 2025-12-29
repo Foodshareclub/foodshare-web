@@ -1,15 +1,34 @@
 /**
- * OG Image Statistics
- * Fetches dynamic stats for OpenGraph images
+ * OG Image Statistics (Enterprise-grade)
+ *
+ * Fetches dynamic stats for OpenGraph images with:
+ * - 5-minute in-memory cache
+ * - Stale-while-revalidate pattern
+ * - Centralized fallback values
  */
 
-import { createClient } from "@/lib/supabase/server";
+import { createEdgeClient } from "@/lib/supabase/edge";
 
 export interface OGStats {
   totalListings: number;
   activeUsers: number;
   foodSaved: string;
 }
+
+/**
+ * Fallback stats when database is unavailable
+ * Single source of truth - not duplicated elsewhere
+ */
+const FALLBACK_STATS: OGStats = {
+  totalListings: 100,
+  activeUsers: 50,
+  foodSaved: "200 kg",
+};
+
+// In-memory cache for edge runtime
+let cachedStats: OGStats | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Calculate estimated food saved based on listings
@@ -25,11 +44,22 @@ function calculateFoodSaved(listingsCount: number): string {
 
 /**
  * Get stats for OG images
- * Uses edge-compatible queries with caching
+ *
+ * Features:
+ * - Returns cached data if fresh (< 5 min old)
+ * - On error, returns stale cache or fallback
+ * - Never throws - always returns valid stats
  */
 export async function getOGStats(): Promise<OGStats> {
+  const now = Date.now();
+
+  // Return cached if fresh
+  if (cachedStats && now - cacheTimestamp < CACHE_TTL) {
+    return cachedStats;
+  }
+
   try {
-    const supabase = await createClient();
+    const supabase = createEdgeClient();
 
     // Parallel queries for performance
     const [listingsResult, usersResult] = await Promise.all([
@@ -40,19 +70,21 @@ export async function getOGStats(): Promise<OGStats> {
     const totalListings = listingsResult.count || 0;
     const activeUsers = usersResult.count || 0;
 
-    return {
+    const stats: OGStats = {
       totalListings,
       activeUsers,
       foodSaved: calculateFoodSaved(totalListings),
     };
+
+    // Update cache
+    cachedStats = stats;
+    cacheTimestamp = now;
+
+    return stats;
   } catch (error) {
     console.error("[OG Stats] Error fetching stats:", error);
-    // Return fallback values
-    return {
-      totalListings: 100,
-      activeUsers: 50,
-      foodSaved: "200 kg",
-    };
+    // Return stale cache if available, otherwise fallback
+    return cachedStats || FALLBACK_STATS;
   }
 }
 
