@@ -139,8 +139,7 @@ export const defaultMetadata: Metadata = {
     "theme-color": "#FF2D55",
     // Pinterest
     "pinterest-rich-pin": "true",
-    // Facebook
-    "fb:app_id": siteConfig.facebookAppId,
+    // Facebook fb:app_id is added directly in layout.tsx head with property attribute
   },
 };
 

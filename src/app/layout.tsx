@@ -20,33 +20,8 @@ const inter = Inter({
   fallback: ["system-ui", "arial"],
 });
 
-/**
- * Generate metadata with Facebook App ID fetched from Supabase Vault
- */
-export async function generateMetadata(): Promise<Metadata> {
-  const facebookAppId = await getFacebookAppId();
-
-  // Build the other metadata object, filtering out undefined values
-  const otherMetadata: Record<string, string | number | (string | number)[]> = {};
-
-  if (defaultMetadata.other) {
-    for (const [key, value] of Object.entries(defaultMetadata.other)) {
-      if (value !== undefined && value !== null) {
-        otherMetadata[key] = value as string | number | (string | number)[];
-      }
-    }
-  }
-
-  // Add Facebook App ID
-  if (facebookAppId) {
-    otherMetadata["fb:app_id"] = facebookAppId;
-  }
-
-  return {
-    ...defaultMetadata,
-    other: otherMetadata,
-  };
-}
+// Use default metadata (fb:app_id is added directly in head with property attribute)
+export const metadata: Metadata = defaultMetadata;
 
 export default async function RootLayout({
   children,
@@ -60,9 +35,14 @@ export default async function RootLayout({
   // Get auth session for navbar (server-side)
   const session = await getAuthSession();
 
+  // Get Facebook App ID from Supabase Vault for OpenGraph meta tag
+  const facebookAppId = await getFacebookAppId();
+
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
+        {/* Facebook App ID - must use property attribute, not name */}
+        {facebookAppId && <meta property="fb:app_id" content={facebookAppId} />}
         {/* OpenSearch - enables browser address bar search */}
         <link
           rel="search"

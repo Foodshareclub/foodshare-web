@@ -2,12 +2,12 @@
 
 ## App Details
 
-| Field | Value |
-|-------|-------|
-| **Facebook App ID** | `2896639917053743` |
-| **Site URL** | `https://foodshare.club/` |
-| **iOS Bundle ID** | `com.flutterflow.foodshare` |
-| **iOS App Store ID** | `1573242804` |
+| Field                | Value                       |
+| -------------------- | --------------------------- |
+| **Facebook App ID**  | `2896639917053743`          |
+| **Site URL**         | `https://foodshare.club/`   |
+| **iOS Bundle ID**    | `com.flutterflow.foodshare` |
+| **iOS App Store ID** | `1573242804`                |
 
 ## Meta Developer Dashboard
 
@@ -15,12 +15,12 @@ Dashboard URL: https://developers.facebook.com/apps/2896639917053743/settings/ba
 
 ### Required Settings
 
-| Field | Value |
-|-------|-------|
-| Website → Site URL | `https://foodshare.club/` |
-| iOS → iPhone Store ID | `1573242804` |
-| iOS → iPad Store ID | `1573242804` |
-| Android → Package Names | *(Remove - no Android app yet)* |
+| Field                   | Value                           |
+| ----------------------- | ------------------------------- |
+| Website → Site URL      | `https://foodshare.club/`       |
+| iOS → iPhone Store ID   | `1573242804`                    |
+| iOS → iPad Store ID     | `1573242804`                    |
+| Android → Package Names | _(Remove - no Android app yet)_ |
 
 ## Secret Storage
 
@@ -45,17 +45,22 @@ supabase secrets set FACEBOOK_APP_ID=2896639917053743
 The Facebook App ID is fetched from Supabase Vault at runtime:
 
 1. **`src/lib/email/vault.ts`** - Contains `getFacebookAppId()` function
-2. **`src/app/layout.tsx`** - Uses `generateMetadata()` to fetch and set `fb:app_id`
+2. **`src/app/layout.tsx`** - Fetches from Vault and adds `<meta property="fb:app_id">` directly in `<head>`
 
 ### How It Works
 
 ```
-Request → layout.tsx generateMetadata()
+Request → layout.tsx (Server Component)
               ↓
         getFacebookAppId() → Supabase Vault RPC
               ↓
-        Returns fb:app_id in HTML meta tag
+        Renders <meta property="fb:app_id" content="..."> in <head>
 ```
+
+### Why Direct in Head?
+
+Facebook requires the `property` attribute for OpenGraph tags like `fb:app_id`.
+Next.js `metadata.other` generates `name` attribute, so we add it directly in `<head>`.
 
 ## Verification
 
@@ -87,8 +92,9 @@ If Facebook disables the app due to Platform Term 7.d:
 URL: https://foodshare.club/
 Response Code: 200
 
-Warnings:
-- Missing Properties: fb:app_id (FIXED - now fetched from Supabase Vault)
+Fix Applied:
+- fb:app_id now rendered with property attribute (not name)
+- Fetched from Supabase Vault at runtime
 
 Open Graph Properties:
 - og:url: https://foodshare.club/
