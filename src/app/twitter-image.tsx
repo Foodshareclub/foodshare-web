@@ -60,7 +60,6 @@ export default async function Image() {
         }}
       >
         {/* Logo */}
-        {}
         <img
           src={`${process.env.NEXT_PUBLIC_SITE_URL || "https://foodshare.club"}/logo512.png`}
           alt="FoodShare Logo"
@@ -117,7 +116,6 @@ export default async function Image() {
               alignItems: "center",
               padding: "20px 32px",
               background: "rgba(255,255,255,0.15)",
-              backdropFilter: "blur(10px)",
               borderRadius: 16,
               border: "1px solid rgba(255,255,255,0.2)",
             }}
@@ -152,7 +150,6 @@ export default async function Image() {
               alignItems: "center",
               padding: "20px 32px",
               background: "rgba(255,255,255,0.15)",
-              backdropFilter: "blur(10px)",
               borderRadius: 16,
               border: "1px solid rgba(255,255,255,0.2)",
             }}
@@ -187,7 +184,6 @@ export default async function Image() {
               alignItems: "center",
               padding: "20px 32px",
               background: "rgba(255,255,255,0.15)",
-              backdropFilter: "blur(10px)",
               borderRadius: 16,
               border: "1px solid rgba(255,255,255,0.2)",
             }}
@@ -216,37 +212,72 @@ export default async function Image() {
         </div>
 
         {/* Feature badges */}
-        <div
-          style={{
-            display: "flex",
-            gap: 12,
-          }}
-        >
-          {[
-            { emoji: "⚡", text: "Fast" },
-            { emoji: "🌍", text: "21 Languages" },
-            { emoji: "🔒", text: "Secure" },
-            { emoji: "💚", text: "Free" },
-            {
-              emoji: seasonal.emoji,
-              text: seasonal.season.charAt(0).toUpperCase() + seasonal.season.slice(1),
-            },
-          ].map((badge) => (
-            <div
-              key={badge.text}
-              style={{
-                display: "flex",
-                padding: "8px 16px",
-                background: "rgba(255,255,255,0.2)",
-                borderRadius: 50,
-                fontSize: 16,
-                color: "white",
-                fontWeight: 600,
-              }}
-            >
-              {badge.emoji} {badge.text}
-            </div>
-          ))}
+        <div style={{ display: "flex", gap: 12 }}>
+          <div
+            style={{
+              display: "flex",
+              padding: "8px 16px",
+              background: "rgba(255,255,255,0.2)",
+              borderRadius: 50,
+              fontSize: 16,
+              color: "white",
+              fontWeight: 600,
+            }}
+          >
+            ⚡ Fast
+          </div>
+          <div
+            style={{
+              display: "flex",
+              padding: "8px 16px",
+              background: "rgba(255,255,255,0.2)",
+              borderRadius: 50,
+              fontSize: 16,
+              color: "white",
+              fontWeight: 600,
+            }}
+          >
+            🌍 21 Languages
+          </div>
+          <div
+            style={{
+              display: "flex",
+              padding: "8px 16px",
+              background: "rgba(255,255,255,0.2)",
+              borderRadius: 50,
+              fontSize: 16,
+              color: "white",
+              fontWeight: 600,
+            }}
+          >
+            🔒 Secure
+          </div>
+          <div
+            style={{
+              display: "flex",
+              padding: "8px 16px",
+              background: "rgba(255,255,255,0.2)",
+              borderRadius: 50,
+              fontSize: 16,
+              color: "white",
+              fontWeight: 600,
+            }}
+          >
+            💚 Free
+          </div>
+          <div
+            style={{
+              display: "flex",
+              padding: "8px 16px",
+              background: "rgba(255,255,255,0.2)",
+              borderRadius: 50,
+              fontSize: 16,
+              color: "white",
+              fontWeight: 600,
+            }}
+          >
+            {seasonal.emoji} {seasonal.season.charAt(0).toUpperCase() + seasonal.season.slice(1)}
+          </div>
         </div>
       </div>
 

@@ -42,7 +42,28 @@ const typeGradients: Record<string, string> = {
 
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+
+  // Validate id is a valid number to prevent injection
   const productId = parseInt(id, 10);
+  if (isNaN(productId) || productId <= 0) {
+    // Return default image for invalid IDs
+    return new ImageResponse(
+      <div
+        style={{
+          height: "100%",
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "linear-gradient(135deg, #FF2D55 0%, #E61E4D 50%, #FF6B8A 100%)",
+          fontFamily: "system-ui, sans-serif",
+        }}
+      >
+        <span style={{ fontSize: 80, color: "white" }}>🍓 FoodShare</span>
+      </div>,
+      { ...size }
+    );
+  }
 
   // Fetch product data
   let title = "Food Listing";
@@ -97,7 +118,6 @@ export default async function Image({ params }: { params: Promise<{ id: string }
             display: "flex",
           }}
         >
-          {}
           <img
             src={imageUrl}
             alt=""
@@ -203,7 +223,6 @@ export default async function Image({ params }: { params: Promise<{ id: string }
           gap: 12,
         }}
       >
-        {}
         <img
           src={`${process.env.NEXT_PUBLIC_SITE_URL || "https://foodshare.club"}/logo512.png`}
           alt="FoodShare"
