@@ -2,8 +2,11 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 export const alt = "FoodShare - Food Listings";
-export const size = { width: 1200, height: 630 };
+export const size = { width: 1200, height: 600 };
 export const contentType = "image/png";
+
+// ISR: Regenerate image every 5 minutes
+export const revalidate = 300;
 
 export default async function Image() {
   return new ImageResponse(
@@ -174,6 +177,11 @@ export default async function Image() {
         </span>
       </div>
     </div>,
-    { ...size }
+    {
+      ...size,
+      headers: {
+        "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=600",
+      },
+    }
   );
 }

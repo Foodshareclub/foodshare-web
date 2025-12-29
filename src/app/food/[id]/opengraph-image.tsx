@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import * as Sentry from "@sentry/nextjs";
 import { getProductById } from "@/lib/data/products";
 
 export const runtime = "edge";
@@ -87,7 +88,15 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         imageUrl = product.images[0];
       }
     }
-  } catch {
+  } catch (error) {
+    // Report to Sentry for monitoring
+    Sentry.captureException(error, {
+      tags: {
+        component: "og-image",
+        route: "food/[id]",
+      },
+      extra: { productId },
+    });
     // Use defaults on error
   }
 

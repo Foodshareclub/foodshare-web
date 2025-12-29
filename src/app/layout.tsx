@@ -5,6 +5,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { defaultMetadata } from "@/lib/metadata";
 import { getFacebookAppId } from "@/lib/email/vault";
+import { generateOrganizationJsonLd, generateWebsiteJsonLd, generateSoftwareApplicationJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 import type { Locale } from "@/i18n/config";
 import Footer from "@/components/footer/Footer";
 import { DevTools } from "@/components/dev";
@@ -41,6 +42,20 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
+        {/* JSON-LD Structured Data for SEO */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: safeJsonLdStringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                generateOrganizationJsonLd(),
+                generateWebsiteJsonLd(),
+                generateSoftwareApplicationJsonLd(),
+              ],
+            }),
+          }}
+        />
         {/* Facebook App ID - must use property attribute, not name */}
         {facebookAppId && <meta property="fb:app_id" content={facebookAppId} />}
         {/* OpenSearch - enables browser address bar search */}

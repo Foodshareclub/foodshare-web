@@ -3,8 +3,11 @@ import { getOGStats, getSeasonalTheme } from "@/lib/data/og-stats";
 
 export const runtime = "edge";
 export const alt = "FoodShare - Share Food, Reduce Waste, Build Community";
-export const size = { width: 1200, height: 630 };
+export const size = { width: 1200, height: 600 };
 export const contentType = "image/png";
+
+// ISR: Regenerate image every 5 minutes
+export const revalidate = 300;
 
 export default async function Image() {
   // Fetch dynamic stats
@@ -295,6 +298,11 @@ export default async function Image() {
         foodshare.club
       </div>
     </div>,
-    { ...size }
+    {
+      ...size,
+      headers: {
+        "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=600",
+      },
+    }
   );
 }

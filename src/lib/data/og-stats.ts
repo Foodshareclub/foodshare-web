@@ -5,8 +5,10 @@
  * - 5-minute in-memory cache
  * - Stale-while-revalidate pattern
  * - Centralized fallback values
+ * - Sentry error tracking
  */
 
+import * as Sentry from "@sentry/nextjs";
 import { createEdgeClient } from "@/lib/supabase/edge";
 
 export interface OGStats {
@@ -82,6 +84,17 @@ export async function getOGStats(): Promise<OGStats> {
 
     return stats;
   } catch (error) {
+    // Report to Sentry for monitoring
+    Sentry.captureException(error, {
+      tags: {
+        component: "og-image",
+        function: "getOGStats",
+      },
+      extra: {
+        hasCachedStats: !!cachedStats,
+        cacheAge: cachedStats ? now - cacheTimestamp : null,
+      },
+    });
     console.error("[OG Stats] Error fetching stats:", error);
     // Return stale cache if available, otherwise fallback
     return cachedStats || FALLBACK_STATS;
