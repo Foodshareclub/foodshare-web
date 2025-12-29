@@ -7,9 +7,8 @@ import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 import { trackEvent } from "@/app/actions/analytics";
 
-// Import and re-export AuthUser type from data layer for consistency
+// Import AuthUser for internal use (don't re-export from server action files)
 import type { AuthUser } from "@/lib/data/auth";
-export type { AuthUser };
 
 /**
  * Check if a string is a full URL (http/https)

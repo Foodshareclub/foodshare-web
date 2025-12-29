@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Challenge } from "@/lib/data/challenges";
-import type { AuthUser } from "@/app/actions/auth";
+import type { AuthUser } from "@/lib/data/auth";
 
 interface ChallengeDetailClientProps {
   challenge: Challenge;

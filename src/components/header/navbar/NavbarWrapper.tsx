@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Navbar from "@/components/header/navbar/Navbar";
 import { useAuth } from "@/hooks/useAuth";
-import type { AuthUser } from "@/app/actions/auth";
+import type { AuthUser } from "@/lib/data/auth";
 import type { CustomRoomType } from "@/api/chatAPI";
 
 interface NavbarWrapperProps {

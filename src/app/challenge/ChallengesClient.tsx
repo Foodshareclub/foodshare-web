@@ -11,7 +11,7 @@ import { ChallengeLeaderboard } from "@/components/challenges/ChallengeLeaderboa
 import { ActiveChallenges } from "@/components/challenges/ActiveChallenges";
 import { useDeckChallenges } from "@/hooks/queries/useChallenges";
 import type { InitialProductStateType } from "@/types/product.types";
-import type { AuthUser } from "@/app/actions/auth";
+import type { AuthUser } from "@/lib/data/auth";
 import type { LeaderboardUser, UserRankInfo } from "@/components/challenges/ChallengeLeaderboard";
 
 interface ChallengesClientProps {

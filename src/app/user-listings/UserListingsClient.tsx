@@ -13,6 +13,7 @@ import {
   Filter,
   RefreshCw,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { ProductCard } from "@/components/productCard/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,9 +30,8 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import type { InitialProductStateType } from "@/types/product.types";
-import type { AuthUser } from "@/app/actions/auth";
+import type { AuthUser } from "@/lib/data/auth";
 import { refreshUserListingsCache } from "@/app/actions/products";
-import { useRouter } from "next/navigation";
 
 interface UserListingsClientProps {
   listings: InitialProductStateType[];

@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { getOGStats, getSeasonalTheme } from "@/lib/data/og-stats";
 
 export const runtime = "edge";
 export const alt = "FoodShare - Share Food, Reduce Waste, Build Community";
@@ -6,6 +7,10 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function Image() {
+  // Fetch dynamic stats
+  const stats = await getOGStats();
+  const seasonal = getSeasonalTheme();
+
   return new ImageResponse(
     <div
       style={{
@@ -15,84 +20,245 @@ export default async function Image() {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        background: "linear-gradient(135deg, #00A699 0%, #00C9B7 50%, #7DD3C0 100%)",
+        background: "linear-gradient(135deg, #FF2D55 0%, #E61E4D 50%, #FF6B8A 100%)",
         fontFamily: "system-ui, sans-serif",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
-      {/* Logo - FoodShare strawberry */}
-      {}
-      <img
-        src={`${process.env.NEXT_PUBLIC_SITE_URL || "https://foodshare.club"}/logo512.png`}
-        alt="FoodShare Logo"
-        width={160}
-        height={160}
+      {/* Decorative circles */}
+      <div
         style={{
-          marginBottom: 32,
-          borderRadius: "24px",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.15)",
+          position: "absolute",
+          top: -100,
+          right: -100,
+          width: 400,
+          height: 400,
+          borderRadius: "50%",
+          background: "rgba(255,255,255,0.1)",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          bottom: -150,
+          left: -150,
+          width: 500,
+          height: 500,
+          borderRadius: "50%",
+          background: "rgba(255,255,255,0.08)",
         }}
       />
 
-      {/* Title */}
+      {/* Main content */}
       <div
         style={{
           display: "flex",
-          fontSize: 72,
-          fontWeight: 800,
-          color: "white",
-          textShadow: "0 4px 12px rgba(0,0,0,0.2)",
-          marginBottom: 16,
+          flexDirection: "column",
+          alignItems: "center",
+          zIndex: 1,
         }}
       >
-        FoodShare
-      </div>
+        {/* Logo */}
+        {}
+        <img
+          src={`${process.env.NEXT_PUBLIC_SITE_URL || "https://foodshare.club"}/logo512.png`}
+          alt="FoodShare Logo"
+          width={140}
+          height={140}
+          style={{
+            marginBottom: 24,
+            borderRadius: "28px",
+            boxShadow: "0 12px 40px rgba(0,0,0,0.25)",
+          }}
+        />
 
-      {/* Tagline */}
-      <div
-        style={{
-          display: "flex",
-          fontSize: 32,
-          color: "rgba(255,255,255,0.95)",
-          textShadow: "0 2px 8px rgba(0,0,0,0.15)",
-          marginBottom: 40,
-        }}
-      >
-        Share Food • Reduce Waste • Build Community
-      </div>
+        {/* Title */}
+        <div
+          style={{
+            display: "flex",
+            fontSize: 64,
+            fontWeight: 800,
+            color: "white",
+            textShadow: "0 4px 20px rgba(0,0,0,0.3)",
+            marginBottom: 12,
+            letterSpacing: "-1px",
+          }}
+        >
+          FoodShare
+        </div>
 
-      {/* Feature badges */}
-      <div
-        style={{
-          display: "flex",
-          gap: 16,
-        }}
-      >
-        {["⚡ Fast", "🌍 21 Languages", "🔒 Secure", "💚 Free"].map((badge) => (
+        {/* Tagline */}
+        <div
+          style={{
+            display: "flex",
+            fontSize: 28,
+            color: "rgba(255,255,255,0.95)",
+            textShadow: "0 2px 10px rgba(0,0,0,0.2)",
+            marginBottom: 40,
+          }}
+        >
+          Share Food • Reduce Waste • Build Community
+        </div>
+
+        {/* Stats cards */}
+        <div
+          style={{
+            display: "flex",
+            gap: 20,
+            marginBottom: 32,
+          }}
+        >
+          {/* Listings stat */}
           <div
-            key={badge}
             style={{
               display: "flex",
-              padding: "12px 24px",
-              background: "rgba(255,255,255,0.2)",
-              borderRadius: 50,
-              fontSize: 20,
-              color: "white",
-              fontWeight: 600,
+              flexDirection: "column",
+              alignItems: "center",
+              padding: "20px 32px",
+              background: "rgba(255,255,255,0.15)",
+              backdropFilter: "blur(10px)",
+              borderRadius: 16,
+              border: "1px solid rgba(255,255,255,0.2)",
             }}
           >
-            {badge}
+            <div
+              style={{
+                display: "flex",
+                fontSize: 36,
+                fontWeight: 700,
+                color: "white",
+              }}
+            >
+              {stats.totalListings.toLocaleString()}+
+            </div>
+            <div
+              style={{
+                display: "flex",
+                fontSize: 16,
+                color: "rgba(255,255,255,0.9)",
+                marginTop: 4,
+              }}
+            >
+              Food Listings
+            </div>
           </div>
-        ))}
+
+          {/* Users stat */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              padding: "20px 32px",
+              background: "rgba(255,255,255,0.15)",
+              backdropFilter: "blur(10px)",
+              borderRadius: 16,
+              border: "1px solid rgba(255,255,255,0.2)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                fontSize: 36,
+                fontWeight: 700,
+                color: "white",
+              }}
+            >
+              {stats.activeUsers.toLocaleString()}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                fontSize: 16,
+                color: "rgba(255,255,255,0.9)",
+                marginTop: 4,
+              }}
+            >
+              Active Members
+            </div>
+          </div>
+
+          {/* Food saved stat */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              padding: "20px 32px",
+              background: "rgba(255,255,255,0.15)",
+              backdropFilter: "blur(10px)",
+              borderRadius: 16,
+              border: "1px solid rgba(255,255,255,0.2)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                fontSize: 36,
+                fontWeight: 700,
+                color: "white",
+              }}
+            >
+              {stats.foodSaved}
+            </div>
+            <div
+              style={{
+                display: "flex",
+                fontSize: 16,
+                color: "rgba(255,255,255,0.9)",
+                marginTop: 4,
+              }}
+            >
+              Food Saved
+            </div>
+          </div>
+        </div>
+
+        {/* Feature badges */}
+        <div
+          style={{
+            display: "flex",
+            gap: 12,
+          }}
+        >
+          {[
+            { emoji: "⚡", text: "Fast" },
+            { emoji: "🌍", text: "21 Languages" },
+            { emoji: "🔒", text: "Secure" },
+            { emoji: "💚", text: "Free" },
+            {
+              emoji: seasonal.emoji,
+              text: seasonal.season.charAt(0).toUpperCase() + seasonal.season.slice(1),
+            },
+          ].map((badge) => (
+            <div
+              key={badge.text}
+              style={{
+                display: "flex",
+                padding: "8px 16px",
+                background: "rgba(255,255,255,0.2)",
+                borderRadius: 50,
+                fontSize: 16,
+                color: "white",
+                fontWeight: 600,
+              }}
+            >
+              {badge.emoji} {badge.text}
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* URL */}
       <div
         style={{
           position: "absolute",
-          bottom: 32,
+          bottom: 28,
           display: "flex",
-          fontSize: 24,
-          color: "rgba(255,255,255,0.8)",
+          fontSize: 22,
+          color: "rgba(255,255,255,0.85)",
+          fontWeight: 500,
         }}
       >
         foodshare.club

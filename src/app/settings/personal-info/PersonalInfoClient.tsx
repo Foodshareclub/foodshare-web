@@ -19,7 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { Glass } from "@/components/ui/glass";
 import { cn } from "@/lib/utils";
 import { ALLOWED_MIME_TYPES } from "@/constants/mime-types";
-import type { AuthUser } from "@/app/actions/auth";
+import type { AuthUser } from "@/lib/data/auth";
 import type { Profile } from "@/lib/data/profiles";
 
 interface PersonalInfoClientProps {

@@ -27,7 +27,7 @@ import { ReportPostDialog } from "@/components/reports";
 import { ShareButton } from "@/components/share/ShareButton";
 import { cn } from "@/lib/utils";
 import type { InitialProductStateType } from "@/types/product.types";
-import type { AuthUser } from "@/app/actions/auth";
+import type { AuthUser } from "@/lib/data/auth";
 import { isValidImageUrl } from "@/lib/image";
 
 // Dynamically import Leaflet (requires client-side rendering)
@@ -72,7 +72,9 @@ export function ProductDetailClient({ product, user, isAdmin = false }: ProductD
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    setIsLoaded(true);
+    // Schedule state update to avoid synchronous setState in effect
+    const frameId = requestAnimationFrame(() => setIsLoaded(true));
+    return () => cancelAnimationFrame(frameId);
   }, []);
 
   const onStarClick = (index: number) => {
@@ -515,7 +517,7 @@ export function ProductDetailClient({ product, user, isAdmin = false }: ProductD
 
 function AboutListingCard({
   product,
-  isLoaded,
+  isLoaded: _isLoaded,
 }: {
   product: InitialProductStateType;
   isLoaded: boolean;

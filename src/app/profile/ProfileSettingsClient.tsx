@@ -8,7 +8,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import {
   User,
   ShieldCheck,
@@ -35,7 +34,7 @@ import ListingPersonCards from "@/components/listingPersonCard/ListingPersonCard
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import type { AuthUser } from "@/app/actions/auth";
+import type { AuthUser } from "@/lib/data/auth";
 
 type SettingsCardProps = {
   icon: React.ReactNode;
@@ -115,11 +114,13 @@ interface ProfileSettingsClientProps {
   user: AuthUser;
 }
 
-export function ProfileSettingsClient({ user }: ProfileSettingsClientProps) {
+export function ProfileSettingsClient({ user: _user }: ProfileSettingsClientProps) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    setIsLoaded(true);
+    // Schedule state update to avoid synchronous setState in effect
+    const frameId = requestAnimationFrame(() => setIsLoaded(true));
+    return () => cancelAnimationFrame(frameId);
   }, []);
 
   const settingsInfo = [

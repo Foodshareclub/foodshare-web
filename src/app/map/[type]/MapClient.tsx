@@ -1,80 +1,70 @@
-'use client';
+"use client";
 
 /**
  * Map Client Component - Handles all Leaflet map rendering
  * Receives pre-fetched locations and user data from Server Component
  */
 
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
-import 'leaflet/dist/leaflet.css';
-import '@/components/leaflet/leaflet.css';
+import React, { useEffect, useState, useCallback } from "react";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import "leaflet/dist/leaflet.css";
+import "@/components/leaflet/leaflet.css";
 
-import NavigateButtons from '@/components/navigateButtons/NavigateButtons';
-import Navbar from '@/components/header/navbar/Navbar';
-import { useCustomMarkerIcon, useUserLocationIcon, createClusterIcon } from '@/hooks/useMarkerIcon';
-import { useDefaultMapCenter } from '@/hooks/useDefaultMapCenter';
-import { useWebGLRenderer } from '@/hooks/useWebGLRenderer';
-import { useMapZoom } from '@/hooks/useMapZoom';
-import { useMapPosition } from '@/hooks/useMapPosition';
-import { urlToDbType } from '@/utils/categoryMapping';
-import { getCoordinates, type LocationType } from '@/types/product.types';
-import type { AuthUser } from '@/app/actions/auth';
+import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
+import Navbar from "@/components/header/navbar/Navbar";
+import { useCustomMarkerIcon, useUserLocationIcon, createClusterIcon } from "@/hooks/useMarkerIcon";
+import { useDefaultMapCenter } from "@/hooks/useDefaultMapCenter";
+import { useWebGLRenderer } from "@/hooks/useWebGLRenderer";
+import { useMapZoom } from "@/hooks/useMapZoom";
+import { useMapPosition } from "@/hooks/useMapPosition";
+import { getCoordinates, type LocationType } from "@/types/product.types";
+import type { AuthUser } from "@/lib/data/auth";
 
 // Dynamic imports for Leaflet components (SSR: false is critical!)
-const MapContainer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false }
-);
+const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), {
+  ssr: false,
+});
 
-const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
-  { ssr: false }
-);
+const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), {
+  ssr: false,
+});
 
-const Marker = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Marker),
-  { ssr: false }
-);
+const Marker = dynamic(() => import("react-leaflet").then((mod) => mod.Marker), { ssr: false });
 
-const Popup = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Popup),
-  { ssr: false }
-);
+const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), { ssr: false });
 
-const MarkerClusterGroup = dynamic(() => import('react-leaflet-cluster'), {
+const MarkerClusterGroup = dynamic(() => import("react-leaflet-cluster"), {
   ssr: false,
 });
 
 // Import other map components dynamically
 const MapViewController = dynamic(
-  () => import('@/components/leaflet/MapViewController').then((mod) => ({ default: mod.default })),
+  () => import("@/components/leaflet/MapViewController").then((mod) => ({ default: mod.default })),
   { ssr: false }
 );
 
 const ZoomTracker = dynamic(
-  () => import('@/components/leaflet/ZoomTracker').then((mod) => ({ default: mod.default })),
+  () => import("@/components/leaflet/ZoomTracker").then((mod) => ({ default: mod.default })),
   { ssr: false }
 );
 
 const MapPositionTracker = dynamic(
-  () => import('@/components/leaflet/MapPositionTracker').then((mod) => ({ default: mod.default })),
+  () => import("@/components/leaflet/MapPositionTracker").then((mod) => ({ default: mod.default })),
   { ssr: false }
 );
 
 const SearchMenu = dynamic(
-  () => import('@/components/leaflet/SearchMenu').then((mod) => ({ default: mod.SearchMenu })),
+  () => import("@/components/leaflet/SearchMenu").then((mod) => ({ default: mod.SearchMenu })),
   { ssr: false }
 );
 
-const UserLocationMarker = dynamic(
-  () => import('@/components/leaflet/UserLocationMarker'),
-  { ssr: false }
-);
+const UserLocationMarker = dynamic(() => import("@/components/leaflet/UserLocationMarker"), {
+  ssr: false,
+});
 
 const ProductPopup = dynamic(
-  () => import('@/components/map/ProductPopup').then((mod) => ({ default: mod.ProductPopup })),
+  () => import("@/components/map/ProductPopup").then((mod) => ({ default: mod.ProductPopup })),
   { ssr: false }
 );
 
@@ -95,7 +85,7 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
 
   // Auth state from user prop
   const isAuth = !!user;
-  const userId = user?.id || '';
+  const userId = user?.id || "";
   const profile = user?.profile;
 
   // Navbar handlers
@@ -106,10 +96,13 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
     [router]
   );
 
-  const handleProductTypeChange = useCallback((newType: string) => {
-    // Navigate to new map type - Server Component will refetch
-    router.push(`/map/${newType}`);
-  }, [router]);
+  const handleProductTypeChange = useCallback(
+    (newType: string) => {
+      // Navigate to new map type - Server Component will refetch
+      router.push(`/map/${newType}`);
+    },
+    [router]
+  );
 
   // Custom marker icons
   const beautifulMarker = useCustomMarkerIcon();
@@ -179,15 +172,15 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
           productType={type}
           onRouteChange={handleRouteChange}
           onProductTypeChange={handleProductTypeChange}
-          imgUrl={profile?.avatar_url || ''}
-          firstName={profile?.first_name || ''}
-          secondName={profile?.second_name || ''}
-          email={profile?.email || ''}
+          imgUrl={profile?.avatar_url || ""}
+          firstName={profile?.first_name || ""}
+          secondName={profile?.second_name || ""}
+          email={profile?.email || ""}
           signalOfNewMessage={[]}
           mapMode={true}
         />
         <div className="relative h-map w-full isolate">
-          <NavigateButtons navigateTo={type} title={'Show posts'} />
+          <NavigateButtons navigateTo={type} title={"Show posts"} />
           <div className="h-full w-full animate-pulse bg-muted flex items-center justify-center">
             <div className="text-center">
               <div className="text-4xl mb-4">🗺️</div>
@@ -207,15 +200,15 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
         productType={type}
         onRouteChange={handleRouteChange}
         onProductTypeChange={handleProductTypeChange}
-        imgUrl={profile?.avatar_url || ''}
-        firstName={profile?.first_name || ''}
-        secondName={profile?.second_name || ''}
-        email={profile?.email || ''}
+        imgUrl={profile?.avatar_url || ""}
+        firstName={profile?.first_name || ""}
+        secondName={profile?.second_name || ""}
+        email={profile?.email || ""}
         signalOfNewMessage={[]}
         mapMode={true}
       />
       <div className="relative h-map w-full isolate contain-layout contain-style contain-paint">
-        <NavigateButtons navigateTo={type} title={'Show posts'} />
+        <NavigateButtons navigateTo={type} title={"Show posts"} />
         {/* Show loading skeleton while determining map center */}
         {isCenterLoading ? (
           <div className="h-full w-full animate-pulse bg-muted flex items-center justify-center">
@@ -227,11 +220,11 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
         ) : (
           <MapContainer
             style={{
-              height: '100%',
-              width: '100%',
+              height: "100%",
+              width: "100%",
               zIndex: 0,
-              transform: 'translate3d(0, 0, 0)',
-              willChange: 'transform',
+              transform: "translate3d(0, 0, 0)",
+              willChange: "transform",
             }}
             center={mapCenter}
             zoom={finalZoom}
@@ -326,7 +319,7 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1000] pointer-events-none">
             <div
               className="bg-white p-8 rounded-2xl flex flex-col gap-3"
-              style={{ boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)' }}
+              style={{ boxShadow: "0 10px 40px rgba(0, 0, 0, 0.1)" }}
             >
               <span className="text-5xl text-center">🗺️</span>
               <p className="text-xl font-semibold text-gray-700">No items found</p>

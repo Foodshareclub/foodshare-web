@@ -27,7 +27,7 @@ import { Separator } from "@/components/ui/separator";
 import { Glass } from "@/components/ui/glass";
 import { MFAEnrollment } from "@/components/security/MFAEnrollment";
 import { cn as _cn } from "@/lib/utils";
-import type { AuthUser } from "@/app/actions/auth";
+import type { AuthUser } from "@/lib/data/auth";
 
 interface LoginSecurityClientProps {
   user: AuthUser;

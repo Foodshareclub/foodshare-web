@@ -17,7 +17,7 @@ const FaMapMarkerAlt = MapPin;
 const FaCalendar = Calendar;
 import peak from "@/assets/peakpx-min.jpg";
 import type { PublicProfile } from "@/lib/data/profiles";
-import type { AuthUser } from "@/app/actions/auth";
+import type { AuthUser } from "@/lib/data/auth";
 
 interface ViewProfileClientProps {
   profile: PublicProfile;
