@@ -9,8 +9,7 @@ export interface LogContext {
   component?: string;
   action?: string;
   userId?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ErrorLog {

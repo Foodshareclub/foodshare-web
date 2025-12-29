@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import "./globals.css";
 import { Providers } from "./providers";
 import { defaultMetadata } from "@/lib/metadata";
+import { getFacebookAppId } from "@/lib/email/vault";
 import type { Locale } from "@/i18n/config";
 import Footer from "@/components/footer/Footer";
 import { DevTools } from "@/components/dev";
@@ -19,7 +20,33 @@ const inter = Inter({
   fallback: ["system-ui", "arial"],
 });
 
-export const metadata: Metadata = defaultMetadata;
+/**
+ * Generate metadata with Facebook App ID fetched from Supabase Vault
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const facebookAppId = await getFacebookAppId();
+
+  // Build the other metadata object, filtering out undefined values
+  const otherMetadata: Record<string, string | number | (string | number)[]> = {};
+
+  if (defaultMetadata.other) {
+    for (const [key, value] of Object.entries(defaultMetadata.other)) {
+      if (value !== undefined && value !== null) {
+        otherMetadata[key] = value as string | number | (string | number)[];
+      }
+    }
+  }
+
+  // Add Facebook App ID
+  if (facebookAppId) {
+    otherMetadata["fb:app_id"] = facebookAppId;
+  }
+
+  return {
+    ...defaultMetadata,
+    other: otherMetadata,
+  };
+}
 
 export default async function RootLayout({
   children,

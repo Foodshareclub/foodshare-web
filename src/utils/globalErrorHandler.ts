@@ -3,7 +3,7 @@
  * Catches unhandled promise rejections and storage errors at the application level
  */
 
-import { detectStorageError, clearSupabaseStorage, logStorageError } from "./storageErrorHandler";
+import { detectStorageError, clearSupabaseStorage, logStorageError, type StorageErrorInfo } from "./storageErrorHandler";
 import { createLogger } from "@/lib/logger";
 import { productionErrorReporter } from "./productionErrorReporter";
 import { autoRecovery } from "./autoRecovery";
@@ -118,7 +118,7 @@ export function initializeGlobalErrorHandlers() {
  * Show a modal/alert with storage recovery options
  * Uses safe DOM methods to avoid XSS vulnerabilities
  */
-function showStorageRecoveryUI(storageError: any) {
+function showStorageRecoveryUI(storageError: StorageErrorInfo) {
   // Create overlay
   const overlay = document.createElement("div");
   overlay.style.cssText = `

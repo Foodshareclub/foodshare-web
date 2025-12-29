@@ -287,20 +287,41 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://vercel.live https://*.vercel-scripts.com https://www.googletagmanager.com https://www.google-analytics.com",
-              "worker-src 'self' blob:",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "img-src 'self' data: blob: https://*.supabase.co https://*.r2.cloudflarestorage.com https://*.openstreetmap.org https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://firebasestorage.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com",
-              "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.r2.cloudflarestorage.com https://api.openai.com https://vercel.live wss://ws-us3.pusher.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com",
-              "frame-ancestors 'self'",
-              "frame-src 'self' https://vercel.live",
-              "form-action 'self'",
-              "base-uri 'self'",
-              "object-src 'none'",
-            ].join("; "),
+            // Production: Remove unsafe-inline/unsafe-eval for stronger XSS protection
+            // Development: Allow inline scripts for hot reloading
+            value: process.env.NODE_ENV === "production"
+              ? [
+                  "default-src 'self'",
+                  // Production: Use strict-dynamic for enhanced security
+                  "script-src 'self' 'strict-dynamic' https://vercel.live https://*.vercel-scripts.com https://www.googletagmanager.com https://www.google-analytics.com",
+                  "worker-src 'self' blob:",
+                  // Styles still need unsafe-inline for CSS-in-JS (Tailwind)
+                  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+                  "img-src 'self' data: blob: https://*.supabase.co https://*.r2.cloudflarestorage.com https://*.openstreetmap.org https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://firebasestorage.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com",
+                  "font-src 'self' https://fonts.gstatic.com",
+                  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.r2.cloudflarestorage.com https://api.openai.com https://vercel.live wss://ws-us3.pusher.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com",
+                  "frame-ancestors 'self'",
+                  "frame-src 'self' https://vercel.live",
+                  "form-action 'self'",
+                  "base-uri 'self'",
+                  "object-src 'none'",
+                  "upgrade-insecure-requests",
+                ].join("; ")
+              : [
+                  // Development: Allow unsafe-inline for hot reloading
+                  "default-src 'self'",
+                  "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://vercel.live https://*.vercel-scripts.com https://www.googletagmanager.com https://www.google-analytics.com",
+                  "worker-src 'self' blob:",
+                  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+                  "img-src 'self' data: blob: https://*.supabase.co https://*.r2.cloudflarestorage.com https://*.openstreetmap.org https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://firebasestorage.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com",
+                  "font-src 'self' https://fonts.gstatic.com",
+                  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.r2.cloudflarestorage.com https://api.openai.com https://vercel.live wss://ws-us3.pusher.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com",
+                  "frame-ancestors 'self'",
+                  "frame-src 'self' https://vercel.live",
+                  "form-action 'self'",
+                  "base-uri 'self'",
+                  "object-src 'none'",
+                ].join("; "),
           },
         ],
       },

@@ -1,6 +1,6 @@
 /**
  * Supabase Middleware Helper
- * Handles session refresh and cookie management in Edge runtime
+ * Handles session refresh, cookie management, and request correlation in Edge runtime
  */
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
@@ -9,13 +9,29 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 /**
+ * Generate a correlation ID for request tracing
+ * Uses crypto.randomUUID() for unique identifiers
+ */
+function generateCorrelationId(): string {
+  return crypto.randomUUID();
+}
+
+/**
  * Update Supabase session in middleware
  * Refreshes expired sessions and manages auth cookies
+ * Adds correlation ID for distributed tracing
  */
 export async function updateSession(request: NextRequest) {
+  // Get or generate correlation ID for request tracing
+  const correlationId = request.headers.get("x-correlation-id") || generateCorrelationId();
+
   let supabaseResponse = NextResponse.next({
     request,
   });
+
+  // Add correlation ID to response headers for tracing
+  supabaseResponse.headers.set("x-correlation-id", correlationId);
+  supabaseResponse.headers.set("x-request-id", correlationId);
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {

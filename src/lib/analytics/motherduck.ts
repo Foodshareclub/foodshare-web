@@ -40,8 +40,7 @@ export class MotherDuckService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static async runQuery<T = any>(query: string, params: any[] = []): Promise<T[]> {
+  static async runQuery<T = Record<string, unknown>>(query: string, params: unknown[] = []): Promise<T[]> {
     const db = await this.getConnection();
     // duckdb-async 'all' returns a promise
     return (await db.all(query, ...params)) as T[];

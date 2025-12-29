@@ -15,7 +15,7 @@ export const siteConfig = {
 
   // Social handles
   twitterHandle: "@foodshareapp",
-  facebookAppId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || "",
+  facebookAppId: "", // Fetched from Supabase Vault at runtime via generateMetadata()
 
   // Locale configuration
   locale: "en_NZ",

@@ -1,7 +1,7 @@
 /**
- * Email Secrets Vault Service
+ * App Secrets Vault Service
  *
- * Fetches email provider credentials from Supabase Vault.
+ * Fetches credentials and API keys from Supabase Vault.
  * Falls back to environment variables for local development.
  *
  * Secrets stored in Vault:
@@ -9,6 +9,7 @@
  * - BREVO_API_KEY
  * - AWS_ACCESS_KEY_ID
  * - AWS_SECRET_ACCESS_KEY
+ * - FACEBOOK_APP_ID
  */
 
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
@@ -27,6 +28,7 @@ interface EmailSecrets {
   awsSecretAccessKey: string | null;
   awsRegion: string;
   motherDuckToken: string | null;
+  facebookAppId: string | null;
 }
 
 // Cache configuration
@@ -44,6 +46,7 @@ const SECRET_NAMES = {
   AWS_ACCESS_KEY_ID: "AWS_ACCESS_KEY_ID",
   AWS_SECRET_ACCESS_KEY: "AWS_SECRET_ACCESS_KEY",
   MOTHERDUCK_TOKEN: "MOTHERDUCK_TOKEN",
+  FACEBOOK_APP_ID: "FACEBOOK_APP_ID",
 } as const;
 
 /** Mask a secret for safe logging (show first 6 and last 4 chars) */
@@ -115,6 +118,7 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
     awsSecretAccessKey: null,
     awsRegion: process.env.AWS_REGION ?? "us-east-1",
     motherDuckToken: null,
+    facebookAppId: null,
   };
 
   // In development, check env vars first (local dev shortcut)
@@ -128,6 +132,7 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
       awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? null,
       awsRegion: process.env.AWS_REGION ?? "us-east-1",
       motherDuckToken: process.env.MOTHERDUCK_TOKEN ?? null,
+      facebookAppId: process.env.FACEBOOK_APP_ID ?? null,
     };
 
     const hasEnvSecrets =
@@ -204,6 +209,7 @@ export async function getEmailSecrets(): Promise<EmailSecrets> {
       awsSecretAccessKey: secretsMap.get(SECRET_NAMES.AWS_SECRET_ACCESS_KEY) ?? null,
       awsRegion: process.env.AWS_REGION ?? "us-east-1",
       motherDuckToken: secretsMap.get(SECRET_NAMES.MOTHERDUCK_TOKEN) ?? null,
+      facebookAppId: secretsMap.get(SECRET_NAMES.FACEBOOK_APP_ID) ?? null,
     };
 
     // Log masked values for debugging
@@ -277,6 +283,14 @@ export async function getAwsCredentials(): Promise<{
 export async function getMotherDuckToken(): Promise<string | null> {
   const secrets = await getEmailSecrets();
   return secrets.motherDuckToken;
+}
+
+/**
+ * Get Facebook App ID specifically
+ */
+export async function getFacebookAppId(): Promise<string | null> {
+  const secrets = await getEmailSecrets();
+  return secrets.facebookAppId;
 }
 
 /**

@@ -13,6 +13,53 @@ const logger = createLogger("SessionManager");
 const SESSION_REFRESH_THRESHOLD = 5 * 60 * 1000; // 5 minutes before expiry
 const SESSION_CHECK_INTERVAL = 60 * 1000; // Check every minute
 
+/**
+ * Allowed paths for returnUrl redirect (security: prevents open redirect)
+ * Only internal app paths are allowed to prevent phishing attacks
+ */
+const ALLOWED_RETURN_PATH_PREFIXES = [
+  '/food',
+  '/profile',
+  '/settings',
+  '/chat',
+  '/forum',
+  '/my-posts',
+  '/challenge',
+  '/admin',
+  '/messages',
+  '/notifications',
+  '/map',
+  '/thing',
+  '/fridge',
+  '/foodbank',
+  '/donation',
+  '/help',
+] as const;
+
+/**
+ * Validate and sanitize returnUrl to prevent open redirect attacks
+ * Returns sanitized path or fallback to home
+ */
+function getSafeReturnUrl(pathname: string): string {
+  // Must start with / (relative path only)
+  if (!pathname.startsWith('/')) {
+    return '/';
+  }
+
+  // Check against allowed prefixes
+  const isAllowed = ALLOWED_RETURN_PATH_PREFIXES.some(
+    prefix => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+
+  // Also allow exact match for home
+  if (pathname === '/' || isAllowed) {
+    return encodeURIComponent(pathname);
+  }
+
+  // Default to home for any unrecognized paths
+  return '/';
+}
+
 let refreshTimer: NodeJS.Timeout | null = null;
 let checkTimer: NodeJS.Timeout | null = null;
 
@@ -181,9 +228,9 @@ export const sessionManager = {
       logger.debug("Session timed out");
     }
 
-    // Redirect to login with return URL
-    const returnUrl = encodeURIComponent(window.location.pathname);
-    window.location.href = `/auth/login?returnUrl=${returnUrl}&reason=timeout`;
+    // Redirect to login with validated return URL (prevents open redirect)
+    const safeReturnUrl = getSafeReturnUrl(window.location.pathname);
+    window.location.href = `/auth/login?returnUrl=${safeReturnUrl}&reason=timeout`;
   },
 
   /**
