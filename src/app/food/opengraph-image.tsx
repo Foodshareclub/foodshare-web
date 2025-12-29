@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import * as Sentry from "@sentry/nextjs";
 
 export const runtime = "edge";
 export const alt = "FoodShare - Food Listings";
@@ -9,7 +10,8 @@ export const contentType = "image/png";
 export const revalidate = 300;
 
 export default async function Image() {
-  return new ImageResponse(
+  try {
+    return new ImageResponse(
     <div
       style={{
         height: "100%",
@@ -183,5 +185,15 @@ export default async function Image() {
         "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=600",
       },
     }
-  );
+    );
+  } catch (error) {
+    // Report to Sentry and redirect to static fallback
+    Sentry.captureException(error, {
+      tags: { component: "og-image", route: "food" },
+    });
+    return new Response(null, {
+      status: 302,
+      headers: { Location: "/og-default.png" },
+    });
+  }
 }

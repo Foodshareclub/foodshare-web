@@ -42,7 +42,8 @@ const typeGradients: Record<string, string> = {
 };
 
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+  try {
+    const { id } = await params;
 
   // Validate id is a valid number to prevent injection
   const productId = parseInt(id, 10);
@@ -83,9 +84,20 @@ export default async function Image({ params }: { params: Promise<{ id: string }
       emoji = typeEmojis[type] || "🍓";
       gradient = typeGradients[type] || typeGradients.default;
 
+      // Validate external image with timeout
       if (product.images?.[0]) {
-        hasImage = true;
-        imageUrl = product.images[0];
+        try {
+          const response = await fetch(product.images[0], {
+            method: "HEAD",
+            signal: AbortSignal.timeout(3000), // 3 second timeout
+          });
+          if (response.ok) {
+            hasImage = true;
+            imageUrl = product.images[0];
+          }
+        } catch {
+          // Skip external image on timeout/error - gradient will be used
+        }
       }
     }
   } catch (error) {
@@ -260,5 +272,15 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=600",
       },
     }
-  );
+    );
+  } catch (error) {
+    // Report to Sentry and redirect to static fallback
+    Sentry.captureException(error, {
+      tags: { component: "og-image", route: "food/[id]" },
+    });
+    return new Response(null, {
+      status: 302,
+      headers: { Location: "/og-default.png" },
+    });
+  }
 }
