@@ -143,7 +143,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave }: ProductCard
         <div className="p-3 pt-3 pb-4">
           <h3 className="text-card-title text-left font-body line-clamp-1">{product.post_name}</h3>
           <p className="text-card-body line-clamp-1 mt-1">{product.post_stripped_address}</p>
-          <p className="text-card-small mt-1">
+          <p className="text-card-small mt-1 line-clamp-1">
             <span className="text-card-body">Available:</span>{" "}
             <span className="text-card-body">{product.available_hours}</span>
           </p>
