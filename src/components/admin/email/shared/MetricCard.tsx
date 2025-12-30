@@ -7,6 +7,7 @@ export function MetricCard({
   icon,
   trend,
   trendValue,
+  subValue,
   color = "blue",
 }: {
   label: string;
@@ -14,6 +15,8 @@ export function MetricCard({
   icon: React.ReactNode;
   trend?: "up" | "down";
   trendValue?: string;
+  /** Additional context text below the value */
+  subValue?: string;
   color?: "blue" | "emerald" | "violet" | "amber" | "rose";
 }) {
   const colors = {
@@ -57,6 +60,7 @@ export function MetricCard({
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">{label}</p>
           <p className={cn("text-2xl font-bold", c.value)}>{value}</p>
+          {subValue && <p className="text-xs text-muted-foreground">{subValue}</p>}
           {trend && trendValue && (
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               {trend === "up" ? (

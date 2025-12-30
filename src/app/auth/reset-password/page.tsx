@@ -9,18 +9,10 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Loader2, Lock, Eye, EyeOff, CheckCircle, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Lock, Eye, EyeOff, CheckCircle, AlertTriangle } from "lucide-react";
-
-// Icon aliases for consistency
-const AiOutlineLoading3Quarters = Loader2;
-const FaLock = Lock;
-const FaEye = Eye;
-const FaEyeSlash = EyeOff;
-const FaCheckCircle = CheckCircle;
-const FaExclamationTriangle = AlertTriangle;
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -142,7 +134,7 @@ export default function ResetPasswordPage() {
             {/* Loading state while checking session */}
             {isValidSession === null && (
               <div className="text-center py-8">
-                <AiOutlineLoading3Quarters className="w-12 h-12 animate-spin text-[#FF2D55] mx-auto mb-4" />
+                <Loader2 className="w-12 h-12 animate-spin text-[#FF2D55] mx-auto mb-4" />
                 <p className="text-muted-foreground">Verifying your reset link...</p>
               </div>
             )}
@@ -151,7 +143,7 @@ export default function ResetPasswordPage() {
             {isValidSession === false && (
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full mb-6">
-                  <FaExclamationTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
+                  <AlertTriangle className="w-8 h-8 text-red-600 dark:text-red-400" />
                 </div>
                 <h1 className="text-[28px] font-bold mb-3 text-foreground">
                   Link expired or invalid
@@ -171,7 +163,7 @@ export default function ResetPasswordPage() {
             {isSuccess && (
               <div className="text-center">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FF2D55]/10 rounded-full mb-6">
-                  <FaCheckCircle className="w-8 h-8 text-[#FF2D55]" />
+                  <CheckCircle className="w-8 h-8 text-[#FF2D55]" />
                 </div>
                 <h1 className="text-[28px] font-bold mb-3 text-foreground">Password updated!</h1>
                 <p className="text-base text-muted-foreground leading-relaxed mb-6">
@@ -195,7 +187,7 @@ export default function ResetPasswordPage() {
                 {/* Header */}
                 <div className="mb-8 text-center">
                   <div className="inline-flex items-center justify-center w-16 h-16 bg-[#FF2D55]/10 rounded-full mb-6">
-                    <FaLock className="w-7 h-7 text-[#FF2D55]" />
+                    <Lock className="w-7 h-7 text-[#FF2D55]" />
                   </div>
                   <h1 className="text-[28px] font-bold mb-3 text-foreground">Set new password</h1>
                   <p className="text-base text-muted-foreground leading-relaxed">
@@ -255,7 +247,7 @@ export default function ResetPasswordPage() {
                           className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
                           aria-label={showPassword ? "Hide password" : "Show password"}
                         >
-                          {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                         </button>
                       </div>
 
@@ -309,7 +301,7 @@ export default function ResetPasswordPage() {
                           className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground"
                           aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                         >
-                          {showConfirmPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                          {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                         </button>
                       </div>
                       {confirmPassword && password !== confirmPassword && (
@@ -328,7 +320,7 @@ export default function ResetPasswordPage() {
                     >
                       {isLoading ? (
                         <span className="flex items-center gap-2">
-                          <AiOutlineLoading3Quarters className="w-5 h-5 animate-spin" />
+                          <Loader2 className="w-5 h-5 animate-spin" />
                           Updating...
                         </span>
                       ) : (

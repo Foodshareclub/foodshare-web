@@ -19,7 +19,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
+import { NotificationItem } from "./NotificationItem";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -27,7 +27,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { NotificationItem } from "./NotificationItem";
 import { markAllNotificationsAsRead, deleteReadNotifications } from "@/app/actions/notifications";
 import { useBrowserNotifications } from "@/hooks/useBrowserNotifications";
 import { useNotificationSound } from "@/hooks/useNotificationSound";
@@ -401,39 +400,34 @@ export function NotificationCenter({
         )}
       </PopoverContent>
 
-      {/* Toast notifications for new incoming notifications */}
-      <AnimatePresence>
-        {toasts.map((toast) => (
-          <motion.div
-            key={toast.id}
-            initial={{ opacity: 0, y: 50, x: "-50%" }}
-            animate={{ opacity: 1, y: 0, x: "-50%" }}
-            exit={{ opacity: 0, y: -20, x: "-50%" }}
-            className="fixed bottom-4 left-1/2 z-[100] max-w-sm"
-          >
-            <div className="bg-background border rounded-lg shadow-lg p-4 flex items-start gap-3">
-              <div className="flex-shrink-0">
-                <Bell className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">{toast.title}</p>
-                {toast.body && (
-                  <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">{toast.body}</p>
-                )}
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 flex-shrink-0"
-                onClick={() => dismissToast(toast.id)}
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Dismiss</span>
-              </Button>
+      {/* Toast notifications for new incoming notifications (CSS animations) */}
+      {toasts.map((toast) => (
+        <div
+          key={toast.id}
+          className="fixed bottom-4 left-1/2 z-[100] max-w-sm -translate-x-1/2 animate-toast-in"
+        >
+          <div className="bg-background border rounded-lg shadow-lg p-4 flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <Bell className="h-5 w-5 text-primary" />
             </div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">{toast.title}</p>
+              {toast.body && (
+                <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">{toast.body}</p>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 flex-shrink-0"
+              onClick={() => dismissToast(toast.id)}
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Dismiss</span>
+            </Button>
+          </div>
+        </div>
+      ))}
     </Popover>
   );
 }

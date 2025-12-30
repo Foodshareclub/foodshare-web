@@ -3,6 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
+import {
+  getChallengeLeaderboard as getLeaderboardData,
+  getCurrentUserRank as getUserRankData,
+  getLeaderboardUserProfile as getUserProfileData,
+} from "@/lib/data/challenge-leaderboard";
+import type {
+  LeaderboardUser,
+  LeaderboardUserProfile,
+  UserRankInfo,
+} from "@/components/challenges/ChallengeLeaderboard/types";
 
 // ============================================================================
 // Constants
@@ -445,4 +455,34 @@ export async function checkChallengeLiked(
   }
 
   return { isLiked, likeCount };
+}
+
+// ============================================================================
+// Leaderboard Server Actions (replaces API routes)
+// ============================================================================
+
+/**
+ * Get challenge leaderboard - Server Action wrapper
+ * Replaces: GET /api/challenges/leaderboard
+ */
+export async function fetchChallengeLeaderboard(limit?: number): Promise<LeaderboardUser[]> {
+  return getLeaderboardData(limit);
+}
+
+/**
+ * Get current user's rank - Server Action wrapper
+ * Replaces: GET /api/challenges/leaderboard/me
+ */
+export async function fetchCurrentUserRank(): Promise<UserRankInfo | null> {
+  return getUserRankData();
+}
+
+/**
+ * Get user profile for leaderboard modal - Server Action wrapper
+ * Replaces: GET /api/challenges/leaderboard/user/[userId]
+ */
+export async function fetchLeaderboardUserProfile(
+  userId: string
+): Promise<LeaderboardUserProfile | null> {
+  return getUserProfileData(userId);
 }

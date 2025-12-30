@@ -1,12 +1,40 @@
 "use client";
 
-import { useEditor, EditorContent, type Editor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Placeholder from "@tiptap/extension-placeholder";
-import Link from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+/**
+ * RichTextEditor - Lexical-based rich text editor
+ * Replaces TipTap for ~150KB bundle savings
+ */
+
+import { useCallback, useEffect, useState } from "react";
+import { LexicalComposer } from "@lexical/react/LexicalComposer";
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+import { ContentEditable } from "@lexical/react/LexicalContentEditable";
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
+import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
+import { ListPlugin } from "@lexical/react/LexicalListPlugin";
+import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin";
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
+import { $generateHtmlFromNodes, $generateNodesFromDOM } from "@lexical/html";
+import {
+  $getRoot,
+  $getSelection,
+  $isRangeSelection,
+  FORMAT_TEXT_COMMAND,
+  UNDO_COMMAND,
+  REDO_COMMAND,
+  type EditorState,
+  type LexicalEditor,
+} from "lexical";
+import { HeadingNode, QuoteNode, $createHeadingNode, $createQuoteNode } from "@lexical/rich-text";
+import {
+  ListNode,
+  ListItemNode,
+  INSERT_ORDERED_LIST_COMMAND,
+  INSERT_UNORDERED_LIST_COMMAND,
+} from "@lexical/list";
+import { LinkNode, TOGGLE_LINK_COMMAND, $isLinkNode } from "@lexical/link";
+import { $setBlocksType } from "@lexical/selection";
 import {
   Bold,
   Italic,
@@ -16,23 +44,13 @@ import {
   Quote,
   Code,
   Link2,
-  ImageIcon,
   Undo,
   Redo,
+  Heading2,
+  Heading3,
 } from "lucide-react";
-
-// Icon aliases for consistency
-const FaBold = Bold;
-const FaItalic = Italic;
-const FaStrikethrough = Strikethrough;
-const FaListUl = List;
-const FaListOl = ListOrdered;
-const FaQuoteLeft = Quote;
-const FaCode = Code;
-const FaLink = Link2;
-const FaImage = ImageIcon;
-const FaUndo = Undo;
-const FaRedo = Redo;
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 type RichTextEditorProps = {
   content?: string;
@@ -43,85 +61,137 @@ type RichTextEditorProps = {
   minHeight?: string;
 };
 
-function MenuBar({ editor }: { editor: Editor | null }) {
-  if (!editor) return null;
+// Lexical theme for prose styling
+const theme = {
+  paragraph: "my-2",
+  heading: {
+    h2: "text-xl font-semibold my-2",
+    h3: "text-lg font-semibold my-2",
+  },
+  list: {
+    ul: "list-disc ml-6 my-2",
+    ol: "list-decimal ml-6 my-2",
+    listitem: "my-1",
+  },
+  quote: "border-l-4 border-border pl-4 italic my-2 text-muted-foreground",
+  text: {
+    bold: "font-bold",
+    italic: "italic",
+    strikethrough: "line-through",
+    code: "bg-muted px-1.5 py-0.5 rounded font-mono text-sm",
+  },
+  link: "text-primary underline",
+};
 
-  const addLink = () => {
-    const url = window.prompt("Enter URL:");
-    if (url) {
-      editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+// Initial editor configuration
+function createEditorConfig(editable: boolean) {
+  return {
+    namespace: "ForumEditor",
+    theme,
+    editable,
+    onError: (error: Error) => console.error("[RichTextEditor] Error:", error),
+    nodes: [HeadingNode, QuoteNode, ListNode, ListItemNode, LinkNode],
+  };
+}
+
+// Toolbar component
+function ToolbarPlugin() {
+  const [editor] = useLexicalComposerContext();
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+  const [isStrikethrough, setIsStrikethrough] = useState(false);
+  const [isCode, setIsCode] = useState(false);
+  const [isLink, setIsLink] = useState(false);
+  const updateToolbar = useCallback(() => {
+    const selection = $getSelection();
+    if ($isRangeSelection(selection)) {
+      setIsBold(selection.hasFormat("bold"));
+      setIsItalic(selection.hasFormat("italic"));
+      setIsStrikethrough(selection.hasFormat("strikethrough"));
+      setIsCode(selection.hasFormat("code"));
+
+      // Check for link
+      const node = selection.anchor.getNode();
+      const parent = node.getParent();
+      setIsLink($isLinkNode(parent) || $isLinkNode(node));
     }
+  }, []);
+
+  useEffect(() => {
+    return editor.registerUpdateListener(({ editorState }) => {
+      editorState.read(() => {
+        updateToolbar();
+      });
+    });
+  }, [editor, updateToolbar]);
+
+  // Toolbar button handlers
+  const formatBold = () => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold");
+  const formatItalic = () => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic");
+  const formatStrikethrough = () => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough");
+  const formatCode = () => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "code");
+  const undo = () => editor.dispatchCommand(UNDO_COMMAND, undefined);
+  const redo = () => editor.dispatchCommand(REDO_COMMAND, undefined);
+
+  const insertHeading = (level: "h2" | "h3") => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $setBlocksType(selection, () => $createHeadingNode(level));
+      }
+    });
   };
 
-  const addImage = () => {
-    const url = window.prompt("Enter image URL:");
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
+  const insertQuote = () => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $setBlocksType(selection, () => $createQuoteNode());
+      }
+    });
+  };
+
+  const insertBulletList = () => {
+    editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
+  };
+
+  const insertOrderedList = () => {
+    editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
+  };
+
+  const insertLink = () => {
+    if (isLink) {
+      editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
+    } else {
+      const url = window.prompt("Enter URL:");
+      if (url) {
+        editor.dispatchCommand(TOGGLE_LINK_COMMAND, url);
+      }
     }
   };
 
   const buttons = [
+    { icon: Bold, action: formatBold, active: isBold, title: "Bold" },
+    { icon: Italic, action: formatItalic, active: isItalic, title: "Italic" },
     {
-      icon: FaBold,
-      action: () => editor.chain().focus().toggleBold().run(),
-      active: editor.isActive("bold"),
-      title: "Bold",
-    },
-    {
-      icon: FaItalic,
-      action: () => editor.chain().focus().toggleItalic().run(),
-      active: editor.isActive("italic"),
-      title: "Italic",
-    },
-    {
-      icon: FaStrikethrough,
-      action: () => editor.chain().focus().toggleStrike().run(),
-      active: editor.isActive("strike"),
+      icon: Strikethrough,
+      action: formatStrikethrough,
+      active: isStrikethrough,
       title: "Strikethrough",
     },
-    {
-      icon: FaCode,
-      action: () => editor.chain().focus().toggleCode().run(),
-      active: editor.isActive("code"),
-      title: "Code",
-    },
+    { icon: Code, action: formatCode, active: isCode, title: "Code" },
     { type: "divider" as const },
-    {
-      icon: FaListUl,
-      action: () => editor.chain().focus().toggleBulletList().run(),
-      active: editor.isActive("bulletList"),
-      title: "Bullet List",
-    },
-    {
-      icon: FaListOl,
-      action: () => editor.chain().focus().toggleOrderedList().run(),
-      active: editor.isActive("orderedList"),
-      title: "Ordered List",
-    },
-    {
-      icon: FaQuoteLeft,
-      action: () => editor.chain().focus().toggleBlockquote().run(),
-      active: editor.isActive("blockquote"),
-      title: "Quote",
-    },
+    { icon: Heading2, action: () => insertHeading("h2"), active: false, title: "Heading 2" },
+    { icon: Heading3, action: () => insertHeading("h3"), active: false, title: "Heading 3" },
     { type: "divider" as const },
-    { icon: FaLink, action: addLink, active: editor.isActive("link"), title: "Add Link" },
-    { icon: FaImage, action: addImage, active: false, title: "Add Image" },
+    { icon: List, action: insertBulletList, active: false, title: "Bullet List" },
+    { icon: ListOrdered, action: insertOrderedList, active: false, title: "Ordered List" },
+    { icon: Quote, action: insertQuote, active: false, title: "Quote" },
     { type: "divider" as const },
-    {
-      icon: FaUndo,
-      action: () => editor.chain().focus().undo().run(),
-      active: false,
-      title: "Undo",
-      disabled: !editor.can().undo(),
-    },
-    {
-      icon: FaRedo,
-      action: () => editor.chain().focus().redo().run(),
-      active: false,
-      title: "Redo",
-      disabled: !editor.can().redo(),
-    },
+    { icon: Link2, action: insertLink, active: isLink, title: "Add Link" },
+    { type: "divider" as const },
+    { icon: Undo, action: undo, active: false, title: "Undo" },
+    { icon: Redo, action: redo, active: false, title: "Redo" },
   ];
 
   return (
@@ -138,7 +208,6 @@ function MenuBar({ editor }: { editor: Editor | null }) {
             variant="ghost"
             size="icon-sm"
             onClick={btn.action}
-            disabled={"disabled" in btn ? btn.disabled : false}
             className={cn("h-8 w-8", btn.active && "bg-primary/10 text-primary")}
             title={btn.title}
           >
@@ -146,6 +215,42 @@ function MenuBar({ editor }: { editor: Editor | null }) {
           </Button>
         );
       })}
+    </div>
+  );
+}
+
+// Plugin to load initial HTML content
+function InitialContentPlugin({ content }: { content: string }) {
+  const [editor] = useLexicalComposerContext();
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    if (initialized || !content) return;
+
+    editor.update(() => {
+      const parser = new DOMParser();
+      const dom = parser.parseFromString(content, "text/html");
+      const nodes = $generateNodesFromDOM(editor, dom);
+
+      const root = $getRoot();
+      root.clear();
+
+      nodes.forEach((node) => {
+        root.append(node);
+      });
+    });
+
+    setInitialized(true);
+  }, [editor, content, initialized]);
+
+  return null;
+}
+
+// Placeholder component
+function Placeholder({ text }: { text: string }) {
+  return (
+    <div className="absolute top-4 left-4 text-muted-foreground pointer-events-none select-none">
+      {text}
     </div>
   );
 }
@@ -158,40 +263,43 @@ export function RichTextEditor({
   className,
   minHeight = "150px",
 }: RichTextEditorProps) {
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        heading: { levels: [2, 3] },
-      }),
-      Placeholder.configure({ placeholder }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: { class: "text-primary underline" },
-      }).extend({ name: "customLink" }),
-      Image.configure({ HTMLAttributes: { class: "rounded-lg max-w-full" } }),
-    ],
-    content,
-    editable,
-    immediatelyRender: false,
-    onUpdate: ({ editor }) => {
-      onChange?.(editor.getHTML(), editor.getJSON() as Record<string, unknown>);
+  const handleChange = useCallback(
+    (editorState: EditorState, editor: LexicalEditor) => {
+      editorState.read(() => {
+        const html = $generateHtmlFromNodes(editor, null);
+        const json = editorState.toJSON() as unknown as Record<string, unknown>;
+        onChange?.(html, json);
+      });
     },
-    editorProps: {
-      attributes: {
-        class: cn(
-          "prose prose-sm dark:prose-invert max-w-none focus:outline-none p-4",
-          "prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-blockquote:my-2",
-          "prose-headings:font-semibold prose-h2:text-xl prose-h3:text-lg"
-        ),
-        style: `min-height: ${minHeight}`,
-      },
-    },
-  });
+    [onChange]
+  );
 
   return (
     <div className={cn("border border-border rounded-lg overflow-hidden bg-background", className)}>
-      {editable && <MenuBar editor={editor} />}
-      <EditorContent editor={editor} />
+      <LexicalComposer initialConfig={createEditorConfig(editable)}>
+        {editable && <ToolbarPlugin />}
+        <div className="relative">
+          <RichTextPlugin
+            contentEditable={
+              <ContentEditable
+                className={cn(
+                  "prose prose-sm dark:prose-invert max-w-none focus:outline-none p-4",
+                  "prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-blockquote:my-2",
+                  "prose-headings:font-semibold prose-h2:text-xl prose-h3:text-lg"
+                )}
+                style={{ minHeight }}
+              />
+            }
+            placeholder={<Placeholder text={placeholder} />}
+            ErrorBoundary={LexicalErrorBoundary}
+          />
+        </div>
+        <HistoryPlugin />
+        <ListPlugin />
+        <LinkPlugin />
+        <OnChangePlugin onChange={handleChange} />
+        <InitialContentPlugin content={content} />
+      </LexicalComposer>
     </div>
   );
 }

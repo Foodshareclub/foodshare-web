@@ -14,6 +14,7 @@
 
 import type { EmailProvider, EmailType, SendEmailRequest, SendEmailResponse } from "./types";
 import { toEmailProvider } from "./type-guards";
+import { isValidEmail } from "@/lib/validators/email";
 
 // Lazy-loaded providers (tree-shaking friendly)
 
@@ -72,13 +73,6 @@ const MONTHLY_LIMITS: Record<EmailProvider, number> = {
 
 // Request coalescing for quota checks
 const pendingQuotaChecks = new Map<string, Promise<ProviderHealth[]>>();
-
-// Simple email validation regex (RFC 5322 simplified)
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-function isValidEmail(email: string): boolean {
-  return EMAIL_REGEX.test(email) && email.length <= 254;
-}
 
 // Metrics buffer (non-blocking writes)
 const metricsBuffer: Array<{

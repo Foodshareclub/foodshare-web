@@ -11,15 +11,11 @@ import { useTranslations } from "next-intl";
 import { useManualEmailSender } from "@/hooks/useEmailManagement";
 import { PROVIDER_NAMES, PROVIDER_LIMITS, EMAIL_TYPE_NAMES } from "@/lib/email/constants";
 import type { EmailProvider, EmailType } from "@/lib/email/types";
+import type { ManualEmailRequest } from "@/types/email-management.types";
+import { escapeHtml } from "@/lib/utils";
 
-// Local type definitions (previously in @/api/admin/emailManagement)
-export interface ManualEmailRequest {
-  to: string;
-  subject: string;
-  html: string;
-  emailType: EmailType;
-  provider?: EmailProvider;
-}
+// Re-export for backwards compatibility
+export type { ManualEmailRequest } from "@/types/email-management.types";
 
 interface FormData {
   to: string;
@@ -51,10 +47,10 @@ export function ManualEmailSender() {
       return;
     }
 
-    // Convert plain text to HTML if needed
+    // Convert plain text to HTML if needed (escape to prevent XSS)
     const html = formData.useHtml
       ? formData.message
-      : `<p>${formData.message.replace(/\n/g, "<br>")}</p>`;
+      : `<p>${escapeHtml(formData.message).replace(/\n/g, "<br>")}</p>`;
 
     const request: ManualEmailRequest = {
       to: formData.to,

@@ -4,15 +4,8 @@
  */
 
 // Redis (KV Cache)
-export {
-  getRedis,
-  cache,
-  rateLimiter,
-  lock,
-  REDIS_KEYS,
-  CACHE_TTL,
-} from './redis';
-export type { RateLimitResult, CacheTTL } from './redis';
+export { getRedis, cache, rateLimiter, lock, REDIS_KEYS, CACHE_TTL } from "./redis";
+export type { RateLimitResult, CacheTTL } from "./redis";
 
 // Vercel Blob (File Storage)
 export {
@@ -31,8 +24,8 @@ export {
   MAX_FILE_SIZES,
   ALLOWED_IMAGE_TYPES,
   ALLOWED_DOCUMENT_TYPES,
-} from './blob';
-export type { UploadOptions, BlobAccess, BlobUploadResult } from './blob';
+} from "./blob";
+export type { UploadOptions, BlobAccess, BlobUploadResult } from "./blob";
 
 // Upstash Vector (Embeddings)
 export {
@@ -46,14 +39,14 @@ export {
   deleteVectorsByType,
   getIndexStats,
   VECTOR_NAMESPACES,
-} from './vector';
+} from "./vector";
 export type {
   VectorMetadata,
   VectorContentType,
   VectorUpsertItem,
   VectorQueryResult,
   VectorNamespace,
-} from './vector';
+} from "./vector";
 
 // Upstash QStash (Message Queue)
 export {
@@ -77,8 +70,8 @@ export {
   queueEmbeddingGeneration,
   JOB_TYPES,
   CRON_SCHEDULES,
-} from './qstash';
-export type { PublishOptions, PublishResult, ScheduleInfo, JobType } from './qstash';
+} from "./qstash";
+export type { PublishOptions, PublishResult, ScheduleInfo, JobType } from "./qstash";
 
 // Upstash Search (Full-text Search)
 export {
@@ -94,13 +87,13 @@ export {
   removeProductFromSearch,
   removeProductsFromSearch,
   SEARCH_INDEXES,
-} from './search';
+} from "./search";
 export type {
   SearchDocument,
   SearchResult,
   SearchIndexName,
   ProductSearchDocument,
-} from './search';
+} from "./search";
 
 // Vercel Edge Config (Feature Flags)
 export {
@@ -114,13 +107,26 @@ export {
   getSupportedLocales,
   FEATURE_FLAGS,
   CONFIG_KEYS,
-} from './edge-config';
-export type { FeatureFlagKey, ConfigKey } from './edge-config';
+} from "./edge-config";
+export type { FeatureFlagKey, ConfigKey } from "./edge-config";
 
 // MotherDuck (Analytics)
+export { getMotherDuckConfig, ANALYTICS_QUERIES, MOTHERDUCK_ENV } from "./motherduck";
+export type { MotherDuckConfig, AnalyticsResult, AnalyticsQueryKey } from "./motherduck";
+
+// Image Optimization (Sharp)
 export {
-  getMotherDuckConfig,
-  ANALYTICS_QUERIES,
-  MOTHERDUCK_ENV,
-} from './motherduck';
-export type { MotherDuckConfig, AnalyticsResult, AnalyticsQueryKey } from './motherduck';
+  optimizeImage,
+  quickOptimize,
+  createResponsiveSet,
+  generateBlurPlaceholder,
+  getImageDimensions,
+  validateImageInput,
+  IMAGE_SIZES,
+} from "./image-optimization";
+export type {
+  ImageSize,
+  OptimizedImage,
+  ImageOptimizationResult,
+  OptimizationOptions,
+} from "./image-optimization";

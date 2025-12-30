@@ -1,16 +1,25 @@
 export function EmptyState({
   icon,
   message,
+  title,
+  description,
   action,
 }: {
   icon: React.ReactNode;
-  message: string;
+  /** Simple message (use this OR title/description) */
+  message?: string;
+  /** Title text (alternative to message) */
+  title?: string;
+  /** Description text (used with title) */
+  description?: string;
   action?: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-8 text-center">
       <div className="rounded-full bg-muted p-3 mb-3 text-muted-foreground">{icon}</div>
-      <p className="text-muted-foreground">{message}</p>
+      {message && <p className="text-muted-foreground">{message}</p>}
+      {title && <p className="font-medium text-foreground">{title}</p>}
+      {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
       {action}
     </div>
   );

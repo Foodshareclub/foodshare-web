@@ -15,6 +15,8 @@ import { CACHE_TAGS, invalidateTag, invalidatePostActivityCaches } from "@/lib/d
 import { trackEvent } from "@/app/actions/analytics";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import { logPostContact, logPostArrangement } from "@/app/actions/post-activity";
+// Structured logger available for future use
+// import { createActionLogger } from "@/lib/structured-logger";
 
 // ============================================================================
 // Zod Schemas

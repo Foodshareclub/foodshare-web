@@ -4,7 +4,6 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Search,
@@ -24,6 +23,7 @@ import {
   ArrowRight,
   Hash,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { ForumPostCard } from "@/components/forum";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,33 +39,14 @@ import {
 import type { ForumPost, ForumCategory, ForumTag } from "@/api/forumAPI";
 import type { ForumStats, LeaderboardUser, SortOption } from "@/lib/data/forum";
 
-// Icon aliases for consistency
-const FaPlus = Plus;
-const FaSearch = Search;
-const FaFire = Flame;
-const FaClock = Clock;
-const FaCommentDots = MessageCircle;
-const FaHeart = Heart;
-const FaFilter = Filter;
-const FaTimes = X;
-const FaLightbulb = Lightbulb;
-const FaQuestion = HelpCircle;
-const FaTrophy = Trophy;
-const FaStar = Star;
-const FaMedal = Medal;
-const FaCrown = Crown;
-const FaArrowUp = ArrowUp;
-const FaArrowRight = ArrowRight;
-const FaHashtag = Hash;
-
 // ============================================================================
 // Constants
 // ============================================================================
 
 const LEADERBOARD_BADGES = [
-  { icon: FaCrown, color: "text-yellow-500", bg: "bg-yellow-500/10" },
-  { icon: FaMedal, color: "text-gray-400", bg: "bg-gray-400/10" },
-  { icon: FaMedal, color: "text-amber-600", bg: "bg-amber-600/10" },
+  { icon: Crown, color: "text-yellow-500", bg: "bg-yellow-500/10" },
+  { icon: Medal, color: "text-gray-400", bg: "bg-gray-400/10" },
+  { icon: Medal, color: "text-amber-600", bg: "bg-amber-600/10" },
 ] as const;
 
 // ============================================================================
@@ -100,10 +81,7 @@ function _StatCard({
   trend?: number;
 }) {
   return (
-    <motion.div
-      whileHover={{ y: -4, scale: 1.02 }}
-      className="relative overflow-hidden rounded-2xl p-5 bg-white/10 backdrop-blur-md border border-white/20"
-    >
+    <div className="relative overflow-hidden rounded-2xl p-5 bg-white/10 backdrop-blur-md border border-white/20 transition-transform duration-200 hover:-translate-y-1 hover:scale-[1.02]">
       <div className="absolute top-0 right-0 w-20 h-20 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
       <div className="relative z-10 flex items-center gap-4">
         <div className={`p-3 rounded-xl ${color} shadow-lg`}>
@@ -117,13 +95,13 @@ function _StatCard({
             <p className="text-sm text-white/70">{label}</p>
             {trend !== undefined && trend > 0 && (
               <span className="text-xs text-green-400 flex items-center gap-0.5">
-                <FaArrowUp className="w-2 h-2" />+{trend}%
+                <ArrowUp className="w-2 h-2" />+{trend}%
               </span>
             )}
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -136,10 +114,7 @@ function TrendingPost({ post, rank }: { post: ForumPost; rank: number }) {
   };
 
   return (
-    <motion.div
-      whileHover={{ x: 4 }}
-      className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent/50 transition-colors cursor-pointer group"
-    >
+    <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent/50 transition-all cursor-pointer group hover:translate-x-1">
       <span
         className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold ${getRankStyle(rank)}`}
       >
@@ -152,33 +127,30 @@ function TrendingPost({ post, rank }: { post: ForumPost; rank: number }) {
           </p>
           <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
             <span className="flex items-center gap-1">
-              <FaFire className="w-3 h-3 text-orange-500" />
+              <Flame className="w-3 h-3 text-orange-500" />
               {post.views_count || 0}
             </span>
             <span className="flex items-center gap-1">
-              <FaHeart className="w-3 h-3 text-red-500" />
+              <Heart className="w-3 h-3 text-red-500" />
               {post.forum_likes_counter || 0}
             </span>
           </div>
         </Link>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
 function LeaderboardCard({ user, rank }: { user: LeaderboardUser; rank: number }) {
   const badge = LEADERBOARD_BADGES[rank - 1] || {
-    icon: FaStar,
+    icon: Star,
     color: "text-primary",
     bg: "bg-primary/10",
   };
   const BadgeIcon = badge.icon;
 
   return (
-    <motion.div
-      whileHover={{ scale: 1.02 }}
-      className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent/50 transition-all"
-    >
+    <div className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent/50 transition-all hover:scale-[1.02]">
       <div className={`relative ${badge.bg} p-1 rounded-full`}>
         {user.avatar_url ? (
           <Image
@@ -213,7 +185,7 @@ function LeaderboardCard({ user, rank }: { user: LeaderboardUser; rank: number }
         <p className="text-sm font-bold text-primary">{user.score}</p>
         <p className="text-xs text-muted-foreground">points</p>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -229,11 +201,7 @@ function ActivityItem({ post }: { post: ForumPost }) {
   })();
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      className="flex items-start gap-3 py-2"
-    >
+    <div className="flex items-start gap-3 py-2 animate-in fade-in slide-in-from-left-5 duration-300">
       {post.profiles?.avatar_url ? (
         <Image
           src={post.profiles.avatar_url}
@@ -262,7 +230,7 @@ function ActivityItem({ post }: { post: ForumPost }) {
         </p>
         <p className="text-xs text-muted-foreground">{timeAgo}</p>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -278,17 +246,17 @@ function CategoryCard({
   postCount?: number;
 }) {
   return (
-    <motion.button
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+    <button
       onClick={onClick}
       aria-pressed={isSelected}
       aria-label={`Filter by category: ${category.name}`}
-      className={`w-full text-left p-3 rounded-xl transition-all ${
+      className={cn(
+        "w-full text-left p-3 rounded-xl transition-all duration-200",
+        "hover:scale-[1.02] active:scale-[0.98]",
         isSelected
           ? "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/25"
           : "glass hover:bg-accent"
-      }`}
+      )}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -302,7 +270,7 @@ function CategoryCard({
           {postCount ?? category.posts_count ?? 0}
         </Badge>
       </div>
-    </motion.button>
+    </button>
   );
 }
 
@@ -316,22 +284,22 @@ function TagPill({
   onClick: () => void;
 }) {
   return (
-    <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+    <button
       onClick={onClick}
       aria-pressed={isSelected}
       aria-label={`Filter by tag: ${tag.name}`}
-      className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
+      className={cn(
+        "px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
+        "hover:scale-105 active:scale-95",
         isSelected
           ? "bg-primary text-primary-foreground shadow-md"
           : "bg-muted hover:bg-accent border border-transparent hover:border-primary/20"
-      }`}
+      )}
       style={!isSelected ? { borderLeft: `3px solid ${tag.color}` } : {}}
     >
-      <FaHashtag className="inline w-3 h-3 mr-1 opacity-60" />
+      <Hash className="inline w-3 h-3 mr-1 opacity-60" />
       {tag.name}
-    </motion.button>
+    </button>
   );
 }
 
@@ -350,17 +318,19 @@ function QuickActionCard({
 }) {
   return (
     <Link href={href}>
-      <motion.div
-        whileHover={{ y: -4, scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        className={`relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br ${gradient} text-white cursor-pointer group`}
+      <div
+        className={cn(
+          "relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br text-white cursor-pointer group",
+          "transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98]",
+          gradient
+        )}
       >
         <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-500" />
         <Icon className="w-8 h-8 mb-3 relative z-10" />
         <h4 className="font-bold text-lg relative z-10">{title}</h4>
         <p className="text-sm text-white/80 relative z-10">{description}</p>
-        <FaArrowRight className="absolute bottom-5 right-5 w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" />
-      </motion.div>
+        <ArrowRight className="absolute bottom-5 right-5 w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" />
+      </div>
     </Link>
   );
 }
@@ -455,7 +425,7 @@ export function ForumPageClient({
             {/* Quick Actions */}
             <div className="grid grid-cols-2 gap-3">
               <QuickActionCard
-                icon={FaLightbulb}
+                icon={Lightbulb}
                 title={t("forum_quick_actions_idea", { defaultValue: "Share Idea" })}
                 description={t("forum_quick_actions_idea_desc", {
                   defaultValue: "Start a discussion",
@@ -464,7 +434,7 @@ export function ForumPageClient({
                 gradient="from-amber-500 to-orange-500"
               />
               <QuickActionCard
-                icon={FaQuestion}
+                icon={HelpCircle}
                 title={t("forum_quick_actions_question", { defaultValue: "Ask Question" })}
                 description={t("forum_quick_actions_question_desc", { defaultValue: "Get help" })}
                 href="/forum/new?type=question"
@@ -475,7 +445,7 @@ export function ForumPageClient({
             {/* Categories */}
             <div className="bg-card rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <FaFilter className="w-4 h-4 text-primary" />
+                <Filter className="w-4 h-4 text-primary" />
                 {t("forum_categories", { defaultValue: "Categories" })}
               </h3>
               <div className="space-y-2">
@@ -506,7 +476,7 @@ export function ForumPageClient({
             {/* Tags */}
             <div className="bg-card rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <FaHashtag className="w-4 h-4 text-primary" />
+                <Hash className="w-4 h-4 text-primary" />
                 {t("forum_popular_tags", { defaultValue: "Popular Tags" })}
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -524,7 +494,7 @@ export function ForumPageClient({
             {/* Leaderboard */}
             <div className="bg-card rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <FaTrophy className="w-4 h-4 text-yellow-500" />
+                <Trophy className="w-4 h-4 text-yellow-500" />
                 {t("forum_leaderboard", { defaultValue: "Top Contributors" })}
               </h3>
               <div className="space-y-1">
@@ -541,7 +511,7 @@ export function ForumPageClient({
             <div className="bg-card rounded-2xl p-4 shadow-sm mb-6">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                   <Input
                     placeholder={t("forum_search_placeholder", { defaultValue: "Search posts..." })}
                     value={searchQuery}
@@ -557,25 +527,25 @@ export function ForumPageClient({
                     <SelectContent>
                       <SelectItem value="latest">
                         <span className="flex items-center gap-2">
-                          <FaClock className="w-3 h-3" />{" "}
+                          <Clock className="w-3 h-3" />{" "}
                           {t("forum_sort_latest", { defaultValue: "Latest" })}
                         </span>
                       </SelectItem>
                       <SelectItem value="hot">
                         <span className="flex items-center gap-2">
-                          <FaFire className="w-3 h-3" />{" "}
+                          <Flame className="w-3 h-3" />{" "}
                           {t("forum_sort_hot", { defaultValue: "Hot" })}
                         </span>
                       </SelectItem>
                       <SelectItem value="top">
                         <span className="flex items-center gap-2">
-                          <FaHeart className="w-3 h-3" />{" "}
+                          <Heart className="w-3 h-3" />{" "}
                           {t("forum_sort_top", { defaultValue: "Top" })}
                         </span>
                       </SelectItem>
                       <SelectItem value="unanswered">
                         <span className="flex items-center gap-2">
-                          <FaQuestion className="w-3 h-3" />{" "}
+                          <HelpCircle className="w-3 h-3" />{" "}
                           {t("forum_sort_unanswered", { defaultValue: "Unanswered" })}
                         </span>
                       </SelectItem>
@@ -587,7 +557,7 @@ export function ForumPageClient({
                     onClick={() => setShowFilters(!showFilters)}
                     className="lg:hidden"
                   >
-                    <FaFilter className="w-4 h-4" />
+                    <Filter className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
@@ -601,7 +571,7 @@ export function ForumPageClient({
                   {selectedCategory && (
                     <Badge variant="secondary" className="gap-1">
                       {categories.find((c) => c.id === selectedCategory)?.name}
-                      <FaTimes
+                      <X
                         className="w-3 h-3 cursor-pointer"
                         onClick={() => setSelectedCategory(null)}
                       />
@@ -612,10 +582,7 @@ export function ForumPageClient({
                     return tag ? (
                       <Badge key={tagId} variant="secondary" className="gap-1">
                         #{tag.name}
-                        <FaTimes
-                          className="w-3 h-3 cursor-pointer"
-                          onClick={() => toggleTag(tagId)}
-                        />
+                        <X className="w-3 h-3 cursor-pointer" onClick={() => toggleTag(tagId)} />
                       </Badge>
                     ) : null;
                   })}
@@ -627,41 +594,37 @@ export function ForumPageClient({
             </div>
 
             {/* Posts Grid */}
-            <AnimatePresence mode="popLayout">
-              {sortedPosts.length > 0 ? (
-                <motion.div layout className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {sortedPosts.map((post) => (
-                    <motion.div
-                      key={post.id}
-                      layout
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                    >
-                      <ForumPostCard post={post} />
-                    </motion.div>
-                  ))}
-                </motion.div>
-              ) : (
-                <div className="text-center py-16">
-                  <FaCommentDots className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">
-                    {t("forum_no_posts", { defaultValue: "No posts found" })}
-                  </h3>
-                  <p className="text-muted-foreground mb-4">
-                    {t("forum_no_posts_desc", {
-                      defaultValue: "Try adjusting your filters or be the first to post!",
-                    })}
-                  </p>
-                  <Link href="/forum/new">
-                    <Button>
-                      <FaPlus className="w-4 h-4 mr-2" />
-                      {t("forum_create_first", { defaultValue: "Create First Post" })}
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </AnimatePresence>
+            {sortedPosts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {sortedPosts.map((post, index) => (
+                  <div
+                    key={post.id}
+                    className="animate-in fade-in slide-in-from-bottom-4 duration-300"
+                    style={{ animationDelay: `${Math.min(index * 50, 300)}ms` }}
+                  >
+                    <ForumPostCard post={post} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <MessageCircle className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
+                <h3 className="text-xl font-semibold mb-2">
+                  {t("forum_no_posts", { defaultValue: "No posts found" })}
+                </h3>
+                <p className="text-muted-foreground mb-4">
+                  {t("forum_no_posts_desc", {
+                    defaultValue: "Try adjusting your filters or be the first to post!",
+                  })}
+                </p>
+                <Link href="/forum/new">
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
+                    {t("forum_create_first", { defaultValue: "Create First Post" })}
+                  </Button>
+                </Link>
+              </div>
+            )}
           </main>
 
           {/* Right Sidebar - Trending & Activity */}
@@ -669,7 +632,7 @@ export function ForumPageClient({
             {/* Trending */}
             <div className="bg-card rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <FaFire className="w-4 h-4 text-orange-500" />
+                <Flame className="w-4 h-4 text-orange-500" />
                 {t("forum_trending", { defaultValue: "Trending" })}
               </h3>
               <div className="space-y-1">
@@ -682,7 +645,7 @@ export function ForumPageClient({
             {/* Recent Activity */}
             <div className="bg-card rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <FaClock className="w-4 h-4 text-blue-500" />
+                <Clock className="w-4 h-4 text-blue-500" />
                 {t("forum_recent_activity", { defaultValue: "Recent Activity" })}
               </h3>
               <div className="divide-y">

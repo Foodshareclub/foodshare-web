@@ -1,22 +1,20 @@
 /**
  * Query Hooks Index
- * Centralized exports for all TanStack Query hooks
+ * Centralized exports for active TanStack Query hooks
+ *
+ * Note: Most data fetching uses Server Components + Server Actions.
+ * These hooks are only for cases requiring client-side state:
+ * - Real-time updates (challenges, map viewport)
+ * - Complex client interactions
  */
 
-// Auth
-export * from "./useAuthQueries";
+// Challenges - deck swiping, leaderboard
+export * from "./useChallenges";
+export * from "./useChallengeLeaderboard";
+export * from "./useActiveChallenges";
 
-// Profile
-export * from "./useProfileQueries";
+// Map - viewport-based location loading
+export * from "./useViewportLocations";
 
-// Products
-export * from "./useProductQueries";
-
-// Chat
-export * from "./useChatQueries";
-
-// Forum
-export * from "./useForumQueries";
-
-// Admin - Removed: Use server actions from @/app/actions/admin.ts instead
-// TanStack Query for admin data violates server-first architecture
+// Admin - email CRM dashboard
+export * from "./useEmailCRM";

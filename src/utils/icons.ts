@@ -1,18 +1,18 @@
-// Icon mapping file for @chakra-ui/icons migration to react-icons
-// This provides the same icon names as @chakra-ui/icons but using react-icons/md (Material Design Icons)
-// to minimize code changes during migration to Chakra UI v3
+// Icon mapping file for @chakra-ui/icons migration to lucide-react
+// This provides the same icon names as @chakra-ui/icons but using lucide-react
+// to minimize code changes during migration
 
 export {
-  MdEdit as EditIcon,
-  MdDelete as DeleteIcon,
-  MdStar as StarIcon,
-  MdPhone as PhoneIcon,
-  MdSearch as SearchIcon,
-  MdVisibility as ViewIcon,
-  MdVisibilityOff as ViewOffIcon,
-  MdChevronRight as ChevronRightIcon,
-  MdArrowForward as ArrowRightIcon,
-  MdDragIndicator as DragHandleIcon,
-  MdArrowBack as ArrowLeftIcon,
-  MdArrowForward as ArrowForwardIcon,
-} from "react-icons/md";
+  Pencil as EditIcon,
+  Trash2 as DeleteIcon,
+  Star as StarIcon,
+  Phone as PhoneIcon,
+  Search as SearchIcon,
+  Eye as ViewIcon,
+  EyeOff as ViewOffIcon,
+  ChevronRight as ChevronRightIcon,
+  ArrowRight as ArrowRightIcon,
+  GripVertical as DragHandleIcon,
+  ArrowLeft as ArrowLeftIcon,
+  ArrowRight as ArrowForwardIcon,
+} from "lucide-react";

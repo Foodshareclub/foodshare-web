@@ -6,11 +6,11 @@
  */
 
 import { useState } from "react";
-import { formatDistanceToNow } from "date-fns";
 import { MessageSquare, ShoppingBag, Star, Clock, MapPin, Bell, Trash2, Check } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { MoreHorizontal } from "lucide-react";
+import { cn, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,7 +18,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
 import type { UserNotification, NotificationType } from "@/types/notifications.types";
 import { markNotificationAsRead, deleteNotification } from "@/app/actions/notifications";
 
@@ -76,7 +75,7 @@ export function NotificationItem({ notification, onRead, onDelete }: Notificatio
   const Icon = notificationIcons[notification.type] || Bell;
   const colorClass = notificationColors[notification.type] || notificationColors.system;
   const link = getNotificationLink(notification);
-  const timeAgo = formatDistanceToNow(new Date(notification.created_at), { addSuffix: true });
+  const timeAgo = formatDate(notification.created_at, { format: "relative-short" });
 
   const handleMarkAsRead = async () => {
     if (isRead) return;

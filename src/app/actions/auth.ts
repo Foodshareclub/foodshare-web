@@ -3,12 +3,46 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import type { Session } from "@supabase/supabase-js";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 import { trackEvent } from "@/app/actions/analytics";
+import { createActionLogger } from "@/lib/structured-logger";
 
 // Import AuthUser for internal use (don't re-export from server action files)
 import type { AuthUser } from "@/lib/data/auth";
+
+// ============================================================================
+// Validation Schemas
+// ============================================================================
+
+const emailSchema = z
+  .string()
+  .min(1, "Email is required")
+  .email("Invalid email format")
+  .max(254, "Email too long");
+
+const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .max(128, "Password too long");
+
+const signInSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, "Password is required").max(128, "Password too long"),
+});
+
+const signUpSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  firstName: z.string().max(100, "First name too long").optional().nullable(),
+  lastName: z.string().max(100, "Last name too long").optional().nullable(),
+  name: z.string().max(200, "Name too long").optional().nullable(),
+});
+
+const updatePasswordSchema = z.object({
+  password: passwordSchema,
+});
 
 /**
  * Check if a string is a full URL (http/https)
@@ -130,10 +164,23 @@ export async function checkIsAdmin(): Promise<boolean> {
 export async function signInWithPassword(
   formData: FormData
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const logger = await createActionLogger("signInWithPassword");
 
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  // Validate input
+  const rawData = {
+    email: formData.get("email"),
+    password: formData.get("password"),
+  };
+
+  const validation = signInSchema.safeParse(rawData);
+  if (!validation.success) {
+    const firstError = validation.error.issues[0];
+    logger.warn("Validation failed", { error: firstError?.message });
+    return { success: false, error: firstError?.message || "Invalid input" };
+  }
+
+  const { email, password } = validation.data;
+  const supabase = await createClient();
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -141,6 +188,7 @@ export async function signInWithPassword(
   });
 
   if (error) {
+    logger.warn("Sign in failed", { error: error.message });
     return { success: false, error: error.message };
   }
 
@@ -150,6 +198,7 @@ export async function signInWithPassword(
   // Track login
   await trackEvent("User Login", { method: "password" });
 
+  logger.info("User signed in successfully");
   return { success: true };
 }
 
@@ -157,13 +206,26 @@ export async function signInWithPassword(
  * Sign up with email and password
  */
 export async function signUp(formData: FormData): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient();
+  const logger = await createActionLogger("signUp");
 
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-  const firstName = formData.get("firstName") as string | null;
-  const lastName = formData.get("lastName") as string | null;
-  const name = formData.get("name") as string | null;
+  // Validate input
+  const rawData = {
+    email: formData.get("email"),
+    password: formData.get("password"),
+    firstName: formData.get("firstName") || null,
+    lastName: formData.get("lastName") || null,
+    name: formData.get("name") || null,
+  };
+
+  const validation = signUpSchema.safeParse(rawData);
+  if (!validation.success) {
+    const firstError = validation.error.issues[0];
+    logger.warn("Validation failed", { error: firstError?.message });
+    return { success: false, error: firstError?.message || "Invalid input" };
+  }
+
+  const { email, password, firstName, lastName, name } = validation.data;
+  const supabase = await createClient();
 
   // Build display name from firstName/lastName or use name directly
   const displayName = firstName && lastName ? `${firstName} ${lastName}` : firstName || name || "";
@@ -181,6 +243,7 @@ export async function signUp(formData: FormData): Promise<{ success: boolean; er
   });
 
   if (error) {
+    logger.warn("Sign up failed", { error: error.message });
     return { success: false, error: error.message };
   }
 
@@ -201,6 +264,7 @@ export async function signUp(formData: FormData): Promise<{ success: boolean; er
   // Track signup
   await trackEvent("User Signup", { method: "password" });
 
+  logger.info("User signed up successfully");
   return { success: true };
 }
 
@@ -219,9 +283,16 @@ export async function signOut(): Promise<void> {
  * Request password reset
  */
 export async function resetPassword(email: string): Promise<{ success: boolean; error?: string }> {
+  // Validate email
+  const validation = emailSchema.safeParse(email);
+  if (!validation.success) {
+    const firstError = validation.error.issues[0];
+    return { success: false, error: firstError?.message || "Invalid email" };
+  }
+
   const supabase = await createClient();
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+  const { error } = await supabase.auth.resetPasswordForEmail(validation.data, {
     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?type=recovery`,
   });
 
@@ -238,12 +309,21 @@ export async function resetPassword(email: string): Promise<{ success: boolean; 
 export async function updatePassword(
   formData: FormData
 ): Promise<{ success: boolean; error?: string }> {
+  // Validate input
+  const rawData = {
+    password: formData.get("password"),
+  };
+
+  const validation = updatePasswordSchema.safeParse(rawData);
+  if (!validation.success) {
+    const firstError = validation.error.issues[0];
+    return { success: false, error: firstError?.message || "Invalid password" };
+  }
+
   const supabase = await createClient();
 
-  const newPassword = formData.get("password") as string;
-
   const { error } = await supabase.auth.updateUser({
-    password: newPassword,
+    password: validation.data.password,
   });
 
   if (error) {

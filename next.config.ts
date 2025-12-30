@@ -4,6 +4,36 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 const withNextIntl = createNextIntlPlugin();
 
+// Bundle analyzer for build:analyze script (ANALYZE=true)
+// Uses webpack-bundle-analyzer under the hood
+const withBundleAnalyzer = (config: NextConfig) => {
+  if (process.env.ANALYZE !== "true") return config;
+
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
+
+  return {
+    ...config,
+    webpack: (webpackConfig: { plugins: unknown[] }, options: { isServer: boolean }) => {
+      // Run original webpack config first if it exists
+      const modifiedConfig = config.webpack?.(webpackConfig, options as Parameters<NonNullable<NextConfig['webpack']>>[1]) ?? webpackConfig;
+
+      // Only add analyzer for client bundle
+      if (!options.isServer) {
+        modifiedConfig.plugins.push(
+          new BundleAnalyzerPlugin({
+            analyzerMode: "static",
+            reportFilename: "../bundle-report.html",
+            openAnalyzer: true,
+          })
+        );
+      }
+
+      return modifiedConfig;
+    },
+  };
+};
+
 const nextConfig: NextConfig = {
   // Enable React Compiler (stable in Next.js 16)
   reactCompiler: true,
@@ -371,4 +401,5 @@ const sentryWebpackPluginOptions = {
   disableLogger: true,
 };
 
-export default withSentryConfig(withNextIntl(nextConfig), sentryWebpackPluginOptions);
+// Chain: bundleAnalyzer -> nextIntl -> sentry
+export default withSentryConfig(withNextIntl(withBundleAnalyzer(nextConfig)), sentryWebpackPluginOptions);

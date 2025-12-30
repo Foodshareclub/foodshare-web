@@ -1,11 +1,9 @@
-import React from "react";
-import AliceCarousel from "react-alice-carousel";
-import "react-alice-carousel/lib/alice-carousel.css";
-import { navigationActionsSVG, responsive } from "@/utils/navigationActions";
+"use client";
+
 import { useRouter } from "next/navigation";
+import { navigationActionsSVG } from "@/utils/navigationActions";
 import type { PagesType } from "@/components/header/navbar/types";
 import { ItemsForCarousel } from "@/components";
-import "./Carousel.css";
 
 type PropsType = {
   getRoute: (route: string) => void;
@@ -23,7 +21,7 @@ export default function Carousel({
   isCompact = false,
 }: PropsType) {
   const router = useRouter();
-  
+
   const navigateHandler = (name: string) => {
     const routeName = name.toLowerCase();
     router.push(`${routeName === "food" ? "/food" : routeName}`);
@@ -32,26 +30,25 @@ export default function Carousel({
   };
 
   return (
-    <AliceCarousel
-      responsive={responsive}
-      controlsStrategy="responsive"
-      disableButtonsControls={true}
-      keyboardNavigation={true}
-      disableDotsControls={true}
-      infinite
-      activeIndex={0}
-      animationDuration={100}
-      touchTracking={true}
-      items={navigationActionsSVG.map((item, id) => (
-        <ItemsForCarousel
-          key={id}
-          item={item}
-          navigateHandler={navigateHandler}
-          pageType={pageType}
-          productType={productType}
-          isCompact={isCompact}
-        />
+    <div
+      className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-2 md:gap-2.5 lg:gap-3 pb-2 -mx-4 px-4 cursor-grab active:cursor-grabbing"
+      style={{
+        scrollbarWidth: "none",
+        msOverflowStyle: "none",
+        WebkitOverflowScrolling: "touch",
+      }}
+    >
+      {navigationActionsSVG.map((item, id) => (
+        <div key={id} className="snap-start shrink-0">
+          <ItemsForCarousel
+            item={item}
+            navigateHandler={navigateHandler}
+            pageType={pageType}
+            productType={productType}
+            isCompact={isCompact}
+          />
+        </div>
       ))}
-    />
+    </div>
   );
 }

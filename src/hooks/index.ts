@@ -16,6 +16,7 @@ export * from "./useTheme";
 
 // Utility hooks
 export * from "./useDebounce";
+export * from "./useLocalStorage";
 export * from "./useMediaQuery";
 export * from "./usePosition";
 export * from "./useCustomBoolean";
@@ -35,6 +36,12 @@ export * from "./useMarkerIcon";
 // Unified Chat hooks (for realtime subscriptions)
 export * from "./useUnifiedChat";
 
+// Shared realtime subscription hook (foundation for all realtime features)
+export * from "./useRealtimeSubscription";
+
+// Product realtime updates (new listings, status changes)
+export * from "./useProductRealtime";
+
 // Image blob URL management (memory-safe blob URL handling)
 export * from "./useImageBlobUrl";
 
@@ -48,3 +55,9 @@ export { useActionToast, ActionToastProvider } from "./useActionToast";
 
 // User location (geolocation API + Zustand integration)
 export { useUserLocation, type Coordinates, type UseUserLocationReturn } from "./useUserLocation";
+
+// Modal state management
+export { useModalState, type ModalState } from "./useModalState";
+
+// Optimistic updates (React 19 useOptimistic)
+export * from "./useOptimisticActivity";

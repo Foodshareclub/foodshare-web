@@ -1,14 +1,7 @@
-import { motion } from "framer-motion";
-
+/**
+ * TabContent - CSS-animated wrapper for tab panels
+ * Replaces framer-motion with native CSS animations for smaller bundle
+ */
 export function TabContent({ children }: { children: React.ReactNode }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2 }}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div className="animate-in fade-in slide-in-from-bottom-2 duration-200">{children}</div>;
 }

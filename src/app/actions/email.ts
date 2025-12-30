@@ -14,6 +14,35 @@ import type { EmailTemplateName, EmailTemplateProps } from "@/emails/types";
 import { createClient } from "@/lib/supabase/server";
 import { serverActionError, type ServerActionResult } from "@/lib/errors";
 import type { ErrorCode } from "@/lib/errors";
+import { escapeHtml } from "@/lib/utils";
+import { sendEmailTask, type SendEmailPayload } from "@/trigger/email-queue";
+
+// ============================================================================
+// Async Email Helper
+// ============================================================================
+
+/**
+ * Send email asynchronously via Trigger.dev
+ * Use this for non-critical emails where the user doesn't need to wait
+ *
+ * @example
+ * await sendEmailAsync({
+ *   to: "user@example.com",
+ *   subject: "Welcome!",
+ *   template: "welcome",
+ *   data: { name: "John" },
+ * });
+ */
+export async function sendEmailAsync(payload: SendEmailPayload): Promise<{ triggered: boolean }> {
+  try {
+    await sendEmailTask.trigger(payload);
+    return { triggered: true };
+  } catch (error) {
+    console.error("[sendEmailAsync] Failed to queue email:", error);
+    // Fall back to sync send if Trigger.dev is unavailable
+    return { triggered: false };
+  }
+}
 
 // ============================================================================
 // Zod Schemas
@@ -552,8 +581,9 @@ export async function sendAdminEmail(
     let text = validated.data.message;
 
     if (!validated.data.useHtml) {
-      // If not using HTML mode, wrap text in simple paragraph
-      html = `<p>${validated.data.message.replace(/\n/g, "<br>")}</p>`;
+      // If not using HTML mode, escape HTML and wrap text in simple paragraph
+      const escapedMessage = escapeHtml(validated.data.message);
+      html = `<p>${escapedMessage.replace(/\n/g, "<br>")}</p>`;
     } else {
       // If using HTML mode, strip tags for text version (rough approximation)
       text = validated.data.message.replace(/<[^>]*>?/gm, "");

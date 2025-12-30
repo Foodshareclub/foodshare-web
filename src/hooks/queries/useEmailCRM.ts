@@ -80,12 +80,12 @@ async function fetchTemplates(): Promise<EmailTemplate[]> {
 }
 
 // Individual hooks
+// Note: Polling removed - use useEmailCRMRealtime() for live updates
 export function useEmailStats() {
   return useQuery({
     queryKey: emailCRMKeys.stats(),
     queryFn: fetchStats,
-    refetchInterval: 30000, // Refresh every 30 seconds
-    staleTime: 20000, // Consider fresh for 20 seconds
+    staleTime: 30000, // Consider fresh for 30 seconds
   });
 }
 
@@ -93,8 +93,7 @@ export function useProviderHealth() {
   return useQuery({
     queryKey: emailCRMKeys.health(),
     queryFn: fetchHealth,
-    refetchInterval: 60000, // Refresh every minute
-    staleTime: 45000,
+    staleTime: 60000, // Consider fresh for 1 minute
   });
 }
 
@@ -102,8 +101,7 @@ export function useCampaigns() {
   return useQuery({
     queryKey: emailCRMKeys.campaigns(),
     queryFn: fetchCampaigns,
-    refetchInterval: 60000,
-    staleTime: 45000,
+    staleTime: 60000,
   });
 }
 
@@ -111,8 +109,7 @@ export function useAutomations() {
   return useQuery({
     queryKey: emailCRMKeys.automations(),
     queryFn: fetchAutomations,
-    refetchInterval: 60000,
-    staleTime: 45000,
+    staleTime: 60000,
   });
 }
 
@@ -120,8 +117,7 @@ export function useSegments() {
   return useQuery({
     queryKey: emailCRMKeys.segments(),
     queryFn: fetchSegments,
-    refetchInterval: 120000, // Refresh every 2 minutes
-    staleTime: 90000,
+    staleTime: 120000, // Consider fresh for 2 minutes
   });
 }
 
@@ -129,8 +125,7 @@ export function useQuotas() {
   return useQuery({
     queryKey: emailCRMKeys.quotas(),
     queryFn: fetchQuotas,
-    refetchInterval: 30000, // Refresh every 30 seconds (quota changes frequently)
-    staleTime: 20000,
+    staleTime: 30000, // Consider fresh for 30 seconds
   });
 }
 
@@ -138,8 +133,7 @@ export function useBounceStats() {
   return useQuery({
     queryKey: emailCRMKeys.bounces(),
     queryFn: fetchBounces,
-    refetchInterval: 60000,
-    staleTime: 45000,
+    staleTime: 60000,
   });
 }
 
@@ -147,8 +141,7 @@ export function useEmailTemplates() {
   return useQuery({
     queryKey: emailCRMKeys.templates(),
     queryFn: fetchTemplates,
-    refetchInterval: 300000, // Refresh every 5 minutes
-    staleTime: 240000,
+    staleTime: 300000, // Consider fresh for 5 minutes (templates rarely change)
   });
 }
 

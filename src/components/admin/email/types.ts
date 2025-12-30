@@ -48,6 +48,7 @@ export interface EmailFormData {
 
 /**
  * Props for the main EmailCRMDashboard component
+ * @deprecated Use EmailCRMClientProps instead
  */
 export interface EmailCRMDashboardProps {
   initialData?: EmailCRMData;
@@ -56,9 +57,12 @@ export interface EmailCRMDashboardProps {
 /**
  * Props for EmailCRMClient component
  */
-export interface Props {
+export interface EmailCRMClientProps {
   initialData?: EmailCRMData;
 }
+
+/** @deprecated Use EmailCRMClientProps instead */
+export type Props = EmailCRMClientProps;
 
 /**
  * Props for the OverviewTab component

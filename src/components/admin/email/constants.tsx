@@ -26,8 +26,8 @@ import type { EmailDashboardStats } from "@/lib/data/admin-email";
  */
 export const TABS: TabConfig[] = [
   {
-    id: "overview",
-    label: "Overview",
+    id: "dashboard",
+    label: "Dashboard",
     icon: <BarChart3 className="h-4 w-4" />,
     description: "Dashboard & metrics",
   },

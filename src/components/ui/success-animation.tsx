@@ -1,7 +1,11 @@
 "use client";
 
+/**
+ * SuccessAnimation Component
+ * Uses pure CSS animations for optimal performance (no Framer Motion)
+ */
+
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Check, PartyPopper, Sparkles, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -68,16 +72,19 @@ const themeColors = {
     circle: "stroke-primary",
     icon: "text-primary",
     bg: "bg-primary/10",
+    particle: "bg-primary",
   },
   success: {
     circle: "stroke-green-500",
     icon: "text-green-500",
     bg: "bg-green-500/10",
+    particle: "bg-green-500",
   },
   brand: {
     circle: "stroke-emerald-500",
     icon: "text-emerald-500",
     bg: "bg-emerald-500/10",
+    particle: "bg-emerald-500",
   },
 };
 
@@ -90,14 +97,14 @@ const variantIcons = {
 
 // Particle positions for celebration effect
 const particles = [
-  { x: -40, y: -40, rotate: -45, delay: 0.1 },
-  { x: 40, y: -40, rotate: 45, delay: 0.15 },
-  { x: -50, y: 0, rotate: -90, delay: 0.2 },
-  { x: 50, y: 0, rotate: 90, delay: 0.25 },
-  { x: -40, y: 40, rotate: -135, delay: 0.3 },
-  { x: 40, y: 40, rotate: 135, delay: 0.35 },
-  { x: 0, y: -50, rotate: 0, delay: 0.12 },
-  { x: 0, y: 50, rotate: 180, delay: 0.28 },
+  { x: -40, y: -40, rotate: -45, delay: 100 },
+  { x: 40, y: -40, rotate: 45, delay: 150 },
+  { x: -50, y: 0, rotate: -90, delay: 200 },
+  { x: 50, y: 0, rotate: 90, delay: 250 },
+  { x: -40, y: 40, rotate: -135, delay: 300 },
+  { x: 40, y: 40, rotate: 135, delay: 350 },
+  { x: 0, y: -50, rotate: 0, delay: 120 },
+  { x: 0, y: 50, rotate: 180, delay: 280 },
 ];
 
 /**
@@ -105,31 +112,6 @@ const particles = [
  *
  * A reusable animated success indicator with multiple variants.
  * Perfect for form submissions, completed actions, and celebrations.
- *
- * @example
- * // Basic checkmark
- * <SuccessAnimation show={isSuccess} message="Saved!" />
- *
- * @example
- * // Celebration with auto-hide
- * <SuccessAnimation
- *   show={showSuccess}
- *   variant="celebration"
- *   message="Congratulations!"
- *   description="Your listing was published"
- *   autoHideDuration={3000}
- *   onComplete={() => setShowSuccess(false)}
- * />
- *
- * @example
- * // With overlay for modal-like effect
- * <SuccessAnimation
- *   show={isComplete}
- *   variant="sparkle"
- *   size="lg"
- *   overlay
- *   theme="success"
- * />
  */
 export function SuccessAnimation({
   show,
@@ -144,17 +126,29 @@ export function SuccessAnimation({
   theme = "success",
 }: SuccessAnimationProps) {
   const [isVisible, setIsVisible] = useState(show);
+  const [isAnimating, setIsAnimating] = useState(false);
   const config = sizeConfig[size];
   const colors = themeColors[theme];
   const Icon = variantIcons[variant];
 
   useEffect(() => {
-    setIsVisible(show);
+    if (show) {
+      setIsVisible(true);
+      setIsAnimating(true);
+    } else {
+      setIsAnimating(false);
+      // Wait for exit animation
+      const timer = setTimeout(() => setIsVisible(false), 300);
+      return () => clearTimeout(timer);
+    }
 
     if (show && autoHideDuration > 0) {
       const timer = setTimeout(() => {
-        setIsVisible(false);
-        onComplete?.();
+        setIsAnimating(false);
+        setTimeout(() => {
+          setIsVisible(false);
+          onComplete?.();
+        }, 300);
       }, autoHideDuration);
 
       return () => clearTimeout(timer);
@@ -165,146 +159,143 @@ export function SuccessAnimation({
   const radius = (config.circle - config.stroke) / 2;
   const circumference = 2 * Math.PI * radius;
 
+  if (!isVisible) return null;
+
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <>
-          {/* Overlay backdrop */}
-          {overlay && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
-              aria-hidden="true"
-            />
+    <>
+      {/* Overlay backdrop */}
+      {overlay && (
+        <div
+          className={cn(
+            "fixed inset-0 bg-background/80 backdrop-blur-sm z-50",
+            "transition-opacity duration-300",
+            isAnimating ? "opacity-100" : "opacity-0"
           )}
-
-          {/* Main animation container */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-            className={cn(
-              "flex flex-col items-center justify-center gap-4",
-              overlay && "fixed inset-0 z-50",
-              className
-            )}
-            role="status"
-            aria-live="polite"
-            aria-label={message || "Success"}
-          >
-            {/* Circle and icon container */}
-            <div className={cn("relative", config.container)}>
-              {/* Background circle */}
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-                className={cn(
-                  "absolute inset-0 rounded-full",
-                  colors.bg
-                )}
-              />
-
-              {/* Animated circle stroke */}
-              <svg
-                className="absolute inset-0 -rotate-90"
-                width={config.circle}
-                height={config.circle}
-                viewBox={`0 0 ${config.circle} ${config.circle}`}
-              >
-                <motion.circle
-                  cx={config.circle / 2}
-                  cy={config.circle / 2}
-                  r={radius}
-                  fill="none"
-                  strokeWidth={config.stroke}
-                  strokeLinecap="round"
-                  className={colors.circle}
-                  initial={{ strokeDasharray: circumference, strokeDashoffset: circumference }}
-                  animate={{ strokeDashoffset: 0 }}
-                  transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-                />
-              </svg>
-
-              {/* Icon */}
-              <motion.div
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 15,
-                  delay: 0.4,
-                }}
-                className={cn(
-                  "absolute inset-0 flex items-center justify-center",
-                  colors.icon
-                )}
-              >
-                <Icon size={config.icon} strokeWidth={2.5} />
-              </motion.div>
-
-              {/* Celebration particles */}
-              {(variant === "celebration" || variant === "sparkle") && (
-                <div className="absolute inset-0 pointer-events-none">
-                  {particles.map((particle, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ scale: 0, opacity: 0, x: 0, y: 0 }}
-                      animate={{
-                        scale: [0, 1, 0],
-                        opacity: [0, 1, 0],
-                        x: particle.x,
-                        y: particle.y,
-                      }}
-                      transition={{
-                        duration: 0.8,
-                        delay: particle.delay + 0.4,
-                        ease: "easeOut",
-                      }}
-                      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-                    >
-                      <motion.div
-                        initial={{ rotate: 0 }}
-                        animate={{ rotate: particle.rotate }}
-                        className={cn("w-2 h-2 rounded-full", colors.bg.replace("/10", ""))}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Message text */}
-            {message && (
-              <motion.p
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className={cn("font-semibold text-foreground text-center", config.message)}
-              >
-                {message}
-              </motion.p>
-            )}
-
-            {/* Description text */}
-            {description && (
-              <motion.p
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className={cn("text-muted-foreground text-center max-w-xs", config.description)}
-              >
-                {description}
-              </motion.p>
-            )}
-          </motion.div>
-        </>
+          aria-hidden="true"
+        />
       )}
-    </AnimatePresence>
+
+      {/* Main animation container */}
+      <div
+        className={cn(
+          "flex flex-col items-center justify-center gap-4",
+          "transition-all duration-300 ease-out",
+          isAnimating ? "opacity-100 scale-100" : "opacity-0 scale-[0.8]",
+          overlay && "fixed inset-0 z-50",
+          className
+        )}
+        role="status"
+        aria-live="polite"
+        aria-label={message || "Success"}
+      >
+        {/* Circle and icon container */}
+        <div className={cn("relative", config.container)}>
+          {/* Background circle */}
+          <div
+            className={cn(
+              "absolute inset-0 rounded-full",
+              "transition-transform duration-300 ease-out",
+              colors.bg,
+              isAnimating ? "scale-100" : "scale-0"
+            )}
+            style={{ transitionDelay: "100ms" }}
+          />
+
+          {/* Animated circle stroke */}
+          <svg
+            className="absolute inset-0 -rotate-90"
+            width={config.circle}
+            height={config.circle}
+            viewBox={`0 0 ${config.circle} ${config.circle}`}
+          >
+            <circle
+              cx={config.circle / 2}
+              cy={config.circle / 2}
+              r={radius}
+              fill="none"
+              strokeWidth={config.stroke}
+              strokeLinecap="round"
+              className={cn(colors.circle, "animate-success-circle")}
+              style={{
+                strokeDasharray: circumference,
+                strokeDashoffset: isAnimating ? 0 : circumference,
+                transition: "stroke-dashoffset 0.6s ease-out 0.2s",
+              }}
+            />
+          </svg>
+
+          {/* Icon */}
+          <div
+            className={cn(
+              "absolute inset-0 flex items-center justify-center",
+              "transition-all duration-300",
+              colors.icon,
+              isAnimating ? "scale-100 opacity-100" : "scale-0 opacity-0"
+            )}
+            style={{
+              transitionDelay: "400ms",
+              transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+            }}
+          >
+            <Icon size={config.icon} strokeWidth={2.5} />
+          </div>
+
+          {/* Celebration particles */}
+          {(variant === "celebration" || variant === "sparkle") && isAnimating && (
+            <div className="absolute inset-0 pointer-events-none">
+              {particles.map((particle, i) => (
+                <div
+                  key={i}
+                  className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 animate-success-particle"
+                  style={
+                    {
+                      "--particle-x": `${particle.x}px`,
+                      "--particle-y": `${particle.y}px`,
+                      animationDelay: `${particle.delay + 400}ms`,
+                    } as React.CSSProperties
+                  }
+                >
+                  <div
+                    className={cn("w-2 h-2 rounded-full", colors.particle)}
+                    style={{ transform: `rotate(${particle.rotate}deg)` }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Message text */}
+        {message && (
+          <p
+            className={cn(
+              "font-semibold text-foreground text-center",
+              "transition-all duration-300",
+              config.message,
+              isAnimating ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2.5"
+            )}
+            style={{ transitionDelay: "500ms" }}
+          >
+            {message}
+          </p>
+        )}
+
+        {/* Description text */}
+        {description && (
+          <p
+            className={cn(
+              "text-muted-foreground text-center max-w-xs",
+              "transition-all duration-300",
+              config.description,
+              isAnimating ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2.5"
+            )}
+            style={{ transitionDelay: "600ms" }}
+          >
+            {description}
+          </p>
+        )}
+      </div>
+    </>
   );
 }
 
@@ -312,29 +303,31 @@ export function SuccessAnimation({
  * Inline success indicator for forms and inputs
  * Smaller, more subtle animation for inline use
  */
-export function InlineSuccessIndicator({
-  show,
-  className,
-}: {
-  show: boolean;
-  className?: string;
-}) {
+export function InlineSuccessIndicator({ show, className }: { show: boolean; className?: string }) {
+  const [isVisible, setIsVisible] = useState(show);
+
+  useEffect(() => {
+    if (show) {
+      setIsVisible(true);
+    } else {
+      const timer = setTimeout(() => setIsVisible(false), 200);
+      return () => clearTimeout(timer);
+    }
+  }, [show]);
+
+  if (!isVisible) return null;
+
   return (
-    <AnimatePresence>
-      {show && (
-        <motion.span
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 500, damping: 25 }}
-          className={cn(
-            "inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-500/10 text-green-500",
-            className
-          )}
-        >
-          <Check size={12} strokeWidth={3} />
-        </motion.span>
+    <span
+      className={cn(
+        "inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-500/10 text-green-500",
+        "transition-all duration-200",
+        show ? "scale-100 opacity-100" : "scale-0 opacity-0",
+        className
       )}
-    </AnimatePresence>
+      style={{ transitionTimingFunction: "cubic-bezier(0.34, 1.56, 0.64, 1)" }}
+    >
+      <Check size={12} strokeWidth={3} />
+    </span>
   );
 }

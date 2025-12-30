@@ -1,9 +1,14 @@
 import { Suspense } from "react";
+import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { UserCircle, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCRMCustomers, getCRMDashboardStats, getCustomerTags } from "@/lib/data/crm";
-import { CRMDashboardClient } from "@/components/admin/crm/CRMDashboardClient";
+
+// Dynamic import for code-splitting (~150KB saved from initial bundle)
+const CRMDashboardClient = dynamic(() =>
+  import("@/components/admin/crm/CRMDashboardClient").then((mod) => mod.CRMDashboardClient)
+);
 
 function CRMSkeleton() {
   return (

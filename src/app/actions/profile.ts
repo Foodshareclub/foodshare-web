@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 import { getProfile, type Profile } from "@/lib/data/profiles";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
+import { createActionLogger } from "@/lib/structured-logger";
 
 // ============================================================================
 // Zod Schemas
@@ -97,9 +98,12 @@ export async function getCurrentProfile(): Promise<Profile | null> {
 export async function updateProfile(
   formData: FormData
 ): Promise<ServerActionResult<ProfileResult>> {
+  const logger = await createActionLogger("updateProfile");
+
   try {
     const { supabase, user, error: authError } = await verifyAuth();
     if (authError || !supabase || !user) {
+      logger.warn("Auth failed", { error: authError });
       return serverActionError(authError || "Not authenticated", "UNAUTHORIZED");
     }
 
@@ -134,7 +138,7 @@ export async function updateProfile(
     const { error } = await supabase.from("profiles").update(profileData).eq("id", user.id);
 
     if (error) {
-      console.error("Failed to update profile:", error);
+      logger.error("Database error", error);
       return serverActionError(error.message, "DATABASE_ERROR");
     }
 
@@ -143,6 +147,7 @@ export async function updateProfile(
     invalidateTag(CACHE_TAGS.PROFILE(user.id));
     revalidatePath("/profile");
 
+    logger.info("Profile updated", { userId: user.id });
     return {
       success: true,
       data: {
@@ -151,7 +156,7 @@ export async function updateProfile(
       },
     };
   } catch (error) {
-    console.error("Failed to update profile:", error);
+    logger.error("Unexpected error", error instanceof Error ? error : undefined);
     return serverActionError("Failed to update profile", "UNKNOWN_ERROR");
   }
 }
@@ -430,14 +435,19 @@ export async function updateUserAddress(
       updated_at: new Date().toISOString(),
     };
 
-    // Handle lat/long if provided
+    // Handle lat/long if provided (with NaN validation)
     const lat = formData.get("lat");
     const long = formData.get("long");
     if (lat && long) {
-      Object.assign(addressData, {
-        lat: parseFloat(lat as string),
-        long: parseFloat(long as string),
-      });
+      const parsedLat = parseFloat(lat as string);
+      const parsedLong = parseFloat(long as string);
+      // Only assign if both are valid numbers
+      if (!Number.isNaN(parsedLat) && !Number.isNaN(parsedLong)) {
+        Object.assign(addressData, {
+          lat: parsedLat,
+          long: parsedLong,
+        });
+      }
     }
 
     const { data, error } = await supabase

@@ -165,7 +165,7 @@ export async function getUserActivitySummary(
 
 /**
  * Get activity counts by type for a post
- * Uses unstable_cache for efficient aggregation
+ * Uses optimized RPC for single-query aggregation
  */
 export async function getPostActivityCounts(
   postId: number
@@ -177,19 +177,20 @@ export async function getPostActivityCounts(
       logCacheOperation("miss", cacheKey);
       const supabase = createCachedClient();
 
-      const { data, error } = await supabase
-        .from("post_activity_logs")
-        .select("activity_type")
-        .eq("post_id", postId);
+      // Use optimized RPC (replaces JS loop aggregation)
+      const { data, error } = await supabase.rpc("get_post_activity_counts", {
+        p_post_id: postId,
+      });
 
       if (error) {
         console.error("[getPostActivityCounts] Error:", error.message);
         return {};
       }
 
+      // Transform RPC result to counts object
       const counts: Record<string, number> = {};
       for (const row of data || []) {
-        counts[row.activity_type] = (counts[row.activity_type] || 0) + 1;
+        counts[row.activity_type] = Number(row.count) || 0;
       }
 
       logCacheOperation("set", cacheKey, { types: Object.keys(counts).length });
@@ -389,7 +390,7 @@ export interface ActivityDashboardStats {
 
 /**
  * Get activity statistics for admin dashboard
- * Uses unstable_cache with parallel fetching for optimal performance
+ * Uses optimized RPC for counts + parallel fetch for top types
  */
 export async function getActivityDashboardStats(): Promise<ActivityDashboardStats> {
   const cacheKey = "dashboard-stats";
@@ -399,25 +400,13 @@ export async function getActivityDashboardStats(): Promise<ActivityDashboardStat
       logCacheOperation("miss", cacheKey);
       const supabase = createCachedClient();
 
-      const now = new Date();
-      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-      const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
-      const monthStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const monthStart = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-      // Parallel fetch for all counts - bleeding edge pattern
-      const [todayResult, weekResult, monthResult, typeData] = await Promise.all([
-        supabase
-          .from("post_activity_logs")
-          .select("id", { count: "exact", head: true })
-          .gte("created_at", todayStart),
-        supabase
-          .from("post_activity_logs")
-          .select("id", { count: "exact", head: true })
-          .gte("created_at", weekStart),
-        supabase
-          .from("post_activity_logs")
-          .select("id", { count: "exact", head: true })
-          .gte("created_at", monthStart),
+      // Parallel fetch: RPC for counts + query for top types
+      const [statsResult, typeData] = await Promise.all([
+        // Single RPC replaces 3 COUNT queries
+        supabase.rpc("get_activity_dashboard_stats"),
+        // Still need separate query for top activity types
         supabase.from("post_activity_logs").select("activity_type").gte("created_at", monthStart),
       ]);
 
@@ -432,10 +421,11 @@ export async function getActivityDashboardStats(): Promise<ActivityDashboardStat
         .sort((a, b) => b.count - a.count)
         .slice(0, 10);
 
+      const rpcStats = statsResult.data?.[0];
       const stats = {
-        todayActivities: todayResult.count || 0,
-        weekActivities: weekResult.count || 0,
-        monthActivities: monthResult.count || 0,
+        todayActivities: Number(rpcStats?.today_activities) || 0,
+        weekActivities: Number(rpcStats?.week_activities) || 0,
+        monthActivities: Number(rpcStats?.month_activities) || 0,
         topActivityTypes,
       };
 

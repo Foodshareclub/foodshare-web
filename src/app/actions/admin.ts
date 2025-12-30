@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import type { ErrorCode } from "@/lib/errors";
+import { escapeFilterValue } from "@/lib/utils";
 
 // ============================================================================
 // Zod Schemas
@@ -276,8 +277,9 @@ export async function getUsers(
       .select("id, first_name, second_name, email, created_time, is_active", { count: "exact" });
 
     if (search) {
+      const safeSearch = escapeFilterValue(search);
       query = query.or(
-        `first_name.ilike.%${search}%,second_name.ilike.%${search}%,email.ilike.%${search}%`
+        `first_name.ilike.%${safeSearch}%,second_name.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%`
       );
     }
 

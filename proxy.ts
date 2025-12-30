@@ -37,6 +37,16 @@ const authLimiter = redis
     })
   : null;
 
+// Mutation rate limiter: 50 mutations per minute per IP (POST/PUT/DELETE)
+const mutationLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(50, "1 m"),
+      analytics: true,
+      prefix: "ratelimit:mutations",
+    })
+  : null;
+
 /**
  * Get client IP from request headers
  */
@@ -71,6 +81,23 @@ export async function proxy(request: NextRequest) {
             },
           });
         }
+      }
+    }
+
+    // Apply stricter rate limiting to mutations (POST, PUT, DELETE)
+    const method = request.method;
+    if ((method === "POST" || method === "PUT" || method === "DELETE") && mutationLimiter) {
+      const { success, reset } = await mutationLimiter.limit(`${ip}:mutations`);
+      if (!success) {
+        return new NextResponse("Too Many Requests - Mutation Limit", {
+          status: 429,
+          headers: {
+            "Retry-After": String(Math.ceil((reset - Date.now()) / 1000)),
+            "X-RateLimit-Limit": "50",
+            "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Type": "mutations",
+          },
+        });
       }
     }
 

@@ -7,7 +7,7 @@
 
 import { apiCache } from "@/lib/api-cache";
 import { createLogger } from "@/lib/logger";
-import type { PerformanceMemory } from "@/types/web-apis.types";
+import type { PerformanceMemory, PerformanceEventTiming } from "@/types/web-apis.types";
 import { getPerformanceMemory } from "@/types/web-apis.types";
 
 const logger = createLogger("PerformanceMonitor");
@@ -28,7 +28,7 @@ class PerformanceMonitor {
    * Start monitoring (dev only)
    */
   start(intervalMs: number = 30000) {
-    if (process.env.NODE_ENV !== 'production') return;
+    if (process.env.NODE_ENV !== "production") return;
 
     logger.debug("📊 Performance monitoring started");
 
@@ -168,10 +168,8 @@ class PerformanceMonitor {
    * Get First Input Delay
    */
   private getFID(): number {
-    const fidEntries = performance.getEntriesByType("first-input");
-    return fidEntries.length > 0
-      ? (fidEntries[0] as any).processingStart - fidEntries[0].startTime
-      : 0;
+    const fidEntries = performance.getEntriesByType("first-input") as PerformanceEventTiming[];
+    return fidEntries.length > 0 ? fidEntries[0].processingStart - fidEntries[0].startTime : 0;
   }
 
   /**
@@ -254,7 +252,7 @@ class PerformanceMonitor {
 export const performanceMonitor = new PerformanceMonitor();
 
 // Auto-start in development
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== "production") {
   // Start monitoring after page load
   window.addEventListener("load", () => {
     setTimeout(() => {
@@ -264,7 +262,7 @@ if (process.env.NODE_ENV !== 'production') {
   });
 
   // Expose to window for manual access
-  (window as any).performanceMonitor = performanceMonitor;
-  (window as any).logPerformance = () => performanceMonitor.logMetrics();
-  (window as any).logWebVitals = () => performanceMonitor.logWebVitals();
+  window.performanceMonitor = performanceMonitor;
+  window.logPerformance = () => performanceMonitor.logMetrics();
+  window.logWebVitals = () => performanceMonitor.logWebVitals();
 }

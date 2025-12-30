@@ -7,76 +7,75 @@
  * Used in post detail pages and admin dashboards.
  */
 
-import { formatDistanceToNow } from "date-fns";
 import {
-  FiPlus,
-  FiEdit,
-  FiTrash2,
-  FiRotateCcw,
-  FiToggleRight,
-  FiToggleLeft,
-  FiClock,
-  FiEye,
-  FiMessageCircle,
-  FiCheckCircle,
-  FiXCircle,
-  FiPackage,
-  FiAlertCircle,
-  FiFlag,
-  FiAlertTriangle,
-  FiCheck,
-  FiThumbsUp,
-  FiThumbsDown,
-  FiEyeOff,
-  FiHeart,
-  FiShare2,
-  FiBookmark,
-  FiEdit3,
-  FiFileText,
-  FiSettings,
-  FiPower,
-  FiMapPin,
-  FiImage,
-} from "react-icons/fi";
-import { cn } from "@/lib/utils";
+  Plus,
+  Pencil,
+  Trash2,
+  RotateCcw,
+  ToggleRight,
+  ToggleLeft,
+  Clock,
+  Eye,
+  MessageCircle,
+  CheckCircle,
+  XCircle,
+  Package,
+  AlertCircle,
+  Flag,
+  AlertTriangle,
+  Check,
+  ThumbsUp,
+  ThumbsDown,
+  EyeOff,
+  Heart,
+  Share2,
+  Bookmark,
+  PenLine,
+  FileText,
+  Settings,
+  Power,
+  MapPin,
+  Image,
+} from "lucide-react";
+import { cn, formatDate } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { PostActivityTimelineItem, PostActivityType } from "@/types/post-activity.types";
 import { ACTIVITY_TYPE_LABELS, ACTIVITY_TYPE_COLORS } from "@/types/post-activity.types";
 
 // Icon mapping
 const ACTIVITY_ICONS: Record<PostActivityType, React.ComponentType<{ className?: string }>> = {
-  created: FiPlus,
-  updated: FiEdit,
-  deleted: FiTrash2,
-  restored: FiRotateCcw,
-  activated: FiToggleRight,
-  deactivated: FiToggleLeft,
-  expired: FiClock,
-  viewed: FiEye,
-  contacted: FiMessageCircle,
-  arranged: FiCheckCircle,
-  arrangement_cancelled: FiXCircle,
-  collected: FiPackage,
-  not_collected: FiAlertCircle,
-  reported: FiFlag,
-  flagged: FiAlertTriangle,
-  unflagged: FiCheck,
-  approved: FiThumbsUp,
-  rejected: FiThumbsDown,
-  hidden: FiEyeOff,
-  unhidden: FiEye,
-  liked: FiHeart,
-  unliked: FiHeart,
-  shared: FiShare2,
-  bookmarked: FiBookmark,
-  unbookmarked: FiBookmark,
-  admin_edited: FiEdit3,
-  admin_note_added: FiFileText,
-  admin_status_changed: FiSettings,
-  auto_expired: FiClock,
-  auto_deactivated: FiPower,
-  location_updated: FiMapPin,
-  images_updated: FiImage,
+  created: Plus,
+  updated: Pencil,
+  deleted: Trash2,
+  restored: RotateCcw,
+  activated: ToggleRight,
+  deactivated: ToggleLeft,
+  expired: Clock,
+  viewed: Eye,
+  contacted: MessageCircle,
+  arranged: CheckCircle,
+  arrangement_cancelled: XCircle,
+  collected: Package,
+  not_collected: AlertCircle,
+  reported: Flag,
+  flagged: AlertTriangle,
+  unflagged: Check,
+  approved: ThumbsUp,
+  rejected: ThumbsDown,
+  hidden: EyeOff,
+  unhidden: Eye,
+  liked: Heart,
+  unliked: Heart,
+  shared: Share2,
+  bookmarked: Bookmark,
+  unbookmarked: Bookmark,
+  admin_edited: PenLine,
+  admin_note_added: FileText,
+  admin_status_changed: Settings,
+  auto_expired: Clock,
+  auto_deactivated: Power,
+  location_updated: MapPin,
+  images_updated: Image,
 };
 
 interface PostActivityTimelineProps {
@@ -122,7 +121,7 @@ interface ActivityItemProps {
 }
 
 function ActivityItem({ activity, showActor, compact }: ActivityItemProps) {
-  const Icon = ACTIVITY_ICONS[activity.activity_type] || FiClock;
+  const Icon = ACTIVITY_ICONS[activity.activity_type] || Clock;
   const colorClass = ACTIVITY_TYPE_COLORS[activity.activity_type] || "text-gray-500";
   const label = ACTIVITY_TYPE_LABELS[activity.activity_type] || activity.activity_type;
 
@@ -168,7 +167,7 @@ function ActivityItem({ activity, showActor, compact }: ActivityItemProps) {
             className="text-xs text-muted-foreground flex-shrink-0"
             dateTime={activity.created_at}
           >
-            {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
+            {formatDate(activity.created_at, { format: "relative-short" })}
           </time>
         </div>
 

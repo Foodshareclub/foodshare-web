@@ -97,7 +97,7 @@ export const getAllMapLocations = unstable_cache(
 
 /**
  * Get nearby locations within a bounding box
- * Useful for viewport-based loading
+ * Uses PostGIS RPC for efficient spatial queries
  */
 export async function getNearbyLocations(
   bounds: {
@@ -106,43 +106,61 @@ export async function getNearbyLocations(
     east: number;
     west: number;
   },
-  productType?: string
+  productType?: string,
+  limit: number = 500
 ): Promise<LocationType[]> {
+  // Round bounds to reduce cache fragmentation (precision: ~10m)
+  const precision = 4;
+  const roundedBounds = {
+    north: Number(bounds.north.toFixed(precision)),
+    south: Number(bounds.south.toFixed(precision)),
+    east: Number(bounds.east.toFixed(precision)),
+    west: Number(bounds.west.toFixed(precision)),
+  };
+
   const cacheKey = productType
-    ? `nearby-locations-${productType}-${bounds.north}-${bounds.south}-${bounds.east}-${bounds.west}`
-    : `nearby-locations-all-${bounds.north}-${bounds.south}-${bounds.east}-${bounds.west}`;
+    ? `nearby-locations-${productType}-${roundedBounds.north}-${roundedBounds.south}-${roundedBounds.east}-${roundedBounds.west}`
+    : `nearby-locations-all-${roundedBounds.north}-${roundedBounds.south}-${roundedBounds.east}-${roundedBounds.west}`;
 
   return unstable_cache(
     async (): Promise<LocationType[]> => {
       const supabase = createCachedClient();
 
-      // Use PostGIS ST_MakeEnvelope for efficient bounding box query
-      // Note: This requires the location column to have a spatial index
-      let query = supabase
-        .from("posts_with_location")
-        .select("id, location_json, post_name, post_type, images")
-        .eq("is_active", true);
+      // Use PostGIS RPC for efficient spatial index query
+      const { data, error } = await supabase.rpc("get_posts_in_bounds", {
+        min_lng: roundedBounds.west,
+        min_lat: roundedBounds.south,
+        max_lng: roundedBounds.east,
+        max_lat: roundedBounds.north,
+        filter_post_type: productType?.toLowerCase() ?? null,
+        result_limit: limit,
+      });
 
-      if (productType) {
-        query = query.eq("post_type", productType.toLowerCase());
+      if (error) {
+        // Fallback to JS filtering if RPC not available (migration not applied)
+        console.warn("[getNearbyLocations] RPC failed, falling back to JS filter:", error.message);
+        return getNearbyLocationsFallback(bounds, productType);
       }
 
-      const { data, error } = await query;
+      // Transform RPC result to LocationType format
+      const locations: LocationType[] = (data ?? []).map(
+        (item: {
+          id: number;
+          post_name: string;
+          post_type: string;
+          images: string[];
+          location_json: LocationType["location_json"];
+        }) => ({
+          id: item.id,
+          post_name: item.post_name,
+          post_type: item.post_type,
+          images: item.images,
+          location_json: item.location_json,
+        })
+      );
 
-      if (error) throw new Error(error.message);
-
-      // Filter by bounds in JavaScript (PostGIS filtering would be more efficient)
-      // TODO: Add PostGIS bounding box query when RPC function is available
-      const filtered = (data ?? []).filter((item) => {
-        const loc = item.location_json as { coordinates?: [number, number] } | null;
-        if (!loc?.coordinates) return false;
-        const [lng, lat] = loc.coordinates;
-        return (
-          lat >= bounds.south && lat <= bounds.north && lng >= bounds.west && lng <= bounds.east
-        );
-      });
       // Apply location privacy (~200m approximation) for user safety
-      return applyLocationPrivacy(filtered);
+      return applyLocationPrivacy(locations);
     },
     [cacheKey],
     {
@@ -150,6 +168,39 @@ export async function getNearbyLocations(
       tags: [CACHE_TAGS.PRODUCT_LOCATIONS],
     }
   )();
+}
+
+/**
+ * Fallback: Get nearby locations using JS filtering
+ * Used when PostGIS RPC is not available
+ */
+async function getNearbyLocationsFallback(
+  bounds: { north: number; south: number; east: number; west: number },
+  productType?: string
+): Promise<LocationType[]> {
+  const supabase = createCachedClient();
+
+  let query = supabase
+    .from("posts_with_location")
+    .select("id, location_json, post_name, post_type, images")
+    .eq("is_active", true);
+
+  if (productType) {
+    query = query.eq("post_type", productType.toLowerCase());
+  }
+
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+
+  // Filter by bounds in JavaScript
+  const filtered = (data ?? []).filter((item) => {
+    const loc = item.location_json as { coordinates?: [number, number] } | null;
+    if (!loc?.coordinates) return false;
+    const [lng, lat] = loc.coordinates;
+    return lat >= bounds.south && lat <= bounds.north && lng >= bounds.west && lng <= bounds.east;
+  });
+
+  return applyLocationPrivacy(filtered);
 }
 
 /**

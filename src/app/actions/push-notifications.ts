@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { ROLE_IDS } from "@/lib/constants";
+import { sendPushTask, broadcastPushTask } from "@/trigger/push-notifications";
 
 interface PushPayload {
   type: string;
@@ -89,12 +91,11 @@ export async function broadcastPushNotification(payload: PushPayload): Promise<S
   }
 
   // Check if user has admin role via user_roles table
-  // Admin role_id = 6, superadmin role_id = 7
   const { data: adminRole } = await supabase
     .from("user_roles")
     .select("role_id")
     .eq("profile_id", user.id)
-    .in("role_id", [6, 7])
+    .in("role_id", [ROLE_IDS.ADMIN, ROLE_IDS.SUPERADMIN])
     .limit(1)
     .maybeSingle();
 
@@ -115,4 +116,80 @@ export async function broadcastPushNotification(payload: PushPayload): Promise<S
   const userIds = [...new Set(tokens.map((t) => t.profile_id))];
 
   return sendPushNotification(userIds, payload);
+}
+
+// ============================================================================
+// Async Push Notifications (Background Jobs via Trigger.dev)
+// ============================================================================
+
+/**
+ * Send push notification asynchronously (non-blocking)
+ * Uses Trigger.dev for background processing
+ */
+export async function sendPushNotificationAsync(
+  userId: string,
+  title: string,
+  body: string,
+  data?: Record<string, string>
+): Promise<{ triggered: boolean }> {
+  try {
+    await sendPushTask.trigger({
+      userId,
+      title,
+      body,
+      data,
+    });
+    return { triggered: true };
+  } catch (error) {
+    console.error("[sendPushNotificationAsync] Failed to queue:", error);
+    return { triggered: false };
+  }
+}
+
+/**
+ * Broadcast push notification to multiple users asynchronously
+ * Uses Trigger.dev for background processing with batching
+ */
+export async function broadcastPushNotificationAsync(
+  userIds: string[],
+  title: string,
+  body: string,
+  data?: Record<string, string>
+): Promise<{ triggered: boolean }> {
+  const supabase = await createClient();
+
+  // Verify caller is admin
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { triggered: false };
+  }
+
+  // Check admin role
+  const { data: adminRole } = await supabase
+    .from("user_roles")
+    .select("role_id")
+    .eq("profile_id", user.id)
+    .in("role_id", [ROLE_IDS.ADMIN, ROLE_IDS.SUPERADMIN])
+    .limit(1)
+    .maybeSingle();
+
+  if (!adminRole) {
+    return { triggered: false };
+  }
+
+  try {
+    await broadcastPushTask.trigger({
+      userIds,
+      title,
+      body,
+      data,
+    });
+    return { triggered: true };
+  } catch (error) {
+    console.error("[broadcastPushNotificationAsync] Failed to queue:", error);
+    return { triggered: false };
+  }
 }

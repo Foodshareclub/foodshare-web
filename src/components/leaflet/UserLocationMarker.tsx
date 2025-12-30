@@ -6,11 +6,6 @@ import { useState, useEffect } from "react";
 import type { Icon, IconOptions, LatLng } from "leaflet";
 import { MapPin, X, Loader2 } from "lucide-react";
 
-// Icon aliases for consistency
-const FaMapMarkerAlt = MapPin;
-const FaTimes = X;
-const FaSpinner = Loader2;
-
 type LocationMarkerType = {
   icon: Icon<IconOptions>;
 };
@@ -63,7 +58,7 @@ const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
             <Popup>
               <div className="flex flex-col gap-1 items-start">
                 <p className="flex items-center gap-1 font-semibold text-sm">
-                  <FaMapMarkerAlt className="text-red-500" />
+                  <MapPin className="text-red-500" />
                   Your location
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -98,22 +93,22 @@ const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
         >
           {isLoading ? (
             <>
-              <FaSpinner className="animate-spin" />
+              <Loader2 className="animate-spin" />
               Finding...
             </>
           ) : error ? (
             <>
-              <FaTimes />
+              <X />
               Retry
             </>
           ) : position ? (
             <>
-              <FaMapMarkerAlt />
+              <MapPin />
               Located
             </>
           ) : (
             <>
-              <FaMapMarkerAlt />
+              <MapPin />
               Locate Me
             </>
           )}

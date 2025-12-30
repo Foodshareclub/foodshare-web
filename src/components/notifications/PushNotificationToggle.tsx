@@ -1,6 +1,6 @@
 "use client";
 
-import { FiBell, FiBellOff } from "react-icons/fi";
+import { Bell, BellOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -37,18 +37,19 @@ export function PushNotificationToggle({
         size={showLabel ? "default" : "icon"}
         onClick={handleClick}
         disabled={isLoading || permission === "denied"}
-        title={
+        aria-label={
           permission === "denied"
             ? "Notifications blocked in browser settings"
             : isSubscribed
-              ? "Disable notifications"
-              : "Enable notifications"
+              ? "Disable push notifications"
+              : "Enable push notifications"
         }
+        aria-pressed={isSubscribed}
       >
         {isSubscribed ? (
-          <FiBell className={cn("h-4 w-4", showLabel && "mr-2")} />
+          <Bell className={cn("h-4 w-4", showLabel && "mr-2")} aria-hidden="true" />
         ) : (
-          <FiBellOff className={cn("h-4 w-4", showLabel && "mr-2")} />
+          <BellOff className={cn("h-4 w-4", showLabel && "mr-2")} aria-hidden="true" />
         )}
         {showLabel && (isSubscribed ? "Notifications On" : "Enable Notifications")}
       </Button>

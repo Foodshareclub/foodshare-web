@@ -11,20 +11,58 @@ import {
 } from "@/lib/data/cache-keys";
 import { trackEvent } from "@/app/actions/analytics";
 import { logPostActivity as _logPostActivity } from "@/app/actions/post-activity";
+import {
+  indexProduct,
+  removeProductFromSearch,
+  type ProductSearchDocument,
+} from "@/lib/storage/search";
+import { embedProduct } from "@/lib/embeddings";
+import { createActionLogger } from "@/lib/structured-logger";
 
 // NOTE: Data functions (getProducts, getAllProducts, etc.) should be imported
 // directly from '@/lib/data/products' - they cannot be re-exported from a
 // 'use server' file as only async server actions are allowed.
 
-const IS_DEV = process.env.NODE_ENV === "development";
-
 /**
- * Conditional logging - only logs in development
+ * Index a product for full-text search (fire-and-forget)
+ * Runs asynchronously to avoid blocking the main action
  */
-function devLog(context: string, message: string, data?: unknown): void {
-  if (!IS_DEV) return;
-  const dataStr = data ? ` ${JSON.stringify(data)}` : "";
-  console.log(`[${context}] ${message}${dataStr}`);
+async function indexProductForSearch(
+  productId: number,
+  productData: {
+    post_name: string;
+    post_description: string;
+    post_type: string;
+    post_address?: string;
+    profile_id: string;
+    is_active?: boolean;
+  }
+): Promise<void> {
+  try {
+    const searchDoc: ProductSearchDocument = {
+      id: productId.toString(),
+      title: productData.post_name,
+      description: productData.post_description,
+      type: productData.post_type,
+      location: productData.post_address || "",
+      userId: productData.profile_id,
+      createdAt: new Date().toISOString(),
+      active: productData.is_active ?? true,
+      content: {
+        title: productData.post_name,
+        description: productData.post_description,
+        type: productData.post_type,
+      },
+    };
+
+    const success = await indexProduct(searchDoc);
+    if (!success) {
+      console.warn("[indexProductForSearch] Failed to index product", { id: productId });
+    }
+  } catch (error) {
+    // Non-blocking - log and continue
+    console.error("[indexProductForSearch] Error:", error);
+  }
 }
 
 /**
@@ -69,7 +107,8 @@ const updateProductSchema = createProductSchema.partial().extend({
  * Create a new product
  */
 export async function createProduct(formData: FormData): Promise<ActionResult<{ id: number }>> {
-  devLog("createProduct", "🚀 Starting...");
+  const logger = await createActionLogger("createProduct");
+  logger.info("Starting product creation");
 
   // Parse form data - convert null to undefined for optional fields
   const getString = (key: string): string => (formData.get(key) as string) ?? "";
@@ -101,7 +140,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     profile_id: getString("profile_id"),
   };
 
-  devLog("createProduct", "📝 Parsed", {
+  logger.debug("Parsed form data", {
     post_name: rawData.post_name,
     post_type: rawData.post_type,
     images_count: rawData.images?.length,
@@ -110,7 +149,7 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
   // Validate with standard helper
   const validation = validateWithSchema(createProductSchema, rawData);
   if (!validation.success) {
-    devLog("createProduct", "❌ Validation failed", validation.error);
+    logger.warn("Validation failed", { error: validation.error });
     return validation;
   }
 
@@ -142,15 +181,33 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     // Batch invalidate all product caches
     invalidateProductCaches(data.id, validation.data.post_type, validation.data.profile_id);
 
-    devLog("createProduct", "✅ Created", { id: data.id });
+    logger.info("Product created", { id: data.id });
     return { id: data.id };
   }, "createProduct").then(async (result) => {
     if (result.success && result.data) {
-      // Fire-and-forget analytics (don't block response)
-      trackEvent("Listing Created", {
-        listingId: result.data.id,
-        type: formData.get("post_type") as string,
-      }).catch(() => {});
+      // Fire-and-forget: analytics, search indexing, and embeddings (don't block response)
+      Promise.all([
+        trackEvent("Listing Created", {
+          listingId: result.data.id,
+          type: formData.get("post_type") as string,
+        }),
+        indexProductForSearch(result.data.id, {
+          post_name: formData.get("post_name") as string,
+          post_description: formData.get("post_description") as string,
+          post_type: formData.get("post_type") as string,
+          post_address: formData.get("post_address") as string | undefined,
+          profile_id: formData.get("profile_id") as string,
+          is_active: true,
+        }),
+        embedProduct({
+          id: result.data.id,
+          title: formData.get("post_name") as string,
+          description: formData.get("post_description") as string,
+          type: formData.get("post_type") as string,
+          location: (formData.get("post_address") as string) || undefined,
+          userId: formData.get("profile_id") as string,
+        }),
+      ]).catch(() => {});
     }
     return result;
   });
@@ -163,7 +220,8 @@ export async function updateProduct(
   id: number,
   formData: FormData
 ): Promise<ActionResult<undefined>> {
-  devLog("updateProduct", "🚀 Starting", { id });
+  const logger = await createActionLogger("updateProduct");
+  logger.info("Starting product update", { id });
 
   // Parse form data
   const rawData: Record<string, unknown> = {};
@@ -200,7 +258,7 @@ export async function updateProduct(
   // Validate with Zod (partial schema for updates)
   const validation = validateWithSchema(updateProductSchema, rawData);
   if (!validation.success) {
-    devLog("updateProduct", "❌ Validation failed", validation.error);
+    logger.warn("Validation failed", { error: validation.error });
     return validation;
   }
 
@@ -239,7 +297,27 @@ export async function updateProduct(
       invalidateProductCaches(id, validation.data.post_type);
     }
 
-    devLog("updateProduct", "✅ Updated", { id });
+    // Fire-and-forget: re-embed if content changed
+    if (validation.data.post_name || validation.data.post_description) {
+      const { data: updatedProduct } = await supabase
+        .from("posts")
+        .select("post_name, post_description, post_type, post_address, profile_id")
+        .eq("id", id)
+        .single();
+
+      if (updatedProduct) {
+        embedProduct({
+          id,
+          title: updatedProduct.post_name,
+          description: updatedProduct.post_description,
+          type: updatedProduct.post_type,
+          location: updatedProduct.post_address || undefined,
+          userId: updatedProduct.profile_id,
+        }).catch(() => {});
+      }
+    }
+
+    logger.info("Product updated", { id });
     return undefined;
   }, "updateProduct");
 }
@@ -249,7 +327,8 @@ export async function updateProduct(
  * This unpublishes the listing rather than permanently deleting it
  */
 export async function deleteProduct(id: number): Promise<ActionResult<undefined>> {
-  devLog("deleteProduct", "🚀 Starting soft delete", { id });
+  const logger = await createActionLogger("deleteProduct");
+  logger.info("Starting soft delete", { id });
 
   return withErrorHandling(async () => {
     const supabase = await createClient();
@@ -288,7 +367,10 @@ export async function deleteProduct(id: number): Promise<ActionResult<undefined>
     // Batch invalidate all product caches
     invalidateProductCaches(id, product.post_type, product.profile_id);
 
-    devLog("deleteProduct", "✅ Unpublished", { id });
+    // Remove from search index (fire-and-forget)
+    removeProductFromSearch(id.toString()).catch(() => {});
+
+    logger.info("Product unpublished", { id });
     return undefined;
   }, "deleteProduct");
 }

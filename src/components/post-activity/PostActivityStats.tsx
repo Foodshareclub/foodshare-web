@@ -1,19 +1,11 @@
-"use client";
-
 /**
- * Post Activity Stats Component
+ * Post Activity Stats Component (Server Component)
  *
  * Displays activity statistics for a post in a compact card format.
+ * Pure display component - no client-side interactivity needed.
  */
 
-import {
-  FiEye,
-  FiMessageCircle,
-  FiCheckCircle,
-  FiPackage,
-  FiHeart,
-  FiShare2,
-} from "react-icons/fi";
+import { Eye, MessageCircle, CheckCircle, Package, Heart, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PostActivityCounts } from "@/types/post-activity.types";
 
@@ -23,12 +15,12 @@ interface PostActivityStatsProps {
 }
 
 const STAT_CONFIG = [
-  { key: "viewed", label: "Views", icon: FiEye, color: "text-gray-500" },
-  { key: "contacted", label: "Contacts", icon: FiMessageCircle, color: "text-blue-500" },
-  { key: "arranged", label: "Arranged", icon: FiCheckCircle, color: "text-green-500" },
-  { key: "collected", label: "Collected", icon: FiPackage, color: "text-green-600" },
-  { key: "liked", label: "Likes", icon: FiHeart, color: "text-pink-500" },
-  { key: "shared", label: "Shares", icon: FiShare2, color: "text-blue-500" },
+  { key: "viewed", label: "Views", icon: Eye, color: "text-gray-500" },
+  { key: "contacted", label: "Contacts", icon: MessageCircle, color: "text-blue-500" },
+  { key: "arranged", label: "Arranged", icon: CheckCircle, color: "text-green-500" },
+  { key: "collected", label: "Collected", icon: Package, color: "text-green-600" },
+  { key: "liked", label: "Likes", icon: Heart, color: "text-pink-500" },
+  { key: "shared", label: "Shares", icon: Share2, color: "text-blue-500" },
 ] as const;
 
 export function PostActivityStats({ counts, className }: PostActivityStatsProps) {

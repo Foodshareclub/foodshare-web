@@ -3,8 +3,8 @@
  * Centralized types for product/post data structures
  */
 
-import type { PostGISGeography, GeoJSONPoint } from './postgis.types';
-import { parsePostGISPoint } from '@/utils/postgis';
+import type { PostGISGeography, GeoJSONPoint } from "./postgis.types";
+import { parsePostGISPoint } from "@/utils/postgis";
 
 /**
  * Review type for product reviews
@@ -58,10 +58,19 @@ export type LocationType = {
 };
 
 /**
+ * Product type with extracted coordinates (for map display)
+ * Used when coordinates have been computed from PostGIS location
+ */
+export type ProductWithCoordinates = InitialProductStateType & {
+  latitude: number;
+  longitude: number;
+};
+
+/**
  * Helper to get coordinates from product (PostGIS format)
  * Checks location_json (GeoJSON from computed column) first,
  * then falls back to location field for backwards compatibility
- * 
+ *
  * Best practice: Use posts_with_location view which provides location_json
  * as proper GeoJSON via ST_AsGeoJSON()
  */
@@ -69,7 +78,7 @@ export function getCoordinates(
   product: InitialProductStateType | LocationType
 ): { lat: number; lng: number } | null {
   // Prefer location_json (GeoJSON from computed column via ST_AsGeoJSON)
-  if ('location_json' in product && product.location_json) {
+  if ("location_json" in product && product.location_json) {
     const parsed = parsePostGISPoint(product.location_json);
     if (parsed) {
       return { lat: parsed.latitude, lng: parsed.longitude };

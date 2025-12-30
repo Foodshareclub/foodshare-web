@@ -5,6 +5,9 @@
 
 import { supabase } from "@/lib/supabase/client";
 import type { SegmentFilters } from "@/types/campaign.types";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("SegmentBuilderAPI");
 
 // =============================================================================
 // SEGMENT BUILDER FUNCTIONS
@@ -27,13 +30,13 @@ export async function calculateSegmentSize(filters: SegmentFilters) {
     const { count, error } = await query;
 
     if (error) {
-      console.error("Error calculating segment size:", error);
+      logger.error("Error calculating segment size", error);
       return { data: null, error };
     }
 
     return { data: count || 0, error: null };
   } catch (error) {
-    console.error("Error calculating segment size:", error);
+    logger.error("Error calculating segment size", error as Error);
     return { data: null, error };
   }
 }
@@ -88,7 +91,7 @@ export async function getSampleMembers(filters: SegmentFilters, limit: number = 
     const { data, error } = await query;
 
     if (error) {
-      console.error("Error fetching sample members:", error);
+      logger.error("Error fetching sample members", error);
       return { data: null, error };
     }
 
@@ -145,7 +148,7 @@ export async function getSampleMembers(filters: SegmentFilters, limit: number = 
 
     return { data: members, error: null };
   } catch (error) {
-    console.error("Error fetching sample members:", error);
+    logger.error("Error fetching sample members", error as Error);
     return { data: null, error };
   }
 }
@@ -440,18 +443,15 @@ export function validateSegmentFilters(filters: SegmentFilters): {
  * Apply segment filters to a Supabase query
  * Internal helper function to consistently apply filters across all queries
  * Uses generic type to preserve Supabase query builder chain type
+ *
+ * Note: Using `any` here because PostgrestFilterBuilder has complex generics
+ * that are difficult to type correctly while maintaining chainability
  */
-/* eslint-disable @typescript-eslint/no-unsafe-function-type */
-function applySegmentFilters<
-  T extends {
-    eq: Function;
-    gte: Function;
-    lte: Function;
-    in: Function;
-    contains: Function;
-  },
->(query: T, filters: SegmentFilters): T {
-  /* eslint-enable @typescript-eslint/no-unsafe-function-type */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function applySegmentFilters<T extends { eq: any; gte: any; lte: any; in: any; contains: any }>(
+  query: T,
+  filters: SegmentFilters
+): T {
   // Customer type
   if (filters.customer_type && filters.customer_type !== "all") {
     query = query.eq("customer_type", filters.customer_type);

@@ -2,24 +2,63 @@
 
 /**
  * EmailCRMClient - Advanced Email CRM Management Interface
- * Modular version with extracted components
+ * Modular version with lazy-loaded tabs for optimal bundle size
+ * Real-time updates via Supabase Realtime (no polling)
  */
 
 import React, { useState, useTransition } from "react";
-import { AnimatePresence } from "framer-motion";
-import { Plus, Send, Mail, Users, Zap } from "lucide-react";
-import type { TabType, Props, ProviderHealth } from "./types";
+import dynamic from "next/dynamic";
+import { Plus, Send, Mail, Users, Zap, Loader2, Wifi, WifiOff } from "lucide-react";
+import type { TabType, EmailCRMClientProps, ProviderHealth } from "./types";
 import { TABS } from "./constants";
 import { ProviderHealthBadge } from "./shared/ProviderComponents";
 import { TabContent } from "./shared/TabContent";
-import {
-  DashboardTab,
-  CampaignsTab,
-  AutomationTab,
-  AudienceTab,
-  ComposeTab,
-  ProvidersTab,
-} from "./tabs";
+import { DashboardTab } from "./tabs/DashboardTab";
+import { useEmailCRMRealtime, getConnectionStatusColor } from "@/hooks/queries/useEmailCRMRealtime";
+import { useEmailCRMData } from "@/hooks/queries/useEmailCRM";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
+// Lazy-load tabs - only Dashboard loads eagerly (most common entry point)
+
+const CampaignsTab = dynamic(
+  () => import("./tabs/CampaignsTab").then((m) => ({ default: m.CampaignsTab })),
+  {
+    loading: () => <TabSkeleton />,
+  }
+);
+const AutomationTab = dynamic(
+  () => import("./tabs/AutomationTab").then((m) => ({ default: m.AutomationTab })),
+  {
+    loading: () => <TabSkeleton />,
+  }
+);
+const AudienceTab = dynamic(
+  () => import("./tabs/AudienceTab").then((m) => ({ default: m.AudienceTab })),
+  {
+    loading: () => <TabSkeleton />,
+  }
+);
+const ComposeTab = dynamic(
+  () => import("./tabs/ComposeTab").then((m) => ({ default: m.ComposeTab })),
+  {
+    loading: () => <TabSkeleton />,
+  }
+);
+const ProvidersTab = dynamic(
+  () => import("./tabs/ProvidersTab").then((m) => ({ default: m.ProvidersTab })),
+  {
+    loading: () => <TabSkeleton />,
+  }
+);
+
+// Lightweight skeleton for tab loading
+function TabSkeleton() {
+  return (
+    <div className="flex items-center justify-center py-12">
+      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -56,16 +95,28 @@ function getDefaultStats(): EmailDashboardStats {
   };
 }
 
-export function EmailCRMClient({ initialData }: Props) {
+export function EmailCRMClient({ initialData }: EmailCRMClientProps) {
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [_isPending, _startTransition] = useTransition();
 
-  // Data state (use initial data or defaults)
-  const stats = initialData?.stats || getDefaultStats();
-  const providerHealth = initialData?.providerHealth || [];
-  const campaigns = initialData?.campaigns || [];
-  const automations = initialData?.automations || [];
-  const segments = initialData?.segments || [];
+  // Enable realtime updates - invalidates React Query cache on changes
+  const { connectionStatus, reconnect } = useEmailCRMRealtime();
+
+  // Fetch live data (updated by realtime hook)
+  const {
+    stats: liveStats,
+    providerHealth: liveHealth,
+    campaigns: liveCampaigns,
+    automations: liveAutomations,
+    segments: liveSegments,
+  } = useEmailCRMData();
+
+  // Use live data if available, fall back to initial data, then defaults
+  const stats = liveStats || initialData?.stats || getDefaultStats();
+  const providerHealth = liveHealth || initialData?.providerHealth || [];
+  const campaigns = liveCampaigns || initialData?.campaigns || [];
+  const automations = liveAutomations || initialData?.automations || [];
+  const segments = liveSegments || initialData?.segments || [];
 
   // Quota calculation
   const quotaPercent =
@@ -78,8 +129,46 @@ export function EmailCRMClient({ initialData }: Props) {
       {/* Header with Provider Health & Quota */}
       <div className="flex-shrink-0 border-b border-border/40 bg-card/50 backdrop-blur-sm">
         <div className="flex items-center justify-between gap-4 p-4">
-          {/* Provider Health Indicators */}
+          {/* Provider Health Indicators + Live Status */}
           <div className="flex items-center gap-3">
+            {/* Realtime Connection Status */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={connectionStatus === "disconnected" ? reconnect : undefined}
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/50 transition-colors"
+                >
+                  {connectionStatus === "connected" ? (
+                    <Wifi className="h-3.5 w-3.5 text-emerald-500" />
+                  ) : (
+                    <WifiOff className="h-3.5 w-3.5 text-muted-foreground" />
+                  )}
+                  <span
+                    className={cn(
+                      "h-2 w-2 rounded-full",
+                      getConnectionStatusColor(connectionStatus)
+                    )}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {connectionStatus === "connected"
+                      ? "Live"
+                      : connectionStatus === "reconnecting"
+                        ? "..."
+                        : "Offline"}
+                  </span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {connectionStatus === "connected"
+                  ? "Real-time updates active"
+                  : connectionStatus === "reconnecting"
+                    ? "Reconnecting to server..."
+                    : "Click to reconnect"}
+              </TooltipContent>
+            </Tooltip>
+
+            <div className="h-4 w-px bg-border" />
+
             {providerHealth.map((provider: ProviderHealth) => (
               <ProviderHealthBadge key={provider.provider} provider={provider} />
             ))}
@@ -162,43 +251,41 @@ export function EmailCRMClient({ initialData }: Props) {
       {/* Main Content Area - Scrollable */}
       <ScrollArea className="flex-1">
         <div className="p-6">
-          <AnimatePresence mode="wait">
-            {activeTab === "dashboard" && (
-              <TabContent key="dashboard">
-                <DashboardTab
-                  stats={stats}
-                  campaigns={campaigns}
-                  automations={automations}
-                  providerHealth={providerHealth}
-                />
-              </TabContent>
-            )}
-            {activeTab === "campaigns" && (
-              <TabContent key="campaigns">
-                <CampaignsTab campaigns={campaigns} />
-              </TabContent>
-            )}
-            {activeTab === "automation" && (
-              <TabContent key="automation">
-                <AutomationTab automations={automations} />
-              </TabContent>
-            )}
-            {activeTab === "audience" && (
-              <TabContent key="audience">
-                <AudienceTab segments={segments} stats={stats} />
-              </TabContent>
-            )}
-            {activeTab === "compose" && (
-              <TabContent key="compose">
-                <ComposeTab />
-              </TabContent>
-            )}
-            {activeTab === "providers" && (
-              <TabContent key="providers">
-                <ProvidersTab providerHealth={providerHealth} />
-              </TabContent>
-            )}
-          </AnimatePresence>
+          {activeTab === "dashboard" && (
+            <TabContent key="dashboard">
+              <DashboardTab
+                stats={stats}
+                campaigns={campaigns}
+                automations={automations}
+                providerHealth={providerHealth}
+              />
+            </TabContent>
+          )}
+          {activeTab === "campaigns" && (
+            <TabContent key="campaigns">
+              <CampaignsTab campaigns={campaigns} />
+            </TabContent>
+          )}
+          {activeTab === "automation" && (
+            <TabContent key="automation">
+              <AutomationTab automations={automations} />
+            </TabContent>
+          )}
+          {activeTab === "audience" && (
+            <TabContent key="audience">
+              <AudienceTab segments={segments} stats={stats} />
+            </TabContent>
+          )}
+          {activeTab === "compose" && (
+            <TabContent key="compose">
+              <ComposeTab />
+            </TabContent>
+          )}
+          {activeTab === "providers" && (
+            <TabContent key="providers">
+              <ProvidersTab providerHealth={providerHealth} />
+            </TabContent>
+          )}
         </div>
       </ScrollArea>
     </div>

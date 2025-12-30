@@ -8,16 +8,10 @@ import React from "react";
 import { useTranslations } from "next-intl";
 import { useProviderQuotas } from "@/hooks/useEmailManagement";
 import { PROVIDER_NAMES } from "@/lib/email/constants";
+import type { ProviderQuotaStatus } from "@/types/email-management.types";
 
-// Local type definitions (previously in @/api/admin/emailManagement)
-export interface ProviderQuotaStatus {
-  provider: string;
-  status: "ok" | "warning" | "exhausted";
-  usage_percentage: number;
-  emails_sent: number;
-  remaining: number;
-  daily_limit: number;
-}
+// Re-export for backwards compatibility
+export type { ProviderQuotaStatus } from "@/types/email-management.types";
 
 interface QuotaMeterProps {
   quota: ProviderQuotaStatus;

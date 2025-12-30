@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Award,
   CheckCircle,
@@ -15,21 +14,9 @@ import {
   Trash2,
 } from "lucide-react";
 import { RichTextViewer } from "./RichTextViewer";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import type { ForumComment } from "@/api/forumAPI";
 import { useAuth } from "@/hooks/useAuth";
-
-// Icon aliases for consistency
-const FaAward = Award;
-const FaCheckCircle = CheckCircle;
-const FaChevronDown = ChevronDown;
-const FaCommentDots = MessageCircle;
-const FaEdit = Pencil;
-const FaEllipsisH = MoreHorizontal;
-const FaFlag = Flag;
-const FaHeart = Heart;
-const FaReply = Reply;
-const FaTrash = Trash2;
 
 type ForumCommentCardProps = {
   comment: ForumComment;
@@ -69,21 +56,6 @@ export function ForumCommentCard({
   const [isLiked, setIsLiked] = useState(false);
   const isOwnComment = userId === comment.user_id;
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return "Just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
-  };
-
   // React Compiler optimizes these handlers automatically
   const handleToggleReplies = () => {
     if (!expanded && onLoadReplies && comment.replies_count > 0) {
@@ -105,24 +77,16 @@ export function ForumCommentCard({
   };
 
   return (
-    <motion.div
-      className={getIndentation()}
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.3 }}
-    >
+    <div className={cn(getIndentation(), "animate-in fade-in slide-in-from-left-2 duration-300")}>
       {/* Thread connector for nested comments */}
       {comment.depth > 0 && (
         <div className="flex items-start mb-2">
-          <FaReply className="w-4 h-4 text-muted-foreground/50 mr-2 mt-1 flex-shrink-0" />
+          <Reply className="w-4 h-4 text-muted-foreground/50 mr-2 mt-1 flex-shrink-0" />
           <span className="text-xs text-muted-foreground">&quot;Reply&quot;</span>
         </div>
       )}
 
-      <motion.div
-        whileHover={{ scale: 1.005 }}
-        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-      >
+      <div className="transition-transform duration-200 hover:scale-[1.005]">
         <div
           className={cn(
             "rounded-2xl p-0 mb-3 overflow-hidden transition-all duration-300",
@@ -133,15 +97,11 @@ export function ForumCommentCard({
         >
           {/* Best Answer Banner */}
           {comment.is_best_answer && (
-            <motion.div
-              initial={{ height: 0 }}
-              animate={{ height: "auto" }}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 flex items-center gap-2"
-            >
-              <FaAward className="w-4 h-4 text-white" />
+            <div className="bg-gradient-to-r from-green-500 to-emerald-500 px-4 py-2 flex items-center gap-2 animate-in slide-in-from-top duration-300">
+              <Award className="w-4 h-4 text-white" />
               <span className="text-white text-sm font-semibold">&quot;Best Answer&quot;</span>
-              <FaCheckCircle className="w-4 h-4 text-white ml-auto" />
-            </motion.div>
+              <CheckCircle className="w-4 h-4 text-white ml-auto" />
+            </div>
           )}
 
           <div className="p-4 md:p-5">
@@ -166,7 +126,7 @@ export function ForumCommentCard({
                   {/* Post author badge */}
                   {isPostAuthor && (
                     <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
-                      <FaCheckCircle className="w-3 h-3 text-white" />
+                      <CheckCircle className="w-3 h-3 text-white" />
                     </span>
                   )}
                 </div>
@@ -183,10 +143,12 @@ export function ForumCommentCard({
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <span>{formatDate(comment.comment_created_at)}</span>
+                    <span>
+                      {formatDate(comment.comment_created_at, { format: "relative-short" })}
+                    </span>
                     {comment.is_edited && (
                       <span className="italic flex items-center gap-1">
-                        <FaEdit className="w-3 h-3" />
+                        <Pencil className="w-3 h-3" />
                         &quot;edited&quot;
                       </span>
                     )}
@@ -196,82 +158,72 @@ export function ForumCommentCard({
 
               {/* Actions Menu */}
               <div className="relative">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                <button
+                  className="p-2 rounded-full hover:bg-gray-100 hover:scale-110 active:scale-95 transition-all"
                   onClick={() => setShowMenu(!showMenu)}
                 >
-                  <FaEllipsisH className="w-4 h-4 text-muted-foreground" />
-                </motion.button>
+                  <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
+                </button>
 
-                <AnimatePresence>
-                  {showMenu && (
-                    <>
-                      {/* Backdrop to close menu */}
-                      <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-0 top-10 bg-popover rounded-xl shadow-xl border border-border py-2 z-20 min-w-[160px] overflow-hidden"
-                      >
-                        {isOwnComment && onEdit && (
+                {showMenu && (
+                  <>
+                    {/* Backdrop to close menu */}
+                    <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
+                    <div className="absolute right-0 top-10 bg-popover rounded-xl shadow-xl border border-border py-2 z-20 min-w-[160px] overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-150">
+                      {isOwnComment && onEdit && (
+                        <button
+                          className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted/50 flex items-center gap-3 transition-colors"
+                          onClick={() => {
+                            onEdit(comment);
+                            setShowMenu(false);
+                          }}
+                        >
+                          <Pencil className="w-4 h-4 text-muted-foreground" />
+                          &quot;Edit&quot;
+                        </button>
+                      )}
+                      {isOwnComment && onDelete && (
+                        <button
+                          className="w-full px-4 py-2.5 text-left text-sm hover:bg-red-50 flex items-center gap-3 text-red-600 transition-colors"
+                          onClick={() => {
+                            onDelete(comment.id);
+                            setShowMenu(false);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          &quot;Delete&quot;
+                        </button>
+                      )}
+                      {!isOwnComment && onReport && (
+                        <button
+                          className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted/50 flex items-center gap-3 transition-colors"
+                          onClick={() => {
+                            onReport(comment.id);
+                            setShowMenu(false);
+                          }}
+                        >
+                          <Flag className="w-4 h-4 text-muted-foreground" />
+                          &quot;Report&quot;
+                        </button>
+                      )}
+                      {isPostAuthor && !comment.is_best_answer && onMarkBestAnswer && (
+                        <>
+                          <div className="h-px bg-gray-100 my-1" />
                           <button
-                            className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted/50 flex items-center gap-3 transition-colors"
+                            className="w-full px-4 py-2.5 text-left text-sm hover:bg-green-50 flex items-center gap-3 text-green-600 transition-colors"
                             onClick={() => {
-                              onEdit(comment);
+                              onMarkBestAnswer(comment.id);
                               setShowMenu(false);
                             }}
                           >
-                            <FaEdit className="w-4 h-4 text-muted-foreground" />
-                            &quot;Edit&quot;
+                            <Award className="w-4 h-4" />
+                            &quot;Mark as Best&quot;
                           </button>
-                        )}
-                        {isOwnComment && onDelete && (
-                          <button
-                            className="w-full px-4 py-2.5 text-left text-sm hover:bg-red-50 flex items-center gap-3 text-red-600 transition-colors"
-                            onClick={() => {
-                              onDelete(comment.id);
-                              setShowMenu(false);
-                            }}
-                          >
-                            <FaTrash className="w-4 h-4" />
-                            &quot;Delete&quot;
-                          </button>
-                        )}
-                        {!isOwnComment && onReport && (
-                          <button
-                            className="w-full px-4 py-2.5 text-left text-sm hover:bg-muted/50 flex items-center gap-3 transition-colors"
-                            onClick={() => {
-                              onReport(comment.id);
-                              setShowMenu(false);
-                            }}
-                          >
-                            <FaFlag className="w-4 h-4 text-muted-foreground" />
-                            &quot;Report&quot;
-                          </button>
-                        )}
-                        {isPostAuthor && !comment.is_best_answer && onMarkBestAnswer && (
-                          <>
-                            <div className="h-px bg-gray-100 my-1" />
-                            <button
-                              className="w-full px-4 py-2.5 text-left text-sm hover:bg-green-50 flex items-center gap-3 text-green-600 transition-colors"
-                              onClick={() => {
-                                onMarkBestAnswer(comment.id);
-                                setShowMenu(false);
-                              }}
-                            >
-                              <FaAward className="w-4 h-4" />
-                              &quot;Mark as Best&quot;
-                            </button>
-                          </>
-                        )}
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
+                        </>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -287,93 +239,78 @@ export function ForumCommentCard({
             {/* Footer: Actions */}
             <div className="flex items-center gap-1 pl-[52px]">
               {onLike && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all ${
+                <button
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all hover:scale-105 active:scale-95",
                     isLiked
                       ? "bg-red-500/10 text-red-600 dark:text-red-400"
                       : "text-muted-foreground hover:bg-muted hover:text-red-500"
-                  }`}
+                  )}
                   onClick={handleLike}
                 >
-                  <FaHeart className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
+                  <Heart className={cn("w-4 h-4", isLiked && "fill-current")} />
                   <span className="font-medium">
                     {(comment.likes_count || 0) + (isLiked ? 1 : 0)}
                   </span>
-                </motion.button>
+                </button>
               )}
 
               {onReply && comment.depth < 2 && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-muted-foreground hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
+                <button
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-muted-foreground hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 transition-all hover:scale-105 active:scale-95"
                   onClick={() => onReply(comment.id)}
                 >
-                  <FaReply className="w-4 h-4" />
+                  <Reply className="w-4 h-4" />
                   &quot;Reply&quot;
-                </motion.button>
+                </button>
               )}
 
               {comment.replies_count > 0 && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-muted-foreground hover:bg-muted transition-all ml-auto"
+                <button
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm text-muted-foreground hover:bg-muted transition-all hover:scale-105 active:scale-95 ml-auto"
                   onClick={handleToggleReplies}
                 >
-                  <FaCommentDots className="w-4 h-4" />
+                  <MessageCircle className="w-4 h-4" />
                   <span className="font-medium">{comment.replies_count}</span>
-                  <motion.span
-                    animate={{ rotate: expanded ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
+                  <span
+                    className={cn("transition-transform duration-200", expanded && "rotate-180")}
                   >
-                    <FaChevronDown className="w-4 h-4" />
-                  </motion.span>
-                </motion.button>
+                    <ChevronDown className="w-4 h-4" />
+                  </span>
+                </button>
               )}
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Nested Replies with animation */}
-      <AnimatePresence>
-        {expanded && replies.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="relative"
-          >
-            {/* Vertical thread line */}
-            <div className="absolute left-5 top-0 bottom-4 w-0.5 bg-gradient-to-b from-gray-200 to-transparent" />
+      {expanded && replies.length > 0 && (
+        <div className="relative animate-in fade-in slide-in-from-top-2 duration-300">
+          {/* Vertical thread line */}
+          <div className="absolute left-5 top-0 bottom-4 w-0.5 bg-gradient-to-b from-gray-200 to-transparent" />
 
-            <div className="space-y-2">
-              {replies.map((reply, index) => (
-                <motion.div
-                  key={reply.id}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <ForumCommentCard
-                    comment={reply}
-                    isPostAuthor={isPostAuthor}
-                    onReply={onReply}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                    onLike={onLike}
-                    onReport={onReport}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+          <div className="space-y-2">
+            {replies.map((reply, index) => (
+              <div
+                key={reply.id}
+                className="animate-in fade-in slide-in-from-top-2 duration-300"
+                style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
+              >
+                <ForumCommentCard
+                  comment={reply}
+                  isPostAuthor={isPostAuthor}
+                  onReply={onReply}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onLike={onLike}
+                  onReport={onReport}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

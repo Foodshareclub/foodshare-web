@@ -7,6 +7,7 @@
 import { unstable_cache } from "next/cache";
 import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
 import { createClient, createCachedClient } from "@/lib/supabase/server";
+import { escapeFilterValue } from "@/lib/utils";
 
 // ============================================================================
 // Types
@@ -152,9 +153,10 @@ export async function getAdminListings(
     query = query.eq("post_type", category);
   }
 
-  // Apply search filter
+  // Apply search filter (escape special characters to prevent filter injection)
   if (search?.trim()) {
-    query = query.or(`post_name.ilike.%${search}%,post_description.ilike.%${search}%`);
+    const safeSearch = escapeFilterValue(search.trim());
+    query = query.or(`post_name.ilike.%${safeSearch}%,post_description.ilike.%${safeSearch}%`);
   }
 
   // Apply sorting

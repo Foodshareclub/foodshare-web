@@ -7,6 +7,7 @@
 import { unstable_cache } from "next/cache";
 import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
 import { createClient, createCachedClient } from "@/lib/supabase/server";
+import { cacheThrough, getLeaderboardKey, REDIS_TTL } from "@/lib/redis";
 import {
   type LeaderboardUser,
   type LeaderboardUserProfile,
@@ -36,29 +37,31 @@ interface RawLeaderboardRow {
 
 /**
  * Get challenge leaderboard - top users by completed challenges
- * Uses optimized RPC function with fallback to manual query
+ * Uses two-tier caching: Redis (distributed) -> unstable_cache -> RPC
  */
 export const getChallengeLeaderboard = unstable_cache(
   async (limit: number = LEADERBOARD_LIMIT): Promise<LeaderboardUser[]> => {
-    const supabase = createCachedClient();
+    // Try Redis cache first (distributed cache for multi-instance)
+    return cacheThrough(
+      getLeaderboardKey(limit),
+      async () => {
+        const supabase = createCachedClient();
 
-    // Query with optimized RPC function
-    const { data, error } = await supabase.rpc("get_challenge_leaderboard", {
-      limit_count: limit,
-    });
+        // Query with optimized RPC function (replaces N+1 JS aggregation)
+        const { data, error } = await supabase.rpc("get_challenge_leaderboard", {
+          limit_count: limit,
+        });
 
-    // If RPC doesn't exist, fall back to manual query
-    if (error?.code === "42883" || error?.code === "PGRST202") {
-      console.warn("Leaderboard RPC not found, using manual query");
-      return getLeaderboardManual(limit);
-    }
+        if (error) {
+          console.error("Error fetching leaderboard:", error);
+          // Fallback to manual query only on error
+          return getLeaderboardManual(limit);
+        }
 
-    if (error) {
-      console.error("Error fetching leaderboard:", error);
-      return getLeaderboardManual(limit); // Fallback on any error
-    }
-
-    return transformLeaderboardData(data || []);
+        return transformLeaderboardData(data || []);
+      },
+      REDIS_TTL.LEADERBOARD
+    );
   },
   ["challenge-leaderboard"],
   {

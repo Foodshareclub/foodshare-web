@@ -1,10 +1,33 @@
-import { Metadata } from "next";
-import { AnalyticsDashboard } from "@/components/admin/analytics/AnalyticsDashboard";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Analytics | FoodShare Admin",
-  description: "Platform analytics and insights",
-};
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
+
+function AnalyticsLoadingFallback() {
+  return (
+    <div className="grid gap-6 p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Skeleton className="h-32 rounded-xl" />
+        <Skeleton className="h-32 rounded-xl" />
+        <Skeleton className="h-32 rounded-xl" />
+        <Skeleton className="h-32 rounded-xl" />
+      </div>
+      <Skeleton className="h-[400px] rounded-xl" />
+    </div>
+  );
+}
+
+// Lazy-load AnalyticsDashboard (includes Recharts ~290KB) - only loads on this route
+const AnalyticsDashboard = dynamic(
+  () =>
+    import("@/components/admin/analytics/AnalyticsDashboard").then((m) => ({
+      default: m.AnalyticsDashboard,
+    })),
+  {
+    ssr: false,
+    loading: AnalyticsLoadingFallback,
+  }
+);
 
 export default function AdminAnalyticsPage() {
   return (

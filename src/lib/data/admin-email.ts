@@ -117,23 +117,20 @@ export interface AudienceSegment {
 export const getEmailDashboardStats = unstable_cache(
   async (): Promise<EmailDashboardStats> => {
     const supabase = createCachedClient();
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const today = new Date().toISOString().split("T")[0];
-
-    // Parallel fetch for performance
+    // Parallel fetch: RPC for email stats + counts for subscribers/automations
     const [
+      // Single RPC replaces campaign + quota aggregation queries
+      emailStatsRes,
+      // These still need separate queries (different tables)
       subscribersRes,
       activeSubsRes,
       registeredUsersRes,
-      campaignsRes,
       automationsRes,
       suppressionRes,
-      _bounceRes,
-      dailyQuotaRes,
-      monthlyQuotaRes,
     ] = await Promise.all([
+      // Optimized RPC for campaign + quota stats
+      supabase.rpc("get_email_dashboard_stats"),
       // Total newsletter subscribers (external)
       supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }),
       // Active newsletter subscribers
@@ -143,12 +140,6 @@ export const getEmailDashboardStats = unstable_cache(
         .eq("status", "active"),
       // Registered users with email preferences (internal subscribers)
       supabase.from("email_preferences").select("*", { count: "exact", head: true }),
-      // Campaign stats (last 30 days)
-      supabase
-        .from("newsletter_campaigns")
-        .select("total_sent, total_opened, total_clicked, total_unsubscribed, total_bounced")
-        .eq("status", "sent")
-        .gte("sent_at", thirtyDaysAgo.toISOString()),
       // Active automations
       supabase
         .from("email_automation_flows")
@@ -156,74 +147,33 @@ export const getEmailDashboardStats = unstable_cache(
         .eq("status", "active"),
       // Suppression list count
       supabase.from("email_suppression_list").select("*", { count: "exact", head: true }),
-      // Bounce count (last 30 days)
-      supabase
-        .from("email_bounce_events")
-        .select("*", { count: "exact", head: true })
-        .eq("event_type", "bounce")
-        .gte("created_at", thirtyDaysAgo.toISOString()),
-      // Today's quota data
-      supabase.from("email_provider_quota").select("*").eq("date", today),
-      // Monthly quota data (last 30 days)
-      supabase
-        .from("email_provider_quota")
-        .select("provider, emails_sent")
-        .gte("date", thirtyDaysAgo.toISOString().split("T")[0]),
     ]);
 
-    // Calculate campaign aggregates
-    const campaigns = campaignsRes.data || [];
-    const totalSent = campaigns.reduce((sum, c) => sum + (c.total_sent || 0), 0);
-    const totalOpened = campaigns.reduce((sum, c) => sum + (c.total_opened || 0), 0);
-    const totalClicked = campaigns.reduce((sum, c) => sum + (c.total_clicked || 0), 0);
-    const totalUnsubscribed = campaigns.reduce((sum, c) => sum + (c.total_unsubscribed || 0), 0);
-    const totalBounced = campaigns.reduce((sum, c) => sum + (c.total_bounced || 0), 0);
-
-    // Process quota data
-    const dailyQuota = dailyQuotaRes.data || [];
-    const monthlyQuota = monthlyQuotaRes.data || [];
-
-    // Calculate daily totals
-    let dailyUsed = 0;
-    let dailyLimit = 0;
-    for (const q of dailyQuota) {
-      dailyUsed += q.emails_sent || 0;
-      dailyLimit += q.daily_limit || 0;
-    }
-
-    // Calculate monthly totals
-    let monthlyUsed = 0;
-    let monthlyLimit = 0;
-    for (const q of monthlyQuota) {
-      monthlyUsed += q.emails_sent || 0;
-    }
-
-    // Get monthly limit from today's quota data (all providers)
-    for (const q of dailyQuota) {
-      monthlyLimit += q.monthly_limit || 0;
-    }
-
-    // Fallback defaults if no quota data
-    if (dailyLimit === 0) dailyLimit = 500;
-    if (monthlyLimit === 0) monthlyLimit = 15000;
+    // Extract stats from RPC
+    const stats = emailStatsRes.data?.[0];
 
     // Combine newsletter subscribers + registered users with email prefs
     const totalSubs = (subscribersRes.count || 0) + (registeredUsersRes.count || 0);
     const activeSubs = (activeSubsRes.count || 0) + (registeredUsersRes.count || 0);
 
+    // Use RPC values or defaults
+    const totalSent = Number(stats?.total_sent) || 0;
+    const dailyLimit = Number(stats?.daily_quota_limit) || 500;
+    const monthlyLimit = Number(stats?.monthly_quota_limit) || 15000;
+
     return {
       totalSubscribers: totalSubs,
       activeSubscribers: activeSubs,
       emailsSent30d: totalSent,
-      avgOpenRate: totalSent > 0 ? Math.round((totalOpened / totalSent) * 1000) / 10 : 0,
-      avgClickRate: totalOpened > 0 ? Math.round((totalClicked / totalOpened) * 1000) / 10 : 0,
-      unsubscribeRate: totalSent > 0 ? Math.round((totalUnsubscribed / totalSent) * 1000) / 10 : 0,
-      bounceRate: totalSent > 0 ? Math.round((totalBounced / totalSent) * 1000) / 10 : 0,
-      activeCampaigns: campaigns.length,
+      avgOpenRate: Number(stats?.avg_open_rate) || 0,
+      avgClickRate: Number(stats?.avg_click_rate) || 0,
+      unsubscribeRate: Number(stats?.unsubscribe_rate) || 0,
+      bounceRate: Number(stats?.bounce_rate) || 0,
+      activeCampaigns: Number(stats?.active_campaigns) || 0,
       activeAutomations: automationsRes.count || 0,
-      dailyQuotaUsed: dailyUsed,
+      dailyQuotaUsed: Number(stats?.daily_quota_used) || 0,
       dailyQuotaLimit: dailyLimit,
-      monthlyQuotaUsed: monthlyUsed,
+      monthlyQuotaUsed: Number(stats?.monthly_quota_used) || 0,
       monthlyQuotaLimit: monthlyLimit,
       suppressedEmails: suppressionRes.count || 0,
     };

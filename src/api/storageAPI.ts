@@ -26,6 +26,9 @@ import {
   type UploadError,
   type RetryConfig,
 } from "@/lib/upload";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("StorageAPI");
 
 // ============================================================================
 // Types
@@ -166,9 +169,7 @@ export const storageAPI = {
     const { bucket, filePath, file, validate = true, retryConfig } = params;
     const config = { ...UPLOAD_CONFIG, ...retryConfig };
 
-    const logPrefix = "[storageAPI.uploadImage]";
-
-    console.log(`${logPrefix} 🚀 Starting upload:`, {
+    logger.debug("Starting upload", {
       bucket,
       filePath,
       size: file.size,
@@ -185,7 +186,7 @@ export const storageAPI = {
         if (bucketKey) {
           const validation = validateFile(file, bucketKey);
           if (!validation.valid) {
-            console.log(`${logPrefix} ❌ Validation failed:`, validation.error);
+            logger.warn("Validation failed", { error: validation.error });
             return { data: null, error: new Error(validation.error) };
           }
         }
@@ -208,7 +209,7 @@ export const storageAPI = {
         const storageType = forceSupabase ? "supabase" : "r2";
 
         // Get presigned URL from server
-        console.log(`${logPrefix} 🌐 Getting ${storageType} upload URL...`);
+        logger.debug("Getting upload URL", { storageType });
 
         const directUpload = await getDirectUploadUrl(
           bucket,
@@ -227,7 +228,7 @@ export const storageAPI = {
         }
 
         const actualStorage = directUpload.storage || "supabase";
-        console.log(`${logPrefix} 📤 Uploading to ${actualStorage}...`);
+        logger.debug("Uploading to storage", { storage: actualStorage });
 
         // Retry loop
         let lastError: UploadError | undefined;
@@ -236,10 +237,12 @@ export const storageAPI = {
           try {
             if (attempt > 0) {
               const delay = calculateBackoffDelay(attempt - 1, config);
-              console.log(
-                `${logPrefix} 🔄 Retry ${attempt}/${config.maxRetries} for ${actualStorage}, ` +
-                  `waiting ${Math.round(delay)}ms...`
-              );
+              logger.debug("Retrying upload", {
+                attempt,
+                maxRetries: config.maxRetries,
+                storage: actualStorage,
+                delayMs: Math.round(delay),
+              });
               await sleep(delay);
             }
 
@@ -252,7 +255,7 @@ export const storageAPI = {
             );
 
             if (result.ok) {
-              console.log(`${logPrefix} ✅ Upload successful via ${actualStorage}`);
+              logger.debug("Upload successful", { storage: actualStorage });
               return { success: true, storage: actualStorage };
             }
 
@@ -260,11 +263,11 @@ export const storageAPI = {
             const httpError = new Error(`HTTP ${result.status}: ${result.errorText}`);
             lastError = classifyError(httpError, { status: result.status } as Response);
 
-            console.log(
-              `${logPrefix} ⚠️ Attempt ${attempt + 1} failed:`,
-              lastError.type,
-              lastError.message
-            );
+            logger.warn("Upload attempt failed", {
+              attempt: attempt + 1,
+              errorType: lastError.type,
+              message: lastError.message,
+            });
 
             // Don't retry non-retriable errors
             if (!lastError.retriable) {
@@ -274,11 +277,11 @@ export const storageAPI = {
             // Network/CORS/timeout error
             lastError = classifyError(fetchError);
 
-            console.log(
-              `${logPrefix} ⚠️ Attempt ${attempt + 1} exception:`,
-              lastError.type,
-              lastError.message
-            );
+            logger.warn("Upload attempt exception", {
+              attempt: attempt + 1,
+              errorType: lastError.type,
+              message: lastError.message,
+            });
 
             // CORS errors won't fix themselves with retries
             if (lastError.type === "cors") {
@@ -306,7 +309,7 @@ export const storageAPI = {
       let result: UploadAttemptResult;
 
       if (isR2CircuitOpen()) {
-        console.log(`${logPrefix} ⚡ R2 circuit open, skipping to Supabase`);
+        logger.debug("R2 circuit open, skipping to Supabase");
         result = await attemptStorageUpload(true);
       } else {
         // Try R2
@@ -320,7 +323,7 @@ export const storageAPI = {
           recordR2Failure();
 
           const failureReason = result.error?.type || "unknown";
-          console.log(`${logPrefix} 🔄 R2 failed (${failureReason}), falling back to Supabase...`);
+          logger.debug("R2 failed, falling back to Supabase", { reason: failureReason });
 
           // Try Supabase
           result = await attemptStorageUpload(true);
@@ -339,7 +342,7 @@ export const storageAPI = {
           ? formatUploadError(result.error)
           : result.errorMessage || "Upload failed. Please try again.";
 
-        console.error(`${logPrefix} ❌ All upload attempts failed:`, userMessage);
+        logger.error("All upload attempts failed", new Error(userMessage));
         return { data: null, error: new Error(userMessage) };
       }
 
@@ -353,7 +356,7 @@ export const storageAPI = {
       };
     } catch (error) {
       // Unexpected error (shouldn't happen, but be safe)
-      console.error(`${logPrefix} ❌ Unexpected exception:`, error);
+      logger.error("Unexpected exception during upload", error as Error);
       return {
         data: null,
         error: new Error("An unexpected error occurred. Please try again."),

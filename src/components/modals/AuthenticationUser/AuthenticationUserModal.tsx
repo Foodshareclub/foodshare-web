@@ -32,6 +32,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createLogger } from "@/lib/logger";
+import { validateEmail } from "@/lib/validators/email";
 
 const logger = createLogger("AuthModal");
 
@@ -155,20 +156,6 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
     } finally {
       setIsRecoveringStorage(false);
     }
-  };
-
-  const validateEmail = (email: string): string => {
-    if (!email) {
-      return "";
-    }
-
-    // Basic email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return "Please enter a valid email address";
-    }
-
-    return "";
   };
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -487,7 +474,11 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     {mode === "signup" && (
                       <div className="flex gap-3">
                         <div className="flex-1">
+                          <label htmlFor="auth-first-name" className="sr-only">
+                            First name
+                          </label>
                           <Input
+                            id="auth-first-name"
                             placeholder={"First name"}
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
@@ -497,7 +488,11 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                           />
                         </div>
                         <div className="flex-1">
+                          <label htmlFor="auth-last-name" className="sr-only">
+                            Last name
+                          </label>
                           <Input
+                            id="auth-last-name"
                             placeholder={"Last name"}
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
@@ -511,7 +506,11 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
 
                     {/* Email */}
                     <div>
+                      <label htmlFor="auth-email" className="sr-only">
+                        Email address
+                      </label>
                       <Input
+                        id="auth-email"
                         type="email"
                         placeholder={"Email address"}
                         value={email}
@@ -527,11 +526,11 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                             : "focus:ring-foreground"
                         }`}
                         aria-invalid={!!emailError}
-                        aria-describedby={emailError ? "email-error" : undefined}
+                        aria-describedby={emailError ? "auth-email-error" : undefined}
                       />
                       {emailError && (
                         <p
-                          id="email-error"
+                          id="auth-email-error"
                           className="text-xs text-red-500 dark:text-red-400 mt-1"
                           role="alert"
                         >
@@ -542,7 +541,11 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
 
                     {/* Password */}
                     <div className="relative">
+                      <label htmlFor="auth-password" className="sr-only">
+                        Password
+                      </label>
                       <Input
+                        id="auth-password"
                         type={showPassword ? "text" : "password"}
                         placeholder={"Password"}
                         value={password}

@@ -261,121 +261,43 @@ export const getCustomerTagsCached = getCustomerTags;
 
 /**
  * Fetch CRM dashboard statistics
+ * Uses optimized RPC function for single-query aggregation
  */
 export async function getCRMDashboardStats(): Promise<CRMDashboardStats> {
   const supabase = await createClient();
 
-  // Fetch total customers
-  const { count: totalCustomers } = await supabase
-    .from("crm_customers")
-    .select("*", { count: "exact", head: true })
-    .eq("is_archived", false);
+  // Use optimized RPC for main stats (replaces 7-8 queries + JS aggregation)
+  const { data: rpcData, error: rpcError } = await supabase.rpc("get_crm_dashboard_stats");
 
-  // Fetch lifecycle stage counts
-  const { data: lifecycleData } = await supabase
-    .from("crm_customers")
-    .select("lifecycle_stage")
-    .eq("is_archived", false);
+  // Parallel fetch for tags and champions (still need separate queries)
+  const [tagRes, championsRes] = await Promise.all([
+    supabase.from("crm_customer_tag_assignments").select(`
+      tag_id,
+      tag:tag_id (name)
+    `),
+    supabase
+      .from("crm_customers")
+      .select(
+        `
+        id,
+        profile_id,
+        ltv_score,
+        profiles:profile_id (first_name, second_name)
+      `
+      )
+      .eq("lifecycle_stage", "champion")
+      .order("ltv_score", { ascending: false })
+      .limit(5),
+  ]);
 
-  const lifecycleCounts = {
-    lead: 0,
-    active: 0,
-    champion: 0,
-    at_risk: 0,
-    churned: 0,
-  };
-
-  lifecycleData?.forEach((item: { lifecycle_stage: string }) => {
-    if (item.lifecycle_stage in lifecycleCounts) {
-      lifecycleCounts[item.lifecycle_stage as keyof typeof lifecycleCounts]++;
-    }
-  });
-
-  // Fetch customer type counts
-  const { data: customerTypeData } = await supabase
-    .from("crm_customers")
-    .select("customer_type")
-    .eq("is_archived", false);
-
-  const customerTypeCounts = {
-    donor: 0,
-    receiver: 0,
-    both: 0,
-  };
-
-  customerTypeData?.forEach((item: { customer_type: string }) => {
-    if (item.customer_type in customerTypeCounts) {
-      customerTypeCounts[item.customer_type as keyof typeof customerTypeCounts]++;
-    }
-  });
-
-  // Fetch average metrics
-  const { data: metricsData } = await supabase
-    .from("crm_customers")
-    .select("engagement_score, churn_risk_score, ltv_score, total_interactions")
-    .eq("is_archived", false);
-
-  const averages = {
-    engagement: 0,
-    churnRisk: 0,
-    ltv: 0,
-    interactions: 0,
-  };
-
-  if (metricsData && metricsData.length > 0) {
-    interface MetricsItem {
-      engagement_score: number | null;
-      churn_risk_score: number | null;
-      ltv_score: number | null;
-      total_interactions: number | null;
-    }
-
-    const sum = metricsData.reduce(
-      (acc, item: MetricsItem) => ({
-        engagement: acc.engagement + (item.engagement_score || 0),
-        churnRisk: acc.churnRisk + (item.churn_risk_score || 0),
-        ltv: acc.ltv + (item.ltv_score || 0),
-        interactions: acc.interactions + (item.total_interactions || 0),
-      }),
-      { engagement: 0, churnRisk: 0, ltv: 0, interactions: 0 }
-    );
-
-    averages.engagement = Math.round(sum.engagement / metricsData.length);
-    averages.churnRisk = Math.round(sum.churnRisk / metricsData.length);
-    averages.ltv = Math.round(sum.ltv / metricsData.length);
-    averages.interactions = Math.round(sum.interactions);
-  }
-
-  // Fetch new customers counts
-  const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-  const { count: newThisWeek } = await supabase
-    .from("crm_customers")
-    .select("*", { count: "exact", head: true })
-    .gte("created_at", oneWeekAgo.toISOString());
-
-  const oneMonthAgo = new Date();
-  oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-
-  const { count: newThisMonth } = await supabase
-    .from("crm_customers")
-    .select("*", { count: "exact", head: true })
-    .gte("created_at", oneMonthAgo.toISOString());
-
-  // Fetch top tags
-  const { data: tagData } = await supabase.from("crm_customer_tag_assignments").select(`
-    tag_id,
-    tag:tag_id (name)
-  `);
-
+  // Process tags
   interface TagAssignment {
     tag_id: string;
     tag: { name: string }[];
   }
 
   const tagCounts: Record<string, number> = {};
-  (tagData as unknown as TagAssignment[] | null)?.forEach((item) => {
+  (tagRes.data as unknown as TagAssignment[] | null)?.forEach((item) => {
     const tagName = item.tag?.[0]?.name;
     if (tagName) {
       tagCounts[tagName] = (tagCounts[tagName] || 0) + 1;
@@ -387,21 +309,7 @@ export async function getCRMDashboardStats(): Promise<CRMDashboardStats> {
     .sort((a, b) => b.customer_count - a.customer_count)
     .slice(0, 5);
 
-  // Fetch top champions
-  const { data: championsData } = await supabase
-    .from("crm_customers")
-    .select(
-      `
-      id,
-      profile_id,
-      ltv_score,
-      profiles:profile_id (first_name, second_name)
-    `
-    )
-    .eq("lifecycle_stage", "champion")
-    .order("ltv_score", { ascending: false })
-    .limit(5);
-
+  // Process champions
   interface ChampionData {
     id: string;
     profile_id: string;
@@ -410,7 +318,7 @@ export async function getCRMDashboardStats(): Promise<CRMDashboardStats> {
   }
 
   const topChampions =
-    (championsData as unknown as ChampionData[] | null)?.map((item) => ({
+    (championsRes.data as unknown as ChampionData[] | null)?.map((item) => ({
       customer_id: item.id,
       full_name:
         [item.profiles?.[0]?.first_name, item.profiles?.[0]?.second_name]
@@ -419,23 +327,52 @@ export async function getCRMDashboardStats(): Promise<CRMDashboardStats> {
       ltv_score: item.ltv_score,
     })) || [];
 
+  // Use RPC data or defaults
+  const stats = rpcData?.[0];
+  if (rpcError || !stats) {
+    console.error("Error fetching CRM stats:", rpcError);
+    // Return empty stats on error
+    return {
+      totalCustomers: 0,
+      activeCustomers: 0,
+      newCustomersThisWeek: 0,
+      newCustomersThisMonth: 0,
+      leadCount: 0,
+      activeCount: 0,
+      championCount: 0,
+      atRiskCount: 0,
+      churnedCount: 0,
+      donorCount: 0,
+      receiverCount: 0,
+      bothCount: 0,
+      averageEngagementScore: 0,
+      averageChurnRisk: 0,
+      averageLTVScore: 0,
+      totalInteractions: 0,
+      interactionsThisWeek: 0,
+      interactionsThisMonth: 0,
+      topTags,
+      topChampions,
+    };
+  }
+
   return {
-    totalCustomers: totalCustomers || 0,
-    activeCustomers: lifecycleCounts.active + lifecycleCounts.champion,
-    newCustomersThisWeek: newThisWeek || 0,
-    newCustomersThisMonth: newThisMonth || 0,
-    leadCount: lifecycleCounts.lead,
-    activeCount: lifecycleCounts.active,
-    championCount: lifecycleCounts.champion,
-    atRiskCount: lifecycleCounts.at_risk,
-    churnedCount: lifecycleCounts.churned,
-    donorCount: customerTypeCounts.donor,
-    receiverCount: customerTypeCounts.receiver,
-    bothCount: customerTypeCounts.both,
-    averageEngagementScore: averages.engagement,
-    averageChurnRisk: averages.churnRisk,
-    averageLTVScore: averages.ltv,
-    totalInteractions: averages.interactions,
+    totalCustomers: Number(stats.total_customers) || 0,
+    activeCustomers: Number(stats.active_count) + Number(stats.champion_count) || 0,
+    newCustomersThisWeek: Number(stats.new_week_count) || 0,
+    newCustomersThisMonth: Number(stats.new_month_count) || 0,
+    leadCount: Number(stats.lead_count) || 0,
+    activeCount: Number(stats.active_count) || 0,
+    championCount: Number(stats.champion_count) || 0,
+    atRiskCount: Number(stats.at_risk_count) || 0,
+    churnedCount: Number(stats.churned_count) || 0,
+    donorCount: Number(stats.donor_count) || 0,
+    receiverCount: Number(stats.receiver_count) || 0,
+    bothCount: Number(stats.both_count) || 0,
+    averageEngagementScore: Number(stats.avg_engagement_score) || 0,
+    averageChurnRisk: Number(stats.avg_churn_risk) || 0,
+    averageLTVScore: Number(stats.avg_ltv_score) || 0,
+    totalInteractions: Number(stats.total_interactions_sum) || 0,
     interactionsThisWeek: 0,
     interactionsThisMonth: 0,
     topTags,

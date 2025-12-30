@@ -3,6 +3,7 @@
 import React, { useState, useCallback, useRef } from "react";
 import { X, Mail, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isValidEmail } from "@/lib/validators/email";
 
 interface EmailInputProps {
   emails: string[];
@@ -23,10 +24,6 @@ export const EmailInput: React.FC<EmailInputProps> = ({
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const validateEmail = (email: string): boolean => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-
   const addEmails = useCallback(
     (newEmails: string[]) => {
       const validEmails: string[] = [];
@@ -37,7 +34,7 @@ export const EmailInput: React.FC<EmailInputProps> = ({
         const trimmed = email.trim();
         if (!trimmed) return;
 
-        if (!validateEmail(trimmed)) {
+        if (!isValidEmail(trimmed)) {
           hasInvalid = true;
           return;
         }

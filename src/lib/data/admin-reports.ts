@@ -211,64 +211,25 @@ function roomsCountQuery(supabase: SupabaseClient, dateRange?: DateRange) {
 
 /**
  * Fetch comprehensive reports data for admin dashboard
- * Uses parallel queries for optimal performance
+ * Uses optimized RPC for counts + parallel queries for aggregations
  */
 export async function getReportsData(): Promise<ReportsData> {
   const supabase = await createClient();
 
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - DAYS_30_MS);
-  const sixtyDaysAgo = new Date(now.getTime() - DAYS_60_MS);
 
-  // Define date ranges for reuse
-  const last30Days: DateRange = { start: thirtyDaysAgo };
-  const prev30Days: DateRange = { start: sixtyDaysAgo, end: thirtyDaysAgo };
-
-  // Execute all queries in parallel for maximum performance
+  // Execute RPC + aggregation queries in parallel
   const [
-    // Totals
-    { count: totalListings },
-    { count: totalUsers },
-    { count: totalChats },
-    { count: totalArranged },
-    // Posts growth
-    { count: listingsLast30 },
-    { count: listingsPrev30 },
-    // Users growth
-    { count: usersLast30 },
-    { count: usersPrev30 },
-    // Chats growth
-    { count: chatsLast30 },
-    { count: chatsPrev30 },
-    // Arranged growth
-    { count: arrangedLast30 },
-    { count: arrangedPrev30 },
-    // Aggregation data
+    // Single RPC replaces 12 count queries
+    { data: statsData, error: statsError },
+    // Aggregation data (still need separate queries)
     { data: categoryData },
     { data: recentListings },
     { data: recentUsers },
   ] = await Promise.all([
-    // Total counts
-    postsCountQuery(supabase),
-    profilesCountQuery(supabase),
-    roomsCountQuery(supabase),
-    postsCountQuery(supabase, { isArranged: true }),
-
-    // Posts: last 30 days vs previous 30 days
-    postsCountQuery(supabase, { dateRange: last30Days }),
-    postsCountQuery(supabase, { dateRange: prev30Days }),
-
-    // Users: last 30 days vs previous 30 days
-    profilesCountQuery(supabase, last30Days),
-    profilesCountQuery(supabase, prev30Days),
-
-    // Chats: last 30 days vs previous 30 days
-    roomsCountQuery(supabase, last30Days),
-    roomsCountQuery(supabase, prev30Days),
-
-    // Arranged: last 30 days vs previous 30 days
-    postsCountQuery(supabase, { isArranged: true, arrangedDateRange: last30Days }),
-    postsCountQuery(supabase, { isArranged: true, arrangedDateRange: prev30Days }),
+    // Optimized RPC for all counts
+    supabase.rpc("get_admin_reports_stats", { p_days_window: 30 }),
 
     // Category breakdown
     supabase.from("posts").select("post_type"),
@@ -288,17 +249,35 @@ export async function getReportsData(): Promise<ReportsData> {
       .order("created_time", { ascending: true }),
   ]);
 
+  // Extract stats from RPC result
+  const stats = statsData?.[0];
+  if (statsError || !stats) {
+    console.error("Error fetching admin reports stats:", statsError);
+  }
+
   // Build response with computed aggregations
   return {
     overview: {
-      totalListings: totalListings ?? 0,
-      totalUsers: totalUsers ?? 0,
-      totalChats: totalChats ?? 0,
-      totalArranged: totalArranged ?? 0,
-      listingsGrowth: calculateGrowth(listingsLast30, listingsPrev30),
-      usersGrowth: calculateGrowth(usersLast30, usersPrev30),
-      chatsGrowth: calculateGrowth(chatsLast30, chatsPrev30),
-      arrangedGrowth: calculateGrowth(arrangedLast30, arrangedPrev30),
+      totalListings: Number(stats?.total_listings) || 0,
+      totalUsers: Number(stats?.total_users) || 0,
+      totalChats: Number(stats?.total_chats) || 0,
+      totalArranged: Number(stats?.total_arranged) || 0,
+      listingsGrowth: calculateGrowth(
+        Number(stats?.listings_last_period) || 0,
+        Number(stats?.listings_prev_period) || 0
+      ),
+      usersGrowth: calculateGrowth(
+        Number(stats?.users_last_period) || 0,
+        Number(stats?.users_prev_period) || 0
+      ),
+      chatsGrowth: calculateGrowth(
+        Number(stats?.chats_last_period) || 0,
+        Number(stats?.chats_prev_period) || 0
+      ),
+      arrangedGrowth: calculateGrowth(
+        Number(stats?.arranged_last_period) || 0,
+        Number(stats?.arranged_prev_period) || 0
+      ),
     },
     listingsByCategory: aggregateByCategory(categoryData),
     listingsByDay: aggregateByDay(recentListings),

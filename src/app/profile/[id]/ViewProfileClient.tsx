@@ -1,20 +1,13 @@
-"use client";
-
 /**
- * View Profile Client Component
- * Handles interactive elements for viewing another user's profile
+ * ViewProfile Component (Server Component)
+ * Displays another user's profile with minimal client-side interactivity
+ * Action buttons are extracted to ProfileActions client wrapper
  */
 
-import React from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { Mail, MapPin, Calendar } from "lucide-react";
+import { MapPin, Calendar } from "lucide-react";
+import { ProfileActions } from "./ProfileActions";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-
-// Icon aliases for consistency
-const FaEnvelope = Mail;
-const FaMapMarkerAlt = MapPin;
-const FaCalendar = Calendar;
 import peak from "@/assets/peakpx-min.jpg";
 import type { PublicProfile } from "@/lib/data/profiles";
 import type { AuthUser } from "@/lib/data/auth";
@@ -27,7 +20,6 @@ interface ViewProfileClientProps {
 }
 
 export function ViewProfileClient({ profile, user, isVolunteer = false }: ViewProfileClientProps) {
-  const router = useRouter();
   const isAuthenticated = !!user;
 
   const initials =
@@ -100,7 +92,7 @@ export function ViewProfileClient({ profile, user, isVolunteer = false }: ViewPr
               <div className="glass-subtle rounded-xl p-4">
                 <div className="flex items-center gap-3">
                   <div className="flex-shrink-0 p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-                    <FaCalendar className="text-emerald-600 dark:text-emerald-400" />
+                    <Calendar className="text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground uppercase font-medium">
@@ -116,7 +108,7 @@ export function ViewProfileClient({ profile, user, isVolunteer = false }: ViewPr
                 <div className="glass-subtle rounded-xl p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0 p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                      <FaMapMarkerAlt className="text-blue-600 dark:text-blue-400" />
+                      <MapPin className="text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground uppercase font-medium">
@@ -129,29 +121,9 @@ export function ViewProfileClient({ profile, user, isVolunteer = false }: ViewPr
               )}
             </div>
 
-            {/* Contact Button (Only for authenticated users) */}
-            {isAuthenticated && (
-              <div className="mt-8 flex justify-center">
-                <button
-                  onClick={() => router.push(`/chat?user=${profile.id}`)}
-                  className="px-8 py-3 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2"
-                >
-                  <FaEnvelope />
-                  Send Message
-                </button>
-              </div>
-            )}
+            {/* Action buttons (client component) */}
+            <ProfileActions profileId={profile.id} isAuthenticated={isAuthenticated} />
           </div>
-        </div>
-
-        {/* Back Button */}
-        <div className="mt-6 flex justify-center">
-          <button
-            onClick={() => router.back()}
-            className="px-6 py-2 text-muted-foreground hover:text-foreground font-medium transition-colors"
-          >
-            ← Back
-          </button>
         </div>
       </div>
     </div>

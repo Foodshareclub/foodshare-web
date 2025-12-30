@@ -495,7 +495,10 @@ export async function previewSegment(filters: SegmentFilters) {
       sample_members:
         (data as unknown as RawPreviewCustomer[] | null)?.map((customer) => ({
           customer_id: customer.id,
-          full_name: [customer.profiles?.[0]?.first_name, customer.profiles?.[0]?.second_name].filter(Boolean).join(' ') || "Unknown",
+          full_name:
+            [customer.profiles?.[0]?.first_name, customer.profiles?.[0]?.second_name]
+              .filter(Boolean)
+              .join(" ") || "Unknown",
           email: customer.profiles?.[0]?.email || "",
           lifecycle_stage: customer.lifecycle_stage,
           engagement_score: customer.engagement_score || 0,
@@ -523,7 +526,10 @@ export async function refreshSegmentMembers(id: string) {
       .single();
 
     if (segmentError || !segment) {
-      logger.error("Error fetching segment", segmentError ? new Error(segmentError.message) : undefined);
+      logger.error(
+        "Error fetching segment",
+        segmentError ? new Error(segmentError.message) : undefined
+      );
       return { data: null, error: segmentError };
     }
 
@@ -541,7 +547,10 @@ export async function refreshSegmentMembers(id: string) {
     );
 
     if (previewError || !previewResult) {
-      logger.error("Error calculating segment members", previewError ? new Error(String(previewError)) : undefined);
+      logger.error(
+        "Error calculating segment members",
+        previewError ? new Error(String(previewError)) : undefined
+      );
       return { data: null, error: previewError };
     }
 
@@ -727,7 +736,10 @@ export async function previewTemplate(id: string, variables: Record<string, unkn
       .single();
 
     if (templateError || !template) {
-      logger.error("Error fetching template", templateError ? new Error(templateError.message) : undefined);
+      logger.error(
+        "Error fetching template",
+        templateError ? new Error(templateError.message) : undefined
+      );
       return { data: null, error: templateError };
     }
 
@@ -816,7 +828,14 @@ export async function fetchWorkflowExecutions(workflowId: string) {
     error_message: string | null;
     metadata: Record<string, unknown> | null;
     workflow: { name: string } | null;
-    customer: { profile_id: string; profiles: { first_name: string | null; second_name: string | null; email: string | null } | null } | null;
+    customer: {
+      profile_id: string;
+      profiles: {
+        first_name: string | null;
+        second_name: string | null;
+        email: string | null;
+      } | null;
+    } | null;
   }
 
   const executions: WorkflowExecutionWithDetails[] =
@@ -833,7 +852,10 @@ export async function fetchWorkflowExecutions(workflowId: string) {
       error_message: execution.error_message,
       metadata: execution.metadata || {},
       workflow_name: execution.workflow?.name || "Unknown",
-      customer_name: [execution.customer?.profiles?.first_name, execution.customer?.profiles?.second_name].filter(Boolean).join(' ') || "Unknown",
+      customer_name:
+        [execution.customer?.profiles?.first_name, execution.customer?.profiles?.second_name]
+          .filter(Boolean)
+          .join(" ") || "Unknown",
       customer_email: execution.customer?.profiles?.email || "",
       total_steps: 0, // Would need to fetch from workflow template
     })) || [];
@@ -856,7 +878,7 @@ export async function pauseWorkflowExecution(id: string) {
     .single();
 
   if (error) {
-    console.error("Error pausing workflow execution:", error);
+    logger.error("Error pausing workflow execution", error);
     return { data: null, error };
   }
 
@@ -878,7 +900,7 @@ export async function resumeWorkflowExecution(id: string) {
     .single();
 
   if (error) {
-    console.error("Error resuming workflow execution:", error);
+    logger.error("Error resuming workflow execution", error);
     return { data: null, error };
   }
 
@@ -899,7 +921,7 @@ export async function cancelWorkflowExecution(id: string) {
     .single();
 
   if (error) {
-    console.error("Error cancelling workflow execution:", error);
+    logger.error("Error cancelling workflow execution", error);
     return { data: null, error };
   }
 

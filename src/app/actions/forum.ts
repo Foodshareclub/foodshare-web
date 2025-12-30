@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
+// Structured logger available for future use
+// import { createActionLogger } from "@/lib/structured-logger";
 
 // Type for forum comments (defined locally, not exported from "use server" file)
 interface ForumComment {
@@ -55,7 +57,8 @@ export async function createForumPost(
       profile_id: user.id,
       forum_post_name: title,
       forum_post_description: content,
-      category_id: categoryId ? parseInt(categoryId) : null,
+      category_id:
+        categoryId && !Number.isNaN(parseInt(categoryId, 10)) ? parseInt(categoryId, 10) : null,
       post_type: postType,
       forum_post_image: imageUrl || null,
       slug,
@@ -155,9 +158,12 @@ export async function updateForumPost(
     .update({
       forum_post_name: formData.get("title") as string,
       forum_post_description: formData.get("content") as string,
-      category_id: formData.get("category")
-        ? parseInt(formData.get("category") as string)
-        : undefined,
+      category_id: (() => {
+        const catId = formData.get("category") as string | null;
+        if (!catId) return undefined;
+        const parsed = parseInt(catId, 10);
+        return Number.isNaN(parsed) ? undefined : parsed;
+      })(),
       is_edited: true,
       forum_post_updated_at: new Date().toISOString(),
     })

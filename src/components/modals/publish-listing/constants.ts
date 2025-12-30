@@ -1,16 +1,18 @@
 import {
-  FaBox,
-  FaCommentDots,
-  FaDotCircle,
-  FaEnvelope,
-  FaHandsHelping,
-  FaLeaf,
-  FaPhone,
-  FaSearch,
-  FaStar,
-  FaUtensils,
-} from "react-icons/fa";
-import { GiMilkCarton, GiPeanut, GiWheat } from "react-icons/gi";
+  Package,
+  MessageCircle,
+  Circle,
+  Mail,
+  HeartHandshake,
+  Leaf,
+  Phone,
+  Search,
+  Star,
+  Utensils,
+  Milk,
+  Nut,
+  Wheat,
+} from "lucide-react";
 
 export const MAX_DESCRIPTION_LENGTH = 500;
 export const MAX_FILE_SIZE_MB = 10;
@@ -27,7 +29,7 @@ export const MAX_RECENT_LISTINGS = 5;
 
 export const categoryConfig = {
   food: {
-    icon: FaUtensils,
+    icon: Utensils,
     label: "Food",
     color: "text-orange-500",
     bgColor: "bg-orange-500/10",
@@ -47,7 +49,7 @@ export const categoryConfig = {
     },
   },
   thing: {
-    icon: FaBox,
+    icon: Package,
     label: "Things",
     color: "text-blue-500",
     bgColor: "bg-blue-500/10",
@@ -67,7 +69,7 @@ export const categoryConfig = {
     },
   },
   borrow: {
-    icon: FaHandsHelping,
+    icon: HeartHandshake,
     label: "Borrow",
     color: "text-green-500",
     bgColor: "bg-green-500/10",
@@ -87,7 +89,7 @@ export const categoryConfig = {
     },
   },
   wanted: {
-    icon: FaSearch,
+    icon: Search,
     label: "Wanted",
     color: "text-purple-500",
     bgColor: "bg-purple-500/10",
@@ -107,7 +109,7 @@ export const categoryConfig = {
     },
   },
   fridge: {
-    icon: FaBox,
+    icon: Package,
     label: "Community Fridge",
     color: "text-cyan-500",
     bgColor: "bg-cyan-500/10",
@@ -127,7 +129,7 @@ export const categoryConfig = {
     },
   },
   foodbank: {
-    icon: FaBox,
+    icon: Package,
     label: "Food Bank",
     color: "text-amber-500",
     bgColor: "bg-amber-500/10",
@@ -147,7 +149,7 @@ export const categoryConfig = {
     },
   },
   volunteer: {
-    icon: FaHandsHelping,
+    icon: HeartHandshake,
     label: "Volunteer",
     color: "text-pink-500",
     bgColor: "bg-pink-500/10",
@@ -167,7 +169,7 @@ export const categoryConfig = {
     },
   },
   challenge: {
-    icon: FaStar,
+    icon: Star,
     label: "Challenge",
     color: "text-yellow-500",
     bgColor: "bg-yellow-500/10",
@@ -187,7 +189,7 @@ export const categoryConfig = {
     },
   },
   vegan: {
-    icon: FaLeaf,
+    icon: Leaf,
     label: "Vegan",
     color: "text-green-600",
     bgColor: "bg-green-600/10",
@@ -209,24 +211,24 @@ export const categoryConfig = {
 } as const;
 
 export const dietaryOptions = [
-  { id: "vegan", label: "Vegan", icon: FaLeaf, color: "text-green-600" },
-  { id: "vegetarian", label: "Vegetarian", icon: FaLeaf, color: "text-green-500" },
-  { id: "gluten-free", label: "Gluten-Free", icon: GiWheat, color: "text-amber-600" },
-  { id: "dairy-free", label: "Dairy-Free", icon: GiMilkCarton, color: "text-blue-500" },
-  { id: "nut-free", label: "Nut-Free", icon: GiPeanut, color: "text-orange-600" },
+  { id: "vegan", label: "Vegan", icon: Leaf, color: "text-green-600" },
+  { id: "vegetarian", label: "Vegetarian", icon: Leaf, color: "text-green-500" },
+  { id: "gluten-free", label: "Gluten-Free", icon: Wheat, color: "text-amber-600" },
+  { id: "dairy-free", label: "Dairy-Free", icon: Milk, color: "text-blue-500" },
+  { id: "nut-free", label: "Nut-Free", icon: Nut, color: "text-orange-600" },
 ];
 
 export const conditionOptions = [
-  { id: "new", label: "New", icon: FaStar, description: "Brand new, never used" },
-  { id: "like-new", label: "Like New", icon: FaDotCircle, description: "Excellent condition" },
-  { id: "good", label: "Good", icon: FaDotCircle, description: "Minor signs of use" },
-  { id: "fair", label: "Fair", icon: FaDotCircle, description: "Shows wear but functional" },
+  { id: "new", label: "New", icon: Star, description: "Brand new, never used" },
+  { id: "like-new", label: "Like New", icon: Circle, description: "Excellent condition" },
+  { id: "good", label: "Good", icon: Circle, description: "Minor signs of use" },
+  { id: "fair", label: "Fair", icon: Circle, description: "Shows wear but functional" },
 ];
 
 export const contactOptions = [
-  { id: "chat", label: "Chat", icon: FaCommentDots },
-  { id: "phone", label: "Phone", icon: FaPhone },
-  { id: "email", label: "Email", icon: FaEnvelope },
+  { id: "chat", label: "Chat", icon: MessageCircle },
+  { id: "phone", label: "Phone", icon: Phone },
+  { id: "email", label: "Email", icon: Mail },
 ];
 
 export const templatePresets = {

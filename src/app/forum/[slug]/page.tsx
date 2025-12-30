@@ -1,23 +1,15 @@
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import parse from "html-react-parser";
+import { Eye, Heart, Clock, CheckCircle, Pin, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { formatDate } from "@/lib/utils";
 import { generateArticleJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 import { siteConfig } from "@/lib/metadata";
 import { ForumCategoryBadge, ForumTagBadge, RealtimeComments } from "@/components/forum";
 import { RichTextViewer } from "@/components/forum/RichTextViewer";
 import { BackButton } from "@/components/navigation/BackButton";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Eye, Heart, Clock, CheckCircle, Pin, Lock } from "lucide-react";
-
-// Icon aliases for consistency
-const FaEye = Eye;
-const FaHeart = Heart;
-const FaClock = Clock;
-const FaCheckCircle = CheckCircle;
-const FaThumbtack = Pin;
-const FaLock = Lock;
 import type { ForumPost, ForumComment } from "@/api/forumAPI";
 
 type PageProps = {
@@ -61,15 +53,6 @@ async function getInitialComments(forumId: number): Promise<ForumComment[]> {
     .order("comment_created_at", { ascending: true });
 
   return (data ?? []) as ForumComment[];
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
 }
 
 function CommentsSkeleton() {
@@ -190,19 +173,19 @@ export default async function ForumPostPage({ params }: PageProps) {
             {post.forum_categories && <ForumCategoryBadge category={post.forum_categories} />}
             {post.is_pinned && (
               <span className="bg-amber-500/90 text-white px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5">
-                <FaThumbtack className="w-3 h-3" />
+                <Pin className="w-3 h-3" />
                 Pinned
               </span>
             )}
             {post.is_locked && (
               <span className="bg-gray-700/90 text-white px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5">
-                <FaLock className="w-3 h-3" />
+                <Lock className="w-3 h-3" />
                 Locked
               </span>
             )}
             {post.best_answer_id && (
               <span className="bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
-                <FaCheckCircle className="w-3.5 h-3.5" />
+                <CheckCircle className="w-3.5 h-3.5" />
                 Solved
               </span>
             )}
@@ -232,8 +215,8 @@ export default async function ForumPostPage({ params }: PageProps) {
                   {post.profiles?.nickname || post.profiles?.first_name || "Anonymous"}
                 </p>
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <FaClock className="w-3 h-3" />
-                  {formatDate(post.forum_post_created_at)}
+                  <Clock className="w-3 h-3" />
+                  {formatDate(post.forum_post_created_at, { format: "long" })}
                   {post.is_edited && <span className="italic ml-2">(edited)</span>}
                 </p>
               </div>
@@ -241,11 +224,11 @@ export default async function ForumPostPage({ params }: PageProps) {
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
-                <FaEye className="w-4 h-4" />
+                <Eye className="w-4 h-4" />
                 {post.views_count || 0} views
               </span>
               <span className="flex items-center gap-1">
-                <FaHeart className="w-4 h-4" />
+                <Heart className="w-4 h-4" />
                 {post.forum_likes_counter || 0} likes
               </span>
             </div>
@@ -267,7 +250,7 @@ export default async function ForumPostPage({ params }: PageProps) {
             {post.rich_content ? (
               <RichTextViewer content={post.rich_content} />
             ) : post.forum_post_description ? (
-              <div className="forum-content">{parse(post.forum_post_description)}</div>
+              <RichTextViewer content={post.forum_post_description} />
             ) : null}
           </div>
 

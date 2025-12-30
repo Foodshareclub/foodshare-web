@@ -21,7 +21,7 @@ import {
 import { getTierConfig, formatXp } from "./constants";
 import type { LeaderboardUserModalProps } from "./types";
 import { useLeaderboardUserProfile } from "@/hooks/queries/useChallengeLeaderboard";
-import { cn } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export function LeaderboardUserModal({ userId, open, onOpenChange }: LeaderboardUserModalProps) {
@@ -166,7 +166,7 @@ export function LeaderboardUserModal({ userId, open, onOpenChange }: Leaderboard
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">{challenge.title}</p>
                           <p className="text-muted-foreground">
-                            {formatDate(challenge.completedAt)}
+                            {formatDate(challenge.completedAt, { format: "relative" })}
                           </p>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
@@ -239,23 +239,6 @@ function ModalSkeleton() {
       </div>
     </div>
   );
-}
-
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 export default LeaderboardUserModal;

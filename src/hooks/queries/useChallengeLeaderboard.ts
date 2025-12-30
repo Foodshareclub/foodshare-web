@@ -2,11 +2,17 @@
  * Challenge Leaderboard React Query Hooks
  *
  * Client-side caching and state management for the leaderboard.
+ * Uses Server Actions instead of API routes for better performance.
  */
 
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import {
+  fetchChallengeLeaderboard,
+  fetchCurrentUserRank,
+  fetchLeaderboardUserProfile,
+} from "@/app/actions/challenges";
 import type {
   LeaderboardUser,
   LeaderboardUserProfile,
@@ -26,69 +32,17 @@ export const leaderboardKeys = {
 
 // ============================================================================
 // Cache Configuration
+// Optimized for live competition experience with Realtime updates
 // ============================================================================
 
 const CACHE_TIMES = {
-  LEADERBOARD: 2 * 60 * 1000, // 2 minutes
-  USER_PROFILE: 5 * 60 * 1000, // 5 minutes
-  CURRENT_RANK: 1 * 60 * 1000, // 1 minute
+  LEADERBOARD: 30 * 1000, // 30 seconds - live competition needs fresh data
+  USER_PROFILE: 2 * 60 * 1000, // 2 minutes - profiles edited more frequently
+  CURRENT_RANK: 30 * 1000, // 30 seconds - show rank changes quickly
 } as const;
 
 // ============================================================================
-// API Configuration
-// ============================================================================
-
-// Allowlist of valid API paths
-const API_PATHS = {
-  LEADERBOARD: "/api/challenges/leaderboard",
-  LEADERBOARD_USER: "/api/challenges/leaderboard/user",
-  LEADERBOARD_ME: "/api/challenges/leaderboard/me",
-} as const;
-
-// UUID validation regex
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-function isValidUUID(id: string): boolean {
-  return UUID_REGEX.test(id);
-}
-
-// ============================================================================
-// API Fetchers
-// ============================================================================
-
-async function fetchLeaderboard(): Promise<LeaderboardUser[]> {
-  const response = await fetch(API_PATHS.LEADERBOARD);
-  if (!response.ok) {
-    throw new Error("Failed to fetch leaderboard");
-  }
-  return response.json();
-}
-
-async function fetchUserProfile(userId: string): Promise<LeaderboardUserProfile | null> {
-  // Validate userId is a valid UUID to prevent URL injection
-  if (!isValidUUID(userId)) {
-    throw new Error("Invalid user ID format");
-  }
-  const url = `${API_PATHS.LEADERBOARD_USER}/${userId}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    if (response.status === 404) return null;
-    throw new Error("Failed to fetch user profile");
-  }
-  return response.json();
-}
-
-async function fetchCurrentUserRank(): Promise<UserRankInfo | null> {
-  const response = await fetch(API_PATHS.LEADERBOARD_ME);
-  if (!response.ok) {
-    if (response.status === 401) return null;
-    throw new Error("Failed to fetch current user rank");
-  }
-  return response.json();
-}
-
-// ============================================================================
-// Hooks
+// Hooks (using Server Actions directly)
 // ============================================================================
 
 /**
@@ -98,7 +52,7 @@ async function fetchCurrentUserRank(): Promise<UserRankInfo | null> {
 export function useChallengeLeaderboard(initialData?: LeaderboardUser[]) {
   return useQuery({
     queryKey: leaderboardKeys.list(),
-    queryFn: fetchLeaderboard,
+    queryFn: () => fetchChallengeLeaderboard(),
     staleTime: CACHE_TIMES.LEADERBOARD,
     gcTime: CACHE_TIMES.LEADERBOARD * 5,
     initialData,
@@ -112,7 +66,7 @@ export function useChallengeLeaderboard(initialData?: LeaderboardUser[]) {
 export function useLeaderboardUserProfile(userId: string | null) {
   return useQuery({
     queryKey: leaderboardKeys.user(userId || ""),
-    queryFn: () => fetchUserProfile(userId!),
+    queryFn: () => fetchLeaderboardUserProfile(userId!),
     enabled: !!userId,
     staleTime: CACHE_TIMES.USER_PROFILE,
     gcTime: CACHE_TIMES.USER_PROFILE * 3,
@@ -126,7 +80,7 @@ export function useLeaderboardUserProfile(userId: string | null) {
 export function useCurrentUserRank(initialData?: UserRankInfo | null) {
   return useQuery({
     queryKey: leaderboardKeys.currentUserRank(),
-    queryFn: fetchCurrentUserRank,
+    queryFn: () => fetchCurrentUserRank(),
     staleTime: CACHE_TIMES.CURRENT_RANK,
     gcTime: CACHE_TIMES.CURRENT_RANK * 5,
     initialData,

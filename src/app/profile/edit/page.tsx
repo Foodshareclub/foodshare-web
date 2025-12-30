@@ -14,9 +14,6 @@ import { ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AddressBlock, EmailBlock, NameBlock, PhoneNumberBlock } from "@/components/profile";
 
-// Icon alias for consistency
-const FaChevronRight = ChevronRight;
-
 // Simplified profile type for this component
 interface ProfileData {
   id: string;
@@ -101,7 +98,7 @@ export default function ProfileEditPage({ initialProfile, initialAddress }: Prof
           >
             Account settings
           </button>
-          <FaChevronRight className="text-muted-foreground text-xs" />
+          <ChevronRight className="text-muted-foreground text-xs" />
           <span className="text-sm font-medium text-foreground">Personal info</span>
         </nav>
 

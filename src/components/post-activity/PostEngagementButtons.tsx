@@ -8,7 +8,7 @@
  */
 
 import { useTransition } from "react";
-import { FiHeart, FiBookmark, FiShare2 } from "react-icons/fi";
+import { Heart, Bookmark, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useOptimisticLike, useOptimisticBookmark } from "@/hooks/useOptimisticActivity";
@@ -87,7 +87,7 @@ export function PostEngagementButtons({
         className={cn("transition-colors", isLiked && "text-pink-500 hover:text-pink-600")}
         aria-label={isLiked ? "Unlike" : "Like"}
       >
-        <FiHeart className={cn("h-4 w-4", isLiked && "fill-current")} />
+        <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
         {showCounts && likeCount > 0 && <span className="ml-1 text-xs">{likeCount}</span>}
       </Button>
 
@@ -100,7 +100,7 @@ export function PostEngagementButtons({
         className={cn("transition-colors", isBookmarked && "text-yellow-500 hover:text-yellow-600")}
         aria-label={isBookmarked ? "Remove bookmark" : "Bookmark"}
       >
-        <FiBookmark className={cn("h-4 w-4", isBookmarked && "fill-current")} />
+        <Bookmark className={cn("h-4 w-4", isBookmarked && "fill-current")} />
       </Button>
 
       {/* Share Button */}
@@ -111,7 +111,7 @@ export function PostEngagementButtons({
         disabled={isSharePending}
         aria-label="Share"
       >
-        <FiShare2 className="h-4 w-4" />
+        <Share2 className="h-4 w-4" />
       </Button>
     </div>
   );

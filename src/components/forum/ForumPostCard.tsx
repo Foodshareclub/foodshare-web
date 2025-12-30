@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import {
-  ArrowUp,
   TrendingUp,
   CheckCircle,
   Clock,
@@ -19,19 +17,6 @@ import {
 import { ForumCategoryBadge } from "./ForumCategoryBadge";
 import { ForumTagBadge } from "./ForumTagBadge";
 import type { ForumPost } from "@/api/forumAPI";
-
-// Icon aliases for consistency
-const _FaArrowUp = ArrowUp;
-const FaChartLine = TrendingUp;
-const FaCheckCircle = CheckCircle;
-const FaClock = Clock;
-const FaCommentDots = MessageCircle;
-const FaEye = Eye;
-const FaHeart = Heart;
-const FaLock = Lock;
-const FaThumbtack = Pin;
-const FaBookmark = Bookmark;
-const FaShare = Share2;
 
 const MODULE_LOAD_TIME = Date.now();
 
@@ -51,8 +36,6 @@ export function ForumPostCard({
   variant: _variant = "default",
 }: ForumPostCardProps) {
   const router = useRouter();
-  const [isHovered, setIsHovered] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
 
   const onNavigateToPost = () => {
     router.push(`/forum/${post.slug || post.id}`);
@@ -113,34 +96,20 @@ export function ForumPostCard({
   const typeStyle = postTypeStyles[post.post_type] || postTypeStyles.discussion;
 
   return (
-    <motion.div
-      className="col-span-1"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.05, ease: [0.25, 0.46, 0.45, 0.94] }}
-      onMouseEnter={() => {
-        setIsHovered(true);
-        onMouseEnter?.();
-      }}
-      onMouseLeave={() => {
-        setIsHovered(false);
-        onMouseLeave?.();
-      }}
+    <div
+      className="col-span-1 animate-in fade-in slide-in-from-bottom-4 duration-400"
+      style={{ animationDelay: `${Math.min(index * 50, 300)}ms`, animationFillMode: "both" }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
-      <motion.div
-        whileHover={{ y: -6 }}
-        whileTap={{ scale: 0.98 }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      >
+      <div className="transition-transform duration-200 ease-out hover:-translate-y-1.5 active:scale-[0.98]">
         <div
           className="relative bg-card rounded-2xl overflow-hidden cursor-pointer group border border-border/50 hover:border-primary/40 shadow-sm hover:shadow-xl transition-all duration-300"
           onClick={onNavigateToPost}
         >
           {/* Gradient border effect on hover */}
           <div
-            className={`absolute inset-0 rounded-2xl transition-opacity duration-300 pointer-events-none ${
-              isHovered ? "opacity-100" : "opacity-0"
-            }`}
+            className="absolute inset-0 rounded-2xl transition-opacity duration-300 pointer-events-none opacity-0 group-hover:opacity-100"
             style={{
               background:
                 "linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05))",
@@ -159,44 +128,37 @@ export function ForumPostCard({
           {/* Image section */}
           {post.forum_post_image ? (
             <div className="relative overflow-hidden">
-              {!imageLoaded && (
-                <div
-                  className="absolute inset-0 bg-gradient-to-r from-muted via-muted/50 to-muted animate-pulse"
-                  style={{ aspectRatio: "16/9" }}
-                />
-              )}
-              <motion.img
-                className="w-full object-cover"
+              {/* Skeleton placeholder - hidden when image loads via CSS */}
+              <div
+                className="absolute inset-0 bg-gradient-to-r from-muted via-muted/50 to-muted animate-pulse"
+                style={{ aspectRatio: "16/9" }}
+              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="w-full object-cover transition-transform duration-500 group-hover:scale-105 relative"
                 style={{ aspectRatio: "16/9" }}
                 src={post.forum_post_image}
                 alt={post.forum_post_name || "Forum post"}
-                onLoad={() => setImageLoaded(true)}
-                animate={{ scale: isHovered ? 1.05 : 1 }}
-                transition={{ duration: 0.5 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
               {/* Overlay badges */}
               <div className="absolute top-3 left-3 flex flex-wrap gap-2 z-10">
                 {post.is_pinned && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="bg-gradient-to-r from-amber-500 to-orange-500 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-lg"
-                  >
-                    <FaThumbtack className="w-3 h-3" />
+                  <span className="bg-gradient-to-r from-amber-500 to-orange-500 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-lg animate-in zoom-in duration-300">
+                    <Pin className="w-3 h-3" />
                     Pinned
-                  </motion.span>
+                  </span>
                 )}
                 {post.is_locked && (
                   <span className="bg-gray-700/90 backdrop-blur-sm text-white px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-lg">
-                    <FaLock className="w-3 h-3" />
+                    <Lock className="w-3 h-3" />
                     Locked
                   </span>
                 )}
                 {isHot && (
                   <span className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-lg">
-                    <FaChartLine className="w-3 h-3" />
+                    <TrendingUp className="w-3 h-3" />
                     Trending
                   </span>
                 )}
@@ -206,30 +168,25 @@ export function ForumPostCard({
               <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-10">
                 <div className="flex items-center gap-2">
                   <span className="bg-black/40 backdrop-blur-md text-white px-2.5 py-1 rounded-full text-xs flex items-center gap-1.5">
-                    <FaEye className="w-3 h-3" />
+                    <Eye className="w-3 h-3" />
                     {post.views_count || 0}
                   </span>
                   <span className="bg-black/40 backdrop-blur-md text-white px-2.5 py-1 rounded-full text-xs flex items-center gap-1.5">
-                    <FaCommentDots className="w-3 h-3" />
+                    <MessageCircle className="w-3 h-3" />
                     {post.forum_comments_counter || 0}
                   </span>
                 </div>
               </div>
 
               {/* Hover actions */}
-              <motion.div
-                className="absolute top-3 right-3 flex gap-2 z-10"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : -10 }}
-                transition={{ duration: 0.2 }}
-              >
+              <div className="absolute top-3 right-3 flex gap-2 z-10 transition-all duration-200 opacity-0 -translate-y-2.5 group-hover:opacity-100 group-hover:translate-y-0">
                 <span className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-2 rounded-full shadow-lg block hover:bg-primary hover:text-white transition-colors">
-                  <FaBookmark className="w-3.5 h-3.5" />
+                  <Bookmark className="w-3.5 h-3.5" />
                 </span>
                 <span className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm p-2 rounded-full shadow-lg block hover:bg-primary hover:text-white transition-colors">
-                  <FaShare className="w-3.5 h-3.5" />
+                  <Share2 className="w-3.5 h-3.5" />
                 </span>
-              </motion.div>
+              </div>
             </div>
           ) : (
             <div className={`h-1.5 bg-gradient-to-r ${typeStyle.gradient}`} />
@@ -251,7 +208,7 @@ export function ForumPostCard({
               )}
               {post.best_answer_id && (
                 <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
-                  <FaCheckCircle className="w-3.5 h-3.5" />
+                  <CheckCircle className="w-3.5 h-3.5" />
                   Solved
                 </span>
               )}
@@ -314,7 +271,7 @@ export function ForumPostCard({
                     {post.profiles?.nickname || post.profiles?.first_name || "Anonymous"}
                   </span>
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <FaClock className="w-3 h-3" />
+                    <Clock className="w-3 h-3" />
                     {formatDate(post.last_activity_at || post.forum_post_created_at)}
                   </span>
                 </div>
@@ -322,16 +279,12 @@ export function ForumPostCard({
 
               {/* Stats */}
               <div className="flex items-center gap-4">
-                <motion.span
-                  className="flex items-center gap-1.5 text-muted-foreground text-sm hover:text-red-500 transition-colors cursor-pointer"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <FaHeart className="w-4 h-4" />
+                <span className="flex items-center gap-1.5 text-muted-foreground text-sm hover:text-red-500 hover:scale-110 active:scale-95 transition-all cursor-pointer">
+                  <Heart className="w-4 h-4" />
                   <span className="font-semibold">{post.forum_likes_counter || 0}</span>
-                </motion.span>
+                </span>
                 <span className="flex items-center gap-1.5 text-muted-foreground text-sm">
-                  <FaCommentDots className="w-4 h-4" />
+                  <MessageCircle className="w-4 h-4" />
                   <span className="font-semibold">{post.forum_comments_counter || 0}</span>
                 </span>
               </div>
@@ -349,7 +302,7 @@ export function ForumPostCard({
             <div className="h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
           )}
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }

@@ -18,9 +18,6 @@ import type { ForumCategory, ForumPostType } from "@/api/forumAPI";
 import { uploadToStorage } from "@/app/actions/storage";
 import { createForumPostFast } from "@/app/actions/forum";
 
-// Icon aliases for consistency
-const FaPaperPlane = Send;
-
 type CreatePostFormProps = {
   categories: ForumCategory[];
 };
@@ -265,7 +262,7 @@ export function CreatePostForm({ categories }: CreatePostFormProps) {
           Cancel
         </Button>
         <Button type="submit" disabled={submitting}>
-          <FaPaperPlane className="mr-2 h-4 w-4" />
+          <Send className="mr-2 h-4 w-4" />
           {submitting ? "Publishing..." : "Publish Post"}
         </Button>
       </div>

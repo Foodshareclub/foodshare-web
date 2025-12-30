@@ -2,10 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { Heart } from "lucide-react";
-
-// Icon aliases for consistency
-const FaHeart = Heart;
-const FaRegHeart = Heart;
 import { Button } from "@/components/ui/button";
 import { toggleForumLike } from "@/app/actions/forum";
 import { cn } from "@/lib/utils";
@@ -60,10 +56,17 @@ export function ForumLikeButton({
         isLiked && "text-red-500 hover:text-red-600",
         className
       )}
-      title={isAuthenticated ? (isLiked ? "Unlike" : "Like") : "Sign in to like"}
+      aria-label={
+        isAuthenticated
+          ? isLiked
+            ? `Unlike this post (${likeCount} likes)`
+            : `Like this post (${likeCount} likes)`
+          : "Sign in to like this post"
+      }
+      aria-pressed={isLiked}
     >
-      {isLiked ? <FaHeart className="w-4 h-4" /> : <FaRegHeart className="w-4 h-4" />}
-      <span>{likeCount}</span>
+      <Heart className="w-4 h-4" aria-hidden="true" />
+      <span aria-hidden="true">{likeCount}</span>
     </Button>
   );
 }

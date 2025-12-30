@@ -1,9 +1,14 @@
 import { Suspense } from "react";
+import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
 import { Workflow } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getActiveAutomations, getEmailDashboardStats } from "@/lib/data/admin-email";
-import { AutomationClient } from "@/components/admin/crm/AutomationClient";
+
+// Dynamic import for code-splitting (~100KB saved from initial bundle)
+const AutomationClient = dynamic(() =>
+  import("@/components/admin/crm/AutomationClient").then((mod) => mod.AutomationClient)
+);
 
 function AutomationSkeleton() {
   return (

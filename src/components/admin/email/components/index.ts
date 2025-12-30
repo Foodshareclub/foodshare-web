@@ -5,5 +5,7 @@
 
 export { TabPanel } from "./TabPanel";
 export { ProviderPill } from "./ProviderPill";
-export { MetricCard } from "./MetricCard";
-export { EmptyState } from "./EmptyState";
+
+// Re-export from shared/ for backwards compatibility
+export { MetricCard } from "../shared/MetricCard";
+export { EmptyState } from "../shared/EmptyState";

@@ -1,9 +1,5 @@
 import Link from "next/link";
 import { Home, ChevronRight } from "lucide-react";
-
-// Icon aliases for consistency
-const FaHome = Home;
-const FaChevronRight = ChevronRight;
 import type { ForumCategory } from "@/api/forumAPI";
 
 interface ForumBreadcrumbProps {
@@ -33,13 +29,13 @@ export function ForumBreadcrumb({ category, postTitle }: ForumBreadcrumbProps) {
             className="hover:text-foreground transition-colors flex items-center gap-1"
             itemProp="item"
           >
-            <FaHome className="w-3.5 h-3.5" />
+            <Home className="w-3.5 h-3.5" />
             <span itemProp="name">Home</span>
           </Link>
           <meta itemProp="position" content="1" />
         </li>
 
-        <FaChevronRight className="w-3 h-3 text-muted-foreground/50" />
+        <ChevronRight className="w-3 h-3 text-muted-foreground/50" />
 
         <li
           className="flex items-center gap-2"
@@ -55,7 +51,7 @@ export function ForumBreadcrumb({ category, postTitle }: ForumBreadcrumbProps) {
 
         {category && (
           <>
-            <FaChevronRight className="w-3 h-3 text-muted-foreground/50" />
+            <ChevronRight className="w-3 h-3 text-muted-foreground/50" />
             <li
               className="flex items-center gap-2"
               itemProp="itemListElement"
@@ -76,7 +72,7 @@ export function ForumBreadcrumb({ category, postTitle }: ForumBreadcrumbProps) {
 
         {postTitle && (
           <>
-            <FaChevronRight className="w-3 h-3 text-muted-foreground/50" />
+            <ChevronRight className="w-3 h-3 text-muted-foreground/50" />
             <li
               className="text-foreground font-medium truncate max-w-[200px] sm:max-w-xs"
               itemProp="itemListElement"

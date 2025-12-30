@@ -1,11 +1,11 @@
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Coffee, Heart, ExternalLink, HandHeart, Users, Leaf, Star, Check } from "lucide-react";
+import { Heart, HandHeart, Users, Leaf, Star, Check } from "lucide-react";
+import { DonateButton } from "./DonateButton";
 import bracketsUp from "@/assets/bracketsUp.png";
 import bracketsDown from "@/assets/bracketsDown.png";
 import { PageHeader } from "@/components/navigation/PageHeader";
-import { DonateButton } from "./DonateButton";
 
 export const metadata: Metadata = {
   title: "Support FoodShare | Donate",

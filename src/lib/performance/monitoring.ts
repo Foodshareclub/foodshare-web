@@ -93,7 +93,7 @@ class PerformanceMonitor {
     if (process.env.NODE_ENV === "development") {
       logger.debug(`Performance: ${metric.name}`, {
         duration: `${metric.value.toFixed(2)}ms`,
-        ...metric.metadata
+        ...metric.metadata,
       });
     }
   }
@@ -300,7 +300,132 @@ export function reportPerformanceMetrics(): void {
   if (process.env.NODE_ENV === "development") {
     logger.debug("Performance metrics summary", averages);
   }
+}
 
-  // TODO: Send to analytics service in production
-  // sendToAnalytics('performance-metrics', averages);
+// =============================================================================
+// Web Vitals Production Reporting
+// =============================================================================
+
+type WebVitalRating = "good" | "needs-improvement" | "poor";
+
+interface WebVitalMetric {
+  name: string;
+  value: number;
+  rating: WebVitalRating;
+  delta: number;
+  id: string;
+  navigationType?: string;
+}
+
+/**
+ * Send a Web Vital metric to Supabase
+ * Uses the web_vitals table for production monitoring
+ */
+async function sendWebVitalToSupabase(metric: WebVitalMetric): Promise<void> {
+  // Only send in production to avoid polluting data
+  if (process.env.NODE_ENV !== "production") {
+    logger.debug(`Web Vital [${metric.name}]: ${metric.value} (${metric.rating})`);
+    return;
+  }
+
+  try {
+    const { createClient } = await import("@/lib/supabase/client");
+    const supabase = createClient();
+
+    const { error } = await supabase.from("web_vitals").insert({
+      name: metric.name,
+      value: metric.value,
+      rating: metric.rating,
+      delta: metric.delta,
+      metric_id: metric.id,
+      page_url: typeof window !== "undefined" ? window.location.pathname : null,
+      user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+      navigation_type: metric.navigationType || null,
+    });
+
+    if (error) {
+      logger.debug("Failed to send Web Vital", { error: error.message });
+    }
+  } catch (e) {
+    // Silent fail - don't break the app for analytics
+    logger.debug("Web Vital reporting error", { error: e });
+  }
+}
+
+/**
+ * Initialize Web Vitals collection and reporting to Supabase
+ * Call this once in your app's root layout or _app
+ *
+ * @example
+ * // In src/app/layout.tsx or a client component
+ * useEffect(() => {
+ *   initWebVitalsReporting();
+ * }, []);
+ */
+export async function initWebVitalsReporting(): Promise<void> {
+  if (typeof window === "undefined") return;
+
+  try {
+    const { onCLS, onINP, onFCP, onLCP, onTTFB } = await import("web-vitals");
+
+    // Report each metric as it becomes available
+    onCLS((metric) => {
+      sendWebVitalToSupabase({
+        name: "CLS",
+        value: metric.value,
+        rating: metric.rating as WebVitalRating,
+        delta: metric.delta,
+        id: metric.id,
+        navigationType: metric.navigationType,
+      });
+    });
+
+    onINP((metric) => {
+      sendWebVitalToSupabase({
+        name: "INP",
+        value: metric.value,
+        rating: metric.rating as WebVitalRating,
+        delta: metric.delta,
+        id: metric.id,
+        navigationType: metric.navigationType,
+      });
+    });
+
+    onFCP((metric) => {
+      sendWebVitalToSupabase({
+        name: "FCP",
+        value: metric.value,
+        rating: metric.rating as WebVitalRating,
+        delta: metric.delta,
+        id: metric.id,
+        navigationType: metric.navigationType,
+      });
+    });
+
+    onLCP((metric) => {
+      sendWebVitalToSupabase({
+        name: "LCP",
+        value: metric.value,
+        rating: metric.rating as WebVitalRating,
+        delta: metric.delta,
+        id: metric.id,
+        navigationType: metric.navigationType,
+      });
+    });
+
+    onTTFB((metric) => {
+      sendWebVitalToSupabase({
+        name: "TTFB",
+        value: metric.value,
+        rating: metric.rating as WebVitalRating,
+        delta: metric.delta,
+        id: metric.id,
+        navigationType: metric.navigationType,
+      });
+    });
+
+    logger.debug("Web Vitals reporting initialized");
+  } catch (e) {
+    logger.debug("Failed to initialize Web Vitals reporting", { error: e });
+  }
 }

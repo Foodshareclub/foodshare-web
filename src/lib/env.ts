@@ -15,6 +15,7 @@ import { z } from "zod";
 const serverEnvSchema = z.object({
   // Supabase (required)
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, "SUPABASE_SERVICE_ROLE_KEY is required"),
+  SUPABASE_ACCESS_TOKEN: z.string().optional(), // For Management API
 
   // Node environment
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
@@ -25,6 +26,7 @@ const serverEnvSchema = z.object({
   AWS_SES_SECRET_ACCESS_KEY: z.string().optional(),
   AWS_SES_REGION: z.string().optional(),
   BREVO_API_KEY: z.string().optional(),
+  MAILERSEND_API_KEY: z.string().optional(),
 
   // OpenAI (optional - for AI features)
   OPENAI_API_KEY: z.string().optional(),
@@ -45,6 +47,12 @@ const serverEnvSchema = z.object({
   // Bot tokens (optional)
   TELEGRAM_BOT_TOKEN: z.string().optional(),
   WHATSAPP_API_TOKEN: z.string().optional(),
+
+  // R2/Storage (optional)
+  R2_PUBLIC_URL: z.string().url().optional(),
+
+  // Alerting (optional)
+  ALERT_WEBHOOK_URL: z.string().url().optional(),
 });
 
 /**
@@ -58,7 +66,22 @@ const clientEnvSchema = z.object({
 
   // App configuration
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+  NEXT_PUBLIC_SITE_URL: z.string().url().optional(), // For auth redirects
   NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: z.string().optional(),
+
+  // Email display
+  NEXT_PUBLIC_EMAIL_FROM: z.string().email().optional(),
+  NEXT_PUBLIC_EMAIL_FROM_NAME: z.string().optional(),
+
+  // Sentry (client-side)
+  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+
+  // Storage
+  NEXT_PUBLIC_R2_PUBLIC_URL: z.string().url().optional(),
+
+  // Feature flags
+  NEXT_PUBLIC_ENABLE_ANALYTICS: z.enum(["true", "false"]).optional(),
+  NEXT_PUBLIC_ENABLE_PUSH_NOTIFICATIONS: z.enum(["true", "false"]).optional(),
 });
 
 /**
@@ -79,9 +102,7 @@ export function validateEnv(): { success: boolean; errors: string[] } {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
-    const errors = result.error.issues.map(
-      (issue) => `${issue.path.join(".")}: ${issue.message}`
-    );
+    const errors = result.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`);
     return { success: false, errors };
   }
 

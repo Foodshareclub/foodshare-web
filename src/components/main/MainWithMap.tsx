@@ -5,15 +5,16 @@
  * Receives products as props from Server Component (no Redux)
  */
 
-'use client';
+"use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { MapView } from "./MapView";
 import { useGridSize, useMediaQuery } from "@/hooks";
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
 import { ProductCard } from "@/components/productCard/ProductCard";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
-import type { InitialProductStateType } from "@/types/product.types";
-import { MapView } from "./MapView";
+import type { InitialProductStateType, ProductWithCoordinates } from "@/types/product.types";
+import { getCoordinates } from "@/types/product.types";
 
 type MainWithMapProps = {
   /** Products to display (passed from Server Component) */
@@ -33,6 +34,21 @@ export function MainWithMap({ products, isLoading = false }: MainWithMapProps) {
 
   // Show map on desktop only (>= 1024px breakpoint)
   const showMap = useMediaQuery("(min-width: 1024px)");
+
+  // Convert products to include coordinates for map display
+  const productsWithCoordinates = useMemo<ProductWithCoordinates[]>(() => {
+    return products
+      .map((product) => {
+        const coords = getCoordinates(product);
+        if (!coords) return null;
+        return {
+          ...product,
+          latitude: coords.lat,
+          longitude: coords.lng,
+        };
+      })
+      .filter((p): p is ProductWithCoordinates => p !== null);
+  }, [products]);
 
   // React Compiler optimizes these handlers automatically
   const handleProductHover = (productId: number | null) => {
@@ -92,7 +108,7 @@ export function MainWithMap({ products, isLoading = false }: MainWithMapProps) {
             }}
           >
             <MapView
-              products={products}
+              products={productsWithCoordinates}
               hoveredProductId={hoveredProductId}
               selectedProductId={selectedProductId}
               onMarkerClick={handleProductClick}

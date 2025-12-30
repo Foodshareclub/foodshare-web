@@ -3,16 +3,18 @@
  * Card components for displaying campaigns, automations, providers, etc.
  */
 
+// Local card components
 export { CampaignListItem } from "./CampaignListItem";
 export { AutomationListItem } from "./AutomationListItem";
 export { AutomationCardEnhanced } from "./AutomationCardEnhanced";
 export { QueueControlCard } from "./QueueControlCard";
 export { ProviderPerformanceCard } from "./ProviderPerformanceCard";
-export { SegmentCard } from "./SegmentCard";
-export { SystemSegmentCard } from "./SystemSegmentCard";
-export { ProviderDetailCard } from "./ProviderDetailCard";
-export { ProviderConfigCard } from "./ProviderConfigCard";
 export { RoutingRule } from "./RoutingRule";
-export { CampaignCard } from "./CampaignCard";
 export { CampaignTableRow } from "./CampaignTableRow";
 export { CampaignForm } from "./CampaignForm";
+
+// Re-export from canonical locations
+export { SegmentCard } from "../audience/SegmentCard";
+export { SystemSegmentCard } from "../audience/SystemSegmentCard";
+export { ProviderDetailCard, ProviderConfigCard } from "../shared/ProviderComponents";
+export { CampaignCard } from "../campaign/CampaignCard";

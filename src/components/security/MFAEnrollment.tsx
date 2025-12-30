@@ -13,7 +13,6 @@
 
 import React, { useState } from "react";
 
-import { MFAService, type MFAMethod } from "@/lib/security/mfa";
 import {
   Loader2,
   CheckCircle,
@@ -23,15 +22,7 @@ import {
   Smartphone,
   Shield,
 } from "lucide-react";
-
-// Icon aliases for consistency
-const FaShieldAlt = Shield;
-const FaEnvelope = Mail;
-const FaMobileAlt = Smartphone;
-const FaExclamationCircle = AlertCircle;
-const AiOutlineLoading3Quarters = Loader2;
-const FaCheckCircle = CheckCircle;
-const FaDownload = Download;
+import { MFAService, type MFAMethod } from "@/lib/security/mfa";
 
 interface MFAEnrollmentProps {
   profileId: string;
@@ -178,7 +169,7 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
   const renderMethodSelection = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <FaShieldAlt className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
+        <Shield className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
         <h2 className="text-2xl font-bold text-foreground mb-2">
           "Enable Two-Factor Authentication"
         </h2>
@@ -191,7 +182,7 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
           onClick={() => handleMethodSelection("email")}
           className="p-6 border-2 border-border rounded-lg hover:border-green-500 hover:bg-green-500/10 transition-all group text-left"
         >
-          <FaEnvelope className="w-8 h-8 text-green-600 dark:text-green-400 mb-3" />
+          <Mail className="w-8 h-8 text-green-600 dark:text-green-400 mb-3" />
           <h3 className="font-bold text-foreground mb-2">"Email Verification"</h3>
           <p className="text-sm text-muted-foreground">"Receive verification codes via email"</p>
         </button>
@@ -201,7 +192,7 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
           onClick={() => handleMethodSelection("sms")}
           className="p-6 border-2 border-border rounded-lg hover:border-green-500 hover:bg-green-500/10 transition-all group text-left"
         >
-          <FaMobileAlt className="w-8 h-8 text-green-600 dark:text-green-400 mb-3" />
+          <Smartphone className="w-8 h-8 text-green-600 dark:text-green-400 mb-3" />
           <h3 className="font-bold text-foreground mb-2">"SMS Verification"</h3>
           <p className="text-sm text-muted-foreground">"Receive verification codes via SMS"</p>
         </button>
@@ -224,14 +215,14 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
   const renderPhoneEntry = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <FaMobileAlt className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
+        <Smartphone className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
         <h2 className="text-2xl font-bold text-foreground mb-2">"Enter Phone Number"</h2>
         <p className="text-muted-foreground">"We'll send a verification code to this number"</p>
       </div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-          <FaExclamationCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
@@ -264,7 +255,7 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
         >
           {isLoading ? (
             <>
-              <AiOutlineLoading3Quarters className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
               "Sending..."
             </>
           ) : (
@@ -279,7 +270,7 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
   const renderVerification = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <FaShieldAlt className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
+        <Shield className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
         <h2 className="text-2xl font-bold text-foreground mb-2">"Enter Verification Code"</h2>
         <p className="text-muted-foreground">
           {selectedMethod === "email"
@@ -290,7 +281,7 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-          <FaExclamationCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
@@ -329,7 +320,7 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
       >
         {isLoading ? (
           <>
-            <AiOutlineLoading3Quarters className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin" />
             "Verifying..."
           </>
         ) : (
@@ -343,7 +334,7 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
   const renderBackupCodes = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <FaCheckCircle className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
+        <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
         <h2 className="text-2xl font-bold text-foreground mb-2">"Save Your Backup Codes"</h2>
         <p className="text-muted-foreground">
           "Store these codes in a safe place. Each code can only be used once."
@@ -371,7 +362,7 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
         onClick={downloadBackupCodes}
         className="w-full px-4 py-3 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
       >
-        <FaDownload className="w-4 h-4" />
+        <Download className="w-4 h-4" />
         "Download Backup Codes"
       </button>
 

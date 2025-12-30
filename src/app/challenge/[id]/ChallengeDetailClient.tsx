@@ -23,7 +23,6 @@ import {
   Flame,
   Sparkles,
 } from "lucide-react";
-import confetti from "canvas-confetti";
 import { acceptChallenge } from "@/app/actions/challenges";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -97,12 +96,14 @@ export function ChallengeDetailClient({
     if (result.success) {
       setIsAccepted(true);
 
-      // Trigger confetti
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ["#FF2D55", "#00A699", "#FFD700"],
+      // Lazy-load confetti only when needed
+      import("canvas-confetti").then(({ default: confetti }) => {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ["#FF2D55", "#00A699", "#FFD700"],
+        });
       });
     }
   };

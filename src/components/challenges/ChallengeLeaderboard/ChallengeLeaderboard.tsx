@@ -20,6 +20,7 @@ import {
   useChallengeLeaderboard,
   useCurrentUserRank,
 } from "@/hooks/queries/useChallengeLeaderboard";
+import { useLeaderboardRealtime } from "@/hooks/queries/useLeaderboardRealtime";
 import { cn } from "@/lib/utils";
 
 export function ChallengeLeaderboard({
@@ -30,6 +31,9 @@ export function ChallengeLeaderboard({
   const shouldReduceMotion = useReducedMotion();
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  // Enable realtime updates for live leaderboard
+  useLeaderboardRealtime();
 
   const { data: leaderboard, isLoading } = useChallengeLeaderboard(initialData);
   const { data: currentUserRank } = useCurrentUserRank(initialUserRank);

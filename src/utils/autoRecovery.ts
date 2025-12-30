@@ -3,8 +3,17 @@
  * Automatically attempts to recover from errors
  */
 
-import { createLogger } from "@/lib/logger";
 import { productionErrorReporter } from "./productionErrorReporter";
+import { createLogger } from "@/lib/logger";
+
+// Extend Window interface for optional debug/recovery methods
+declare global {
+  interface Window {
+    __clearCache?: () => void;
+    __autoRecovery?: AutoRecovery;
+    gc?: () => void;
+  }
+}
 
 const logger = createLogger("AutoRecovery");
 
@@ -132,13 +141,13 @@ class AutoRecovery {
         logger.info("Attempting recovery: Memory cleanup");
         try {
           // Clear large objects
-          if ((window as any).__clearCache) {
-            (window as any).__clearCache();
+          if (window.__clearCache) {
+            window.__clearCache();
           }
 
           // Force garbage collection (if available)
-          if ((window as any).gc) {
-            (window as any).gc();
+          if (window.gc) {
+            window.gc();
           }
 
           return true;
@@ -310,7 +319,7 @@ export const autoRecovery = new AutoRecovery();
 
 // Expose to window for debugging
 if (typeof window !== "undefined") {
-  (window as any).__autoRecovery = autoRecovery;
+  window.__autoRecovery = autoRecovery;
 }
 
 export default autoRecovery;

@@ -15,7 +15,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-import { MetricCard, EmptyState } from "../components";
+import { MetricCard } from "../shared/MetricCard";
+import { EmptyState } from "../shared/EmptyState";
 import { DEFAULT_PROVIDER_HEALTH } from "../constants";
 import type { OverviewTabProps, ProviderHealth } from "../types";
 

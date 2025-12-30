@@ -7,10 +7,13 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import type { EmailProvider, EmailType } from "@/lib/email/types";
 import { REFRESH_INTERVALS } from "@/lib/email/constants";
 
-// Import types from their new locations
-import type { ProviderQuotaStatus } from "@/components/admin/EmailQuotaDashboard";
-import type { EmailLogEntry, QueuedEmailEntry } from "@/components/admin/EmailSendingHistory";
-import type { ManualEmailRequest } from "@/components/admin/ManualEmailSender";
+// Import types from centralized types file
+import type {
+  ProviderQuotaStatus,
+  EmailLogEntry,
+  QueuedEmailEntry,
+  ManualEmailRequest,
+} from "@/types/email-management.types";
 
 // Import Server Actions for mutations
 import {
@@ -347,49 +350,4 @@ export function useManualEmailSender() {
   }, []);
 
   return { sendEmail, sending, result, clearResult };
-}
-
-// Hook for debounced value (useful for search/filter)
-export function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
-
-// Hook for local storage with JSON serialization
-export function useLocalStorage<T>(key: string, initialValue: T) {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.error("Error loading from localStorage:", error);
-      return initialValue;
-    }
-  });
-
-  const setValue = useCallback(
-    (value: T | ((val: T) => T)) => {
-      try {
-        const valueToStore = value instanceof Function ? value(storedValue) : value;
-        setStoredValue(valueToStore);
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
-      } catch (error) {
-        console.error("Error saving to localStorage:", error);
-      }
-    },
-    [key, storedValue]
-  );
-
-  return [storedValue, setValue] as const;
 }

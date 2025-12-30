@@ -1,18 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { Send } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ForumCommentCard } from "./ForumCommentCard";
 import { RichTextEditor } from "./RichTextEditor";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import type { ForumComment } from "@/api/forumAPI";
-import { Send } from "lucide-react";
-
-// Icon alias for consistency
-const FaPaperPlane = Send;
-import { motion, AnimatePresence } from "framer-motion";
 
 type RealtimeCommentsProps = {
   forumId: number;
@@ -223,7 +220,7 @@ export function RealtimeComments({
           />
           <div className="flex justify-end">
             <Button onClick={handleSubmit} disabled={submitting || !commentContent.trim()}>
-              <FaPaperPlane className="mr-2 h-4 w-4" />
+              <Send className="mr-2 h-4 w-4" />
               {submitting ? "Posting..." : "Post Comment"}
             </Button>
           </div>

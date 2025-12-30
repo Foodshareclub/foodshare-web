@@ -90,6 +90,17 @@ export interface ExtendedPerformance extends Performance {
 }
 
 // ============================================================================
+// Performance Event Timing API (First Input Delay)
+// ============================================================================
+
+export interface PerformanceEventTiming extends PerformanceEntry {
+  readonly processingStart: number;
+  readonly processingEnd: number;
+  readonly cancelable: boolean;
+  readonly target: Node | null;
+}
+
+// ============================================================================
 // Extended Window Interface
 // ============================================================================
 
@@ -97,6 +108,10 @@ declare global {
   interface Window {
     SpeechRecognition?: SpeechRecognitionConstructor;
     webkitSpeechRecognition?: SpeechRecognitionConstructor;
+    // Performance monitoring (dev tools)
+    performanceMonitor?: unknown;
+    logPerformance?: () => void;
+    logWebVitals?: () => void;
   }
 }
 

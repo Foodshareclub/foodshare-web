@@ -10,11 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { LocationType } from "@/types/product.types";
 import type { ViewportBounds } from "@/hooks/useDebouncedViewport";
 import { approximateGeoJSON } from "@/utils/postgis";
-import {
-  getCachedLocations,
-  setCachedLocations,
-  generateViewportCacheKey,
-} from "@/lib/map-cache";
+import { getCachedLocations, setCachedLocations, generateViewportCacheKey } from "@/lib/map-cache";
 
 /**
  * Fetch locations from Supabase RPC (client-side)
@@ -47,7 +43,7 @@ interface UseViewportLocationsOptions {
   postType?: string;
   /** Whether to enable the query */
   enabled?: boolean;
-  /** Stale time in milliseconds (default: 5 min) */
+  /** Stale time in milliseconds (default: 30s for real-time updates) */
   staleTime?: number;
 }
 
@@ -74,7 +70,7 @@ export function useViewportLocations(
   bounds: ViewportBounds | null,
   options: UseViewportLocationsOptions = {}
 ): UseViewportLocationsResult {
-  const { postType, enabled = true, staleTime = 5 * 60 * 1000 } = options;
+  const { postType, enabled = true, staleTime = 30 * 1000 } = options; // 30s for real-time updates
 
   const queryClient = useQueryClient();
 
