@@ -54,7 +54,7 @@ A modern food sharing platform that connects people to reduce food waste by enab
 
 ```bash
 git clone <repository-url>
-cd foodshare-nextjs
+cd foodshare
 ```
 
 ### 2. Install dependencies
@@ -96,7 +96,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 ## Project Structure
 
 ```
-foodshare-nextjs/
+foodshare/
 ├── public/                 # Static assets
 │   ├── images/            # Image assets
 │   ├── telegram-webapp/   # Telegram Mini App files

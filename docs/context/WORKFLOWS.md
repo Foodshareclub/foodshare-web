@@ -56,8 +56,8 @@ This document provides step-by-step workflows for common development tasks in th
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/foodshare-nextjs.git
-cd foodshare-nextjs
+git clone https://github.com/your-org/foodshare.git
+cd foodshare
 
 # 2. Install correct Node.js version
 nvm install

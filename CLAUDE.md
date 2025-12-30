@@ -8,20 +8,56 @@ FoodShare is a community food sharing platform built with **Next.js 16 App Route
 
 **Stack**: Next.js 16 + React 19 + TypeScript 5 + Tailwind CSS 4 + Supabase + shadcn/ui
 
+## Cross-Platform Architecture
+
+FoodShare uses a **shared backend** serving multiple client applications:
+
+| Repository           | Purpose                     | Stack                            |
+| -------------------- | --------------------------- | -------------------------------- |
+| `foodshare/`         | Web app (this repo)         | Next.js 16 + React 19            |
+| `foodshare-ios/`     | iOS app                     | Swift + SwiftUI                  |
+| `foodshare-android/` | Android app                 | Kotlin + Jetpack Compose         |
+| `foodshare-backend/` | **Shared Supabase backend** | Deno Edge Functions + PostgreSQL |
+
+### Backend Integration
+
+The `supabase/` folder in this repo is a **symlink** to the shared backend:
+
+```
+supabase/ → ../foodshare-backend
+```
+
+**Important**: When working with Edge Functions or database migrations:
+
+- The actual code lives in `/Users/organic/dev/work/foodshare/foodshare-backend`
+- Changes affect ALL platforms (Web, iOS, Android)
+- See backend's `CLAUDE.md` for Edge Function patterns and security documentation
+
+### When to Work Where
+
+| Task                        | Repository               |
+| --------------------------- | ------------------------ |
+| Web UI, pages, components   | `foodshare/` (this repo) |
+| Server Actions, React Query | `foodshare/` (this repo) |
+| Edge Functions (Deno)       | `foodshare-backend/`     |
+| Database migrations         | `foodshare-backend/`     |
+| Push notifications, email   | `foodshare-backend/`     |
+| iOS/Android attestation     | `foodshare-backend/`     |
+
 ## Critical Information
 
 ### This is Next.js 16 with App Router
 
-| Aspect | FoodShare | NOT |
-|--------|-----------|-----|
-| Routing | File-based App Router (`src/app/`) | React Router, Pages Router |
-| Entry Point | `src/app/layout.tsx` | `index.html`, `_app.tsx` |
-| Data Fetching | Server Components + Server Actions | getServerSideProps, useEffect |
-| Mutations | Server Actions (`'use server'`) | API routes, Redux thunks |
-| Caching | React Query + Next.js cache | Redux, localStorage |
-| Dev Server | `npm run dev` (Turbopack, port 3000) | `vite dev` |
-| Build Output | `.next/` | `dist/` |
-| Env Vars | `NEXT_PUBLIC_` prefix (client) | `VITE_`, `REACT_APP_` |
+| Aspect        | FoodShare                            | NOT                           |
+| ------------- | ------------------------------------ | ----------------------------- |
+| Routing       | File-based App Router (`src/app/`)   | React Router, Pages Router    |
+| Entry Point   | `src/app/layout.tsx`                 | `index.html`, `_app.tsx`      |
+| Data Fetching | Server Components + Server Actions   | getServerSideProps, useEffect |
+| Mutations     | Server Actions (`'use server'`)      | API routes, Redux thunks      |
+| Caching       | React Query + Next.js cache          | Redux, localStorage           |
+| Dev Server    | `npm run dev` (Turbopack, port 3000) | `vite dev`                    |
+| Build Output  | `.next/`                             | `dist/`                       |
+| Env Vars      | `NEXT_PUBLIC_` prefix (client)       | `VITE_`, `REACT_APP_`         |
 
 ### UI: shadcn/ui + Radix UI + Tailwind CSS 4
 
@@ -34,13 +70,13 @@ FoodShare is a community food sharing platform built with **Next.js 16 App Route
 
 **NO REDUX** - We use Next.js 16 native patterns:
 
-| Pattern | Use Case | Location |
-|---------|----------|----------|
-| **Server Components** | Data fetching, initial page load | `src/app/**/page.tsx` |
-| **Server Actions** | Mutations, form submissions | `src/app/actions/*.ts` |
-| **React Query** | Client-side caching, optimistic updates | `src/hooks/queries/` |
-| **Zustand** | Lightweight client state (UI, chat) | `src/store/zustand/` |
-| **React Context** | Auth session, theme | `src/app/providers.tsx` |
+| Pattern               | Use Case                                | Location                |
+| --------------------- | --------------------------------------- | ----------------------- |
+| **Server Components** | Data fetching, initial page load        | `src/app/**/page.tsx`   |
+| **Server Actions**    | Mutations, form submissions             | `src/app/actions/*.ts`  |
+| **React Query**       | Client-side caching, optimistic updates | `src/hooks/queries/`    |
+| **Zustand**           | Lightweight client state (UI, chat)     | `src/store/zustand/`    |
+| **React Context**     | Auth session, theme                     | `src/app/providers.tsx` |
 
 ### Data Flow Pattern
 
@@ -75,22 +111,22 @@ export default async function ProductsPage() {
 
 ```typescript
 // src/lib/data/products.ts - Cached data fetching
-import { unstable_cache } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
-import { CACHE_TAGS, CACHE_DURATIONS } from './cache-keys';
+import { unstable_cache } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
 
 export const getProducts = unstable_cache(
   async (productType: string) => {
     const supabase = await createClient();
     const { data, error } = await supabase
-      .from('posts_with_location')
-      .select('*')
-      .eq('post_type', productType)
-      .eq('is_active', true);
+      .from("posts_with_location")
+      .select("*")
+      .eq("post_type", productType)
+      .eq("is_active", true);
     if (error) throw new Error(error.message);
     return data ?? [];
   },
-  ['products-by-type'],
+  ["products-by-type"],
   { revalidate: CACHE_DURATIONS.PRODUCTS, tags: [CACHE_TAGS.PRODUCTS] }
 );
 ```
@@ -99,17 +135,17 @@ export const getProducts = unstable_cache(
 
 ```typescript
 // src/app/actions/products.ts - Mutations only
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
+import { createClient } from "@/lib/supabase/server";
+import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
 
-  const { error } = await supabase.from('posts').insert({
-    post_name: formData.get('post_name'),
-    post_description: formData.get('post_description'),
+  const { error } = await supabase.from("posts").insert({
+    post_name: formData.get("post_name"),
+    post_description: formData.get("post_description"),
   });
 
   if (error) throw new Error(error.message);
@@ -151,18 +187,18 @@ export function ProductCard({ product }: { product: Product }) {
 
 ```typescript
 // src/hooks/queries/useProducts.ts
-'use client';
+"use client";
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { createProduct } from '@/app/actions/products';  // Mutations from actions/
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createProduct } from "@/app/actions/products"; // Mutations from actions/
 
 // Client hooks fetch via API routes, not lib/data (server-only)
-const fetchProducts = (type: string) => 
-  fetch(`/api/products?type=${type}`).then(res => res.json());
+const fetchProducts = (type: string) =>
+  fetch(`/api/products?type=${type}`).then((res) => res.json());
 
 export function useProducts(type: string) {
   return useQuery({
-    queryKey: ['products', type],
+    queryKey: ["products", type],
     queryFn: () => getProducts(type),
   });
 }
@@ -173,7 +209,7 @@ export function useCreateProduct() {
   return useMutation({
     mutationFn: createProduct,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
     },
   });
 }
@@ -183,7 +219,7 @@ export function useCreateProduct() {
 
 ```typescript
 // src/store/zustand/useUIStore.ts
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface UIStore {
   sidebarOpen: boolean;
@@ -213,6 +249,8 @@ Supported locales: en, cs, de, es, fr, pt, ru, uk, zh, hi, ar (RTL), it, pl, nl,
 
 ## Development Commands
 
+### Web App (this repo)
+
 ```bash
 npm run dev          # Start dev server with Turbopack
 npm run build        # Production build
@@ -221,6 +259,17 @@ npm run lint         # ESLint
 npm run lint:fix     # Fix lint errors
 npm run test:build   # Type-check + lint + build
 npm run clean        # Clean .next and cache
+```
+
+### Backend (foodshare-backend/)
+
+```bash
+cd ../foodshare-backend
+supabase start                    # Start local Supabase stack
+supabase functions serve          # Serve Edge Functions locally
+supabase functions deploy         # Deploy all functions
+supabase db push                  # Apply migrations
+supabase migration new <name>     # Create migration
 ```
 
 ## Project Structure
@@ -267,9 +316,7 @@ src/
 
 proxy.ts                    # Next.js 16 Proxy (formerly middleware.ts)
 messages/                   # next-intl translations
-supabase/
-├── functions/             # Edge Functions (Deno)
-└── migrations/            # Database migrations
+supabase/ → ../foodshare-backend  # SYMLINK to shared backend
 context/                   # Documentation
 ```
 
@@ -290,27 +337,35 @@ context/                   # Documentation
 ├─────────────────────────────────────────────────────┤
 │              Infrastructure Layer                    │
 │  Supabase Client (server.ts, client.ts)             │
+├─────────────────────────────────────────────────────┤
+│         Shared Backend (foodshare-backend)           │
+│  Edge Functions (Deno) + PostgreSQL + RLS            │
+│  [Serves: Web, iOS, Android]                         │
 └─────────────────────────────────────────────────────┘
 ```
 
 **Data Flow**:
+
 - READ: Server Component → `lib/data/` function → Supabase → Render
 - WRITE: Form action → Server Action → Supabase → `invalidateTag()` → Re-render
+- EDGE: Client → Edge Function (shared backend) → Database
 
 ### Key Patterns
 
 **Supabase Client**:
+
 ```typescript
 // Server Components & Server Actions
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from "@/lib/supabase/server";
 const supabase = await createClient();
 
 // Client Components
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from "@/lib/supabase/client";
 const supabase = createClient();
 ```
 
 **Loading States (Suspense)**:
+
 ```typescript
 // src/app/products/page.tsx
 import { Suspense } from 'react';
@@ -327,6 +382,7 @@ export default function ProductsPage() {
 ```
 
 **Error Handling**:
+
 ```typescript
 // src/app/products/error.tsx
 'use client';
@@ -347,6 +403,7 @@ export default function Error({ error, reset }: {
 ## Database
 
 Key tables (all have RLS enabled):
+
 - `profiles` - User profiles
 - `products` - Food listings (with PostGIS coordinates)
 - `chats` - Chat conversations
@@ -354,6 +411,14 @@ Key tables (all have RLS enabled):
 - `reviews` - User reviews
 
 See `context/DATABASE_SCHEMA.md` for complete schema.
+
+**Database changes** (migrations, RLS policies, triggers) are managed in `foodshare-backend/`:
+
+```bash
+cd ../foodshare-backend
+supabase migration new <name>   # Create migration
+supabase db push                # Apply migrations
+```
 
 ## Code Standards
 
@@ -375,6 +440,7 @@ See `context/DATABASE_SCHEMA.md` for complete schema.
 ### When to Use `'use client'`
 
 Use `'use client'` ONLY when you need:
+
 - Event handlers (onClick, onChange)
 - React hooks (useState, useEffect, useRef)
 - Browser APIs (localStorage, window)
@@ -385,12 +451,18 @@ Use `'use client'` ONLY when you need:
 ## Documentation
 
 Detailed docs in `context/`:
+
 - `INDEX.md` - Documentation hub
 - `ARCHITECTURE.md` - System design
 - `TECH_STACK.md` - Technology details
 - `DATABASE_SCHEMA.md` - Database structure
 - `WORKFLOWS.md` - Development workflows
 - `ultrathink.md` - Architecture principles
+
+**Backend documentation** (Edge Functions, security, push notifications):
+
+- `../foodshare-backend/CLAUDE.md` - Backend patterns and utilities
+- `../foodshare-backend/functions/PLATFORM_GUIDE.md` - Platform categorization
 
 ## Next.js 16 Specific: Proxy (formerly Middleware)
 
@@ -411,6 +483,7 @@ export const config = {
 ```
 
 **Key differences from middleware:**
+
 - File: `proxy.ts` (not `middleware.ts`)
 - Function: `export async function proxy()` (not `middleware()`)
 - Runtime: Node.js (not Edge) - direct imports work, no dynamic import needed
@@ -421,12 +494,12 @@ export const config = {
 
 ```typescript
 // ❌ WRONG - Don't do this in src/app/actions/auth.ts
-'use server';
-import type { AuthUser } from '@/lib/data/auth';
-export type { AuthUser };  // This BREAKS the build!
+"use server";
+import type { AuthUser } from "@/lib/data/auth";
+export type { AuthUser }; // This BREAKS the build!
 
 // ✅ CORRECT - Import AuthUser directly from lib/data/auth
-import type { AuthUser } from '@/lib/data/auth';
+import type { AuthUser } from "@/lib/data/auth";
 ```
 
 The `AuthUser` type is defined in `src/lib/data/auth.ts`. Always import it from there, never from `src/app/actions/auth.ts`.
@@ -444,8 +517,8 @@ export const runtime = "edge";
 export const size = { width: 1200, height: 630 };
 
 export default async function Image() {
-  const stats = await getOGStats();  // Live stats from Supabase
-  const seasonal = getSeasonalTheme();  // Winter/Spring/Summer/Fall theming
+  const stats = await getOGStats(); // Live stats from Supabase
+  const seasonal = getSeasonalTheme(); // Winter/Spring/Summer/Fall theming
 
   return new ImageResponse(/* JSX */);
 }
@@ -456,8 +529,9 @@ export default async function Image() {
 **Module not found**: Check imports use `@/` alias (tsconfig paths)
 
 **Map not rendering**: Leaflet needs `'use client'` and dynamic import:
+
 ```typescript
-const Map = dynamic(() => import('@/components/leaflet/Map'), { ssr: false });
+const Map = dynamic(() => import("@/components/leaflet/Map"), { ssr: false });
 ```
 
 **Type errors with Supabase**: Regenerate types: `supabase gen types typescript`
@@ -469,3 +543,7 @@ const Map = dynamic(() => import('@/components/leaflet/Map'), { ssr: false });
 **AuthUser import error**: Import from `@/lib/data/auth`, NOT from `@/app/actions/auth`
 
 **Middleware build error**: Use `proxy.ts` instead of `middleware.ts` in Next.js 16
+
+**Edge Function not found**: Remember `supabase/` is a symlink - work in `foodshare-backend/` directly
+
+**Migration conflicts**: Coordinate backend changes across platforms - they affect iOS/Android too

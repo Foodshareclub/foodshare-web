@@ -26,7 +26,7 @@ Understanding the codebase organization.
 ```bash
 # Clone and install
 git clone <repository-url>
-cd foodshare-nextjs
+cd foodshare
 npm install
 
 # Set up environment
@@ -41,12 +41,12 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 
 ## Essential Commands
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run lint` | Run ESLint |
-| `npm run type-check` | TypeScript checking |
+| Command              | Description              |
+| -------------------- | ------------------------ |
+| `npm run dev`        | Start development server |
+| `npm run build`      | Build for production     |
+| `npm run lint`       | Run ESLint               |
+| `npm run type-check` | TypeScript checking      |
 
 ## Key Concepts
 

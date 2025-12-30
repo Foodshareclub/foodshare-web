@@ -22,7 +22,7 @@
 ## Repository Overview
 
 ```
-foodshare-nextjs/
+foodshare/
 ├── .claude/                    # Claude Code configuration
 ├── .github/                    # GitHub workflows and templates
 ├── .next/                      # Next.js build output (generated)
@@ -68,18 +68,18 @@ foodshare-nextjs/
 
 ### Directories
 
-| Directory         | Purpose                          | Git Tracked     |
-| ----------------- | -------------------------------- | --------------- |
-| **src/**          | Application source code          | Yes             |
-| **messages/**     | next-intl translation JSON files | Yes             |
-| **public/**       | Static assets (images, manifest) | Yes             |
-| **context/**      | Project documentation            | Yes             |
-| **docs/**         | Additional documentation         | Yes             |
-| **scripts/**      | Build and utility scripts        | Yes             |
-| **supabase/**     | DB migrations and Edge Functions | Yes             |
-| **.github/**      | GitHub Actions workflows         | Yes             |
-| **node_modules/** | npm dependencies                 | No (.gitignore) |
-| **.next/**        | Next.js build output             | No (.gitignore) |
+| Directory         | Purpose                                           | Git Tracked     |
+| ----------------- | ------------------------------------------------- | --------------- |
+| **src/**          | Application source code                           | Yes             |
+| **messages/**     | next-intl translation JSON files                  | Yes             |
+| **public/**       | Static assets (images, manifest)                  | Yes             |
+| **context/**      | Project documentation                             | Yes             |
+| **docs/**         | Additional documentation                          | Yes             |
+| **scripts/**      | Build and utility scripts                         | Yes             |
+| **supabase/**     | Symlink → `../foodshare-backend` (shared backend) | Yes (symlink)   |
+| **.github/**      | GitHub Actions workflows                          | Yes             |
+| **node_modules/** | npm dependencies                                  | No (.gitignore) |
+| **.next/**        | Next.js build output                              | No (.gitignore) |
 
 ---
 

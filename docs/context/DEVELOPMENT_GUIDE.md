@@ -19,7 +19,7 @@
 
 ```bash
 git clone <repository-url>
-cd foodshare-nextjs
+cd foodshare
 ```
 
 ### 2. Install Node.js Version

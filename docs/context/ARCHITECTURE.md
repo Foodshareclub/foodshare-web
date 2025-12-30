@@ -6,6 +6,19 @@
 
 FoodShare follows a modern **Next.js 16 App Router** architecture with **React Server Components** as the foundation. Data flows through Server Components and Server Actions, with Supabase as the backend.
 
+### Cross-Platform Architecture
+
+FoodShare uses a **shared backend** serving multiple client applications:
+
+| Repository           | Purpose                     | Stack                            |
+| -------------------- | --------------------------- | -------------------------------- |
+| `foodshare/`         | Web app (this repo)         | Next.js 16 + React 19            |
+| `foodshare-ios/`     | iOS app                     | Swift + SwiftUI                  |
+| `foodshare-android/` | Android app                 | Kotlin + Jetpack Compose         |
+| `foodshare-backend/` | **Shared Supabase backend** | Deno Edge Functions + PostgreSQL |
+
+The `supabase/` folder in this repo is a **symlink** to `../foodshare-backend`. Edge Functions and database migrations are managed in the backend repo and shared across all platforms.
+
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        Browser / Client                              │
