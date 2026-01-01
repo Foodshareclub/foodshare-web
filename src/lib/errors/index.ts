@@ -43,3 +43,25 @@ export {
 
 // Error Handler
 export { ApiErrorHandler, apiErrorHandler } from "./handler";
+
+// Recovery Strategies
+export {
+  executeRecovery,
+  createStandardRecovery,
+  createAggressiveRecovery,
+  createInteractiveRecovery,
+  createCriticalRecovery,
+  withRecovery,
+  createRecoverableFetch,
+  useRecovery,
+} from "./recovery";
+export type {
+  RecoveryStrategyType,
+  RetryStrategy,
+  CacheStrategy,
+  DegradeStrategy,
+  PromptStrategy,
+  RecoveryStrategy,
+  RecoveryConfig,
+  RecoveryResult,
+} from "./recovery";

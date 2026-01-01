@@ -78,7 +78,7 @@ export { default as LanguageSelector } from "./languageSelector/LanguageSelector
 export { default as ChangeLanguageContainer } from "./localization/ChangeLanguageContainer";
 
 // Error Boundaries
-export { GenericErrorBoundary, withErrorBoundary } from "./ErrorBoundary";
+export { FeatureErrorBoundary, AsyncErrorBoundary, withErrorBoundary } from "./ErrorBoundary";
 
 // Auth Guards
 export { AuthGuard, RequireAuth, RequireGuest, RequireAdmin } from "./guards/AuthGuard";

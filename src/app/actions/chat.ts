@@ -6,6 +6,7 @@
  * - Zod schema validation
  * - Type-safe action results
  * - Proper auth checks
+ * - Edge Function routing (when enabled)
  */
 
 import { z } from "zod";
@@ -15,8 +16,18 @@ import { CACHE_TAGS, invalidateTag, invalidatePostActivityCaches } from "@/lib/d
 import { trackEvent } from "@/app/actions/analytics";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import { logPostContact, logPostArrangement } from "@/app/actions/post-activity";
-// Structured logger available for future use
-// import { createActionLogger } from "@/lib/structured-logger";
+import {
+  createRoomAPI,
+  sendMessageAPI,
+  acceptRequestAPI,
+  completeExchangeAPI,
+  archiveRoomAPI,
+} from "@/lib/api/chat";
+import { submitReviewAPI, formDataToReviewInput } from "@/lib/api/reviews";
+
+// Feature flags for Edge Function migration
+const USE_EDGE_FUNCTIONS = process.env.USE_EDGE_FUNCTIONS_FOR_CHAT === "true";
+const USE_EDGE_FUNCTIONS_FOR_REVIEWS = process.env.USE_EDGE_FUNCTIONS_FOR_REVIEWS === "true";
 
 // ============================================================================
 // Zod Schemas
@@ -77,6 +88,8 @@ async function verifyAuth() {
 
 /**
  * Send a message in a food sharing chat room
+ *
+ * Routes to Edge Function when USE_EDGE_FUNCTIONS_FOR_CHAT is enabled.
  */
 export async function sendFoodChatMessage(formData: FormData): Promise<ServerActionResult<void>> {
   try {
@@ -98,6 +111,25 @@ export async function sendFoodChatMessage(formData: FormData): Promise<ServerAct
       return serverActionError(firstError.message, "VALIDATION_ERROR");
     }
 
+    // Use Edge Function when enabled
+    if (USE_EDGE_FUNCTIONS) {
+      const result = await sendMessageAPI({
+        roomId: validated.data.roomId,
+        text: validated.data.text,
+        image: validated.data.image,
+      });
+
+      if (result.success) {
+        invalidateTag(CACHE_TAGS.CHATS);
+        invalidateTag(CACHE_TAGS.CHAT(validated.data.roomId));
+        invalidateTag(CACHE_TAGS.CHAT_MESSAGES(validated.data.roomId));
+        invalidateTag(CACHE_TAGS.USER_NOTIFICATIONS(user.id));
+      }
+
+      return result.success ? successVoid() : serverActionError(result.error.message, result.error.code);
+    }
+
+    // Fallback: Direct Supabase path
     // Verify user is a participant in this room
     const { data: room, error: roomError } = await supabase
       .from("rooms")
@@ -201,6 +233,8 @@ export async function markFoodChatAsRead(roomId: string): Promise<ServerActionRe
 /**
  * Create a new food sharing chat room
  * Prevents users from chatting with themselves or requesting their own posts
+ *
+ * Routes to Edge Function when USE_EDGE_FUNCTIONS_FOR_CHAT is enabled.
  */
 export async function createFoodChatRoom(
   postId: number,
@@ -227,6 +261,41 @@ export async function createFoodChatRoom(
       );
     }
 
+    // Use Edge Function when enabled
+    if (USE_EDGE_FUNCTIONS) {
+      const result = await createRoomAPI({
+        postId: validated.data.postId,
+        sharerId: validated.data.sharerId,
+      });
+
+      if (result.success) {
+        invalidateTag(CACHE_TAGS.CHATS);
+        invalidateTag(CACHE_TAGS.USER_NOTIFICATIONS(validated.data.sharerId));
+        invalidatePostActivityCaches(validated.data.postId, user.id);
+
+        // Log and track only for new rooms
+        if (result.data.created) {
+          await logPostContact(validated.data.postId, result.data.roomId, {
+            sharer_id: validated.data.sharerId,
+            requester_id: user.id,
+          });
+
+          await trackEvent("Food Requested", {
+            postId: validated.data.postId,
+            sharerId: validated.data.sharerId,
+            requesterId: user.id,
+            roomId: result.data.roomId,
+            via: "edge-function",
+          });
+        }
+
+        return { success: true, data: { roomId: result.data.roomId } };
+      }
+
+      return serverActionError(result.error.message, result.error.code);
+    }
+
+    // Fallback: Direct Supabase path
     // Verify the post belongs to the sharer (prevent requesting own posts)
     const { data: post } = await supabase
       .from("posts")
@@ -397,6 +466,35 @@ export async function writeReview(formData: FormData): Promise<ServerActionResul
     if (validated.data.profileId === user.id) {
       return serverActionError("You cannot review yourself", "VALIDATION_ERROR");
     }
+
+    // ==========================================================================
+    // Edge Function Path (when enabled)
+    // ==========================================================================
+    if (USE_EDGE_FUNCTIONS_FOR_REVIEWS) {
+      const input = formDataToReviewInput(formData);
+      const result = await submitReviewAPI(input);
+
+      if (result.success) {
+        invalidateTag(CACHE_TAGS.PROFILES);
+        invalidateTag(CACHE_TAGS.PROFILE(validated.data.profileId));
+        revalidatePath("/profile");
+
+        await trackEvent("Review Left", {
+          postId: validated.data.postId,
+          rating: validated.data.rating,
+          reviewerId: user.id,
+          targetProfileId: validated.data.profileId,
+        });
+
+        return successVoid();
+      }
+
+      return result as ServerActionResult<void>;
+    }
+
+    // ==========================================================================
+    // Direct Supabase Path (fallback)
+    // ==========================================================================
 
     const { error } = await supabase.from("reviews").insert({
       profile_id: validated.data.profileId,

@@ -1,7 +1,12 @@
-// Unified Error Boundary (recommended)
-export { GenericErrorBoundary, withErrorBoundary } from './GenericErrorBoundary';
-export { default } from './GenericErrorBoundary';
+/**
+ * Error Boundary Components
+ *
+ * @module components/ErrorBoundary
+ */
 
-// Legacy exports (for backward compatibility)
-export { AppErrorBoundary } from './AppErrorBoundary';
-export { StorageErrorBoundary } from './StorageErrorBoundary';
+export {
+  FeatureErrorBoundary,
+  withErrorBoundary,
+  AsyncErrorBoundary,
+} from "./FeatureErrorBoundary";
+export type { ErrorFallbackProps, FeatureErrorBoundaryProps } from "./FeatureErrorBoundary";

@@ -2,6 +2,7 @@
  * Admin Email Server Actions
  * Mutations for email management from admin CRM
  * All actions require admin/superadmin role
+ * Supports dual-mode routing (Edge Functions when enabled)
  */
 
 "use server";
@@ -9,6 +10,19 @@
 import { createClient } from "@/lib/supabase/server";
 import type { EmailProvider, EmailType } from "@/lib/email/types";
 import { invalidateTag, CACHE_TAGS } from "@/lib/data/cache-keys";
+import {
+  retryEmailAPI,
+  deleteQueuedEmailAPI,
+  sendManualEmailAPI,
+  resetProviderQuotaAPI,
+  updateProviderAvailabilityAPI,
+  resetCircuitBreakerAPI,
+  addToSuppressionListAPI,
+  removeFromSuppressionListAPI,
+} from "@/lib/api";
+
+// Feature flag for Edge Function migration
+const USE_EDGE_FUNCTIONS = process.env.USE_EDGE_FUNCTIONS_FOR_ADMIN === "true";
 
 // ============================================================================
 // Types
@@ -73,6 +87,15 @@ async function verifyAdminAccess(): Promise<
  * Requires admin access
  */
 export async function retryEmail(queueId: string): Promise<ActionResult> {
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await retryEmailAPI(queueId);
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.EMAIL_QUEUE);
+      return { success: true };
+    }
+    return { success: false, error: result.error?.message || "Failed to retry email" };
+  }
+
   try {
     const auth = await verifyAdminAccess();
     if ("error" in auth) {
@@ -111,6 +134,15 @@ export async function retryEmail(queueId: string): Promise<ActionResult> {
  * Requires admin access
  */
 export async function deleteQueuedEmail(queueId: string): Promise<ActionResult> {
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await deleteQueuedEmailAPI(queueId);
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.EMAIL_QUEUE);
+      return { success: true };
+    }
+    return { success: false, error: result.error?.message || "Failed to delete queued email" };
+  }
+
   try {
     const auth = await verifyAdminAccess();
     if ("error" in auth) {
@@ -144,6 +176,23 @@ export async function deleteQueuedEmail(queueId: string): Promise<ActionResult> 
 export async function sendManualEmail(
   request: ManualEmailRequest
 ): Promise<ActionResult<{ messageId: string }>> {
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await sendManualEmailAPI({
+      to: request.to,
+      subject: request.subject,
+      html: request.html,
+      emailType: request.emailType as "transactional" | "marketing" | "notification" | "system",
+      provider: request.provider as "resend" | "brevo" | "mailersend" | "ses" | undefined,
+    });
+    if (result.success && result.data) {
+      invalidateTag(CACHE_TAGS.EMAIL_QUEUE);
+      invalidateTag(CACHE_TAGS.EMAIL_STATS);
+      return { success: true, data: { messageId: result.data.messageId || "" } };
+    }
+    const errorMsg = !result.success && result.error ? result.error.message : "Failed to send manual email";
+    return { success: false, error: errorMsg };
+  }
+
   try {
     const auth = await verifyAdminAccess();
     if ("error" in auth) {
@@ -199,6 +248,20 @@ export async function resetProviderQuota(
   provider: EmailProvider,
   date?: string
 ): Promise<ActionResult> {
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await resetProviderQuotaAPI(
+      provider as "resend" | "brevo" | "mailersend" | "ses",
+      date
+    );
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.PROVIDER_QUOTAS);
+      invalidateTag(CACHE_TAGS.PROVIDER_HEALTH);
+      invalidateTag(CACHE_TAGS.EMAIL_STATS);
+      return { success: true };
+    }
+    return { success: false, error: result.error?.message || "Failed to reset provider quota" };
+  }
+
   try {
     const auth = await verifyAdminAccess();
     if ("error" in auth) {
@@ -240,6 +303,19 @@ export async function updateProviderAvailability(
   provider: EmailProvider,
   isAvailable: boolean
 ): Promise<ActionResult> {
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await updateProviderAvailabilityAPI(
+      provider as "resend" | "brevo" | "mailersend" | "ses",
+      isAvailable
+    );
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.PROVIDER_HEALTH);
+      invalidateTag(CACHE_TAGS.EMAIL_HEALTH);
+      return { success: true };
+    }
+    return { success: false, error: result.error?.message || "Failed to update availability" };
+  }
+
   try {
     const auth = await verifyAdminAccess();
     if ("error" in auth) {
@@ -280,6 +356,18 @@ export async function updateProviderAvailability(
  * Requires admin access
  */
 export async function resetCircuitBreaker(provider: EmailProvider): Promise<ActionResult> {
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await resetCircuitBreakerAPI(
+      provider as "resend" | "brevo" | "mailersend" | "ses"
+    );
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.PROVIDER_HEALTH);
+      invalidateTag(CACHE_TAGS.EMAIL_HEALTH);
+      return { success: true };
+    }
+    return { success: false, error: result.error?.message || "Failed to reset circuit breaker" };
+  }
+
   try {
     const auth = await verifyAdminAccess();
     if ("error" in auth) {
@@ -328,6 +416,15 @@ export async function addToSuppressionList(
   reason: "bounce" | "complaint" | "unsubscribe" | "manual",
   notes?: string
 ): Promise<ActionResult> {
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await addToSuppressionListAPI(email, reason, notes);
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.EMAIL_STATS);
+      return { success: true };
+    }
+    return { success: false, error: result.error?.message || "Failed to add to suppression list" };
+  }
+
   try {
     const auth = await verifyAdminAccess();
     if ("error" in auth) {
@@ -367,6 +464,18 @@ export async function addToSuppressionList(
  * Remove email from suppression list
  */
 export async function removeFromSuppressionList(email: string): Promise<ActionResult> {
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await removeFromSuppressionListAPI(email);
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.EMAIL_STATS);
+      return { success: true };
+    }
+    return {
+      success: false,
+      error: result.error?.message || "Failed to remove from suppression list",
+    };
+  }
+
   try {
     const auth = await verifyAdminAccess();
     if ("error" in auth) {

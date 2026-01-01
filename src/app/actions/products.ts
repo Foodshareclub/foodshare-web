@@ -18,6 +18,14 @@ import {
 } from "@/lib/storage/search";
 import { embedProduct } from "@/lib/embeddings";
 import { createActionLogger } from "@/lib/structured-logger";
+import {
+  createProductAPI,
+  updateProductAPI,
+  deleteProductAPI,
+} from "@/lib/api/products";
+
+// Feature flag for Edge Function migration (set to true to enable)
+const USE_EDGE_FUNCTIONS = process.env.USE_EDGE_FUNCTIONS_FOR_PRODUCTS === "true";
 
 // NOTE: Data functions (getProducts, getAllProducts, etc.) should be imported
 // directly from '@/lib/data/products' - they cannot be re-exported from a
@@ -97,6 +105,9 @@ const createProductSchema = z.object({
   condition: z.string().optional(),
   images: z.array(z.string()).optional().default([]),
   profile_id: z.string().uuid("Invalid user ID"),
+  // Location coordinates (optional - when provided, enables Edge Function path)
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
 });
 
 const updateProductSchema = createProductSchema.partial().extend({
@@ -105,6 +116,12 @@ const updateProductSchema = createProductSchema.partial().extend({
 
 /**
  * Create a new product
+ *
+ * Routes to Edge Function when:
+ * - USE_EDGE_FUNCTIONS flag is enabled
+ * - Latitude and longitude are provided
+ *
+ * Falls back to direct Supabase otherwise.
  */
 export async function createProduct(formData: FormData): Promise<ActionResult<{ id: number }>> {
   const logger = await createActionLogger("createProduct");
@@ -115,6 +132,12 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
   const getOptionalString = (key: string): string | undefined => {
     const value = formData.get(key);
     return value ? (value as string) : undefined;
+  };
+  const getOptionalNumber = (key: string): number | undefined => {
+    const value = formData.get(key);
+    if (!value) return undefined;
+    const num = parseFloat(value as string);
+    return isNaN(num) ? undefined : num;
   };
 
   // Parse images JSON safely
@@ -138,12 +161,15 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     condition: getOptionalString("condition"),
     images,
     profile_id: getString("profile_id"),
+    latitude: getOptionalNumber("latitude"),
+    longitude: getOptionalNumber("longitude"),
   };
 
   logger.debug("Parsed form data", {
     post_name: rawData.post_name,
     post_type: rawData.post_type,
     images_count: rawData.images?.length,
+    has_location: !!(rawData.latitude && rawData.longitude),
   });
 
   // Validate with standard helper
@@ -152,6 +178,66 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     logger.warn("Validation failed", { error: validation.error });
     return validation;
   }
+
+  // Check if we should use Edge Function
+  const hasLocation = validation.data.latitude !== undefined && validation.data.longitude !== undefined;
+  const useEdgeFunction = USE_EDGE_FUNCTIONS && hasLocation;
+
+  if (useEdgeFunction) {
+    logger.info("Using Edge Function path", { hasLocation });
+
+    // Route through Edge Function for unified cross-platform behavior
+    const result = await createProductAPI({
+      post_name: validation.data.post_name,
+      post_description: validation.data.post_description,
+      post_type: validation.data.post_type,
+      post_address: validation.data.post_address,
+      available_hours: validation.data.available_hours,
+      transportation: validation.data.transportation,
+      condition: validation.data.condition,
+      images: validation.data.images ?? [],
+      profile_id: validation.data.profile_id,
+      latitude: validation.data.latitude,
+      longitude: validation.data.longitude,
+    });
+
+    if (result.success) {
+      // Invalidate caches
+      invalidateProductCaches(result.data.id, validation.data.post_type, validation.data.profile_id);
+
+      // Fire-and-forget background tasks
+      Promise.all([
+        trackEvent("Listing Created", {
+          listingId: result.data.id,
+          type: validation.data.post_type,
+          via: "edge-function",
+        }),
+        indexProductForSearch(result.data.id, {
+          post_name: validation.data.post_name,
+          post_description: validation.data.post_description,
+          post_type: validation.data.post_type,
+          post_address: validation.data.post_address,
+          profile_id: validation.data.profile_id,
+          is_active: true,
+        }),
+        embedProduct({
+          id: result.data.id,
+          title: validation.data.post_name,
+          description: validation.data.post_description,
+          type: validation.data.post_type,
+          location: validation.data.post_address || undefined,
+          userId: validation.data.profile_id,
+        }),
+      ]).catch(() => {});
+
+      logger.info("Product created via Edge Function", { id: result.data.id });
+    }
+
+    return result;
+  }
+
+  // Fallback: Direct Supabase path (legacy behavior)
+  logger.info("Using direct Supabase path", { hasLocation, useEdgeFunctions: USE_EDGE_FUNCTIONS });
 
   return withErrorHandling(async () => {
     const supabase = await createClient();
@@ -168,9 +254,12 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
       throw new Error("Unauthorized: User ID mismatch");
     }
 
+    // Remove lat/lng from insert data (not in posts table schema for direct insert)
+    const { latitude: _lat, longitude: _lng, ...insertData } = validation.data;
+
     const { data, error } = await supabase
       .from("posts")
-      .insert({ ...validation.data, is_active: true })
+      .insert({ ...insertData, is_active: true })
       .select("id")
       .single();
 
@@ -215,6 +304,15 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
 
 /**
  * Update an existing product
+ *
+ * TODO: Migrate to Edge Function when version field is added to product type.
+ * The Edge Function requires `version` for optimistic locking, which needs:
+ * 1. Add `version` to InitialProductStateType (src/types/product.types.ts)
+ * 2. Include version in product queries (lib/data/products.ts)
+ * 3. Pass version through FormData when editing
+ * 4. Call updateProductAPI with version
+ *
+ * Currently stays on direct Supabase path for backwards compatibility.
  */
 export async function updateProduct(
   id: number,
@@ -325,11 +423,35 @@ export async function updateProduct(
 /**
  * Delete a product (soft delete - sets is_active = false)
  * This unpublishes the listing rather than permanently deleting it
+ *
+ * Routes to Edge Function when USE_EDGE_FUNCTIONS is enabled.
  */
 export async function deleteProduct(id: number): Promise<ActionResult<undefined>> {
   const logger = await createActionLogger("deleteProduct");
   logger.info("Starting soft delete", { id });
 
+  // Use Edge Function when enabled
+  if (USE_EDGE_FUNCTIONS) {
+    logger.info("Using Edge Function path for delete");
+
+    const result = await deleteProductAPI(id);
+
+    if (result.success) {
+      // We need to get product info for cache invalidation
+      // The Edge Function already deleted, so we invalidate common caches
+      invalidateTag(CACHE_TAGS.PRODUCTS);
+      invalidateTag(CACHE_TAGS.PRODUCT(id));
+
+      // Remove from search index (fire-and-forget)
+      removeProductFromSearch(id.toString()).catch(() => {});
+
+      logger.info("Product deleted via Edge Function", { id });
+    }
+
+    return result;
+  }
+
+  // Fallback: Direct Supabase path
   return withErrorHandling(async () => {
     const supabase = await createClient();
 

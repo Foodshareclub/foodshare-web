@@ -6,6 +6,7 @@
  * - Zod schema validation
  * - Type-safe action results
  * - Proper auth checks
+ * - Edge Function routing (when enabled via feature flag)
  */
 
 import { z } from "zod";
@@ -15,6 +16,23 @@ import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 import { getProfile, type Profile } from "@/lib/data/profiles";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import { createActionLogger } from "@/lib/structured-logger";
+
+// Edge Function API imports
+import {
+  updateProfileAPI,
+  uploadAvatarAPI,
+  deleteAvatarAPI,
+  updateAddressAPI,
+  formDataToProfileInput,
+  formDataToAddressInput,
+  fileToAvatarInput,
+} from "@/lib/api/profile";
+
+// =============================================================================
+// Feature Flag
+// =============================================================================
+
+const USE_EDGE_FUNCTIONS = process.env.USE_EDGE_FUNCTIONS_FOR_PROFILE === "true";
 
 // ============================================================================
 // Zod Schemas
@@ -107,6 +125,34 @@ export async function updateProfile(
       return serverActionError(authError || "Not authenticated", "UNAUTHORIZED");
     }
 
+    // ==========================================================================
+    // Edge Function Path (when enabled)
+    // ==========================================================================
+    if (USE_EDGE_FUNCTIONS) {
+      const input = formDataToProfileInput(formData);
+      const result = await updateProfileAPI(input);
+
+      if (result.success) {
+        invalidateTag(CACHE_TAGS.PROFILES);
+        invalidateTag(CACHE_TAGS.PROFILE(user.id));
+        revalidatePath("/profile");
+        logger.info("Profile updated via Edge Function", { userId: user.id });
+        return {
+          success: true,
+          data: {
+            id: result.data.id,
+            name: result.data.name,
+          },
+        };
+      }
+
+      return result as ServerActionResult<ProfileResult>;
+    }
+
+    // ==========================================================================
+    // Direct Supabase Path (fallback)
+    // ==========================================================================
+
     // Parse form data
     const rawData: Record<string, unknown> = {};
     const fields = ["name", "bio", "phone", "location"];
@@ -191,6 +237,30 @@ export async function uploadAvatar(
       return serverActionError("File too large. Maximum size is 5MB", "VALIDATION_ERROR");
     }
 
+    // ==========================================================================
+    // Edge Function Path (when enabled)
+    // ==========================================================================
+    if (USE_EDGE_FUNCTIONS) {
+      const input = await fileToAvatarInput(file);
+      const result = await uploadAvatarAPI(input);
+
+      if (result.success) {
+        invalidateTag(CACHE_TAGS.PROFILES);
+        invalidateTag(CACHE_TAGS.PROFILE(user.id));
+        revalidatePath("/profile");
+        return {
+          success: true,
+          data: { url: result.data.url },
+        };
+      }
+
+      return result as ServerActionResult<AvatarUploadResult>;
+    }
+
+    // ==========================================================================
+    // Direct Supabase Path (fallback)
+    // ==========================================================================
+
     const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const fileName = `${user.id}/avatar.${fileExt}`;
 
@@ -271,6 +341,30 @@ export async function uploadProfileAvatar(
       return serverActionError("File too large. Maximum size is 5MB", "VALIDATION_ERROR");
     }
 
+    // ==========================================================================
+    // Edge Function Path (when enabled)
+    // ==========================================================================
+    if (USE_EDGE_FUNCTIONS) {
+      const input = await fileToAvatarInput(file);
+      const result = await uploadAvatarAPI(input);
+
+      if (result.success) {
+        invalidateTag(CACHE_TAGS.PROFILES);
+        invalidateTag(CACHE_TAGS.PROFILE(user.id));
+        revalidatePath("/profile");
+        return {
+          success: true,
+          data: { url: result.data.url },
+        };
+      }
+
+      return result as ServerActionResult<AvatarUploadResult>;
+    }
+
+    // ==========================================================================
+    // Direct Supabase Path (fallback)
+    // ==========================================================================
+
     const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const fileName = `${user.id}/avatar.${fileExt}`;
 
@@ -322,6 +416,25 @@ export async function deleteAvatar(): Promise<ServerActionResult<void>> {
     if (authError || !supabase || !user) {
       return serverActionError(authError || "Not authenticated", "UNAUTHORIZED");
     }
+
+    // ==========================================================================
+    // Edge Function Path (when enabled)
+    // ==========================================================================
+    if (USE_EDGE_FUNCTIONS) {
+      const result = await deleteAvatarAPI();
+
+      if (result.success) {
+        invalidateTag(CACHE_TAGS.PROFILES);
+        invalidateTag(CACHE_TAGS.PROFILE(user.id));
+        revalidatePath("/profile");
+      }
+
+      return result;
+    }
+
+    // ==========================================================================
+    // Direct Supabase Path (fallback)
+    // ==========================================================================
 
     // List and delete all avatar files for this user
     const { data: files } = await supabase.storage.from("avatars").list(user.id);
@@ -421,6 +534,43 @@ export async function updateUserAddress(
     if (authError || !supabase || !user) {
       return serverActionError(authError || "Not authenticated", "UNAUTHORIZED");
     }
+
+    // ==========================================================================
+    // Edge Function Path (when enabled)
+    // ==========================================================================
+    if (USE_EDGE_FUNCTIONS) {
+      const input = formDataToAddressInput(formData);
+      const result = await updateAddressAPI(input);
+
+      if (result.success) {
+        revalidatePath("/profile");
+        revalidatePath("/settings");
+        // Transform response back to UserAddress format
+        return {
+          success: true,
+          data: {
+            profile_id: result.data.profileId,
+            address_line_1: result.data.addressLine1,
+            address_line_2: result.data.addressLine2 || "",
+            address_line_3: result.data.addressLine3 || "",
+            city: result.data.city,
+            state_province: result.data.stateProvince || "",
+            postal_code: result.data.postalCode || "",
+            country: result.data.country,
+            lat: result.data.lat,
+            long: result.data.lng,
+            generated_full_address: result.data.fullAddress,
+            radius_meters: result.data.radiusMeters,
+          },
+        };
+      }
+
+      return result as ServerActionResult<UserAddress>;
+    }
+
+    // ==========================================================================
+    // Direct Supabase Path (fallback)
+    // ==========================================================================
 
     // Parse form data
     const addressData = {

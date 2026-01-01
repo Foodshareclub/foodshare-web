@@ -378,12 +378,18 @@ function PublishListingModal({
       if (productObj.condition) formData.set("condition", productObj.condition);
       if (productObj.images) formData.set("images", JSON.stringify(productObj.images));
       if (productObj.profile_id) formData.set("profile_id", productObj.profile_id);
+      // Add coordinates for Edge Function routing (enables unified cross-platform API)
+      if (userLocation?.latitude !== undefined && userLocation?.longitude !== undefined) {
+        formData.set("latitude", userLocation.latitude.toString());
+        formData.set("longitude", userLocation.longitude.toString());
+      }
 
       console.log("[PublishListing] 📝 Form data built:", {
         post_name: productObj.post_name,
         post_type: productObj.post_type,
         images_count: productObj.images?.length,
         profile_id: productObj.profile_id,
+        has_location: !!(userLocation?.latitude && userLocation?.longitude),
         is_update: !!product,
       });
 

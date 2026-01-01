@@ -3,11 +3,30 @@
 /**
  * Admin Listings Server Actions
  * Mutations for admin CRM listings management
+ *
+ * Supports dual-mode routing:
+ * - Edge Function path (when USE_EDGE_FUNCTIONS_FOR_ADMIN=true)
+ * - Direct Supabase path (fallback)
  */
 
 import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 import { requireAdmin, logAdminAction } from "@/lib/data/admin-auth";
+import {
+  updateListingAPI,
+  activateListingAPI,
+  deactivateListingAPI,
+  deleteListingAPI as deleteListingEdge,
+  updateAdminNotesAPI,
+  bulkActivateListingsAPI,
+  bulkDeactivateListingsAPI,
+  bulkDeleteListingsAPI,
+  updateUserRolesAPI,
+  toUpdateListingRequest,
+} from "@/lib/api";
+
+// Feature flag for Edge Function migration
+const USE_EDGE_FUNCTIONS = process.env.USE_EDGE_FUNCTIONS_FOR_ADMIN === "true";
 
 // ============================================================================
 // Types
@@ -37,6 +56,25 @@ interface ActionResult {
  * Update a listing (admin can edit any listing)
  */
 export async function updateListing(id: number, data: UpdateListingData): Promise<ActionResult> {
+  // ==========================================================================
+  // Edge Function Path (when enabled)
+  // ==========================================================================
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await updateListingAPI(id, toUpdateListingRequest(data));
+
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.ADMIN_LISTINGS);
+      invalidateTag(CACHE_TAGS.PRODUCTS);
+      invalidateTag(CACHE_TAGS.PRODUCT(id));
+      return { success: true };
+    }
+
+    return { success: false, error: result.error?.message || "Failed to update listing" };
+  }
+
+  // ==========================================================================
+  // Direct Supabase Path (fallback)
+  // ==========================================================================
   try {
     const adminId = await requireAdmin();
     const supabase = await createClient();
@@ -69,6 +107,19 @@ export async function updateListing(id: number, data: UpdateListingData): Promis
  * Activate a listing (approve)
  */
 export async function activateListing(id: number): Promise<ActionResult> {
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await activateListingAPI(id);
+
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.ADMIN_LISTINGS);
+      invalidateTag(CACHE_TAGS.PRODUCTS);
+      invalidateTag(CACHE_TAGS.PRODUCT(id));
+      return { success: true };
+    }
+
+    return { success: false, error: result.error?.message || "Failed to activate listing" };
+  }
+
   try {
     const adminId = await requireAdmin();
     const supabase = await createClient();
@@ -96,6 +147,19 @@ export async function activateListing(id: number): Promise<ActionResult> {
  * Deactivate a listing
  */
 export async function deactivateListing(id: number, reason?: string): Promise<ActionResult> {
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await deactivateListingAPI(id, reason);
+
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.ADMIN_LISTINGS);
+      invalidateTag(CACHE_TAGS.PRODUCTS);
+      invalidateTag(CACHE_TAGS.PRODUCT(id));
+      return { success: true };
+    }
+
+    return { success: false, error: result.error?.message || "Failed to deactivate listing" };
+  }
+
   try {
     const adminId = await requireAdmin();
     const supabase = await createClient();
@@ -127,6 +191,18 @@ export async function deactivateListing(id: number, reason?: string): Promise<Ac
  * Delete a listing permanently
  */
 export async function deleteListing(id: number): Promise<ActionResult> {
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await deleteListingEdge(id);
+
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.ADMIN_LISTINGS);
+      invalidateTag(CACHE_TAGS.PRODUCTS);
+      return { success: true };
+    }
+
+    return { success: false, error: result.error?.message || "Failed to delete listing" };
+  }
+
   try {
     const adminId = await requireAdmin();
     const supabase = await createClient();
@@ -150,6 +226,18 @@ export async function deleteListing(id: number): Promise<ActionResult> {
  * Bulk activate listings
  */
 export async function bulkActivateListings(ids: number[]): Promise<ActionResult> {
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await bulkActivateListingsAPI(ids);
+
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.ADMIN_LISTINGS);
+      invalidateTag(CACHE_TAGS.PRODUCTS);
+      return { success: true };
+    }
+
+    return { success: false, error: result.error?.message || "Failed to bulk activate" };
+  }
+
   try {
     const adminId = await requireAdmin();
     const supabase = await createClient();
@@ -181,6 +269,18 @@ export async function bulkDeactivateListings(
   ids: number[],
   reason?: string
 ): Promise<ActionResult> {
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await bulkDeactivateListingsAPI(ids, reason);
+
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.ADMIN_LISTINGS);
+      invalidateTag(CACHE_TAGS.PRODUCTS);
+      return { success: true };
+    }
+
+    return { success: false, error: result.error?.message || "Failed to bulk deactivate" };
+  }
+
   try {
     const adminId = await requireAdmin();
     const supabase = await createClient();
@@ -214,6 +314,18 @@ export async function bulkDeactivateListings(
  * Bulk delete listings
  */
 export async function bulkDeleteListings(ids: number[]): Promise<ActionResult> {
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await bulkDeleteListingsAPI(ids);
+
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.ADMIN_LISTINGS);
+      invalidateTag(CACHE_TAGS.PRODUCTS);
+      return { success: true };
+    }
+
+    return { success: false, error: result.error?.message || "Failed to bulk delete" };
+  }
+
   try {
     const adminId = await requireAdmin();
     const supabase = await createClient();
@@ -239,6 +351,17 @@ export async function bulkDeleteListings(ids: number[]): Promise<ActionResult> {
  * Update admin notes for a listing
  */
 export async function updateAdminNotes(id: number, notes: string): Promise<ActionResult> {
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await updateAdminNotesAPI(id, notes);
+
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.ADMIN_LISTINGS);
+      return { success: true };
+    }
+
+    return { success: false, error: result.error?.message || "Failed to update notes" };
+  }
+
   try {
     const adminId = await requireAdmin();
     const supabase = await createClient();
@@ -267,6 +390,18 @@ export async function updateUserRoles(
   userId: string,
   roles: Record<string, boolean>
 ): Promise<ActionResult> {
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await updateUserRolesAPI(userId, roles);
+
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.PROFILES);
+      invalidateTag(CACHE_TAGS.ADMIN);
+      return { success: true };
+    }
+
+    return { success: false, error: result.error?.message || "Failed to update roles" };
+  }
+
   try {
     const adminId = await requireAdmin();
     const supabase = await createClient();

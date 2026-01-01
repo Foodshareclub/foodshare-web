@@ -7,6 +7,7 @@
  * - Optimistic update support
  * - Activity logging
  * - Cache invalidation
+ * - Edge Function routing (when enabled)
  *
  * @module app/actions/post-engagement
  */
@@ -22,6 +23,16 @@ import {
 } from "@/lib/errors";
 import { logPostActivity, logPostShared } from "@/app/actions/post-activity";
 import { CACHE_TAGS, invalidateTag, invalidatePostActivityCaches } from "@/lib/data/cache-keys";
+import {
+  toggleLikeAPI,
+  toggleBookmarkAPI,
+  recordShareAPI,
+  getUserBookmarksAPI,
+  getBatchEngagementAPI,
+} from "@/lib/api/engagement";
+
+// Feature flag for Edge Function migration
+const USE_EDGE_FUNCTIONS = process.env.USE_EDGE_FUNCTIONS_FOR_ENGAGEMENT === "true";
 
 // ============================================================================
 // Schemas
@@ -50,6 +61,30 @@ export async function togglePostLike(
   const validation = validateWithSchema(postIdSchema, { postId });
   if (!validation.success) return validation;
 
+  // ==========================================================================
+  // Edge Function Path (when enabled)
+  // ==========================================================================
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await toggleLikeAPI(postId);
+
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.PRODUCT(postId));
+      invalidatePostActivityCaches(postId);
+      return {
+        success: true,
+        data: {
+          isLiked: result.data.isLiked,
+          likeCount: result.data.likeCount,
+        },
+      };
+    }
+
+    return result as ActionResult<{ isLiked: boolean; likeCount: number }>;
+  }
+
+  // ==========================================================================
+  // Direct Supabase Path (fallback)
+  // ==========================================================================
   return withErrorHandling(async () => {
     const supabase = await createClient();
 
@@ -166,6 +201,27 @@ export async function togglePostBookmark(
   const validation = validateWithSchema(postIdSchema, { postId });
   if (!validation.success) return validation;
 
+  // ==========================================================================
+  // Edge Function Path (when enabled)
+  // ==========================================================================
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await toggleBookmarkAPI(postId);
+
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.PRODUCT(postId));
+      invalidatePostActivityCaches(postId);
+      return {
+        success: true,
+        data: { isBookmarked: result.data.isBookmarked },
+      };
+    }
+
+    return result as ActionResult<{ isBookmarked: boolean }>;
+  }
+
+  // ==========================================================================
+  // Direct Supabase Path (fallback)
+  // ==========================================================================
   return withErrorHandling(async () => {
     const supabase = await createClient();
 

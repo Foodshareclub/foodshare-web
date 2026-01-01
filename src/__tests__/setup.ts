@@ -10,6 +10,45 @@ import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder as typeof global.TextDecoder;
 
+// Polyfill fetch globals for MSW (Node.js 18+ has these, but jsdom may not expose them)
+if (typeof global.Request === 'undefined') {
+  // @ts-expect-error - Polyfill for older Node versions
+  global.Request = class Request {
+    constructor(public url: string, public init?: RequestInit) {}
+  };
+}
+
+if (typeof global.Response === 'undefined') {
+  // @ts-expect-error - Polyfill for older Node versions
+  global.Response = class Response {
+    constructor(public body?: BodyInit | null, public init?: ResponseInit) {}
+    json() { return Promise.resolve({}); }
+    text() { return Promise.resolve(''); }
+  };
+}
+
+// Polyfill BroadcastChannel for MSW 2.x
+if (typeof global.BroadcastChannel === 'undefined') {
+  // @ts-expect-error - Polyfill for Node.js
+  global.BroadcastChannel = class BroadcastChannel {
+    name: string;
+    constructor(name: string) { this.name = name; }
+    postMessage() {}
+    close() {}
+    addEventListener() {}
+    removeEventListener() {}
+    onmessage = null;
+    onmessageerror = null;
+  };
+}
+
+// =============================================================================
+// MSW Setup (conditional - only if tests need it)
+// =============================================================================
+
+// MSW is set up lazily in individual test files that need it
+// Use: import { setupMSW } from '@/lib/testing'; setupMSW();
+
 // Mock next/cache (Server Actions use this)
 jest.mock('next/cache', () => ({
   revalidatePath: jest.fn(),

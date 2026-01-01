@@ -391,9 +391,9 @@ Review all `<Image>` components for:
 | `any` Type Count | 8 | 0 | 0 | DONE |
 | Console.log Count | 770 | 770 | <50 | In Progress |
 | Test Coverage | ~70% | ~70% | 85% | Pending |
-| Security Advisories | 8 | 2 | 0 | 2 Dashboard-only |
+| Security Advisories | 8 | 2 | 0 | 2 Dashboard-only (Jan 1, 2026: Fixed 5 function search paths) |
 | Lighthouse Performance | TBD | TBD | >90 | Pending |
-| Code Quality Rating | 8.4/10 | 9.1/10 | 9.5/10 | Improved |
+| Code Quality Rating | 8.4/10 | 9.2/10 | 9.5/10 | Improved |
 
 ---
 

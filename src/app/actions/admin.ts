@@ -7,6 +7,7 @@
  * - Type-safe action results
  * - Audit logging
  * - Proper admin auth via user_roles
+ * - Dual-mode routing (Edge Functions when enabled)
  */
 
 import { z } from "zod";
@@ -16,6 +17,14 @@ import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import type { ErrorCode } from "@/lib/errors";
 import { escapeFilterValue } from "@/lib/utils";
+import {
+  banUserAPI,
+  unbanUserAPI,
+  updateUserRoleAPI,
+} from "@/lib/api";
+
+// Feature flag for Edge Function migration
+const USE_EDGE_FUNCTIONS = process.env.USE_EDGE_FUNCTIONS_FOR_ADMIN === "true";
 
 // ============================================================================
 // Zod Schemas
@@ -348,14 +357,36 @@ export async function updateUserRole(
   userId: string,
   role: string
 ): Promise<ServerActionResult<void>> {
-  try {
-    // Validate input
-    const validated = UpdateUserRoleSchema.safeParse({ userId, role });
-    if (!validated.success) {
-      const firstError = validated.error.issues[0];
-      return serverActionError(firstError.message, "VALIDATION_ERROR");
+  // Validate input
+  const validated = UpdateUserRoleSchema.safeParse({ userId, role });
+  if (!validated.success) {
+    const firstError = validated.error.issues[0];
+    return serverActionError(firstError.message, "VALIDATION_ERROR");
+  }
+
+  // ==========================================================================
+  // Edge Function Path (when enabled)
+  // ==========================================================================
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await updateUserRoleAPI(userId, role);
+
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.ADMIN);
+      invalidateTag(CACHE_TAGS.PROFILES);
+      revalidatePath("/admin");
+      return successVoid();
     }
 
+    return serverActionError(
+      result.error?.message || "Failed to update user role",
+      "UNKNOWN_ERROR"
+    );
+  }
+
+  // ==========================================================================
+  // Direct Supabase Path (fallback)
+  // ==========================================================================
+  try {
     const auth = await verifyAdminAccess();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
@@ -409,14 +440,34 @@ export async function updateUserRole(
  * Ban a user
  */
 export async function banUser(userId: string, reason: string): Promise<ServerActionResult<void>> {
-  try {
-    // Validate input
-    const validated = BanUserSchema.safeParse({ userId, reason });
-    if (!validated.success) {
-      const firstError = validated.error.issues[0];
-      return serverActionError(firstError.message, "VALIDATION_ERROR");
+  // Validate input
+  const validated = BanUserSchema.safeParse({ userId, reason });
+  if (!validated.success) {
+    const firstError = validated.error.issues[0];
+    return serverActionError(firstError.message, "VALIDATION_ERROR");
+  }
+
+  // ==========================================================================
+  // Edge Function Path (when enabled)
+  // ==========================================================================
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await banUserAPI(userId, reason);
+
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.ADMIN);
+      invalidateTag(CACHE_TAGS.PROFILES);
+      invalidateTag(CACHE_TAGS.PRODUCTS);
+      revalidatePath("/admin");
+      return successVoid();
     }
 
+    return serverActionError(result.error?.message || "Failed to ban user", "UNKNOWN_ERROR");
+  }
+
+  // ==========================================================================
+  // Direct Supabase Path (fallback)
+  // ==========================================================================
+  try {
     const auth = await verifyAdminAccess();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
@@ -475,12 +526,31 @@ export async function banUser(userId: string, reason: string): Promise<ServerAct
  * Unban a user
  */
 export async function unbanUser(userId: string): Promise<ServerActionResult<void>> {
-  try {
-    // Validate ID
-    if (!userId || !z.string().uuid().safeParse(userId).success) {
-      return serverActionError("Invalid user ID", "VALIDATION_ERROR");
+  // Validate ID
+  if (!userId || !z.string().uuid().safeParse(userId).success) {
+    return serverActionError("Invalid user ID", "VALIDATION_ERROR");
+  }
+
+  // ==========================================================================
+  // Edge Function Path (when enabled)
+  // ==========================================================================
+  if (USE_EDGE_FUNCTIONS) {
+    const result = await unbanUserAPI(userId);
+
+    if (result.success) {
+      invalidateTag(CACHE_TAGS.ADMIN);
+      invalidateTag(CACHE_TAGS.PROFILES);
+      revalidatePath("/admin");
+      return successVoid();
     }
 
+    return serverActionError(result.error?.message || "Failed to unban user", "UNKNOWN_ERROR");
+  }
+
+  // ==========================================================================
+  // Direct Supabase Path (fallback)
+  // ==========================================================================
+  try {
     const auth = await verifyAdminAccess();
     if (isAuthError(auth)) {
       return serverActionError(auth.error, auth.code);
