@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { getPostTypeConfig, POST_TYPE_CONFIG } from "@/lib/constants";
 import type { InitialProductStateType } from "@/types/product.types";
 import type { AuthUser } from "@/lib/data/auth";
 import { refreshUserListingsCache } from "@/app/actions/products";
@@ -40,18 +41,6 @@ interface UserListingsClientProps {
 
 type FilterStatus = "all" | "active" | "inactive";
 type SortOption = "newest" | "oldest" | "name" | "views";
-
-const POST_TYPE_CONFIG: Record<string, { label: string; emoji: string }> = {
-  food: { label: "Food", emoji: "🍎" },
-  thing: { label: "Thing", emoji: "📦" },
-  borrow: { label: "Borrow", emoji: "🤝" },
-  wanted: { label: "Wanted", emoji: "🔍" },
-  fridge: { label: "Fridge", emoji: "🧊" },
-  foodbank: { label: "Food Bank", emoji: "🏦" },
-  volunteer: { label: "Volunteer", emoji: "💪" },
-  challenge: { label: "Challenge", emoji: "🏆" },
-  vegan: { label: "Vegan", emoji: "🌱" },
-};
 
 const STATUS_OPTIONS = [
   { value: "all" as const, label: "All Status", icon: "🔘" },
@@ -177,7 +166,7 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
                     : "bg-muted/50 text-muted-foreground hover:bg-muted"
                 )}
               >
-                {POST_TYPE_CONFIG[type]?.emoji} {POST_TYPE_CONFIG[type]?.label || type}
+                {getPostTypeConfig(type).emoji} {getPostTypeConfig(type).label}
               </button>
             ))}
           </div>
@@ -445,7 +434,7 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
                       <span>
                         {filterType === "all"
                           ? "📋 All Types"
-                          : `${POST_TYPE_CONFIG[filterType]?.emoji || "📦"} ${POST_TYPE_CONFIG[filterType]?.label || filterType}`}
+                          : `${getPostTypeConfig(filterType).emoji} ${getPostTypeConfig(filterType).label}`}
                       </span>
                       <ChevronDown className="h-4 w-4 opacity-60 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                     </Button>
@@ -472,9 +461,9 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
                         onClick={() => setFilterType(type)}
                         className="gap-3 rounded-lg cursor-pointer transition-colors"
                       >
-                        <span className="text-base">{POST_TYPE_CONFIG[type]?.emoji || "📦"}</span>
+                        <span className="text-base">{getPostTypeConfig(type).emoji}</span>
                         <span className="flex-1 font-medium">
-                          {POST_TYPE_CONFIG[type]?.label || type}
+                          {getPostTypeConfig(type).label}
                         </span>
                         {filterType === type && <Check className="h-4 w-4 text-emerald-600" />}
                       </DropdownMenuItem>

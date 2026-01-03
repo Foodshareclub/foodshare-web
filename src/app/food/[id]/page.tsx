@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
-import { ProductDetailClient } from "./ProductDetailClient";
+import { PostDetailClient } from "./PostDetailClient";
 import { getProductById, getPopularProductIds } from "@/lib/data/products";
 import { getChallengeById } from "@/lib/data/challenges";
 import type { InitialProductStateType } from "@/types/product.types";
@@ -138,8 +138,8 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
         />
-        <Suspense fallback={<ProductDetailSkeleton />}>
-          <ProductDetailClient product={product} user={user} isAdmin={isAdmin} />
+        <Suspense fallback={<PostDetailSkeleton />}>
+          <PostDetailClient post={product} user={user} isAdmin={isAdmin} />
         </Suspense>
       </>
     );
@@ -221,7 +221,7 @@ export async function generateMetadata({ params, searchParams }: PageProps) {
   }
 }
 
-function ProductDetailSkeleton() {
+function PostDetailSkeleton() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
       <div className="h-[140px] bg-white border-b animate-pulse" />

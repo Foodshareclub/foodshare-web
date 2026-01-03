@@ -21,6 +21,7 @@ import { updateProduct, deleteProduct } from "@/app/actions/products";
 import { cn } from "@/lib/utils";
 import { isValidImageUrl } from "@/lib/image";
 import { getProductDetailUrl } from "@/utils/categoryMapping";
+import { getPostTypeConfig, POST_TYPE_CONFIG } from "@/lib/constants";
 import type { InitialProductStateType } from "@/types/product.types";
 
 // Lazy load the heavy modal
@@ -34,66 +35,6 @@ interface MyPostsClientProps {
 
 type FilterStatus = "all" | "active" | "inactive";
 type SortOption = "newest" | "oldest" | "name" | "views";
-
-const POST_TYPE_LABELS: Record<
-  string,
-  { label: string; emoji: string; color: string; bgActive: string }
-> = {
-  food: {
-    label: "Food",
-    emoji: "🍎",
-    color: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
-    bgActive: "bg-orange-500/20 border-orange-500/50",
-  },
-  thing: {
-    label: "Thing",
-    emoji: "📦",
-    color: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-    bgActive: "bg-blue-500/20 border-blue-500/50",
-  },
-  borrow: {
-    label: "Borrow",
-    emoji: "🤝",
-    color: "bg-green-500/10 text-green-600 dark:text-green-400",
-    bgActive: "bg-green-500/20 border-green-500/50",
-  },
-  wanted: {
-    label: "Wanted",
-    emoji: "🔍",
-    color: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
-    bgActive: "bg-purple-500/20 border-purple-500/50",
-  },
-  fridge: {
-    label: "Fridge",
-    emoji: "🧊",
-    color: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",
-    bgActive: "bg-cyan-500/20 border-cyan-500/50",
-  },
-  foodbank: {
-    label: "Food Bank",
-    emoji: "🏦",
-    color: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-    bgActive: "bg-amber-500/20 border-amber-500/50",
-  },
-  volunteer: {
-    label: "Volunteer",
-    emoji: "💪",
-    color: "bg-pink-500/10 text-pink-600 dark:text-pink-400",
-    bgActive: "bg-pink-500/20 border-pink-500/50",
-  },
-  challenge: {
-    label: "Challenge",
-    emoji: "🏆",
-    color: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
-    bgActive: "bg-yellow-500/20 border-yellow-500/50",
-  },
-  vegan: {
-    label: "Vegan",
-    emoji: "🌱",
-    color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-    bgActive: "bg-emerald-500/20 border-emerald-500/50",
-  },
-};
 
 export function MyPostsClient({ posts }: MyPostsClientProps) {
   const router = useRouter();
@@ -210,12 +151,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
         </button>
 
         {postTypes.map((type) => {
-          const typeInfo = POST_TYPE_LABELS[type] || {
-            label: type,
-            emoji: "📋",
-            color: "bg-gray-500/10 text-gray-600",
-            bgActive: "bg-gray-500/20 border-gray-500/50",
-          };
+          const typeInfo = getPostTypeConfig(type);
           const count = typeCounts[type] || 0;
           const isActive = filterType === type;
 
@@ -377,7 +313,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
                   <span className="ml-1">
                     in{" "}
                     <span className="font-medium">
-                      {POST_TYPE_LABELS[filterType]?.label || filterType}
+                      {getPostTypeConfig(filterType).label}
                     </span>
                   </span>
                 )}
@@ -452,11 +388,7 @@ interface PostCardProps {
 }
 
 function PostCard({ post, onEdit, onDelete, onToggleStatus, isUpdating }: PostCardProps) {
-  const typeInfo = POST_TYPE_LABELS[post.post_type] || {
-    label: post.post_type,
-    emoji: "📋",
-    color: "bg-gray-500/10 text-gray-600",
-  };
+  const typeInfo = getPostTypeConfig(post.post_type);
 
   const formattedDate = new Date(post.created_at).toLocaleDateString("en-US", {
     month: "short",
