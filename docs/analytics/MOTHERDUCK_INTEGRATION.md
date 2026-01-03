@@ -1,12 +1,145 @@
-# MotherDuck / DuckDB Integration Research
+# MotherDuck / DuckDB Integration
 
-> **Date:** January 2026  
-> **Status:** Research / Planning  
+> **Date:** January 2026
+> **Status:** Implemented (v3.0.0)
 > **Contact:** Weyman Cohen (MotherDuck)
 
 ## Overview
 
-Exploring MotherDuck as an analytics layer alongside Supabase to power dashboards, reports, and LLM-driven insights without impacting production app performance.
+MotherDuck serves as the analytics layer for FoodShare, syncing data from Supabase to power dashboards, reports, and LLM-driven insights without impacting production app performance.
+
+## Current Implementation
+
+We implemented **Option 3: Scheduled Edge Function → Batch Sync** with incremental sync support.
+
+### Architecture
+
+```text
+Supabase (PostgreSQL)
+    ↓ Edge Function (sync-analytics)
+    ↓ Incremental sync via updated_at
+MotherDuck (DuckDB cloud)
+    ↓ Server Actions query
+Next.js Analytics Dashboard
+```
+
+### Key Components
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| Sync Edge Function | `foodshare-backend/functions/sync-analytics/index.ts` | Syncs profiles/posts to MotherDuck |
+| MotherDuck Service | `foodshare-web/src/lib/analytics/motherduck.ts` | DuckDB connection via duckdb-async |
+| Analytics Actions | `foodshare-web/src/app/actions/analytics.ts` | Server actions for dashboard queries |
+| Vault Integration | `foodshare-web/src/lib/email/vault.ts` | Secure token retrieval |
+
+### MotherDuck Tables
+
+```sql
+-- Synced from Supabase profiles
+full_users (
+  id VARCHAR PRIMARY KEY,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP,
+  email VARCHAR,
+  nickname VARCHAR,
+  first_name VARCHAR,
+  second_name VARCHAR,
+  is_active BOOLEAN,
+  is_verified BOOLEAN,
+  last_seen_at TIMESTAMP,
+  synced_at TIMESTAMP
+)
+
+-- Synced from Supabase posts
+full_listings (
+  id BIGINT PRIMARY KEY,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP,
+  post_name VARCHAR,
+  post_type VARCHAR,
+  is_active BOOLEAN,
+  is_arranged BOOLEAN,
+  post_arranged_at TIMESTAMP,
+  profile_id VARCHAR,
+  post_views INTEGER,
+  post_like_counter INTEGER,
+  synced_at TIMESTAMP
+)
+
+-- Real-time event tracking
+events (
+  id VARCHAR PRIMARY KEY,
+  event_name VARCHAR,
+  user_id VARCHAR,
+  properties VARCHAR,
+  timestamp TIMESTAMP,
+  synced_at TIMESTAMP
+)
+
+-- Sync metadata
+sync_metadata (
+  table_name VARCHAR PRIMARY KEY,
+  last_sync_at TIMESTAMP,
+  records_synced INTEGER,
+  sync_mode VARCHAR
+)
+```
+
+### Available Analytics Endpoints
+
+| Function | Description |
+|----------|-------------|
+| `getAnalyticsSummary()` | Total users, listings, food saved |
+| `getMonthlyGrowth()` | User/listing growth by month |
+| `getDailyActiveUsers()` | DAU for last 30 days |
+| `getEventDistribution()` | Top 5 event types |
+| `getConversionFunnel()` | Listing → Request → Arranged |
+| `getUserRetentionCohorts()` | Monthly cohort retention |
+| `getInventoryAging()` | Active listings by age bucket |
+| `getListingTypeDistribution()` | Breakdown by post_type |
+| `getTopSharers()` | Users with most arranged listings |
+| `getSyncStatus()` | Last sync metadata |
+| `trackEvent()` | Track custom events |
+
+### Sync Modes
+
+```bash
+# Incremental sync (default) - syncs records updated since last sync
+POST /functions/v1/sync-analytics
+
+# Full sync - deletes and replenishes all data
+POST /functions/v1/sync-analytics?mode=full
+
+# Cron-compatible GET endpoint
+GET /functions/v1/sync-analytics
+```
+
+### Setup Instructions
+
+1. **Add MotherDuck token to Supabase Vault:**
+   ```sql
+   SELECT vault.create_secret('MOTHERDUCK_TOKEN', 'your-token-here');
+   ```
+
+2. **Deploy the Edge Function:**
+   ```bash
+   cd foodshare-backend
+   npx supabase functions deploy sync-analytics
+   ```
+
+3. **Run initial full sync:**
+   ```bash
+   curl -X POST "https://your-project.supabase.co/functions/v1/sync-analytics?mode=full"
+   ```
+
+4. **Set up hourly cron (via Supabase Dashboard or pg_cron):**
+   ```sql
+   SELECT cron.schedule(
+     'sync-analytics-hourly',
+     '0 * * * *',
+     $$SELECT net.http_get('https://your-project.supabase.co/functions/v1/sync-analytics')$$
+   );
+   ```
 
 ## Current Data Profile
 
@@ -324,4 +457,5 @@ const response = await fetch('https://api.motherduck.com/v1/sql', {
 
 | Date | Update |
 |------|--------|
+| 2026-01-03 | v3.0.0 - Production implementation with incremental sync |
 | 2026-01-02 | Initial research document |
