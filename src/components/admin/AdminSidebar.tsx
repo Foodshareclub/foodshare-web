@@ -23,7 +23,8 @@ import {
   Target,
   Workflow,
   Menu,
-  X,
+  TrendingUp,
+  Gauge,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -56,6 +57,8 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/admin", label: "dashboard", icon: LayoutDashboard },
       { href: "/admin/ai-insights", label: "ai_insights", icon: Sparkles },
+      { href: "/admin/analytics", label: "analytics", icon: TrendingUp },
+      { href: "/admin/performance", label: "performance", icon: Gauge },
     ],
   },
   {
@@ -217,7 +220,6 @@ export function AdminSidebar() {
  */
 export function AdminMobileHeader() {
   const [open, setOpen] = useState(false);
-  const t = useTranslations();
 
   return (
     <div className="md:hidden flex items-center justify-between p-4 border-b border-border/50 bg-background/95 backdrop-blur-sm sticky top-0 z-40">
