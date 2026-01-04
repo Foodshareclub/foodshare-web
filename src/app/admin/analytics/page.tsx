@@ -56,20 +56,22 @@ const AIAnalyticsPanel = dynamic(
 
 export default function AdminAnalyticsPage() {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded-md">
-            Powered by MotherDuck
-          </span>
+    <div className="h-full overflow-y-auto">
+      <div className="space-y-6 pb-6">
+        <div className="flex items-center justify-between sticky top-0 bg-muted/30 backdrop-blur-sm py-2 -mx-1 px-1 z-10">
+          <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded-md">
+              Powered by MotherDuck
+            </span>
+          </div>
         </div>
-      </div>
-      <AnalyticsDashboard />
+        <AnalyticsDashboard />
 
-      {/* AI-Powered Analytics Section */}
-      <div className="rounded-lg border bg-card p-6">
-        <AIAnalyticsPanel />
+        {/* AI-Powered Analytics Section */}
+        <div className="rounded-lg border bg-card p-6">
+          <AIAnalyticsPanel />
+        </div>
       </div>
     </div>
   );
