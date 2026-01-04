@@ -2,17 +2,14 @@ import { Suspense } from "react";
 import { getForumPageData } from "@/lib/data/forum";
 import { ForumPageClient } from "@/components/forum";
 import { Skeleton } from "@/components/ui/skeleton";
-import { generatePageMetadata } from "@/lib/metadata";
+import { generatePageMetadata, siteConfig } from "@/lib/metadata";
+import {
+  generateBreadcrumbJsonLd,
+  generateItemListJsonLd,
+  safeJsonLdStringify,
+} from "@/lib/jsonld";
 
-// ============================================================================
-// Route Segment Config
-// ============================================================================
-
-export const revalidate = 300; // 5 minutes
-
-// ============================================================================
-// Metadata
-// ============================================================================
+export const revalidate = 300;
 
 export const metadata = generatePageMetadata({
   title: "Community Forum",
@@ -22,14 +19,9 @@ export const metadata = generatePageMetadata({
   path: "/forum",
 });
 
-// ============================================================================
-// Loading Skeleton
-// ============================================================================
-
 function ForumSkeleton() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      {/* Hero Skeleton */}
       <div className="bg-primary/90 text-white">
         <div className="container mx-auto px-4 py-12">
           <Skeleton className="h-10 w-64 bg-white/20 mb-2" />
@@ -41,11 +33,8 @@ function ForumSkeleton() {
           </div>
         </div>
       </div>
-
-      {/* Content Skeleton */}
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar */}
           <aside className="w-full lg:w-80 space-y-6">
             <div className="grid grid-cols-2 gap-3">
               <Skeleton className="h-32 rounded-2xl" />
@@ -54,8 +43,6 @@ function ForumSkeleton() {
             <Skeleton className="h-64 rounded-2xl" />
             <Skeleton className="h-48 rounded-2xl" />
           </aside>
-
-          {/* Main */}
           <main className="flex-1">
             <Skeleton className="h-16 rounded-2xl mb-6" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -77,23 +64,42 @@ function ForumSkeleton() {
   );
 }
 
-// ============================================================================
-// Page Component
-// ============================================================================
-
 async function ForumContent() {
   const data = await getForumPageData();
-
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: "Home", url: siteConfig.url },
+    { name: "Forum", url: siteConfig.url + "/forum" },
+  ]);
+  const itemListJsonLd = generateItemListJsonLd({
+    name: "FoodShare Community Forum",
+    description: "Community discussions about food sharing, sustainability, and reducing waste.",
+    items: data.posts.slice(0, 10).map((post, index) => ({
+      name: post.forum_post_name || "Forum Post",
+      url: siteConfig.url + "/forum/" + (post.slug || post.id),
+      image: post.forum_post_image || undefined,
+      position: index + 1,
+    })),
+  });
   return (
-    <ForumPageClient
-      posts={data.posts}
-      categories={data.categories}
-      tags={data.tags}
-      stats={data.stats}
-      leaderboard={data.leaderboard}
-      trendingPosts={data.trendingPosts}
-      recentActivity={data.recentActivity}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(itemListJsonLd) }}
+      />
+      <ForumPageClient
+        posts={data.posts}
+        categories={data.categories}
+        tags={data.tags}
+        stats={data.stats}
+        leaderboard={data.leaderboard}
+        trendingPosts={data.trendingPosts}
+        recentActivity={data.recentActivity}
+      />
+    </>
   );
 }
 

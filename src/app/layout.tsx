@@ -5,7 +5,13 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { defaultMetadata } from "@/lib/metadata";
 import { getFacebookAppId } from "@/lib/email/vault";
-import { generateOrganizationJsonLd, generateWebsiteJsonLd, generateSoftwareApplicationJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
+import {
+  generateOrganizationJsonLd,
+  generateWebsiteJsonLd,
+  generateSoftwareApplicationJsonLd,
+  safeJsonLdStringify,
+} from "@/lib/jsonld";
+import { getAppRatingStats } from "@/lib/data/og-stats";
 import type { Locale } from "@/i18n/config";
 import Footer from "@/components/footer/Footer";
 import { DevTools } from "@/components/dev";
@@ -39,6 +45,9 @@ export default async function RootLayout({
   // Get Facebook App ID from Supabase Vault for OpenGraph meta tag
   const facebookAppId = await getFacebookAppId();
 
+  // Get dynamic app rating for SoftwareApplication schema
+  const appRating = await getAppRatingStats();
+
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
@@ -51,7 +60,7 @@ export default async function RootLayout({
               "@graph": [
                 generateOrganizationJsonLd(),
                 generateWebsiteJsonLd(),
-                generateSoftwareApplicationJsonLd(),
+                generateSoftwareApplicationJsonLd(appRating),
               ],
             }),
           }}
@@ -78,6 +87,10 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://ko-fi.com" />
         <link rel="dns-prefetch" href="https://supabase.co" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        {/* Theme color for dark mode support */}
+        <meta name="theme-color" content="#FF2D55" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#1a1a2e" media="(prefers-color-scheme: dark)" />
+        <meta name="color-scheme" content="light dark" />
       </head>
       <body className={inter.className} suppressHydrationWarning>
         {/* Skip to main content link for keyboard accessibility */}

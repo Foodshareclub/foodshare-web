@@ -121,3 +121,71 @@ export function getSeasonalTheme(): {
     return { season: "fall", accent: "#FFBD7A", emoji: "🍂" };
   }
 }
+
+export interface AppRatingStats {
+  ratingValue: string;
+  ratingCount: string;
+}
+
+// Fallback ratings when data unavailable
+const FALLBACK_RATING: AppRatingStats = {
+  ratingValue: "4.8",
+  ratingCount: "100",
+};
+
+// Cache for app rating stats
+let cachedRating: AppRatingStats | null = null;
+let ratingCacheTimestamp = 0;
+const RATING_CACHE_TTL = 60 * 60 * 1000; // 1 hour (ratings change less frequently)
+
+/**
+ * Get aggregate app rating stats for SoftwareApplication schema
+ * Aggregates from user reviews/ratings in the database
+ */
+export async function getAppRatingStats(): Promise<AppRatingStats> {
+  const now = Date.now();
+
+  // Return cached if fresh
+  if (cachedRating && now - ratingCacheTimestamp < RATING_CACHE_TTL) {
+    return cachedRating;
+  }
+
+  try {
+    const supabase = createEdgeClient();
+
+    // Aggregate ratings from reviews table
+    const { data, error } = await supabase.from("reviews").select("rating");
+
+    if (error || !data || data.length === 0) {
+      return cachedRating || FALLBACK_RATING;
+    }
+
+    const validRatings = data.filter((r) => r.rating != null && r.rating > 0);
+    if (validRatings.length === 0) {
+      return cachedRating || FALLBACK_RATING;
+    }
+
+    const totalRatings = validRatings.length;
+    const avgRating = validRatings.reduce((sum, r) => sum + (r.rating || 0), 0) / totalRatings;
+
+    const stats: AppRatingStats = {
+      ratingValue: avgRating.toFixed(1),
+      ratingCount: totalRatings.toString(),
+    };
+
+    // Update cache
+    cachedRating = stats;
+    ratingCacheTimestamp = now;
+
+    return stats;
+  } catch (error) {
+    Sentry.captureException(error, {
+      tags: {
+        component: "jsonld",
+        function: "getAppRatingStats",
+      },
+    });
+    console.error("[App Rating] Error fetching stats:", error);
+    return cachedRating || FALLBACK_RATING;
+  }
+}

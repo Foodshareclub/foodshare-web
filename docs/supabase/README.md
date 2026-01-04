@@ -55,6 +55,43 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
 SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
 ```
 
+## Supabase Clients
+
+The codebase provides multiple Supabase clients for different use cases:
+
+| Client | Location | Use Case |
+|--------|----------|----------|
+| `createClient()` | `@/lib/supabase/server` | Server Components, Server Actions, Route Handlers (with cookies) |
+| `createCachedClient()` | `@/lib/supabase/server` | Inside `unstable_cache()` where cookies cannot be called |
+| `createClient()` | `@/lib/supabase/client` | Client-side realtime subscriptions only |
+| `createEdgeClient()` | `@/lib/supabase/edge` | Edge Runtime (OG images, edge functions) |
+| `createAdminClient()` | `@/lib/supabase/admin` | Service role operations (Vault access, bypassing RLS) |
+
+### Usage Examples
+
+```typescript
+// Server Component / Server Action (most common)
+import { createClient } from '@/lib/supabase/server';
+const supabase = await createClient();
+
+// Admin operations (Vault secrets, bypass RLS)
+import { createAdminClient } from '@/lib/supabase/admin';
+const supabase = createAdminClient(); // No await needed
+
+// Client-side realtime only
+import { createClient } from '@/lib/supabase/client';
+const supabase = createClient();
+```
+
+### Admin Client Security
+
+The admin client uses `SUPABASE_SERVICE_ROLE_KEY` and should only be used in:
+- Route Handlers that need Vault access
+- Server Actions requiring RLS bypass
+- Background jobs and webhooks
+
+**Never expose the admin client to client-side code.**
+
 ## Key Features
 
 ### PostGIS Geography

@@ -184,6 +184,112 @@ function useNearbyPosts(lat: number, lng: number, postType?: string) {
 
 ---
 
+### Meta Webhook API
+
+**Endpoints:** `GET /api/webhooks/meta`, `POST /api/webhooks/meta`
+
+**Location:** `src/app/api/webhooks/meta/route.ts`
+
+Handles Meta platform webhooks for Instagram, WhatsApp Business, and user-related events.
+
+**Authentication:** Webhook verification via Supabase Vault secret
+
+#### GET - Webhook Verification
+
+Meta sends a GET request to verify your webhook URL during setup.
+
+**Query Parameters:**
+
+| Parameter          | Type     | Required | Description                   |
+| ------------------ | -------- | -------- | ----------------------------- |
+| `hub.mode`         | `string` | Yes      | Must be `subscribe`           |
+| `hub.verify_token` | `string` | Yes      | Token to verify (from Vault)  |
+| `hub.challenge`    | `string` | Yes      | Challenge string to echo back |
+
+**Success Response (200):** Returns the `hub.challenge` value
+
+**Error Responses:**
+
+| Status | Body                         | Description                    |
+| ------ | ---------------------------- | ------------------------------ |
+| 403    | `Forbidden`                  | Token mismatch or invalid mode |
+| 500    | `Server configuration error` | Vault secret not configured    |
+
+#### POST - Receive Webhook Events
+
+Receives webhook events from Meta platforms.
+
+**Request Body:** Meta webhook payload (varies by event type)
+
+**Supported Event Types:**
+
+| `body.object`               | Handler                  | Description              |
+| --------------------------- | ------------------------ | ------------------------ |
+| `user`                      | `handleUserWebhook`      | Profile updates          |
+| `instagram`                 | `handleInstagramWebhook` | Messages, comments, etc. |
+| `whatsapp_business_account` | `handleWhatsAppWebhook`  | WhatsApp Business events |
+
+**Success Response (200):** Always returns `OK` to acknowledge receipt
+
+**Note:** Returns 200 even on errors to prevent Meta from retrying.
+
+#### Setup Requirements
+
+1. **Store verify token in Supabase Vault:**
+
+   ```sql
+   SELECT vault.create_secret('meta_webhook_verify_token', 'your-secure-token');
+   ```
+
+2. **Configure `SUPABASE_SERVICE_ROLE_KEY`** in environment variables (required to access Vault)
+
+3. **Register webhook URL** in Meta Developer Console:
+   - URL: `https://your-domain.com/api/webhooks/meta`
+   - Verify Token: Same value stored in Vault
+
+#### Security Notes
+
+- Uses `createAdminClient()` with service role key to access Vault secrets
+- Verify token is never exposed in environment variables or client code
+- All webhook processing is logged for debugging
+  import { useState, useEffect } from "react";
+
+function useNearbyPosts(lat: number, lng: number, postType?: string) {
+const [posts, setPosts] = useState([]);
+const [cursor, setCursor] = useState<number | null>(null);
+const [hasMore, setHasMore] = useState(false);
+const [loading, setLoading] = useState(false);
+
+const fetchPosts = async (reset = false) => {
+setLoading(true);
+const params = new URLSearchParams({
+lat: lat.toString(),
+lng: lng.toString(),
+...(postType && { postType }),
+...(cursor && !reset && { cursor: cursor.toString() }),
+});
+
+    const res = await fetch(`/api/nearby-posts?${params}`);
+    const { data, hasMore: more, nextCursor } = await res.json();
+
+    setPosts((prev) => (reset ? data : [...prev, ...data]));
+    setHasMore(more);
+    setCursor(nextCursor);
+    setLoading(false);
+
+};
+
+useEffect(() => {
+fetchPosts(true);
+}, [lat, lng, postType]);
+
+return { posts, hasMore, loading, loadMore: () => fetchPosts() };
+}
+
+````
+
+---
+
 ## Product API (`productAPI`)
 
 Located: `src/api/productAPI.ts`
@@ -202,7 +308,7 @@ Located: `src/api/productAPI.ts`
 
 ```typescript
 productAPI.getAllProducts();
-```
+````
 
 **Returns:** All posts from the `posts_with_location` view (no filtering)
 

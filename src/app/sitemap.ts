@@ -10,11 +10,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
 
   // Fetch all dynamic data for sitemap
-  const [forumPosts, forumCategories, foodProducts] = await Promise.all([
-    getForumPostsForSitemap(),
-    getForumCategoriesForSitemap(),
-    getFoodProductsForSitemap(),
-  ]);
+  const [forumPosts, forumCategories, foodProducts, challenges, publicProfiles] = await Promise.all(
+    [
+      getForumPostsForSitemap(),
+      getForumCategoriesForSitemap(),
+      getFoodProductsForSitemap(),
+      getChallengesForSitemap(),
+      getPublicProfilesForSitemap(),
+    ]
+  );
 
   // Static routes
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -111,6 +115,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.4,
     },
+    // Donation page
+    {
+      url: `${baseUrl}/donation`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    // Challenges section
+    {
+      url: `${baseUrl}/challenge`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
   ];
 
   // Forum category routes
@@ -137,7 +155,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticRoutes, ...forumCategoryRoutes, ...forumPostRoutes, ...foodProductRoutes];
+  // Challenge routes
+  const challengeRoutes: MetadataRoute.Sitemap = challenges.map((challenge) => ({
+    url: `${baseUrl}/challenge/${challenge.id}`,
+    lastModified: new Date(challenge.challenge_updated_at || challenge.challenge_created_at),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
+  // Public profile routes
+  const publicProfileRoutes: MetadataRoute.Sitemap = publicProfiles.map((profile) => ({
+    url: `${baseUrl}/profile/${profile.id}`,
+    lastModified: new Date(profile.updated_at || profile.created_at),
+    changeFrequency: "weekly" as const,
+    priority: 0.5,
+  }));
+
+  return [
+    ...staticRoutes,
+    ...forumCategoryRoutes,
+    ...forumPostRoutes,
+    ...foodProductRoutes,
+    ...challengeRoutes,
+    ...publicProfileRoutes,
+  ];
 }
 
 /**
@@ -151,8 +192,7 @@ async function getForumPostsForSitemap() {
       .from("forum")
       .select("id, slug, forum_post_updated_at, last_activity_at, is_pinned, is_featured")
       .eq("forum_published", true)
-      .order("forum_post_created_at", { ascending: false })
-      .limit(500);
+      .order("forum_post_created_at", { ascending: false });
 
     if (error) {
       console.error("Failed to fetch forum posts for sitemap:", error);
@@ -193,7 +233,7 @@ async function getForumCategoriesForSitemap() {
 
 /**
  * Fetch active food posts for sitemap
- * Returns top 100 most viewed active posts
+ * Returns all active posts for complete SEO coverage
  */
 async function getFoodProductsForSitemap() {
   try {
@@ -203,8 +243,7 @@ async function getFoodProductsForSitemap() {
       .from("posts")
       .select("id, created_at, updated_at")
       .eq("is_active", true)
-      .order("id", { ascending: false })
-      .limit(50);
+      .order("id", { ascending: false });
 
     if (error) {
       console.error("Failed to fetch food posts for sitemap:", error);
@@ -214,6 +253,58 @@ async function getFoodProductsForSitemap() {
     return data || [];
   } catch {
     console.error("Error fetching food posts for sitemap");
+    return [];
+  }
+}
+
+/**
+ * Fetch published challenges for sitemap
+ */
+async function getChallengesForSitemap() {
+  try {
+    const supabase = createCachedClient();
+
+    const { data, error } = await supabase
+      .from("challenges")
+      .select("id, challenge_created_at, challenge_updated_at")
+      .eq("challenge_published", true)
+      .order("id", { ascending: false });
+
+    if (error) {
+      console.error("Failed to fetch challenges for sitemap:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch {
+    console.error("Error fetching challenges for sitemap");
+    return [];
+  }
+}
+
+/**
+ * Fetch public user profiles for sitemap
+ * Only includes users who have opted into public profiles
+ */
+async function getPublicProfilesForSitemap() {
+  try {
+    const supabase = createCachedClient();
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, created_at, updated_at")
+      .eq("is_public", true)
+      .order("id", { ascending: false })
+      .limit(500);
+
+    if (error) {
+      console.error("Failed to fetch public profiles for sitemap:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch {
+    console.error("Error fetching public profiles for sitemap");
     return [];
   }
 }

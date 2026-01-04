@@ -17,6 +17,9 @@ export interface AnalyticsSummary {
   totalListings: number;
   activeListings: number;
   listingsChange: number;
+  usersChange: number;
+  activeUsersChange: number;
+  arrangedChange: number;
   foodSavedKg: number;
 }
 
@@ -47,6 +50,19 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
           count(case when is_active = true then 1 end) as active_users
         FROM full_users
       ),
+      user_change AS (
+        SELECT
+          count(case when created_at >= current_date - INTERVAL 30 DAY then 1 end) as this_month,
+          count(case when created_at >= current_date - INTERVAL 60 DAY AND created_at < current_date - INTERVAL 30 DAY then 1 end) as last_month
+        FROM full_users
+      ),
+      active_user_change AS (
+        SELECT
+          count(case when last_seen_at >= current_date - INTERVAL 30 DAY then 1 end) as this_month,
+          count(case when last_seen_at >= current_date - INTERVAL 60 DAY AND last_seen_at < current_date - INTERVAL 30 DAY then 1 end) as last_month
+        FROM full_users
+        WHERE is_active = true
+      ),
       listing_stats AS (
         SELECT
           count(*) as total_listings,
@@ -59,6 +75,13 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
           count(case when created_at >= current_date - INTERVAL 30 DAY then 1 end) as this_month,
           count(case when created_at >= current_date - INTERVAL 60 DAY AND created_at < current_date - INTERVAL 30 DAY then 1 end) as last_month
         FROM full_listings
+      ),
+      arranged_change AS (
+        SELECT
+          count(case when post_arranged_at >= current_date - INTERVAL 30 DAY then 1 end) as this_month,
+          count(case when post_arranged_at >= current_date - INTERVAL 60 DAY AND post_arranged_at < current_date - INTERVAL 30 DAY then 1 end) as last_month
+        FROM full_listings
+        WHERE is_arranged = true
       )
       SELECT
         u.total_users,
@@ -66,11 +89,11 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
         l.total_listings,
         l.active_listings,
         l.arranged_listings,
-        CASE
-          WHEN c.last_month > 0 THEN ((c.this_month - c.last_month)::FLOAT / c.last_month) * 100
-          ELSE 0
-        END as listings_change
-      FROM user_stats u, listing_stats l, listing_change c
+        CASE WHEN uc.last_month > 0 THEN ((uc.this_month - uc.last_month)::FLOAT / uc.last_month) * 100 ELSE 0 END as users_change,
+        CASE WHEN auc.last_month > 0 THEN ((auc.this_month - auc.last_month)::FLOAT / auc.last_month) * 100 ELSE 0 END as active_users_change,
+        CASE WHEN lc.last_month > 0 THEN ((lc.this_month - lc.last_month)::FLOAT / lc.last_month) * 100 ELSE 0 END as listings_change,
+        CASE WHEN ac.last_month > 0 THEN ((ac.this_month - ac.last_month)::FLOAT / ac.last_month) * 100 ELSE 0 END as arranged_change
+      FROM user_stats u, user_change uc, active_user_change auc, listing_stats l, listing_change lc, arranged_change ac
     `;
 
     const [stats] = await MotherDuckService.runQuery<{
@@ -79,7 +102,10 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
       total_listings: number;
       active_listings: number;
       arranged_listings: number;
+      users_change: number;
+      active_users_change: number;
       listings_change: number;
+      arranged_change: number;
     }>(summaryQuery);
 
     // Estimate food saved: ~2kg average per arranged listing
@@ -91,6 +117,9 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
       totalListings: stats?.total_listings || 0,
       activeListings: stats?.active_listings || 0,
       listingsChange: Math.round((stats?.listings_change || 0) * 10) / 10,
+      usersChange: Math.round((stats?.users_change || 0) * 10) / 10,
+      activeUsersChange: Math.round((stats?.active_users_change || 0) * 10) / 10,
+      arrangedChange: Math.round((stats?.arranged_change || 0) * 10) / 10,
       foodSavedKg,
     });
   } catch (error) {
@@ -101,6 +130,9 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
       totalListings: 0,
       activeListings: 0,
       listingsChange: 0,
+      usersChange: 0,
+      activeUsersChange: 0,
+      arrangedChange: 0,
       foodSavedKg: 0,
     });
   }
@@ -434,7 +466,9 @@ export interface ListingTypeDistribution {
   percentage: number;
 }
 
-export async function getListingTypeDistribution(): Promise<ServerActionResult<ListingTypeDistribution[]>> {
+export async function getListingTypeDistribution(): Promise<
+  ServerActionResult<ListingTypeDistribution[]>
+> {
   try {
     const supabase = await createClient();
     const {

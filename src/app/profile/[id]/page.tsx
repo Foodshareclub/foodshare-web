@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ViewProfileClient } from "./ViewProfileClient";
 import { getPublicProfile, hasUserRole } from "@/lib/data/profiles";
 import { getUser } from "@/app/actions/auth";
+import { generatePersonJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 
 // Route segment config for caching
 export const revalidate = 300;
@@ -29,10 +30,27 @@ export default async function ViewProfilePage({ params }: PageProps) {
     notFound();
   }
 
+  // Generate Person structured data for SEO
+  const fullName = [profile.first_name, profile.second_name].filter(Boolean).join(" ") || "User";
+  const personJsonLd = generatePersonJsonLd({
+    id: profile.id,
+    name: fullName,
+    description: profile.about_me || undefined,
+    image: profile.avatar_url || undefined,
+    url: `https://foodshare.club/profile/${id}`,
+    memberSince: profile.created_time || undefined,
+  });
+
   return (
-    <Suspense fallback={<ProfileSkeleton />}>
-      <ViewProfileClient profile={profile} user={user} isVolunteer={isVolunteer} />
-    </Suspense>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(personJsonLd) }}
+      />
+      <Suspense fallback={<ProfileSkeleton />}>
+        <ViewProfileClient profile={profile} user={user} isVolunteer={isVolunteer} />
+      </Suspense>
+    </>
   );
 }
 

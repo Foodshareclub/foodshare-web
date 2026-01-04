@@ -4,11 +4,12 @@ import { MyPostsClient } from "./MyPostsClient";
 import { MyPostsSkeleton } from "./MyPostsSkeleton";
 import { getUser } from "@/app/actions/auth";
 import { getUserProducts } from "@/lib/data/products";
+import { generateNoIndexMetadata } from "@/lib/metadata";
 
-export const metadata = {
-  title: "My Posts | FoodShare",
-  description: "Manage your food sharing posts - create, edit, and delete your listings",
-};
+export const metadata = generateNoIndexMetadata(
+  "My Posts",
+  "Manage your food sharing posts - create, edit, and delete your listings"
+);
 
 // Force dynamic rendering - user-specific content
 export const dynamic = "force-dynamic";

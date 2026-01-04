@@ -25,12 +25,13 @@ Next.js Analytics Dashboard
 
 ### Key Components
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| Sync Edge Function | `foodshare-backend/functions/sync-analytics/index.ts` | Syncs profiles/posts to MotherDuck |
-| MotherDuck Service | `foodshare-web/src/lib/analytics/motherduck.ts` | DuckDB connection via duckdb-async |
-| Analytics Actions | `foodshare-web/src/app/actions/analytics.ts` | Server actions for dashboard queries |
-| Vault Integration | `foodshare-web/src/lib/email/vault.ts` | Secure token retrieval |
+| Component            | Location                                              | Purpose                              |
+| -------------------- | ----------------------------------------------------- | ------------------------------------ |
+| Sync Edge Function   | `foodshare-backend/functions/sync-analytics/index.ts` | Syncs profiles/posts to MotherDuck   |
+| MotherDuck Service   | `foodshare-web/src/lib/analytics/motherduck.ts`       | DuckDB connection via duckdb-async   |
+| Analytics Actions    | `foodshare-web/src/app/actions/analytics.ts`          | Server actions for dashboard queries |
+| AI Analytics Actions | `foodshare-web/src/app/actions/analytics-ai.ts`       | LLM-powered queries and insights     |
+| Vault Integration    | `foodshare-web/src/lib/email/vault.ts`                | Secure token retrieval               |
 
 ### MotherDuck Tables
 
@@ -87,19 +88,75 @@ sync_metadata (
 
 ### Available Analytics Endpoints
 
-| Function | Description |
-|----------|-------------|
-| `getAnalyticsSummary()` | Total users, listings, food saved |
-| `getMonthlyGrowth()` | User/listing growth by month |
-| `getDailyActiveUsers()` | DAU for last 30 days |
-| `getEventDistribution()` | Top 5 event types |
-| `getConversionFunnel()` | Listing → Request → Arranged |
-| `getUserRetentionCohorts()` | Monthly cohort retention |
-| `getInventoryAging()` | Active listings by age bucket |
-| `getListingTypeDistribution()` | Breakdown by post_type |
-| `getTopSharers()` | Users with most arranged listings |
-| `getSyncStatus()` | Last sync metadata |
-| `trackEvent()` | Track custom events |
+| Function                       | Description                       |
+| ------------------------------ | --------------------------------- |
+| `getAnalyticsSummary()`        | Total users, listings, food saved |
+| `getMonthlyGrowth()`           | User/listing growth by month      |
+| `getDailyActiveUsers()`        | DAU for last 30 days              |
+| `getEventDistribution()`       | Top 5 event types                 |
+| `getConversionFunnel()`        | Listing → Request → Arranged      |
+| `getUserRetentionCohorts()`    | Monthly cohort retention          |
+| `getInventoryAging()`          | Active listings by age bucket     |
+| `getListingTypeDistribution()` | Breakdown by post_type            |
+| `getTopSharers()`              | Users with most arranged listings |
+| `getSyncStatus()`              | Last sync metadata                |
+| `trackEvent()`                 | Track custom events               |
+
+### AI-Powered Analytics (LLM Integration)
+
+Located in `src/app/actions/analytics-ai.ts`, these server actions use MotherDuck's `prompt()` function for LLM-powered insights:
+
+| Function                         | Description                                                                   |
+| -------------------------------- | ----------------------------------------------------------------------------- |
+| `askAnalyticsQuestion(question)` | Natural language to SQL - converts questions into queries and returns answers |
+| `generateWeeklyReport()`         | LLM-generated weekly community report with metrics and highlights             |
+| `getAIInsights()`                | AI-powered pattern analysis returning trends, anomalies, and recommendations  |
+
+#### Natural Language Query Example
+
+```typescript
+import { askAnalyticsQuestion } from "@/app/actions/analytics-ai";
+
+const result = await askAnalyticsQuestion("What food categories are most shared in London?");
+// Returns: { question, generatedSQL, answer, data, executionTimeMs }
+```
+
+#### Weekly Report Structure
+
+```typescript
+interface WeeklyReport {
+  period: string; // "12/27/2025 - 1/3/2026"
+  summary: string; // LLM-generated narrative
+  highlights: string[]; // 3 bullet points
+  metrics: {
+    newUsers: number;
+    newListings: number;
+    arrangedItems: number;
+    topCategory: string;
+  };
+  generatedAt: string;
+}
+```
+
+#### AI Insights Types
+
+```typescript
+interface AIInsight {
+  type: "trend" | "anomaly" | "recommendation";
+  title: string;
+  description: string;
+  confidence: number; // 0.0 to 1.0
+  metric?: string;
+  value?: number;
+}
+```
+
+**Security Notes:**
+
+- All AI queries require authentication
+- Natural language queries are sanitized and limited to 500 chars
+- Only SELECT queries are allowed (no mutations)
+- Results are truncated to prevent token overflow
 
 ### Sync Modes
 
@@ -117,17 +174,20 @@ GET /functions/v1/sync-analytics
 ### Setup Instructions
 
 1. **Add MotherDuck token to Supabase Vault:**
+
    ```sql
    SELECT vault.create_secret('MOTHERDUCK_TOKEN', 'your-token-here');
    ```
 
 2. **Deploy the Edge Function:**
+
    ```bash
    cd foodshare-backend
    npx supabase functions deploy sync-analytics
    ```
 
 3. **Run initial full sync:**
+
    ```bash
    curl -X POST "https://your-project.supabase.co/functions/v1/sync-analytics?mode=full"
    ```
@@ -143,12 +203,12 @@ GET /functions/v1/sync-analytics
 
 ## Current Data Profile
 
-| Metric | Estimate |
-|--------|----------|
-| Transactional data | 1-5GB (posts, profiles, messages, reviews) |
-| Images | Stored in Supabase Storage (separate) |
-| Ingestion frequency | Hourly batches (initial) |
-| Growth rate | TBD based on user adoption |
+| Metric              | Estimate                                   |
+| ------------------- | ------------------------------------------ |
+| Transactional data  | 1-5GB (posts, profiles, messages, reviews) |
+| Images              | Stored in Supabase Storage (separate)      |
+| Ingestion frequency | Hourly batches (initial)                   |
+| Growth rate         | TBD based on user adoption                 |
 
 ## Analytics Goals
 
@@ -180,21 +240,23 @@ Dashboards / LLM
 
 **Supported ETL tools (per Supabase docs):**
 
-| Tool | Type | Notes |
-|------|------|-------|
-| **Fivetran** | Managed | Easiest setup, use `postgres` user + logical replication |
-| **Airbyte** | Self-hosted/Cloud | Good free tier, known WAL cleanup issue |
-| **Estuary** | Managed | Has specific [Supabase docs](https://docs.estuary.dev/reference/Connectors/capture-connectors/PostgreSQL/Supabase/) |
+| Tool         | Type              | Notes                                                                                                               |
+| ------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Fivetran** | Managed           | Easiest setup, use `postgres` user + logical replication                                                            |
+| **Airbyte**  | Self-hosted/Cloud | Good free tier, known WAL cleanup issue                                                                             |
+| **Estuary**  | Managed           | Has specific [Supabase docs](https://docs.estuary.dev/reference/Connectors/capture-connectors/PostgreSQL/Supabase/) |
 
 **Setup steps:**
 
 1. Create publication in Supabase:
+
 ```sql
-CREATE PUBLICATION foodshare_analytics 
+CREATE PUBLICATION foodshare_analytics
 FOR TABLE posts, profiles, rooms, reviews, profile_stats;
 ```
 
 2. Create replication slot:
+
 ```sql
 SELECT pg_create_logical_replication_slot('motherduck_slot', 'pgoutput');
 ```
@@ -207,11 +269,13 @@ SELECT pg_create_logical_replication_slot('motherduck_slot', 'pgoutput');
 4. Configure ETL destination to MotherDuck
 
 **Pros:**
+
 - Production-grade, battle-tested
 - Handles schema changes, retries, monitoring
 - Near real-time (minutes of lag)
 
 **Cons:**
+
 - Additional cost (ETL tool pricing)
 - Another service to manage
 
@@ -233,7 +297,7 @@ MotherDuck REST API / S3 staging
 
 ```sql
 -- Create webhook trigger
-CREATE TRIGGER posts_to_analytics 
+CREATE TRIGGER posts_to_analytics
 AFTER INSERT OR UPDATE ON posts
 FOR EACH ROW
 EXECUTE FUNCTION supabase_functions.http_request(
@@ -254,21 +318,21 @@ const buffer: any[] = [];
 
 Deno.serve(async (req: Request) => {
   const payload = await req.json();
-  
+
   buffer.push({
     type: payload.type,
     table: payload.table,
     record: payload.record,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
-  
+
   if (buffer.length >= BATCH_SIZE) {
     await flushToMotherDuck(buffer);
     buffer.length = 0;
   }
-  
+
   return new Response(JSON.stringify({ queued: true }), {
-    headers: { 'Content-Type': 'application/json' }
+    headers: { "Content-Type": "application/json" },
   });
 });
 
@@ -280,11 +344,13 @@ async function flushToMotherDuck(records: any[]) {
 ```
 
 **Pros:**
+
 - No external ETL tool
 - Stays in Supabase ecosystem
 - Pay only for Edge Function invocations
 
 **Cons:**
+
 - Custom code to maintain
 - Need to handle batching, retries, failures
 - Less mature than ETL tools
@@ -309,42 +375,43 @@ Edge Function
 // Edge function with pg_cron or external scheduler
 Deno.serve(async () => {
   const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
-  
+
   // Get last sync timestamp from KV or table
   const lastSync = await getLastSyncTime();
-  
+
   // Fetch changes since last sync
-  const { data: posts } = await supabase
-    .from('posts')
-    .select('*')
-    .gte('updated_at', lastSync);
-  
+  const { data: posts } = await supabase.from("posts").select("*").gte("updated_at", lastSync);
+
   const { data: profiles } = await supabase
-    .from('profiles_with_stats')
-    .select('*')
-    .gte('updated_at', lastSync);
-  
+    .from("profiles_with_stats")
+    .select("*")
+    .gte("updated_at", lastSync);
+
   // Write to MotherDuck (via S3 or direct)
   await syncToMotherDuck({ posts, profiles });
-  
+
   // Update last sync time
   await setLastSyncTime(new Date().toISOString());
-  
-  return new Response(JSON.stringify({ 
-    synced: { posts: posts?.length, profiles: profiles?.length }
-  }));
+
+  return new Response(
+    JSON.stringify({
+      synced: { posts: posts?.length, profiles: profiles?.length },
+    })
+  );
 });
 ```
 
 **Pros:**
+
 - Simplest to implement
 - Full control over sync logic
 - No CDC complexity
 
 **Cons:**
+
 - Not real-time (hourly/daily lag)
 - Need to track `updated_at` properly
 - Deletes harder to capture
@@ -361,17 +428,19 @@ Supabase recently launched **Analytics Buckets** (private alpha) with built-in r
 Supabase
     ↓ Built-in ETL (Supabase ETL)
 Analytics Bucket (Iceberg format)
-    ↓ 
+    ↓
 DuckDB / MotherDuck (native Iceberg reader)
 ```
 
 **Status:** Private alpha - worth monitoring
 
 **Setup (when available):**
+
 1. Create Analytics Bucket in Supabase Dashboard
 2. Create publication for tables
 3. Create replication pipeline to bucket
 4. Query with DuckDB:
+
 ```sql
 SELECT * FROM iceberg_scan('s3://your-bucket/warehouse/posts');
 ```
@@ -382,22 +451,22 @@ SELECT * FROM iceberg_scan('s3://your-bucket/warehouse/posts');
 
 ### Data Loading Options
 
-| Method | Use Case |
-|--------|----------|
-| S3/GCS import | Batch loads from object storage |
-| PostgreSQL connector | Direct query (not CDC) |
-| Parquet files | Efficient columnar format |
-| CSV upload | Simple, small datasets |
+| Method               | Use Case                        |
+| -------------------- | ------------------------------- |
+| S3/GCS import        | Batch loads from object storage |
+| PostgreSQL connector | Direct query (not CDC)          |
+| Parquet files        | Efficient columnar format       |
+| CSV upload           | Simple, small datasets          |
 
 ### Querying from Edge Functions
 
 ```typescript
 // Potential approach - query MotherDuck from Deno
-const response = await fetch('https://api.motherduck.com/v1/sql', {
-  method: 'POST',
+const response = await fetch("https://api.motherduck.com/v1/sql", {
+  method: "POST",
   headers: {
-    'Authorization': `Bearer ${MOTHERDUCK_TOKEN}`,
-    'Content-Type': 'application/json'
+    Authorization: `Bearer ${MOTHERDUCK_TOKEN}`,
+    "Content-Type": "application/json",
   },
   body: JSON.stringify({
     sql: `
@@ -405,8 +474,8 @@ const response = await fetch('https://api.motherduck.com/v1/sql', {
       FROM posts 
       WHERE created_at > NOW() - INTERVAL '7 days'
       GROUP BY post_type
-    `
-  })
+    `,
+  }),
 });
 ```
 
@@ -415,17 +484,20 @@ const response = await fetch('https://api.motherduck.com/v1/sql', {
 ## Recommended Approach
 
 ### Phase 1: Proof of Concept (Now)
+
 - Use **Option 3** (Scheduled Edge Function)
 - Hourly batch sync of key tables
 - Write to S3/Supabase Storage as Parquet
 - Query with local DuckDB or MotherDuck trial
 
 ### Phase 2: Production (If POC successful)
+
 - Evaluate **Fivetran** vs **Estuary** for managed CDC
 - Set up proper monitoring and alerting
 - Build dashboards on MotherDuck
 
 ### Phase 3: LLM Integration
+
 - Create aggregation views in MotherDuck
 - Edge function queries MotherDuck for insights
 - Feed structured data to LLM for natural language reports
@@ -453,9 +525,50 @@ const response = await fetch('https://api.motherduck.com/v1/sql', {
 
 ---
 
+## Partnership Notes (Weyman Cohen - MotherDuck)
+
+> LinkedIn conversation, December 2025
+
+**Dec 12, 2025** - Weyman Cohen (MotherDuck)
+
+> Glad to connect! Curious what sparked your interest in Motherduck initially?
+
+**Dec 14, 2025** - Tarlan Isaev
+
+> I'm exploring MotherDuck for streaming Supabase data (CDC/webhooks) into DuckDB for fast analytics and dashboards.
+
+**Dec 15, 2025** - Weyman Cohen
+
+> Curious what kind of dataset you're working with/what kinds of analytical questions you're trying to uncover with data? Also interested to hear what other tools you're considering to potentially sit alongside Motherduck (BI tools, data sources, ingestion tools, etc)?
+
+**Dec 29, 2025** - Tarlan Isaev
+
+> I'm building Foodshare—cross-platform iOS/Android/Web apps that help neighbors share surplus food. Here's my latest launch on Product Hunt: https://www.producthunt.com/products/foodshare/launches/foodshare-3
+
+**Dec 30, 2025** - Tarlan Isaev
+
+> For the web app, I built a custom CRM and an email load-balancer that rotates across three different email providers for scheduled newsletters — boosts deliverability and reliability. Next, I'm expanding backend analytics on the collected data and planning to spin up a lightweight LLM on my VPS to feed the data into and pull insights from it.
+
+**Jan 1, 2026** - Weyman Cohen
+
+> I've seen this type of use case work really well - MotherDuck becomes your analytics layer next to Supabase, so you can stream changes from your app data to power dashboards and reports without slowing down your live app, and it makes feeding clean, structured data into your LLM much simpler since everything's already queryable in one place.
+>
+> Curious - what data volume you have (500MBs, 30GBs, 5TB, etc?)
+> And how often would you need to ingest the data? (hourly, daily, weekly, real-time)
+
+**Key Takeaways:**
+
+- MotherDuck positioned as analytics layer alongside Supabase (not replacement)
+- Stream app changes → power dashboards without impacting live app performance
+- Simplifies LLM integration by keeping data queryable in one place
+- Follow-up needed: data volume estimate and ingestion frequency requirements
+
+---
+
 ## Changelog
 
-| Date | Update |
-|------|--------|
+| Date       | Update                                                   |
+| ---------- | -------------------------------------------------------- |
 | 2026-01-03 | v3.0.0 - Production implementation with incremental sync |
-| 2026-01-02 | Initial research document |
+| 2026-01-03 | Added partnership notes from Weyman Cohen conversation   |
+| 2026-01-02 | Initial research document                                |

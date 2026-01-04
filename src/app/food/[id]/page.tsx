@@ -4,7 +4,12 @@ import { PostDetailClient } from "./PostDetailClient";
 import { getProductById, getPopularProductIds } from "@/lib/data/products";
 import { getChallengeById } from "@/lib/data/challenges";
 import type { InitialProductStateType } from "@/types/product.types";
-import { generateProductJsonLd, generateBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
+import {
+  generateProductJsonLd,
+  generateBreadcrumbJsonLd,
+  safeJsonLdStringify,
+  calculateAggregateRating,
+} from "@/lib/jsonld";
 import { isDatabaseHealthy } from "@/lib/data/health";
 
 export const revalidate = 120;
@@ -112,6 +117,7 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
     const [user, isAdmin] = await Promise.all([safeGetUser(), safeCheckIsAdmin()]);
 
     // Generate JSON-LD structured data for SEO
+    const aggregateRating = calculateAggregateRating(product.five_star, product.four_star);
     const jsonLd = generateProductJsonLd({
       id: product.id,
       name: product.post_name || "Food Item",
@@ -120,6 +126,7 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
       category: product.post_type || "Food",
       datePosted: product.created_at,
       location: product.post_stripped_address,
+      aggregateRating: aggregateRating || undefined,
     });
 
     const breadcrumbJsonLd = generateBreadcrumbJsonLd([

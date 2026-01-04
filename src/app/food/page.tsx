@@ -6,8 +6,9 @@ import { getChallenges } from "@/lib/data/challenges";
 import { getNearbyPosts } from "@/lib/data/nearby-posts";
 import { HomeClient } from "@/app/HomeClient";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
-import { categoryMetadata, generatePageMetadata } from "@/lib/metadata";
+import { categoryMetadata, generatePageMetadata, siteConfig } from "@/lib/metadata";
 import { isDatabaseHealthy } from "@/lib/data/health";
+import { generateItemListJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 
 // Route segment config for caching
 export const revalidate = 60;
@@ -163,10 +164,30 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     redirect("/maintenance");
   }
 
+  // Generate ItemList structured data for SEO (first 10 items for rich carousel)
+  const categoryKey = categoryKeyMap[productType] || "food";
+  const category = categoryMetadata[categoryKey];
+  const itemListJsonLd = generateItemListJsonLd({
+    name: `${category.title} on FoodShare`,
+    description: category.description,
+    items: products.slice(0, 10).map((product, index) => ({
+      name: product.post_name || "Item",
+      url: `${siteConfig.url}/food/${product.id}`,
+      image: product.images?.[0],
+      position: index + 1,
+    })),
+  });
+
   return (
-    <Suspense fallback={<ProductsPageSkeleton />}>
-      <HomeClient initialProducts={products} productType={productType} />
-    </Suspense>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(itemListJsonLd) }}
+      />
+      <Suspense fallback={<ProductsPageSkeleton />}>
+        <HomeClient initialProducts={products} productType={productType} />
+      </Suspense>
+    </>
   );
 }
 

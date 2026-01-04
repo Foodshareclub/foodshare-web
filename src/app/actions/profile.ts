@@ -16,6 +16,7 @@ import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 import { getProfile, type Profile } from "@/lib/data/profiles";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import { createActionLogger } from "@/lib/structured-logger";
+import { trackEvent } from "@/app/actions/analytics";
 
 // Edge Function API imports
 import {
@@ -193,6 +194,12 @@ export async function updateProfile(
     invalidateTag(CACHE_TAGS.PROFILE(user.id));
     revalidatePath("/profile");
 
+    // Track analytics event (fire-and-forget)
+    trackEvent("Profile Updated", {
+      userId: user.id,
+      fieldsUpdated: Object.keys(validated.data),
+    }).catch(() => {});
+
     logger.info("Profile updated", { userId: user.id });
     return {
       success: true,
@@ -292,6 +299,9 @@ export async function uploadAvatar(
     invalidateTag(CACHE_TAGS.PROFILES);
     invalidateTag(CACHE_TAGS.PROFILE(user.id));
     revalidatePath("/profile");
+
+    // Track analytics event
+    trackEvent("Avatar Uploaded", { userId: user.id }).catch(() => {});
 
     return {
       success: true,
@@ -614,6 +624,9 @@ export async function updateUserAddress(
 
     revalidatePath("/profile");
     revalidatePath("/settings");
+
+    // Track analytics event
+    trackEvent("Address Updated", { userId: user.id }).catch(() => {});
 
     return { success: true, data: data as UserAddress };
   } catch (error) {

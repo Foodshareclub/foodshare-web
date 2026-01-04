@@ -5,12 +5,8 @@ import { getProducts } from "@/lib/data/products";
 import { getNearbyPosts } from "@/lib/data/nearby-posts";
 import { isDatabaseHealthy } from "@/lib/data/health";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
-import {
-  generateOrganizationJsonLd,
-  generateWebsiteJsonLd,
-  generateSoftwareApplicationJsonLd,
-  safeJsonLdStringify,
-} from "@/lib/jsonld";
+import { generateBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
+import { siteConfig } from "@/lib/metadata";
 
 export const revalidate = 60;
 
@@ -51,29 +47,18 @@ function parseLocationParams(params: {
 }
 
 /**
- * Generate all JSON-LD structured data in parallel
+ * Generate page-specific JSON-LD structured data
+ * Note: Organization, WebSite, and SoftwareApplication are already in layout.tsx
  */
 function generateJsonLdScripts(): React.ReactNode {
-  // Generate all JSON-LD data (these are synchronous)
-  const organizationJsonLd = generateOrganizationJsonLd();
-  const websiteJsonLd = generateWebsiteJsonLd();
-  const softwareAppJsonLd = generateSoftwareApplicationJsonLd();
+  // Only generate breadcrumb (page-specific) - other schemas are in layout.tsx
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([{ name: "Home", url: siteConfig.url }]);
 
   return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(organizationJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(websiteJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(softwareAppJsonLd) }}
-      />
-    </>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
+    />
   );
 }
 

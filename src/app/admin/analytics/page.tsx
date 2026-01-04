@@ -17,6 +17,19 @@ function AnalyticsLoadingFallback() {
   );
 }
 
+function AIAnalyticsLoadingFallback() {
+  return (
+    <div className="space-y-4 rounded-lg border bg-card p-6">
+      <Skeleton className="h-6 w-48" />
+      <Skeleton className="h-10 w-full" />
+      <div className="flex gap-2">
+        <Skeleton className="h-8 w-32" />
+        <Skeleton className="h-8 w-32" />
+      </div>
+    </div>
+  );
+}
+
 // Lazy-load AnalyticsDashboard (includes Recharts ~290KB) - only loads on this route
 const AnalyticsDashboard = dynamic(
   () =>
@@ -26,6 +39,18 @@ const AnalyticsDashboard = dynamic(
   {
     ssr: false,
     loading: AnalyticsLoadingFallback,
+  }
+);
+
+// Lazy-load AIAnalyticsPanel
+const AIAnalyticsPanel = dynamic(
+  () =>
+    import("@/components/admin/analytics/AIAnalyticsPanel").then((m) => ({
+      default: m.AIAnalyticsPanel,
+    })),
+  {
+    ssr: false,
+    loading: AIAnalyticsLoadingFallback,
   }
 );
 
@@ -41,6 +66,11 @@ export default function AdminAnalyticsPage() {
         </div>
       </div>
       <AnalyticsDashboard />
+
+      {/* AI-Powered Analytics Section */}
+      <div className="rounded-lg border bg-card p-6">
+        <AIAnalyticsPanel />
+      </div>
     </div>
   );
 }

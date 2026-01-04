@@ -16,7 +16,11 @@ const withBundleAnalyzer = (config: NextConfig) => {
     ...config,
     webpack: (webpackConfig: { plugins: unknown[] }, options: { isServer: boolean }) => {
       // Run original webpack config first if it exists
-      const modifiedConfig = config.webpack?.(webpackConfig, options as Parameters<NonNullable<NextConfig['webpack']>>[1]) ?? webpackConfig;
+      const modifiedConfig =
+        config.webpack?.(
+          webpackConfig,
+          options as Parameters<NonNullable<NextConfig["webpack"]>>[1]
+        ) ?? webpackConfig;
 
       // Only add analyzer for client bundle
       if (!options.isServer) {
@@ -37,6 +41,13 @@ const withBundleAnalyzer = (config: NextConfig) => {
 const nextConfig: NextConfig = {
   // Enable React Compiler (stable in Next.js 16)
   reactCompiler: true,
+
+  // HTML-limited bots that cannot execute JavaScript
+  // These bots receive blocking metadata instead of streaming metadata
+  // to ensure they always get complete meta tags in <head>
+  // Must be a RegExp pattern matching User-Agent strings
+  htmlLimitedBots:
+    /Googlebot|Bingbot|Yandex|YandexBot|DuckDuckBot|Slurp|Baiduspider|facebookexternalhit|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Applebot|PinterestBot|Discordbot|GPTBot|ChatGPT-User|PerplexityBot|Google-Extended|anthropic-ai|CCBot/,
 
   // Cache Components disabled - incompatible with existing route segment configs
   // TODO: Re-enable when migrating to 'use cache' directive (requires removing
@@ -402,4 +413,7 @@ const sentryWebpackPluginOptions = {
 };
 
 // Chain: bundleAnalyzer -> nextIntl -> sentry
-export default withSentryConfig(withNextIntl(withBundleAnalyzer(nextConfig)), sentryWebpackPluginOptions);
+export default withSentryConfig(
+  withNextIntl(withBundleAnalyzer(nextConfig)),
+  sentryWebpackPluginOptions
+);

@@ -1,12 +1,16 @@
-import { redirect } from 'next/navigation';
-import { Suspense } from 'react';
-import { getUser } from '@/app/actions/auth';
-import { getUserProducts } from '@/lib/data/products';
-import { UserListingsClient } from './UserListingsClient';
-import SkeletonCard from '@/components/productCard/SkeletonCard';
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { UserListingsClient } from "./UserListingsClient";
+import { getUser } from "@/app/actions/auth";
+import { getUserProducts } from "@/lib/data/products";
+import SkeletonCard from "@/components/productCard/SkeletonCard";
+import { noIndexMetadata } from "@/lib/metadata";
 
 // Route segment config for caching
 export const revalidate = 60;
+
+// Private page - should not be indexed
+export const metadata = noIndexMetadata;
 
 /**
  * User Listings Page - Server Component
@@ -18,7 +22,7 @@ export default async function UserListingsPage() {
 
   // Redirect if not authenticated
   if (!user) {
-    redirect('/auth/login?from=/user-listings');
+    redirect("/auth/login?from=/user-listings");
   }
 
   // Fetch user's listings

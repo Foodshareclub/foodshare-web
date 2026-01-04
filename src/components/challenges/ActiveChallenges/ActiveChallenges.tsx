@@ -154,7 +154,11 @@ export function ActiveChallenges({ className }: ActiveChallengesProps) {
                 {/* Challenge Image */}
                 <div className="relative h-12 w-12 rounded-lg overflow-hidden shrink-0 bg-muted">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={challenge.image} alt="" className="h-full w-full object-cover" />
+                  <img
+                    src={challenge.image}
+                    alt={challenge.title || "Challenge image"}
+                    className="h-full w-full object-cover"
+                  />
                   {/* Difficulty badge */}
                   <div
                     className={cn(

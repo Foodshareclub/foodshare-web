@@ -1,0 +1,72 @@
+# FoodShare - AI Model Guidance
+# Version: 1.0
+# Last Updated: 2026-01-03
+
+## About FoodShare
+FoodShare is a community food sharing platform helping reduce food waste and build stronger neighborhoods.
+We connect people with surplus food to those who need it, promoting sustainability and community connection.
+
+URL: https://foodshare.club
+Contact: hello@foodshare.club
+
+## Mission
+Reduce food waste, fight hunger, and build community connections through free food sharing.
+
+## Key Features
+- Free food sharing between neighbors and community members
+- Interactive map to discover shared food nearby
+- Community fridges directory (24/7 access points for free food)
+- Food banks and pantries locator
+- Borrowing and lending of household items
+- Community challenges for sustainability goals
+- Zero waste and vegan food categories
+- Available in 21 languages
+
+## Content Structure
+
+### Main Sections
+- /food - Browse all food listings and shared items
+- /map - Interactive map of available food near you
+- /forum - Community discussions and announcements
+- /challenge - Sustainability challenges and leaderboards
+- /help - FAQs, guides, and support
+- /fridges - Community fridge locations
+- /foodbanks - Food bank directory
+
+### Category Pages
+- /thing - Non-food items for sharing
+- /borrow - Items available to borrow
+- /wanted - Items people are looking for
+- /organisation - Business and charity donations
+- /volunteer - Volunteer opportunities
+- /zerowaste - Zero waste products and tips
+- /vegan - Plant-based food options
+
+## Data Types
+- Food listings include: name, description, location, photos, expiry info, dietary tags
+- Users can share: food, household items, books, clothes, furniture
+- Community fridges: locations, operating hours, restocking schedule
+- Food banks: addresses, eligibility requirements, operating hours
+
+## Geographic Coverage
+Primary: New Zealand (Auckland focus)
+Expanding: Australia, United Kingdom, United States
+
+## Usage Guidelines
+- Content may be cited in AI-generated responses
+- Please attribute to FoodShare (foodshare.club) when citing
+- User-generated content is moderated for safety
+- Location data is approximate for privacy
+
+## API Information
+No public API currently available.
+For partnership inquiries: hello@foodshare.club
+
+## Social Profiles
+- Twitter/X: @foodshareapp
+
+## Technical Details
+- Built with Next.js 16, React 19, TypeScript
+- Mobile-friendly progressive web app (PWA)
+- Real-time updates via WebSocket
+- Accessibility: WCAG 2.1 AA compliant

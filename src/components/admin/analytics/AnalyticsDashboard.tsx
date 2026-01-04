@@ -115,9 +115,21 @@ export const AnalyticsDashboard = () => {
               <Users className="w-5 h-5" />
             </div>
           </div>
-          <div className="flex items-center gap-1 mt-4 text-xs font-medium text-green-500">
-            <ArrowUpRight className="w-3 h-3" />
-            <span>+12% from last month</span>
+          <div
+            className={cn(
+              "flex items-center gap-1 mt-4 text-xs font-medium",
+              (summary?.usersChange ?? 0) >= 0 ? "text-green-500" : "text-red-500"
+            )}
+          >
+            {(summary?.usersChange ?? 0) >= 0 ? (
+              <ArrowUpRight className="w-3 h-3" />
+            ) : (
+              <ArrowDownRight className="w-3 h-3" />
+            )}
+            <span>
+              {(summary?.usersChange ?? 0) >= 0 ? "+" : ""}
+              {summary?.usersChange ?? 0}% from last month
+            </span>
           </div>
         </GlassCard>
 
@@ -132,9 +144,21 @@ export const AnalyticsDashboard = () => {
               <Activity className="w-5 h-5" />
             </div>
           </div>
-          <div className="flex items-center gap-1 mt-4 text-xs font-medium text-green-500">
-            <ArrowUpRight className="w-3 h-3" />
-            <span>+5.2% from last month</span>
+          <div
+            className={cn(
+              "flex items-center gap-1 mt-4 text-xs font-medium",
+              (summary?.activeUsersChange ?? 0) >= 0 ? "text-green-500" : "text-red-500"
+            )}
+          >
+            {(summary?.activeUsersChange ?? 0) >= 0 ? (
+              <ArrowUpRight className="w-3 h-3" />
+            ) : (
+              <ArrowDownRight className="w-3 h-3" />
+            )}
+            <span>
+              {(summary?.activeUsersChange ?? 0) >= 0 ? "+" : ""}
+              {summary?.activeUsersChange ?? 0}% from last month
+            </span>
           </div>
         </GlassCard>
 
@@ -149,9 +173,21 @@ export const AnalyticsDashboard = () => {
               <ShoppingBag className="w-5 h-5" />
             </div>
           </div>
-          <div className="flex items-center gap-1 mt-4 text-xs font-medium text-red-500">
-            <ArrowDownRight className="w-3 h-3" />
-            <span>-2.1% from last month</span>
+          <div
+            className={cn(
+              "flex items-center gap-1 mt-4 text-xs font-medium",
+              (summary?.listingsChange ?? 0) >= 0 ? "text-green-500" : "text-red-500"
+            )}
+          >
+            {(summary?.listingsChange ?? 0) >= 0 ? (
+              <ArrowUpRight className="w-3 h-3" />
+            ) : (
+              <ArrowDownRight className="w-3 h-3" />
+            )}
+            <span>
+              {(summary?.listingsChange ?? 0) >= 0 ? "+" : ""}
+              {summary?.listingsChange ?? 0}% from last month
+            </span>
           </div>
         </GlassCard>
 
@@ -168,9 +204,21 @@ export const AnalyticsDashboard = () => {
               <ShoppingBag className="w-5 h-5" />
             </div>
           </div>
-          <div className="flex items-center gap-1 mt-4 text-xs font-medium text-green-500">
-            <ArrowUpRight className="w-3 h-3" />
-            <span>+18% from last month</span>
+          <div
+            className={cn(
+              "flex items-center gap-1 mt-4 text-xs font-medium",
+              (summary?.arrangedChange ?? 0) >= 0 ? "text-green-500" : "text-red-500"
+            )}
+          >
+            {(summary?.arrangedChange ?? 0) >= 0 ? (
+              <ArrowUpRight className="w-3 h-3" />
+            ) : (
+              <ArrowDownRight className="w-3 h-3" />
+            )}
+            <span>
+              {(summary?.arrangedChange ?? 0) >= 0 ? "+" : ""}
+              {summary?.arrangedChange ?? 0}% from last month
+            </span>
           </div>
         </GlassCard>
       </div>
