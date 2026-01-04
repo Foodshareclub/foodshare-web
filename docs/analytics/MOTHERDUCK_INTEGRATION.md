@@ -1,40 +1,53 @@
 # MotherDuck / DuckDB Integration
 
 > **Date:** January 2026
-> **Status:** Implemented (v3.0.0)
+> **Status:** Partially Migrated (v3.1.0)
 > **Contact:** Weyman Cohen (MotherDuck)
 
 ## Overview
 
-MotherDuck serves as the analytics layer for FoodShare, syncing data from Supabase to power dashboards, reports, and LLM-driven insights without impacting production app performance.
+MotherDuck was originally designed as the analytics layer for FoodShare, syncing data from Supabase to power dashboards, reports, and LLM-driven insights without impacting production app performance.
 
-## Current Implementation
+## Current Status
 
-We implemented **Option 3: Scheduled Edge Function → Batch Sync** with incremental sync support.
+> **⚠️ Important:** MotherDuck/DuckDB native binaries don't work in Vercel's serverless environment. Core analytics queries (`getAnalyticsSummary`, `getMonthlyGrowth`, `getDailyActiveUsers`) now use **Supabase directly** instead of MotherDuck.
 
-### Architecture
+The sync infrastructure remains in place for:
+
+- Browser-based WASM sync (admin UI)
+- Edge Function sync for data warehousing
+- Future analytics that require DuckDB's analytical capabilities
+
+### Current Architecture
 
 ```text
+Primary Analytics (Production):
+Supabase (PostgreSQL)
+    ↓ Server Actions query directly
+Next.js Analytics Dashboard
+
+Data Warehouse (Background Sync):
 Supabase (PostgreSQL)
     ↓ Edge Function (sync-analytics)
     ↓ Incremental sync via updated_at
 MotherDuck (DuckDB cloud)
-    ↓ Server Actions query
-Next.js Analytics Dashboard
+    ↓ WASM client queries (admin only)
 ```
 
 ### Key Components
 
-| Component            | Location                                              | Purpose                                      |
-| -------------------- | ----------------------------------------------------- | -------------------------------------------- |
-| Sync Edge Function   | `foodshare-backend/functions/sync-analytics/index.ts` | Syncs profiles/posts to MotherDuck           |
-| Sync API Route       | `foodshare-web/src/app/api/admin/sync-analytics/`     | Next.js API route for sync (Node.js runtime) |
-| **WASM Sync Page**   | `foodshare-web/src/app/admin/analytics/sync/page.tsx` | Browser-based sync using MotherDuck WASM     |
-| Python Sync Script   | `foodshare-backend/tools/sync-to-motherduck.py`       | CLI tool for manual/cron sync                |
-| MotherDuck Service   | `foodshare-web/src/lib/analytics/motherduck.ts`       | DuckDB connection via duckdb-async           |
-| Analytics Actions    | `foodshare-web/src/app/actions/analytics.ts`          | Server actions for dashboard queries         |
-| AI Analytics Actions | `foodshare-web/src/app/actions/analytics-ai.ts`       | LLM-powered queries and insights             |
-| Vault Integration    | `foodshare-web/src/lib/email/vault.ts`                | Secure token retrieval                       |
+| Component            | Location                                              | Purpose                                       |
+| -------------------- | ----------------------------------------------------- | --------------------------------------------- |
+| Sync Edge Function   | `foodshare-backend/functions/sync-analytics/index.ts` | Syncs profiles/posts to MotherDuck            |
+| Sync API Route       | `foodshare-web/src/app/api/admin/sync-analytics/`     | Next.js API route for sync (Node.js runtime)  |
+| **WASM Sync Page**   | `foodshare-web/src/app/admin/analytics/sync/page.tsx` | Browser-based sync using MotherDuck WASM      |
+| Python Sync Script   | `foodshare-backend/tools/sync-to-motherduck.py`       | CLI tool for manual/cron sync                 |
+| MotherDuck Service   | `foodshare-web/src/lib/analytics/motherduck.ts`       | DuckDB connection (WASM only, not serverless) |
+| Analytics Actions    | `foodshare-web/src/app/actions/analytics.ts`          | Server actions - **uses Supabase directly**   |
+| AI Analytics Actions | `foodshare-web/src/app/actions/analytics-ai.ts`       | LLM-powered queries and insights              |
+| Vault Integration    | `foodshare-web/src/lib/email/vault.ts`                | Secure token retrieval                        |
+
+> **Note:** The `analytics.ts` server actions now query Supabase directly because DuckDB native binaries are incompatible with Vercel's serverless environment. The MotherDuck service is only used for browser-based WASM queries in the admin panel.
 
 ### MotherDuck Tables
 
@@ -100,7 +113,7 @@ sync_metadata (
 | `getConversionFunnel()`        | Listing → Request → Arranged      |
 | `getUserRetentionCohorts()`    | Monthly cohort retention          |
 | `getInventoryAging()`          | Active listings by age bucket     |
-| `getListingTypeDistribution()` | Breakdown by post_type            |
+| `getListingTypeDistribution()` | Breakdown by post_type (Supabase) |
 | `getTopSharers()`              | Users with most arranged listings |
 | `getSyncStatus()`              | Last sync metadata                |
 | `trackEvent()`                 | Track custom events               |
@@ -681,10 +694,12 @@ const response = await fetch("https://api.motherduck.com/v1/sql", {
 
 ## Changelog
 
-| Date       | Update                                                         |
-| ---------- | -------------------------------------------------------------- |
-| 2026-01-03 | Added browser-based WASM sync page (`/admin/analytics/sync`)   |
-| 2026-01-03 | Added Next.js API route for sync (`/api/admin/sync-analytics`) |
-| 2026-01-03 | v3.0.0 - Production implementation with incremental sync       |
-| 2026-01-03 | Added partnership notes from Weyman Cohen conversation         |
-| 2026-01-02 | Initial research document                                      |
+| Date       | Update                                                                    |
+| ---------- | ------------------------------------------------------------------------- |
+| 2026-01-04 | Migrated `getListingTypeDistribution()` to Supabase direct query          |
+| 2026-01-04 | Migrated core analytics to Supabase direct queries (Vercel compatibility) |
+| 2026-01-03 | Added browser-based WASM sync page (`/admin/analytics/sync`)              |
+| 2026-01-03 | Added Next.js API route for sync (`/api/admin/sync-analytics`)            |
+| 2026-01-03 | v3.0.0 - Production implementation with incremental sync                  |
+| 2026-01-03 | Added partnership notes from Weyman Cohen conversation                    |
+| 2026-01-02 | Initial research document                                                 |
