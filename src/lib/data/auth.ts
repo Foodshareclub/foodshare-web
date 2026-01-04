@@ -7,6 +7,7 @@
 import { unstable_cache } from "next/cache";
 import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // ============================================================================
 // Types
@@ -120,18 +121,27 @@ export async function checkIsAdmin(userId: string): Promise<{
   roles: string[];
 }> {
   try {
-    const supabase = await createClient();
+    // Use admin client to bypass RLS (avoids infinite recursion in user_roles policy)
+    const supabase = createAdminClient();
 
-    const { data: userRoles } = await supabase
+    const { data: userRoles, error } = await supabase
       .from("user_roles")
-      .select("roles!inner(name)")
+      .select("role_id, roles(name)")
       .eq("profile_id", userId);
 
-    const roles = (userRoles || []).map((r) => (r.roles as unknown as { name: string }).name);
+    if (error) {
+      console.error("[checkIsAdmin] Query error:", error.message);
+      return { isAdmin: false, roles: [] };
+    }
+
+    const roles = (userRoles || [])
+      .map((r) => (r.roles as unknown as { name: string })?.name)
+      .filter(Boolean);
     const isAdmin = roles.includes("admin") || roles.includes("superadmin");
 
     return { isAdmin, roles };
-  } catch {
+  } catch (error) {
+    console.error("[checkIsAdmin] Error:", error);
     return { isAdmin: false, roles: [] };
   }
 }

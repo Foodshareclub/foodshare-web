@@ -104,13 +104,20 @@ export function useAuth(): UseAuthReturn {
   const checkAdminStatus = useCallback(
     async (userId: string) => {
       setAdminCheckStatus("loading");
+
+      // Debug logging
+      console.log("[checkAdminStatus] userId:", userId);
+
       try {
         const { data, error: roleError } = await supabase
           .from("user_roles")
           .select("role_id, roles!user_roles_role_id_fkey(name)")
           .eq("profile_id", userId);
 
+        console.log("[checkAdminStatus] query result:", data, "error:", roleError);
+
         if (roleError) {
+          console.error("[checkAdminStatus] Query error:", roleError);
           setAdminCheckStatus("failed");
           return;
         }
@@ -121,8 +128,12 @@ export function useAuth(): UseAuthReturn {
         });
 
         const isUserAdmin = userRoles.includes("admin") || userRoles.includes("superadmin");
+
+        console.log("[checkAdminStatus] computed roles:", userRoles, "isAdmin:", isUserAdmin);
+
         setAdmin(isUserAdmin, userRoles);
-      } catch {
+      } catch (error) {
+        console.error("[checkAdminStatus] Error:", error);
         setAdminCheckStatus("failed");
       }
     },

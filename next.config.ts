@@ -332,6 +332,20 @@ const nextConfig: NextConfig = {
   // Security headers
   async headers() {
     return [
+      // Cross-origin isolation for MotherDuck WASM (admin analytics sync only)
+      {
+        source: "/admin/analytics/:path*",
+        headers: [
+          {
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin",
+          },
+          {
+            key: "Cross-Origin-Embedder-Policy",
+            value: "require-corp",
+          },
+        ],
+      },
       {
         source: "/(.*)",
         headers: [
@@ -379,7 +393,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: blob: https://*.supabase.co https://*.r2.cloudflarestorage.com https://*.openstreetmap.org https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://firebasestorage.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.r2.cloudflarestorage.com https://api.openai.com https://vercel.live wss://ws-us3.pusher.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.r2.cloudflarestorage.com https://api.openai.com https://vercel.live wss://ws-us3.pusher.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com https://app.motherduck.com https://*.motherduck.com",
               "frame-ancestors 'self'",
               "frame-src 'self' https://vercel.live",
               "form-action 'self'",

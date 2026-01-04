@@ -252,7 +252,107 @@ Receives webhook events from Meta platforms.
 - Uses `createAdminClient()` with service role key to access Vault secrets
 - Verify token is never exposed in environment variables or client code
 - All webhook processing is logged for debugging
-  import { useState, useEffect } from "react";
+
+---
+
+### Analytics Sync API (Admin)
+
+**Endpoint:** `POST /api/admin/sync-analytics`, `GET /api/admin/sync-analytics`
+
+**Location:** `src/app/api/admin/sync-analytics/route.ts`
+
+Syncs analytics data from PostgreSQL staging tables to MotherDuck. Uses Node.js runtime (not Edge) for native DuckDB support.
+
+**Authentication:** Required via `CRON_SECRET` bearer token (or localhost in development)
+
+**Runtime:** Node.js (not Edge) - required for native DuckDB
+
+**Max Duration:** 60 seconds
+
+**Query Parameters:**
+
+| Parameter | Type     | Required | Description                                  |
+| --------- | -------- | -------- | -------------------------------------------- |
+| `mode`    | `string` | No       | `full` for full resync, omit for incremental |
+
+**Request Headers:**
+
+| Header          | Value                  | Required | Description            |
+| --------------- | ---------------------- | -------- | ---------------------- |
+| `Authorization` | `Bearer <CRON_SECRET>` | Yes\*    | Required in production |
+
+\*Not required in development mode (localhost)
+
+**Success Response (200):**
+
+```typescript
+{
+  success: true,
+  mode: 'full' | 'incremental',
+  stats: {
+    dailyStats: number,      // Records synced from analytics_daily_stats
+    userActivity: number,    // Records synced from analytics_user_activity
+    postActivity: number     // Records synced from analytics_post_activity
+  },
+  durationMs: number
+}
+```
+
+**Error Responses:**
+
+| Status | Body                                                           | Description                    |
+| ------ | -------------------------------------------------------------- | ------------------------------ |
+| 401    | `{ success: false, error: 'Unauthorized' }`                    | Missing or invalid auth header |
+| 500    | `{ success: false, error: 'MOTHERDUCK_TOKEN not configured' }` | Missing env var                |
+| 500    | `{ success: false, error: '...' }`                             | Sync failed                    |
+
+**Environment Variables Required:**
+
+- `MOTHERDUCK_TOKEN` - MotherDuck access token
+- `CRON_SECRET` - Secret for authenticating cron/admin requests
+
+**MotherDuck Tables Created:**
+
+- `daily_stats` - Daily aggregated metrics
+- `user_activity_summary` - Per-user activity summaries
+- `post_activity_daily_stats` - Post engagement by day
+
+**Example Usage:**
+
+```bash
+# Incremental sync (cron job)
+curl -X POST "https://your-domain.com/api/admin/sync-analytics" \
+  -H "Authorization: Bearer $CRON_SECRET"
+
+# Full resync
+curl -X POST "https://your-domain.com/api/admin/sync-analytics?mode=full" \
+  -H "Authorization: Bearer $CRON_SECRET"
+
+# GET also works (for simple cron services)
+curl "https://your-domain.com/api/admin/sync-analytics" \
+  -H "Authorization: Bearer $CRON_SECRET"
+```
+
+**Vercel Cron Setup:**
+
+Add to `vercel.json`:
+
+```json
+{
+  "crons": [
+    {
+      "path": "/api/admin/sync-analytics",
+      "schedule": "0 * * * *"
+    }
+  ]
+}
+```
+
+**Related Documentation:** See `docs/analytics/MOTHERDUCK_INTEGRATION.md` for full architecture details.
+
+---
+
+import { useState, useEffect } from "react";
 
 function useNearbyPosts(lat: number, lng: number, postType?: string) {
 const [posts, setPosts] = useState([]);
