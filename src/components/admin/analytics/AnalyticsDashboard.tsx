@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   LineChart,
   Line,
@@ -18,8 +19,21 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { Users, ShoppingBag, ArrowUpRight, ArrowDownRight, Activity } from "lucide-react";
+import { Users, ShoppingBag, ArrowUpRight, ArrowDownRight, Activity, MapPin } from "lucide-react";
 import { GlassCard, GlassPanel } from "@/components/ui/glass";
+
+// Dynamic import for Leaflet-based component (client-side only)
+const GeoHeatMap = dynamic(() => import("./GeoHeatMap").then((mod) => mod.GeoHeatMap), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[400px] flex items-center justify-center bg-muted/20 rounded-lg">
+      <div className="flex items-center gap-2 text-muted-foreground">
+        <MapPin className="h-5 w-5 animate-pulse" />
+        <span>Loading map...</span>
+      </div>
+    </div>
+  ),
+});
 import {
   getAnalyticsSummary,
   getMonthlyGrowth,
@@ -276,6 +290,12 @@ export const AnalyticsDashboard = () => {
           </div>
         </GlassPanel>
       </div>
+
+      {/* Geographic Activity Heat Map */}
+      <GlassPanel className="min-h-[450px]">
+        <h3 className="text-lg font-semibold mb-6">Geographic Activity Hotspots</h3>
+        <GeoHeatMap />
+      </GlassPanel>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <GlassPanel className="min-h-[400px]">

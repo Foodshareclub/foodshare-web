@@ -584,3 +584,107 @@ export async function getSyncStatus(): Promise<ServerActionResult<SyncStatus[]>>
     return serverActionSuccess([]);
   }
 }
+
+/**
+ * Get Geographic Hotspots
+ * Returns aggregated listing data by location for heat map visualization
+ */
+export interface GeoHotspot {
+  latitude: number;
+  longitude: number;
+  count: number;
+  arrangedCount: number;
+  postType: string;
+}
+
+export async function getGeographicHotspots(): Promise<ServerActionResult<GeoHotspot[]>> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return serverActionError("Unauthorized", "UNAUTHORIZED");
+
+    // Grid-based aggregation - round coordinates to ~1km precision
+    const query = `
+      SELECT
+        ROUND(latitude, 2) as latitude,
+        ROUND(longitude, 2) as longitude,
+        COUNT(*) as count,
+        COUNT(CASE WHEN is_arranged = true THEN 1 END) as arrangedCount,
+        MODE(post_type) as postType
+      FROM full_listings
+      WHERE latitude IS NOT NULL
+        AND longitude IS NOT NULL
+        AND is_active = true
+      GROUP BY 1, 2
+      HAVING COUNT(*) >= 1
+      ORDER BY count DESC
+      LIMIT 500
+    `;
+
+    const MotherDuckService = await getMotherDuckService();
+    const results = await MotherDuckService.runQuery<GeoHotspot>(query);
+    return serverActionSuccess(results);
+  } catch (error) {
+    console.error("Failed to fetch geographic hotspots:", error);
+    return serverActionSuccess([]);
+  }
+}
+
+/**
+ * Get Activity by Hour
+ * Returns listing and event activity grouped by hour of day
+ */
+export interface HourlyActivity {
+  hour: number;
+  listingCount: number;
+  eventCount: number;
+}
+
+export async function getActivityByHour(): Promise<ServerActionResult<HourlyActivity[]>> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return serverActionError("Unauthorized", "UNAUTHORIZED");
+
+    const query = `
+      WITH listing_hours AS (
+        SELECT
+          EXTRACT(HOUR FROM created_at) as hour,
+          COUNT(*) as listing_count
+        FROM full_listings
+        WHERE created_at >= current_date - INTERVAL 30 DAY
+        GROUP BY 1
+      ),
+      event_hours AS (
+        SELECT
+          EXTRACT(HOUR FROM timestamp) as hour,
+          COUNT(*) as event_count
+        FROM events
+        WHERE timestamp >= current_date - INTERVAL 30 DAY
+        GROUP BY 1
+      ),
+      hours AS (
+        SELECT generate_series(0, 23) as hour
+      )
+      SELECT
+        h.hour,
+        COALESCE(l.listing_count, 0) as listingCount,
+        COALESCE(e.event_count, 0) as eventCount
+      FROM hours h
+      LEFT JOIN listing_hours l ON h.hour = l.hour
+      LEFT JOIN event_hours e ON h.hour = e.hour
+      ORDER BY h.hour
+    `;
+
+    const MotherDuckService = await getMotherDuckService();
+    const results = await MotherDuckService.runQuery<HourlyActivity>(query);
+    return serverActionSuccess(results);
+  } catch (error) {
+    console.error("Failed to fetch hourly activity:", error);
+    return serverActionSuccess([]);
+  }
+}
