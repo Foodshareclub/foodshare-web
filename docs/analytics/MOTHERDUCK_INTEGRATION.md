@@ -25,13 +25,16 @@ Next.js Analytics Dashboard
 
 ### Key Components
 
-| Component            | Location                                              | Purpose                              |
-| -------------------- | ----------------------------------------------------- | ------------------------------------ |
-| Sync Edge Function   | `foodshare-backend/functions/sync-analytics/index.ts` | Syncs profiles/posts to MotherDuck   |
-| MotherDuck Service   | `foodshare-web/src/lib/analytics/motherduck.ts`       | DuckDB connection via duckdb-async   |
-| Analytics Actions    | `foodshare-web/src/app/actions/analytics.ts`          | Server actions for dashboard queries |
-| AI Analytics Actions | `foodshare-web/src/app/actions/analytics-ai.ts`       | LLM-powered queries and insights     |
-| Vault Integration    | `foodshare-web/src/lib/email/vault.ts`                | Secure token retrieval               |
+| Component            | Location                                              | Purpose                                      |
+| -------------------- | ----------------------------------------------------- | -------------------------------------------- |
+| Sync Edge Function   | `foodshare-backend/functions/sync-analytics/index.ts` | Syncs profiles/posts to MotherDuck           |
+| Sync API Route       | `foodshare-web/src/app/api/admin/sync-analytics/`     | Next.js API route for sync (Node.js runtime) |
+| **WASM Sync Page**   | `foodshare-web/src/app/admin/analytics/sync/page.tsx` | Browser-based sync using MotherDuck WASM     |
+| Python Sync Script   | `foodshare-backend/tools/sync-to-motherduck.py`       | CLI tool for manual/cron sync                |
+| MotherDuck Service   | `foodshare-web/src/lib/analytics/motherduck.ts`       | DuckDB connection via duckdb-async           |
+| Analytics Actions    | `foodshare-web/src/app/actions/analytics.ts`          | Server actions for dashboard queries         |
+| AI Analytics Actions | `foodshare-web/src/app/actions/analytics-ai.ts`       | LLM-powered queries and insights             |
+| Vault Integration    | `foodshare-web/src/lib/email/vault.ts`                | Secure token retrieval                       |
 
 ### MotherDuck Tables
 
@@ -160,6 +163,49 @@ interface AIInsight {
 
 ### Sync Modes
 
+There are multiple ways to trigger analytics sync:
+
+#### 1. Browser-Based WASM Sync (Admin UI)
+
+The admin panel includes a browser-based sync page using MotherDuck's WASM client:
+
+```text
+URL: /admin/analytics/sync
+```
+
+**Features:**
+
+- Runs entirely in the browser using `@motherduck/wasm-client`
+- Fetches MotherDuck token from Supabase Vault via RPC
+- Supports incremental sync (unsynced records) and full sync
+- Test connectivity button to verify both PostgreSQL and MotherDuck connections
+- Real-time progress status updates
+
+**Requirements:**
+
+- Cross-origin isolation headers (configured in `next.config.ts`):
+  - `Cross-Origin-Opener-Policy: same-origin`
+  - `Cross-Origin-Embedder-Policy: require-corp`
+- MotherDuck token stored in Supabase Vault as `MOTHERDUCK_TOKEN`
+- Supabase RPC function `get_vault_secret` for secure token retrieval
+
+**Usage:**
+
+1. Navigate to `/admin/analytics/sync`
+2. Click "Test Connectivity" to verify connections
+3. Click "Incremental Sync" for unsynced records only
+4. Click "Full Sync" to resync all data
+
+**Tables synced:**
+
+- `analytics_daily_stats` → `daily_stats`
+- `analytics_user_activity` → `user_activity_summary`
+- `analytics_post_activity` → `post_activity_daily_stats`
+
+#### 2. Supabase Edge Function
+
+#### 2. Supabase Edge Function
+
 ```bash
 # Incremental sync (default) - syncs records updated since last sync
 POST /functions/v1/sync-analytics
@@ -170,6 +216,74 @@ POST /functions/v1/sync-analytics?mode=full
 # Cron-compatible GET endpoint
 GET /functions/v1/sync-analytics
 ```
+
+#### 3. Next.js API Route (Node.js Runtime)
+
+The web app includes a dedicated API route that uses native DuckDB for better performance:
+
+```bash
+# Incremental sync (default)
+POST /api/admin/sync-analytics
+Authorization: Bearer <CRON_SECRET>
+
+# Full sync
+POST /api/admin/sync-analytics?mode=full
+Authorization: Bearer <CRON_SECRET>
+
+# GET also supported for cron compatibility
+GET /api/admin/sync-analytics
+```
+
+**Response format:**
+
+```typescript
+interface SyncResult {
+  success: boolean;
+  mode: "full" | "incremental";
+  stats: {
+    dailyStats: number;
+    userActivity: number;
+    postActivity: number;
+  };
+  durationMs: number;
+  error?: string;
+}
+```
+
+**Environment variables required:**
+
+- `MOTHERDUCK_TOKEN` - MotherDuck access token
+- `CRON_SECRET` - Secret for authenticating cron requests
+
+**Features:**
+
+- Uses Node.js runtime (not Edge) for native DuckDB support
+- 60-second max duration for large syncs
+- Syncs from PostgreSQL staging tables (`analytics_daily_stats`, `analytics_user_activity`, `analytics_post_activity`)
+- Marks records as synced after successful transfer
+
+#### 4. Python CLI Script
+
+For manual syncs or external cron jobs:
+
+```bash
+# Install dependencies
+pip install duckdb psycopg2-binary python-dotenv
+
+# Incremental sync
+python foodshare-backend/tools/sync-to-motherduck.py
+
+# Full sync
+python foodshare-backend/tools/sync-to-motherduck.py --full
+
+# Test connectivity only
+python foodshare-backend/tools/sync-to-motherduck.py --test
+```
+
+**Environment variables:**
+
+- `DATABASE_URL` or `SUPABASE_DB_URL` - PostgreSQL connection string
+- `MOTHERDUCK_TOKEN` - MotherDuck access token
 
 ### Setup Instructions
 
@@ -567,8 +681,10 @@ const response = await fetch("https://api.motherduck.com/v1/sql", {
 
 ## Changelog
 
-| Date       | Update                                                   |
-| ---------- | -------------------------------------------------------- |
-| 2026-01-03 | v3.0.0 - Production implementation with incremental sync |
-| 2026-01-03 | Added partnership notes from Weyman Cohen conversation   |
-| 2026-01-02 | Initial research document                                |
+| Date       | Update                                                         |
+| ---------- | -------------------------------------------------------------- |
+| 2026-01-03 | Added browser-based WASM sync page (`/admin/analytics/sync`)   |
+| 2026-01-03 | Added Next.js API route for sync (`/api/admin/sync-analytics`) |
+| 2026-01-03 | v3.0.0 - Production implementation with incremental sync       |
+| 2026-01-03 | Added partnership notes from Weyman Cohen conversation         |
+| 2026-01-02 | Initial research document                                      |

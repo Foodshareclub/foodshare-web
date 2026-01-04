@@ -688,3 +688,71 @@ export async function getActivityByHour(): Promise<ServerActionResult<HourlyActi
     return serverActionSuccess([]);
   }
 }
+
+/**
+ * Trigger Analytics Sync
+ * Calls the sync-analytics Edge Function to sync data from Supabase to MotherDuck
+ */
+export interface TriggerSyncResult {
+  success: boolean;
+  mode: "full" | "incremental";
+  synced: {
+    users: number;
+    listings: number;
+  };
+  durationMs?: number;
+  error?: string;
+}
+
+export async function triggerAnalyticsSync(
+  mode: "full" | "incremental" = "incremental"
+): Promise<ServerActionResult<TriggerSyncResult>> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return serverActionError("Unauthorized", "UNAUTHORIZED");
+    }
+
+    // Get Supabase URL and service role key for authenticated Edge Function call
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      return serverActionError("Missing Supabase configuration", "SERVER_ERROR");
+    }
+
+    // Call the sync-analytics Edge Function with service role authentication
+    const response = await fetch(`${supabaseUrl}/functions/v1/sync-analytics?mode=${mode}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${serviceRoleKey}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Sync failed:", errorText);
+      return serverActionError(`Sync failed: ${response.status}`, "SERVER_ERROR");
+    }
+
+    const result = await response.json();
+
+    return serverActionSuccess({
+      success: result.data?.success ?? result.success ?? true,
+      mode: result.data?.mode ?? result.mode ?? mode,
+      synced: result.data?.synced ?? result.synced ?? { users: 0, listings: 0 },
+      durationMs: result.data?.durationMs ?? result.durationMs,
+    });
+  } catch (error) {
+    console.error("Failed to trigger sync:", error);
+    return serverActionError(
+      error instanceof Error ? error.message : "Unknown error",
+      "SERVER_ERROR"
+    );
+  }
+}
