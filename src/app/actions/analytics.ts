@@ -10,13 +10,22 @@ import { ServerActionResult } from "@/lib/errors/types";
 export interface AnalyticsSummary {
   totalUsers: number;
   activeUsers: number;
+  activeUsers7d: number;
   totalListings: number;
   activeListings: number;
+  arrangedListings: number;
   listingsChange: number;
   usersChange: number;
   activeUsersChange: number;
   arrangedChange: number;
   foodSavedKg: number;
+  // Engagement metrics
+  totalConversations: number;
+  totalViews: number;
+  totalLikes: number;
+  usersWithPosts: number;
+  newUsersThisMonth: number;
+  newListingsThisMonth: number;
 }
 
 export interface MonthlyGrowth {
@@ -42,6 +51,8 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const sixtyDaysAgo = new Date();
     sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     // Get total users
     const { count: totalUsers } = await supabase
@@ -53,6 +64,12 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
       .from("profiles")
       .select("*", { count: "exact", head: true })
       .gte("last_seen_at", thirtyDaysAgo.toISOString());
+
+    // Get active users in last 7 days
+    const { count: activeUsers7d } = await supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .gte("last_seen_at", sevenDaysAgo.toISOString());
 
     // Get total listings
     const { count: totalListings } = await supabase
@@ -96,6 +113,24 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
       .gte("created_at", sixtyDaysAgo.toISOString())
       .lt("created_at", thirtyDaysAgo.toISOString());
 
+    // Engagement metrics
+    const { count: totalConversations } = await supabase
+      .from("rooms")
+      .select("*", { count: "exact", head: true });
+
+    const { count: usersWithPosts } = await supabase
+      .from("posts")
+      .select("profile_id", { count: "exact", head: true })
+      .not("profile_id", "is", null);
+
+    // Get aggregate stats (views and likes)
+    const { data: statsData } = await supabase
+      .from("posts")
+      .select("post_views, post_like_counter");
+
+    const totalViews = statsData?.reduce((sum, p) => sum + (p.post_views || 0), 0) || 0;
+    const totalLikes = statsData?.reduce((sum, p) => sum + (p.post_like_counter || 0), 0) || 0;
+
     // Calculate percentage changes
     const usersChange =
       usersLastMonth && usersLastMonth > 0
@@ -113,26 +148,42 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
     return serverActionSuccess({
       totalUsers: totalUsers || 0,
       activeUsers: activeUsers || 0,
+      activeUsers7d: activeUsers7d || 0,
       totalListings: totalListings || 0,
       activeListings: activeListings || 0,
+      arrangedListings: arrangedListings || 0,
       listingsChange: Math.round(listingsChange * 10) / 10,
       usersChange: Math.round(usersChange * 10) / 10,
-      activeUsersChange: 0, // Would need more complex query
-      arrangedChange: 0, // Would need more complex query
+      activeUsersChange: 0,
+      arrangedChange: 0,
       foodSavedKg,
+      totalConversations: totalConversations || 0,
+      totalViews,
+      totalLikes,
+      usersWithPosts: usersWithPosts || 0,
+      newUsersThisMonth: usersThisMonth || 0,
+      newListingsThisMonth: listingsThisMonth || 0,
     });
   } catch (error) {
     console.error("Analytics error:", error);
     return serverActionSuccess({
       totalUsers: 0,
       activeUsers: 0,
+      activeUsers7d: 0,
       totalListings: 0,
       activeListings: 0,
+      arrangedListings: 0,
       listingsChange: 0,
       usersChange: 0,
       activeUsersChange: 0,
       arrangedChange: 0,
       foodSavedKg: 0,
+      totalConversations: 0,
+      totalViews: 0,
+      totalLikes: 0,
+      usersWithPosts: 0,
+      newUsersThisMonth: 0,
+      newListingsThisMonth: 0,
     });
   }
 }

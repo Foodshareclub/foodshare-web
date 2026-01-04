@@ -259,7 +259,7 @@ export function AnalyticsDashboardV2() {
         successfulShares={arrangedCount}
       />
 
-      {/* Key Metrics */}
+      {/* Key Metrics - Row 1 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <InsightCard
           title="Total Users"
@@ -268,6 +268,7 @@ export function AnalyticsDashboardV2() {
           icon={Users}
           iconColor="text-primary"
           iconBgColor="bg-primary/10"
+          subtitle={`${summary?.newUsersThisMonth || 0} new this month`}
           delay={0}
         />
         <InsightCard
@@ -277,7 +278,7 @@ export function AnalyticsDashboardV2() {
           icon={Activity}
           iconColor="text-blue-500"
           iconBgColor="bg-blue-500/10"
-          subtitle="Last 30 days"
+          subtitle={`${summary?.activeUsers7d || 0} in last 7 days`}
           delay={1}
         />
         <InsightCard
@@ -287,17 +288,58 @@ export function AnalyticsDashboardV2() {
           icon={ShoppingBag}
           iconColor="text-orange-500"
           iconBgColor="bg-orange-500/10"
+          subtitle={`${summary?.activeListings || 0} active`}
           delay={2}
         />
         <InsightCard
           title="Food Saved"
-          value={`${arrangedCount} items`}
+          value={`${summary?.arrangedListings || 0} items`}
           change={summary?.arrangedChange}
           icon={Heart}
           iconColor="text-emerald-500"
           iconBgColor="bg-emerald-500/10"
-          subtitle="Successfully shared"
+          subtitle="Successfully arranged"
           delay={3}
+        />
+      </div>
+
+      {/* Engagement Metrics - Row 2 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <InsightCard
+          title="Conversations"
+          value={summary?.totalConversations || 0}
+          icon={Users}
+          iconColor="text-purple-500"
+          iconBgColor="bg-purple-500/10"
+          subtitle="Total chat rooms"
+          delay={4}
+        />
+        <InsightCard
+          title="Total Views"
+          value={summary?.totalViews || 0}
+          icon={Activity}
+          iconColor="text-cyan-500"
+          iconBgColor="bg-cyan-500/10"
+          subtitle="Listing impressions"
+          delay={5}
+        />
+        <InsightCard
+          title="Total Likes"
+          value={summary?.totalLikes || 0}
+          icon={Heart}
+          iconColor="text-pink-500"
+          iconBgColor="bg-pink-500/10"
+          subtitle="Community engagement"
+          delay={6}
+        />
+        <InsightCard
+          title="Active Sharers"
+          value={summary?.usersWithPosts || 0}
+          icon={Award}
+          iconColor="text-amber-500"
+          iconBgColor="bg-amber-500/10"
+          subtitle="Users with listings"
+          delay={7}
         />
       </div>
 
@@ -305,7 +347,7 @@ export function AnalyticsDashboardV2() {
       <ChartCard
         title="Value Loop Funnel"
         subtitle="Track the journey from listing to successful share"
-        delay={4}
+        delay={8}
         minHeight="350px"
       >
         {funnelData.length === 0 ? (
@@ -358,7 +400,7 @@ export function AnalyticsDashboardV2() {
       <ChartCard
         title="Geographic Activity"
         subtitle="Where food sharing is happening"
-        delay={5}
+        delay={9}
         minHeight="450px"
       >
         <GeoHeatMap />
@@ -366,7 +408,7 @@ export function AnalyticsDashboardV2() {
 
       {/* Growth Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Monthly Growth" subtitle="Users and listings over time" delay={6}>
+        <ChartCard title="Monthly Growth" subtitle="Users and listings over time" delay={10}>
           {growthData.length === 0 ? (
             <EmptyState message="No growth data yet" />
           ) : (
@@ -429,7 +471,7 @@ export function AnalyticsDashboardV2() {
           )}
         </ChartCard>
 
-        <ChartCard title="Daily Active Users" subtitle="Last 30 days" delay={7}>
+        <ChartCard title="Daily Active Users" subtitle="Last 30 days" delay={11}>
           {dauData.length === 0 ? (
             <EmptyState message="No activity data yet" />
           ) : (
@@ -475,7 +517,7 @@ export function AnalyticsDashboardV2() {
         <ChartCard
           title="Listing Activity"
           subtitle="Monthly new listings"
-          delay={8}
+          delay={12}
           className="lg:col-span-2"
         >
           {growthData.length === 0 ? (
@@ -521,7 +563,7 @@ export function AnalyticsDashboardV2() {
           )}
         </ChartCard>
 
-        <ChartCard title="Listing Types" subtitle="Distribution by category" delay={9}>
+        <ChartCard title="Listing Types" subtitle="Distribution by category" delay={13}>
           {typeDistribution.length === 0 ? (
             <EmptyState message="No type data yet" />
           ) : (
@@ -563,7 +605,7 @@ export function AnalyticsDashboardV2() {
 
       {/* Top Sharers & Inventory Age */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Top Food Heroes" subtitle="Most active community members" delay={10}>
+        <ChartCard title="Top Food Heroes" subtitle="Most active community members" delay={14}>
           {topSharers.length === 0 ? (
             <EmptyState message="No sharer data yet" />
           ) : (
@@ -602,7 +644,7 @@ export function AnalyticsDashboardV2() {
           )}
         </ChartCard>
 
-        <ChartCard title="Inventory Aging" subtitle="How long listings stay active" delay={11}>
+        <ChartCard title="Inventory Aging" subtitle="How long listings stay active" delay={15}>
           {ageData.length === 0 ? (
             <EmptyState message="No inventory data yet" />
           ) : (
@@ -642,7 +684,7 @@ export function AnalyticsDashboardV2() {
       </div>
 
       {/* Retention Cohorts */}
-      <ChartCard title="User Retention" subtitle="Monthly cohort analysis" delay={12}>
+      <ChartCard title="User Retention" subtitle="Monthly cohort analysis" delay={16}>
         {cohortData.length === 0 ? (
           <EmptyState message="No retention data yet" />
         ) : (
