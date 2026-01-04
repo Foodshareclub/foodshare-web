@@ -48,4 +48,6 @@ tools/target/
 
 # eslint cache
 .eslintcache
-supabase
+
+# Supabase local development (root folder only)
+/supabase
