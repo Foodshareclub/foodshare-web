@@ -104,19 +104,19 @@ sync_metadata (
 
 ### Available Analytics Endpoints
 
-| Function                       | Description                       |
-| ------------------------------ | --------------------------------- |
-| `getAnalyticsSummary()`        | Total users, listings, food saved |
-| `getMonthlyGrowth()`           | User/listing growth by month      |
-| `getDailyActiveUsers()`        | DAU for last 30 days              |
-| `getEventDistribution()`       | Top 5 event types                 |
-| `getConversionFunnel()`        | Listing → Request → Arranged      |
-| `getUserRetentionCohorts()`    | Monthly cohort retention          |
-| `getInventoryAging()`          | Active listings by age bucket     |
-| `getListingTypeDistribution()` | Breakdown by post_type (Supabase) |
-| `getTopSharers()`              | Users with most arranged listings |
-| `getSyncStatus()`              | Last sync metadata                |
-| `trackEvent()`                 | Track custom events               |
+| Function                       | Description                                                                 |
+| ------------------------------ | --------------------------------------------------------------------------- |
+| `getAnalyticsSummary()`        | Comprehensive metrics: users, listings, engagement, growth, food saved (kg) |
+| `getMonthlyGrowth()`           | User/listing growth by month                                                |
+| `getDailyActiveUsers()`        | DAU for last 30 days                                                        |
+| `getEventDistribution()`       | Top 5 event types                                                           |
+| `getConversionFunnel()`        | Listing → Request → Arranged                                                |
+| `getUserRetentionCohorts()`    | Monthly cohort retention                                                    |
+| `getInventoryAging()`          | Active listings by age bucket                                               |
+| `getListingTypeDistribution()` | Breakdown by post_type (Supabase)                                           |
+| `getTopSharers()`              | Users with most arranged listings                                           |
+| `getSyncStatus()`              | Last sync metadata                                                          |
+| `trackEvent()`                 | Track custom events                                                         |
 
 ### AI-Powered Analytics (LLM Integration)
 
@@ -135,6 +135,41 @@ import { askAnalyticsQuestion } from "@/app/actions/analytics-ai";
 
 const result = await askAnalyticsQuestion("What food categories are most shared in London?");
 // Returns: { question, generatedSQL, answer, data, executionTimeMs }
+```
+
+#### Analytics Summary Structure
+
+The `getAnalyticsSummary()` function returns comprehensive platform metrics:
+
+```typescript
+interface AnalyticsSummary {
+  // User metrics
+  totalUsers: number; // Total registered users
+  activeUsers: number; // Users active in last 30 days
+  activeUsers7d: number; // Users active in last 7 days
+  usersWithPosts: number; // Users who have created at least one post
+  newUsersThisMonth: number; // Users registered this month
+
+  // Listing metrics
+  totalListings: number; // Total posts created
+  activeListings: number; // Currently active posts
+  arrangedListings: number; // Posts that have been arranged
+  newListingsThisMonth: number; // Posts created this month
+
+  // Engagement metrics
+  totalConversations: number; // Total chat rooms created
+  totalViews: number; // Sum of all post views
+  totalLikes: number; // Sum of all post likes
+
+  // Growth metrics (vs previous period)
+  listingsChange: number; // % change in listings
+  usersChange: number; // % change in users
+  activeUsersChange: number; // % change in active users
+  arrangedChange: number; // % change in arranged items
+
+  // Impact metrics
+  foodSavedKg: number; // Estimated kg of food saved
+}
 ```
 
 #### Weekly Report Structure
@@ -694,12 +729,13 @@ const response = await fetch("https://api.motherduck.com/v1/sql", {
 
 ## Changelog
 
-| Date       | Update                                                                    |
-| ---------- | ------------------------------------------------------------------------- |
-| 2026-01-04 | Migrated `getListingTypeDistribution()` to Supabase direct query          |
-| 2026-01-04 | Migrated core analytics to Supabase direct queries (Vercel compatibility) |
-| 2026-01-03 | Added browser-based WASM sync page (`/admin/analytics/sync`)              |
-| 2026-01-03 | Added Next.js API route for sync (`/api/admin/sync-analytics`)            |
-| 2026-01-03 | v3.0.0 - Production implementation with incremental sync                  |
-| 2026-01-03 | Added partnership notes from Weyman Cohen conversation                    |
-| 2026-01-02 | Initial research document                                                 |
+| Date       | Update                                                                     |
+| ---------- | -------------------------------------------------------------------------- |
+| 2026-01-04 | Expanded `AnalyticsSummary` with engagement metrics and 7-day active users |
+| 2026-01-04 | Migrated `getListingTypeDistribution()` to Supabase direct query           |
+| 2026-01-04 | Migrated core analytics to Supabase direct queries (Vercel compatibility)  |
+| 2026-01-03 | Added browser-based WASM sync page (`/admin/analytics/sync`)               |
+| 2026-01-03 | Added Next.js API route for sync (`/api/admin/sync-analytics`)             |
+| 2026-01-03 | v3.0.0 - Production implementation with incremental sync                   |
+| 2026-01-03 | Added partnership notes from Weyman Cohen conversation                     |
+| 2026-01-02 | Initial research document                                                  |

@@ -120,21 +120,23 @@ Food listings and volunteer opportunities.
 - `post_type` (text) - Type: 'food', 'volunteer', 'community_fridge', 'food_bank'
 - `post_address` (text) - Full address
 - `post_stripped_address` (text) - Simplified address for display
-- `latitude` (float8) - Geographic latitude
-- `longitude` (float8) - Geographic longitude
-- `locations` (geography) - PostGIS point for geospatial queries
+- `location_json` (jsonb) - Location as GeoJSON: `{ "type": "Point", "coordinates": [lng, lat] }`
 - `gif_url` (text) - Primary image URL
 - `gif_url_2` (text) - Second image URL
 - `gif_url_3` (text) - Third image URL
 - `available_hours` (text) - Availability schedule
 - `transportation` (text) - Pickup/delivery options
 - `condition` (text) - Item condition (new/like-new/good/fair) or food freshness
-- `active` (boolean) - Whether post is active (default: true)
-- `post_arranged` (boolean) - Whether item is reserved
+- `is_active` (boolean) - Whether post is active (default: true)
+- `is_arranged` (boolean) - Whether item is reserved (default: false)
+- `post_arranged_to` (uuid) - User who arranged the pickup
+- `post_arranged_at` (timestamp) - When arrangement was made
 - `post_views` (integer) - View counter
 - `post_like_counter` (integer) - Like counter
 - `created_at` (timestamp) - Post creation time
 - `updated_at` (timestamp) - Last update time
+
+> **Note:** Location data is stored as GeoJSON in `location_json`. The coordinates array follows GeoJSON convention: `[longitude, latitude]`. Legacy `latitude`/`longitude` columns may exist but `location_json` is the preferred source.
 
 **Relationships:**
 
@@ -146,8 +148,8 @@ Food listings and volunteer opportunities.
 
 - `idx_posts_profile_id` on profile_id
 - `idx_posts_post_type` on post_type
-- `idx_posts_active` on active
-- `idx_posts_locations` (GIST) for geospatial queries
+- `idx_posts_is_active` on is_active
+- `idx_posts_location_json` (GIN) for GeoJSON queries
 - Full-text search on `post_name` for search functionality
 
 **RLS Policies:**
