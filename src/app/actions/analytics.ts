@@ -37,6 +37,7 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
     }
 
     // Query Supabase directly (MotherDuck doesn't work in Vercel)
+    // Note: profiles uses created_time, last_seen_at; posts uses is_active, is_arranged
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const sixtyDaysAgo = new Date();
@@ -47,41 +48,41 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
       .from("profiles")
       .select("*", { count: "exact", head: true });
 
-    // Get active users (updated in last 30 days)
+    // Get active users (last_seen_at in last 30 days)
     const { count: activeUsers } = await supabase
       .from("profiles")
       .select("*", { count: "exact", head: true })
-      .gte("updated_at", thirtyDaysAgo.toISOString());
+      .gte("last_seen_at", thirtyDaysAgo.toISOString());
 
     // Get total listings
     const { count: totalListings } = await supabase
       .from("posts")
       .select("*", { count: "exact", head: true });
 
-    // Get active listings (not arranged)
+    // Get active listings (is_active=true and is_arranged=false)
     const { count: activeListings } = await supabase
       .from("posts")
       .select("*", { count: "exact", head: true })
-      .eq("active", true)
-      .eq("post_arranged", false);
+      .eq("is_active", true)
+      .eq("is_arranged", false);
 
     // Get arranged listings
     const { count: arrangedListings } = await supabase
       .from("posts")
       .select("*", { count: "exact", head: true })
-      .eq("post_arranged", true);
+      .eq("is_arranged", true);
 
-    // Get users created this month vs last month for change calculation
+    // Get users created this month vs last month (profiles uses created_time)
     const { count: usersThisMonth } = await supabase
       .from("profiles")
       .select("*", { count: "exact", head: true })
-      .gte("created_at", thirtyDaysAgo.toISOString());
+      .gte("created_time", thirtyDaysAgo.toISOString());
 
     const { count: usersLastMonth } = await supabase
       .from("profiles")
       .select("*", { count: "exact", head: true })
-      .gte("created_at", sixtyDaysAgo.toISOString())
-      .lt("created_at", thirtyDaysAgo.toISOString());
+      .gte("created_time", sixtyDaysAgo.toISOString())
+      .lt("created_time", thirtyDaysAgo.toISOString());
 
     // Get listings created this month vs last month
     const { count: listingsThisMonth } = await supabase
@@ -148,13 +149,14 @@ export async function getMonthlyGrowth(): Promise<ServerActionResult<MonthlyGrow
     }
 
     // Query Supabase directly for last 12 months
+    // Note: profiles uses created_time, posts uses created_at
     const twelveMonthsAgo = new Date();
     twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
 
     const { data: users } = await supabase
       .from("profiles")
-      .select("created_at")
-      .gte("created_at", twelveMonthsAgo.toISOString());
+      .select("created_time")
+      .gte("created_time", twelveMonthsAgo.toISOString());
 
     const { data: listings } = await supabase
       .from("posts")
@@ -173,8 +175,8 @@ export async function getMonthlyGrowth(): Promise<ServerActionResult<MonthlyGrow
     }
 
     users?.forEach((u) => {
-      if (u.created_at) {
-        const date = new Date(u.created_at);
+      if (u.created_time) {
+        const date = new Date(u.created_time);
         const monthKey = date.toLocaleString("en-US", { month: "short" });
         if (monthlyData[monthKey]) {
           monthlyData[monthKey].users++;
@@ -222,21 +224,21 @@ export async function getDailyActiveUsers(): Promise<ServerActionResult<DailyAct
 
     if (!user) return serverActionError("Unauthorized", "UNAUTHORIZED");
 
-    // Query Supabase directly for last 30 days
+    // Query Supabase directly for last 30 days (use last_seen_at for activity)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const { data: users } = await supabase
       .from("profiles")
-      .select("updated_at")
-      .gte("updated_at", thirtyDaysAgo.toISOString());
+      .select("last_seen_at")
+      .gte("last_seen_at", thirtyDaysAgo.toISOString());
 
     // Aggregate by day
     const dailyData: Record<string, number> = {};
 
     users?.forEach((u) => {
-      if (u.updated_at) {
-        const date = u.updated_at.substring(0, 10);
+      if (u.last_seen_at) {
+        const date = u.last_seen_at.substring(0, 10);
         dailyData[date] = (dailyData[date] || 0) + 1;
       }
     });
@@ -313,11 +315,11 @@ export async function getConversionFunnel(): Promise<ServerActionResult<FunnelSt
       .from("rooms")
       .select("*", { count: "exact", head: true });
 
-    // Get arranged listings
+    // Get arranged listings (use is_arranged column)
     const { count: arrangedListings } = await supabase
       .from("posts")
       .select("*", { count: "exact", head: true })
-      .eq("post_arranged", true);
+      .eq("is_arranged", true);
 
     const listings = totalListings || 0;
     const requests = requestedListings || 0;
@@ -366,32 +368,32 @@ export async function getUserRetentionCohorts(): Promise<ServerActionResult<Rete
     } = await supabase.auth.getUser();
     if (!user) return serverActionError("Unauthorized", "UNAUTHORIZED");
 
-    // Query Supabase directly
+    // Query Supabase directly (profiles uses created_time, last_seen_at)
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
     const { data: users } = await supabase
       .from("profiles")
-      .select("id, created_at, updated_at")
-      .gte("created_at", sixMonthsAgo.toISOString());
+      .select("id, created_time, last_seen_at")
+      .gte("created_time", sixMonthsAgo.toISOString());
 
     // Group by cohort month
     const cohorts: Record<string, { size: number; month1: number; month2: number }> = {};
 
     users?.forEach((u) => {
-      if (!u.created_at) return;
-      const cohort = u.created_at.substring(0, 7);
+      if (!u.created_time) return;
+      const cohort = u.created_time.substring(0, 7);
 
       if (!cohorts[cohort]) cohorts[cohort] = { size: 0, month1: 0, month2: 0 };
       cohorts[cohort].size++;
 
       // Check if user was active in month 1 and month 2
-      if (u.updated_at && u.created_at) {
-        const created = new Date(u.created_at);
-        const updated = new Date(u.updated_at);
+      if (u.last_seen_at && u.created_time) {
+        const created = new Date(u.created_time);
+        const lastSeen = new Date(u.last_seen_at);
         const monthsDiff =
-          (updated.getFullYear() - created.getFullYear()) * 12 +
-          (updated.getMonth() - created.getMonth());
+          (lastSeen.getFullYear() - created.getFullYear()) * 12 +
+          (lastSeen.getMonth() - created.getMonth());
 
         if (monthsDiff >= 1) cohorts[cohort].month1++;
         if (monthsDiff >= 2) cohorts[cohort].month2++;
@@ -427,12 +429,12 @@ export async function getInventoryAging(): Promise<ServerActionResult<InventoryA
     } = await supabase.auth.getUser();
     if (!user) return serverActionError("Unauthorized", "UNAUTHORIZED");
 
-    // Query Supabase directly
+    // Query Supabase directly (use is_active, is_arranged columns)
     const { data: listings } = await supabase
       .from("posts")
       .select("created_at")
-      .eq("active", true)
-      .eq("post_arranged", false);
+      .eq("is_active", true)
+      .eq("is_arranged", false);
 
     const now = Date.now();
     const buckets = { "0-7 days": 0, "7-30 days": 0, "30+ days": 0 };
@@ -477,8 +479,11 @@ export async function getListingTypeDistribution(): Promise<
     } = await supabase.auth.getUser();
     if (!user) return serverActionError("Unauthorized", "UNAUTHORIZED");
 
-    // Query Supabase directly
-    const { data: listings } = await supabase.from("posts").select("post_type").eq("active", true);
+    // Query Supabase directly (use is_active column)
+    const { data: listings } = await supabase
+      .from("posts")
+      .select("post_type")
+      .eq("is_active", true);
 
     const typeCounts: Record<string, number> = {};
     let total = 0;
@@ -523,10 +528,10 @@ export async function getTopSharers(limit: number = 10): Promise<ServerActionRes
     } = await supabase.auth.getUser();
     if (!user) return serverActionError("Unauthorized", "UNAUTHORIZED");
 
-    // Query Supabase directly - get listings with profile info
+    // Query Supabase directly - get listings with profile info (use is_arranged column)
     const { data: listings } = await supabase
       .from("posts")
-      .select("profile_id, post_arranged, profiles(nickname)")
+      .select("profile_id, is_arranged, profiles(nickname)")
       .not("profile_id", "is", null);
 
     // Aggregate by user
@@ -548,7 +553,7 @@ export async function getTopSharers(limit: number = 10): Promise<ServerActionRes
       }
 
       userStats[userId].totalListings++;
-      if (l.post_arranged) userStats[userId].arrangedCount++;
+      if (l.is_arranged) userStats[userId].arrangedCount++;
     });
 
     const results = Object.entries(userStats)
@@ -642,13 +647,12 @@ export async function getGeographicHotspots(): Promise<ServerActionResult<GeoHot
     } = await supabase.auth.getUser();
     if (!user) return serverActionError("Unauthorized", "UNAUTHORIZED");
 
-    // Query Supabase directly
+    // Query Supabase directly (use location_json for coordinates, is_active/is_arranged columns)
     const { data: listings } = await supabase
       .from("posts")
-      .select("latitude, longitude, post_arranged, post_type")
-      .eq("active", true)
-      .not("latitude", "is", null)
-      .not("longitude", "is", null);
+      .select("location_json, is_arranged, post_type")
+      .eq("is_active", true)
+      .not("location_json", "is", null);
 
     // Grid-based aggregation - round coordinates to ~1km precision
     const grid: Record<
@@ -657,17 +661,26 @@ export async function getGeographicHotspots(): Promise<ServerActionResult<GeoHot
     > = {};
 
     listings?.forEach((l) => {
-      if (l.latitude == null || l.longitude == null) return;
-      const lat = Math.round(l.latitude * 100) / 100;
-      const lng = Math.round(l.longitude * 100) / 100;
-      const key = `${lat},${lng}`;
+      // location_json is GeoJSON: { type: "Point", coordinates: [lng, lat] }
+      const locationJson = l.location_json as {
+        type: string;
+        coordinates: [number, number];
+      } | null;
+      if (!locationJson?.coordinates) return;
+
+      const [lng, lat] = locationJson.coordinates;
+      if (lat == null || lng == null) return;
+
+      const roundedLat = Math.round(lat * 100) / 100;
+      const roundedLng = Math.round(lng * 100) / 100;
+      const key = `${roundedLat},${roundedLng}`;
 
       if (!grid[key]) {
         grid[key] = { count: 0, arrangedCount: 0, types: {} };
       }
 
       grid[key].count++;
-      if (l.post_arranged) grid[key].arrangedCount++;
+      if (l.is_arranged) grid[key].arrangedCount++;
 
       const type = l.post_type || "unknown";
       grid[key].types[type] = (grid[key].types[type] || 0) + 1;
