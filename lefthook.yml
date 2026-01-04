@@ -28,9 +28,12 @@ pre-commit:
     format:
       tags: format quality autofix
       glob: "*.{ts,tsx,js,jsx,json,css,scss,md,yaml,yml}"
-      run: npx prettier --write --cache {staged_files}
+      run: npx prettier --write --cache --cache-strategy metadata {staged_files}
       stage_fixed: true
       priority: 1
+      env:
+        FORCE_COLOR: "0"
+        NODE_OPTIONS: ""
 
     lint:
       tags: lint quality autofix
@@ -38,6 +41,9 @@ pre-commit:
       run: npx eslint {staged_files} --fix --max-warnings=0 --no-warn-ignored --cache --cache-location .eslintcache
       stage_fixed: true
       priority: 1
+      env:
+        FORCE_COLOR: "0"
+        NODE_OPTIONS: ""
 
     # PHASE 2: Security checks (after formatting)
     security-check:
@@ -56,6 +62,8 @@ pre-commit:
       tags: typescript
       run: npx tsc --noEmit --incremental
       priority: 3
+      env:
+        NODE_OPTIONS: ""
 
     complexity-check:
       tags: quality optional
@@ -72,6 +80,8 @@ pre-commit:
       run: npx eslint {staged_files} --fix --rule 'import/order:error' --no-warn-ignored 2>/dev/null || true
       stage_fixed: true
       priority: 1
+      env:
+        NODE_OPTIONS: ""
 
     import-check:
       tags: quality optional
@@ -131,12 +141,15 @@ pre-push:
       tags: typescript
       run: npx tsc --noEmit --strict --incremental
       priority: 2
+      env:
+        NODE_OPTIONS: ""
 
     test:
       tags: test
       run: npm run test -- --passWithNoTests
       env:
         CI: true
+        NODE_OPTIONS: ""
       priority: 2
       skip:
         - run: test -n "$SKIP_TESTS"
@@ -146,6 +159,7 @@ pre-push:
       run: npm run build
       env:
         NODE_ENV: production
+        NODE_OPTIONS: ""
       priority: 3
       skip:
         - run: test -n "$SKIP_BUILD"
