@@ -154,19 +154,20 @@ export async function getAppRatingStats(): Promise<AppRatingStats> {
     const supabase = createEdgeClient();
 
     // Aggregate ratings from reviews table
-    const { data, error } = await supabase.from("reviews").select("rating");
+    const { data, error } = await supabase.from("reviews").select("reviewed_rating");
 
     if (error || !data || data.length === 0) {
       return cachedRating || FALLBACK_RATING;
     }
 
-    const validRatings = data.filter((r) => r.rating != null && r.rating > 0);
+    const validRatings = data.filter((r) => r.reviewed_rating != null && r.reviewed_rating > 0);
     if (validRatings.length === 0) {
       return cachedRating || FALLBACK_RATING;
     }
 
     const totalRatings = validRatings.length;
-    const avgRating = validRatings.reduce((sum, r) => sum + (r.rating || 0), 0) / totalRatings;
+    const avgRating =
+      validRatings.reduce((sum, r) => sum + (r.reviewed_rating || 0), 0) / totalRatings;
 
     const stats: AppRatingStats = {
       ratingValue: avgRating.toFixed(1),

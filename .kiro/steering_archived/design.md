@@ -59,7 +59,7 @@ import { cn } from '@/lib/utils';
 ## Animations
 
 ```tsx
-className="transition-all duration-200 hover:scale-105"
+className = "transition-all duration-200 hover:scale-105";
 ```
 
 ## Breakpoints

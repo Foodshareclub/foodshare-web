@@ -42,7 +42,7 @@ const [a, b] = await Promise.all([getA(), getB()]);
 ## Code Splitting
 
 ```typescript
-const Map = dynamic(() => import('@/components/leaflet/Map'), { ssr: false });
+const Map = dynamic(() => import("@/components/leaflet/Map"), { ssr: false });
 ```
 
 ## Caching
@@ -50,11 +50,13 @@ const Map = dynamic(() => import('@/components/leaflet/Map'), { ssr: false });
 Use centralized cache keys from `@/lib/data/cache-keys`:
 
 ```typescript
-import { unstable_cache } from 'next/cache';
-import { CACHE_TAGS, CACHE_DURATIONS } from '@/lib/data/cache-keys';
+import { unstable_cache } from "next/cache";
+import { CACHE_TAGS, CACHE_DURATIONS } from "@/lib/data/cache-keys";
 
 export const getData = unstable_cache(
-  async () => { /* fetch */ },
+  async () => {
+    /* fetch */
+  },
   [CACHE_TAGS.PRODUCTS],
   { revalidate: CACHE_DURATIONS.PRODUCTS, tags: [CACHE_TAGS.PRODUCTS] }
 );
@@ -63,14 +65,14 @@ export const getData = unstable_cache(
 ## Revalidation
 
 ```typescript
-import { revalidatePath } from 'next/cache';
-import { CACHE_TAGS, invalidateTag, getProductTags } from '@/lib/data/cache-keys';
+import { revalidatePath } from "next/cache";
+import { CACHE_TAGS, invalidateTag, getProductTags } from "@/lib/data/cache-keys";
 
 invalidateTag(CACHE_TAGS.PRODUCTS);
-revalidatePath('/products');
+revalidatePath("/products");
 
 // Bulk invalidation
-getProductTags(productId, type).forEach(tag => invalidateTag(tag));
+getProductTags(productId, type).forEach((tag) => invalidateTag(tag));
 ```
 
 ## Checklist

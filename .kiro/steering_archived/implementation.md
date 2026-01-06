@@ -20,11 +20,11 @@ export default async function ProductsPage() {
 
 ```typescript
 // lib/data/products.ts
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from "@/lib/supabase/server";
 
 export async function getProducts() {
   const supabase = await createClient();
-  const { data, error } = await supabase.from('posts').select('*');
+  const { data, error } = await supabase.from("posts").select("*");
   if (error) throw error;
   return data;
 }
@@ -34,15 +34,15 @@ export async function getProducts() {
 
 ```typescript
 // app/actions/products.ts
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
+import { createClient } from "@/lib/supabase/server";
+import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
-  await supabase.from('posts').insert({
-    post_name: formData.get('name') as string,
+  await supabase.from("posts").insert({
+    post_name: formData.get("name") as string,
   });
   invalidateTag(CACHE_TAGS.PRODUCTS);
 }
@@ -110,12 +110,12 @@ const Map = dynamic(() => import('@/components/leaflet/Map'), {
 
 ## Quick Reference
 
-| Need | Solution |
-|------|----------|
-| Fetch data | Server Component + lib/data function |
-| Mutate data | Server Action + invalidateTag |
-| Form submit | form action={serverAction} |
-| Pending state | useFormStatus |
-| Interactivity | Client Component |
-| Realtime | Supabase client subscription |
-| Maps | dynamic import with ssr: false |
+| Need          | Solution                             |
+| ------------- | ------------------------------------ |
+| Fetch data    | Server Component + lib/data function |
+| Mutate data   | Server Action + invalidateTag        |
+| Form submit   | form action={serverAction}           |
+| Pending state | useFormStatus                        |
+| Interactivity | Client Component                     |
+| Realtime      | Supabase client subscription         |
+| Maps          | dynamic import with ssr: false       |

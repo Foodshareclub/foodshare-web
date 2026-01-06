@@ -49,14 +49,14 @@ tools/                      # Rust-based git hooks (lefthook-rs)
 
 ## File Conventions
 
-| File | Purpose |
-|------|---------|
-| `page.tsx` | Route UI (Server Component) |
-| `layout.tsx` | Shared layout |
-| `loading.tsx` | Suspense fallback |
-| `error.tsx` | Error boundary (Client) |
-| `not-found.tsx` | 404 page |
-| `route.ts` | API Route Handler |
+| File            | Purpose                     |
+| --------------- | --------------------------- |
+| `page.tsx`      | Route UI (Server Component) |
+| `layout.tsx`    | Shared layout               |
+| `loading.tsx`   | Suspense fallback           |
+| `error.tsx`     | Error boundary (Client)     |
+| `not-found.tsx` | 404 page                    |
+| `route.ts`      | API Route Handler           |
 
 ## Naming
 
@@ -70,9 +70,9 @@ tools/                      # Rust-based git hooks (lefthook-rs)
 Always use `@/` alias:
 
 ```typescript
-import { Button } from '@/components/ui/button';
-import { getProducts } from '@/lib/data/products';
-import { cn } from '@/lib/utils';
+import { Button } from "@/components/ui/button";
+import { getProducts } from "@/lib/data/products";
+import { cn } from "@/lib/utils";
 ```
 
 ## Data Flow

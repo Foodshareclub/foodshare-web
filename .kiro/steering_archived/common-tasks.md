@@ -10,11 +10,11 @@ inclusion: always
 
 ```typescript
 // lib/data/myFeature.ts
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from "@/lib/supabase/server";
 
 export async function getMyData() {
   const supabase = await createClient();
-  const { data, error } = await supabase.from('my_table').select('*');
+  const { data, error } = await supabase.from("my_table").select("*");
   if (error) throw error;
   return data;
 }
@@ -24,15 +24,15 @@ export async function getMyData() {
 
 ```typescript
 // app/actions/myFeature.ts
-'use server';
-import { createClient } from '@/lib/supabase/server';
-import { invalidateTag } from '@/lib/data/cache-keys';
+"use server";
+import { createClient } from "@/lib/supabase/server";
+import { invalidateTag } from "@/lib/data/cache-keys";
 
 export async function createMyItem(formData: FormData) {
   const supabase = await createClient();
-  const { error } = await supabase.from('my_table').insert({ name: formData.get('name') });
+  const { error } = await supabase.from("my_table").insert({ name: formData.get("name") });
   if (error) return { error: error.message };
-  invalidateTag('myFeature');
+  invalidateTag("myFeature");
   return { success: true };
 }
 ```
@@ -76,22 +76,22 @@ export function MyFeatureList({ data }) {
 
 ```typescript
 // Select
-const { data } = await supabase.from('posts').select('*');
+const { data } = await supabase.from("posts").select("*");
 
 // With filter
-const { data } = await supabase.from('posts').select('*').eq('type', 'food').eq('active', true);
+const { data } = await supabase.from("posts").select("*").eq("type", "food").eq("active", true);
 
 // With relations
-const { data } = await supabase.from('posts').select('*, profiles(*)');
+const { data } = await supabase.from("posts").select("*, profiles(*)");
 
 // Insert
-const { error } = await supabase.from('posts').insert({ name: 'New' });
+const { error } = await supabase.from("posts").insert({ name: "New" });
 
 // Update
-const { error } = await supabase.from('posts').update({ name: 'Updated' }).eq('id', id);
+const { error } = await supabase.from("posts").update({ name: "Updated" }).eq("id", id);
 
 // Delete
-const { error } = await supabase.from('posts').delete().eq('id', id);
+const { error } = await supabase.from("posts").delete().eq("id", id);
 ```
 
 ## Git Workflow
@@ -149,11 +149,11 @@ npm run test:coverage # Coverage report
 
 ## Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| Hydration mismatch | Use `useEffect` for client-only content |
-| Supabase error | Check env vars, await `createClient()` |
-| Import not found | Use `@/` alias |
-| Component not updating | Check revalidation in Server Action |
-| Hook failed | Check `tools/target/release/lefthook-rs` exists |
-| Security check failed | Review flagged patterns, fix or allowlist |
+| Issue                  | Solution                                        |
+| ---------------------- | ----------------------------------------------- |
+| Hydration mismatch     | Use `useEffect` for client-only content         |
+| Supabase error         | Check env vars, await `createClient()`          |
+| Import not found       | Use `@/` alias                                  |
+| Component not updating | Check revalidation in Server Action             |
+| Hook failed            | Check `tools/target/release/lefthook-rs` exists |
+| Security check failed  | Review flagged patterns, fix or allowlist       |

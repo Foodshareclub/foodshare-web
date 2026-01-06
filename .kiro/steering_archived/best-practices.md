@@ -26,11 +26,11 @@ export default async function Page({ params }) {
 ### Server Actions (Mutations)
 
 ```typescript
-'use server';
-import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
+"use server";
+import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 
 export async function createItem(formData: FormData) {
-  await supabase.from('items').insert({ name: formData.get('name') });
+  await supabase.from("items").insert({ name: formData.get("name") });
   invalidateTag(CACHE_TAGS.PRODUCTS); // Use centralized cache helper
 }
 ```
@@ -61,25 +61,25 @@ const supabase = createClient(); // from @/lib/supabase/client
 
 ## Common Mistakes
 
-| Mistake | Fix |
-|---------|-----|
-| Hooks in Server Component | Add `'use client'` |
-| Missing `NEXT_PUBLIC_` | Add prefix for client vars |
-| Not awaiting `createClient()` | Always `await` on server |
-| Hydration mismatch | Use `useEffect` for client-only |
+| Mistake                               | Fix                                                         |
+| ------------------------------------- | ----------------------------------------------------------- |
+| Hooks in Server Component             | Add `'use client'`                                          |
+| Missing `NEXT_PUBLIC_`                | Add prefix for client vars                                  |
+| Not awaiting `createClient()`         | Always `await` on server                                    |
+| Hydration mismatch                    | Use `useEffect` for client-only                             |
 | Re-exporting from `'use server'` file | Only async actions allowed; import data from `@/lib/data/*` |
 
 ## Security (OWASP)
 
 Git hooks automatically check for:
 
-| Category | Checks |
-|----------|--------|
-| A01 Broken Access Control | Auth on mutations, IDOR, CSRF |
-| A02 Cryptographic Failures | Weak crypto, secrets, JWT |
-| A03 Injection | SQL, command injection, ReDoS |
-| A07 XSS | dangerouslySetInnerHTML, innerHTML |
-| A10 SSRF | User-controlled URLs |
+| Category                   | Checks                             |
+| -------------------------- | ---------------------------------- |
+| A01 Broken Access Control  | Auth on mutations, IDOR, CSRF      |
+| A02 Cryptographic Failures | Weak crypto, secrets, JWT          |
+| A03 Injection              | SQL, command injection, ReDoS      |
+| A07 XSS                    | dangerouslySetInnerHTML, innerHTML |
+| A10 SSRF                   | User-controlled URLs               |
 
 Run manually: `./tools/target/release/lefthook-rs nextjs-security src/**/*.tsx`
 

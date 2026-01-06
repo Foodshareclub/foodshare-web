@@ -43,15 +43,15 @@ export function Counter() {
 
 ```typescript
 // app/actions/products.ts
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { CACHE_TAGS, invalidateTag } from '@/lib/data/cache-keys';
+import { createClient } from "@/lib/supabase/server";
+import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 
 export async function createProduct(formData: FormData) {
   const supabase = await createClient();
-  const { error } = await supabase.from('posts').insert({
-    post_name: formData.get('name') as string,
+  const { error } = await supabase.from("posts").insert({
+    post_name: formData.get("name") as string,
   });
   if (error) return { error: error.message };
   invalidateTag(CACHE_TAGS.PRODUCTS);
@@ -143,11 +143,11 @@ export function Greeting() {
 
 ```typescript
 // Server-side (Server Components, Actions, Route Handlers)
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from "@/lib/supabase/server";
 const supabase = await createClient();
 
 // Client-side (only for realtime subscriptions)
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from "@/lib/supabase/client";
 const supabase = createClient();
 ```
 
@@ -177,6 +177,7 @@ With scope: `feat(auth): add OAuth login`
 ## Code Quality (Auto-enforced)
 
 Pre-commit hooks automatically:
+
 - Format code (Prettier)
 - Fix lint issues (ESLint)
 - Sort imports alphabetically

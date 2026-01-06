@@ -139,13 +139,13 @@ export async function getUserStats(userId: string): Promise<ProfileStats> {
             .select("*", { count: "exact", head: true })
             .eq("profile_id", userId)
             .eq("is_active", true),
-          supabase.from("reviews").select("rating").eq("reviewed_user_id", userId),
+          supabase.from("reviews").select("reviewed_rating").eq("reviewed_user_id", userId),
         ]);
 
       const totalReviews = reviews?.length ?? 0;
       const averageRating =
         totalReviews > 0
-          ? (reviews?.reduce((sum, r) => sum + (r.rating || 0), 0) ?? 0) / totalReviews
+          ? (reviews?.reduce((sum, r) => sum + (r.reviewed_rating || 0), 0) ?? 0) / totalReviews
           : 0;
 
       return {

@@ -18,3 +18,6 @@ export * from "./useViewportLocations";
 
 // Admin - email CRM dashboard
 export * from "./useEmailCRM";
+
+// Products - infinite scroll, pagination
+export * from "./useProducts";

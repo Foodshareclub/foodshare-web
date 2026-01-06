@@ -7,22 +7,53 @@ import { Redis } from "@upstash/redis";
 // Rate Limiting Configuration
 // ============================================================================
 
-/**
- * Create rate limiter for mutations if Redis is configured
- * Limits: 30 mutations per minute per user/IP
- */
-const ratelimit =
+// Initialize Redis for rate limiting (only with env vars)
+const redis =
   process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-    ? new Ratelimit({
-        redis: new Redis({
-          url: process.env.UPSTASH_REDIS_REST_URL,
-          token: process.env.UPSTASH_REDIS_REST_TOKEN,
-        }),
-        limiter: Ratelimit.slidingWindow(30, "1 m"),
-        prefix: "mutation-limit",
-        analytics: true,
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
       })
     : null;
+
+/**
+ * Global rate limiter: 100 requests per 10 seconds per IP
+ * Protects against general abuse and DDoS
+ */
+const globalLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(100, "10 s"),
+      analytics: true,
+      prefix: "ratelimit:global",
+    })
+  : null;
+
+/**
+ * Auth endpoint rate limiter: 10 requests per minute per IP
+ * Stricter limit to prevent brute force attacks
+ */
+const authLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(10, "1 m"),
+      analytics: true,
+      prefix: "ratelimit:auth",
+    })
+  : null;
+
+/**
+ * Mutation rate limiter: 30 mutations per minute per user/IP
+ * Protects against spam and abuse of write operations
+ */
+const mutationLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(30, "1 m"),
+      analytics: true,
+      prefix: "ratelimit:mutations",
+    })
+  : null;
 
 // ============================================================================
 // Security Configuration
@@ -48,8 +79,8 @@ const CSP_DIRECTIVES = [
   }`.trim(),
   // Fonts: self + Google Fonts
   "font-src 'self' https://fonts.gstatic.com",
-  // Frame ancestors: prevent clickjacking
-  "frame-ancestors 'none'",
+  // Frame ancestors: allow same-origin frames (Vercel preview)
+  "frame-ancestors 'self'",
   // Base URI: prevent base tag hijacking
   "base-uri 'self'",
   // Form action: only allow forms to submit to self
@@ -82,6 +113,18 @@ const MUTATION_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
 // ============================================================================
 // Security Helpers
 // ============================================================================
+
+/**
+ * Get client IP from request headers
+ * Checks multiple headers for proxied requests (Cloudflare, Vercel, etc.)
+ */
+function getClientIp(request: NextRequest): string {
+  const cfConnectingIp = request.headers.get("cf-connecting-ip");
+  const realIp = request.headers.get("x-real-ip");
+  const forwardedFor = request.headers.get("x-forwarded-for");
+
+  return cfConnectingIp || realIp || forwardedFor?.split(",")[0].trim() || "unknown";
+}
 
 /**
  * Validate request origin for CSRF protection
@@ -132,7 +175,8 @@ function addSecurityHeaders(response: NextResponse): void {
   response.headers.set("X-Content-Type-Options", "nosniff");
 
   // Prevent clickjacking (backup for CSP frame-ancestors)
-  response.headers.set("X-Frame-Options", "DENY");
+  // Use SAMEORIGIN to allow Vercel preview frames
+  response.headers.set("X-Frame-Options", "SAMEORIGIN");
 
   // Enable XSS filter (legacy browsers)
   response.headers.set("X-XSS-Protection", "1; mode=block");
@@ -140,11 +184,11 @@ function addSecurityHeaders(response: NextResponse): void {
   // Control referrer information
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
 
-  // HSTS in production (1 year, include subdomains)
+  // HSTS in production (2 years, include subdomains, preload)
   if (process.env.NODE_ENV === "production") {
     response.headers.set(
       "Strict-Transport-Security",
-      "max-age=31536000; includeSubDomains; preload"
+      "max-age=63072000; includeSubDomains; preload"
     );
   }
 
@@ -183,29 +227,66 @@ export async function proxy(request: NextRequest) {
   }
 
   // ============================================================================
-  // Rate Limiting - Limit mutations per user/IP
+  // Rate Limiting - Multi-tier protection
   // ============================================================================
-  const isMutation = MUTATION_METHODS.includes(request.method.toUpperCase());
-  if (ratelimit && isMutation) {
-    // Use IP as identifier (will be replaced with user ID after auth check if available)
-    const ip =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      request.headers.get("x-real-ip") ||
-      "unknown";
+  const { pathname } = request.nextUrl;
+  const ip = getClientIp(request);
 
-    const { success, limit, reset, remaining } = await ratelimit.limit(`mutation:${ip}`);
+  // Skip rate limiting in development
+  if (process.env.NODE_ENV === "production") {
+    // 1. Auth endpoint rate limiting (strictest - 10/min)
+    const isAuthEndpoint = pathname.startsWith("/auth") || pathname.startsWith("/api/auth");
+    if (authLimiter && isAuthEndpoint) {
+      const { success, reset } = await authLimiter.limit(ip);
+      if (!success) {
+        console.warn(`Auth rate limit exceeded for ${ip} on ${pathname}`);
+        return new NextResponse("Too Many Requests", {
+          status: 429,
+          headers: {
+            "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
+            "X-RateLimit-Limit": "10",
+            "X-RateLimit-Remaining": "0",
+            "X-RateLimit-Type": "auth",
+          },
+        });
+      }
+    }
 
-    if (!success) {
-      console.warn(`Rate limit exceeded for ${ip} on ${request.nextUrl.pathname}`);
-      return new NextResponse("Too Many Requests", {
-        status: 429,
-        headers: {
-          "X-RateLimit-Limit": limit.toString(),
-          "X-RateLimit-Remaining": remaining.toString(),
-          "X-RateLimit-Reset": reset.toString(),
-          "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
-        },
-      });
+    // 2. Mutation rate limiting (30/min for POST/PUT/PATCH/DELETE)
+    const isMutation = MUTATION_METHODS.includes(request.method.toUpperCase());
+    if (mutationLimiter && isMutation) {
+      const { success, limit, reset, remaining } = await mutationLimiter.limit(`mutation:${ip}`);
+      if (!success) {
+        console.warn(`Mutation rate limit exceeded for ${ip} on ${pathname}`);
+        return new NextResponse("Too Many Requests", {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+            "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
+            "X-RateLimit-Type": "mutations",
+          },
+        });
+      }
+    }
+
+    // 3. Global rate limiting (100/10s for all requests)
+    if (globalLimiter) {
+      const { success, limit, reset, remaining } = await globalLimiter.limit(ip);
+      if (!success) {
+        console.warn(`Global rate limit exceeded for ${ip}`);
+        return new NextResponse("Too Many Requests", {
+          status: 429,
+          headers: {
+            "X-RateLimit-Limit": limit.toString(),
+            "X-RateLimit-Remaining": remaining.toString(),
+            "X-RateLimit-Reset": reset.toString(),
+            "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
+            "X-RateLimit-Type": "global",
+          },
+        });
+      }
     }
   }
 

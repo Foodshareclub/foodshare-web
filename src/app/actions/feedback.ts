@@ -14,6 +14,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import type { ErrorCode } from "@/lib/errors";
+import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
 
 // ============================================================================
 // Zod Schemas
@@ -163,6 +164,7 @@ export async function submitFeedback(
     }
 
     revalidatePath("/admin/feedback");
+    invalidateTag(CACHE_TAGS.ADMIN);
 
     return {
       success: true,
@@ -296,6 +298,7 @@ export async function updateFeedbackStatus(
     });
 
     revalidatePath("/admin/feedback");
+    invalidateTag(CACHE_TAGS.ADMIN);
 
     return {
       success: true,
@@ -334,6 +337,7 @@ export async function deleteFeedback(feedbackId: string): Promise<ServerActionRe
     await logAuditEvent(supabase, user.id, "DELETE", "feedback", feedbackId);
 
     revalidatePath("/admin/feedback");
+    invalidateTag(CACHE_TAGS.ADMIN);
 
     return successVoid();
   } catch (error) {
