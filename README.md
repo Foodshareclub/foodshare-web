@@ -37,6 +37,7 @@ A modern food sharing platform that connects people to reduce food waste by enab
 
 - **Upstash** - Redis caching, Vector search, QStash queues
 - **Vercel** - Hosting and deployment
+- **Sentry** - Error tracking and performance monitoring
 - **AWS SES / Brevo / Resend** - Email services
 - **Twilio** - Phone verification
 - **OpenAI** - AI features
@@ -145,14 +146,15 @@ Copy `.env.local.example` to `.env.local` and configure:
 
 ### Optional Services
 
-| Variable              | Description             |
-| --------------------- | ----------------------- |
-| `KV_REST_API_URL`     | Upstash Redis URL       |
-| `KV_REST_API_TOKEN`   | Upstash Redis token     |
-| `BREVO_API_KEY`       | Brevo email API key     |
-| `TWILIO_ACCOUNT_SID`  | Twilio account SID      |
-| `AWS_ACCESS_KEY_ID`   | AWS credentials for SES |
-| `NEXT_PUBLIC_APP_URL` | Public app URL          |
+| Variable                 | Description               |
+| ------------------------ | ------------------------- |
+| `NEXT_PUBLIC_SENTRY_DSN` | Sentry error tracking DSN |
+| `KV_REST_API_URL`        | Upstash Redis URL         |
+| `KV_REST_API_TOKEN`      | Upstash Redis token       |
+| `BREVO_API_KEY`          | Brevo email API key       |
+| `TWILIO_ACCOUNT_SID`     | Twilio account SID        |
+| `AWS_ACCESS_KEY_ID`      | AWS credentials for SES   |
+| `NEXT_PUBLIC_APP_URL`    | Public app URL            |
 
 See `.env.local.example` for the complete list with documentation.
 
@@ -232,6 +234,7 @@ Detailed documentation is available in the `/docs` directory:
 - `docs/03-features/` - Feature documentation
 - `docs/04-deployment/` - Deployment guides
 - `docs/05-reference/` - API and technical reference
+- `docs/SENTRY_INTEGRATION.md` - Error tracking and monitoring setup
 
 ## Security
 
