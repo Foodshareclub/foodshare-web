@@ -34,6 +34,10 @@
     "start:bun-runtime": "bun --bun next start"
   },
   "dependencies": {
+    "@foodshare/types": "*",
+    "@foodshare/utils": "*",
+    "@foodshare/validation": "*",
+    "@foodshare/ui": "*",
     "@ai-sdk/xai": "^2.0.39",
     "@aws-sdk/client-ses": "^3.940.0",
     "@getbrevo/brevo": "^3.0.1",
