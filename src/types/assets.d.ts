@@ -42,6 +42,6 @@ declare module '*.bmp' {
 }
 
 declare module '*.svg' {
-  const content: React.FC<React.SVGProps<SVGSVGElement>>;
+  const content: import('next/image').StaticImageData;
   export default content;
 }
