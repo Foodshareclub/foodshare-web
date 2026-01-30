@@ -448,8 +448,13 @@ const sentryWebpackPluginOptions = {
   disableClientWebpackPlugin: process.env.NODE_ENV !== "production",
   // Hide source maps from generated client bundles
   hideSourceMaps: true,
-  // Automatically tree-shake Sentry logger statements
-  disableLogger: true,
+  // Webpack tree-shaking options (Note: not supported with Turbopack)
+  webpack: {
+    treeshake: {
+      // Automatically tree-shake Sentry logger statements to reduce bundle size
+      removeDebugLogging: true,
+    },
+  },
 };
 
 // Chain: bundleAnalyzer -> nextIntl -> sentry

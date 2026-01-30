@@ -166,7 +166,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Public profile routes
   const publicProfileRoutes: MetadataRoute.Sitemap = publicProfiles.map((profile) => ({
     url: `${baseUrl}/profile/${profile.id}`,
-    lastModified: new Date(profile.updated_at || profile.created_at),
+    lastModified: new Date(profile.updated_at),
     changeFrequency: "weekly" as const,
     priority: 0.5,
   }));
@@ -284,27 +284,10 @@ async function getChallengesForSitemap() {
 
 /**
  * Fetch public user profiles for sitemap
- * Only includes users who have opted into public profiles
+ * Note: Disabled until is_public column is added to profiles table
+ * TODO: Enable once database migration adds profiles.is_public column
  */
-async function getPublicProfilesForSitemap() {
-  try {
-    const supabase = createCachedClient();
-
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, created_at, updated_at")
-      .eq("is_public", true)
-      .order("id", { ascending: false })
-      .limit(500);
-
-    if (error) {
-      console.error("Failed to fetch public profiles for sitemap:", error);
-      return [];
-    }
-
-    return data || [];
-  } catch {
-    console.error("Error fetching public profiles for sitemap");
-    return [];
-  }
+async function getPublicProfilesForSitemap(): Promise<Array<{ id: string; updated_at: string }>> {
+  // Return empty array - public profiles feature not yet in database
+  return [];
 }
