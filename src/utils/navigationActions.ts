@@ -55,7 +55,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     fr: "Nourriture",
     cs: "Jídlo",
     src: food.src,
-    red: foodRed,
+    red: foodRed.src,
   },
   {
     name: "Things",
@@ -65,7 +65,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     fr: "Des choses",
     cs: "Věci",
     src: things.src,
-    red: thingsRed,
+    red: thingsRed.src,
   },
   {
     name: "Borrow",
@@ -75,7 +75,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     fr: "Emprunter",
     cs: "Půjčit si",
     src: borrow.src,
-    red: borrowRed,
+    red: borrowRed.src,
   },
   {
     name: "Wanted",
@@ -85,7 +85,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     fr: "Voulait",
     cs: "Hledaný",
     src: wanted.src,
-    red: wantedRed,
+    red: wantedRed.src,
   },
   {
     name: "FoodBanks",
@@ -95,7 +95,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     fr: "Banques alimentaires",
     cs: "FoodBanks",
     src: foodBanks.src,
-    red: foodBanksRed,
+    red: foodBanksRed.src,
   },
   {
     name: "Fridges",
@@ -105,7 +105,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     fr: "Réfrigérateurs",
     cs: "Lednice",
     src: fridges.src,
-    red: fridgesRed,
+    red: fridgesRed.src,
   },
   {
     name: "Organisations",
@@ -115,7 +115,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     fr: "Organisations",
     cs: "Organizace",
     src: business.src,
-    red: businessRed,
+    red: businessRed.src,
   },
   {
     name: "Volunteer",
@@ -125,7 +125,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     fr: "Bénévole",
     cs: "Dobrovolník",
     src: volunteer.src,
-    red: volunteerRed,
+    red: volunteerRed.src,
   },
   {
     name: "Challenges",
@@ -135,7 +135,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     fr: "Défis",
     cs: "Výzvy",
     src: challenges.src,
-    red: challengesRed,
+    red: challengesRed.src,
   },
   {
     name: "Forum",
@@ -145,7 +145,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     fr: "Forum",
     cs: "Fórum",
     src: community.src,
-    red: communityRed,
+    red: communityRed.src,
   },
   {
     name: "Zerowaste",
@@ -155,7 +155,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     fr: "Carte",
     cs: "Mapa",
     src: zerowaste.src,
-    red: zerowasteRed,
+    red: zerowasteRed.src,
   },
   {
     name: "Vegan",
@@ -165,7 +165,7 @@ export const navigationActionsSVG: Array<NavigationActionsSVGType> = [
     fr: "Végétalien",
     cs: "Vegan",
     src: vegan.src,
-    red: veganRed,
+    red: veganRed.src,
   },
 ];
 export const responsive = {

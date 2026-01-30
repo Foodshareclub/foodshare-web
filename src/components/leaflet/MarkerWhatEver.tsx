@@ -24,7 +24,7 @@ const MarkerWhatEver: FC<MarkerType> = ({
   valTwo,
 }) => {
   const skater = new Icon({
-    iconUrl: icon,
+    iconUrl: icon.src,
     iconSize: [25, 25],
   });
 

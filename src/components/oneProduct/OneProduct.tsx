@@ -132,7 +132,7 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
 
           {/* Location */}
           <div className="flex items-center gap-2 mb-4 text-muted-foreground">
-            <img src={loc} alt="location" className="w-5 h-5" />
+            <img src={loc.src} alt="location" className="w-5 h-5" />
             <p className="text-base">{product.post_stripped_address}</p>
           </div>
 
@@ -141,7 +141,7 @@ export function OneProduct({ chat, product, buttonValue, navigateHandler, size, 
           {/* Stats Row */}
           <div className="flex justify-between mb-4 flex-wrap gap-3">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <img src={likes} alt="likes" className="w-5 h-5" />
+              <img src={likes.src} alt="likes" className="w-5 h-5" />
               <p className="text-sm">{product.post_like_counter || 0} likes</p>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">

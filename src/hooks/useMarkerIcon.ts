@@ -46,7 +46,7 @@ export const useUserLocationIcon = () => {
   return useMemo(
     () =>
       new Icon({
-        iconUrl: markerIconRed,
+        iconUrl: markerIconRed.src,
         iconSize: [25, 25],
         className: "custom-marker-user",
       }),
