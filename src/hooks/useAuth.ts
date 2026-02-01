@@ -92,8 +92,6 @@ export function useAuth(): UseAuthReturn {
   const setAuth = useAuthStore((state) => state.setAuth);
   const setLoading = useAuthStore((state) => state.setLoading);
   const setError = useAuthStore((state) => state.setError);
-  const setAdmin = useAuthStore((state) => state.setAdmin);
-  const setAdminCheckStatus = useAuthStore((state) => state.setAdminCheckStatus);
   const clearErrorAction = useAuthStore((state) => state.clearError);
   const reset = useAuthStore((state) => state.reset);
 
@@ -103,10 +101,19 @@ export function useAuth(): UseAuthReturn {
 
   const checkAdminStatus = useCallback(
     async (userId: string) => {
-      setAdminCheckStatus("loading");
+      // Get current state and actions directly from store to avoid dependency issues
+      const currentState = useAuthStore.getState();
 
-      // Debug logging
-      console.log("[checkAdminStatus] userId:", userId);
+      // Prevent redundant checks - only proceed if idle or failed
+      if (
+        currentState.adminCheckStatus === "loading" ||
+        currentState.adminCheckStatus === "succeeded"
+      ) {
+        return;
+      }
+
+      // Get actions from store (stable reference pattern)
+      useAuthStore.getState().setAdminCheckStatus("loading");
 
       try {
         const { data, error: roleError } = await supabase
@@ -114,11 +121,9 @@ export function useAuth(): UseAuthReturn {
           .select("role_id, roles!user_roles_role_id_fkey(name)")
           .eq("profile_id", userId);
 
-        console.log("[checkAdminStatus] query result:", data, "error:", roleError);
-
         if (roleError) {
           console.error("[checkAdminStatus] Query error:", roleError);
-          setAdminCheckStatus("failed");
+          useAuthStore.getState().setAdminCheckStatus("failed");
           return;
         }
 
@@ -129,15 +134,14 @@ export function useAuth(): UseAuthReturn {
 
         const isUserAdmin = userRoles.includes("admin") || userRoles.includes("superadmin");
 
-        console.log("[checkAdminStatus] computed roles:", userRoles, "isAdmin:", isUserAdmin);
-
-        setAdmin(isUserAdmin, userRoles);
+        // Use fresh reference to avoid stale closure
+        useAuthStore.getState().setAdmin(isUserAdmin, userRoles);
       } catch (error) {
         console.error("[checkAdminStatus] Error:", error);
-        setAdminCheckStatus("failed");
+        useAuthStore.getState().setAdminCheckStatus("failed");
       }
     },
-    [supabase, setAdminCheckStatus, setAdmin]
+    [supabase] // Only supabase as dependency - Zustand actions accessed via getState()
   );
 
   // ========================================================================
@@ -157,7 +161,9 @@ export function useAuth(): UseAuthReturn {
         const {
           data: { session: initialSession },
         } = await supabase.auth.getSession();
-        setAuth(initialSession?.user ?? null, initialSession);
+
+        // Use getState() for stable action references
+        useAuthStore.getState().setAuth(initialSession?.user ?? null, initialSession);
 
         // Check admin status if user exists
         if (initialSession?.user) {
@@ -166,7 +172,7 @@ export function useAuth(): UseAuthReturn {
       } catch (err) {
         console.error("Error getting initial session:", err);
       } finally {
-        setLoading(false);
+        useAuthStore.getState().setLoading(false);
       }
     };
 
@@ -177,12 +183,12 @@ export function useAuth(): UseAuthReturn {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, newSession: Session | null) => {
-        setAuth(newSession?.user ?? null, newSession);
+        useAuthStore.getState().setAuth(newSession?.user ?? null, newSession);
 
         if (newSession?.user) {
           await checkAdminStatus(newSession.user.id);
         } else {
-          reset();
+          useAuthStore.getState().reset();
         }
 
         // Refresh server components on auth change
@@ -195,7 +201,7 @@ export function useAuth(): UseAuthReturn {
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase, router, reset, checkAdminStatus, setAuth, setLoading]);
+  }, [supabase, router, checkAdminStatus]); // Minimal stable dependencies only
 
   // ========================================================================
   // Auth Actions
