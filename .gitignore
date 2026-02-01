@@ -52,3 +52,4 @@ tools/target/
 # Supabase local config (keep migrations/functions tracked)
 /supabase/*
 supabase
+.env*.local

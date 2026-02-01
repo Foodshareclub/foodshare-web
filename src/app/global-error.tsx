@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
-
 /**
  * Global Error Handler
  * Catches errors in the root layout and provides a recovery UI
  * This is the last line of defense for unhandled errors
+ *
+ * Note: Kept minimal for Bun runtime compatibility during prerendering
  */
 export default function GlobalError({
   error,
@@ -14,10 +14,10 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    // Log error to console in development
+  // Log error on mount (avoiding useEffect for Bun prerender compatibility)
+  if (typeof window !== "undefined") {
     console.error("Global error:", error);
-  }, [error]);
+  }
 
   return (
     <html lang="en">
