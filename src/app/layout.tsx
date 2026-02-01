@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Inter } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
 import { Providers } from "./providers";
@@ -20,13 +20,11 @@ import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { NavbarWrapper } from "@/components/header/navbar/NavbarWrapper";
 import { getAuthSession } from "@/lib/data/auth";
 
-// Using local Inter variable font for Turbopack compatibility
-const inter = localFont({
-  src: "../fonts/InterVariable.woff2",
+const inter = Inter({
+  subsets: ["latin"],
   display: "swap",
   preload: true,
   fallback: ["system-ui", "arial"],
-  variable: "--font-inter",
 });
 
 // Use default metadata (fb:app_id is added directly in head with property attribute)
