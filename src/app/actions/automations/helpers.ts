@@ -73,7 +73,7 @@ export async function logAuditEvent(
 // Cache Invalidation Helper
 // ============================================================================
 
-export function invalidateAutomationCache(): void {
+export async function invalidateAutomationCache(): Promise<void> {
   revalidatePath("/admin/email");
   invalidateTag("automations");
   invalidateTag("email-dashboard");
