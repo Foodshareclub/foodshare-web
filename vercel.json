@@ -4,7 +4,7 @@
   "crons": [
     {
       "path": "/api/health/upstash",
-      "schedule": "0 */12 * * *"
+      "schedule": "0 6 * * *"
     }
   ]
 }
