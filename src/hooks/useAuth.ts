@@ -104,11 +104,15 @@ export function useAuth(): UseAuthReturn {
       // Get current state and actions directly from store to avoid dependency issues
       const currentState = useAuthStore.getState();
 
-      // Prevent redundant checks - only proceed if idle or failed
-      if (
-        currentState.adminCheckStatus === "loading" ||
-        currentState.adminCheckStatus === "succeeded"
-      ) {
+      // Skip if already loading
+      if (currentState.adminCheckStatus === "loading") {
+        return;
+      }
+
+      // If status is "succeeded" but isAdmin is still false, the state was only
+      // partially restored from localStorage (adminCheckStatus is persisted but
+      // isAdmin is not). Re-check in this case.
+      if (currentState.adminCheckStatus === "succeeded" && currentState.isAdmin) {
         return;
       }
 

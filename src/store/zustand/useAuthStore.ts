@@ -125,13 +125,12 @@ export const useAuthStore = create<AuthState>()(
         }
         return localStorage;
       }),
-      // SECURITY: Only persist non-sensitive UI state
+      // SECURITY: Don't persist any auth state
       // Session/user data should come from secure Supabase cookies
-      // Never persist: user, session, isAdmin, roles (sensitive data)
-      partialize: (state) => ({
-        // Only persist admin check status for UX (avoid re-checking)
-        adminCheckStatus: state.adminCheckStatus,
-      }),
+      // Never persist: user, session, isAdmin, roles, adminCheckStatus
+      // Note: Previously adminCheckStatus was persisted, but this caused a bug
+      // where the check was skipped on page reload while isAdmin remained false
+      partialize: () => ({}),
     }
   )
 );
