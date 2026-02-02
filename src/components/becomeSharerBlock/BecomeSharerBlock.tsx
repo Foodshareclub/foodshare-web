@@ -76,7 +76,7 @@ export function BecomeSharerBlock() {
   };
 
   const handleVolunteer = () => {
-    alert("Coming soon!");
+    router.push("/new?type=volunteer");
   };
 
   return (
