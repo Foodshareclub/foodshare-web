@@ -95,7 +95,7 @@ export function BecomeSharerBlock() {
         <div className="grid grid-cols-2 gap-1">
           <ListingMenuItem value="food" icon={photoObj.food} label="Food" onClick={addHandler} />
           <ListingMenuItem
-            value="things"
+            value="thing"
             icon={photoObj.things}
             label="Things"
             onClick={addHandler}
@@ -126,7 +126,7 @@ export function BecomeSharerBlock() {
           onClick={addHandler}
         />
         <ListingMenuItem
-          value="foodBank"
+          value="foodbank"
           icon={photoObj.foodBanks}
           label="Food bank"
           onClick={addHandler}
@@ -151,7 +151,7 @@ export function BecomeSharerBlock() {
             onClick={addHandler}
           />
           <ListingMenuItem
-            value="vegan-food"
+            value="vegan"
             icon={photoObj.vegan}
             label="Vegan"
             onClick={addHandler}
