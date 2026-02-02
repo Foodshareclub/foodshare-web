@@ -85,8 +85,6 @@ export function DesktopMenu({
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
-  // Debug: Log admin status
-  console.log("[DesktopMenu] isAdmin:", isAdmin, "isAuth:", isAuth, "email:", email, "onNavigateToDashboard:", !!onNavigateToDashboard);
 
   const hasNotifications = signalOfNewMessage.length > 0;
   const notificationCount = signalOfNewMessage.length;
@@ -136,22 +134,15 @@ export function DesktopMenu({
                 </div>
 
                 {/* Admin Dashboard Link */}
-                {(() => {
-                  console.log("[DesktopMenu] Rendering Admin check:", { isAdmin, hasHandler: !!onNavigateToDashboard, shouldRender: isAdmin && !!onNavigateToDashboard });
-                  return null;
-                })()}
-                {isAdmin && onNavigateToDashboard && (
-                  <>
-                    {console.log("[DesktopMenu] ✅ ADMIN MENU ITEM IS RENDERING")}
-                    <MenuItem
-                      label="Admin"
-                      icon={<LayoutGrid className="w-5 h-5" />}
-                      onClick={onNavigateToDashboard}
-                      variant="accent"
-                      testId="menu-admin"
-                    />
-                  </>
-                )}
+                {isAdmin && onNavigateToDashboard ? (
+                  <MenuItem
+                    label="Admin"
+                    icon={<LayoutGrid className="w-5 h-5" />}
+                    onClick={onNavigateToDashboard}
+                    variant="accent"
+                    testId="menu-admin"
+                  />
+                ) : null}
 
                 <MenuItem
                   label="My listings"
