@@ -452,7 +452,7 @@ Admin access is controlled via `user_roles` table with RLS policies. **Critical*
 | `src/proxy.ts`                | Middleware-level admin route protection  |
 | `src/app/admin/layout.tsx`    | Page-level protection (defense-in-depth) |
 
-### Common Pitfall
+### Common Pitfalls
 
 **Never use anon client to check admin roles** - RLS will block the query and return empty results, causing false negatives. Always use `checkUserIsAdmin()` which uses the admin client internally.
 
@@ -465,6 +465,8 @@ const { data } = await supabase.from("user_roles").select("*");
 import { checkUserIsAdmin } from "@/lib/data/admin-check";
 const { isAdmin, roles } = await checkUserIsAdmin(userId);
 ```
+
+**Edge Runtime Limitation**: `proxy.ts` runs on Edge runtime and cannot import Node.js-specific code. The admin check is inlined directly in proxy.ts instead of using the shared utility. If you modify the admin check logic, update BOTH files.
 
 ## Code Standards
 
