@@ -131,6 +131,18 @@ export function BecomeSharerBlock() {
             label="Vegan"
             onClick={handleSelect}
           />
+          <ListingMenuItem
+            value="zerowaste"
+            icon={photoObj["zero waste"]}
+            label="Zero Waste"
+            onClick={handleSelect}
+          />
+          <ListingMenuItem
+            value="business"
+            icon={photoObj.business}
+            label="Organisation"
+            onClick={handleSelect}
+          />
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

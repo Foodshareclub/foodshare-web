@@ -296,12 +296,13 @@ export function NewProductForm({
         throw new Error(result.error?.message || "Failed to create listing");
       }
 
-      // Redirect to appropriate page
-      if (isVolunteerForm) {
-        router.push("/volunteers?submitted=true");
-      } else {
-        router.push(`/food?type=${formData.post_type}`);
-      }
+      // Redirect to appropriate page based on type
+      const redirectMap: Record<string, string> = {
+        volunteer: "/volunteers?submitted=true",
+        challenge: "/challenge?submitted=true",
+      };
+      const redirectUrl = redirectMap[formData.post_type] || `/food?type=${formData.post_type}`;
+      router.push(redirectUrl);
       router.refresh();
     } catch (err) {
       console.error("Error creating product:", err);
@@ -375,14 +376,13 @@ export function NewProductForm({
                   <SelectItem value="thing">🎁 Things</SelectItem>
                   <SelectItem value="borrow">🔧 Borrow</SelectItem>
                   <SelectItem value="wanted">🤲 Wanted</SelectItem>
-                  <SelectItem value="foodbank">🏛️ FoodBanks</SelectItem>
                   <SelectItem value="fridge">❄️ Fridges</SelectItem>
+                  <SelectItem value="foodbank">🏛️ Food Banks</SelectItem>
                   <SelectItem value="business">🏛️ Organisations</SelectItem>
                   <SelectItem value="volunteer">🙌 Volunteers</SelectItem>
                   <SelectItem value="challenge">🏆 Challenges</SelectItem>
                   <SelectItem value="zerowaste">♻️ Zero Waste</SelectItem>
                   <SelectItem value="vegan">🌱 Vegan</SelectItem>
-                  <SelectItem value="forum">💬 Forum</SelectItem>
                 </SelectContent>
               </Select>
             </div>
