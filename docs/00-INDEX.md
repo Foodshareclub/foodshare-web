@@ -44,3 +44,8 @@
 
 - [Sentry Integration](./SENTRY_INTEGRATION.md) - Error tracking and performance monitoring
 - [Sentry Setup](./monitoring/SENTRY_SETUP.md) - Quick setup guide
+
+## Outreach & Growth
+
+- [Tester Recruitment Newsletter](./outreach/TESTER_RECRUITMENT_NEWSLETTER.md) - Recruiting web & iOS beta testers
+- [SGC RCC Outreach](./outreach/SGC_RCC_Outreach_Email.md) - Regional Climate Collaboratives outreach

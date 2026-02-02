@@ -85,6 +85,9 @@ export function DesktopMenu({
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
+  // Debug: Log admin status
+  console.log("[DesktopMenu] isAdmin:", isAdmin, "isAuth:", isAuth, "email:", email, "onNavigateToDashboard:", !!onNavigateToDashboard);
+
   const hasNotifications = signalOfNewMessage.length > 0;
   const notificationCount = signalOfNewMessage.length;
 

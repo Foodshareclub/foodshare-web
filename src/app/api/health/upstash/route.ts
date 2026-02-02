@@ -5,13 +5,16 @@
  * 1. Verify connectivity
  * 2. Prevent hibernation due to inactivity
  *
- * Called by Vercel Cron every 12 hours
+ * Called by:
+ * - Vercel Cron daily (hobby plan limitation)
+ * - QStash schedule every 5 minutes (for keep-warm)
  */
 
 import { NextResponse } from "next/server";
 import { Redis } from "@upstash/redis";
-import { Client as QStashClient } from "@upstash/qstash";
+import { Client as QStashClient, Receiver } from "@upstash/qstash";
 import { Search } from "@upstash/search";
+import { Index as VectorIndex } from "@upstash/vector";
 
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
@@ -23,11 +26,38 @@ interface ServiceHealth {
   error?: string;
 }
 
+const HEALTH_CHECK_TIMEOUT = 5000; // 5 second timeout per service
+
+async function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number
+): Promise<T> {
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("Timeout")), ms)
+  );
+  return Promise.race([promise, timeout]);
+}
+
 async function checkRedis(): Promise<ServiceHealth> {
   const start = Date.now();
   try {
-    const redis = Redis.fromEnv();
-    const pong = await redis.ping();
+    // Support both naming conventions: UPSTASH_REDIS_REST_* and KV_REST_API_*
+    const url =
+      process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+    const token =
+      process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+
+    if (!url || !token) {
+      return {
+        name: "Upstash Redis",
+        status: "degraded",
+        latency: Date.now() - start,
+        error: "Not configured",
+      };
+    }
+
+    const redis = new Redis({ url, token });
+    const pong = await withTimeout(redis.ping(), HEALTH_CHECK_TIMEOUT);
     return {
       name: "Upstash Redis",
       status: pong === "PONG" ? "healthy" : "degraded",
@@ -46,11 +76,20 @@ async function checkRedis(): Promise<ServiceHealth> {
 async function checkQStash(): Promise<ServiceHealth> {
   const start = Date.now();
   try {
+    if (!process.env.QSTASH_TOKEN) {
+      return {
+        name: "Upstash QStash",
+        status: "degraded",
+        latency: Date.now() - start,
+        error: "Not configured",
+      };
+    }
+
     const qstash = new QStashClient({
-      token: process.env.QSTASH_TOKEN!,
+      token: process.env.QSTASH_TOKEN,
     });
     // List schedules as a health check (lightweight operation)
-    await qstash.schedules.list();
+    await withTimeout(qstash.schedules.list(), HEALTH_CHECK_TIMEOUT);
     return {
       name: "Upstash QStash",
       status: "healthy",
@@ -69,12 +108,24 @@ async function checkQStash(): Promise<ServiceHealth> {
 async function checkSearch(): Promise<ServiceHealth> {
   const start = Date.now();
   try {
+    if (
+      !process.env.UPSTASH_SEARCH_REST_URL ||
+      !process.env.UPSTASH_SEARCH_REST_TOKEN
+    ) {
+      return {
+        name: "Upstash Search",
+        status: "degraded",
+        latency: Date.now() - start,
+        error: "Not configured",
+      };
+    }
+
     const search = new Search({
-      url: process.env.UPSTASH_SEARCH_REST_URL!,
-      token: process.env.UPSTASH_SEARCH_REST_TOKEN!,
+      url: process.env.UPSTASH_SEARCH_REST_URL,
+      token: process.env.UPSTASH_SEARCH_REST_TOKEN,
     });
     // List indexes as a health check
-    const indexes = await search.listIndexes();
+    await withTimeout(search.listIndexes(), HEALTH_CHECK_TIMEOUT);
     return {
       name: "Upstash Search",
       status: "healthy",
@@ -82,14 +133,85 @@ async function checkSearch(): Promise<ServiceHealth> {
     };
   } catch (error) {
     // Search might return error if no indexes exist, but connection works
-    const isConnectionError = error instanceof Error &&
-      (error.message.includes("fetch") || error.message.includes("network"));
+    const errorMsg = error instanceof Error ? error.message : "Unknown error";
+    const isConnectionError =
+      errorMsg.includes("fetch") ||
+      errorMsg.includes("network") ||
+      errorMsg.includes("Timeout");
     return {
       name: "Upstash Search",
       status: isConnectionError ? "down" : "healthy",
       latency: Date.now() - start,
-      error: isConnectionError ? error.message : undefined,
+      error: isConnectionError ? errorMsg : undefined,
     };
+  }
+}
+
+async function checkVector(): Promise<ServiceHealth> {
+  const start = Date.now();
+  try {
+    // Check if Vector env vars are configured
+    if (
+      !process.env.UPSTASH_VECTOR_REST_URL ||
+      !process.env.UPSTASH_VECTOR_REST_TOKEN
+    ) {
+      return {
+        name: "Upstash Vector",
+        status: "degraded",
+        latency: Date.now() - start,
+        error: "Not configured",
+      };
+    }
+
+    const vector = new VectorIndex({
+      url: process.env.UPSTASH_VECTOR_REST_URL,
+      token: process.env.UPSTASH_VECTOR_REST_TOKEN,
+    });
+    // Get index info as a lightweight health check
+    await withTimeout(vector.info(), HEALTH_CHECK_TIMEOUT);
+    return {
+      name: "Upstash Vector",
+      status: "healthy",
+      latency: Date.now() - start,
+    };
+  } catch (error) {
+    return {
+      name: "Upstash Vector",
+      status: "down",
+      latency: Date.now() - start,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Verify QStash signature for scheduled calls
+ */
+async function verifyQStashSignature(request: Request): Promise<boolean> {
+  const signature = request.headers.get("upstash-signature");
+  if (!signature) return false;
+
+  const currentSigningKey = process.env.QSTASH_CURRENT_SIGNING_KEY;
+  const nextSigningKey = process.env.QSTASH_NEXT_SIGNING_KEY;
+
+  if (!currentSigningKey || !nextSigningKey) return false;
+
+  try {
+    const receiver = new Receiver({
+      currentSigningKey,
+      nextSigningKey,
+    });
+
+    const body = await request.text();
+    const isValid = await receiver.verify({
+      signature,
+      body,
+      url: request.url,
+    });
+
+    return isValid;
+  } catch {
+    return false;
   }
 }
 
@@ -100,30 +222,51 @@ export async function GET(request: Request) {
 
   // Allow access if no secret is set, or if secret matches, or if from Vercel cron
   const isVercelCron = request.headers.get("x-vercel-cron") === "1";
-  const isAuthorized = !cronSecret ||
-    authHeader === `Bearer ${cronSecret}` ||
-    isVercelCron;
+  const isAuthorized =
+    !cronSecret || authHeader === `Bearer ${cronSecret}` || isVercelCron;
 
   if (!isAuthorized) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  return runHealthCheck("vercel-cron");
+}
+
+export async function POST(request: Request) {
+  // Verify QStash signature for scheduled calls
+  const isQStashRequest = await verifyQStashSignature(request.clone());
+
+  if (!isQStashRequest) {
+    return NextResponse.json(
+      { error: "Invalid QStash signature" },
+      { status: 401 }
+    );
+  }
+
+  return runHealthCheck("qstash-schedule");
+}
+
+async function runHealthCheck(
+  source: "vercel-cron" | "qstash-schedule" | "manual"
+) {
   const startTime = Date.now();
 
   // Run all health checks in parallel
-  const [redis, qstash, search] = await Promise.all([
+  const [redis, qstash, search, vector] = await Promise.all([
     checkRedis(),
     checkQStash(),
     checkSearch(),
+    checkVector(),
   ]);
 
-  const services = [redis, qstash, search];
+  const services = [redis, qstash, search, vector];
   const allHealthy = services.every((s) => s.status === "healthy");
   const anyDown = services.some((s) => s.status === "down");
 
   const response = {
     status: anyDown ? "degraded" : allHealthy ? "healthy" : "partial",
     timestamp: new Date().toISOString(),
+    source,
     totalLatency: Date.now() - startTime,
     services,
   };

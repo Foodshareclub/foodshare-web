@@ -67,6 +67,9 @@ export function NavbarWrapper({
   // Use client admin status (from useAuth) with server fallback
   const isAdmin = clientIsAdmin || initialIsAdmin;
 
+  // Debug: Log admin status sources
+  console.log("[NavbarWrapper] initialIsAdmin:", initialIsAdmin, "clientIsAdmin:", clientIsAdmin, "final isAdmin:", isAdmin);
+
   const handleRouteChange = (route: string) => {
     router.push(`/${route}`);
   };
