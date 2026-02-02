@@ -409,9 +409,10 @@ export async function proxy(request: NextRequest) {
         .select("role_id, roles(name)")
         .eq("profile_id", user.id);
 
-      const roles = (userRoles || [])
-        .map((r) => (r.roles as unknown as { name: string })?.name)
-        .filter(Boolean);
+      type RoleRow = { role_id: string; roles: { name: string } | null };
+      const roles = ((userRoles as RoleRow[] | null) || [])
+        .map((r) => r.roles?.name)
+        .filter((name): name is string => Boolean(name));
       isAdmin = roles.includes("admin") || roles.includes("superadmin");
     }
 
