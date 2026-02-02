@@ -42,7 +42,7 @@ export function VolunteerHero({ showSubmissionMessage = false }: VolunteerHeroPr
 
           {/* CTA Button */}
           <Link
-            href="/food/new"
+            href="/new?type=volunteer"
             className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-8 py-4 rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all shadow-lg hover:shadow-xl hover:scale-105"
           >
             <span className="text-xl">🙌</span>
@@ -91,7 +91,7 @@ export function BecomeVolunteerCTA() {
             drive, cook, organize, or just have a few hours to spare - we&apos;d love to have you!
           </p>
           <Link
-            href="/food/new"
+            href="/new?type=volunteer"
             className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-8 py-4 rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-600 transition-all shadow-lg hover:shadow-xl"
           >
             Apply Now

@@ -61,6 +61,8 @@ type FormData = {
 
 interface NewProductFormProps {
   userId: string;
+  /** Initial post type from URL param (e.g., ?type=volunteer) */
+  initialType?: string;
   /** Profile data passed from server */
   profile?: {
     first_name?: string | null;
@@ -72,7 +74,12 @@ interface NewProductFormProps {
   isAdmin?: boolean;
 }
 
-export function NewProductForm({ userId, profile, isAdmin = false }: NewProductFormProps) {
+export function NewProductForm({
+  userId,
+  initialType = "food",
+  profile,
+  isAdmin = false,
+}: NewProductFormProps) {
   const t = useTranslations();
   const router = useRouter();
   const { userLocation: _userLocation } = useUIStore();
@@ -89,7 +96,7 @@ export function NewProductForm({ userId, profile, isAdmin = false }: NewProductF
   const [formData, setFormData] = useState<FormData>({
     post_name: "",
     post_description: "",
-    post_type: "food",
+    post_type: initialType,
     available_hours: "",
     transportation: "pickup",
     post_address: "",
