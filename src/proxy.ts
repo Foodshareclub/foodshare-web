@@ -1,8 +1,22 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { checkUserIsAdmin } from "@/lib/data/admin-check";
+
+// Admin client for checking roles (bypasses RLS)
+// Created lazily to avoid issues during build
+let _adminClient: ReturnType<typeof createClient> | null = null;
+function getAdminClient() {
+  if (!_adminClient && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    _adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+  }
+  return _adminClient;
+}
 
 // ============================================================================
 // Rate Limiting Configuration
@@ -386,8 +400,20 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Check admin status using shared utility (uses admin client to bypass RLS)
-    const { isAdmin } = await checkUserIsAdmin(user.id);
+    // Check admin status using admin client (bypasses RLS)
+    let isAdmin = false;
+    const adminClient = getAdminClient();
+    if (adminClient) {
+      const { data: userRoles } = await adminClient
+        .from("user_roles")
+        .select("role_id, roles(name)")
+        .eq("profile_id", user.id);
+
+      const roles = (userRoles || [])
+        .map((r) => (r.roles as unknown as { name: string })?.name)
+        .filter(Boolean);
+      isAdmin = roles.includes("admin") || roles.includes("superadmin");
+    }
 
     // Redirect to home if not admin
     if (!isAdmin) {
