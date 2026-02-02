@@ -38,5 +38,13 @@ export default async function NewPage({ searchParams }: PageProps) {
   // Check admin status from user_roles table
   const { isAdmin } = await checkIsAdmin(user.id);
 
-  return <NewProductForm userId={user.id} isAdmin={isAdmin} initialType={initialType} />;
+  // Key forces re-mount when type changes, ensuring fresh form state
+  return (
+    <NewProductForm
+      key={initialType}
+      userId={user.id}
+      isAdmin={isAdmin}
+      initialType={initialType}
+    />
+  );
 }
