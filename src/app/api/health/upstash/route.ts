@@ -233,17 +233,27 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  // Verify QStash signature for scheduled calls
+  // Try QStash signature first
   const isQStashRequest = await verifyQStashSignature(request.clone());
+  if (isQStashRequest) {
+    return runHealthCheck("qstash-schedule");
+  }
 
-  if (!isQStashRequest) {
+  // Fallback: Allow if authorized via cron secret or Vercel header
+  const authHeader = request.headers.get("authorization");
+  const cronSecret = process.env.CRON_SECRET;
+  const isVercelCron = request.headers.get("x-vercel-cron") === "1";
+  const isAuthorized =
+    !cronSecret || authHeader === `Bearer ${cronSecret}` || isVercelCron;
+
+  if (!isAuthorized) {
     return NextResponse.json(
-      { error: "Invalid QStash signature" },
+      { error: "Invalid QStash signature or unauthorized" },
       { status: 401 }
     );
   }
 
-  return runHealthCheck("qstash-schedule");
+  return runHealthCheck("manual");
 }
 
 async function runHealthCheck(
