@@ -133,16 +133,18 @@ export function DesktopMenu({
                   </div>
                 </div>
 
-                {/* Admin Dashboard Link */}
-                {isAdmin && onNavigateToDashboard ? (
-                  <MenuItem
-                    label="Admin"
-                    icon={<LayoutGrid className="w-5 h-5" />}
+                {/* Admin Dashboard Link - Using direct button instead of MenuItem */}
+                {isAdmin && onNavigateToDashboard && (
+                  <button
+                    type="button"
                     onClick={onNavigateToDashboard}
-                    variant="accent"
-                    testId="menu-admin"
-                  />
-                ) : null}
+                    data-testid="menu-admin"
+                    className="flex items-center gap-3 px-4 py-3 cursor-pointer rounded-lg w-full text-left bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+                  >
+                    <LayoutGrid className="w-5 h-5 flex-shrink-0" />
+                    <span className="flex-1 text-sm font-semibold">Admin Dashboard</span>
+                  </button>
+                )}
 
                 <MenuItem
                   label="My listings"
