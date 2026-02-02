@@ -2,7 +2,7 @@
 
 /**
  * Preset Automations
- * Create pre-configured automation flows (welcome, reengagement, food_alert)
+ * Create pre-configured automation flows (welcome, reengagement, food_alert, welcome_with_testers)
  */
 
 import { createAutomationFlow } from "./flow-crud";
@@ -13,7 +13,7 @@ import { error, type ActionResult } from "./types";
 // ============================================================================
 
 export async function createPresetAutomation(
-  preset: "welcome" | "reengagement" | "food_alert"
+  preset: "welcome" | "reengagement" | "food_alert" | "welcome_with_testers"
 ): Promise<ActionResult<{ id: string; name: string }>> {
   const presets = {
     welcome: {
@@ -40,6 +40,58 @@ export async function createPresetAutomation(
           delay_minutes: 0,
           template_slug: "first-share-tips",
           subject: "Ready to share your first food? 🥗",
+        },
+      ],
+    },
+    // Enhanced welcome series with beta tester recruitment
+    welcome_with_testers: {
+      name: "Welcome Series + Tester Recruitment",
+      description:
+        "5-email onboarding sequence: welcome → profile → tester recruitment → first share → community highlights",
+      trigger_type: "user_signup",
+      steps: [
+        // Step 1: Immediate welcome email
+        {
+          type: "email" as const,
+          delay_minutes: 0,
+          template_slug: "welcome",
+          subject: "Welcome to FoodShare! 🍎",
+        },
+        // Step 2: Wait 2 days
+        { type: "delay" as const, delay_minutes: 2880 },
+        // Step 3: Complete profile reminder
+        {
+          type: "email" as const,
+          delay_minutes: 0,
+          template_slug: "complete-profile",
+          subject: "Complete your FoodShare profile 📝",
+        },
+        // Step 4: Wait 2 more days
+        { type: "delay" as const, delay_minutes: 2880 },
+        // Step 5: Tester recruitment (Web + iOS)
+        {
+          type: "email" as const,
+          delay_minutes: 0,
+          template_slug: "tester-recruitment",
+          subject: "Help Shape FoodShare's Future - Join Our Beta Program 🚀",
+        },
+        // Step 6: Wait 3 days
+        { type: "delay" as const, delay_minutes: 4320 },
+        // Step 7: First share tips
+        {
+          type: "email" as const,
+          delay_minutes: 0,
+          template_slug: "first-share-tips",
+          subject: "Ready to share your first food? 🥗",
+        },
+        // Step 8: Wait 5 days
+        { type: "delay" as const, delay_minutes: 7200 },
+        // Step 9: Community highlights
+        {
+          type: "email" as const,
+          delay_minutes: 0,
+          template_slug: "community-highlights",
+          subject: "See what your neighbors are sharing 🏘️",
         },
       ],
     },

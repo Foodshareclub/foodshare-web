@@ -85,6 +85,14 @@ export function DesktopMenu({
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
+  // DEBUG: Log props to diagnose admin menu visibility issue
+  console.log("[DesktopMenu] Props received:", {
+    isAuth,
+    isAdmin,
+    hasOnNavigateToDashboard: !!onNavigateToDashboard,
+    email,
+    willShowAdminButton: isAuth && isAdmin && !!onNavigateToDashboard,
+  });
 
   const hasNotifications = signalOfNewMessage.length > 0;
   const notificationCount = signalOfNewMessage.length;
