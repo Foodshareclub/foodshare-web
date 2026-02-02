@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import type { CustomRoomType } from "@/api/chatAPI";
 
 // ============================================================================
@@ -22,8 +23,8 @@ export interface CategoryItem {
   id: string;
   /** Display label for the category */
   label: string;
-  /** Icon path or SVG string */
-  icon: string;
+  /** Lucide icon component */
+  icon: LucideIcon;
   /** ARIA label for accessibility */
   ariaLabel?: string;
   /** Route path for navigation */

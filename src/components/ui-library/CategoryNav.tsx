@@ -106,11 +106,10 @@ export const CategoryNav: React.FC<CategoryNavProps> = ({
               >
                 {/* Icon */}
                 <div
-                  className="text-2xl md:text-[29px] transition-all duration-200"
-                  role="img"
+                  className={`transition-all duration-200 ${isActive ? "text-primary" : "text-muted-foreground"}`}
                   aria-hidden="true"
                 >
-                  {category.icon}
+                  <category.icon className="w-6 h-6 md:w-7 md:h-7" strokeWidth={1.75} />
                 </div>
 
                 {/* Label */}

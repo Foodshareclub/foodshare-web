@@ -1,13 +1,13 @@
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-
 
 export interface CategoryItemProps {
   /** Unique category identifier */
   id: string;
   /** Category display label */
   label: string;
-  /** SVG icon as string or React element */
-  icon?: string | React.ReactNode;
+  /** Lucide icon component */
+  icon?: LucideIcon;
   /** Active/selected state */
   isActive?: boolean;
   /** Click handler */
@@ -35,78 +35,85 @@ export interface CategoryItemProps {
  * />
  * ```
  */
-export function CategoryItem({ id, label, icon, isActive = false, onClick, onKeyDown: externalOnKeyDown, className }: CategoryItemProps) {
-    const handleClick = () => {
+export function CategoryItem({
+  id,
+  label,
+  icon,
+  isActive = false,
+  onClick,
+  onKeyDown: externalOnKeyDown,
+  className,
+}: CategoryItemProps) {
+  const handleClick = () => {
+    onClick(id);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Handle Enter/Space for activation
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
       onClick(id);
-    };
+    }
+    // Call external handler for arrow key navigation
+    externalOnKeyDown?.(e);
+  };
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-      // Handle Enter/Space for activation
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        onClick(id);
-      }
-      // Call external handler for arrow key navigation
-      externalOnKeyDown?.(e);
-    };
-
-    return (
-      <button
-        type="button"
-        role="tab"
-        aria-selected={isActive}
-        aria-label={label}
-        tabIndex={isActive ? 0 : -1}
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-        className={cn(
-          "flex flex-col items-center justify-center gap-1 px-2 py-1 min-w-fit relative",
-          "transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
-          "hover:scale-105 active:scale-95",
-          "focus:outline-none focus-visible:outline-none",
-          className
-        )}
-        style={{
-          transform: "translateZ(0)",
-          willChange: "transform",
-        }}
-      >
-        {icon && (
-          <span
-            className={cn(
-              "text-xl md:text-2xl",
-              "transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
-              isActive ? "scale-110" : "scale-100"
-            )}
-            role="img"
-            aria-hidden="true"
-            style={{ transform: "translateZ(0)", willChange: "transform" }}
-          >
-            {typeof icon === "string" ? icon : icon}
-          </span>
-        )}
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={isActive}
+      aria-label={label}
+      tabIndex={isActive ? 0 : -1}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      className={cn(
+        "flex flex-col items-center justify-center gap-1 px-2 py-1 min-w-fit relative",
+        "transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
+        "hover:scale-105 active:scale-95",
+        "focus:outline-none focus-visible:outline-none",
+        className
+      )}
+      style={{
+        transform: "translateZ(0)",
+        willChange: "transform",
+      }}
+    >
+      {icon && (
         <span
           className={cn(
-            "text-[10px] md:text-[11px] whitespace-nowrap tracking-wide select-none",
-            "transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
-            isActive
-              ? "font-semibold text-foreground"
-              : "font-medium text-muted-foreground"
+            "transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
+            isActive ? "scale-110 text-primary" : "scale-100 text-muted-foreground"
           )}
+          aria-hidden="true"
+          style={{ transform: "translateZ(0)", willChange: "transform" }}
         >
-          {label}
+          {(() => {
+            const Icon = icon;
+            return <Icon className="w-5 h-5 md:w-6 md:h-6" strokeWidth={1.75} />;
+          })()}
         </span>
-
-        {/* Active Indicator - Bottom Border */}
-        {isActive && (
-          <div
-            className="absolute -bottom-0.5 left-0 w-full h-0.5 bg-primary rounded-t-sm"
-            style={{
-              transform: "translateZ(0)",
-              willChange: "transform",
-            }}
-          />
+      )}
+      <span
+        className={cn(
+          "text-[10px] md:text-[11px] whitespace-nowrap tracking-wide select-none",
+          "transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
+          isActive ? "font-semibold text-foreground" : "font-medium text-muted-foreground"
         )}
-      </button>
-    );
+      >
+        {label}
+      </span>
+
+      {/* Active Indicator - Bottom Border */}
+      {isActive && (
+        <div
+          className="absolute -bottom-0.5 left-0 w-full h-0.5 bg-primary rounded-t-sm"
+          style={{
+            transform: "translateZ(0)",
+            willChange: "transform",
+          }}
+        />
+      )}
+    </button>
+  );
 }
