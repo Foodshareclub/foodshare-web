@@ -420,6 +420,52 @@ supabase migration new <name>   # Create migration
 supabase db push                # Apply migrations
 ```
 
+## Admin Role Checking
+
+Admin access is controlled via `user_roles` table with RLS policies. **Critical**: The `user_roles` table has RLS that blocks reads with the anon client.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Admin Check Flow                          │
+├─────────────────────────────────────────────────────────────┤
+│  checkUserIsAdmin() ← Single source of truth                │
+│  (src/lib/data/admin-check.ts)                              │
+│       │                                                      │
+│       └── Uses createAdminClient() (service role key)       │
+│           to bypass RLS on user_roles table                 │
+├─────────────────────────────────────────────────────────────┤
+│  Used by:                                                    │
+│  • proxy.ts - Middleware protection for /admin routes       │
+│  • auth.ts (getAuthSession) - Server Components             │
+│  • admin/layout.tsx - Defense-in-depth page protection      │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Key Files
+
+| File                          | Purpose                                  |
+| ----------------------------- | ---------------------------------------- |
+| `src/lib/data/admin-check.ts` | Shared `checkUserIsAdmin()` utility      |
+| `src/lib/supabase/admin.ts`   | Service role client (bypasses RLS)       |
+| `src/proxy.ts`                | Middleware-level admin route protection  |
+| `src/app/admin/layout.tsx`    | Page-level protection (defense-in-depth) |
+
+### Common Pitfall
+
+**Never use anon client to check admin roles** - RLS will block the query and return empty results, causing false negatives. Always use `checkUserIsAdmin()` which uses the admin client internally.
+
+```typescript
+// ❌ WRONG - Will fail due to RLS
+const supabase = await createClient(); // anon client
+const { data } = await supabase.from("user_roles").select("*");
+
+// ✅ CORRECT - Uses admin client internally
+import { checkUserIsAdmin } from "@/lib/data/admin-check";
+const { isAdmin, roles } = await checkUserIsAdmin(userId);
+```
+
 ## Code Standards
 
 ### Next.js 16 Rules

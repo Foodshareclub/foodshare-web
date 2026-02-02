@@ -4,6 +4,9 @@ import { generateNoIndexMetadata } from "@/lib/metadata";
 import { AdminSidebar, AdminMobileHeader } from "@/components/admin/AdminSidebar";
 import { AdminBreadcrumb } from "@/components/admin/AdminBreadcrumb";
 
+// Force dynamic rendering - never cache admin auth checks
+export const dynamic = "force-dynamic";
+
 export const metadata = generateNoIndexMetadata(
   "Admin Dashboard",
   "FoodShare administration panel"

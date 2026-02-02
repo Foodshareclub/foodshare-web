@@ -85,15 +85,6 @@ export function DesktopMenu({
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
-  // DEBUG: Log props to diagnose admin menu visibility issue
-  console.log("[DesktopMenu] Props received:", {
-    isAuth,
-    isAdmin,
-    hasOnNavigateToDashboard: !!onNavigateToDashboard,
-    email,
-    willShowAdminButton: isAuth && isAdmin && !!onNavigateToDashboard,
-  });
-
   const hasNotifications = signalOfNewMessage.length > 0;
   const notificationCount = signalOfNewMessage.length;
 
@@ -141,25 +132,24 @@ export function DesktopMenu({
                   </div>
                 </div>
 
-                {/* Admin Dashboard Link - Using direct button instead of MenuItem */}
-                {isAdmin && onNavigateToDashboard && (
-                  <button
-                    type="button"
-                    onClick={onNavigateToDashboard}
-                    data-testid="menu-admin"
-                    className="flex items-center gap-3 px-4 py-3 cursor-pointer rounded-lg w-full text-left bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
-                  >
-                    <LayoutGrid className="w-5 h-5 flex-shrink-0" />
-                    <span className="flex-1 text-sm font-semibold">Admin Dashboard</span>
-                  </button>
-                )}
-
                 <MenuItem
                   label="My listings"
                   icon={<ClipboardList className="w-5 h-5" />}
                   onClick={onNavigateToMyLists}
                   testId="menu-my-listings"
                 />
+
+                {/* Admin Dashboard */}
+                {isAdmin && onNavigateToDashboard && (
+                  <MenuItem
+                    label="Admin Dashboard"
+                    icon={<LayoutGrid className="w-5 h-5" />}
+                    onClick={onNavigateToDashboard}
+                    variant="accent"
+                    testId="menu-admin"
+                  />
+                )}
+
                 <MenuItem
                   label={hasNotifications ? `Chat (${notificationCount} new)` : "Chat"}
                   icon={<MessageCircle className="w-5 h-5" />}

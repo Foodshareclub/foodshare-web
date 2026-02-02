@@ -6,8 +6,8 @@
 
 import { unstable_cache } from "next/cache";
 import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
+import { checkUserIsAdmin } from "./admin-check";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 // ============================================================================
 // Types
@@ -110,46 +110,13 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
 // Re-export admin auth utilities from centralized location
 export { getAdminAuth, requireAdmin, requireSuperAdmin } from "./admin-auth";
+export { checkUserIsAdmin } from "./admin-check";
 
 /**
  * Check if current user is admin
- * Uses user_roles table as source of truth
- * @deprecated Use getAdminAuth() from @/lib/data/admin-auth instead
+ * @deprecated Use checkUserIsAdmin() from @/lib/data/admin-check instead
  */
-export async function checkIsAdmin(userId: string): Promise<{
-  isAdmin: boolean;
-  roles: string[];
-}> {
-  try {
-    // Use admin client to bypass RLS (avoids infinite recursion in user_roles policy)
-    const supabase = createAdminClient();
-
-    const { data: userRoles, error } = await supabase
-      .from("user_roles")
-      .select("role_id, roles(name)")
-      .eq("profile_id", userId);
-
-    if (error) {
-      console.error("[checkIsAdmin] Query error:", error.message);
-      return { isAdmin: false, roles: [] };
-    }
-
-    console.log("[checkIsAdmin] userId:", userId);
-    console.log("[checkIsAdmin] userRoles:", JSON.stringify(userRoles));
-
-    const roles = (userRoles || [])
-      .map((r) => (r.roles as unknown as { name: string })?.name)
-      .filter(Boolean);
-    const isAdmin = roles.includes("admin") || roles.includes("superadmin");
-
-    console.log("[checkIsAdmin] roles:", roles, "isAdmin:", isAdmin);
-
-    return { isAdmin, roles };
-  } catch (error) {
-    console.error("[checkIsAdmin] Error:", error);
-    return { isAdmin: false, roles: [] };
-  }
-}
+export { checkUserIsAdmin as checkIsAdmin } from "./admin-check";
 
 /**
  * Get full auth session with user, profile, and admin status
@@ -167,7 +134,7 @@ export async function getAuthSession(): Promise<AuthSession> {
     };
   }
 
-  const { isAdmin, roles } = await checkIsAdmin(user.id);
+  const { isAdmin, roles } = await checkUserIsAdmin(user.id);
 
   return {
     user,
