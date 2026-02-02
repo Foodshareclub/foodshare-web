@@ -137,15 +137,22 @@ export function MobileMenu({
             {isAuth ? (
               <div className="flex flex-col gap-3">
                 {/* Admin Dashboard Link */}
+                {(() => {
+                  console.log("[MobileMenu] Rendering Admin check:", { isAdmin, hasHandler: !!onNavigateToDashboard, shouldRender: isAdmin && !!onNavigateToDashboard });
+                  return null;
+                })()}
                 {isAdmin && onNavigateToDashboard && (
-                  <button
-                    type="button"
-                    className="glass-accent-primary rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                    onClick={() => handleNavigation(onNavigateToDashboard)}
-                  >
-                    <LayoutGrid className="w-8 h-8 flex-shrink-0" />
-                    <span className="text-3xl font-semibold">Admin</span>
-                  </button>
+                  <>
+                    {console.log("[MobileMenu] ✅ ADMIN MENU ITEM IS RENDERING")}
+                    <button
+                      type="button"
+                      className="glass-accent-primary rounded-xl p-4 cursor-pointer gpu flex items-center gap-4 w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                      onClick={() => handleNavigation(onNavigateToDashboard)}
+                    >
+                      <LayoutGrid className="w-8 h-8 flex-shrink-0" />
+                      <span className="text-3xl font-semibold">Admin</span>
+                    </button>
+                  </>
                 )}
 
                 <button

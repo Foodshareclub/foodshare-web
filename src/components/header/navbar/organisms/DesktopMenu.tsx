@@ -136,14 +136,21 @@ export function DesktopMenu({
                 </div>
 
                 {/* Admin Dashboard Link */}
+                {(() => {
+                  console.log("[DesktopMenu] Rendering Admin check:", { isAdmin, hasHandler: !!onNavigateToDashboard, shouldRender: isAdmin && !!onNavigateToDashboard });
+                  return null;
+                })()}
                 {isAdmin && onNavigateToDashboard && (
-                  <MenuItem
-                    label="Admin"
-                    icon={<LayoutGrid className="w-5 h-5" />}
-                    onClick={onNavigateToDashboard}
-                    variant="accent"
-                    testId="menu-admin"
-                  />
+                  <>
+                    {console.log("[DesktopMenu] ✅ ADMIN MENU ITEM IS RENDERING")}
+                    <MenuItem
+                      label="Admin"
+                      icon={<LayoutGrid className="w-5 h-5" />}
+                      onClick={onNavigateToDashboard}
+                      variant="accent"
+                      testId="menu-admin"
+                    />
+                  </>
                 )}
 
                 <MenuItem
