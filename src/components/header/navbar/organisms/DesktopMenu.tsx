@@ -132,13 +132,6 @@ export function DesktopMenu({
                   </div>
                 </div>
 
-                <MenuItem
-                  label="My listings"
-                  icon={<ClipboardList className="w-5 h-5" />}
-                  onClick={onNavigateToMyLists}
-                  testId="menu-my-listings"
-                />
-
                 {/* Admin Dashboard */}
                 {isAdmin && onNavigateToDashboard && (
                   <MenuItem
@@ -149,6 +142,13 @@ export function DesktopMenu({
                     testId="menu-admin"
                   />
                 )}
+
+                <MenuItem
+                  label="My listings"
+                  icon={<ClipboardList className="w-5 h-5" />}
+                  onClick={onNavigateToMyLists}
+                  testId="menu-my-listings"
+                />
 
                 <MenuItem
                   label={hasNotifications ? `Chat (${notificationCount} new)` : "Chat"}
