@@ -114,6 +114,8 @@ const CSP_DIRECTIVES = [
  */
 const ALLOWED_ORIGINS = [
   process.env.NEXT_PUBLIC_APP_URL,
+  "https://foodshare.club",
+  "https://www.foodshare.club",
   "https://foodshare.app",
   "https://www.foodshare.app",
   process.env.NODE_ENV === "development" ? "http://localhost:3000" : null,
@@ -150,6 +152,12 @@ function validateOrigin(request: NextRequest): boolean {
 
   // Safe methods don't need origin validation
   if (!MUTATION_METHODS.includes(method)) {
+    return true;
+  }
+
+  // Allow health/cron endpoints (Vercel cron jobs have no origin header)
+  const { pathname } = request.nextUrl;
+  if (pathname.startsWith("/api/health/")) {
     return true;
   }
 
