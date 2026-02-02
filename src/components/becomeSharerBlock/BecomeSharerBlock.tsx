@@ -1,13 +1,9 @@
 'use client';
 
-import { useState } from "react";
 import type { StaticImageData } from "next/image";
-import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 
 import { photoObj } from "@/utils/navigationActions";
-import { useAuth } from "@/hooks/useAuth";
-import { PATH } from "@/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,12 +12,6 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { AddListingButton } from "./AddListingButton";
-
-// Lazy load the heavy modal (3000+ lines)
-const PublishListingModal = dynamic(
-  () => import("@/components/modals/PublishListingModal"),
-  { ssr: false }
-);
 
 type ListingMenuItemProps = {
   value: string;
@@ -56,32 +46,17 @@ const SectionHeader: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 /**
  * BecomeSharerBlock Component
  * Dropdown menu for creating new listings
- * Uses useAuth hook (TanStack Query + Zustand) instead of Redux
+ * All options navigate to /new?type={category} for consistent UX
  */
 export function BecomeSharerBlock() {
   const router = useRouter();
-  // Auth state from useAuth hook (replaces Redux isAuthSelector)
-  const { isAuthenticated } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
-  const [type, setType] = useState("");
 
-  // React Compiler optimizes these handlers automatically
-  const addHandler = (value: string) => {
-    if (isAuthenticated) {
-      setIsOpen(true);
-      setType(value);
-    } else {
-      router.push(PATH.mainFood);
-    }
-  };
-
-  const handleVolunteer = () => {
-    router.push("/new?type=volunteer");
+  const handleSelect = (category: string) => {
+    router.push(`/new?type=${category}`);
   };
 
   return (
     <DropdownMenu>
-      <PublishListingModal value={type} onClose={() => setIsOpen(false)} isOpen={isOpen} />
       <DropdownMenuTrigger asChild>
         <AddListingButton />
       </DropdownMenuTrigger>
@@ -93,24 +68,24 @@ export function BecomeSharerBlock() {
         {/* Main Categories - Most Used */}
         <SectionHeader>Share</SectionHeader>
         <div className="grid grid-cols-2 gap-1">
-          <ListingMenuItem value="food" icon={photoObj.food} label="Food" onClick={addHandler} />
+          <ListingMenuItem value="food" icon={photoObj.food} label="Food" onClick={handleSelect} />
           <ListingMenuItem
             value="thing"
             icon={photoObj.things}
             label="Things"
-            onClick={addHandler}
+            onClick={handleSelect}
           />
           <ListingMenuItem
             value="borrow"
             icon={photoObj.borrow}
             label="Borrow"
-            onClick={addHandler}
+            onClick={handleSelect}
           />
           <ListingMenuItem
             value="wanted"
             icon={photoObj.wanted}
             label="Wanted"
-            onClick={addHandler}
+            onClick={handleSelect}
           />
         </div>
 
@@ -123,19 +98,19 @@ export function BecomeSharerBlock() {
           value="fridge"
           icon={photoObj.fridge}
           label="Community fridge"
-          onClick={addHandler}
+          onClick={handleSelect}
         />
         <ListingMenuItem
           value="foodbank"
           icon={photoObj.foodBanks}
           label="Food bank"
-          onClick={addHandler}
+          onClick={handleSelect}
         />
         <ListingMenuItem
           value="volunteer"
           icon={photoObj.volunteer}
           label="Volunteer"
-          onClick={handleVolunteer}
+          onClick={handleSelect}
         />
 
         {/* Divider */}
@@ -148,16 +123,16 @@ export function BecomeSharerBlock() {
             value="challenge"
             icon={photoObj.challenges}
             label="Challenge"
-            onClick={addHandler}
+            onClick={handleSelect}
           />
           <ListingMenuItem
             value="vegan"
             icon={photoObj.vegan}
             label="Vegan"
-            onClick={addHandler}
+            onClick={handleSelect}
           />
         </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
-};
+}
