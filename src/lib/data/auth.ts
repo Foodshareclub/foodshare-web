@@ -134,10 +134,15 @@ export async function checkIsAdmin(userId: string): Promise<{
       return { isAdmin: false, roles: [] };
     }
 
+    console.log("[checkIsAdmin] userId:", userId);
+    console.log("[checkIsAdmin] userRoles:", JSON.stringify(userRoles));
+
     const roles = (userRoles || [])
       .map((r) => (r.roles as unknown as { name: string })?.name)
       .filter(Boolean);
     const isAdmin = roles.includes("admin") || roles.includes("superadmin");
+
+    console.log("[checkIsAdmin] roles:", roles, "isAdmin:", isAdmin);
 
     return { isAdmin, roles };
   } catch (error) {

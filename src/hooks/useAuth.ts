@@ -125,6 +125,9 @@ export function useAuth(): UseAuthReturn {
           .select("role_id, roles!user_roles_role_id_fkey(name)")
           .eq("profile_id", userId);
 
+        console.log("[checkAdminStatus] userId:", userId);
+        console.log("[checkAdminStatus] data:", JSON.stringify(data));
+
         if (roleError) {
           console.error("[checkAdminStatus] Query error:", roleError);
           useAuthStore.getState().setAdminCheckStatus("failed");
@@ -137,6 +140,8 @@ export function useAuth(): UseAuthReturn {
         });
 
         const isUserAdmin = userRoles.includes("admin") || userRoles.includes("superadmin");
+
+        console.log("[checkAdminStatus] userRoles:", userRoles, "isUserAdmin:", isUserAdmin);
 
         // Use fresh reference to avoid stale closure
         useAuthStore.getState().setAdmin(isUserAdmin, userRoles);
