@@ -20,7 +20,7 @@ import { embedProduct } from "@/lib/embeddings";
 import { createActionLogger } from "@/lib/structured-logger";
 import {
   createProductAPI,
-  updateProductAPI,
+  updateProductAPI as _updateProductAPI,
   deleteProductAPI,
 } from "@/lib/api/products";
 
@@ -180,7 +180,8 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
   }
 
   // Check if we should use Edge Function
-  const hasLocation = validation.data.latitude !== undefined && validation.data.longitude !== undefined;
+  const hasLocation =
+    validation.data.latitude !== undefined && validation.data.longitude !== undefined;
   const useEdgeFunction = USE_EDGE_FUNCTIONS && hasLocation;
 
   if (useEdgeFunction) {
@@ -203,7 +204,11 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
 
     if (result.success) {
       // Invalidate caches
-      invalidateProductCaches(result.data.id, validation.data.post_type, validation.data.profile_id);
+      invalidateProductCaches(
+        result.data.id,
+        validation.data.post_type,
+        validation.data.profile_id
+      );
 
       // Fire-and-forget background tasks
       Promise.all([
@@ -218,7 +223,9 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
           post_type: validation.data.post_type,
           post_address: validation.data.post_address,
           profile_id: validation.data.profile_id,
-          is_active: true,
+          // NOTE: Edge Function currently handles is_active separately
+          // Volunteer posts require approval via admin dashboard
+          is_active: validation.data.post_type !== "volunteer",
         }),
         embedProduct({
           id: result.data.id,
@@ -257,9 +264,13 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
     // Remove lat/lng from insert data (not in posts table schema for direct insert)
     const { latitude: _lat, longitude: _lng, ...insertData } = validation.data;
 
+    // Volunteer posts require admin approval (start as inactive)
+    const isVolunteerPost = validation.data.post_type === "volunteer";
+    const initialActiveStatus = !isVolunteerPost; // false for volunteers, true for others
+
     const { data, error } = await supabase
       .from("posts")
-      .insert({ ...insertData, is_active: true })
+      .insert({ ...insertData, is_active: initialActiveStatus })
       .select("id")
       .single();
 
@@ -286,7 +297,8 @@ export async function createProduct(formData: FormData): Promise<ActionResult<{ 
           post_type: formData.get("post_type") as string,
           post_address: formData.get("post_address") as string | undefined,
           profile_id: formData.get("profile_id") as string,
-          is_active: true,
+          // Volunteer posts start inactive (pending approval)
+          is_active: formData.get("post_type") !== "volunteer",
         }),
         embedProduct({
           id: result.data.id,
