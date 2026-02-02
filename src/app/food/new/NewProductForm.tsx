@@ -22,17 +22,43 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { STORAGE_BUCKETS, getStorageUrl } from "@/constants/storage";
+import {
+  Apple,
+  Gift,
+  Wrench,
+  HandHelping,
+  Refrigerator,
+  Landmark,
+  Building2,
+  Users,
+  Trophy,
+  Recycle,
+  Leaf,
+  ArrowLeft,
+  PlusCircle,
+  Car,
+  ChefHat,
+  ClipboardList,
+  Smartphone,
+  Camera,
+  Globe,
+  Code,
+  HeartHandshake,
+  X,
+  Loader2,
+  ImagePlus,
+} from "lucide-react";
 
-// Volunteer skills options
+// Volunteer skills options with Lucide icons
 const VOLUNTEER_SKILLS = [
-  { id: "driving", label: "Driving/Delivery", icon: "🚗" },
-  { id: "cooking", label: "Cooking", icon: "👨‍🍳" },
-  { id: "organizing", label: "Organizing", icon: "📋" },
-  { id: "social", label: "Social Media", icon: "📱" },
-  { id: "photo", label: "Photography", icon: "📸" },
-  { id: "translation", label: "Translation", icon: "🌐" },
-  { id: "tech", label: "Tech/Coding", icon: "💻" },
-  { id: "outreach", label: "Community Outreach", icon: "🤝" },
+  { id: "driving", label: "Driving/Delivery", Icon: Car },
+  { id: "cooking", label: "Cooking", Icon: ChefHat },
+  { id: "organizing", label: "Organizing", Icon: ClipboardList },
+  { id: "social", label: "Social Media", Icon: Smartphone },
+  { id: "photo", label: "Photography", Icon: Camera },
+  { id: "translation", label: "Translation", Icon: Globe },
+  { id: "tech", label: "Tech/Coding", Icon: Code },
+  { id: "outreach", label: "Community Outreach", Icon: HeartHandshake },
 ] as const;
 
 // Availability options
@@ -339,13 +365,18 @@ export function NewProductForm({
             onClick={() => router.back()}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-4"
           >
-            <span>←</span>
+            <ArrowLeft className="w-4 h-4" />
             <span>Back</span>
           </button>
-          <h1 className="text-3xl font-bold text-foreground">
-            {isVolunteerForm ? "Become a Volunteer" : "Create New Listing"}
-          </h1>
-          <p className="text-muted-foreground mt-2">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
+              <PlusCircle className="w-6 h-6 text-orange-500" />
+            </div>
+            <h1 className="text-3xl font-bold text-foreground">
+              {isVolunteerForm ? "Become a Volunteer" : "Create New Listing"}
+            </h1>
+          </div>
+          <p className="text-muted-foreground">
             {isVolunteerForm
               ? "Join our community of food heroes making a difference"
               : "Share food items or services with your community"}
@@ -372,17 +403,72 @@ export function NewProductForm({
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="food">🍎 Food</SelectItem>
-                  <SelectItem value="thing">🎁 Things</SelectItem>
-                  <SelectItem value="borrow">🔧 Borrow</SelectItem>
-                  <SelectItem value="wanted">🤲 Wanted</SelectItem>
-                  <SelectItem value="fridge">❄️ Fridges</SelectItem>
-                  <SelectItem value="foodbank">🏛️ Food Banks</SelectItem>
-                  <SelectItem value="business">🏛️ Organisations</SelectItem>
-                  <SelectItem value="volunteer">🙌 Volunteers</SelectItem>
-                  <SelectItem value="challenge">🏆 Challenges</SelectItem>
-                  <SelectItem value="zerowaste">♻️ Zero Waste</SelectItem>
-                  <SelectItem value="vegan">🌱 Vegan</SelectItem>
+                  <SelectItem value="food">
+                    <span className="flex items-center gap-2">
+                      <Apple className="w-4 h-4 text-red-500" />
+                      Food
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="thing">
+                    <span className="flex items-center gap-2">
+                      <Gift className="w-4 h-4 text-purple-500" />
+                      Things
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="borrow">
+                    <span className="flex items-center gap-2">
+                      <Wrench className="w-4 h-4 text-blue-500" />
+                      Borrow
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="wanted">
+                    <span className="flex items-center gap-2">
+                      <HandHelping className="w-4 h-4 text-amber-500" />
+                      Wanted
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="fridge">
+                    <span className="flex items-center gap-2">
+                      <Refrigerator className="w-4 h-4 text-cyan-500" />
+                      Fridges
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="foodbank">
+                    <span className="flex items-center gap-2">
+                      <Landmark className="w-4 h-4 text-indigo-500" />
+                      Food Banks
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="business">
+                    <span className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4 text-slate-500" />
+                      Organisations
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="volunteer">
+                    <span className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-emerald-500" />
+                      Volunteers
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="challenge">
+                    <span className="flex items-center gap-2">
+                      <Trophy className="w-4 h-4 text-yellow-500" />
+                      Challenges
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="zerowaste">
+                    <span className="flex items-center gap-2">
+                      <Recycle className="w-4 h-4 text-green-500" />
+                      Zero Waste
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="vegan">
+                    <span className="flex items-center gap-2">
+                      <Leaf className="w-4 h-4 text-lime-500" />
+                      Vegan
+                    </span>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -419,9 +505,9 @@ export function NewProductForm({
                           <button
                             type="button"
                             onClick={() => handleRemoveImage(0)}
-                            className="absolute -top-1 -right-1 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity text-xs"
+                            className="absolute -top-1 -right-1 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                           >
-                            ✕
+                            <X className="w-3 h-3" />
                           </button>
                         </div>
                       </div>
@@ -439,7 +525,7 @@ export function NewProductForm({
                           className="flex flex-col items-center justify-center w-full p-8 border-2 border-dashed border-emerald-300 dark:border-emerald-700 rounded-xl cursor-pointer hover:border-emerald-500 transition-colors bg-emerald-50/50 dark:bg-emerald-950/20"
                         >
                           <div className="w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mb-3">
-                            <span className="text-3xl">📸</span>
+                            <Camera className="w-8 h-8 text-emerald-600" />
                           </div>
                           <p className="text-sm text-muted-foreground">
                             Click to upload your photo
@@ -516,7 +602,7 @@ export function NewProductForm({
                           htmlFor={skill.id}
                           className="text-sm font-medium cursor-pointer flex items-center gap-2"
                         >
-                          <span>{skill.icon}</span>
+                          <skill.Icon className="w-4 h-4 text-emerald-600" />
                           <span>{skill.label}</span>
                         </label>
                       </div>
@@ -587,7 +673,7 @@ export function NewProductForm({
                   >
                     {isSubmitting ? (
                       <span className="flex items-center justify-center gap-2">
-                        <span className="animate-spin">⏳</span>
+                        <Loader2 className="w-4 h-4 animate-spin" />
                         Submitting...
                       </span>
                     ) : (
@@ -671,9 +757,9 @@ export function NewProductForm({
                             <button
                               type="button"
                               onClick={() => handleRemoveImage(index)}
-                              className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                             >
-                              ✕
+                              <X className="w-3 h-3" />
                             </button>
                           </div>
                         ))}
@@ -694,7 +780,7 @@ export function NewProductForm({
                           className="flex items-center justify-center w-full p-6 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-orange-400 dark:hover:border-orange-500 transition-colors"
                         >
                           <div className="text-center">
-                            <span className="text-3xl mb-2 block">📷</span>
+                            <ImagePlus className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
                             <p className="text-sm text-muted-foreground">
                               {t("click_to_add_photos", {
                                 current: selectedImages.length,
@@ -779,7 +865,7 @@ export function NewProductForm({
                   >
                     {isSubmitting ? (
                       <span className="flex items-center justify-center gap-2">
-                        <span className="animate-spin">⏳</span>
+                        <Loader2 className="w-4 h-4 animate-spin" />
                         {t("creating")}
                       </span>
                     ) : (
