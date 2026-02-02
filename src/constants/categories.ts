@@ -6,7 +6,7 @@
 import {
   Apple,
   Gift,
-  HandHelping,
+  LampDesk,
   PackageSearch,
   Warehouse,
   Refrigerator,
@@ -23,7 +23,7 @@ import {
 export const CATEGORIES = [
   { id: "food", labelKey: "categories.food", icon: Apple },
   { id: "things", labelKey: "categories.things", icon: Gift },
-  { id: "borrow", labelKey: "categories.borrow", icon: HandHelping },
+  { id: "borrow", labelKey: "categories.borrow", icon: LampDesk },
   { id: "wanted", labelKey: "categories.wanted", icon: PackageSearch },
   { id: "foodbanks", labelKey: "categories.foodbanks", icon: Warehouse },
   { id: "fridges", labelKey: "categories.fridges", icon: Refrigerator },
