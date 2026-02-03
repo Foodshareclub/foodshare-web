@@ -1,7 +1,6 @@
 'use client';
 
 import type { StaticImageData } from "next/image";
-import { useRouter } from "next/navigation";
 
 import { photoObj } from "@/utils/navigationActions";
 import {
@@ -49,8 +48,6 @@ const SectionHeader: React.FC<{ children: React.ReactNode }> = ({ children }) =>
  * All options navigate to /new?type={category} for consistent UX
  */
 export function BecomeSharerBlock() {
-  const router = useRouter();
-
   const handleSelect = (category: string) => {
     // Use full page navigation to ensure auth cookies are properly sent
     // Soft navigation with router.push can sometimes miss cookie refresh
