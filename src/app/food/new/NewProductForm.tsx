@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createProduct } from "@/app/actions/products";
@@ -130,6 +130,15 @@ export function NewProductForm({
     post_stripped_address: "",
     volunteer_skills: [],
   });
+
+  // Sync form state when initialType prop changes (e.g., URL navigation)
+  // This replaces the key={initialType} prop that was removed to fix auth issues
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      post_type: initialType,
+    }));
+  }, [initialType]);
 
   const isVolunteerForm = formData.post_type === "volunteer";
 
