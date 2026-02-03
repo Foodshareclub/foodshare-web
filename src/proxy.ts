@@ -237,7 +237,7 @@ function addSecurityHeaders(response: NextResponse): void {
  *
  * Security: Admin check uses multiple role sources for consistency with checkIsAdmin()
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // ============================================================================
   // CSRF Protection - Block invalid origins for mutations
   // ============================================================================
