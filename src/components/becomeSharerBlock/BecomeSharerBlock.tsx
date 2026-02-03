@@ -52,7 +52,9 @@ export function BecomeSharerBlock() {
   const router = useRouter();
 
   const handleSelect = (category: string) => {
-    router.push(`/new?type=${category}`);
+    // Use full page navigation to ensure auth cookies are properly sent
+    // Soft navigation with router.push can sometimes miss cookie refresh
+    window.location.href = `/new?type=${category}`;
   };
 
   return (
