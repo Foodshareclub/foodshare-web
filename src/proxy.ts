@@ -342,14 +342,13 @@ export async function proxy(request: NextRequest) {
   }
 
   // Clear corrupted cookies before Supabase tries to read them
+  // But DON'T return early - continue processing to allow re-authentication
   if (corruptedCookies.length > 0) {
     for (const cookieName of corruptedCookies) {
       response.cookies.delete(cookieName);
-      console.warn(`Middleware: Cleared corrupted cookie: ${cookieName}`);
+      console.warn(`Proxy: Cleared corrupted cookie: ${cookieName}`);
     }
-    // Return early to let cookies clear
-    addSecurityHeaders(response);
-    return response;
+    // Continue processing instead of returning early
   }
 
   // Create Supabase client with modern cookie handling (getAll/setAll pattern)
@@ -382,21 +381,15 @@ export async function proxy(request: NextRequest) {
   try {
     const { data, error } = await supabase.auth.getUser();
     if (error) {
-      // Token refresh failed - clear cookies and let user re-authenticate
-      console.warn("Middleware: Token refresh failed:", error.message);
+      // Token refresh failed - log but DON'T clear cookies
+      // Let the page handle auth state instead of aggressively logging out
+      console.warn("Proxy: Token refresh warning:", error.message);
     } else {
       user = data.user;
     }
   } catch (error) {
-    console.warn("Middleware: Session load failed, clearing auth cookies:", error);
-    const allCookies = request.cookies.getAll();
-    for (const cookie of allCookies) {
-      if (cookie.name.startsWith("sb-")) {
-        response.cookies.delete(cookie.name);
-      }
-    }
-    addSecurityHeaders(response);
-    return response;
+    // Log but DON'T clear cookies - this was causing unwanted logouts
+    console.warn("Proxy: Session load error (continuing without clearing cookies):", error);
   }
 
   // Admin route protection
