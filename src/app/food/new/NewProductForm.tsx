@@ -7,7 +7,7 @@ import { createProduct } from "@/app/actions/products";
 import { useUIStore } from "@/store/zustand/useUIStore";
 import { storageAPI } from "@/api/storageAPI";
 import Navbar from "@/components/header/navbar/Navbar";
-import { useAuth } from "@/hooks/useAuth";
+// Note: Auth state is determined by server-passed userId prop, not useAuth()
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -110,8 +110,9 @@ export function NewProductForm({
   const router = useRouter();
   const { userLocation: _userLocation } = useUIStore();
 
-  // Auth for navbar (client-side for real-time updates)
-  const { isAuthenticated } = useAuth();
+  // Use server-passed userId to determine auth (avoids hydration mismatch)
+  // The userId prop is only passed when user is authenticated on server
+  const isAuthenticated = !!userId;
   const avatarUrl = profile?.avatar_url;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
