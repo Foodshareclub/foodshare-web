@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { NewProductForm } from "./NewProductForm";
-import { createClient } from "@/lib/supabase/server";
+import { getAuthSession } from "@/lib/data/auth";
 import { generateNoIndexMetadata } from "@/lib/metadata";
-import { checkIsAdmin } from "@/lib/data/auth";
 
 // Force dynamic rendering - auth-required page
 export const dynamic = "force-dynamic";
@@ -22,22 +21,23 @@ interface PageProps {
  * Accepts ?type= query param to pre-select category (e.g., ?type=volunteer)
  */
 export default async function NewProductPage({ searchParams }: PageProps) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Use getAuthSession() for consistent auth handling (same as admin layout)
+  const session = await getAuthSession();
 
   const params = await searchParams;
   const initialType = params.type || "food";
 
   // Server-side auth check with redirect (no flash of content)
-  if (!user) {
+  if (!session.isAuthenticated || !session.user) {
     const redirectPath = params.type ? `/new?type=${params.type}` : "/food/new";
     redirect(`/auth/login?redirect=${encodeURIComponent(redirectPath)}`);
   }
 
-  // Check admin status from user_roles table
-  const { isAdmin } = await checkIsAdmin(user.id);
-
-  return <NewProductForm userId={user.id} isAdmin={isAdmin} initialType={initialType} />;
+  return (
+    <NewProductForm
+      userId={session.user.id}
+      isAdmin={session.isAdmin}
+      initialType={initialType}
+    />
+  );
 }
