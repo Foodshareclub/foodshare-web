@@ -51,6 +51,27 @@ import {
 import { sendAdminEmail, sendTestEmailDirect } from "@/app/actions/email";
 import type { EmailType } from "@/lib/email/types";
 import type { EmailTemplate } from "@/types/automations.types";
+import {
+  renderTemplatePreview,
+  getIframeSandboxAttributes,
+} from "@/lib/email/template-renderer";
+
+// Secure iframe component for template preview
+function TemplatePreviewIframe({ html, slug }: { html: string; slug: string }) {
+  // Render with sample data substitution
+  const renderedHtml = renderTemplatePreview(html, slug);
+
+  return (
+    <iframe
+      srcDoc={renderedHtml}
+      className="w-full h-[500px] border-0"
+      title="Email Preview"
+      sandbox={getIframeSandboxAttributes()}
+      // Prevent iframe from accessing parent window
+      referrerPolicy="no-referrer"
+    />
+  );
+}
 
 // Lazy load heavy components
 const RichTextEditor = lazy(() =>
@@ -115,20 +136,28 @@ function EmailTemplatesPanel({
 
   const getTemplateIcon = (slug: string) => {
     if (slug.includes("volunteer")) return <Users className="h-4 w-4" />;
-    if (slug.includes("welcome") || slug.includes("confirmation"))
+    if (slug.includes("milestone") || slug.includes("celebration"))
+      return <Star className="h-4 w-4" />;
+    if (slug.includes("impact") || slug.includes("digest"))
+      return <Sparkles className="h-4 w-4" />;
+    if (slug.includes("neighborhood") || slug.includes("welcome"))
       return <UserPlus className="h-4 w-4" />;
+    if (slug.includes("reengagement") || slug.includes("miss"))
+      return <Heart className="h-4 w-4" />;
     if (slug.includes("food") || slug.includes("alert")) return <Heart className="h-4 w-4" />;
     if (slug.includes("newsletter")) return <FileText className="h-4 w-4" />;
-    if (slug.includes("reengagement") || slug.includes("miss")) return <Star className="h-4 w-4" />;
     return <Layers className="h-4 w-4" />;
   };
 
   const getTemplateColor = (slug: string): "emerald" | "blue" | "rose" | "amber" | "violet" => {
     if (slug.includes("volunteer")) return "rose";
+    if (slug.includes("milestone") || slug.includes("celebration")) return "amber";
+    if (slug.includes("impact") || slug.includes("digest")) return "violet";
+    if (slug.includes("neighborhood")) return "emerald";
     if (slug.includes("welcome") || slug.includes("confirmation")) return "emerald";
+    if (slug.includes("reengagement") || slug.includes("miss")) return "amber";
     if (slug.includes("food") || slug.includes("alert")) return "rose";
     if (slug.includes("newsletter")) return "blue";
-    if (slug.includes("reengagement")) return "amber";
     return "violet";
   };
 
@@ -202,14 +231,20 @@ function EmailTemplatesPanel({
               {previewTemplate && getTemplateIcon(previewTemplate.slug)}
               {previewTemplate?.name}
             </DialogTitle>
-            <DialogDescription>Subject: {previewTemplate?.subject}</DialogDescription>
+            <DialogDescription>
+              Subject: {previewTemplate?.subject}
+              {previewTemplate?.variables && previewTemplate.variables.length > 0 && (
+                <span className="ml-2 text-xs text-muted-foreground">
+                  (Variables: {previewTemplate.variables.join(", ")})
+                </span>
+              )}
+            </DialogDescription>
           </DialogHeader>
-          <div className="flex-1 overflow-auto border rounded-lg bg-white">
+          <div className="flex-1 overflow-auto border rounded-lg bg-white dark:bg-zinc-900">
             {previewTemplate && (
-              <iframe
-                srcDoc={previewTemplate.html_content}
-                className="w-full h-[500px] border-0"
-                title="Email Preview"
+              <TemplatePreviewIframe
+                html={previewTemplate.html_content}
+                slug={previewTemplate.slug}
               />
             )}
           </div>

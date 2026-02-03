@@ -574,23 +574,26 @@ Hi {{first_name}},
 
 You've been part of the FoodShare community, and we've loved having you! Now, we're inviting you to take the next step and become a volunteer.
 
+THE PROBLEM WE'RE SOLVING TOGETHER:
+- 40% of food produced goes to waste
+- 210,000 Sacramento residents face food insecurity
+- Every volunteer hour saves ~10 lbs of food
+
+"I used to throw away so much food. Now I share it with my neighbors. This is what community should be." — Sarah M., FoodShare Volunteer
+
 WHY VOLUNTEER?
 
-Make a Real Difference
-Help neighbors access fresh food while reducing waste in your community.
+Make a Real Difference - Help neighbors access fresh food while reducing waste.
 
-Join an Amazing Team
-Connect with like-minded people who care about food security and sustainability.
+Join an Amazing Team - Connect with like-minded people who care about community.
 
-Grow Your Skills
-Gain experience in community organizing, food safety, event coordination, and more.
+Grow Your Skills - Gain experience in organizing, food safety, and events.
 
-Flexible Commitment
-Whether you have 2 hours a month or 10 hours a week, we have opportunities that fit your schedule.
+Flexible Commitment - 2 hours/month to 10 hours/week — we have roles that fit your life.
 
 VOLUNTEER ROLES AVAILABLE:
 
-- Food Rescue Coordinators - Help collect and distribute surplus food
+- Food Rescue Coordinators - Collect and distribute surplus food
 - Community Ambassadors - Spread the word and onboard new members
 - Event Helpers - Support food sharing events and pop-ups
 - Tech Champions - Help neighbors navigate the app
@@ -623,6 +626,37 @@ The FoodShare Team
             <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #444;">
               You've been part of the FoodShare community, and we've loved having you! Now, we're inviting you to take the next step and become a <strong>volunteer</strong>. Our volunteers are the heartbeat of FoodShare — they're the ones making sure good food reaches neighbors in need.
             </p>
+
+            <!-- Impact Stats Banner -->
+            <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); border-radius: 12px; padding: 24px; margin: 24px 0;">
+              <p style="margin: 0 0 16px; font-size: 14px; color: rgba(255,255,255,0.7); text-align: center; text-transform: uppercase; letter-spacing: 1px;">The Problem We're Solving Together</p>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="33%" style="text-align: center; padding: 8px;">
+                    <p style="margin: 0; font-size: 32px; font-weight: 800; color: ${BRAND_COLOR};">40%</p>
+                    <p style="margin: 4px 0 0; font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.3;">of food produced<br/>goes to waste</p>
+                  </td>
+                  <td width="33%" style="text-align: center; padding: 8px; border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);">
+                    <p style="margin: 0; font-size: 32px; font-weight: 800; color: ${BRAND_COLOR};">210K</p>
+                    <p style="margin: 4px 0 0; font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.3;">Sacramento residents<br/>face food insecurity</p>
+                  </td>
+                  <td width="33%" style="text-align: center; padding: 8px;">
+                    <p style="margin: 0; font-size: 32px; font-weight: 800; color: ${BRAND_COLOR};">10 lbs</p>
+                    <p style="margin: 4px 0 0; font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.3;">of food saved<br/>per volunteer hour</p>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Volunteer Testimonial -->
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+              <p style="margin: 0 0 16px; font-size: 18px; font-style: italic; color: #444; line-height: 1.6;">
+                "I used to throw away so much food. Now I share it with my neighbors. This is what community should be."
+              </p>
+              <p style="margin: 0; font-size: 14px; color: #666;">
+                <strong style="color: ${BRAND_COLOR};">— Sarah M.</strong>, FoodShare Volunteer
+              </p>
+            </div>
 
             <!-- Why Volunteer -->
             <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin: 24px 0;">
@@ -706,6 +740,430 @@ The FoodShare Team
 };
 
 // ============================================================================
+// TEMPLATE 7: Monthly Impact Digest
+// ============================================================================
+export const monthlyImpactDigestTemplate: EmailTemplateDefinition = {
+  name: "Monthly Impact Digest",
+  slug: "monthly-impact-digest",
+  subject: "Your Community Impact This Month 🌟",
+  category: "automation",
+  variables: ["first_name", "month_name", "meals_saved", "co2_prevented", "new_neighbors", "top_sharer", "unsubscribe_url"],
+  plain_text_content: `
+Hi {{first_name}},
+
+What a month for our FoodShare community! Here's what we accomplished together in {{month_name}}:
+
+YOUR COMMUNITY'S IMPACT:
+- {{meals_saved}} meals saved from waste
+- {{co2_prevented}} lbs of CO2 prevented
+- {{new_neighbors}} new neighbors joined
+
+COMMUNITY SPOTLIGHT:
+This month's top sharer is {{top_sharer}}! Thank you for making a difference.
+
+YOUR PERSONAL STATS:
+Check your impact dashboard to see how you've contributed to these amazing numbers.
+
+View your impact: https://foodshare.club/profile/impact
+
+Every share counts. Every meal matters. Thank you for being part of this community.
+
+See you next month,
+The FoodShare Team
+`.trim(),
+  html_content: emailWrapper(`
+        <!-- Header -->
+        <tr>
+          <td style="background: ${BRAND_GRADIENT}; padding: 40px 30px; text-align: center;">
+            <img src="${LOGO_URL}" alt="FoodShare" style="width: 80px; height: 80px; border-radius: 50%; background: white; padding: 4px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);">
+            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">{{month_name}} Community Impact 🌟</h1>
+            <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">Look what we accomplished together!</p>
+          </td>
+        </tr>
+
+        <!-- Content -->
+        <tr>
+          <td style="padding: 40px 30px;">
+            <p style="margin: 0 0 20px; font-size: 17px; line-height: 1.6; color: #1a1a1a;">
+              Hi {{first_name}},
+            </p>
+            <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #444;">
+              What a month for our FoodShare community! Here's what we accomplished <strong>together</strong> in {{month_name}}:
+            </p>
+
+            <!-- Impact Stats -->
+            <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); border-radius: 12px; padding: 28px; margin: 24px 0;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="33%" style="text-align: center; padding: 12px;">
+                    <p style="margin: 0; font-size: 36px; font-weight: 800; color: ${BRAND_COLOR};">{{meals_saved}}</p>
+                    <p style="margin: 6px 0 0; font-size: 12px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.5px;">Meals Saved</p>
+                  </td>
+                  <td width="33%" style="text-align: center; padding: 12px; border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);">
+                    <p style="margin: 0; font-size: 36px; font-weight: 800; color: #10b981;">{{co2_prevented}}</p>
+                    <p style="margin: 6px 0 0; font-size: 12px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.5px;">Lbs CO2 Prevented</p>
+                  </td>
+                  <td width="33%" style="text-align: center; padding: 12px;">
+                    <p style="margin: 0; font-size: 36px; font-weight: 800; color: #3b82f6;">{{new_neighbors}}</p>
+                    <p style="margin: 6px 0 0; font-size: 12px; color: rgba(255,255,255,0.8); text-transform: uppercase; letter-spacing: 0.5px;">New Neighbors</p>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Community Spotlight -->
+            <div style="background: #fff5f7; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+              <p style="margin: 0 0 8px; font-size: 12px; color: ${BRAND_COLOR}; text-transform: uppercase; letter-spacing: 1px;">Community Spotlight</p>
+              <p style="margin: 0 0 8px; font-size: 20px; font-weight: 700; color: #1a1a1a;">🏆 {{top_sharer}}</p>
+              <p style="margin: 0; font-size: 14px; color: #666;">This month's top sharer — thank you for making a difference!</p>
+            </div>
+
+            <!-- Personal Impact CTA -->
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin: 24px 0;">
+              <h3 style="margin: 0 0 12px; font-size: 18px; color: ${BRAND_COLOR};">📊 Your Personal Impact</h3>
+              <p style="margin: 0 0 16px; font-size: 14px; color: #666; line-height: 1.6;">
+                Check your impact dashboard to see how you've contributed to these amazing community numbers.
+              </p>
+              <a href="https://foodshare.club/profile/impact" style="display: inline-block; background: ${BRAND_GRADIENT}; color: white; padding: 12px 24px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 14px;">
+                View My Impact →
+              </a>
+            </div>
+
+            <p style="margin: 24px 0 0; font-size: 16px; color: #444; text-align: center; font-style: italic;">
+              Every share counts. Every meal matters.<br/>Thank you for being part of this community. 💚
+            </p>
+          </td>
+        </tr>
+  `),
+};
+
+// ============================================================================
+// TEMPLATE 8: Milestone Celebration
+// ============================================================================
+export const milestoneCelebrationTemplate: EmailTemplateDefinition = {
+  name: "Milestone Celebration",
+  slug: "milestone-celebration",
+  subject: "🎉 You've reached a milestone on FoodShare!",
+  category: "automation",
+  variables: ["first_name", "milestone_type", "milestone_number", "total_meals", "total_co2", "unsubscribe_url"],
+  plain_text_content: `
+Hi {{first_name}},
+
+🎉 CONGRATULATIONS! You've just hit a huge milestone!
+
+You've shared {{milestone_number}} {{milestone_type}} on FoodShare!
+
+YOUR TOTAL IMPACT:
+- {{total_meals}} meals shared with neighbors
+- {{total_co2}} lbs of CO2 prevented
+- Countless smiles created
+
+You're not just sharing food — you're building community and protecting our planet. That's something to be proud of!
+
+Keep up the amazing work. Your neighbors appreciate you.
+
+Share more: https://foodshare.club/create
+
+With gratitude,
+The FoodShare Team
+
+P.S. Share this milestone on social media and inspire others to join the movement!
+`.trim(),
+  html_content: emailWrapper(`
+        <!-- Header -->
+        <tr>
+          <td style="background: ${BRAND_GRADIENT}; padding: 40px 30px; text-align: center;">
+            <img src="${LOGO_URL}" alt="FoodShare" style="width: 80px; height: 80px; border-radius: 50%; background: white; padding: 4px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);">
+            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">Congratulations! 🎉</h1>
+            <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">You've reached a milestone</p>
+          </td>
+        </tr>
+
+        <!-- Content -->
+        <tr>
+          <td style="padding: 40px 30px;">
+            <p style="margin: 0 0 20px; font-size: 17px; line-height: 1.6; color: #1a1a1a;">
+              Hi {{first_name}},
+            </p>
+
+            <!-- Milestone Badge -->
+            <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 16px; padding: 32px; margin: 24px 0; text-align: center; border: 2px solid #fbbf24;">
+              <p style="margin: 0 0 8px; font-size: 48px;">🏆</p>
+              <p style="margin: 0 0 8px; font-size: 14px; color: #92400e; text-transform: uppercase; letter-spacing: 1px;">Milestone Achieved</p>
+              <p style="margin: 0; font-size: 32px; font-weight: 800; color: #1a1a1a;">{{milestone_number}} {{milestone_type}}</p>
+            </div>
+
+            <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #444; text-align: center;">
+              You're not just sharing food — you're <strong>building community</strong> and <strong>protecting our planet</strong>. That's something to be proud of!
+            </p>
+
+            <!-- Total Impact Stats -->
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin: 24px 0;">
+              <h3 style="margin: 0 0 16px; font-size: 18px; color: ${BRAND_COLOR}; text-align: center;">Your Total Impact</h3>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="50%" style="text-align: center; padding: 12px;">
+                    <p style="margin: 0; font-size: 28px; font-weight: 700; color: ${BRAND_COLOR};">{{total_meals}}</p>
+                    <p style="margin: 4px 0 0; font-size: 12px; color: #666;">Meals Shared</p>
+                  </td>
+                  <td width="50%" style="text-align: center; padding: 12px; border-left: 1px solid #e5e7eb;">
+                    <p style="margin: 0; font-size: 28px; font-weight: 700; color: #10b981;">{{total_co2}}</p>
+                    <p style="margin: 4px 0 0; font-size: 12px; color: #666;">Lbs CO2 Prevented</p>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- CTA -->
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td align="center" style="padding: 20px 0;">
+                  <a href="https://foodshare.club/create" style="display: inline-block; background: ${BRAND_GRADIENT}; color: white; padding: 16px 40px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 16px rgba(255,45,85,0.3);">
+                    Keep Sharing →
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin: 24px 0 0; font-size: 14px; color: #666; text-align: center;">
+              P.S. Share this milestone on social media and inspire others to join the movement! 🚀
+            </p>
+          </td>
+        </tr>
+  `),
+};
+
+// ============================================================================
+// TEMPLATE 9: Welcome to the Neighborhood
+// ============================================================================
+export const welcomeNeighborhoodTemplate: EmailTemplateDefinition = {
+  name: "Welcome to the Neighborhood",
+  slug: "welcome-neighborhood",
+  subject: "Welcome to the neighborhood, {{first_name}}! 🏘️",
+  category: "automation",
+  variables: ["first_name", "neighborhood_name", "nearby_sharers", "recent_listings", "unsubscribe_url"],
+  plain_text_content: `
+Hi {{first_name}},
+
+Welcome to the {{neighborhood_name}} FoodShare community! 🏘️
+
+You've just joined a group of neighbors who believe that good food shouldn't go to waste. Here's what's happening in your area:
+
+YOUR NEIGHBORS:
+{{nearby_sharers}} neighbors are already sharing food near you.
+
+RECENT LISTINGS NEARBY:
+{{recent_listings}}
+
+GETTING STARTED:
+
+1. Complete your profile - Help neighbors know who you are
+2. Browse the map - See what's available nearby
+3. Share something - Got extras? Post your first listing!
+
+Explore your neighborhood: https://foodshare.club/map
+
+We're excited to have you. Welcome to the family!
+
+The FoodShare Team
+`.trim(),
+  html_content: emailWrapper(`
+        <!-- Header -->
+        <tr>
+          <td style="background: ${BRAND_GRADIENT}; padding: 40px 30px; text-align: center;">
+            <img src="${LOGO_URL}" alt="FoodShare" style="width: 80px; height: 80px; border-radius: 50%; background: white; padding: 4px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);">
+            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">Welcome to {{neighborhood_name}}! 🏘️</h1>
+            <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">Your neighbors are excited to meet you</p>
+          </td>
+        </tr>
+
+        <!-- Content -->
+        <tr>
+          <td style="padding: 40px 30px;">
+            <p style="margin: 0 0 20px; font-size: 17px; line-height: 1.6; color: #1a1a1a;">
+              Hi {{first_name}},
+            </p>
+            <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #444;">
+              Welcome to the <strong>{{neighborhood_name}}</strong> FoodShare community! You've just joined a group of neighbors who believe that good food shouldn't go to waste.
+            </p>
+
+            <!-- Neighbors Stat -->
+            <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center; border: 1px solid #6ee7b7;">
+              <p style="margin: 0 0 4px; font-size: 42px; font-weight: 800; color: #059669;">{{nearby_sharers}}</p>
+              <p style="margin: 0; font-size: 14px; color: #047857;">neighbors already sharing food near you</p>
+            </div>
+
+            <!-- Getting Started Steps -->
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin: 24px 0;">
+              <h3 style="margin: 0 0 16px; font-size: 18px; color: ${BRAND_COLOR};">🚀 Getting Started</h3>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td width="36" style="vertical-align: top;">
+                          <div style="background: ${BRAND_COLOR}; color: white; width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; font-weight: 700; font-size: 14px;">1</div>
+                        </td>
+                        <td>
+                          <strong style="color: #1a1a1a;">Complete your profile</strong>
+                          <p style="margin: 4px 0 0; font-size: 13px; color: #666;">Help neighbors know who you are</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td width="36" style="vertical-align: top;">
+                          <div style="background: ${BRAND_COLOR}; color: white; width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; font-weight: 700; font-size: 14px;">2</div>
+                        </td>
+                        <td>
+                          <strong style="color: #1a1a1a;">Browse the map</strong>
+                          <p style="margin: 4px 0 0; font-size: 13px; color: #666;">See what's available nearby</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 0;">
+                    <table width="100%" cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td width="36" style="vertical-align: top;">
+                          <div style="background: ${BRAND_COLOR}; color: white; width: 28px; height: 28px; border-radius: 50%; text-align: center; line-height: 28px; font-weight: 700; font-size: 14px;">3</div>
+                        </td>
+                        <td>
+                          <strong style="color: #1a1a1a;">Share something</strong>
+                          <p style="margin: 4px 0 0; font-size: 13px; color: #666;">Got extras? Post your first listing!</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- CTA -->
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td align="center" style="padding: 20px 0;">
+                  <a href="https://foodshare.club/map" style="display: inline-block; background: ${BRAND_GRADIENT}; color: white; padding: 16px 40px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 16px rgba(255,45,85,0.3);">
+                    Explore Your Neighborhood →
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin: 24px 0 0; font-size: 16px; color: #444; text-align: center; font-style: italic;">
+              We're excited to have you. Welcome to the family! 💚
+            </p>
+          </td>
+        </tr>
+  `),
+};
+
+// ============================================================================
+// TEMPLATE 10: Re-engagement (We Miss You)
+// ============================================================================
+export const reengagementTemplate: EmailTemplateDefinition = {
+  name: "We Miss You",
+  slug: "reengagement-miss-you",
+  subject: "We miss you, {{first_name}}! Your neighbors are still sharing 🥗",
+  category: "automation",
+  variables: ["first_name", "days_inactive", "nearby_listings", "community_meals_saved", "unsubscribe_url"],
+  plain_text_content: `
+Hi {{first_name}},
+
+We noticed you haven't been on FoodShare in a while, and we wanted to check in. Your neighbors miss you!
+
+WHILE YOU WERE AWAY:
+- Your community saved {{community_meals_saved}} meals
+- {{nearby_listings}} new listings posted near you
+- New neighbors joined and are ready to share
+
+WHAT'S NEW:
+We've been busy making FoodShare even better — faster map loading, easier posting, and more ways to connect with neighbors.
+
+Come back and see what's cooking: https://foodshare.club/map
+
+Whether you're sharing or claiming, your participation makes our community stronger. We'd love to see you back!
+
+Warmly,
+The FoodShare Team
+
+P.S. Got feedback? We'd love to hear why you've been away. Just reply to this email.
+`.trim(),
+  html_content: emailWrapper(`
+        <!-- Header -->
+        <tr>
+          <td style="background: ${BRAND_GRADIENT}; padding: 40px 30px; text-align: center;">
+            <img src="${LOGO_URL}" alt="FoodShare" style="width: 80px; height: 80px; border-radius: 50%; background: white; padding: 4px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);">
+            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">We Miss You! 💚</h1>
+            <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">Your neighbors are still sharing</p>
+          </td>
+        </tr>
+
+        <!-- Content -->
+        <tr>
+          <td style="padding: 40px 30px;">
+            <p style="margin: 0 0 20px; font-size: 17px; line-height: 1.6; color: #1a1a1a;">
+              Hi {{first_name}},
+            </p>
+            <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #444;">
+              We noticed you haven't been on FoodShare in a while, and we wanted to check in. <strong>Your neighbors miss you!</strong>
+            </p>
+
+            <!-- What's Happened Stats -->
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin: 24px 0;">
+              <h3 style="margin: 0 0 16px; font-size: 16px; color: #666; text-align: center; text-transform: uppercase; letter-spacing: 1px;">While You Were Away</h3>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="50%" style="text-align: center; padding: 12px;">
+                    <p style="margin: 0; font-size: 32px; font-weight: 700; color: ${BRAND_COLOR};">{{community_meals_saved}}</p>
+                    <p style="margin: 4px 0 0; font-size: 12px; color: #666;">Meals Saved<br/>by your community</p>
+                  </td>
+                  <td width="50%" style="text-align: center; padding: 12px; border-left: 1px solid #e5e7eb;">
+                    <p style="margin: 0; font-size: 32px; font-weight: 700; color: #10b981;">{{nearby_listings}}</p>
+                    <p style="margin: 4px 0 0; font-size: 12px; color: #666;">New Listings<br/>posted near you</p>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- What's New -->
+            <div style="background: #fff5f7; border-radius: 12px; padding: 24px; margin: 24px 0; border-left: 4px solid ${BRAND_COLOR};">
+              <h3 style="margin: 0 0 12px; font-size: 18px; color: ${BRAND_COLOR};">✨ What's New</h3>
+              <p style="margin: 0; font-size: 14px; color: #666; line-height: 1.6;">
+                We've been busy making FoodShare even better — faster map loading, easier posting, and more ways to connect with neighbors.
+              </p>
+            </div>
+
+            <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #444; text-align: center;">
+              Whether you're sharing or claiming, your participation makes our community stronger. <strong>We'd love to see you back!</strong>
+            </p>
+
+            <!-- CTA -->
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td align="center" style="padding: 20px 0;">
+                  <a href="https://foodshare.club/map" style="display: inline-block; background: ${BRAND_GRADIENT}; color: white; padding: 16px 40px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 16px rgba(255,45,85,0.3);">
+                    See What's Cooking →
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin: 24px 0 0; font-size: 14px; color: #666; text-align: center;">
+              P.S. Got feedback? We'd love to hear why you've been away.<br/>Just reply to this email — we read every message.
+            </p>
+          </td>
+        </tr>
+  `),
+};
+
+// ============================================================================
 // ALL TEMPLATES
 // ============================================================================
 export const welcomeSeriesTemplates: EmailTemplateDefinition[] = [
@@ -715,4 +1173,8 @@ export const welcomeSeriesTemplates: EmailTemplateDefinition[] = [
   firstShareTipsTemplate,
   communityHighlightsTemplate,
   volunteerRecruitmentTemplate,
+  monthlyImpactDigestTemplate,
+  milestoneCelebrationTemplate,
+  welcomeNeighborhoodTemplate,
+  reengagementTemplate,
 ];

@@ -11,5 +11,9 @@ export {
   firstShareTipsTemplate,
   communityHighlightsTemplate,
   volunteerRecruitmentTemplate,
+  monthlyImpactDigestTemplate,
+  milestoneCelebrationTemplate,
+  welcomeNeighborhoodTemplate,
+  reengagementTemplate,
   type EmailTemplateDefinition,
 } from "./welcome-series";
