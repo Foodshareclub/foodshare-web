@@ -10,7 +10,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Bold,
   Italic,
@@ -60,6 +60,9 @@ export function RichTextEditor({
   const [linkUrl, setLinkUrl] = useState("");
   const [imageUrl, setImageUrl] = useState("");
 
+  // Track if update came from external prop change to avoid infinite loops
+  const isExternalUpdate = useRef(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -76,7 +79,11 @@ export function RichTextEditor({
     ],
     content: value,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      // Don't trigger onChange if this update was from external prop
+      if (!isExternalUpdate.current) {
+        onChange(editor.getHTML());
+      }
+      isExternalUpdate.current = false;
     },
     editorProps: {
       attributes: {
@@ -92,6 +99,14 @@ export function RichTextEditor({
       },
     },
   });
+
+  // Sync external value changes with the editor
+  useEffect(() => {
+    if (editor && value !== editor.getHTML()) {
+      isExternalUpdate.current = true;
+      editor.commands.setContent(value, { emitUpdate: false });
+    }
+  }, [value, editor]);
 
   const addLink = () => {
     if (linkUrl && editor) {

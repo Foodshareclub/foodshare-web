@@ -1,6 +1,14 @@
 /**
  * Welcome Series Email Templates
- * Professional email templates for new user onboarding + tester recruitment
+ * Enterprise-grade email templates for FoodShare
+ *
+ * Design based on welcome-confirmation.html - featuring:
+ * - Preheader text for email previews
+ * - Decorative top bar
+ * - Large centered logo
+ * - Card-based content sections
+ * - Rich dark footer with social links
+ * - MSO conditionals for Outlook
  */
 
 export interface EmailTemplateDefinition {
@@ -13,43 +21,247 @@ export interface EmailTemplateDefinition {
   variables: string[];
 }
 
-// Shared email styles
+// Shared email constants
 const LOGO_URL =
   "https://***REMOVED***.supabase.co/storage/v1/object/public/assets/logo-512.png";
 const BRAND_COLOR = "#ff2d55";
+
+// Legacy constant for backward compatibility
 const BRAND_GRADIENT = "linear-gradient(135deg, #ff2d55 0%, #ff5177 100%)";
 
-const emailWrapper = (content: string) => `
+/**
+ * Enterprise email wrapper with full HTML structure
+ * Matches the beautiful welcome-confirmation.html design
+ */
+const emailWrapper = (
+  content: string,
+  options: {
+    preheader?: string;
+    title?: string;
+  } = {}
+) => `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>${options.title || "FoodShare"}</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5; color: #1a1a1a;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
-  <tr>
-    <td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
-        ${content}
-        <!-- Footer -->
-        <tr>
-          <td style="background: ${BRAND_GRADIENT}; padding: 30px; text-align: center;">
-            <img src="${LOGO_URL}" alt="FoodShare" style="width: 40px; height: 40px; border-radius: 50%; background: white; padding: 2px; margin-bottom: 12px;">
-            <p style="margin: 0 0 8px; font-size: 14px; color: rgba(255,255,255,0.9);">FoodShare LLC</p>
-            <p style="margin: 0 0 16px; font-size: 12px; color: rgba(255,255,255,0.8);">4632 Winding Way, Sacramento, CA 95841</p>
-            <p style="margin: 0; font-size: 12px; color: rgba(255,255,255,0.7);">
-              <a href="{{unsubscribe_url}}" style="color: rgba(255,255,255,0.9); text-decoration: underline;">Unsubscribe</a> ·
-              <a href="https://foodshare.club/privacy" style="color: rgba(255,255,255,0.9); text-decoration: underline;">Privacy</a>
-            </p>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f7; color: #1d1d1f; -webkit-font-smoothing: antialiased;">
+
+  <!-- Preheader Text (hidden) -->
+  ${options.preheader ? `<div style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">${options.preheader}</div>` : ""}
+
+  <!-- Email Container -->
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f7; padding: 60px 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 20px; overflow: hidden;">
+
+          <!-- Decorative Top Bar -->
+          <tr>
+            <td style="height: 6px; background-color: ${BRAND_COLOR};"></td>
+          </tr>
+
+          ${content}
+
+          <!-- Footer Section -->
+          <tr>
+            <td style="background-color: #1d1d1f; padding: 50px 40px; text-align: center;">
+              <!-- Social Media -->
+              <p style="margin: 0 0 18px; font-size: 13px; color: #86868b; font-weight: 600; text-transform: uppercase; letter-spacing: 2px;">Connect With Us</p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 0 30px;">
+                <tr>
+                  <td align="center">
+                    <a href="https://facebook.com/foodshare" style="display: inline-block; margin: 0 8px; width: 44px; height: 44px; background-color: #2d2d2d; border-radius: 50%; line-height: 44px; text-align: center; text-decoration: none;"><span style="font-size: 20px; color: #ffffff; font-family: Georgia, serif; font-weight: bold;">f</span></a>
+                    <a href="https://twitter.com/foodshare" style="display: inline-block; margin: 0 8px; width: 44px; height: 44px; background-color: #2d2d2d; border-radius: 50%; line-height: 44px; text-align: center; text-decoration: none;"><span style="font-size: 18px; color: #ffffff; font-weight: bold;">X</span></a>
+                    <a href="https://instagram.com/foodshare" style="display: inline-block; margin: 0 8px; width: 44px; height: 44px; background-color: #2d2d2d; border-radius: 50%; line-height: 44px; text-align: center; text-decoration: none;"><span style="font-size: 18px; color: #ffffff; font-family: Arial, sans-serif; font-weight: 900;">IG</span></a>
+                    <a href="https://linkedin.com/company/foodshare" style="display: inline-block; margin: 0 8px; width: 44px; height: 44px; background-color: #2d2d2d; border-radius: 50%; line-height: 44px; text-align: center; text-decoration: none;"><span style="font-size: 18px; color: #ffffff; font-family: Arial, sans-serif; font-weight: 700;">in</span></a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Divider -->
+              <table width="120" cellpadding="0" cellspacing="0" border="0" align="center" style="margin: 0 0 30px;">
+                <tr>
+                  <td style="height: 1px; background-color: #3d3d3d;"></td>
+                </tr>
+              </table>
+
+              <!-- Footer Logo -->
+              <table cellpadding="0" cellspacing="0" border="0" align="center">
+                <tr>
+                  <td style="background-color: #ffffff; border-radius: 50%; padding: 4px;">
+                    <img src="${LOGO_URL}" alt="FoodShare" width="36" height="36" style="width: 36px; height: 36px; border-radius: 50%; display: block;">
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Company Info -->
+              <p style="margin: 20px 0 0; font-size: 15px; line-height: 1.5; color: #ffffff; font-weight: 600;">FoodShare LLC</p>
+              <p style="margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: #86868b;">4632 Winding Way, Sacramento, CA 95841</p>
+              <p style="margin: 6px 0 0; font-size: 12px; line-height: 1.5; color: #86868b;">&copy; 2025 All Rights Reserved</p>
+
+              <!-- Contact -->
+              <p style="margin: 24px 0 0; font-size: 13px; color: #86868b;">
+                Questions? <a href="mailto:support@foodshare.club" style="color: ${BRAND_COLOR}; text-decoration: none; font-weight: 600;">support@foodshare.club</a>
+              </p>
+
+              <!-- Footer Links -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 28px 0 0;">
+                <tr>
+                  <td align="center">
+                    <a href="https://foodshare.club/" style="display: inline-block; margin: 4px 6px; padding: 10px 20px; background-color: #2d2d2d; border-radius: 20px; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 600;">Visit Us</a>
+                    <a href="https://foodshare.club/privacy" style="display: inline-block; margin: 4px 6px; padding: 10px 20px; background-color: #2d2d2d; border-radius: 20px; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 600;">Privacy</a>
+                    <a href="{{unsubscribe_url}}" style="display: inline-block; margin: 4px 6px; padding: 10px 20px; background-color: #2d2d2d; border-radius: 20px; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 600;">Unsubscribe</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
+`;
+
+/**
+ * Standard header with logo and title
+ */
+const emailHeader = (title: string, subtitle?: string) => `
+          <!-- Header with Logo -->
+          <tr>
+            <td style="background-color: ${BRAND_COLOR}; padding: 60px 40px 50px; text-align: center;">
+              <!-- Logo Container -->
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center">
+                    <table cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 50%; padding: 8px;">
+                      <tr>
+                        <td>
+                          <img src="${LOGO_URL}" alt="FoodShare Logo" width="90" height="90" style="width: 90px; height: 90px; border-radius: 50%; display: block;">
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <h1 style="margin: 28px 0 0; color: #ffffff; font-size: 36px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2;">${title}</h1>
+              ${subtitle ? `<p style="margin: 16px 0 0; color: rgba(255, 255, 255, 0.95); font-size: 18px; font-weight: 500;">${subtitle}</p>` : ""}
+            </td>
+          </tr>
+`;
+
+/**
+ * Content section wrapper
+ */
+const emailContent = (content: string) => `
+          <!-- Content Section -->
+          <tr>
+            <td style="padding: 50px 45px; background-color: #ffffff;">
+              ${content}
+            </td>
+          </tr>
+`;
+
+/**
+ * Card component for content sections
+ */
+const emailCard = (content: string) => `
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #fafafa; border-radius: 16px; border: 1px solid #e8e8ed;">
+                <tr>
+                  <td style="padding: 35px;">
+                    ${content}
+                  </td>
+                </tr>
+              </table>
+`;
+
+/**
+ * Accent box with left border (for callouts)
+ */
+const emailAccentBox = (content: string, bgColor = "#fff0f3") => `
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: ${bgColor}; border-radius: 12px; margin-top: 25px;">
+                <tr>
+                  <td style="padding: 22px 25px; border-left: 4px solid ${BRAND_COLOR};">
+                    ${content}
+                  </td>
+                </tr>
+              </table>
+`;
+
+/**
+ * CTA Button (with Outlook fallback)
+ */
+const emailButton = (text: string, url: string) => `
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="padding: 25px 0;">
+                    <!--[if mso]>
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${url}" style="height:56px;v-text-anchor:middle;width:280px;" arcsize="50%" strokecolor="${BRAND_COLOR}" fillcolor="${BRAND_COLOR}">
+                      <w:anchorlock/>
+                      <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:bold;">${text.toUpperCase()}</center>
+                    </v:roundrect>
+                    <![endif]-->
+                    <!--[if !mso]><!-->
+                    <a href="${url}" style="display: inline-block; padding: 18px 52px; background-color: ${BRAND_COLOR}; color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 15px; text-transform: uppercase; letter-spacing: 1.5px;">${text}</a>
+                    <!--<![endif]-->
+                  </td>
+                </tr>
+              </table>
+`;
+
+/**
+ * Stats row (for impact numbers)
+ */
+const emailStats = (stats: { value: string; label: string; color?: string }[]) => `
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #1d1d1f; border-radius: 16px; margin: 25px 0;">
+                <tr>
+                  ${stats
+                    .map(
+                      (stat, i) => `
+                  <td width="${Math.floor(100 / stats.length)}%" style="text-align: center; padding: 28px 12px;${i > 0 ? " border-left: 1px solid #3d3d3d;" : ""}">
+                    <p style="margin: 0; font-size: 36px; font-weight: 800; color: ${stat.color || BRAND_COLOR};">${stat.value}</p>
+                    <p style="margin: 8px 0 0; font-size: 12px; color: #86868b; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.4;">${stat.label}</p>
+                  </td>`
+                    )
+                    .join("")}
+                </tr>
+              </table>
+`;
+
+/**
+ * Feature list item
+ */
+const emailFeatureItem = (emoji: string, title: string, description: string) => `
+                    <tr>
+                      <td style="padding: 12px 0;">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                          <tr>
+                            <td width="50" style="vertical-align: top; font-size: 24px;">${emoji}</td>
+                            <td>
+                              <p style="margin: 0; font-size: 16px; font-weight: 700; color: #1d1d1f;">${title}</p>
+                              <p style="margin: 4px 0 0; font-size: 14px; color: #424245; line-height: 1.5;">${description}</p>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
 `;
 
 // ============================================================================
@@ -78,74 +290,43 @@ Questions? Reply to this email or reach us at support@foodshare.club
 
 FoodShare - Reducing food waste, one share at a time
 `.trim(),
-  html_content: emailWrapper(`
-        <!-- Header -->
-        <tr>
-          <td style="background: ${BRAND_GRADIENT}; padding: 40px 30px; text-align: center;">
-            <img src="${LOGO_URL}" alt="FoodShare" style="width: 80px; height: 80px; border-radius: 50%; background: white; padding: 4px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);">
-            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">Welcome to FoodShare! 🎉</h1>
-            <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">Join the movement to reduce food waste</p>
-          </td>
-        </tr>
+  html_content: emailWrapper(
+    emailHeader("Welcome to FoodShare!", "Join the movement to reduce food waste") +
+      emailContent(`
+              <p style="margin: 0 0 20px; font-size: 18px; line-height: 1.7; color: #1d1d1f;">
+                Hi <strong style="color: ${BRAND_COLOR};">{{first_name}}</strong>,
+              </p>
 
-        <!-- Content -->
-        <tr>
-          <td style="padding: 40px 30px;">
-            <p style="margin: 0 0 20px; font-size: 17px; line-height: 1.6; color: #1a1a1a;">
-              Hi {{first_name}},
-            </p>
-            <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #444;">
-              You're now part of a growing community dedicated to <strong>reducing food waste</strong> and <strong>sharing delicious meals</strong> with neighbors. Every year, millions of pounds of perfectly good food goes to waste — together, we can change that!
-            </p>
+              ${emailCard(`
+                    <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.8; color: #424245;">
+                      You're now part of a growing community dedicated to <strong style="color: #1d1d1f;">reducing food waste</strong> and <strong style="color: #1d1d1f;">sharing delicious meals</strong> with neighbors.
+                    </p>
 
-            <!-- Features -->
-            <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin: 24px 0;">
-              <h3 style="margin: 0 0 16px; font-size: 18px; color: ${BRAND_COLOR};">🌱 What You Can Do</h3>
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="padding: 8px 0;">
-                    <span style="font-size: 20px; margin-right: 12px;">🍎</span>
-                    <strong>Share Surplus Food</strong> - Post extras for neighbors to pick up
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0;">
-                    <span style="font-size: 20px; margin-right: 12px;">🗺️</span>
-                    <strong>Discover Food Near You</strong> - Browse the interactive map
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0;">
-                    <span style="font-size: 20px; margin-right: 12px;">💬</span>
-                    <strong>Connect & Chat</strong> - Coordinate pickups with neighbors
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0;">
-                    <span style="font-size: 20px; margin-right: 12px;">📊</span>
-                    <strong>Track Your Impact</strong> - See how much food you've saved
-                  </td>
-                </tr>
-              </table>
-            </div>
+                    <p style="margin: 0 0 25px; font-size: 16px; line-height: 1.8; color: #424245;">
+                      Every year, millions of pounds of perfectly good food goes to waste — together, we can change that!
+                    </p>
 
-            <!-- CTA -->
-            <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                <td align="center" style="padding: 20px 0;">
-                  <a href="https://foodshare.club/map" style="display: inline-block; background: ${BRAND_GRADIENT}; color: white; padding: 16px 40px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 16px rgba(255,45,85,0.3);">
-                    Explore the Map →
-                  </a>
-                </td>
-              </tr>
-            </table>
+                    <p style="margin: 0 0 20px; font-size: 15px; font-weight: 700; color: ${BRAND_COLOR}; text-transform: uppercase; letter-spacing: 1px;">What You Can Do</p>
 
-            <p style="margin: 24px 0 0; font-size: 14px; color: #666; text-align: center;">
-              Questions? Reply to this email or reach us at <a href="mailto:support@foodshare.club" style="color: ${BRAND_COLOR};">support@foodshare.club</a>
-            </p>
-          </td>
-        </tr>
-  `),
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      ${emailFeatureItem("🍎", "Share Surplus Food", "Post extras for neighbors to pick up")}
+                      ${emailFeatureItem("🗺️", "Discover Food Near You", "Browse the interactive map")}
+                      ${emailFeatureItem("💬", "Connect & Chat", "Coordinate pickups with neighbors")}
+                      ${emailFeatureItem("📊", "Track Your Impact", "See how much food you've saved")}
+                    </table>
+
+                    ${emailButton("Explore the Map", "https://foodshare.club/map")}
+              `)}
+
+              ${emailAccentBox(`
+                    <p style="margin: 0; font-size: 14px; line-height: 1.7; color: #86868b;">
+                      <strong style="color: ${BRAND_COLOR}; font-size: 15px;">Ready to make a difference?</strong><br>
+                      Start by browsing what's available near you, or share your first item today!
+                    </p>
+              `)}
+      `),
+    { preheader: "Welcome to FoodShare! Start sharing food with your community today.", title: "Welcome to FoodShare" }
+  ),
 };
 
 // ============================================================================
@@ -607,136 +788,92 @@ Together, we're building a community where no good food goes to waste.
 With gratitude,
 The FoodShare Team
 `.trim(),
-  html_content: emailWrapper(`
-        <!-- Header -->
-        <tr>
-          <td style="background: ${BRAND_GRADIENT}; padding: 40px 30px; text-align: center;">
-            <img src="${LOGO_URL}" alt="FoodShare" style="width: 80px; height: 80px; border-radius: 50%; background: white; padding: 4px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);">
-            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">Volunteer With Us 🤝</h1>
-            <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">Make a difference in your community</p>
-          </td>
-        </tr>
-
-        <!-- Content -->
-        <tr>
-          <td style="padding: 40px 30px;">
-            <p style="margin: 0 0 20px; font-size: 17px; line-height: 1.6; color: #1a1a1a;">
-              Hi {{first_name}},
-            </p>
-            <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #444;">
-              You've been part of the FoodShare community, and we've loved having you! Now, we're inviting you to take the next step and become a <strong>volunteer</strong>. Our volunteers are the heartbeat of FoodShare — they're the ones making sure good food reaches neighbors in need.
-            </p>
-
-            <!-- Impact Stats Banner -->
-            <div style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); border-radius: 12px; padding: 24px; margin: 24px 0;">
-              <p style="margin: 0 0 16px; font-size: 14px; color: rgba(255,255,255,0.7); text-align: center; text-transform: uppercase; letter-spacing: 1px;">The Problem We're Solving Together</p>
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td width="33%" style="text-align: center; padding: 8px;">
-                    <p style="margin: 0; font-size: 32px; font-weight: 800; color: ${BRAND_COLOR};">40%</p>
-                    <p style="margin: 4px 0 0; font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.3;">of food produced<br/>goes to waste</p>
-                  </td>
-                  <td width="33%" style="text-align: center; padding: 8px; border-left: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1);">
-                    <p style="margin: 0; font-size: 32px; font-weight: 800; color: ${BRAND_COLOR};">210K</p>
-                    <p style="margin: 4px 0 0; font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.3;">Sacramento residents<br/>face food insecurity</p>
-                  </td>
-                  <td width="33%" style="text-align: center; padding: 8px;">
-                    <p style="margin: 0; font-size: 32px; font-weight: 800; color: ${BRAND_COLOR};">10 lbs</p>
-                    <p style="margin: 4px 0 0; font-size: 11px; color: rgba(255,255,255,0.8); line-height: 1.3;">of food saved<br/>per volunteer hour</p>
-                  </td>
-                </tr>
-              </table>
-            </div>
-
-            <!-- Volunteer Testimonial -->
-            <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
-              <p style="margin: 0 0 16px; font-size: 18px; font-style: italic; color: #444; line-height: 1.6;">
-                "I used to throw away so much food. Now I share it with my neighbors. This is what community should be."
+  html_content: emailWrapper(
+    emailHeader("Volunteer With Us", "Make a difference in your community") +
+      emailContent(`
+              <p style="margin: 0 0 20px; font-size: 18px; line-height: 1.7; color: #1d1d1f;">
+                Hi <strong style="color: ${BRAND_COLOR};">{{first_name}}</strong>,
               </p>
-              <p style="margin: 0; font-size: 14px; color: #666;">
-                <strong style="color: ${BRAND_COLOR};">— Sarah M.</strong>, FoodShare Volunteer
-              </p>
-            </div>
 
-            <!-- Why Volunteer -->
-            <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin: 24px 0;">
-              <h3 style="margin: 0 0 16px; font-size: 18px; color: ${BRAND_COLOR};">🌱 Why Volunteer?</h3>
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="padding: 8px 0;">
-                    <span style="font-size: 20px; margin-right: 12px;">🏘️</span>
-                    <strong>Make a Real Difference</strong> - Help neighbors access fresh food
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0;">
-                    <span style="font-size: 20px; margin-right: 12px;">👥</span>
-                    <strong>Join an Amazing Team</strong> - Connect with like-minded people
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0;">
-                    <span style="font-size: 20px; margin-right: 12px;">🌱</span>
-                    <strong>Grow Your Skills</strong> - Gain experience in organizing and events
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0;">
-                    <span style="font-size: 20px; margin-right: 12px;">💪</span>
-                    <strong>Flexible Commitment</strong> - 2 hours/month to 10 hours/week
-                  </td>
-                </tr>
-              </table>
-            </div>
+              ${emailCard(`
+                    <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.8; color: #424245;">
+                      You've been part of the FoodShare community, and we've loved having you! Now, we're inviting you to take the next step and become a <strong style="color: #1d1d1f;">volunteer</strong>.
+                    </p>
+                    <p style="margin: 0; font-size: 16px; line-height: 1.8; color: #424245;">
+                      Our volunteers are the heartbeat of FoodShare — they're the ones making sure good food reaches neighbors in need.
+                    </p>
+              `)}
 
-            <!-- Volunteer Roles -->
-            <div style="background: #fff5f7; border-radius: 12px; padding: 24px; margin: 24px 0; border-left: 4px solid ${BRAND_COLOR};">
-              <h3 style="margin: 0 0 16px; font-size: 18px; color: ${BRAND_COLOR};">🎯 Volunteer Roles Available</h3>
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="padding: 8px 0; border-bottom: 1px solid #ffe4e9;">
-                    <strong style="color: #1a1a1a;">Food Rescue Coordinators</strong>
-                    <p style="margin: 4px 0 0; font-size: 13px; color: #666;">Collect and distribute surplus food from local businesses</p>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; border-bottom: 1px solid #ffe4e9;">
-                    <strong style="color: #1a1a1a;">Community Ambassadors</strong>
-                    <p style="margin: 4px 0 0; font-size: 13px; color: #666;">Spread the word and help onboard new members</p>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; border-bottom: 1px solid #ffe4e9;">
-                    <strong style="color: #1a1a1a;">Event Helpers</strong>
-                    <p style="margin: 4px 0 0; font-size: 13px; color: #666;">Support food sharing events and community pop-ups</p>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0;">
-                    <strong style="color: #1a1a1a;">Tech Champions</strong>
-                    <p style="margin: 4px 0 0; font-size: 13px; color: #666;">Help neighbors navigate the app and platform</p>
-                  </td>
-                </tr>
-              </table>
-            </div>
+              <!-- Impact Stats -->
+              <p style="margin: 30px 0 15px; font-size: 13px; color: #86868b; text-align: center; text-transform: uppercase; letter-spacing: 2px; font-weight: 600;">The Problem We're Solving Together</p>
+              ${emailStats([
+                { value: "40%", label: "of food produced<br/>goes to waste" },
+                { value: "210K", label: "Sacramento residents<br/>face food insecurity" },
+                { value: "10 lbs", label: "of food saved<br/>per volunteer hour" },
+              ])}
 
-            <!-- CTA -->
-            <table width="100%" cellpadding="0" cellspacing="0">
-              <tr>
-                <td align="center" style="padding: 20px 0;">
-                  <a href="https://foodshare.club/volunteer" style="display: inline-block; background: ${BRAND_GRADIENT}; color: white; padding: 16px 40px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 16px rgba(255,45,85,0.3);">
-                    Apply to Volunteer →
-                  </a>
-                </td>
-              </tr>
-            </table>
+              <!-- Testimonial -->
+              ${emailCard(`
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="text-align: center; padding: 10px 20px;">
+                          <p style="margin: 0 0 20px; font-size: 20px; font-style: italic; color: #424245; line-height: 1.6;">
+                            "I used to throw away so much food. Now I share it with my neighbors. This is what community should be."
+                          </p>
+                          <p style="margin: 0; font-size: 14px; color: #86868b;">
+                            <strong style="color: ${BRAND_COLOR};">— Sarah M.</strong>, FoodShare Volunteer
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+              `)}
 
-            <p style="margin: 24px 0 0; font-size: 14px; color: #666; text-align: center;">
-              Questions? Reply to this email or reach us at <a href="mailto:support@foodshare.club" style="color: ${BRAND_COLOR};">support@foodshare.club</a>
-            </p>
-          </td>
-        </tr>
-  `),
+              <!-- Why Volunteer -->
+              <p style="margin: 35px 0 20px; font-size: 15px; font-weight: 700; color: ${BRAND_COLOR}; text-transform: uppercase; letter-spacing: 1px;">Why Volunteer?</p>
+              ${emailCard(`
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      ${emailFeatureItem("🏘️", "Make a Real Difference", "Help neighbors access fresh food while reducing waste")}
+                      ${emailFeatureItem("👥", "Join an Amazing Team", "Connect with like-minded people who care about community")}
+                      ${emailFeatureItem("🌱", "Grow Your Skills", "Gain experience in organizing, food safety, and events")}
+                      ${emailFeatureItem("💪", "Flexible Commitment", "2 hours/month to 10 hours/week — we have roles that fit your life")}
+                    </table>
+              `)}
+
+              <!-- Volunteer Roles -->
+              ${emailAccentBox(`
+                    <p style="margin: 0 0 15px; font-size: 15px; font-weight: 700; color: ${BRAND_COLOR};">Volunteer Roles Available</p>
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="padding: 10px 0; border-bottom: 1px solid #ffe4e9;">
+                          <strong style="color: #1d1d1f;">Food Rescue Coordinators</strong>
+                          <p style="margin: 4px 0 0; font-size: 13px; color: #86868b;">Collect and distribute surplus food from local businesses</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 10px 0; border-bottom: 1px solid #ffe4e9;">
+                          <strong style="color: #1d1d1f;">Community Ambassadors</strong>
+                          <p style="margin: 4px 0 0; font-size: 13px; color: #86868b;">Spread the word and help onboard new members</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 10px 0; border-bottom: 1px solid #ffe4e9;">
+                          <strong style="color: #1d1d1f;">Event Helpers</strong>
+                          <p style="margin: 4px 0 0; font-size: 13px; color: #86868b;">Support food sharing events and community pop-ups</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 10px 0;">
+                          <strong style="color: #1d1d1f;">Tech Champions</strong>
+                          <p style="margin: 4px 0 0; font-size: 13px; color: #86868b;">Help neighbors navigate the app and platform</p>
+                        </td>
+                      </tr>
+                    </table>
+              `)}
+
+              ${emailButton("Apply to Volunteer", "https://foodshare.club/volunteer")}
+      `),
+    { preheader: "Join our volunteer team and help reduce food waste in Sacramento!", title: "Volunteer with FoodShare" }
+  ),
 };
 
 // ============================================================================
