@@ -23,36 +23,14 @@ export function createCachedClient() {
 }
 
 /**
- * Safely get all cookies, filtering out corrupted ones
- * This prevents "Invalid UTF-8 sequence" errors from crashing the app
+ * Get all cookies from the cookie store
+ * NOTE: Previous filtering logic was removed as it caused false positives
+ * and filtered out valid Supabase auth cookies, breaking authentication.
+ * Supabase handles invalid cookies gracefully on its own.
  */
 function getSafeCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
   try {
-    const allCookies = cookieStore.getAll();
-    // Filter out potentially corrupted Supabase auth cookies
-    return allCookies.filter((cookie) => {
-      if (cookie.name.startsWith("sb-")) {
-        try {
-          // Test if the value can be safely decoded
-          // Supabase cookies are base64url encoded
-          if (cookie.value) {
-            // Simple validation - check for valid base64url characters
-            const base64urlRegex = /^[A-Za-z0-9_-]*$/;
-            const parts = cookie.value.split(".");
-            const isValid = parts.every((part) => base64urlRegex.test(part) || part === "");
-            if (!isValid) {
-              console.warn(`Filtering corrupted Supabase cookie: ${cookie.name}`);
-              return false;
-            }
-          }
-          return true;
-        } catch {
-          console.warn(`Filtering invalid cookie: ${cookie.name}`);
-          return false;
-        }
-      }
-      return true;
-    });
+    return cookieStore.getAll();
   } catch (error) {
     console.error("Error reading cookies:", error);
     return [];
