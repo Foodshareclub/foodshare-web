@@ -250,10 +250,7 @@ export function NewProductForm({
         return;
       }
 
-      if (selectedImages.length === 0) {
-        setError("Please add a photo of yourself");
-        return;
-      }
+      // Photo is optional for volunteers
 
       if (!formData.available_hours.trim()) {
         setError("Please select your availability");
@@ -494,10 +491,10 @@ export function NewProductForm({
                   <p className="opacity-90">Help us reduce food waste and strengthen communities</p>
                 </div>
 
-                {/* Volunteer Photo - Single image */}
+                {/* Volunteer Photo - Single image (optional) */}
                 <div className="mb-6">
                   <Label className="text-base font-semibold mb-2 block">
-                    Your Photo <span className="text-red-500">*</span>
+                    Your Photo <span className="text-muted-foreground font-normal">(Optional)</span>
                   </Label>
                   <p className="text-sm text-muted-foreground mb-3">
                     Add a friendly photo so the community can get to know you
