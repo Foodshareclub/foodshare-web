@@ -25,6 +25,26 @@ export {
 // Template-based sending (recommended)
 export { sendTemplateEmail, sendBatchTemplateEmail, previewEmail } from "./send";
 
+// Database-driven templates (enterprise)
+export {
+  sendDatabaseTemplateEmail,
+  sendBatchDatabaseTemplateEmail,
+  previewDatabaseTemplate,
+} from "./send";
+
+export {
+  fetchDatabaseTemplate,
+  fetchAllTemplates,
+  renderDatabaseTemplate,
+  renderTemplateContent,
+  prepareVariables,
+  hasDatabaseTemplate,
+  clearTemplateCache,
+  clearTemplateCacheEntry,
+  getTemplateCacheStats,
+  TEMPLATE_SLUG_MAP,
+} from "./database-templates";
+
 // Providers
 export { ResendProvider, BrevoProvider, AWSSESProvider, type IEmailProvider } from "./providers";
 
@@ -55,3 +75,6 @@ export type {
   BrevoConfig,
   AWSSESConfig,
 } from "./types";
+
+// Database template types
+export type { DatabaseTemplate, RenderedTemplate, TemplateVariable } from "./database-templates";
