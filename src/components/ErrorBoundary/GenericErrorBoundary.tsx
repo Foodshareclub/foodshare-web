@@ -3,16 +3,16 @@
  * Consolidates AppErrorBoundary, StorageErrorBoundary, and EmailCRMErrorBoundary
  */
 
-import type { ReactNode, ErrorInfo } from 'react';
-import React, { Component } from 'react';
-import { Button } from '@/components/ui/button';
-import { detectStorageError, clearSupabaseStorage } from '@/utils/storageErrorHandler';
+import type { ReactNode, ErrorInfo } from "react";
+import React, { Component } from "react";
+import { Button } from "@/components/ui/button";
+import { detectStorageError, clearSupabaseStorage } from "@/utils/storageErrorHandler";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-type ErrorType = 'generic' | 'storage' | 'network' | 'auth';
+type ErrorType = "generic" | "storage" | "network" | "auth";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -42,28 +42,28 @@ interface ErrorBoundaryState {
 function detectErrorType(error: Error): ErrorType {
   // Check for storage errors
   if (detectStorageError(error)) {
-    return 'storage';
+    return "storage";
   }
 
   // Check for network errors
   if (
-    error.message.includes('fetch') ||
-    error.message.includes('network') ||
-    error.name === 'NetworkError'
+    error.message.includes("fetch") ||
+    error.message.includes("network") ||
+    error.name === "NetworkError"
   ) {
-    return 'network';
+    return "network";
   }
 
   // Check for auth errors
   if (
-    error.message.includes('auth') ||
-    error.message.includes('unauthorized') ||
-    error.message.includes('session')
+    error.message.includes("auth") ||
+    error.message.includes("unauthorized") ||
+    error.message.includes("session")
   ) {
-    return 'auth';
+    return "auth";
   }
 
-  return 'generic';
+  return "generic";
 }
 
 // ============================================================================
@@ -77,7 +77,7 @@ export class GenericErrorBoundary extends Component<ErrorBoundaryProps, ErrorBou
       hasError: false,
       error: null,
       errorInfo: null,
-      errorType: 'generic',
+      errorType: "generic",
       errorCount: 0,
       isRecovering: false,
     };
@@ -109,8 +109,8 @@ export class GenericErrorBoundary extends Component<ErrorBoundaryProps, ErrorBou
     this.props.onError?.(error, errorInfo);
 
     // Log in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('ErrorBoundary caught:', error, errorInfo);
+    if (process.env.NODE_ENV === "development") {
+      console.error("ErrorBoundary caught:", error, errorInfo);
     }
   }
 
@@ -129,10 +129,31 @@ export class GenericErrorBoundary extends Component<ErrorBoundaryProps, ErrorBou
   clearCacheAndReload = async () => {
     this.setState({ isRecovering: true });
     try {
-      localStorage.clear();
+      // Auth key patterns that must be preserved
+      const authPatterns = [
+        "auth-token",
+        "auth_token",
+        "access_token",
+        "refresh_token",
+        "session",
+        "pkce",
+        "code_verifier",
+        "sb-", // Supabase auth cookies use sb- prefix
+      ];
+
+      const isAuthKey = (key: string): boolean => {
+        const lowerKey = key.toLowerCase();
+        return authPatterns.some((pattern) => lowerKey.includes(pattern));
+      };
+
+      // Clear non-auth localStorage keys only
+      const keysToRemove = Object.keys(localStorage).filter((key) => !isAuthKey(key));
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+
+      // Clear sessionStorage (doesn't contain auth tokens)
       sessionStorage.clear();
 
-      if ('caches' in window) {
+      if ("caches" in window) {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map((name) => caches.delete(name)));
       }
@@ -150,10 +171,10 @@ export class GenericErrorBoundary extends Component<ErrorBoundaryProps, ErrorBou
       if (success) {
         window.location.reload();
       } else {
-        alert('Failed to clear storage. Please manually clear your browser cache.');
+        alert("Failed to clear storage. Please manually clear your browser cache.");
       }
     } catch {
-      alert('Failed to clear storage. Please manually clear your browser cache.');
+      alert("Failed to clear storage. Please manually clear your browser cache.");
     } finally {
       this.setState({ isRecovering: false });
     }
@@ -161,7 +182,7 @@ export class GenericErrorBoundary extends Component<ErrorBoundaryProps, ErrorBou
 
   override render() {
     const { hasError, error, errorInfo, errorType, errorCount, isRecovering } = this.state;
-    const { children, fallback, showDetails = process.env.NODE_ENV === 'development' } = this.props;
+    const { children, fallback, showDetails = process.env.NODE_ENV === "development" } = this.props;
 
     if (!hasError || !error) {
       return children;
@@ -180,19 +201,19 @@ export class GenericErrorBoundary extends Component<ErrorBoundaryProps, ErrorBou
           <div className="bg-gradient-to-r from-red-500 to-orange-500 p-6 text-white">
             <div className="flex items-center gap-3">
               <div className="text-4xl">
-                {errorType === 'storage' ? '💾' : errorType === 'network' ? '🌐' : '💥'}
+                {errorType === "storage" ? "💾" : errorType === "network" ? "🌐" : "💥"}
               </div>
               <div>
                 <h1 className="text-xl font-bold">
-                  {errorType === 'storage'
-                    ? 'Storage Error'
-                    : errorType === 'network'
-                      ? 'Network Error'
-                      : 'Something went wrong'}
+                  {errorType === "storage"
+                    ? "Storage Error"
+                    : errorType === "network"
+                      ? "Network Error"
+                      : "Something went wrong"}
                 </h1>
                 <p className="text-red-100 text-sm mt-1">
-                  {errorType === 'storage'
-                    ? 'There was a problem with browser storage'
+                  {errorType === "storage"
+                    ? "There was a problem with browser storage"
                     : "Don't worry, you can try to recover"}
                 </p>
               </div>
@@ -204,7 +225,7 @@ export class GenericErrorBoundary extends Component<ErrorBoundaryProps, ErrorBou
             {/* Error Message */}
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
               <p className="text-red-700 dark:text-red-400 font-mono text-sm break-words">
-                {error.message || 'Unknown error'}
+                {error.message || "Unknown error"}
               </p>
             </div>
 
@@ -238,14 +259,14 @@ export class GenericErrorBoundary extends Component<ErrorBoundaryProps, ErrorBou
             </div>
 
             {/* Storage-specific recovery */}
-            {errorType === 'storage' && (
+            {errorType === "storage" && (
               <Button
                 onClick={this.handleStorageRecovery}
                 variant="destructive"
                 className="w-full"
                 disabled={isRecovering}
               >
-                {isRecovering ? 'Clearing...' : '🧹 Clear Storage & Reload'}
+                {isRecovering ? "Clearing..." : "🧹 Clear Storage & Reload"}
               </Button>
             )}
 
@@ -273,7 +294,7 @@ export class GenericErrorBoundary extends Component<ErrorBoundaryProps, ErrorBou
 
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<ErrorBoundaryProps, 'children'>
+  errorBoundaryProps?: Omit<ErrorBoundaryProps, "children">
 ): React.FC<P> {
   return function WrappedComponent(props: P) {
     return (

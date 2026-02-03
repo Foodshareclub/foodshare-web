@@ -72,7 +72,9 @@ class AutoRecovery {
       maxAttempts: 1,
     });
 
-    // Strategy 2: Clear storage
+    // Strategy 2: Clear non-auth storage
+    // IMPORTANT: Never clear localStorage.clear() as it destroys auth tokens
+    // Instead, only clear non-essential cache keys
     this.registerStrategy({
       name: "clear-storage",
       condition: (error) =>
@@ -80,10 +82,33 @@ class AutoRecovery {
         error.message.includes("quota") ||
         error.message.includes("localStorage"),
       action: async () => {
-        logger.info("Attempting recovery: Clear storage");
+        logger.info("Attempting recovery: Clear non-auth storage");
         try {
-          localStorage.clear();
+          // Auth key patterns that must be preserved
+          const authPatterns = [
+            "auth-token",
+            "auth_token",
+            "access_token",
+            "refresh_token",
+            "session",
+            "pkce",
+            "code_verifier",
+            "sb-", // Supabase auth cookies use sb- prefix
+          ];
+
+          const isAuthKey = (key: string): boolean => {
+            const lowerKey = key.toLowerCase();
+            return authPatterns.some((pattern) => lowerKey.includes(pattern));
+          };
+
+          // Clear non-auth localStorage keys only
+          const keysToRemove = Object.keys(localStorage).filter((key) => !isAuthKey(key));
+          logger.info(`Clearing ${keysToRemove.length} non-auth localStorage keys`);
+          keysToRemove.forEach((key) => localStorage.removeItem(key));
+
+          // Clear sessionStorage (doesn't contain auth tokens, safe to clear)
           sessionStorage.clear();
+
           return true;
         } catch (error) {
           logger.error("Storage clear failed", error as Error);

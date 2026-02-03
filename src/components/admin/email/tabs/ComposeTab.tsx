@@ -114,6 +114,7 @@ function EmailTemplatesPanel({
   const [previewTemplate, setPreviewTemplate] = useState<EmailTemplate | null>(null);
 
   const getTemplateIcon = (slug: string) => {
+    if (slug.includes("volunteer")) return <Users className="h-4 w-4" />;
     if (slug.includes("welcome") || slug.includes("confirmation"))
       return <UserPlus className="h-4 w-4" />;
     if (slug.includes("food") || slug.includes("alert")) return <Heart className="h-4 w-4" />;
@@ -123,6 +124,7 @@ function EmailTemplatesPanel({
   };
 
   const getTemplateColor = (slug: string): "emerald" | "blue" | "rose" | "amber" | "violet" => {
+    if (slug.includes("volunteer")) return "rose";
     if (slug.includes("welcome") || slug.includes("confirmation")) return "emerald";
     if (slug.includes("food") || slug.includes("alert")) return "rose";
     if (slug.includes("newsletter")) return "blue";

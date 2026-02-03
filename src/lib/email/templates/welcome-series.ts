@@ -561,6 +561,151 @@ The FoodShare Team
 };
 
 // ============================================================================
+// TEMPLATE 6: Volunteer Recruitment
+// ============================================================================
+export const volunteerRecruitmentTemplate: EmailTemplateDefinition = {
+  name: "Volunteer Recruitment",
+  slug: "volunteer-recruitment",
+  subject: "Volunteer with FoodShare - Make a Difference in Your Community 🤝",
+  category: "marketing",
+  variables: ["first_name", "unsubscribe_url"],
+  plain_text_content: `
+Hi {{first_name}},
+
+You've been part of the FoodShare community, and we've loved having you! Now, we're inviting you to take the next step and become a volunteer.
+
+WHY VOLUNTEER?
+
+Make a Real Difference
+Help neighbors access fresh food while reducing waste in your community.
+
+Join an Amazing Team
+Connect with like-minded people who care about food security and sustainability.
+
+Grow Your Skills
+Gain experience in community organizing, food safety, event coordination, and more.
+
+Flexible Commitment
+Whether you have 2 hours a month or 10 hours a week, we have opportunities that fit your schedule.
+
+VOLUNTEER ROLES AVAILABLE:
+
+- Food Rescue Coordinators - Help collect and distribute surplus food
+- Community Ambassadors - Spread the word and onboard new members
+- Event Helpers - Support food sharing events and pop-ups
+- Tech Champions - Help neighbors navigate the app
+
+Apply now: https://foodshare.club/volunteer
+
+Questions? Reply to this email or reach out at support@foodshare.club
+
+Together, we're building a community where no good food goes to waste.
+
+With gratitude,
+The FoodShare Team
+`.trim(),
+  html_content: emailWrapper(`
+        <!-- Header -->
+        <tr>
+          <td style="background: ${BRAND_GRADIENT}; padding: 40px 30px; text-align: center;">
+            <img src="${LOGO_URL}" alt="FoodShare" style="width: 80px; height: 80px; border-radius: 50%; background: white; padding: 4px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);">
+            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">Volunteer With Us 🤝</h1>
+            <p style="margin: 8px 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">Make a difference in your community</p>
+          </td>
+        </tr>
+
+        <!-- Content -->
+        <tr>
+          <td style="padding: 40px 30px;">
+            <p style="margin: 0 0 20px; font-size: 17px; line-height: 1.6; color: #1a1a1a;">
+              Hi {{first_name}},
+            </p>
+            <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #444;">
+              You've been part of the FoodShare community, and we've loved having you! Now, we're inviting you to take the next step and become a <strong>volunteer</strong>. Our volunteers are the heartbeat of FoodShare — they're the ones making sure good food reaches neighbors in need.
+            </p>
+
+            <!-- Why Volunteer -->
+            <div style="background: #f8f9fa; border-radius: 12px; padding: 24px; margin: 24px 0;">
+              <h3 style="margin: 0 0 16px; font-size: 18px; color: ${BRAND_COLOR};">🌱 Why Volunteer?</h3>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding: 8px 0;">
+                    <span style="font-size: 20px; margin-right: 12px;">🏘️</span>
+                    <strong>Make a Real Difference</strong> - Help neighbors access fresh food
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0;">
+                    <span style="font-size: 20px; margin-right: 12px;">👥</span>
+                    <strong>Join an Amazing Team</strong> - Connect with like-minded people
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0;">
+                    <span style="font-size: 20px; margin-right: 12px;">🌱</span>
+                    <strong>Grow Your Skills</strong> - Gain experience in organizing and events
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0;">
+                    <span style="font-size: 20px; margin-right: 12px;">💪</span>
+                    <strong>Flexible Commitment</strong> - 2 hours/month to 10 hours/week
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Volunteer Roles -->
+            <div style="background: #fff5f7; border-radius: 12px; padding: 24px; margin: 24px 0; border-left: 4px solid ${BRAND_COLOR};">
+              <h3 style="margin: 0 0 16px; font-size: 18px; color: ${BRAND_COLOR};">🎯 Volunteer Roles Available</h3>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding: 8px 0; border-bottom: 1px solid #ffe4e9;">
+                    <strong style="color: #1a1a1a;">Food Rescue Coordinators</strong>
+                    <p style="margin: 4px 0 0; font-size: 13px; color: #666;">Collect and distribute surplus food from local businesses</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; border-bottom: 1px solid #ffe4e9;">
+                    <strong style="color: #1a1a1a;">Community Ambassadors</strong>
+                    <p style="margin: 4px 0 0; font-size: 13px; color: #666;">Spread the word and help onboard new members</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; border-bottom: 1px solid #ffe4e9;">
+                    <strong style="color: #1a1a1a;">Event Helpers</strong>
+                    <p style="margin: 4px 0 0; font-size: 13px; color: #666;">Support food sharing events and community pop-ups</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0;">
+                    <strong style="color: #1a1a1a;">Tech Champions</strong>
+                    <p style="margin: 4px 0 0; font-size: 13px; color: #666;">Help neighbors navigate the app and platform</p>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- CTA -->
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td align="center" style="padding: 20px 0;">
+                  <a href="https://foodshare.club/volunteer" style="display: inline-block; background: ${BRAND_GRADIENT}; color: white; padding: 16px 40px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 16px; box-shadow: 0 4px 16px rgba(255,45,85,0.3);">
+                    Apply to Volunteer →
+                  </a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin: 24px 0 0; font-size: 14px; color: #666; text-align: center;">
+              Questions? Reply to this email or reach us at <a href="mailto:support@foodshare.club" style="color: ${BRAND_COLOR};">support@foodshare.club</a>
+            </p>
+          </td>
+        </tr>
+  `),
+};
+
+// ============================================================================
 // ALL TEMPLATES
 // ============================================================================
 export const welcomeSeriesTemplates: EmailTemplateDefinition[] = [
@@ -569,4 +714,5 @@ export const welcomeSeriesTemplates: EmailTemplateDefinition[] = [
   testerRecruitmentTemplate,
   firstShareTipsTemplate,
   communityHighlightsTemplate,
+  volunteerRecruitmentTemplate,
 ];

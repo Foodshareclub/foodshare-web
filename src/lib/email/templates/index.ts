@@ -10,5 +10,6 @@ export {
   testerRecruitmentTemplate,
   firstShareTipsTemplate,
   communityHighlightsTemplate,
+  volunteerRecruitmentTemplate,
   type EmailTemplateDefinition,
 } from "./welcome-series";

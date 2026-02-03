@@ -153,24 +153,51 @@ export async function testStorageAvailability(): Promise<{
 }
 
 /**
- * Attempts to clear Supabase storage to recover from storage errors
+ * Auth-related key patterns that should NEVER be cleared
+ * These are essential for maintaining user sessions
+ */
+const AUTH_KEY_PATTERNS = [
+  "auth-token",
+  "auth_token",
+  "access_token",
+  "refresh_token",
+  "session",
+  "pkce",
+  "code_verifier",
+];
+
+/**
+ * Check if a key is an auth-related key that should be preserved
+ */
+function isAuthKey(key: string): boolean {
+  const lowerKey = key.toLowerCase();
+  return AUTH_KEY_PATTERNS.some((pattern) => lowerKey.includes(pattern));
+}
+
+/**
+ * Attempts to clear Supabase cache storage to recover from storage errors
+ * IMPORTANT: Never clears auth tokens - only clears cache data
  */
 export async function clearSupabaseStorage(): Promise<boolean> {
   try {
-    // Clear localStorage keys related to Supabase
+    // Clear localStorage keys related to Supabase EXCEPT auth tokens
     const supabaseKeys = Object.keys(localStorage).filter(
-      (key) => key.includes("supabase") || key.includes("sb-")
+      (key) => (key.includes("supabase") || key.includes("sb-")) && !isAuthKey(key)
     );
+
+    console.log("[StorageErrorHandler] Clearing non-auth Supabase keys:", supabaseKeys);
     supabaseKeys.forEach((key) => localStorage.removeItem(key));
 
-    // Delete Supabase IndexedDB databases
+    // Delete Supabase IndexedDB databases EXCEPT auth-related ones
     const databases = await indexedDB.databases();
     const supabaseDbs = databases.filter(
-      (db) => db.name?.includes("supabase") || db.name?.includes("sb-")
+      (db) =>
+        (db.name?.includes("supabase") || db.name?.includes("sb-")) && !isAuthKey(db.name || "")
     );
 
     for (const db of supabaseDbs) {
       if (db.name) {
+        console.log("[StorageErrorHandler] Deleting IndexedDB:", db.name);
         indexedDB.deleteDatabase(db.name);
       }
     }
