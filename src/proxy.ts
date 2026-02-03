@@ -73,40 +73,8 @@ const mutationLimiter = redis
 // ============================================================================
 // Security Configuration
 // ============================================================================
-
-/**
- * Content Security Policy
- * Prevents XSS, clickjacking, and other injection attacks
- */
-const CSP_DIRECTIVES = [
-  "default-src 'self'",
-  // Scripts: self + inline (Next.js hydration) + eval (dev only)
-  process.env.NODE_ENV === "development"
-    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
-    : "script-src 'self' 'unsafe-inline'",
-  // Styles: self + inline (Tailwind, styled-jsx)
-  "style-src 'self' 'unsafe-inline'",
-  // Images: self + data URIs + external CDNs + blob
-  "img-src 'self' data: https: blob:",
-  // Connections: self + Supabase (API + Realtime WebSocket)
-  `connect-src 'self' https://*.supabase.co wss://*.supabase.co ${
-    process.env.NODE_ENV === "development" ? "ws://localhost:*" : ""
-  }`.trim(),
-  // Fonts: self + Google Fonts
-  "font-src 'self' https://fonts.gstatic.com",
-  // Frame ancestors: allow same-origin frames (Vercel preview)
-  "frame-ancestors 'self'",
-  // Base URI: prevent base tag hijacking
-  "base-uri 'self'",
-  // Form action: only allow forms to submit to self
-  "form-action 'self'",
-  // Object/embed: disable plugins
-  "object-src 'none'",
-  // Upgrade insecure requests in production
-  process.env.NODE_ENV === "production" ? "upgrade-insecure-requests" : "",
-]
-  .filter(Boolean)
-  .join("; ");
+// NOTE: CSP and security headers are configured in next.config.ts
+// The proxy only handles CSRF protection and rate limiting
 
 /**
  * Allowed origins for CSRF protection
@@ -187,40 +155,8 @@ function validateOrigin(request: NextRequest): boolean {
   return isApiRoute && hasAuthHeader;
 }
 
-/**
- * Add security headers to response
- */
-function addSecurityHeaders(response: NextResponse): void {
-  // Content Security Policy
-  response.headers.set("Content-Security-Policy", CSP_DIRECTIVES);
-
-  // Prevent MIME type sniffing
-  response.headers.set("X-Content-Type-Options", "nosniff");
-
-  // Prevent clickjacking (backup for CSP frame-ancestors)
-  // Use SAMEORIGIN to allow Vercel preview frames
-  response.headers.set("X-Frame-Options", "SAMEORIGIN");
-
-  // Enable XSS filter (legacy browsers)
-  response.headers.set("X-XSS-Protection", "1; mode=block");
-
-  // Control referrer information
-  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
-
-  // HSTS in production (2 years, include subdomains, preload)
-  if (process.env.NODE_ENV === "production") {
-    response.headers.set(
-      "Strict-Transport-Security",
-      "max-age=63072000; includeSubDomains; preload"
-    );
-  }
-
-  // Permissions Policy (disable unnecessary features)
-  response.headers.set(
-    "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(self), payment=()"
-  );
-}
+// NOTE: Security headers (CSP, X-Frame-Options, etc.) are configured in next.config.ts
+// This avoids duplicate/conflicting headers
 
 // ============================================================================
 // Main Proxy
@@ -395,8 +331,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Apply security headers to successful responses
-  addSecurityHeaders(response);
+  // Security headers are applied via next.config.ts
   return response;
 }
 
