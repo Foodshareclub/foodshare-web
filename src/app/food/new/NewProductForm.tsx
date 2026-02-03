@@ -358,7 +358,7 @@ export function NewProductForm({
       />
 
       {/* Form */}
-      <div className="container mx-auto px-4 pt-4 pb-8 max-w-3xl">
+      <div className="container mx-auto px-4 pb-8 max-w-3xl">
         {/* Page Header */}
         <div className="mb-6">
           <button
