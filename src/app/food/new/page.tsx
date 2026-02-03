@@ -33,11 +33,13 @@ export default async function NewProductPage({ searchParams }: PageProps) {
     redirect(`/auth/login?redirect=${encodeURIComponent(redirectPath)}`);
   }
 
+  // Pass all required props including profile
   return (
     <NewProductForm
       userId={session.user.id}
       isAdmin={session.isAdmin}
       initialType={initialType}
+      profile={session.user.profile}
     />
   );
 }

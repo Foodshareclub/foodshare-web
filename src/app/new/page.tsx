@@ -32,13 +32,14 @@ export default async function NewPage({ searchParams }: PageProps) {
     redirect(`/auth/login?redirect=${encodeURIComponent(redirectPath)}`);
   }
 
-  // Key forces re-mount when type changes, ensuring fresh form state
+  // Pass all required props including profile
+  // NOTE: Removed key={initialType} - it was forcing remount and causing auth race conditions
   return (
     <NewProductForm
-      key={initialType}
       userId={session.user.id}
       isAdmin={session.isAdmin}
       initialType={initialType}
+      profile={session.user.profile}
     />
   );
 }
