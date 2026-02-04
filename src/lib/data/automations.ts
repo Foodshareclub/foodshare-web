@@ -4,6 +4,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // Re-export types and constants from shared types file
 export type {
@@ -89,9 +90,10 @@ export async function getFlowEnrollments(flowId: string): Promise<AutomationEnro
 
 /**
  * Get all email templates
+ * Uses admin client to bypass RLS (called from admin routes)
  */
 export async function getEmailTemplates(): Promise<EmailTemplate[]> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("email_templates")
