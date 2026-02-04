@@ -6,16 +6,18 @@
  * - Zod schema validation
  * - Type-safe action results
  * - Proper admin auth via user_roles
+ * - Unified notification API integration
  */
 
 import { z } from "zod";
-import { sendTemplateEmail, previewEmail } from "@/lib/email/send";
+import { previewEmail } from "@/lib/email/send";
 import type { EmailTemplateName, EmailTemplateProps } from "@/emails/types";
 import { createClient } from "@/lib/supabase/server";
 import { serverActionError, type ServerActionResult } from "@/lib/errors";
 import type { ErrorCode } from "@/lib/errors";
 import { escapeHtml } from "@/lib/utils";
 import { sendEmailTask, type SendEmailPayload } from "@/trigger/email-queue";
+import { sendEmailNotification } from "@/lib/notifications";
 
 // ============================================================================
 // Async Email Helper
@@ -182,19 +184,41 @@ export async function sendNewMessageNotification(
       return serverActionError(firstError.message, "VALIDATION_ERROR");
     }
 
-    const result = await sendTemplateEmail({
-      to: emailValidation.data,
-      template: "new-message",
-      props: dataValidation.data,
+    // Get user ID from email
+    const supabase = await createClient();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", emailValidation.data)
+      .single();
+
+    if (!profile) {
+      return serverActionError("User not found", "NOT_FOUND");
+    }
+
+    // Send via unified notification API
+    const result = await sendEmailNotification({
+      userId: profile.id,
+      type: "new_message",
+      title: `New message from ${dataValidation.data.senderName}`,
+      body: dataValidation.data.messagePreview,
+      data: {
+        senderName: dataValidation.data.senderName,
+        senderAvatar: dataValidation.data.senderAvatar || "",
+        conversationUrl: dataValidation.data.conversationUrl,
+        listingTitle: dataValidation.data.listingTitle || "",
+        listingImage: dataValidation.data.listingImage || "",
+        listingType: dataValidation.data.listingType || "",
+      },
     });
 
     if (!result.success) {
-      return serverActionError(result.error || "Failed to send email", "INTERNAL_ERROR");
+      return serverActionError(result.error || "Failed to send notification", "INTERNAL_ERROR");
     }
 
     return {
       success: true,
-      data: { messageId: result.messageId },
+      data: { messageId: result.data?.notificationId },
     };
   } catch (error) {
     console.error("Failed to send new message notification:", error);
@@ -226,19 +250,45 @@ export async function sendListingInterestNotification(
       return serverActionError(firstError.message, "VALIDATION_ERROR");
     }
 
-    const result = await sendTemplateEmail({
-      to: emailValidation.data,
-      template: "listing-interest",
-      props: dataValidation.data,
+    // Get user ID from email
+    const supabase = await createClient();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", emailValidation.data)
+      .single();
+
+    if (!profile) {
+      return serverActionError("User not found", "NOT_FOUND");
+    }
+
+    // Send via unified notification API
+    const result = await sendEmailNotification({
+      userId: profile.id,
+      type: "listing_favorited",
+      title: `${dataValidation.data.interestedUserName} is interested in your listing`,
+      body: `${dataValidation.data.interestedUserName} expressed interest in "${dataValidation.data.listingTitle}"`,
+      data: {
+        interestedUserName: dataValidation.data.interestedUserName,
+        interestedUserAvatar: dataValidation.data.interestedUserAvatar || "",
+        interestedUserRating: dataValidation.data.interestedUserRating || "",
+        interestedUserShares: dataValidation.data.interestedUserShares || "",
+        listingTitle: dataValidation.data.listingTitle,
+        listingImage: dataValidation.data.listingImage || "",
+        listingType: dataValidation.data.listingType,
+        listingLocation: dataValidation.data.listingLocation,
+        messageUrl: dataValidation.data.messageUrl,
+        listingUrl: dataValidation.data.listingUrl,
+      },
     });
 
     if (!result.success) {
-      return serverActionError(result.error || "Failed to send email", "INTERNAL_ERROR");
+      return serverActionError(result.error || "Failed to send notification", "INTERNAL_ERROR");
     }
 
     return {
       success: true,
-      data: { messageId: result.messageId },
+      data: { messageId: result.data?.notificationId },
     };
   } catch (error) {
     console.error("Failed to send listing interest notification:", error);
@@ -270,19 +320,44 @@ export async function sendPickupReminder(
       return serverActionError(firstError.message, "VALIDATION_ERROR");
     }
 
-    const result = await sendTemplateEmail({
-      to: emailValidation.data,
-      template: "pickup-reminder",
-      props: dataValidation.data,
+    // Get user ID from email
+    const supabase = await createClient();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", emailValidation.data)
+      .single();
+
+    if (!profile) {
+      return serverActionError("User not found", "NOT_FOUND");
+    }
+
+    // Send via unified notification API
+    const result = await sendEmailNotification({
+      userId: profile.id,
+      type: "arrangement_confirmed",
+      title: `Pickup reminder: ${dataValidation.data.listingTitle}`,
+      body: `Reminder: Your pickup is scheduled for ${dataValidation.data.pickupDate} at ${dataValidation.data.pickupTime}`,
+      data: {
+        pickupTime: dataValidation.data.pickupTime,
+        pickupDate: dataValidation.data.pickupDate,
+        listingTitle: dataValidation.data.listingTitle,
+        listingImage: dataValidation.data.listingImage || "",
+        sharerName: dataValidation.data.sharerName,
+        pickupAddress: dataValidation.data.pickupAddress,
+        pickupInstructions: dataValidation.data.pickupInstructions || "",
+        directionsUrl: dataValidation.data.directionsUrl,
+        messageUrl: dataValidation.data.messageUrl,
+      },
     });
 
     if (!result.success) {
-      return serverActionError(result.error || "Failed to send email", "INTERNAL_ERROR");
+      return serverActionError(result.error || "Failed to send notification", "INTERNAL_ERROR");
     }
 
     return {
       success: true,
-      data: { messageId: result.messageId },
+      data: { messageId: result.data?.notificationId },
     };
   } catch (error) {
     console.error("Failed to send pickup reminder:", error);
@@ -314,30 +389,49 @@ export async function sendReviewRequest(
       return serverActionError(firstError.message, "VALIDATION_ERROR");
     }
 
+    // Get user ID from email
+    const supabase = await createClient();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", emailValidation.data)
+      .single();
+
+    if (!profile) {
+      return serverActionError("User not found", "NOT_FOUND");
+    }
+
     // Generate star rating URLs
     const baseUrl = dataValidation.data.reviewUrl;
-    const props = {
-      ...dataValidation.data,
-      review1StarUrl: `${baseUrl}?rating=1`,
-      review2StarUrl: `${baseUrl}?rating=2`,
-      review3StarUrl: `${baseUrl}?rating=3`,
-      review4StarUrl: `${baseUrl}?rating=4`,
-      review5StarUrl: `${baseUrl}?rating=5`,
-    };
 
-    const result = await sendTemplateEmail({
-      to: emailValidation.data,
-      template: "review-request",
-      props,
+    // Send via unified notification API
+    const result = await sendEmailNotification({
+      userId: profile.id,
+      type: "review_reminder",
+      title: `Review your experience with ${dataValidation.data.sharerName}`,
+      body: `How was your experience picking up "${dataValidation.data.listingTitle}"?`,
+      data: {
+        recipientName: dataValidation.data.recipientName,
+        sharerName: dataValidation.data.sharerName,
+        listingTitle: dataValidation.data.listingTitle,
+        listingImage: dataValidation.data.listingImage || "",
+        pickupDate: dataValidation.data.pickupDate,
+        reviewUrl: dataValidation.data.reviewUrl,
+        review1StarUrl: `${baseUrl}?rating=1`,
+        review2StarUrl: `${baseUrl}?rating=2`,
+        review3StarUrl: `${baseUrl}?rating=3`,
+        review4StarUrl: `${baseUrl}?rating=4`,
+        review5StarUrl: `${baseUrl}?rating=5`,
+      },
     });
 
     if (!result.success) {
-      return serverActionError(result.error || "Failed to send email", "INTERNAL_ERROR");
+      return serverActionError(result.error || "Failed to send notification", "INTERNAL_ERROR");
     }
 
     return {
       success: true,
-      data: { messageId: result.messageId },
+      data: { messageId: result.data?.notificationId },
     };
   } catch (error) {
     console.error("Failed to send review request:", error);
@@ -369,19 +463,43 @@ export async function sendListingExpiredNotification(
       return serverActionError(firstError.message, "VALIDATION_ERROR");
     }
 
-    const result = await sendTemplateEmail({
-      to: emailValidation.data,
-      template: "listing-expired",
-      props: dataValidation.data,
+    // Get user ID from email
+    const supabase = await createClient();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", emailValidation.data)
+      .single();
+
+    if (!profile) {
+      return serverActionError("User not found", "NOT_FOUND");
+    }
+
+    // Send via unified notification API
+    const result = await sendEmailNotification({
+      userId: profile.id,
+      type: "listing_expired",
+      title: `Your listing "${dataValidation.data.listingTitle}" has expired`,
+      body: `Your ${dataValidation.data.listingType} listing expired on ${dataValidation.data.expiryDate}`,
+      data: {
+        userName: dataValidation.data.userName,
+        listingTitle: dataValidation.data.listingTitle,
+        listingImage: dataValidation.data.listingImage || "",
+        listingType: dataValidation.data.listingType,
+        expiryDate: dataValidation.data.expiryDate,
+        renewUrl: dataValidation.data.renewUrl,
+        editUrl: dataValidation.data.editUrl,
+        markSharedUrl: dataValidation.data.markSharedUrl,
+      },
     });
 
     if (!result.success) {
-      return serverActionError(result.error || "Failed to send email", "INTERNAL_ERROR");
+      return serverActionError(result.error || "Failed to send notification", "INTERNAL_ERROR");
     }
 
     return {
       success: true,
-      data: { messageId: result.messageId },
+      data: { messageId: result.data?.notificationId },
     };
   } catch (error) {
     console.error("Failed to send listing expired notification:", error);
@@ -427,76 +545,42 @@ export async function sendExchangeCompletionEmail(
         : `You received "${data.itemName}" from ${data.otherPartyName}`;
 
     const subject = `🎉 Exchange Complete - ${data.itemName}`;
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #22c55e;">🎉 Exchange Complete!</h1>
-        <p>Hi ${data.recipientName},</p>
-        <p>${roleText}. Thank you for being part of our food sharing community!</p>
 
-        <div style="background: #f3f4f6; padding: 20px; border-radius: 12px; margin: 20px 0;">
-          <h3 style="margin-top: 0;">Impact Summary</h3>
-          <p>By participating in this exchange, you've helped:</p>
-          <ul>
-            <li>🍎 Reduce food waste</li>
-            <li>🤝 Strengthen your local community</li>
-            <li>🌍 Lower environmental impact</li>
-          </ul>
-        </div>
+    // Get user ID from email
+    const supabase = await createClient();
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", emailValidation.data)
+      .single();
 
-        <p>Would you like to leave a review for ${data.otherPartyName}? Reviews help build trust in our community.</p>
+    if (!profile) {
+      return serverActionError("User not found", "NOT_FOUND");
+    }
 
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${reviewUrl}"
-             style="display: inline-block; background: #22c55e; color: white; padding: 12px 30px;
-                    text-decoration: none; border-radius: 8px; font-weight: bold;">
-            Leave a Review
-          </a>
-        </div>
-
-        <p style="color: #6b7280; font-size: 14px;">
-          Thank you for making a difference!<br>
-          The FoodShare Team
-        </p>
-      </div>
-    `;
-
-    const text = `
-Exchange Complete! 🎉
-
-Hi ${data.recipientName},
-
-${roleText}. Thank you for being part of our food sharing community!
-
-By participating in this exchange, you've helped reduce food waste and strengthen your local community.
-
-Would you like to leave a review for ${data.otherPartyName}? Visit: ${reviewUrl}
-
-Thank you for making a difference!
-The FoodShare Team
-    `.trim();
-
-    const { createUnifiedEmailService } = await import("@/lib/email/unified-service");
-    const service = await createUnifiedEmailService();
-
-    const result = await service.sendEmail({
-      emailType: "food_listing",
-      content: { subject, html, text },
-      options: {
-        to: { email: emailValidation.data },
-        from: {
-          email: process.env.EMAIL_FROM || "noreply@foodshare.club",
-          name: process.env.EMAIL_FROM_NAME || "FoodShare",
-        },
+    // Send via unified notification API
+    const result = await sendEmailNotification({
+      userId: profile.id,
+      type: "arrangement_completed",
+      title: subject,
+      body: roleText,
+      data: {
+        recipientName: data.recipientName,
+        otherPartyName: data.otherPartyName,
+        itemName: data.itemName,
+        role: data.role,
+        roomId: data.roomId,
+        reviewUrl: reviewUrl,
       },
     });
 
     if (!result.success) {
-      return serverActionError(result.error || "Failed to send email", "INTERNAL_ERROR");
+      return serverActionError(result.error || "Failed to send notification", "INTERNAL_ERROR");
     }
 
     return {
       success: true,
-      data: { messageId: result.messageId },
+      data: { messageId: result.data?.notificationId },
     };
   } catch (error) {
     console.error("Failed to send exchange completion email:", error);
@@ -573,46 +657,49 @@ export async function sendAdminEmail(
       return serverActionError(auth.error, auth.code);
     }
 
-    const { createUnifiedEmailService } = await import("@/lib/email/unified-service");
-    const service = await createUnifiedEmailService();
+    // Get user ID from email
+    const { supabase } = auth;
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("email", validated.data.to)
+      .single();
 
-    // Determine content type
-    let html = validated.data.message;
-    let text = validated.data.message;
-
-    if (!validated.data.useHtml) {
-      // If not using HTML mode, escape HTML and wrap text in simple paragraph
-      const escapedMessage = escapeHtml(validated.data.message);
-      html = `<p>${escapedMessage.replace(/\n/g, "<br>")}</p>`;
-    } else {
-      // If using HTML mode, strip tags for text version (rough approximation)
-      text = validated.data.message.replace(/<[^>]*>?/gm, "");
+    if (!profile) {
+      return serverActionError("Recipient user not found", "NOT_FOUND");
     }
 
-    const result = await service.sendEmail({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      emailType: validated.data.emailType as any,
-      content: {
-        subject: validated.data.subject,
-        html,
-        text,
-      },
-      options: {
-        to: { email: validated.data.to },
-        from: {
-          email: process.env.EMAIL_FROM || "contact@foodshare.club",
-          name: process.env.EMAIL_FROM_NAME || "FoodShare Admin",
-        },
+    // Determine content type
+    let bodyText = validated.data.message;
+    if (!validated.data.useHtml) {
+      // If not using HTML mode, escape HTML and format
+      const escapedMessage = escapeHtml(validated.data.message);
+      bodyText = escapedMessage.replace(/\n/g, " ");
+    } else {
+      // If using HTML mode, strip tags for text version
+      bodyText = validated.data.message.replace(/<[^>]*>?/gm, "");
+    }
+
+    // Send via unified notification API
+    const result = await sendEmailNotification({
+      userId: profile.id,
+      type: "system_announcement",
+      title: validated.data.subject,
+      body: bodyText,
+      data: {
+        fromAdmin: "true",
+        useHtml: String(validated.data.useHtml),
+        rawMessage: validated.data.message,
       },
     });
 
     if (!result.success) {
-      return serverActionError(result.error || "Failed to send email", "INTERNAL_ERROR");
+      return serverActionError(result.error || "Failed to send notification", "INTERNAL_ERROR");
     }
 
     return {
       success: true,
-      data: { messageId: result.messageId },
+      data: { messageId: result.data?.notificationId },
     };
   } catch (error) {
     console.error("Failed to send admin email:", error);

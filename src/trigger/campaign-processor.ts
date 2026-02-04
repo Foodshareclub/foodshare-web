@@ -4,27 +4,16 @@
  * Handles scheduled email campaigns via Trigger.dev
  * - Checks for scheduled campaigns
  * - Fetches segment recipients
- * - Batch sends emails
+ * - Batch sends emails via unified notification API
  * - Updates campaign progress
  */
 
 import { task, schedules } from "@trigger.dev/sdk/v3";
-import { batchEmailTask, type SendEmailPayload } from "./email-queue";
+import { sendBatchEmailNotifications } from "@/lib/notifications";
 
 // ============================================================================
 // Types
 // ============================================================================
-
-interface Campaign {
-  id: string;
-  name: string;
-  subject: string;
-  template_id: string;
-  segment_id: string;
-  status: string;
-  scheduled_at: string;
-  total_recipients: number;
-}
 
 interface ProcessCampaignPayload {
   campaignId: string;
@@ -85,55 +74,65 @@ export const processCampaignTask = task({
 
     const recipientList = recipients || [];
 
-    // 4. Prepare email payloads
-    const emails: SendEmailPayload[] = recipientList.map(
-      (recipient: { email: string; name?: string }) => ({
-        to: recipient.email,
-        subject: campaign.subject,
-        html: campaign.html_content || `<p>${campaign.text_content || ""}</p>`,
-        text: campaign.text_content,
-        emailType: "newsletter" as const,
-        template: campaign.template_id || "campaign",
+    // 4. Get user IDs for each recipient email
+    const recipientEmails = recipientList.map((r: { email: string }) => r.email);
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, email, first_name")
+      .in("email", recipientEmails);
+
+    if (!profiles || profiles.length === 0) {
+      await supabase.from("newsletter_campaigns").update({ status: "failed" }).eq("id", campaignId);
+      throw new Error("No valid recipients found");
+    }
+
+    // 5. Prepare notification payloads
+    const notifications = profiles.map(
+      (profile: { id: string; email: string; first_name?: string }) => ({
+        userId: profile.id,
+        type: "digest" as const,
+        title: campaign.subject,
+        body: campaign.text_content || campaign.subject,
         data: {
           campaignId: campaign.id,
           campaignName: campaign.name,
-          recipientName: recipient.name || "",
-          ...campaign.template_data,
+          recipientName: profile.first_name || "",
+          templateId: campaign.template_id || "campaign",
+          htmlContent: campaign.html_content || "",
+          textContent: campaign.text_content || "",
+          ...(campaign.template_data || {}),
         },
       })
     );
 
-    // 5. Send emails in batches
-    const batchResult = await batchEmailTask.triggerAndWait({
-      emails,
-      concurrency: 10,
-    });
+    // 6. Send via unified notification batch endpoint
+    const batchResult = await sendBatchEmailNotifications(notifications, true);
 
-    // Handle task result (check .ok before accessing .output)
-    if (!batchResult.ok) {
+    // Handle result
+    if (!batchResult.success || !batchResult.data) {
       await supabase.from("newsletter_campaigns").update({ status: "failed" }).eq("id", campaignId);
-      throw new Error(`Batch email task failed: ${String(batchResult.error)}`);
+      throw new Error(`Batch notification failed: ${batchResult.error || "Unknown error"}`);
     }
 
-    // 6. Update campaign with results
-    const finalStatus = batchResult.output.failed === 0 ? "sent" : "partial";
+    // 7. Update campaign with results
+    const finalStatus = batchResult.data.failed === 0 ? "sent" : "partial";
 
     await supabase
       .from("newsletter_campaigns")
       .update({
         status: finalStatus,
         sent_at: new Date().toISOString(),
-        total_sent: batchResult.output.successful,
-        total_recipients: recipientList.length,
+        total_sent: batchResult.data.delivered,
+        total_recipients: profiles.length,
       })
       .eq("id", campaignId);
 
     return {
       campaignId,
       status: finalStatus === "sent" ? "completed" : "partial",
-      totalRecipients: recipientList.length,
-      sent: batchResult.output.successful,
-      failed: batchResult.output.failed,
+      totalRecipients: profiles.length,
+      sent: batchResult.data.delivered,
+      failed: batchResult.data.failed,
     };
   },
 });
