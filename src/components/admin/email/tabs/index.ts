@@ -5,3 +5,5 @@ export { AutomationTab } from "./AutomationTab";
 export { AudienceTab } from "./AudienceTab";
 export { ComposeTab } from "./ComposeTab";
 export { ProvidersTab } from "./ProvidersTab";
+export { TemplatesTab } from "./TemplatesTab";
+export { QueueTab } from "./QueueTab";

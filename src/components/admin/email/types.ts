@@ -10,6 +10,9 @@ import type {
   RecentCampaign,
   ActiveAutomation,
   AudienceSegment,
+  EmailTemplate,
+  CircuitBreakerState,
+  QueueStats,
 } from "@/lib/data/admin-email";
 
 // Re-export data types for convenience
@@ -20,6 +23,9 @@ export type {
   RecentCampaign,
   ActiveAutomation,
   AudienceSegment,
+  EmailTemplate,
+  CircuitBreakerState,
+  QueueStats,
 };
 
 /**
@@ -32,7 +38,9 @@ export type TabType =
   | "automation"
   | "audience"
   | "compose"
-  | "providers";
+  | "providers"
+  | "templates"
+  | "queue";
 
 /**
  * Form data for composing emails

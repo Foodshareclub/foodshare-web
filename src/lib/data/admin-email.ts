@@ -583,21 +583,48 @@ export interface EmailCRMData {
   segments?: AudienceSegment[] | undefined;
   quotaDetails?: ProviderQuotaDetails[] | undefined;
   bounceStats?: BounceStats | undefined;
+  templates?: EmailTemplate[] | undefined;
+  circuitBreakers?: CircuitBreakerState[] | undefined;
+  queueStats?: QueueStats | undefined;
 }
 
 export async function getEmailCRMData(): Promise<EmailCRMData> {
-  const [stats, providerHealth, campaigns, automations, segments, quotaDetails, bounceStats] =
-    await Promise.all([
-      getEmailDashboardStats(),
-      getProviderHealth(),
-      getRecentCampaigns(),
-      getActiveAutomations(),
-      getAudienceSegments(),
-      getComprehensiveQuotaStatus(),
-      getBounceStats(),
-    ]);
+  const [
+    stats,
+    providerHealth,
+    campaigns,
+    automations,
+    segments,
+    quotaDetails,
+    bounceStats,
+    templates,
+    circuitBreakers,
+    queueStats,
+  ] = await Promise.all([
+    getEmailDashboardStats(),
+    getProviderHealth(),
+    getRecentCampaigns(),
+    getActiveAutomations(),
+    getAudienceSegments(),
+    getComprehensiveQuotaStatus(),
+    getBounceStats(),
+    getEmailTemplates(),
+    getCircuitBreakerStates(),
+    getQueueStats(),
+  ]);
 
-  return { stats, providerHealth, campaigns, automations, segments, quotaDetails, bounceStats };
+  return {
+    stats,
+    providerHealth,
+    campaigns,
+    automations,
+    segments,
+    quotaDetails,
+    bounceStats,
+    templates,
+    circuitBreakers,
+    queueStats,
+  };
 }
 
 // ============================================================================
@@ -676,87 +703,87 @@ export async function getEmailMonitoringData(): Promise<EmailMonitoringData> {
       .limit(20),
   ]);
 
-    const cbData = cbRes.data || [];
-    const healthData = healthRes.data || [];
-    const quotaData = quotaRes.data || [];
-    const emailData = emailRes.data || [];
-    const eventData = eventRes.data || [];
+  const cbData = cbRes.data || [];
+  const healthData = healthRes.data || [];
+  const quotaData = quotaRes.data || [];
+  const emailData = emailRes.data || [];
+  const eventData = eventRes.data || [];
 
-    const providerStatus: ProviderStatus[] = cbData.map((cb) => {
-      const health = healthData.find((h) => h.provider === cb.provider);
-      return {
-        provider: cb.provider,
-        state: cb.state || "closed",
-        failures: cb.failures || 0,
-        consecutive_successes: cb.consecutive_successes || 0,
-        last_failure_time: cb.last_failure_time,
-        health_score: health?.health_score || 100,
-        total_requests: health?.total_requests || 0,
-        successful_requests: health?.successful_requests || 0,
-        failed_requests: health?.failed_requests || 0,
-      };
+  const providerStatus: ProviderStatus[] = cbData.map((cb) => {
+    const health = healthData.find((h) => h.provider === cb.provider);
+    return {
+      provider: cb.provider,
+      state: cb.state || "closed",
+      failures: cb.failures || 0,
+      consecutive_successes: cb.consecutive_successes || 0,
+      last_failure_time: cb.last_failure_time,
+      health_score: health?.health_score || 100,
+      total_requests: health?.total_requests || 0,
+      successful_requests: health?.successful_requests || 0,
+      failed_requests: health?.failed_requests || 0,
+    };
+  });
+
+  const quotaStatus: QuotaStatus[] = quotaData.map((q) => {
+    const limit = PROVIDER_LIMITS[q.provider] || 100;
+    return {
+      provider: q.provider,
+      emails_sent: q.emails_sent || 0,
+      daily_limit: limit,
+      remaining: Math.max(0, limit - (q.emails_sent || 0)),
+      percentage_used: ((q.emails_sent || 0) / limit) * 100,
+      date: q.date,
+    };
+  });
+
+  const recentEmails: RecentEmail[] = emailData.map((e) => ({
+    id: e.id,
+    email_type: e.email_type || "unknown",
+    recipient_email: e.recipient_email || e.recipient || "",
+    provider_used: e.provider_used || e.provider || "",
+    status: e.status || "unknown",
+    created_at: e.created_at,
+  }));
+
+  const healthEvents: HealthEvent[] = eventData.map((e) => ({
+    id: e.id,
+    event_type: e.event_type || "info",
+    severity: e.severity || "info",
+    message: e.message || "",
+    provider: e.provider || "",
+    created_at: e.created_at,
+  }));
+
+  // Add defaults if no data
+  if (providerStatus.length === 0) {
+    ["resend", "brevo", "mailersend", "aws_ses"].forEach((p) => {
+      providerStatus.push({
+        provider: p,
+        state: "closed",
+        failures: 0,
+        consecutive_successes: 0,
+        last_failure_time: null,
+        health_score: 100,
+        total_requests: 0,
+        successful_requests: 0,
+        failed_requests: 0,
+      });
     });
+  }
 
-    const quotaStatus: QuotaStatus[] = quotaData.map((q) => {
-      const limit = PROVIDER_LIMITS[q.provider] || 100;
-      return {
-        provider: q.provider,
-        emails_sent: q.emails_sent || 0,
+  if (quotaStatus.length === 0) {
+    ["resend", "brevo", "mailersend", "aws_ses"].forEach((p) => {
+      const limit = PROVIDER_LIMITS[p] || 100;
+      quotaStatus.push({
+        provider: p,
+        emails_sent: 0,
         daily_limit: limit,
-        remaining: Math.max(0, limit - (q.emails_sent || 0)),
-        percentage_used: ((q.emails_sent || 0) / limit) * 100,
-        date: q.date,
-      };
+        remaining: limit,
+        percentage_used: 0,
+        date: today,
+      });
     });
-
-    const recentEmails: RecentEmail[] = emailData.map((e) => ({
-      id: e.id,
-      email_type: e.email_type || "unknown",
-      recipient_email: e.recipient_email || e.recipient || "",
-      provider_used: e.provider_used || e.provider || "",
-      status: e.status || "unknown",
-      created_at: e.created_at,
-    }));
-
-    const healthEvents: HealthEvent[] = eventData.map((e) => ({
-      id: e.id,
-      event_type: e.event_type || "info",
-      severity: e.severity || "info",
-      message: e.message || "",
-      provider: e.provider || "",
-      created_at: e.created_at,
-    }));
-
-    // Add defaults if no data
-    if (providerStatus.length === 0) {
-      ["resend", "brevo", "mailersend", "aws_ses"].forEach((p) => {
-        providerStatus.push({
-          provider: p,
-          state: "closed",
-          failures: 0,
-          consecutive_successes: 0,
-          last_failure_time: null,
-          health_score: 100,
-          total_requests: 0,
-          successful_requests: 0,
-          failed_requests: 0,
-        });
-      });
-    }
-
-    if (quotaStatus.length === 0) {
-      ["resend", "brevo", "mailersend", "aws_ses"].forEach((p) => {
-        const limit = PROVIDER_LIMITS[p] || 100;
-        quotaStatus.push({
-          provider: p,
-          emails_sent: 0,
-          daily_limit: limit,
-          remaining: limit,
-          percentage_used: 0,
-          date: today,
-        });
-      });
-    }
+  }
 
   return { providerStatus, quotaStatus, recentEmails, healthEvents };
 }
@@ -848,4 +875,139 @@ export async function getQueuedEmails(params: { status?: string }) {
     next_retry_at: email.next_retry_at,
     created_at: email.created_at,
   }));
+}
+
+// ============================================================================
+// Email Templates
+// ============================================================================
+
+export interface EmailTemplate {
+  id: string;
+  name: string;
+  slug: string;
+  subject: string;
+  category: "automation" | "transactional" | "marketing" | "system" | "digest";
+  isActive: boolean;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Get email templates from database
+ * Uses admin client to bypass RLS
+ */
+export async function getEmailTemplates(): Promise<EmailTemplate[]> {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("email_templates")
+    .select("*")
+    .order("category")
+    .order("name");
+
+  if (error) {
+    console.error("[getEmailTemplates] Error:", error);
+    return [];
+  }
+
+  return (data || []).map((t) => ({
+    id: t.id,
+    name: t.name,
+    slug: t.slug,
+    subject: t.subject || "",
+    category: t.category || "transactional",
+    isActive: t.is_active ?? true,
+    version: t.version || 1,
+    createdAt: t.created_at,
+    updatedAt: t.updated_at,
+  }));
+}
+
+// ============================================================================
+// Circuit Breaker State
+// ============================================================================
+
+export interface CircuitBreakerState {
+  provider: "resend" | "brevo" | "aws_ses" | "mailersend";
+  state: "closed" | "open" | "half_open";
+  failureCount: number;
+  successCount: number;
+  lastFailureAt: string | null;
+  lastSuccessAt: string | null;
+  openedAt: string | null;
+  halfOpenAt: string | null;
+}
+
+/**
+ * Get circuit breaker state for all providers
+ * Uses admin client to bypass RLS
+ */
+export async function getCircuitBreakerStates(): Promise<CircuitBreakerState[]> {
+  const supabase = createAdminClient();
+
+  const { data, error } = await supabase
+    .from("email_circuit_breaker_state")
+    .select("*")
+    .order("provider");
+
+  if (error) {
+    console.error("[getCircuitBreakerStates] Error:", error);
+    return [];
+  }
+
+  return (data || []).map((cb) => ({
+    provider: cb.provider as CircuitBreakerState["provider"],
+    state: cb.state || "closed",
+    failureCount: cb.failure_count || 0,
+    successCount: cb.success_count || 0,
+    lastFailureAt: cb.last_failure_at,
+    lastSuccessAt: cb.last_success_at,
+    openedAt: cb.opened_at,
+    halfOpenAt: cb.half_open_at,
+  }));
+}
+
+// ============================================================================
+// Queue Statistics
+// ============================================================================
+
+export interface QueueStats {
+  pending: number;
+  processing: number;
+  failed: number;
+  deadLetter: number;
+  completed: number;
+  totalToday: number;
+}
+
+/**
+ * Get email queue statistics
+ * Uses admin client to bypass RLS
+ */
+export async function getQueueStats(): Promise<QueueStats> {
+  const supabase = createAdminClient();
+
+  const [queueRes, dlqRes] = await Promise.all([
+    supabase.from("email_queue").select("status"),
+    supabase.from("email_dead_letter_queue").select("id", { count: "exact", head: true }),
+  ]);
+
+  const queue = queueRes.data || [];
+  const statusCounts = queue.reduce(
+    (acc, item) => {
+      acc[item.status] = (acc[item.status] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  return {
+    pending: statusCounts["pending"] || 0,
+    processing: statusCounts["processing"] || 0,
+    failed: statusCounts["failed"] || 0,
+    deadLetter: dlqRes.count || 0,
+    completed: statusCounts["completed"] || 0,
+    totalToday: queue.length,
+  };
 }

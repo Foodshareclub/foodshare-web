@@ -25,6 +25,8 @@ import {
   BarChart3,
   Users,
   Settings,
+  FileText,
+  Inbox,
 } from "lucide-react";
 import { getDefaultStats } from "./constants";
 import {
@@ -34,6 +36,8 @@ import {
   AudienceTab,
   ComposeTab,
   ProvidersTab,
+  TemplatesTab,
+  QueueTab,
 } from "./tabs";
 import type { TabType, EmailCRMDashboardProps } from "./types";
 import { cn } from "@/lib/utils";
@@ -96,6 +100,12 @@ const TAB_CONFIG: Record<TabType, { icon: React.ReactNode; label: string; color:
   },
   automation: { icon: <Zap className="h-4 w-4" />, label: "Automation", color: "text-amber-500" },
   audience: { icon: <Users className="h-4 w-4" />, label: "Audience", color: "text-violet-500" },
+  templates: {
+    icon: <FileText className="h-4 w-4" />,
+    label: "Templates",
+    color: "text-purple-500",
+  },
+  queue: { icon: <Inbox className="h-4 w-4" />, label: "Queue", color: "text-cyan-500" },
   compose: { icon: <Send className="h-4 w-4" />, label: "Compose", color: "text-emerald-500" },
   providers: {
     icon: <Settings className="h-4 w-4" />,
@@ -115,6 +125,16 @@ export function EmailCRMDashboard({ initialData }: EmailCRMDashboardProps) {
   const campaigns = initialData?.campaigns || [];
   const automations = initialData?.automations || [];
   const segments = initialData?.segments || [];
+  const templates = initialData?.templates || [];
+  const circuitBreakers = initialData?.circuitBreakers || [];
+  const queueStats = initialData?.queueStats || {
+    pending: 0,
+    processing: 0,
+    failed: 0,
+    deadLetter: 0,
+    completed: 0,
+    totalToday: 0,
+  };
 
   // Quota calculations
   const dailyQuotaPercent =
@@ -228,6 +248,8 @@ export function EmailCRMDashboard({ initialData }: EmailCRMDashboardProps) {
                   "campaigns",
                   "automation",
                   "audience",
+                  "templates",
+                  "queue",
                   "compose",
                   "providers",
                 ] as TabType[]
@@ -286,6 +308,10 @@ export function EmailCRMDashboard({ initialData }: EmailCRMDashboardProps) {
                 {activeTab === "campaigns" && <CampaignsTab campaigns={campaigns} />}
                 {activeTab === "automation" && <AutomationTab automations={automations} />}
                 {activeTab === "audience" && <AudienceTab segments={segments} stats={stats} />}
+                {activeTab === "templates" && <TemplatesTab templates={templates} />}
+                {activeTab === "queue" && (
+                  <QueueTab queueStats={queueStats} circuitBreakers={circuitBreakers} />
+                )}
                 {activeTab === "compose" && <ComposeTab />}
                 {activeTab === "providers" && <ProvidersTab providerHealth={providerHealth} />}
               </motion.div>
