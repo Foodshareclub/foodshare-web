@@ -197,50 +197,34 @@ export const getEmailDashboardStats = unstable_cache(
 export const getComprehensiveQuotaStatus = unstable_cache(
   async (): Promise<ProviderQuotaDetails[]> => {
     const supabase = createCachedClient();
-    const today = new Date().toISOString().split("T")[0];
 
-    // Get today's quota data for all providers (includes daily_limit AND monthly_limit)
+    // Read from email_provider_health_metrics (synced from provider APIs)
     const { data, error } = await supabase
-      .from("email_provider_quota")
+      .from("email_provider_health_metrics")
       .select("*")
-      .eq("date", today);
+      .order("last_updated", { ascending: false });
 
-    if (error) {
-      console.error("Failed to fetch quota data:", error.message);
+    if (error || !data || data.length === 0) {
+      if (error) console.error("Failed to fetch quota data:", error.message);
       return getDefaultQuotaDetails();
     }
-
-    // Get monthly totals (last 30 days) for each provider
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const { data: monthlyData } = await supabase
-      .from("email_provider_quota")
-      .select("provider, emails_sent")
-      .gte("date", thirtyDaysAgo.toISOString().split("T")[0]);
-
-    // Calculate monthly totals per provider
-    const monthlyTotals = new Map<string, number>();
-    monthlyData?.forEach((row) => {
-      const current = monthlyTotals.get(row.provider) || 0;
-      monthlyTotals.set(row.provider, current + (row.emails_sent || 0));
-    });
 
     const providers: EmailProvider[] = ["resend", "brevo", "mailersend", "aws_ses"];
     const defaults = getDefaultQuotaDetails();
 
     return providers.map((provider) => {
-      const quotaRow = data?.find((q) => q.provider === provider);
+      const healthRow = data.find((h) => h.provider === provider);
       const defaultQuota = defaults.find((d) => d.provider === provider)!;
 
-      // Daily quota from database
-      const dailySent = quotaRow?.emails_sent || 0;
-      const dailyLimit = quotaRow?.daily_limit || defaultQuota.daily.limit;
+      // Daily quota from health metrics (synced from provider APIs)
+      const dailySent = healthRow?.daily_quota_used || 0;
+      const dailyLimit = healthRow?.daily_quota_limit || defaultQuota.daily.limit;
       const dailyRemaining = Math.max(0, dailyLimit - dailySent);
       const dailyPercentUsed = dailyLimit > 0 ? (dailySent / dailyLimit) * 100 : 0;
 
-      // Monthly quota - sent is calculated, limit is from database
-      const monthlySent = monthlyTotals.get(provider) || 0;
-      const monthlyLimit = quotaRow?.monthly_limit || defaultQuota.monthly.limit;
+      // Monthly quota from health metrics
+      const monthlySent = healthRow?.monthly_quota_used || 0;
+      const monthlyLimit = healthRow?.monthly_quota_limit || defaultQuota.monthly.limit;
       const monthlyRemaining = Math.max(0, monthlyLimit - monthlySent);
       const monthlyPercentUsed = monthlyLimit > 0 ? (monthlySent / monthlyLimit) * 100 : 0;
 
