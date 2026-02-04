@@ -12,6 +12,7 @@
 import { unstable_cache } from "next/cache";
 import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
 import { createCachedClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { EmailProvider, EmailType } from "@/lib/email/types";
 
 // ============================================================================
@@ -194,64 +195,61 @@ export const getEmailDashboardStats = unstable_cache(
 // Comprehensive Quota Status (per provider)
 // ============================================================================
 
-export const getComprehensiveQuotaStatus = unstable_cache(
-  async (): Promise<ProviderQuotaDetails[]> => {
-    const supabase = createCachedClient();
+/**
+ * Get comprehensive quota status for all providers
+ * Uses admin client to bypass RLS (admin-only data)
+ */
+export async function getComprehensiveQuotaStatus(): Promise<ProviderQuotaDetails[]> {
+  const supabase = createAdminClient();
 
-    // Read from email_provider_health_metrics (synced from provider APIs)
-    const { data, error } = await supabase
-      .from("email_provider_health_metrics")
-      .select("*")
-      .order("last_updated", { ascending: false });
+  // Read from email_provider_health_metrics (synced from provider APIs)
+  const { data, error } = await supabase
+    .from("email_provider_health_metrics")
+    .select("*")
+    .order("last_updated", { ascending: false });
 
-    if (error || !data || data.length === 0) {
-      if (error) console.error("Failed to fetch quota data:", error.message);
-      return getDefaultQuotaDetails();
-    }
-
-    const providers: EmailProvider[] = ["resend", "brevo", "mailersend", "aws_ses"];
-    const defaults = getDefaultQuotaDetails();
-
-    return providers.map((provider) => {
-      const healthRow = data.find((h) => h.provider === provider);
-      const defaultQuota = defaults.find((d) => d.provider === provider)!;
-
-      // Daily quota from health metrics (synced from provider APIs)
-      const dailySent = healthRow?.daily_quota_used || 0;
-      const dailyLimit = healthRow?.daily_quota_limit || defaultQuota.daily.limit;
-      const dailyRemaining = Math.max(0, dailyLimit - dailySent);
-      const dailyPercentUsed = dailyLimit > 0 ? (dailySent / dailyLimit) * 100 : 0;
-
-      // Monthly quota from health metrics
-      const monthlySent = healthRow?.monthly_quota_used || 0;
-      const monthlyLimit = healthRow?.monthly_quota_limit || defaultQuota.monthly.limit;
-      const monthlyRemaining = Math.max(0, monthlyLimit - monthlySent);
-      const monthlyPercentUsed = monthlyLimit > 0 ? (monthlySent / monthlyLimit) * 100 : 0;
-
-      return {
-        provider,
-        daily: {
-          sent: dailySent,
-          limit: dailyLimit,
-          remaining: dailyRemaining,
-          percentUsed: Math.round(dailyPercentUsed * 10) / 10,
-        },
-        monthly: {
-          sent: monthlySent,
-          limit: monthlyLimit,
-          remaining: monthlyRemaining,
-          percentUsed: Math.round(monthlyPercentUsed * 10) / 10,
-        },
-        isAvailable: dailyPercentUsed < 95 && monthlyPercentUsed < 95,
-      };
-    });
-  },
-  ["comprehensive-quota-status"],
-  {
-    revalidate: CACHE_DURATIONS.PROVIDER_QUOTAS,
-    tags: [CACHE_TAGS.PROVIDER_QUOTAS],
+  if (error || !data || data.length === 0) {
+    if (error) console.error("Failed to fetch quota data:", error.message);
+    return getDefaultQuotaDetails();
   }
-);
+
+  const providers: EmailProvider[] = ["resend", "brevo", "mailersend", "aws_ses"];
+  const defaults = getDefaultQuotaDetails();
+
+  return providers.map((provider) => {
+    const healthRow = data.find((h) => h.provider === provider);
+    const defaultQuota = defaults.find((d) => d.provider === provider)!;
+
+    // Daily quota from health metrics (synced from provider APIs)
+    const dailySent = healthRow?.daily_quota_used || 0;
+    const dailyLimit = healthRow?.daily_quota_limit || defaultQuota.daily.limit;
+    const dailyRemaining = Math.max(0, dailyLimit - dailySent);
+    const dailyPercentUsed = dailyLimit > 0 ? (dailySent / dailyLimit) * 100 : 0;
+
+    // Monthly quota from health metrics
+    const monthlySent = healthRow?.monthly_quota_used || 0;
+    const monthlyLimit = healthRow?.monthly_quota_limit || defaultQuota.monthly.limit;
+    const monthlyRemaining = Math.max(0, monthlyLimit - monthlySent);
+    const monthlyPercentUsed = monthlyLimit > 0 ? (monthlySent / monthlyLimit) * 100 : 0;
+
+    return {
+      provider,
+      daily: {
+        sent: dailySent,
+        limit: dailyLimit,
+        remaining: dailyRemaining,
+        percentUsed: Math.round(dailyPercentUsed * 10) / 10,
+      },
+      monthly: {
+        sent: monthlySent,
+        limit: monthlyLimit,
+        remaining: monthlyRemaining,
+        percentUsed: Math.round(monthlyPercentUsed * 10) / 10,
+      },
+      isAvailable: dailyPercentUsed < 95 && monthlyPercentUsed < 95,
+    };
+  });
+}
 
 function getDefaultQuotaDetails(): ProviderQuotaDetails[] {
   const defaults: Array<{ provider: EmailProvider; dailyLimit: number; monthlyLimit: number }> = [
@@ -367,76 +365,78 @@ export const getBounceStats = unstable_cache(
 // Provider Health
 // ============================================================================
 
-export const getProviderHealth = unstable_cache(
-  async (): Promise<ProviderHealth[]> => {
-    const supabase = createCachedClient();
+/**
+ * Get provider health metrics from database
+ * Uses admin client to bypass RLS (admin-only data)
+ * Called from API routes that already check admin permissions
+ */
+export async function getProviderHealth(): Promise<ProviderHealth[]> {
+  const supabase = createAdminClient();
 
-    const { data } = await supabase
-      .from("email_provider_health_metrics")
-      .select("*")
-      .order("last_updated", { ascending: false });
+  const { data, error } = await supabase
+    .from("email_provider_health_metrics")
+    .select("*")
+    .order("last_updated", { ascending: false });
 
-    if (!data || data.length === 0) {
-      // Return defaults if no metrics
-      return [
-        {
-          provider: "resend",
-          healthScore: 100,
-          successRate: 100,
-          avgLatencyMs: 0,
-          totalRequests: 0,
-          status: "healthy",
-        },
-        {
-          provider: "brevo",
-          healthScore: 100,
-          successRate: 100,
-          avgLatencyMs: 0,
-          totalRequests: 0,
-          status: "healthy",
-        },
-        {
-          provider: "mailersend",
-          healthScore: 100,
-          successRate: 100,
-          avgLatencyMs: 0,
-          totalRequests: 0,
-          status: "healthy",
-        },
-        {
-          provider: "aws_ses",
-          healthScore: 100,
-          successRate: 100,
-          avgLatencyMs: 0,
-          totalRequests: 0,
-          status: "healthy",
-        },
-      ];
-    }
-
-    return data.map((m) => ({
-      provider: m.provider as "resend" | "brevo" | "mailersend" | "aws_ses",
-      healthScore: m.health_score || 100,
-      successRate:
-        m.total_requests > 0
-          ? Math.round((m.successful_requests / m.total_requests) * 1000) / 10
-          : 100,
-      avgLatencyMs: Number(m.average_latency_ms) || 0,
-      totalRequests: m.total_requests || 0,
-      status: m.health_score >= 80 ? "healthy" : m.health_score >= 50 ? "degraded" : "down",
-      lastSynced: m.last_synced_at || null,
-      dailyQuotaUsed: m.daily_quota_used || 0,
-      dailyQuotaLimit: m.daily_quota_limit || 500,
-      monthlyQuotaUsed: m.monthly_quota_used || 0,
-      monthlyQuotaLimit: m.monthly_quota_limit || 15000,
-    }));
-  },
-  ["provider-health"],
-  {
-    revalidate: CACHE_DURATIONS.PROVIDER_HEALTH,
-    tags: [CACHE_TAGS.PROVIDER_HEALTH],
+  if (error) {
+    console.error("[getProviderHealth] Database error:", error);
   }
-);
+
+  if (!data || data.length === 0) {
+    // Return defaults if no metrics
+    return [
+      {
+        provider: "resend",
+        healthScore: 100,
+        successRate: 100,
+        avgLatencyMs: 0,
+        totalRequests: 0,
+        status: "healthy",
+      },
+      {
+        provider: "brevo",
+        healthScore: 100,
+        successRate: 100,
+        avgLatencyMs: 0,
+        totalRequests: 0,
+        status: "healthy",
+      },
+      {
+        provider: "mailersend",
+        healthScore: 100,
+        successRate: 100,
+        avgLatencyMs: 0,
+        totalRequests: 0,
+        status: "healthy",
+      },
+      {
+        provider: "aws_ses",
+        healthScore: 100,
+        successRate: 100,
+        avgLatencyMs: 0,
+        totalRequests: 0,
+        status: "healthy",
+      },
+    ];
+  }
+
+  return data.map((m) => ({
+    provider: m.provider as "resend" | "brevo" | "mailersend" | "aws_ses",
+    healthScore: m.health_score || 100,
+    successRate:
+      m.total_requests > 0
+        ? Math.round((m.successful_requests / m.total_requests) * 1000) / 10
+        : 100,
+    avgLatencyMs: Number(m.average_latency_ms) || 0,
+    totalRequests: m.total_requests || 0,
+    status: m.health_score >= 80 ? "healthy" : m.health_score >= 50 ? "degraded" : "down",
+    lastSynced: m.last_synced_at || null,
+    dailyQuotaUsed: m.daily_quota_used || 0,
+    dailyQuotaLimit: m.daily_quota_limit || 500,
+    monthlyQuotaUsed: m.monthly_quota_used || 0,
+    monthlyQuotaLimit: m.monthly_quota_limit || 15000,
+  }));
+}
 
 // ============================================================================
 // Campaigns
@@ -639,28 +639,31 @@ export interface EmailMonitoringData {
   healthEvents: HealthEvent[];
 }
 
-export const getEmailMonitoringData = unstable_cache(
-  async (): Promise<EmailMonitoringData> => {
-    const supabase = createCachedClient();
-    const today = new Date().toISOString().split("T")[0];
-    const PROVIDER_LIMITS: Record<string, number> = {
-      resend: 100,
-      brevo: 300,
-      mailersend: 400,
-      aws_ses: 1000,
-    };
+/**
+ * Get email monitoring data
+ * Uses admin client to bypass RLS for admin-only tables
+ */
+export async function getEmailMonitoringData(): Promise<EmailMonitoringData> {
+  const supabase = createAdminClient();
+  const today = new Date().toISOString().split("T")[0];
+  const PROVIDER_LIMITS: Record<string, number> = {
+    resend: 100,
+    brevo: 300,
+    mailersend: 400,
+    aws_ses: 1000,
+  };
 
-    const [cbRes, healthRes, quotaRes, emailRes, eventRes] = await Promise.all([
-      supabase.from("email_circuit_breaker").select("*"),
-      supabase.from("email_provider_health_metrics").select("*"),
-      supabase.from("email_provider_quota").select("*").eq("date", today),
-      supabase.from("email_logs").select("*").order("created_at", { ascending: false }).limit(10),
-      supabase
-        .from("email_health_events")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(20),
-    ]);
+  const [cbRes, healthRes, quotaRes, emailRes, eventRes] = await Promise.all([
+    supabase.from("email_circuit_breaker").select("*"),
+    supabase.from("email_provider_health_metrics").select("*"),
+    supabase.from("email_provider_quota").select("*").eq("date", today),
+    supabase.from("email_logs").select("*").order("created_at", { ascending: false }).limit(10),
+    supabase
+      .from("email_health_events")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(20),
+  ]);
 
     const cbData = cbRes.data || [];
     const healthData = healthRes.data || [];
@@ -744,112 +747,94 @@ export const getEmailMonitoringData = unstable_cache(
       });
     }
 
-    return { providerStatus, quotaStatus, recentEmails, healthEvents };
-  },
-  ["email-monitoring-data"],
-  {
-    revalidate: CACHE_DURATIONS.EMAIL_HEALTH,
-    tags: [CACHE_TAGS.EMAIL_HEALTH, CACHE_TAGS.PROVIDER_HEALTH],
-  }
-);
+  return { providerStatus, quotaStatus, recentEmails, healthEvents };
+}
 
 /**
  * Get email logs with optional filtering
+ * Uses admin client to bypass RLS for admin-only data
  */
-export const getEmailLogs = unstable_cache(
-  async (params: {
-    provider?: EmailProvider;
-    emailType?: EmailType;
-    status?: string;
-    hours?: number;
-  }) => {
-    const supabase = createCachedClient();
-    const hoursAgo = params.hours || 24;
-    const since = new Date(Date.now() - hoursAgo * 60 * 60 * 1000).toISOString();
+export async function getEmailLogs(params: {
+  provider?: EmailProvider;
+  emailType?: EmailType;
+  status?: string;
+  hours?: number;
+}) {
+  const supabase = createAdminClient();
+  const hoursAgo = params.hours || 24;
+  const since = new Date(Date.now() - hoursAgo * 60 * 60 * 1000).toISOString();
 
-    let query = supabase
-      .from("email_logs")
-      .select("*")
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
-      .limit(100);
+  let query = supabase
+    .from("email_logs")
+    .select("*")
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(100);
 
-    if (params.provider) {
-      query = query.eq("provider", params.provider);
-    }
-    if (params.emailType) {
-      query = query.eq("email_type", params.emailType);
-    }
-    if (params.status) {
-      query = query.eq("status", params.status);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error("[getEmailLogs] Error:", error);
-      return [];
-    }
-
-    return (data || []).map((log) => ({
-      id: log.id,
-      recipient_email: log.recipient_email,
-      email_type: log.email_type,
-      subject: log.subject || "",
-      provider: log.provider,
-      status: log.status,
-      sent_at: log.created_at,
-      provider_message_id: log.provider_message_id,
-      error: log.error_message,
-    }));
-  },
-  ["email-logs"],
-  {
-    revalidate: CACHE_DURATIONS.EMAIL_LOGS,
-    tags: [CACHE_TAGS.EMAIL_LOGS],
+  if (params.provider) {
+    query = query.eq("provider", params.provider);
   }
-);
+  if (params.emailType) {
+    query = query.eq("email_type", params.emailType);
+  }
+  if (params.status) {
+    query = query.eq("status", params.status);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("[getEmailLogs] Error:", error);
+    return [];
+  }
+
+  return (data || []).map((log) => ({
+    id: log.id,
+    recipient_email: log.recipient_email,
+    email_type: log.email_type,
+    subject: log.subject || "",
+    provider: log.provider,
+    status: log.status,
+    sent_at: log.created_at,
+    provider_message_id: log.provider_message_id,
+    error: log.error_message,
+  }));
+}
 
 /**
  * Get queued emails with optional status filter
+ * Uses admin client to bypass RLS for admin-only data
  */
-export const getQueuedEmails = unstable_cache(
-  async (params: { status?: string }) => {
-    const supabase = createCachedClient();
+export async function getQueuedEmails(params: { status?: string }) {
+  const supabase = createAdminClient();
 
-    let query = supabase
-      .from("email_queue")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(100);
+  let query = supabase
+    .from("email_queue")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(100);
 
-    if (params.status) {
-      query = query.eq("status", params.status);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error("[getQueuedEmails] Error:", error);
-      return [];
-    }
-
-    return (data || []).map((email) => ({
-      id: email.id,
-      recipient_email: email.recipient_email,
-      email_type: email.email_type,
-      template_name: email.template_name || "",
-      attempts: email.attempts || 0,
-      max_attempts: email.max_attempts || 3,
-      status: email.status,
-      last_error: email.last_error,
-      next_retry_at: email.next_retry_at,
-      created_at: email.created_at,
-    }));
-  },
-  ["email-queue"],
-  {
-    revalidate: CACHE_DURATIONS.EMAIL_QUEUE,
-    tags: [CACHE_TAGS.EMAIL_QUEUE],
+  if (params.status) {
+    query = query.eq("status", params.status);
   }
-);
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("[getQueuedEmails] Error:", error);
+    return [];
+  }
+
+  return (data || []).map((email) => ({
+    id: email.id,
+    recipient_email: email.recipient_email,
+    email_type: email.email_type,
+    template_name: email.template_name || "",
+    attempts: email.attempts || 0,
+    max_attempts: email.max_attempts || 3,
+    status: email.status,
+    last_error: email.last_error,
+    next_retry_at: email.next_retry_at,
+    created_at: email.created_at,
+  }));
+}
