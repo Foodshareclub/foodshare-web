@@ -1,7 +1,7 @@
 /**
  * API Route: Sync Email Provider Stats
  * POST /api/admin/email/sync
- * Triggers the sync-email-provider-stats Edge Function to fetch real data from providers
+ * Triggers the unified notifications API to fetch real data from provider APIs
  */
 
 import { NextResponse } from "next/server";
@@ -28,16 +28,15 @@ export async function POST(request: Request) {
 
     // Get provider from body if specified
     const body = await request.json().catch(() => ({}));
-    const provider = body.provider;
 
-    // Call the Edge Function
-    const endpoint = provider
-      ? `sync-email-provider-stats/sync/${provider}`
-      : "sync-email-provider-stats/sync";
-
-    const { data, error } = await supabase.functions.invoke(endpoint, {
-      method: "POST",
-    });
+    // Call the unified notifications API - admin/providers/sync
+    const { data, error } = await supabase.functions.invoke(
+      "api-v1-notifications/admin/providers/sync",
+      {
+        method: "POST",
+        body: body.provider ? { provider: body.provider } : {},
+      }
+    );
 
     if (error) {
       console.error("[API /api/admin/email/sync] Edge function error:", error);
