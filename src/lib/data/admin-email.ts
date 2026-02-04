@@ -72,6 +72,11 @@ export interface ProviderHealth {
   avgLatencyMs: number;
   totalRequests: number;
   status: "healthy" | "degraded" | "down";
+  lastSynced?: string | null;
+  dailyQuotaUsed?: number;
+  dailyQuotaLimit?: number;
+  monthlyQuotaUsed?: number;
+  monthlyQuotaLimit?: number;
 }
 
 export interface RecentCampaign {
@@ -435,6 +440,11 @@ export const getProviderHealth = unstable_cache(
       avgLatencyMs: Number(m.average_latency_ms) || 0,
       totalRequests: m.total_requests || 0,
       status: m.health_score >= 80 ? "healthy" : m.health_score >= 50 ? "degraded" : "down",
+      lastSynced: m.last_synced_at || null,
+      dailyQuotaUsed: m.daily_quota_used || 0,
+      dailyQuotaLimit: m.daily_quota_limit || 500,
+      monthlyQuotaUsed: m.monthly_quota_used || 0,
+      monthlyQuotaLimit: m.monthly_quota_limit || 15000,
     }));
   },
   ["provider-health"],

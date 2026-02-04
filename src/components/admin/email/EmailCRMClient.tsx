@@ -8,14 +8,14 @@
 
 import React, { useState, useTransition } from "react";
 import dynamic from "next/dynamic";
-import { Plus, Send, Mail, Users, Zap, Loader2, Wifi, WifiOff } from "lucide-react";
+import { Plus, Send, Mail, Users, Zap, Loader2, Wifi, WifiOff, RefreshCw } from "lucide-react";
 import type { TabType, EmailCRMClientProps, ProviderHealth } from "./types";
 import { TABS } from "./constants";
 import { ProviderHealthBadge } from "./shared/ProviderComponents";
 import { TabContent } from "./shared/TabContent";
 import { DashboardTab } from "./tabs/DashboardTab";
 import { useEmailCRMRealtime, getConnectionStatusColor } from "@/hooks/queries/useEmailCRMRealtime";
-import { useEmailCRMData } from "@/hooks/queries/useEmailCRM";
+import { useEmailCRMData, useSyncProviderStats } from "@/hooks/queries/useEmailCRM";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Lazy-load tabs - only Dashboard loads eagerly (most common entry point)
@@ -111,6 +111,9 @@ export function EmailCRMClient({ initialData }: EmailCRMClientProps) {
     segments: liveSegments,
   } = useEmailCRMData();
 
+  // Sync provider stats from external APIs
+  const syncMutation = useSyncProviderStats();
+
   // Use live data if available, fall back to initial data, then defaults
   const stats = liveStats || initialData?.stats || getDefaultStats();
   const providerHealth = liveHealth || initialData?.providerHealth || [];
@@ -172,6 +175,28 @@ export function EmailCRMClient({ initialData }: EmailCRMClientProps) {
             {providerHealth.map((provider: ProviderHealth) => (
               <ProviderHealthBadge key={provider.provider} provider={provider} />
             ))}
+
+            {/* Sync Button */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => syncMutation.mutate(undefined)}
+                  disabled={syncMutation.isPending}
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted/50 transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw
+                    className={cn(
+                      "h-3.5 w-3.5 text-muted-foreground",
+                      syncMutation.isPending && "animate-spin"
+                    )}
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    {syncMutation.isPending ? "Syncing..." : "Sync"}
+                  </span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Fetch latest stats from email provider APIs</TooltipContent>
+            </Tooltip>
           </div>
 
           {/* Daily Quota */}

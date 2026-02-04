@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
   EmailDashboardStats,
   ProviderHealth,
@@ -197,4 +197,29 @@ export function useEmailCRMData() {
       bounces.refetch();
     },
   };
+}
+
+// Sync provider stats from external APIs
+async function syncProviderStats(provider?: string): Promise<{ success: boolean }> {
+  const res = await fetch("/api/admin/email/sync", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(provider ? { provider } : {}),
+  });
+  if (!res.ok) throw new Error("Failed to sync provider stats");
+  return res.json();
+}
+
+export function useSyncProviderStats() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: syncProviderStats,
+    onSuccess: () => {
+      // Invalidate health and quotas to refresh the UI
+      queryClient.invalidateQueries({ queryKey: emailCRMKeys.health() });
+      queryClient.invalidateQueries({ queryKey: emailCRMKeys.quotas() });
+      queryClient.invalidateQueries({ queryKey: emailCRMKeys.stats() });
+    },
+  });
 }
