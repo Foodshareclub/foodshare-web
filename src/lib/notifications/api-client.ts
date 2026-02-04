@@ -150,16 +150,19 @@ async function callNotificationApi<T>(
     const result = await response.json();
 
     if (!response.ok) {
+      // Error can be at top level (validation errors) or nested in data (delivery failures)
+      const errorMessage = result.error || result.data?.error || `HTTP ${response.status}`;
       return {
         success: false,
-        error: result.error || `HTTP ${response.status}`,
+        error: errorMessage,
       };
     }
 
     return {
       success: result.success,
       data: result.data,
-      error: result.error,
+      // Error can be at top level or nested in data
+      error: result.error || result.data?.error,
     };
   } catch (error) {
     console.error(`[NotificationAPI] ${endpoint} failed:`, error);
