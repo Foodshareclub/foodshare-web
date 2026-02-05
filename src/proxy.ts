@@ -4,11 +4,17 @@ import { NextResponse, type NextRequest } from "next/server";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-// Admin client for checking roles (bypasses RLS)
-// Created lazily to avoid issues during build
+// ============================================================================
+// Admin Client
+// ============================================================================
+
 let _adminClient: ReturnType<typeof createClient> | null = null;
 function getAdminClient() {
-  if (!_adminClient && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (
+    !_adminClient &&
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
     _adminClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -16,6 +22,153 @@ function getAdminClient() {
     );
   }
   return _adminClient;
+}
+
+// ============================================================================
+// IP Reputation & Threat Detection
+// ============================================================================
+
+interface IPReputation {
+  violations: number;
+  lastViolation: number;
+  blocked: boolean;
+}
+
+const ipReputations = new Map<string, IPReputation>();
+const IP_VIOLATION_THRESHOLD = 10;
+const IP_BLOCK_DURATION = 3600000; // 1 hour
+
+function recordIPViolation(ip: string) {
+  const rep = ipReputations.get(ip) || { violations: 0, lastViolation: 0, blocked: false };
+  rep.violations++;
+  rep.lastViolation = Date.now();
+
+  if (rep.violations >= IP_VIOLATION_THRESHOLD) {
+    rep.blocked = true;
+    console.warn(`[Security] IP blocked due to violations: ${ip}`);
+  }
+
+  ipReputations.set(ip, rep);
+}
+
+function isIPBlocked(ip: string): boolean {
+  const rep = ipReputations.get(ip);
+  if (!rep || !rep.blocked) return false;
+
+  const now = Date.now();
+  if (now - rep.lastViolation > IP_BLOCK_DURATION) {
+    rep.blocked = false;
+    rep.violations = 0;
+    ipReputations.set(ip, rep);
+    return false;
+  }
+
+  return true;
+}
+
+// ============================================================================
+// Observability
+// ============================================================================
+
+interface ProxyMetrics {
+  timestamp: number;
+  path: string;
+  method: string;
+  ip: string;
+  userAgent: string;
+  duration: number;
+  status: number;
+  rateLimitHit?: string;
+  csrfBlocked?: boolean;
+  authRefreshFailed?: boolean;
+}
+
+const metrics: ProxyMetrics[] = [];
+const MAX_METRICS = 1000;
+
+function recordMetric(metric: ProxyMetrics) {
+  metrics.push(metric);
+  if (metrics.length > MAX_METRICS) metrics.shift();
+}
+
+function getMetricsSummary() {
+  const now = Date.now();
+  const last5min = metrics.filter((m) => now - m.timestamp < 300000);
+  return {
+    total: last5min.length,
+    rateLimited: last5min.filter((m) => m.rateLimitHit).length,
+    csrfBlocked: last5min.filter((m) => m.csrfBlocked).length,
+    authFailures: last5min.filter((m) => m.authRefreshFailed).length,
+    avgDuration: last5min.reduce((sum, m) => sum + m.duration, 0) / last5min.length || 0,
+  };
+}
+
+// Expose metrics globally for admin endpoint
+if (typeof global !== "undefined") {
+  (
+    global as { proxyMetrics?: { getMetricsSummary: () => ReturnType<typeof getMetricsSummary> } }
+  ).proxyMetrics = { getMetricsSummary };
+}
+
+// ============================================================================
+// Circuit Breaker
+// ============================================================================
+
+interface CircuitState {
+  failures: number;
+  lastFailure: number;
+  state: "closed" | "open" | "half-open";
+}
+
+const circuits = new Map<string, CircuitState>();
+const CIRCUIT_THRESHOLD = 5;
+const CIRCUIT_TIMEOUT = 60000; // 1 minute
+const CIRCUIT_HALF_OPEN_TIMEOUT = 30000; // 30 seconds
+
+function getCircuitState(key: string): CircuitState {
+  if (!circuits.has(key)) {
+    circuits.set(key, { failures: 0, lastFailure: 0, state: "closed" });
+  }
+  return circuits.get(key)!;
+}
+
+function recordCircuitFailure(key: string) {
+  const circuit = getCircuitState(key);
+  circuit.failures++;
+  circuit.lastFailure = Date.now();
+
+  if (circuit.failures >= CIRCUIT_THRESHOLD) {
+    circuit.state = "open";
+    console.warn(`[Circuit] Opened circuit for ${key}`);
+  }
+}
+
+function recordCircuitSuccess(key: string) {
+  const circuit = getCircuitState(key);
+  circuit.failures = 0;
+  circuit.state = "closed";
+}
+
+function isCircuitOpen(key: string): boolean {
+  const circuit = getCircuitState(key);
+  const now = Date.now();
+
+  if (circuit.state === "open") {
+    if (now - circuit.lastFailure > CIRCUIT_TIMEOUT) {
+      circuit.state = "half-open";
+      return false;
+    }
+    return true;
+  }
+
+  if (circuit.state === "half-open") {
+    if (now - circuit.lastFailure > CIRCUIT_HALF_OPEN_TIMEOUT) {
+      circuit.state = "closed";
+      circuit.failures = 0;
+    }
+  }
+
+  return false;
 }
 
 // ============================================================================
@@ -99,60 +252,64 @@ const MUTATION_METHODS = ["POST", "PUT", "PATCH", "DELETE"];
 // Security Helpers
 // ============================================================================
 
-/**
- * Get client IP from request headers
- * Checks multiple headers for proxied requests (Cloudflare, Vercel, etc.)
- */
 function getClientIp(request: NextRequest): string {
-  const cfConnectingIp = request.headers.get("cf-connecting-ip");
-  const realIp = request.headers.get("x-real-ip");
-  const forwardedFor = request.headers.get("x-forwarded-for");
-
-  return cfConnectingIp || realIp || forwardedFor?.split(",")[0].trim() || "unknown";
+  return (
+    request.headers.get("cf-connecting-ip") ||
+    request.headers.get("x-real-ip") ||
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    "unknown"
+  );
 }
 
-/**
- * Validate request origin for CSRF protection
- * Returns true if the request is safe, false if it should be blocked
- */
+function getClientFingerprint(request: NextRequest): string {
+  const ip = getClientIp(request);
+  const ua = request.headers.get("user-agent") || "";
+  return `${ip}:${ua.slice(0, 50)}`;
+}
+
 function validateOrigin(request: NextRequest): boolean {
   const method = request.method.toUpperCase();
+  if (!MUTATION_METHODS.includes(method)) return true;
 
-  // Safe methods don't need origin validation
-  if (!MUTATION_METHODS.includes(method)) {
-    return true;
-  }
-
-  // Allow health/cron endpoints (Vercel cron jobs have no origin header)
   const { pathname } = request.nextUrl;
-  if (pathname.startsWith("/api/health/")) {
-    return true;
-  }
+  if (pathname.startsWith("/api/health/") || pathname.startsWith("/api/cron/")) return true;
 
-  // Check Origin header first (most reliable)
   const origin = request.headers.get("origin");
-  if (origin) {
-    return ALLOWED_ORIGINS.includes(origin);
-  }
+  if (origin && ALLOWED_ORIGINS.includes(origin)) return true;
 
-  // Fallback to Referer header for same-site requests
   const referer = request.headers.get("referer");
   if (referer) {
     try {
       const refererUrl = new URL(referer);
-      return ALLOWED_ORIGINS.includes(refererUrl.origin);
-    } catch {
-      return false;
-    }
+      if (ALLOWED_ORIGINS.includes(refererUrl.origin)) return true;
+    } catch {}
   }
 
-  // API routes from mobile apps won't have Origin/Referer
-  // They should use Edge Functions instead, but allow for now with auth check
-  // The actual mutation will still require valid auth token
-  const isApiRoute = request.nextUrl.pathname.startsWith("/api/");
+  const isApiRoute = pathname.startsWith("/api/");
   const hasAuthHeader = request.headers.has("authorization");
-
   return isApiRoute && hasAuthHeader;
+}
+
+const SUSPICIOUS_PATTERNS = [
+  /\.\.\//,
+  /<script/i,
+  /javascript:/i,
+  /on\w+=/i,
+  /eval\(/i,
+  /union.*select/i,
+  /drop.*table/i,
+];
+
+function detectSuspiciousRequest(request: NextRequest): string | null {
+  const url = request.nextUrl.toString();
+  const ua = request.headers.get("user-agent") || "";
+
+  for (const pattern of SUSPICIOUS_PATTERNS) {
+    if (pattern.test(url)) return `Suspicious URL pattern: ${pattern}`;
+    if (pattern.test(ua)) return `Suspicious User-Agent: ${pattern}`;
+  }
+
+  return null;
 }
 
 // NOTE: Security headers (CSP, X-Frame-Options, etc.) are configured in next.config.ts
@@ -162,85 +319,114 @@ function validateOrigin(request: NextRequest): boolean {
 // Main Proxy
 // ============================================================================
 
-/**
- * Next.js 16 Proxy for Supabase Auth
- *
- * This proxy handles session refresh on every request, ensuring:
- * 1. Supabase auth cookies are properly synced
- * 2. Expired sessions are refreshed automatically
- * 3. Admin routes are protected with role-based access (defense-in-depth)
- * 4. Security headers are applied (CSP, CSRF, XSS protection)
- *
- * Security: Admin check uses multiple role sources for consistency with checkIsAdmin()
- */
 export async function proxy(request: NextRequest) {
-  // ============================================================================
-  // CSRF Protection - Block invalid origins for mutations
-  // ============================================================================
-  if (!validateOrigin(request)) {
-    console.warn(
-      `CSRF: Blocked ${request.method} request from invalid origin:`,
-      request.headers.get("origin") || request.headers.get("referer") || "unknown"
-    );
-    return new NextResponse("Forbidden: Invalid origin", { status: 403 });
+  const startTime = Date.now();
+  const correlationId = request.headers.get("x-correlation-id") || crypto.randomUUID();
+  const ip = getClientIp(request);
+  const fingerprint = getClientFingerprint(request);
+  const { pathname } = request.nextUrl;
+
+  // IP reputation check
+  if (isIPBlocked(ip)) {
+    console.warn(`[Security] Blocked request from banned IP: ${ip}`, { correlationId });
+    return new NextResponse("Forbidden", { status: 403 });
   }
 
-  // ============================================================================
-  // Rate Limiting - Multi-tier protection
-  // ============================================================================
-  const { pathname } = request.nextUrl;
-  const ip = getClientIp(request);
+  const metricData: Partial<ProxyMetrics> = {
+    timestamp: startTime,
+    path: pathname,
+    method: request.method,
+    ip,
+    userAgent: request.headers.get("user-agent") || "",
+  };
 
-  // Skip rate limiting in development
-  if (process.env.NODE_ENV === "production") {
-    // 1. Auth endpoint rate limiting (strictest - 10/min)
+  // Suspicious request detection
+  const suspiciousReason = detectSuspiciousRequest(request);
+  if (suspiciousReason) {
+    console.warn(`[Security] Suspicious request blocked: ${suspiciousReason}`, {
+      ip,
+      pathname,
+      correlationId,
+    });
+    recordIPViolation(ip);
+    recordMetric({ ...metricData, duration: Date.now() - startTime, status: 400 } as ProxyMetrics);
+    return new NextResponse("Bad Request", { status: 400 });
+  }
+
+  // CSRF Protection
+  if (!validateOrigin(request)) {
+    console.warn(`[CSRF] Blocked ${request.method} from invalid origin`, {
+      ip,
+      pathname,
+      correlationId,
+      origin: request.headers.get("origin") || request.headers.get("referer"),
+    });
+    recordIPViolation(ip);
+    metricData.csrfBlocked = true;
+    recordMetric({ ...metricData, duration: Date.now() - startTime, status: 403 } as ProxyMetrics);
+    return new NextResponse("Forbidden", { status: 403 });
+  }
+
+  // Rate Limiting
+  const isProd = process.env.NODE_ENV === "production";
+
+  if (isProd) {
     const isAuthEndpoint = pathname.startsWith("/auth") || pathname.startsWith("/api/auth");
+    const isMutation = MUTATION_METHODS.includes(request.method.toUpperCase());
+
     if (authLimiter && isAuthEndpoint) {
-      const { success, reset } = await authLimiter.limit(ip);
+      const { success, reset } = await authLimiter.limit(fingerprint);
       if (!success) {
-        console.warn(`Auth rate limit exceeded for ${ip} on ${pathname}`);
+        console.warn(`[RateLimit] Auth limit exceeded`, { ip, pathname });
+        metricData.rateLimitHit = "auth";
+        recordMetric({
+          ...metricData,
+          duration: Date.now() - startTime,
+          status: 429,
+        } as ProxyMetrics);
         return new NextResponse("Too Many Requests", {
           status: 429,
           headers: {
             "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
-            "X-RateLimit-Limit": "10",
-            "X-RateLimit-Remaining": "0",
             "X-RateLimit-Type": "auth",
           },
         });
       }
     }
 
-    // 2. Mutation rate limiting (30/min for POST/PUT/PATCH/DELETE)
-    const isMutation = MUTATION_METHODS.includes(request.method.toUpperCase());
     if (mutationLimiter && isMutation) {
-      const { success, limit, reset, remaining } = await mutationLimiter.limit(`mutation:${ip}`);
+      const { success, reset } = await mutationLimiter.limit(`mutation:${fingerprint}`);
       if (!success) {
-        console.warn(`Mutation rate limit exceeded for ${ip} on ${pathname}`);
+        console.warn(`[RateLimit] Mutation limit exceeded`, { ip, pathname });
+        metricData.rateLimitHit = "mutation";
+        recordMetric({
+          ...metricData,
+          duration: Date.now() - startTime,
+          status: 429,
+        } as ProxyMetrics);
         return new NextResponse("Too Many Requests", {
           status: 429,
           headers: {
-            "X-RateLimit-Limit": limit.toString(),
-            "X-RateLimit-Remaining": remaining.toString(),
-            "X-RateLimit-Reset": reset.toString(),
             "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
-            "X-RateLimit-Type": "mutations",
+            "X-RateLimit-Type": "mutation",
           },
         });
       }
     }
 
-    // 3. Global rate limiting (100/10s for all requests)
     if (globalLimiter) {
-      const { success, limit, reset, remaining } = await globalLimiter.limit(ip);
+      const { success, reset } = await globalLimiter.limit(ip);
       if (!success) {
-        console.warn(`Global rate limit exceeded for ${ip}`);
+        console.warn(`[RateLimit] Global limit exceeded`, { ip });
+        metricData.rateLimitHit = "global";
+        recordMetric({
+          ...metricData,
+          duration: Date.now() - startTime,
+          status: 429,
+        } as ProxyMetrics);
         return new NextResponse("Too Many Requests", {
           status: 429,
           headers: {
-            "X-RateLimit-Limit": limit.toString(),
-            "X-RateLimit-Remaining": remaining.toString(),
-            "X-RateLimit-Reset": reset.toString(),
             "Retry-After": Math.ceil((reset - Date.now()) / 1000).toString(),
             "X-RateLimit-Type": "global",
           },
@@ -249,31 +435,17 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Create response that will be returned
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+  let response = NextResponse.next({ request: { headers: request.headers } });
 
-  // NOTE: Corrupted cookie detection disabled - was causing false positives
-  // and logging users out. Supabase client handles invalid cookies gracefully.
-
-  // Create Supabase client with modern cookie handling (getAll/setAll pattern)
-  // This is the recommended approach from Supabase docs for proper token refresh
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
+        getAll: () => request.cookies.getAll(),
+        setAll: (cookiesToSet) => {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({
-            request,
-          });
+          response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
           );
@@ -282,36 +454,49 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Refresh session - critical for maintaining auth state
-  // IMPORTANT: Use getUser() instead of getSession() to properly refresh tokens
-  // getSession() doesn't revalidate the JWT, getUser() does
+  const isHealthCheck = pathname.startsWith("/api/health");
   let user = null;
-  try {
-    const { data, error } = await supabase.auth.getUser();
-    if (error) {
-      // Token refresh failed - log but DON'T clear cookies
-      // Let the page handle auth state instead of aggressively logging out
-      console.warn("Proxy: Token refresh warning:", error.message);
+
+  if (!isHealthCheck) {
+    // Check circuit breaker for Supabase
+    if (isCircuitOpen("supabase-auth")) {
+      console.warn("[Circuit] Supabase auth circuit open, skipping refresh");
+      metricData.authRefreshFailed = true;
     } else {
-      user = data.user;
+      try {
+        const { data, error } = await supabase.auth.getUser();
+        if (error) {
+          console.warn("[Auth] Token refresh failed:", error.message);
+          metricData.authRefreshFailed = true;
+          recordCircuitFailure("supabase-auth");
+        } else {
+          user = data.user;
+          recordCircuitSuccess("supabase-auth");
+        }
+      } catch (error) {
+        console.warn("[Auth] Session load error:", error);
+        metricData.authRefreshFailed = true;
+        recordCircuitFailure("supabase-auth");
+      }
     }
-  } catch (error) {
-    // Log but DON'T clear cookies - this was causing unwanted logouts
-    console.warn("Proxy: Session load error (continuing without clearing cookies):", error);
   }
 
   // Admin route protection
-  if (request.nextUrl.pathname.startsWith("/admin")) {
-    // Redirect to login if not authenticated
+  if (pathname.startsWith("/admin")) {
     if (!user) {
       const loginUrl = new URL("/auth/login", request.url);
-      loginUrl.searchParams.set("next", request.nextUrl.pathname);
+      loginUrl.searchParams.set("next", pathname);
+      recordMetric({
+        ...metricData,
+        duration: Date.now() - startTime,
+        status: 302,
+      } as ProxyMetrics);
       return NextResponse.redirect(loginUrl);
     }
 
-    // Check admin status using admin client (bypasses RLS)
-    let isAdmin = false;
     const adminClient = getAdminClient();
+    let isAdmin = false;
+
     if (adminClient) {
       const { data: userRoles } = await adminClient
         .from("user_roles")
@@ -325,13 +510,22 @@ export async function proxy(request: NextRequest) {
       isAdmin = roles.includes("admin") || roles.includes("superadmin");
     }
 
-    // Redirect to home if not admin
     if (!isAdmin) {
+      recordMetric({
+        ...metricData,
+        duration: Date.now() - startTime,
+        status: 302,
+      } as ProxyMetrics);
       return NextResponse.redirect(new URL("/", request.url));
     }
   }
 
-  // Security headers are applied via next.config.ts
+  recordMetric({ ...metricData, duration: Date.now() - startTime, status: 200 } as ProxyMetrics);
+
+  // Add correlation ID to response headers for tracing
+  response.headers.set("x-correlation-id", correlationId);
+  response.headers.set("x-request-duration", `${Date.now() - startTime}ms`);
+
   return response;
 }
 

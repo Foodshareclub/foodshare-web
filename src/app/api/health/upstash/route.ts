@@ -28,10 +28,7 @@ interface ServiceHealth {
 
 const HEALTH_CHECK_TIMEOUT = 5000; // 5 second timeout per service
 
-async function withTimeout<T>(
-  promise: Promise<T>,
-  ms: number
-): Promise<T> {
+async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error("Timeout")), ms)
   );
@@ -42,10 +39,8 @@ async function checkRedis(): Promise<ServiceHealth> {
   const start = Date.now();
   try {
     // Support both naming conventions: UPSTASH_REDIS_REST_* and KV_REST_API_*
-    const url =
-      process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
-    const token =
-      process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+    const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+    const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 
     if (!url || !token) {
       return {
@@ -108,10 +103,7 @@ async function checkQStash(): Promise<ServiceHealth> {
 async function checkSearch(): Promise<ServiceHealth> {
   const start = Date.now();
   try {
-    if (
-      !process.env.UPSTASH_SEARCH_REST_URL ||
-      !process.env.UPSTASH_SEARCH_REST_TOKEN
-    ) {
+    if (!process.env.UPSTASH_SEARCH_REST_URL || !process.env.UPSTASH_SEARCH_REST_TOKEN) {
       return {
         name: "Upstash Search",
         status: "degraded",
@@ -135,9 +127,7 @@ async function checkSearch(): Promise<ServiceHealth> {
     // Search might return error if no indexes exist, but connection works
     const errorMsg = error instanceof Error ? error.message : "Unknown error";
     const isConnectionError =
-      errorMsg.includes("fetch") ||
-      errorMsg.includes("network") ||
-      errorMsg.includes("Timeout");
+      errorMsg.includes("fetch") || errorMsg.includes("network") || errorMsg.includes("Timeout");
     return {
       name: "Upstash Search",
       status: isConnectionError ? "down" : "healthy",
@@ -151,10 +141,7 @@ async function checkVector(): Promise<ServiceHealth> {
   const start = Date.now();
   try {
     // Check if Vector env vars are configured
-    if (
-      !process.env.UPSTASH_VECTOR_REST_URL ||
-      !process.env.UPSTASH_VECTOR_REST_TOKEN
-    ) {
+    if (!process.env.UPSTASH_VECTOR_REST_URL || !process.env.UPSTASH_VECTOR_REST_TOKEN) {
       return {
         name: "Upstash Vector",
         status: "degraded",
@@ -187,7 +174,7 @@ async function checkVector(): Promise<ServiceHealth> {
 /**
  * Verify QStash signature for scheduled calls
  */
-async function verifyQStashSignature(request: Request): Promise<boolean> {
+async function _verifyQStashSignature(request: Request): Promise<boolean> {
   const signature = request.headers.get("upstash-signature");
   if (!signature) return false;
 
@@ -215,31 +202,36 @@ async function verifyQStashSignature(request: Request): Promise<boolean> {
   }
 }
 
-export async function GET(request: Request) {
-  return NextResponse.json(
-    { 
-      error: "Endpoint deprecated",
-      message: "This endpoint has been replaced by /api/health/v2",
-      migration: "Please update your monitoring to use /api/health/v2"
-    }, 
-    { status: 410 }
-  );
+async function cleanupOldSchedule() {
+  if (!process.env.QSTASH_TOKEN) return;
+
+  try {
+    const qstash = new QStashClient({ token: process.env.QSTASH_TOKEN });
+    const schedules = await qstash.schedules.list();
+    const oldSchedule = schedules.find((s) => s.destination?.includes("/api/health/upstash"));
+
+    if (oldSchedule?.scheduleId) {
+      await qstash.schedules.delete(oldSchedule.scheduleId);
+      console.log("[Upstash] Deleted deprecated schedule:", oldSchedule.scheduleId);
+    }
+  } catch (error) {
+    console.error("[Upstash] Cleanup failed:", error);
+  }
+}
+
+export async function GET() {
+  return NextResponse.json({ error: "Deprecated" }, { status: 410 });
 }
 
 export async function POST(request: Request) {
-  return NextResponse.json(
-    { 
-      error: "Endpoint deprecated",
-      message: "This endpoint has been replaced by /api/health/v2",
-      migration: "Please update your monitoring to use /api/health/v2"
-    }, 
-    { status: 410 }
-  );
+  if (request.headers.get("upstash-signature")) {
+    await cleanupOldSchedule();
+    return NextResponse.json({ status: "cleaned" });
+  }
+  return NextResponse.json({ error: "Deprecated" }, { status: 410 });
 }
 
-async function runHealthCheck(
-  source: "vercel-cron" | "qstash-schedule" | "manual"
-) {
+async function _runHealthCheck(source: "vercel-cron" | "qstash-schedule" | "manual") {
   const startTime = Date.now();
 
   // Run all health checks in parallel
