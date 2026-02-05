@@ -10,9 +10,9 @@ interface HealthStatus {
   retryAfter?: number;
 }
 
-const INITIAL_POLL_INTERVAL = 60000; // 60s between checks (was 30s)
-const MAX_POLL_INTERVAL = 120000; // 2 minutes max
-const CONSECUTIVE_FAILURES_THRESHOLD = 3; // Only show banner after 3 consecutive failures (was 2)
+const INITIAL_POLL_INTERVAL = 300000; // 5 minutes (was 60s) - only check occasionally
+const MAX_POLL_INTERVAL = 600000; // 10 minutes max
+const CONSECUTIVE_FAILURES_THRESHOLD = 3; // Only show banner after 3 consecutive failures
 
 export function MaintenanceBanner(): React.ReactElement | null {
   const [status, setStatus] = useState<HealthStatus | null>(null);
@@ -21,80 +21,81 @@ export function MaintenanceBanner(): React.ReactElement | null {
   const [pollInterval, setPollInterval] = useState(INITIAL_POLL_INTERVAL);
   const consecutiveFailures = useRef(0);
   const [showBanner, setShowBanner] = useState(false);
-
-  const checkHealth = async (): Promise<void> => {
-    setIsChecking(true);
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout to allow for retries in health API
-
-      const res = await fetch("/api/health", {
-        cache: "no-store",
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        consecutiveFailures.current += 1;
-
-        setStatus({
-          status: "maintenance",
-          database: false,
-          message: data.message,
-          retryAfter: data.retryAfter || 30,
-        });
-
-        // Only show banner after consecutive failures
-        if (consecutiveFailures.current >= CONSECUTIVE_FAILURES_THRESHOLD) {
-          setShowBanner(true);
-        }
-
-        setPollInterval(Math.min(pollInterval * 1.5, MAX_POLL_INTERVAL));
-        return;
-      }
-
-      const data: HealthStatus = await res.json();
-      setStatus(data);
-
-      if (data.status === "healthy") {
-        consecutiveFailures.current = 0;
-        setShowBanner(false);
-        setDismissed(false);
-        setPollInterval(INITIAL_POLL_INTERVAL);
-      } else {
-        consecutiveFailures.current += 1;
-        if (consecutiveFailures.current >= CONSECUTIVE_FAILURES_THRESHOLD) {
-          setShowBanner(true);
-        }
-        const nextInterval = data.retryAfter
-          ? data.retryAfter * 1000
-          : Math.min(pollInterval * 1.5, MAX_POLL_INTERVAL);
-        setPollInterval(nextInterval);
-      }
-    } catch {
-      consecutiveFailures.current += 1;
-
-      // Only show banner after consecutive failures (not on first timeout)
-      if (consecutiveFailures.current >= CONSECUTIVE_FAILURES_THRESHOLD) {
-        setStatus({
-          status: "maintenance",
-          database: false,
-          retryAfter: 30,
-        });
-        setShowBanner(true);
-      }
-
-      setPollInterval(Math.min(pollInterval * 1.5, MAX_POLL_INTERVAL));
-    } finally {
-      setIsChecking(false);
-    }
-  };
+  const checkHealthRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     let mounted = true;
     let timeoutId: NodeJS.Timeout;
+
+    const checkHealth = async (): Promise<void> => {
+      setIsChecking(true);
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+        const res = await fetch("/api/health", {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          consecutiveFailures.current += 1;
+
+          setStatus({
+            status: "maintenance",
+            database: false,
+            message: data.message,
+            retryAfter: data.retryAfter || 30,
+          });
+
+          if (consecutiveFailures.current >= CONSECUTIVE_FAILURES_THRESHOLD) {
+            setShowBanner(true);
+          }
+
+          setPollInterval(Math.min(pollInterval * 1.5, MAX_POLL_INTERVAL));
+          return;
+        }
+
+        const data: HealthStatus = await res.json();
+        setStatus(data);
+
+        if (data.status === "healthy") {
+          consecutiveFailures.current = 0;
+          setShowBanner(false);
+          setDismissed(false);
+          setPollInterval(INITIAL_POLL_INTERVAL);
+        } else {
+          consecutiveFailures.current += 1;
+          if (consecutiveFailures.current >= CONSECUTIVE_FAILURES_THRESHOLD) {
+            setShowBanner(true);
+          }
+          const nextInterval = data.retryAfter
+            ? data.retryAfter * 1000
+            : Math.min(pollInterval * 1.5, MAX_POLL_INTERVAL);
+          setPollInterval(nextInterval);
+        }
+      } catch {
+        consecutiveFailures.current += 1;
+
+        if (consecutiveFailures.current >= CONSECUTIVE_FAILURES_THRESHOLD) {
+          setStatus({
+            status: "maintenance",
+            database: false,
+            retryAfter: 30,
+          });
+          setShowBanner(true);
+        }
+
+        setPollInterval(Math.min(pollInterval * 1.5, MAX_POLL_INTERVAL));
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    checkHealthRef.current = checkHealth;
 
     const poll = async (): Promise<void> => {
       if (!mounted) return;
@@ -104,7 +105,6 @@ export function MaintenanceBanner(): React.ReactElement | null {
       }
     };
 
-    // Delay first check by 2s to let the page load first
     const initialDelay = setTimeout(() => {
       poll();
     }, 2000);
@@ -162,7 +162,7 @@ export function MaintenanceBanner(): React.ReactElement | null {
           <div className="flex items-center gap-1 flex-shrink-0">
             {/* Refresh button */}
             <button
-              onClick={checkHealth}
+              onClick={() => checkHealthRef.current?.()}
               disabled={isChecking}
               className={cn(
                 "p-2 rounded-full transition-all duration-200",
