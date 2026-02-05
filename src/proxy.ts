@@ -535,6 +535,11 @@ export async function proxy(request: NextRequest) {
   response.headers.set("x-correlation-id", correlationId);
   response.headers.set("x-request-duration", `${Date.now() - startTime}ms`);
 
+  // Add aggressive caching for static-like routes to reduce function invocations
+  if (pathname.match(/^\/(food|forum|about|privacy|terms)/)) {
+    response.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=300");
+  }
+
   return response;
 }
 
