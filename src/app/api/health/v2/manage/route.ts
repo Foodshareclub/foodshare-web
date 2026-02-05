@@ -62,7 +62,7 @@ class HealthManagementAPI {
       const circuitBreakers = await this.getCircuitBreakerStates(circuitBreakerKeys);
 
       // Calculate performance metrics
-      const performance = this.calculatePerformanceMetrics(metrics || {}, performanceData || {});
+      const performance = this.calculatePerformanceMetrics(metrics as Record<string, string> || {}, performanceData as Record<string, string> || {});
 
       return {
         redis: {

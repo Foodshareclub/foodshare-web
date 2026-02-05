@@ -472,7 +472,7 @@ class EnterpriseHealthMonitor {
       pipeline.push(['hincrbyfloat', 'metrics:health', 'cost_saved_usd', costSaved]);
     }
 
-    await this.redis.pipeline(pipeline).exec();
+    await this.redis.pipeline().exec();
 
     // Emit metrics for external systems
     Logger.metric('health_check_duration_ms', duration, { success: success.toString() });
@@ -562,7 +562,6 @@ async function checkRedis(): Promise<{ status: 'healthy' | 'degraded' | 'down', 
       latency,
       metadata: {
         ping: ping,
-        info: typeof info === 'string' ? info.substring(0, 100) : 'unavailable',
         connection: 'success'
       }
     };
