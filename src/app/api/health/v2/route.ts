@@ -184,40 +184,172 @@ class Logger {
   }
 }
 
-// Main Health Monitor
+// Rate limiter
+class RateLimiter {
+  private readonly redis: Redis;
+  private readonly maxRequests: number;
+  private readonly windowMs: number;
+
+  constructor(maxRequests: number = 100, windowMs: number = 60000) {
+    this.redis = RedisPool.getInstance();
+    this.maxRequests = maxRequests;
+    this.windowMs = windowMs;
+  }
+
+  async allow(clientId: string): Promise<boolean> {
+    const key = `ratelimit:${clientId}`;
+    const now = Date.now();
+    const windowStart = now - this.windowMs;
+
+    // Use Redis sorted set for sliding window
+    const count = await this.redis.eval(
+      `
+      redis.call('ZREMRANGEBYSCORE', KEYS[1], 0, ARGV[1])
+      local count = redis.call('ZCARD', KEYS[1])
+      if count < tonumber(ARGV[3]) then
+        redis.call('ZADD', KEYS[1], ARGV[2], ARGV[2])
+        redis.call('EXPIRE', KEYS[1], 60)
+        return count + 1
+      end
+      return count
+      `,
+      [key],
+      [windowStart.toString(), now.toString(), this.maxRequests.toString()]
+    );
+
+    return (count as number) <= this.maxRequests;
+  }
+}
+
+// Authentication
+function validateApiKey(request: Request): boolean {
+  const apiKey = request.headers.get('x-api-key');
+  const validKey = process.env.HEALTH_API_KEY;
+  
+  // Allow if no key configured (backward compatibility)
+  if (!validKey) return true;
+  
+  return apiKey === validKey;
+}
+
+function getClientId(request: Request): string {
+  // Use API key or IP as client identifier
+  const apiKey = request.headers.get('x-api-key');
+  if (apiKey) return `key:${apiKey}`;
+  
+  const ip = request.headers.get('x-forwarded-for') || 
+             request.headers.get('x-real-ip') || 
+             'unknown';
+  return `ip:${ip}`;
+}
+
+// Singleton Redis connection pool
+class RedisPool {
+  private static instance: Redis | null = null;
+
+  static getInstance(): Redis {
+    if (!this.instance) {
+      if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+        throw new Error('Redis configuration missing');
+      }
+
+      this.instance = new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+        retry: {
+          retries: 3,
+          retryDelayOnFailover: 100
+        }
+      });
+    }
+    return this.instance;
+  }
+}
+
+// Request deduplication
+class RequestDeduplicator {
+  private pending = new Map<string, Promise<any>>();
+
+  async deduplicate<T>(key: string, fn: () => Promise<T>): Promise<T> {
+    const existing = this.pending.get(key);
+    if (existing) return existing;
+
+    const promise = fn().finally(() => this.pending.delete(key));
+    this.pending.set(key, promise);
+    return promise;
+  }
+}
+
+// Response cache
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+}
+
+class ResponseCache {
+  private cache = new Map<string, CacheEntry<any>>();
+  private readonly ttl: number;
+
+  constructor(ttlMs: number = 5000) {
+    this.ttl = ttlMs;
+  }
+
+  get<T>(key: string): T | null {
+    const entry = this.cache.get(key);
+    if (!entry) return null;
+    
+    if (Date.now() - entry.timestamp > this.ttl) {
+      this.cache.delete(key);
+      return null;
+    }
+    
+    return entry.data;
+  }
+
+  set<T>(key: string, data: T): void {
+    this.cache.set(key, { data, timestamp: Date.now() });
+  }
+}
+
+// Main Health Monitor with singleton pattern
 class EnterpriseHealthMonitor {
+  private static instance: EnterpriseHealthMonitor | null = null;
   private readonly redis: Redis;
   private readonly circuitBreaker: CircuitBreaker;
   private readonly instanceId: string;
+  private readonly deduplicator: RequestDeduplicator;
+  private readonly cache: ResponseCache;
 
-  constructor() {
-    if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-      throw new Error('Redis configuration missing');
-    }
-
-    this.redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-      retry: {
-        retries: 3,
-        retryDelayOnFailover: 100
-      }
-    });
-    
+  private constructor() {
+    this.redis = RedisPool.getInstance();
     this.circuitBreaker = new CircuitBreaker();
     this.instanceId = `health-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    this.deduplicator = new RequestDeduplicator();
+    this.cache = new ResponseCache(5000); // 5s cache
   }
 
-  // Optimistic locking for atomic updates
+  static getInstance(): EnterpriseHealthMonitor {
+    if (!this.instance) {
+      this.instance = new EnterpriseHealthMonitor();
+    }
+    return this.instance;
+  }
+
+  // Optimistic locking with proper atomic versioning
   async updateHealthWithLock(serviceId: string, updater: (current: HealthCheck | null) => HealthCheck): Promise<boolean> {
     const key = `health:${serviceId}`;
+    const versionKey = `version:${serviceId}`;
     const maxRetries = 5;
     
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       const current = await this.redis.get(key) as string;
       const currentHealth: HealthCheck | null = current ? JSON.parse(current) : null;
       
+      // Get atomic version from Redis
+      const version = await this.redis.incr(versionKey);
+      
       const updated = updater(currentHealth);
+      updated.version = version;
       
       // Optimistic locking with version check
       if (currentHealth) {
@@ -242,8 +374,9 @@ class EnterpriseHealthMonitor {
         return true;
       }
       
-      // Collision detected, exponential backoff
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 10));
+      // Collision detected, exponential backoff with max limit
+      const backoff = Math.min(Math.pow(2, attempt) * 10, 1000);
+      await new Promise(resolve => setTimeout(resolve, backoff));
     }
     
     Logger.error('Failed to update health after retries', new Error('Optimistic lock failure'), {
@@ -346,7 +479,7 @@ class EnterpriseHealthMonitor {
     Logger.metric('health_check_latency_ms', latency, { success: success.toString() });
   }
 
-  // Get comprehensive health status
+  // Get comprehensive health status with caching
   async getHealthStatus(): Promise<{
     services: HealthCheck[];
     metrics: Metrics;
@@ -356,16 +489,32 @@ class EnterpriseHealthMonitor {
       version: string;
     };
   }> {
-    const [healthKeys, metricsData] = await Promise.all([
-      this.redis.keys('health:*'),
-      this.redis.hgetall('metrics:health')
-    ]);
-
-    const services: HealthCheck[] = [];
-    if (healthKeys.length > 0) {
-      const healthData = await this.redis.mget(...healthKeys);
-      services.push(...healthData.filter(Boolean).map(data => JSON.parse(data as string)));
+    // Check cache first
+    const cached = this.cache.get<any>('health:status');
+    if (cached) {
+      Logger.info('Health status cache hit', { age: Date.now() - cached.timestamp });
+      return cached;
     }
+
+    // Use SCAN instead of KEYS for better performance
+    const services: HealthCheck[] = [];
+    let cursor = '0';
+    
+    do {
+      const [newCursor, keys] = await this.redis.scan(cursor, {
+        match: 'health:*',
+        count: 100
+      }) as [string, string[]];
+      
+      if (keys.length > 0) {
+        const healthData = await this.redis.mget(...keys);
+        services.push(...healthData.filter(Boolean).map(data => JSON.parse(data as string)));
+      }
+      
+      cursor = newCursor;
+    } while (cursor !== '0');
+
+    const metricsData = await this.redis.hgetall('metrics:health');
 
     const metrics: Metrics = {
       checks_total: parseInt(metricsData.checks_total as string || '0'),
@@ -375,7 +524,7 @@ class EnterpriseHealthMonitor {
       circuit_breaker_trips: parseInt(metricsData.circuit_breaker_trips as string || '0')
     };
 
-    return {
+    const result = {
       services,
       metrics,
       system: {
@@ -384,6 +533,11 @@ class EnterpriseHealthMonitor {
         version: '2.0.0'
       }
     };
+
+    // Cache the result
+    this.cache.set('health:status', result);
+
+    return result;
   }
 }
 
@@ -425,54 +579,80 @@ async function checkRedis(): Promise<{ status: 'healthy' | 'degraded' | 'down', 
   }
 }
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: Request): Promise<NextResponse> {
   const startTime = Date.now();
   
   try {
-    const monitor = new EnterpriseHealthMonitor();
+    // Authentication
+    if (!validateApiKey(request)) {
+      return NextResponse.json(
+        { error: 'Unauthorized', timestamp: new Date().toISOString() },
+        { status: 401 }
+      );
+    }
+
+    // Rate limiting
+    const clientId = getClientId(request);
+    const rateLimiter = new RateLimiter(100, 60000); // 100 req/min
     
-    // Check services in parallel with proper error isolation
-    const [redisHealth] = await Promise.allSettled([
-      monitor.checkService('redis', checkRedis)
-    ]);
+    if (!await rateLimiter.allow(clientId)) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded', timestamp: new Date().toISOString() },
+        { status: 429, headers: { 'Retry-After': '60' } }
+      );
+    }
 
-    const services = [
-      redisHealth.status === 'fulfilled' ? redisHealth.value : null
-    ].filter(Boolean) as HealthCheck[];
-
-    const status = await monitor.getHealthStatus();
+    // Request deduplication
+    const monitor = EnterpriseHealthMonitor.getInstance();
+    const deduplicationKey = 'health:check';
     
-    const overallStatus = services.every(s => s.status === 'healthy') ? 'healthy' :
-                         services.some(s => s.status === 'down') ? 'down' : 'degraded';
+    const result = await monitor.deduplicator.deduplicate(deduplicationKey, async () => {
+      // Check services in parallel with proper error isolation
+      const [redisHealth] = await Promise.allSettled([
+        monitor.checkService('redis', checkRedis)
+      ]);
 
-    const response = {
-      status: overallStatus,
-      timestamp: new Date().toISOString(),
-      duration: Date.now() - startTime,
-      services: status.services,
-      metrics: {
-        ...status.metrics,
-        success_rate: status.metrics.checks_total > 0 ? 
-          ((status.metrics.checks_total - status.metrics.checks_failed) / status.metrics.checks_total * 100).toFixed(2) + '%' : '100%',
-        avg_latency: status.metrics.checks_total > 0 ? 
-          Math.round(status.metrics.latency_sum / status.metrics.checks_total) + 'ms' : '0ms',
-        cost_saved: '$' + status.metrics.cost_saved_usd.toFixed(6)
-      },
-      system: status.system
-    };
+      const services = [
+        redisHealth.status === 'fulfilled' ? redisHealth.value : null
+      ].filter(Boolean) as HealthCheck[];
 
-    Logger.info('Health check completed', {
-      status: overallStatus,
-      duration: Date.now() - startTime,
-      services: services.length
+      const status = await monitor.getHealthStatus();
+      
+      const overallStatus = services.every(s => s.status === 'healthy') ? 'healthy' :
+                           services.some(s => s.status === 'down') ? 'down' : 'degraded';
+
+      return {
+        status: overallStatus,
+        timestamp: new Date().toISOString(),
+        duration: Date.now() - startTime,
+        services: status.services,
+        metrics: {
+          ...status.metrics,
+          success_rate: status.metrics.checks_total > 0 ? 
+            ((status.metrics.checks_total - status.metrics.checks_failed) / status.metrics.checks_total * 100).toFixed(2) + '%' : '100%',
+          avg_latency: status.metrics.checks_total > 0 ? 
+            Math.round(status.metrics.latency_sum / status.metrics.checks_total) + 'ms' : '0ms',
+          cost_saved: '$' + status.metrics.cost_saved_usd.toFixed(6)
+        },
+        system: {
+          version: status.system.version,
+          timestamp: status.system.timestamp
+          // Don't expose instanceId for security
+        }
+      };
     });
 
-    return NextResponse.json(response, {
-      status: overallStatus === 'down' ? 503 : 200,
+    Logger.info('Health check completed', {
+      status: result.status,
+      duration: Date.now() - startTime,
+      cached: Date.now() - startTime < 10 // Likely cached if < 10ms
+    });
+
+    return NextResponse.json(result, {
+      status: result.status === 'down' ? 503 : 200,
       headers: {
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
-        'X-Health-Instance': status.system.instanceId,
-        'X-Health-Version': status.system.version
+        'Cache-Control': 'private, max-age=5',
+        'X-Health-Version': '2.0.0'
       }
     });
 
