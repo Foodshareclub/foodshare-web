@@ -216,44 +216,25 @@ async function verifyQStashSignature(request: Request): Promise<boolean> {
 }
 
 export async function GET(request: Request) {
-  // Verify cron secret for security (optional but recommended)
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  // Allow access if no secret is set, or if secret matches, or if from Vercel cron
-  const isVercelCron = request.headers.get("x-vercel-cron") === "1";
-  const isAuthorized =
-    !cronSecret || authHeader === `Bearer ${cronSecret}` || isVercelCron;
-
-  if (!isAuthorized) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  return runHealthCheck("vercel-cron");
+  return NextResponse.json(
+    { 
+      error: "Endpoint deprecated",
+      message: "This endpoint has been replaced by /api/health/v2",
+      migration: "Please update your monitoring to use /api/health/v2"
+    }, 
+    { status: 410 }
+  );
 }
 
 export async function POST(request: Request) {
-  // Try QStash signature first
-  const isQStashRequest = await verifyQStashSignature(request.clone());
-  if (isQStashRequest) {
-    return runHealthCheck("qstash-schedule");
-  }
-
-  // Fallback: Allow if authorized via cron secret or Vercel header
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-  const isVercelCron = request.headers.get("x-vercel-cron") === "1";
-  const isAuthorized =
-    !cronSecret || authHeader === `Bearer ${cronSecret}` || isVercelCron;
-
-  if (!isAuthorized) {
-    return NextResponse.json(
-      { error: "Invalid QStash signature or unauthorized" },
-      { status: 401 }
-    );
-  }
-
-  return runHealthCheck("manual");
+  return NextResponse.json(
+    { 
+      error: "Endpoint deprecated",
+      message: "This endpoint has been replaced by /api/health/v2",
+      migration: "Please update your monitoring to use /api/health/v2"
+    }, 
+    { status: 410 }
+  );
 }
 
 async function runHealthCheck(
