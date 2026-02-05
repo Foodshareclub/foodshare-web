@@ -2,9 +2,9 @@
  * Vercel Blob Storage Client
  * Used for file uploads (images, documents)
  */
-import { put, del, list, head, copy } from '@vercel/blob';
+import { put, del, list, head, copy } from "@vercel/blob";
 
-export type BlobAccess = 'public';
+export type BlobAccess = "public";
 
 export interface UploadOptions {
   access?: BlobAccess;
@@ -28,18 +28,13 @@ export const MAX_FILE_SIZES = {
 } as const;
 
 // Allowed MIME types
-export const ALLOWED_IMAGE_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-] as const;
+export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"] as const;
 
 export const ALLOWED_DOCUMENT_TYPES = [
-  'application/pdf',
-  'text/plain',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  "application/pdf",
+  "text/plain",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ] as const;
 
 /**
@@ -79,7 +74,7 @@ export async function uploadBlob(
   file: File | Blob | ArrayBuffer | string,
   options: UploadOptions = {}
 ): Promise<BlobUploadResult> {
-  const { access = 'public', contentType, addRandomSuffix = true, cacheControlMaxAge } = options;
+  const { access = "public", contentType, addRandomSuffix = true, cacheControlMaxAge } = options;
 
   const blob = await put(pathname, file, {
     access,
@@ -170,7 +165,7 @@ export const BLOB_PATHS = {
   PRODUCT_IMAGES: (productId: string) => `products/${productId}/`,
   USER_AVATARS: (userId: string) => `avatars/${userId}/`,
   CHAT_ATTACHMENTS: (roomId: string) => `chat/${roomId}/`,
-  DOCUMENTS: 'documents/',
+  DOCUMENTS: "documents/",
 } as const;
 
 /**
@@ -181,7 +176,7 @@ export async function copyBlob(
   destinationPathname: string
 ): Promise<BlobUploadResult | null> {
   try {
-    const blob = await copy(sourceUrl, destinationPathname, { access: 'public' });
+    const blob = await copy(sourceUrl, destinationPathname, { access: "public" });
     return {
       url: blob.url,
       pathname: blob.pathname,
@@ -214,14 +209,14 @@ export async function uploadProductImage(
   try {
     const pathname = `${BLOB_PATHS.PRODUCT_IMAGES(productId)}${filename}`;
     const result = await uploadBlob(pathname, file, {
-      access: 'public',
-      contentType: file instanceof File ? file.type : 'image/jpeg',
+      access: "public",
+      contentType: file instanceof File ? file.type : "image/jpeg",
       cacheControlMaxAge: 31536000, // 1 year
     });
     return { url: result.url };
   } catch (error) {
     console.error(`[Blob] Failed to upload product image:`, error);
-    return { error: 'Failed to upload image' };
+    return { error: "Failed to upload image" };
   }
 }
 
@@ -244,15 +239,15 @@ export async function uploadUserAvatar(
   try {
     const pathname = `${BLOB_PATHS.USER_AVATARS(userId)}avatar`;
     const result = await uploadBlob(pathname, file, {
-      access: 'public',
-      contentType: file instanceof File ? file.type : 'image/jpeg',
+      access: "public",
+      contentType: file instanceof File ? file.type : "image/jpeg",
       addRandomSuffix: true,
       cacheControlMaxAge: 31536000, // 1 year
     });
     return { url: result.url };
   } catch (error) {
     console.error(`[Blob] Failed to upload avatar:`, error);
-    return { error: 'Failed to upload avatar' };
+    return { error: "Failed to upload avatar" };
   }
 }
 
@@ -276,14 +271,14 @@ export async function uploadChatAttachment(
   try {
     const pathname = `${BLOB_PATHS.CHAT_ATTACHMENTS(roomId)}${filename}`;
     const result = await uploadBlob(pathname, file, {
-      access: 'public',
+      access: "public",
       contentType: file instanceof File ? file.type : undefined,
       addRandomSuffix: true,
     });
     return { url: result.url };
   } catch (error) {
     console.error(`[Blob] Failed to upload chat attachment:`, error);
-    return { error: 'Failed to upload attachment' };
+    return { error: "Failed to upload attachment" };
   }
 }
 

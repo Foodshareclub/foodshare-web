@@ -1,7 +1,7 @@
 /**
  * Setup QStash Schedule for Upstash Keep-Warm
  *
- * Creates a QStash schedule to ping all Upstash services every 5 minutes.
+ * Creates a QStash schedule to ping all Upstash services every 30 minutes.
  * This bypasses Vercel Hobby plan's daily cron limitation.
  *
  * Run once to set up, then the schedule runs automatically.
@@ -41,9 +41,7 @@ export async function POST(request: Request) {
   try {
     // Check if schedule already exists
     const existingSchedules = await qstash.schedules.list();
-    const existingSchedule = existingSchedules.find((s) =>
-      s.scheduleId?.includes(SCHEDULE_ID)
-    );
+    const existingSchedule = existingSchedules.find((s) => s.scheduleId?.includes(SCHEDULE_ID));
 
     if (existingSchedule) {
       return NextResponse.json({
@@ -55,10 +53,10 @@ export async function POST(request: Request) {
       });
     }
 
-    // Create new schedule - every 5 minutes
+    // Create new schedule - every 30 minutes
     const schedule = await qstash.schedules.create({
       destination: healthEndpoint,
-      cron: "*/5 * * * *", // Every 5 minutes
+      cron: "*/30 * * * *", // Every 30 minutes
       scheduleId: SCHEDULE_ID,
       retries: 3,
     });
@@ -66,14 +64,14 @@ export async function POST(request: Request) {
     console.log("[QStash Schedule Created]", {
       scheduleId: schedule.scheduleId,
       destination: healthEndpoint,
-      cron: "*/5 * * * *",
+      cron: "*/30 * * * *",
     });
 
     return NextResponse.json({
       success: true,
       message: "Schedule created successfully",
       scheduleId: schedule.scheduleId,
-      cron: "*/5 * * * *",
+      cron: "*/30 * * * *",
       destination: healthEndpoint,
     });
   } catch (error) {
@@ -100,9 +98,7 @@ export async function GET(request: Request) {
   try {
     const schedules = await qstash.schedules.list();
     const keepWarmSchedule = schedules.find(
-      (s) =>
-        s.scheduleId?.includes(SCHEDULE_ID) ||
-        s.destination?.includes("/api/health/upstash")
+      (s) => s.scheduleId?.includes(SCHEDULE_ID) || s.destination?.includes("/api/health/upstash")
     );
 
     if (keepWarmSchedule) {
@@ -141,9 +137,7 @@ export async function DELETE(request: Request) {
   try {
     const schedules = await qstash.schedules.list();
     const keepWarmSchedule = schedules.find(
-      (s) =>
-        s.scheduleId?.includes(SCHEDULE_ID) ||
-        s.destination?.includes("/api/health/upstash")
+      (s) => s.scheduleId?.includes(SCHEDULE_ID) || s.destination?.includes("/api/health/upstash")
     );
 
     if (keepWarmSchedule && keepWarmSchedule.scheduleId) {
