@@ -121,7 +121,7 @@ class EnterpriseHealthMonitor {
       error,
     };
 
-    await this.redis.hset(this.HEALTH_KEY, serviceName, JSON.stringify(updatedHealth));
+    await this.redis.hset(this.HEALTH_KEY, { [serviceName]: JSON.stringify(updatedHealth) });
 
     // Log adaptive behavior
     console.log(

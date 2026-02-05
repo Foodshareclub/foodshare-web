@@ -79,7 +79,7 @@ export async function POST(request: Request) {
         if (healthData) {
           const serviceData = JSON.parse(healthData as string);
           serviceData.nextCheck = new Date().toISOString();
-          await redis.hset("health:services", service, JSON.stringify(serviceData));
+          await redis.hset("health:services", { [service]: JSON.stringify(serviceData) });
         }
         return NextResponse.json({ success: true, message: `Forced check for ${service}` });
 
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
           const serviceData = JSON.parse(circuitData as string);
           serviceData.consecutiveFailures = 0;
           serviceData.nextCheck = new Date().toISOString();
-          await redis.hset("health:services", service, JSON.stringify(serviceData));
+          await redis.hset("health:services", { [service]: JSON.stringify(serviceData) });
         }
         return NextResponse.json({
           success: true,
