@@ -34,9 +34,9 @@ export async function POST(request: Request) {
     token: process.env.QSTASH_TOKEN!,
   });
 
-  // Get the base URL for the health endpoint
+  // Get the base URL for the enterprise health endpoint
   const url = new URL(request.url);
-  const healthEndpoint = `${url.origin}/api/health/upstash`;
+  const healthEndpoint = `${url.origin}/api/health/enterprise`;
 
   try {
     // Check if schedule already exists
@@ -53,10 +53,10 @@ export async function POST(request: Request) {
       });
     }
 
-    // Create new schedule - every 30 minutes
+    // Create new schedule - enterprise health monitoring every 30 minutes
     const schedule = await qstash.schedules.create({
       destination: healthEndpoint,
-      cron: "*/30 * * * *", // Every 30 minutes
+      cron: "*/30 * * * *", // Every 30 minutes (adaptive scheduling handles optimization)
       scheduleId: SCHEDULE_ID,
       retries: 3,
     });
