@@ -1,0 +1,180 @@
+[
+  {
+    "route": "/api/ping",
+    "used": false,
+    "files": []
+  },
+  {
+    "route": "/api/products",
+    "used": true,
+    "files": [
+      "src/hooks/useOptimizedSearch.ts",
+      "src/hooks/queries/useProducts.ts",
+      "src/lib/api/circuit-breaker.ts",
+      "src/lib/api/retry.ts"
+    ]
+  },
+  {
+    "route": "/api/chat/messages",
+    "used": true,
+    "files": ["src/app/chat/ChatPageClient.tsx"]
+  },
+  {
+    "route": "/api/health",
+    "used": true,
+    "files": [
+      "src/components/maintenance/MaintenanceBanner.tsx",
+      "src/components/maintenance/MaintenanceStatus.tsx"
+    ]
+  },
+  {
+    "route": "/api/health/upstash",
+    "used": false,
+    "files": []
+  },
+  {
+    "route": "/api/health/upstash/setup-schedule",
+    "used": false,
+    "files": []
+  },
+  {
+    "route": "/api/challenges/complete",
+    "used": true,
+    "files": ["src/hooks/queries/useActiveChallenges.ts"]
+  },
+  {
+    "route": "/api/challenges/leaderboard/user/[userId]",
+    "used": false,
+    "files": []
+  },
+  {
+    "route": "/api/challenges/leaderboard",
+    "used": false,
+    "files": []
+  },
+  {
+    "route": "/api/challenges/leaderboard/me",
+    "used": false,
+    "files": []
+  },
+  {
+    "route": "/api/challenges",
+    "used": true,
+    "files": ["src/hooks/queries/useActiveChallenges.ts", "src/hooks/queries/useChallenges.ts"]
+  },
+  {
+    "route": "/api/challenges/active",
+    "used": true,
+    "files": ["src/hooks/queries/useActiveChallenges.ts"]
+  },
+  {
+    "route": "/api/map-preferences",
+    "used": false,
+    "files": []
+  },
+  {
+    "route": "/api/admin/setup-welcome-automation",
+    "used": false,
+    "files": []
+  },
+  {
+    "route": "/api/admin/proxy-metrics",
+    "used": false,
+    "files": []
+  },
+  {
+    "route": "/api/admin/seed-email-templates",
+    "used": false,
+    "files": []
+  },
+  {
+    "route": "/api/admin/email/quotas",
+    "used": true,
+    "files": ["src/hooks/useEmailManagement.ts", "src/hooks/queries/useEmailCRM.ts"]
+  },
+  {
+    "route": "/api/admin/email/health",
+    "used": true,
+    "files": ["src/hooks/queries/useEmailCRM.ts"]
+  },
+  {
+    "route": "/api/admin/email/bounces",
+    "used": true,
+    "files": ["src/hooks/queries/useEmailCRM.ts"]
+  },
+  {
+    "route": "/api/admin/email/logs",
+    "used": true,
+    "files": ["src/hooks/useEmailManagement.ts"]
+  },
+  {
+    "route": "/api/admin/email/queue",
+    "used": true,
+    "files": ["src/hooks/useEmailManagement.ts"]
+  },
+  {
+    "route": "/api/admin/email/templates/[templateId]",
+    "used": false,
+    "files": []
+  },
+  {
+    "route": "/api/admin/email/templates",
+    "used": true,
+    "files": ["src/app/admin/email/templates/page.tsx", "src/hooks/queries/useEmailCRM.ts"]
+  },
+  {
+    "route": "/api/admin/email/automations",
+    "used": true,
+    "files": ["src/hooks/queries/useEmailCRM.ts"]
+  },
+  {
+    "route": "/api/admin/email/campaigns",
+    "used": true,
+    "files": ["src/hooks/queries/useEmailCRM.ts"]
+  },
+  {
+    "route": "/api/admin/email/sync",
+    "used": true,
+    "files": ["src/hooks/queries/useEmailCRM.ts"]
+  },
+  {
+    "route": "/api/admin/email/stats",
+    "used": true,
+    "files": ["src/hooks/useEmailManagement.ts", "src/hooks/queries/useEmailCRM.ts"]
+  },
+  {
+    "route": "/api/admin/email/segments",
+    "used": true,
+    "files": ["src/hooks/queries/useEmailCRM.ts"]
+  },
+  {
+    "route": "/api/debug-vault",
+    "used": false,
+    "files": []
+  },
+  {
+    "route": "/api/webhooks/meta",
+    "used": false,
+    "files": []
+  },
+  {
+    "route": "/api/email/worker/queue-processor",
+    "used": false,
+    "files": []
+  },
+  {
+    "route": "/api/email/worker/health-monitor",
+    "used": false,
+    "files": []
+  },
+  {
+    "route": "/api/debug/admin-check",
+    "used": false,
+    "files": []
+  },
+  {
+    "route": "/api/moderation/analyze",
+    "used": false,
+    "files": []
+  }
+]
