@@ -258,7 +258,7 @@ class RedisPool {
         token: process.env.UPSTASH_REDIS_REST_TOKEN,
         retry: {
           retries: 3,
-          retryDelayOnFailover: 100
+          backoff: () => 100
         }
       });
     }
@@ -317,7 +317,7 @@ class EnterpriseHealthMonitor {
   private readonly redis: Redis;
   private readonly circuitBreaker: CircuitBreaker;
   private readonly instanceId: string;
-  private readonly deduplicator: RequestDeduplicator;
+  public readonly deduplicator: RequestDeduplicator;
   private readonly cache: ResponseCache;
 
   private constructor() {
@@ -472,7 +472,7 @@ class EnterpriseHealthMonitor {
       pipeline.push(['hincrbyfloat', 'metrics:health', 'cost_saved_usd', costSaved]);
     }
 
-    await this.redis.pipeline(pipeline);
+    await this.redis.pipeline(pipeline).exec();
 
     // Emit metrics for external systems
     Logger.metric('health_check_duration_ms', duration, { success: success.toString() });
@@ -514,14 +514,14 @@ class EnterpriseHealthMonitor {
       cursor = newCursor;
     } while (cursor !== '0');
 
-    const metricsData = await this.redis.hgetall('metrics:health');
+    const metricsData = await this.redis.hgetall('metrics:health') || {};
 
     const metrics: Metrics = {
-      checks_total: parseInt(metricsData.checks_total as string || '0'),
-      checks_failed: parseInt(metricsData.checks_failed as string || '0'),
-      latency_sum: parseInt(metricsData.latency_sum as string || '0'),
-      cost_saved_usd: parseFloat(metricsData.cost_saved_usd as string || '0'),
-      circuit_breaker_trips: parseInt(metricsData.circuit_breaker_trips as string || '0')
+      checks_total: parseInt((metricsData.checks_total as string) || '0'),
+      checks_failed: parseInt((metricsData.checks_failed as string) || '0'),
+      latency_sum: parseInt((metricsData.latency_sum as string) || '0'),
+      cost_saved_usd: parseFloat((metricsData.cost_saved_usd as string) || '0'),
+      circuit_breaker_trips: parseInt((metricsData.circuit_breaker_trips as string) || '0')
     };
 
     const result = {
@@ -551,9 +551,8 @@ async function checkRedis(): Promise<{ status: 'healthy' | 'degraded' | 'down', 
   const start = Date.now();
   
   try {
-    const [ping, info] = await Promise.all([
+    const [ping] = await Promise.all([
       redis.ping(),
-      redis.info().catch(() => 'unavailable')
     ]);
     
     const latency = Date.now() - start;

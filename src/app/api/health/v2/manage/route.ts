@@ -62,7 +62,7 @@ class HealthManagementAPI {
       const circuitBreakers = await this.getCircuitBreakerStates(circuitBreakerKeys);
 
       // Calculate performance metrics
-      const performance = this.calculatePerformanceMetrics(metrics, performanceData);
+      const performance = this.calculatePerformanceMetrics(metrics || {}, performanceData || {});
 
       return {
         redis: {
@@ -256,12 +256,13 @@ class HealthManagementAPI {
         this.redis.keys("health:*"),
       ]);
 
-      const totalChecks = parseInt(metrics.checks_total || "0");
-      const failedChecks = parseInt(metrics.checks_failed || "0");
+      const metricsObj = metrics || {};
+      const totalChecks = parseInt((metricsObj.checks_total as string) || "0");
+      const failedChecks = parseInt((metricsObj.checks_failed as string) || "0");
       const successfulChecks = totalChecks - failedChecks;
-      const latencySum = parseInt(metrics.latency_sum || "0");
-      const costSaved = parseFloat(metrics.cost_saved_usd || "0");
-      const circuitBreakerTrips = parseInt(metrics.circuit_breaker_trips || "0");
+      const latencySum = parseInt((metricsObj.latency_sum as string) || "0");
+      const costSaved = parseFloat((metricsObj.cost_saved_usd as string) || "0");
+      const circuitBreakerTrips = parseInt((metricsObj.circuit_breaker_trips as string) || "0");
 
       // Prometheus format metrics
       const prometheusMetrics = [
