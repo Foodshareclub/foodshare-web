@@ -458,14 +458,23 @@ export async function proxy(request: NextRequest) {
   let user = null;
 
   if (!isHealthCheck) {
-    // Check circuit breaker for Supabase
-    if (isCircuitOpen("supabase-auth")) {
+    // Check if user has auth cookies before attempting refresh
+    const hasAuthCookies =
+      request.cookies.has("sb-access-token") ||
+      request.cookies.has("sb-refresh-token") ||
+      request.cookies.getAll().some((c) => c.name.startsWith("sb-"));
+
+    if (!hasAuthCookies) {
+      // No auth cookies = anonymous user, skip refresh entirely
+      // This is normal and not a failure
+    } else if (isCircuitOpen("supabase-auth")) {
       console.warn("[Circuit] Supabase auth circuit open, skipping refresh");
       metricData.authRefreshFailed = true;
     } else {
       try {
         const { data, error } = await supabase.auth.getUser();
         if (error) {
+          // Only log and circuit break if we had cookies but refresh failed
           console.warn("[Auth] Token refresh failed:", error.message);
           metricData.authRefreshFailed = true;
           recordCircuitFailure("supabase-auth");
