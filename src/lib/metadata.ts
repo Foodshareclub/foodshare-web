@@ -12,7 +12,7 @@ export const siteConfig = {
   description:
     "Join the FoodShare community to share surplus food, reduce waste, and help neighbors in need. Find free food, community fridges, food banks, and connect with local volunteers.",
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://foodshare.club",
-  ogImage: `${process.env.NEXT_PUBLIC_SITE_URL || "https://foodshare.club"}/opengraph-image`,
+  ogImage: `${process.env.NEXT_PUBLIC_SITE_URL || "https://foodshare.club"}/og/home.svg`,
   twitterHandle: "@foodshareapp",
   facebookAppId: "",
   locale: "en_NZ",
