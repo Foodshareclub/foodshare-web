@@ -3,10 +3,5 @@
   "framework": "nextjs",
   "installCommand": "bun install",
   "buildCommand": "bun run build",
-  "crons": [
-    {
-      "path": "/api/health/upstash",
-      "schedule": "0 6 * * *"
-    }
-  ]
+  "crons": []
 }
