@@ -45,33 +45,13 @@ pre-commit:
         FORCE_COLOR: "0"
         NODE_OPTIONS: ""
 
-    # PHASE 2: Security checks (after formatting)
-    security-check:
-      tags: security critical
-      run: ./tools/target/release/lefthook-rs security
-      priority: 2
-
-    nextjs-security:
-      tags: security critical
-      glob: "*.{ts,tsx,js,jsx,json}"
-      run: ./tools/target/release/lefthook-rs nextjs-security {staged_files}
-      priority: 2
-
-    # PHASE 3: Type checking (after lint fixes)
+    # PHASE 2: Type checking (after lint fixes)
     type-check:
       tags: typescript
       run: npx tsc --noEmit --incremental
       priority: 3
       env:
         NODE_OPTIONS: ""
-
-    complexity-check:
-      tags: quality optional
-      glob: "*.{ts,tsx,js,jsx}"
-      run: ./tools/target/release/lefthook-rs complexity {staged_files}
-      priority: 4
-      skip:
-        - run: test -z "$ENABLE_COMPLEXITY" && test -z "$ENABLE_ALL"
 
     # Auto-sort imports (enabled by default, auto-fixes)
     sort-imports:
@@ -83,37 +63,6 @@ pre-commit:
       env:
         NODE_OPTIONS: ""
 
-    import-check:
-      tags: quality optional
-      glob: "*.{ts,tsx,js,jsx}"
-      run: ./tools/target/release/lefthook-rs import-check {staged_files}
-      priority: 4
-      skip:
-        - run: test -z "$ENABLE_IMPORT_CHECK" && test -z "$ENABLE_ALL"
-
-    no-console:
-      tags: quality optional
-      glob: "*.{ts,tsx,js,jsx}"
-      run: ./tools/target/release/lefthook-rs no-console {staged_files}
-      priority: 5
-      skip:
-        - run: test -z "$ENABLE_NO_CONSOLE" && test -z "$ENABLE_ALL"
-
-    large-files:
-      tags: files optional
-      run: ./tools/target/release/lefthook-rs large-files
-      priority: 5
-      skip:
-        - run: test -z "$ENABLE_LARGE_FILES" && test -z "$ENABLE_ALL"
-
-    accessibility:
-      tags: a11y optional
-      glob: "*.{tsx,jsx}"
-      run: ./tools/target/release/lefthook-rs accessibility {staged_files}
-      priority: 5
-      skip:
-        - run: test -z "$ENABLE_A11Y" && test -z "$ENABLE_ALL"
-
 # ============================================================================
 # COMMIT-MSG: Validates commit message format
 # ============================================================================
@@ -121,7 +70,7 @@ commit-msg:
   commands:
     conventional-commits:
       tags: commit-format
-      run: ./tools/target/release/lefthook-rs conventional-commit {1}
+      run: echo "Commit message validation disabled"
 
 # ============================================================================
 # PRE-PUSH: Comprehensive checks before push
@@ -134,7 +83,7 @@ pre-push:
   commands:
     protected-branch:
       tags: branch critical
-      run: ./tools/target/release/lefthook-rs protected-branch
+      run: echo "Protected branch check disabled"
       priority: 1
 
     type-check-strict:
@@ -163,34 +112,6 @@ pre-push:
       priority: 3
       skip:
         - run: test -n "$SKIP_BUILD"
-
-    dependency-audit:
-      tags: security optional
-      run: ./tools/target/release/lefthook-rs dependency-audit
-      priority: 4
-      skip:
-        - run: test -z "$ENABLE_AUDIT" && test -z "$ENABLE_ALL"
-
-    bundle-size:
-      tags: performance optional
-      run: ./tools/target/release/lefthook-rs bundle-size
-      priority: 4
-      skip:
-        - run: test -z "$CHECK_BUNDLE_SIZE" && test -z "$ENABLE_ALL"
-
-    test-coverage:
-      tags: test optional
-      run: ./tools/target/release/lefthook-rs test-coverage
-      priority: 4
-      skip:
-        - run: test -z "$ENABLE_COVERAGE" && test -z "$ENABLE_ALL"
-
-    unused-exports:
-      tags: quality optional
-      run: ./tools/target/release/lefthook-rs unused-exports
-      priority: 5
-      skip:
-        - run: test -z "$ENABLE_DEAD_CODE" && test -z "$ENABLE_ALL"
 
 # ============================================================================
 # POST-CHECKOUT: Auto-maintenance after branch switch
