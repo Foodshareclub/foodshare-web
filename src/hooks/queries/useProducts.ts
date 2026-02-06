@@ -37,12 +37,12 @@ interface UseUserProductsParams {
 // ============================================================================
 
 async function fetchProducts(params: {
-  type?: string;
+  postType?: string;
   cursor?: number | null;
   limit: number;
 }): Promise<PaginatedProductsResponse> {
   return api.products.list({
-    type: params.type,
+    postType: params.postType,
     cursor: params.cursor,
     limit: params.limit,
   });
@@ -68,7 +68,7 @@ export function useInfiniteProducts({
 }: UseProductsParams = {}) {
   return useInfiniteQuery({
     queryKey: ["products", "infinite", { type, limit }],
-    queryFn: ({ pageParam }) => fetchProducts({ type, cursor: pageParam, limit }),
+    queryFn: ({ pageParam }) => fetchProducts({ postType: type, cursor: pageParam, limit }),
     initialPageParam: null as number | null,
     getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.nextCursor : undefined),
     enabled,
@@ -84,7 +84,7 @@ export function useInfiniteProducts({
 export function useProducts({ type = "food", limit = 20, enabled = true }: UseProductsParams = {}) {
   return useQuery({
     queryKey: ["products", { type, limit }],
-    queryFn: () => fetchProducts({ type, limit }),
+    queryFn: () => fetchProducts({ postType: type, limit }),
     enabled,
     staleTime: 60 * 1000,
     gcTime: 5 * 60 * 1000,
@@ -125,7 +125,7 @@ export function usePrefetchProducts() {
   return (type: string, limit = 20) => {
     queryClient.prefetchInfiniteQuery({
       queryKey: ["products", "infinite", { type, limit }],
-      queryFn: ({ pageParam }) => fetchProducts({ type, cursor: pageParam, limit }),
+      queryFn: ({ pageParam }) => fetchProducts({ postType: type, cursor: pageParam, limit }),
       initialPageParam: null as number | null,
     });
   };
