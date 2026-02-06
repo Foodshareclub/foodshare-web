@@ -4,11 +4,12 @@
  * Products React Query Hooks
  *
  * Provides infinite scroll and pagination hooks for products.
- * Uses cursor-based pagination with the /api/products endpoint.
+ * Now uses unified API client for Supabase/Vercel migration.
  */
 
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { InitialProductStateType } from "@/types/product.types";
+import { api } from "@/lib/api/unified-client";
 
 // ============================================================================
 // Types
@@ -32,7 +33,7 @@ interface UseUserProductsParams {
 }
 
 // ============================================================================
-// API Fetchers
+// API Fetchers (now using unified API client)
 // ============================================================================
 
 async function fetchProducts(params: {
@@ -40,35 +41,16 @@ async function fetchProducts(params: {
   cursor?: number | null;
   limit: number;
 }): Promise<PaginatedProductsResponse> {
-  const searchParams = new URLSearchParams({
-    limit: String(params.limit),
+  return api.products.list({
+    type: params.type,
+    cursor: params.cursor,
+    limit: params.limit,
   });
-
-  if (params.type && params.type !== "all") {
-    searchParams.set("type", params.type);
-  }
-
-  if (params.cursor) {
-    searchParams.set("cursor", String(params.cursor));
-  }
-
-  const response = await fetch(`/api/products?${searchParams.toString()}`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch products");
-  }
-
-  return response.json();
 }
 
 async function fetchUserProducts(userId: string): Promise<InitialProductStateType[]> {
-  const response = await fetch(`/api/products?userId=${encodeURIComponent(userId)}`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch user products");
-  }
-
-  return response.json();
+  const result = await api.products.list({ userId });
+  return result.data;
 }
 
 // ============================================================================
