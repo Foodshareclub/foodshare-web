@@ -15,8 +15,6 @@ export {
   listBlobs,
   getBlobMetadata,
   copyBlob,
-  uploadProductImage,
-  uploadUserAvatar,
   uploadChatAttachment,
   deleteProductBlobs,
   validateFile,

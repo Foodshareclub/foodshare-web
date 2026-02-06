@@ -106,44 +106,6 @@ export const MAX_FILE_SIZES = {
 } as const;
 
 /**
- * Get public URL for a storage object
- * Automatically uses R2 URL if configured, otherwise Supabase
- *
- * @deprecated Image uploads now go through the api-v1-images Edge Function which
- * returns public URLs directly. Use `imageAPI.uploadImage()` from `@/api/imageAPI`.
- *
- * @param bucket - Storage bucket name
- * @param path - File path within bucket
- * @returns Full public URL
- */
-export const getStorageUrl = (bucket: StorageBucket, path: string): string => {
-  const r2PublicUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
-
-  // Use R2 if configured (primary storage)
-  if (r2PublicUrl) {
-    return `${r2PublicUrl}/${bucket}/${path}`;
-  }
-
-  // Fallback to Supabase
-  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  return `${baseUrl}/storage/v1/object/public/${bucket}/${path}`;
-};
-
-/**
- * Get signed URL for private storage objects
- * Use this for private buckets like profiles
- */
-export const getSignedStorageUrl = async (
-  _bucket: StorageBucket,
-  _path: string,
-  _expiresIn: number = 3600
-): Promise<string | null> => {
-  // This would use the storageAPI.createSignedUrl method
-  // Implementation depends on your storage API setup
-  return null;
-};
-
-/**
  * Validate file type against bucket's allowed MIME types
  * @param file - File to validate
  * @param bucket - Target storage bucket
