@@ -16,9 +16,6 @@ import {
 
 export const MAX_DESCRIPTION_LENGTH = 500;
 export const MAX_FILE_SIZE_MB = 10;
-export const COMPRESS_THRESHOLD_MB = 0.3; // Compress images over 300KB (aggressive for storage savings)
-export const TARGET_FILE_SIZE_KB = 200; // Target ~200KB per image
-export const MAX_IMAGE_DIMENSION = 800; // Max 800px (was 1024)
 export const DRAFT_KEY = "foodshare_listing_draft";
 export const MAX_IMAGES = 4;
 export const MAX_TAGS = 5;

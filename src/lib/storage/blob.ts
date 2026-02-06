@@ -191,6 +191,9 @@ export async function copyBlob(
 
 /**
  * Upload product image with validation
+ *
+ * @deprecated Use `imageAPI.uploadImage()` from `@/api/imageAPI` instead.
+ * The imageAPI routes through the unified api-v1-images Edge Function.
  */
 export async function uploadProductImage(
   productId: string,
@@ -222,6 +225,9 @@ export async function uploadProductImage(
 
 /**
  * Upload user avatar with validation
+ *
+ * @deprecated Use `imageAPI.uploadImage()` from `@/api/imageAPI` instead.
+ * The imageAPI routes through the unified api-v1-images Edge Function.
  */
 export async function uploadUserAvatar(
   userId: string,

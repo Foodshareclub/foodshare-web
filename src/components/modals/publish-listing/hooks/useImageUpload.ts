@@ -2,14 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import type { ImageItem } from "../types";
-import {
-  MAX_FILE_SIZE_MB,
-  COMPRESS_THRESHOLD_MB,
-  TARGET_FILE_SIZE_KB,
-  MAX_IMAGE_DIMENSION,
-  MAX_IMAGES,
-} from "../constants";
-import { compressImage } from "../utils";
+import { MAX_FILE_SIZE_MB, MAX_IMAGES } from "../constants";
 
 interface UseImageUploadOptions {
   maxImages?: number;
@@ -57,80 +50,24 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
 
   const [images, setImages] = useState<ImageItem[]>([]);
   const [imageError, setImageError] = useState("");
-  const [isCompressing, setIsCompressing] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [draggedImageId, setDraggedImageId] = useState<string | null>(null);
 
   const processImage = useCallback(async (fileToProcess: File): Promise<File | null> => {
-    console.log("[useImageUpload] 🖼️ Processing image:", {
-      name: fileToProcess.name,
-      size: fileToProcess.size,
-      type: fileToProcess.type,
-    });
-
     const fileSizeMB = fileToProcess.size / (1024 * 1024);
 
     if (fileSizeMB > MAX_FILE_SIZE_MB) {
-      console.log("[useImageUpload] ❌ File too large:", fileSizeMB.toFixed(1), "MB");
       setImageError(`File size (${fileSizeMB.toFixed(1)}MB) exceeds ${MAX_FILE_SIZE_MB}MB limit`);
       return null;
     }
 
-    // Always compress images over threshold (300KB) for storage savings
-    if (fileSizeMB > COMPRESS_THRESHOLD_MB) {
-      console.log(
-        "[useImageUpload] 📦 Compressing image (target:",
-        TARGET_FILE_SIZE_KB,
-        "KB, max:",
-        MAX_IMAGE_DIMENSION,
-        "px)..."
-      );
-      setIsCompressing(true);
-      try {
-        const compressed = await compressImage(
-          fileToProcess,
-          TARGET_FILE_SIZE_KB,
-          MAX_IMAGE_DIMENSION
-        );
-        const savedPercent = (
-          ((fileToProcess.size - compressed.size) / fileToProcess.size) *
-          100
-        ).toFixed(0);
-        console.log(
-          "[useImageUpload] ✅ Compression complete:",
-          (compressed.size / 1024).toFixed(0),
-          "KB (",
-          savedPercent,
-          "% saved)"
-        );
-        setIsCompressing(false);
-        return compressed;
-      } catch (err) {
-        console.error("[useImageUpload] ❌ Compression failed:", err);
-        setIsCompressing(false);
-        return fileToProcess;
-      }
-    }
-
-    console.log(
-      "[useImageUpload] ✅ Image ready (under",
-      COMPRESS_THRESHOLD_MB,
-      "MB, no compression needed)"
-    );
+    // Compression is now handled server-side by the api-v1-images Edge Function
     return fileToProcess;
   }, []);
 
   const addImage = useCallback(
     async (file: File) => {
-      console.log(
-        "[useImageUpload] ➕ addImage called - current count:",
-        images.length,
-        "max:",
-        maxImages
-      );
-
       if (images.length >= maxImages) {
-        console.log("[useImageUpload] ❌ Max images reached");
         setImageError(`Maximum ${maxImages} images allowed`);
         return;
       }
@@ -145,11 +82,8 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
           file: processed,
           filePath: `${Date.now()}-${file.name}`,
         };
-        console.log("[useImageUpload] ✅ Image added:", newImage.id, newImage.filePath);
         setImages((prev) => [...prev, newImage]);
         onImageAdded?.();
-      } else {
-        console.log("[useImageUpload] ❌ Image processing returned null");
       }
     },
     [images.length, maxImages, processImage, onImageAdded]
@@ -287,7 +221,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
     setImages,
     imageError,
     setImageError,
-    isCompressing,
+    isCompressing: false,
     isDragOver,
     draggedImageId,
     inputFileRef,

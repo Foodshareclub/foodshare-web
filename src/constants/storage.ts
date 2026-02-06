@@ -109,6 +109,9 @@ export const MAX_FILE_SIZES = {
  * Get public URL for a storage object
  * Automatically uses R2 URL if configured, otherwise Supabase
  *
+ * @deprecated Image uploads now go through the api-v1-images Edge Function which
+ * returns public URLs directly. Use `imageAPI.uploadImage()` from `@/api/imageAPI`.
+ *
  * @param bucket - Storage bucket name
  * @param path - File path within bucket
  * @returns Full public URL

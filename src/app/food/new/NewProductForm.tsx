@@ -3,25 +3,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { createProduct } from "@/app/actions/products";
-import { useUIStore } from "@/store/zustand/useUIStore";
-import { storageAPI } from "@/api/storageAPI";
-import Navbar from "@/components/header/navbar/Navbar";
-// Note: Auth state is determined by server-passed userId prop, not useAuth()
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { STORAGE_BUCKETS, getStorageUrl } from "@/constants/storage";
 import {
   Apple,
   Gift,
@@ -48,6 +29,25 @@ import {
   Loader2,
   ImagePlus,
 } from "lucide-react";
+import { createProduct } from "@/app/actions/products";
+import { useUIStore } from "@/store/zustand/useUIStore";
+import { imageAPI } from "@/api/imageAPI";
+import Navbar from "@/components/header/navbar/Navbar";
+// Note: Auth state is determined by server-passed userId prop, not useAuth()
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { STORAGE_BUCKETS } from "@/constants/storage";
 
 // Volunteer skills options with Lucide icons
 const VOLUNTEER_SKILLS = [
@@ -199,28 +199,15 @@ export function NewProductForm({
   }, []);
 
   const uploadImages = async (): Promise<string[]> => {
-    const uploadedUrls: string[] = [];
+    const result = await imageAPI.uploadBatch(selectedImages, {
+      bucket: STORAGE_BUCKETS.POSTS,
+    });
 
-    for (const file of selectedImages) {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-      try {
-        await storageAPI.uploadImage({
-          bucket: STORAGE_BUCKETS.POSTS,
-          filePath: fileName,
-          file,
-        });
-
-        const publicUrl = getStorageUrl(STORAGE_BUCKETS.POSTS, fileName);
-        uploadedUrls.push(publicUrl);
-      } catch (err) {
-        console.error("Error uploading image:", err);
-        throw new Error(`Failed to upload ${file.name}`);
-      }
+    if (result.error) {
+      throw result.error;
     }
 
-    return uploadedUrls;
+    return result.data.results.map((r) => r.data.url);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

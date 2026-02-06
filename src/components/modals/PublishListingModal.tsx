@@ -62,7 +62,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { createProduct, updateProduct } from "@/app/actions/products";
 import { getUserAddress } from "@/app/actions/profile";
 import { useUIStore } from "@/store/zustand/useUIStore";
-import { storageAPI } from "@/api/storageAPI";
+import { imageAPI } from "@/api/imageAPI";
 import type { InitialProductStateType } from "@/types/product.types";
 import {
   Dialog,
@@ -72,7 +72,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { STORAGE_BUCKETS, getStorageUrl } from "@/constants/storage";
+import { STORAGE_BUCKETS } from "@/constants/storage";
 import { ALLOWED_MIME_TYPES } from "@/constants/mime-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -227,17 +227,14 @@ function PublishListingModal({
   };
 
   // Build product object for submission
-  const imagesArray = imageUpload.images
-    .map((img) => {
-      if (img.isExisting) return img.url;
-      if (img.filePath) return getStorageUrl(STORAGE_BUCKETS.POSTS, `${id}/${img.filePath}`);
-      return null;
-    })
-    .filter((url): url is string => url !== null);
+  // For existing images, keep their URLs. New image URLs will be populated after upload.
+  const existingImageUrls = imageUpload.images
+    .filter((img) => img.isExisting)
+    .map((img) => img.url);
 
   const productObj: Partial<InitialProductStateType> = (() => {
     const obj: Partial<InitialProductStateType> = {
-      images: imagesArray,
+      images: existingImageUrls,
       post_type: form.formData.category,
       post_name: form.formData.title,
       post_description: form.formData.description,
@@ -252,7 +249,7 @@ function PublishListingModal({
     };
 
     if (product && imageUpload.images[0]?.isExisting) {
-      obj.images = product.images?.length > 0 ? product.images : imagesArray;
+      obj.images = product.images?.length > 0 ? product.images : existingImageUrls;
     }
 
     return obj;
@@ -260,42 +257,20 @@ function PublishListingModal({
 
   // Publish handler
   const publishHandler = async () => {
-    console.log("[PublishListing] 🚀 Starting publish handler...");
-    console.log("[PublishListing] Form valid:", form.isFormValid);
-    console.log("[PublishListing] Images count:", imageUpload.images.length);
-
     form.touchAll();
 
     if (!form.isFormValid || imageUpload.images.length === 0) {
-      console.log(
-        "[PublishListing] ❌ Validation failed - form valid:",
-        form.isFormValid,
-        "images:",
-        imageUpload.images.length
-      );
       setShakeError(true);
       setTimeout(() => setShakeError(false), 500);
       formRef.current?.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-    console.log("[PublishListing] ✅ Validation passed");
 
     // Clear previous errors
     setError(null);
     setUploadProgress(null);
 
-    // Pre-flight checks
-    console.log(
-      "[PublishListing] 🔍 Pre-flight checks - isAuthLoading:",
-      isAuthLoading,
-      "id:",
-      id,
-      "online:",
-      navigator.onLine
-    );
-
     if (isAuthLoading) {
-      console.log("[PublishListing] ❌ Auth still loading");
       setError("Checking authentication... Please try again in a moment.");
       setShakeError(true);
       setTimeout(() => setShakeError(false), 500);
@@ -309,7 +284,6 @@ function PublishListingModal({
       return;
     }
 
-    // Check network connectivity
     if (!navigator.onLine) {
       setError("No internet connection. Please check your network and try again.");
       setShakeError(true);
@@ -319,53 +293,47 @@ function PublishListingModal({
 
     setIsLoading(true);
     setPublishState("loading");
-    console.log("[PublishListing] 📤 State set to loading");
 
     try {
       const imagesToUpload = imageUpload.images.filter((image) => image.file && image.filePath);
-      console.log("[PublishListing] 🖼️ Images to upload:", imagesToUpload.length);
+
+      // Collect final image URLs: existing URLs + newly uploaded URLs
+      const finalImageUrls: string[] = [...existingImageUrls];
 
       if (imagesToUpload.length > 0) {
-        console.log("[PublishListing] 📤 Starting image upload...");
         setUploadProgress(`Uploading ${imagesToUpload.length} image(s)...`);
 
-        // Upload all images in parallel - faster and atomic (all or nothing)
-        const uploadResults = await Promise.allSettled(
-          imagesToUpload.map((image) =>
-            storageAPI.uploadImage({
-              bucket: STORAGE_BUCKETS.POSTS,
-              file: image.file!,
-              filePath: `${id}/${image.filePath}`,
-            })
-          )
-        );
-        console.log("[PublishListing] 📤 Upload completed, results:", uploadResults.length);
-
-        // Check results
-        const failures: string[] = [];
-        uploadResults.forEach((result, idx) => {
-          if (result.status === "rejected") {
-            console.error("[PublishListing] ❌ Upload rejected:", idx, result.reason);
-            failures.push(result.reason?.message || `Image ${idx + 1} failed`);
-          } else if (result.value.error) {
-            console.error("[PublishListing] ❌ Upload error:", idx, result.value.error);
-            failures.push(result.value.error.message || `Image ${idx + 1} error`);
+        const filesToUpload = imagesToUpload.map((img) => img.file!);
+        const batchResult = await imageAPI.uploadBatch(
+          filesToUpload,
+          { bucket: STORAGE_BUCKETS.POSTS },
+          (completed, total) => {
+            setUploadProgress(`Uploading ${completed}/${total} image(s)...`);
           }
-        });
+        );
 
-        if (failures.length > 0) {
-          console.error("[PublishListing] ❌ Upload failures:", failures);
-          throw new Error(
-            failures.length === imagesToUpload.length
-              ? "Failed to upload images. Please try again."
-              : `Failed to upload ${failures.length} image(s): ${failures[0]}`
-          );
+        if (batchResult.error) {
+          throw batchResult.error;
         }
-        console.log("[PublishListing] ✅ All images uploaded successfully");
+
+        const { results, summary } = batchResult.data;
+
+        if (summary.failed > 0 && summary.succeeded === 0) {
+          throw new Error("Failed to upload images. Please try again.");
+        }
+        if (summary.failed > 0) {
+          throw new Error(`Failed to upload ${summary.failed} image(s). Please try again.`);
+        }
+
+        for (const result of results) {
+          finalImageUrls.push(result.data.url);
+        }
       }
 
+      // Override productObj images with final URLs
+      productObj.images = finalImageUrls;
+
       setUploadProgress("Saving listing...");
-      console.log("[PublishListing] 💾 Building form data...");
 
       // Build form data
       const formData = new FormData();
@@ -378,26 +346,11 @@ function PublishListingModal({
       if (productObj.condition) formData.set("condition", productObj.condition);
       if (productObj.images) formData.set("images", JSON.stringify(productObj.images));
       if (productObj.profile_id) formData.set("profile_id", productObj.profile_id);
-      // Add coordinates for Edge Function routing (enables unified cross-platform API)
       if (userLocation?.latitude !== undefined && userLocation?.longitude !== undefined) {
         formData.set("latitude", userLocation.latitude.toString());
         formData.set("longitude", userLocation.longitude.toString());
       }
 
-      console.log("[PublishListing] 📝 Form data built:", {
-        post_name: productObj.post_name,
-        post_type: productObj.post_type,
-        images_count: productObj.images?.length,
-        profile_id: productObj.profile_id,
-        has_location: !!(userLocation?.latitude && userLocation?.longitude),
-        is_update: !!product,
-      });
-
-      // Execute server action
-      console.log(
-        "[PublishListing] 🌐 Calling server action...",
-        product ? "updateProduct" : "createProduct"
-      );
       let result;
       if (product) {
         formData.set("is_active", "true");
@@ -406,25 +359,19 @@ function PublishListingModal({
         result = await createProduct(formData);
         if (result.success) form.clearDraft();
       }
-      console.log("[PublishListing] 🌐 Server action response:", result);
 
       if (!result.success) {
-        console.error("[PublishListing] ❌ Save failed:", result.error);
         throw new Error(result.error?.message || "Failed to save listing");
       }
 
-      // Success
-      console.log("[PublishListing] ✅ SUCCESS! Setting success state...");
       setUploadProgress(null);
       router.refresh();
       setPublishState("success");
-      console.log("[PublishListing] ⏳ Waiting 1.5s before closing...");
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log("[PublishListing] 🚪 Closing modal...");
       onClose();
       setOpenEdit?.(false);
     } catch (err) {
-      console.error("[PublishListing] ❌ Error caught:", err);
+      console.error("[PublishListing] Error:", err);
       const message =
         err instanceof Error
           ? err.message.includes("sign") || err.message.includes("auth")
@@ -435,7 +382,6 @@ function PublishListingModal({
       setUploadProgress(null);
       setPublishState("idle");
     } finally {
-      console.log("[PublishListing] 🏁 Publish handler complete, isLoading=false");
       setIsLoading(false);
     }
   };

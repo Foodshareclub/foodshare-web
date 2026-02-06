@@ -149,6 +149,11 @@ export const storageAPI = {
   /**
    * Upload image to storage with robust error handling
    *
+   * @deprecated Use `imageAPI.uploadImage()` from `@/api/imageAPI` instead.
+   * The imageAPI routes through the unified api-v1-images Edge Function which
+   * provides server-side compression, thumbnails, EXIF extraction, and AI detection.
+   * This method is retained for non-image uploads and backward compatibility.
+   *
    * Features:
    * - R2 primary with automatic Supabase fallback
    * - Circuit breaker: skips R2 after repeated failures
@@ -434,10 +439,10 @@ export const storageAPI = {
 };
 
 // ============================================================================
-// Legacy Exports (backward compatibility)
+// Legacy Exports
 // ============================================================================
 
+/** @deprecated Use ImageUrlType instead */
 export type ImgUrlType = ImageUrlType;
+/** @deprecated Use UploadImageType instead */
 export type UploadImgUrlType = UploadImageType;
-export const downloadImgFromDB = storageAPI.downloadImage;
-export const uploadImgFromDB = storageAPI.uploadImage;

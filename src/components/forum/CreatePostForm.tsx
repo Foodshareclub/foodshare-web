@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ForumCategory, ForumPostType } from "@/api/forumAPI";
-import { uploadToStorage } from "@/app/actions/storage";
+import { imageAPI } from "@/api/imageAPI";
 import { createForumPostFast } from "@/app/actions/forum";
 
 type CreatePostFormProps = {
@@ -71,20 +71,17 @@ export function CreatePostForm({ categories }: CreatePostFormProps) {
     reader.readAsDataURL(file);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      // Get file extension
       const ext = file.name.split(".").pop() || "jpg";
-      formData.append("bucket", "forum");
-      formData.append("filePath", `${imagePathId}/cover.${ext}`);
+      const result = await imageAPI.uploadImage(file, {
+        bucket: "forum",
+        path: `${imagePathId}/cover.${ext}`,
+      });
 
-      const result = await uploadToStorage(formData);
-
-      if (result.success && result.publicUrl) {
-        setImageUrl(result.publicUrl);
+      if (result.data) {
+        setImageUrl(result.data.data.url);
       } else {
-        console.error("[CreatePostForm] Upload failed:", result.error);
-        setError(result.error || "Failed to upload image. Please try again.");
+        console.error("[CreatePostForm] Upload failed:", result.error.message);
+        setError(result.error.message || "Failed to upload image. Please try again.");
         setImagePreview(null);
       }
     } catch (err) {

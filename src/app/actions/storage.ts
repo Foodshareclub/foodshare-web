@@ -20,7 +20,7 @@ function devLog(message: string, data?: unknown): void {
   console.log(`[Storage] ${message}${dataStr}`);
 }
 
-function devWarn(message: string, data?: unknown): void {
+function _devWarn(message: string, data?: unknown): void {
   if (!IS_DEV) return;
   const dataStr = data ? ` ${JSON.stringify(data)}` : "";
   console.warn(`[Storage] ${message}${dataStr}`);
@@ -46,6 +46,10 @@ export type DirectUploadResult = {
 /**
  * Upload a file to R2 storage (server-side)
  * This action runs on the server where Vault credentials are accessible
+ *
+ * @deprecated Use `imageAPI.uploadImage()` from `@/api/imageAPI` instead for image uploads.
+ * The imageAPI routes through the unified api-v1-images Edge Function which provides
+ * server-side compression, thumbnails, EXIF extraction, and AI detection.
  */
 export async function uploadToStorage(formData: FormData): Promise<UploadResult> {
   const file = formData.get("file") as File | null;
@@ -81,7 +85,12 @@ export async function uploadToStorage(formData: FormData): Promise<UploadResult>
     const r2Config = await getR2Secrets();
 
     // If R2 is fully configured, try R2 first
-    if (r2Config.accountId && r2Config.accessKeyId && r2Config.secretAccessKey && r2Config.publicUrl) {
+    if (
+      r2Config.accountId &&
+      r2Config.accessKeyId &&
+      r2Config.secretAccessKey &&
+      r2Config.publicUrl
+    ) {
       devLog("📤 Uploading to R2...");
       const r2Path = `${bucket}/${filePath}`;
       const result = await uploadToR2(file, r2Path, file.type);
@@ -178,7 +187,12 @@ export async function getDirectUploadUrl(
       // Get R2 config - checks both env vars and Supabase Vault
       const r2Config = await getR2Secrets();
 
-      if (r2Config.accountId && r2Config.accessKeyId && r2Config.secretAccessKey && r2Config.publicUrl) {
+      if (
+        r2Config.accountId &&
+        r2Config.accessKeyId &&
+        r2Config.secretAccessKey &&
+        r2Config.publicUrl
+      ) {
         const presigned = await getPresignedUpload(`${bucket}/${filePath}`, fileType, fileSize);
 
         if (presigned) {
