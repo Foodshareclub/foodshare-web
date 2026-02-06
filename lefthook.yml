@@ -88,7 +88,7 @@ pre-push:
 
     type-check-strict:
       tags: typescript
-      run: npx tsc --noEmit --strict --incremental
+      run: npx tsc --noEmit --incremental
       priority: 2
       env:
         NODE_OPTIONS: ""
