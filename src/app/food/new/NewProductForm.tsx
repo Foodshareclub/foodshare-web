@@ -28,8 +28,11 @@ import {
   X,
   Loader2,
   ImagePlus,
+  Sparkles,
 } from "lucide-react";
 import { createProduct } from "@/app/actions/products";
+import { generateListingDraft } from "@/app/actions/ai-draft";
+import { resizeImagesForAI } from "@/lib/image/resize-for-ai";
 import { useUIStore } from "@/store/zustand/useUIStore";
 import { imageAPI } from "@/api/imageAPI";
 import Navbar from "@/components/header/navbar/Navbar";
@@ -116,6 +119,7 @@ export function NewProductForm({
   const avatarUrl = profile?.avatar_url;
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDrafting, setIsDrafting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -197,6 +201,36 @@ export function NewProductForm({
       return updated;
     });
   }, []);
+
+  const handleAIDraft = useCallback(async () => {
+    if (selectedImages.length === 0) {
+      setError("Please add at least one image before drafting");
+      return;
+    }
+
+    setIsDrafting(true);
+    setError(null);
+
+    try {
+      const base64Images = await resizeImagesForAI(selectedImages);
+      const result = await generateListingDraft(base64Images, formData.post_type);
+
+      if (!result.success) {
+        setError(result.error?.message || "Failed to generate draft");
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        post_name: result.data.title,
+        post_description: result.data.description,
+      }));
+    } catch {
+      setError("Failed to generate draft. Please try again.");
+    } finally {
+      setIsDrafting(false);
+    }
+  }, [selectedImages, formData.post_type]);
 
   const uploadImages = async (): Promise<string[]> => {
     const result = await imageAPI.uploadBatch(selectedImages, {
@@ -695,44 +729,7 @@ export function NewProductForm({
                     STANDARD LISTING FORM FIELDS
                     ============================================ */}
 
-                {/* Title */}
-                <div className="mb-6">
-                  <Label htmlFor="post_name" className="text-base font-semibold mb-2 block">
-                    {t("title")} <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="post_name"
-                    type="text"
-                    value={formData.post_name}
-                    onChange={(e) => handleInputChange("post_name", e.target.value)}
-                    placeholder="e.g., Fresh Homemade Pasta"
-                    className="w-full"
-                    maxLength={100}
-                  />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {formData.post_name.length}/100 characters
-                  </p>
-                </div>
-
-                {/* Description */}
-                <div className="mb-6">
-                  <Label htmlFor="post_description" className="text-base font-semibold mb-2 block">
-                    {t("description")} <span className="text-red-500">*</span>
-                  </Label>
-                  <Textarea
-                    id="post_description"
-                    value={formData.post_description}
-                    onChange={(e) => handleInputChange("post_description", e.target.value)}
-                    placeholder="Describe your item in detail..."
-                    className="w-full min-h-[120px]"
-                    maxLength={500}
-                  />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {formData.post_description.length}/500 characters
-                  </p>
-                </div>
-
-                {/* Images */}
+                {/* Images (first — eBay-style flow) */}
                 <div className="mb-6">
                   <Label className="text-base font-semibold mb-2 block">
                     {t("photos")} <span className="text-red-500">*</span>
@@ -786,6 +783,70 @@ export function NewProductForm({
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* AI Draft Button */}
+                {selectedImages.length > 0 && (
+                  <div className="mb-6">
+                    <button
+                      type="button"
+                      onClick={handleAIDraft}
+                      disabled={isDrafting}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-950/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isDrafting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Analyzing images...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" />
+                          <span>Draft with AI</span>
+                        </>
+                      )}
+                    </button>
+                    <p className="text-xs text-muted-foreground mt-1.5">
+                      AI will suggest a title and description based on your photos
+                    </p>
+                  </div>
+                )}
+
+                {/* Title */}
+                <div className="mb-6">
+                  <Label htmlFor="post_name" className="text-base font-semibold mb-2 block">
+                    {t("title")} <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="post_name"
+                    type="text"
+                    value={formData.post_name}
+                    onChange={(e) => handleInputChange("post_name", e.target.value)}
+                    placeholder="e.g., Fresh Homemade Pasta"
+                    className="w-full"
+                    maxLength={100}
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {formData.post_name.length}/100 characters
+                  </p>
+                </div>
+
+                {/* Description */}
+                <div className="mb-6">
+                  <Label htmlFor="post_description" className="text-base font-semibold mb-2 block">
+                    {t("description")} <span className="text-red-500">*</span>
+                  </Label>
+                  <Textarea
+                    id="post_description"
+                    value={formData.post_description}
+                    onChange={(e) => handleInputChange("post_description", e.target.value)}
+                    placeholder="Describe your item in detail..."
+                    className="w-full min-h-[120px]"
+                    maxLength={500}
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {formData.post_description.length}/500 characters
+                  </p>
                 </div>
 
                 {/* Available Hours */}
