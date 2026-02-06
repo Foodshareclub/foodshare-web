@@ -48,6 +48,7 @@ export interface ImageMetadata {
   };
   processingTime: number;
   compressionMethod?: string;
+  storage?: "r2" | "supabase";
 }
 
 export interface ImageUploadResponse {
