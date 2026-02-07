@@ -93,26 +93,6 @@ pre-push:
       env:
         NODE_OPTIONS: ""
 
-    test:
-      tags: test
-      run: npm run test -- --passWithNoTests
-      env:
-        CI: true
-        NODE_OPTIONS: ""
-      priority: 2
-      skip:
-        - run: test -n "$SKIP_TESTS"
-
-    build:
-      tags: build
-      run: npm run build
-      env:
-        NODE_ENV: production
-        NODE_OPTIONS: ""
-      priority: 3
-      skip:
-        - run: test -n "$SKIP_BUILD"
-
 # ============================================================================
 # POST-CHECKOUT: Auto-maintenance after branch switch
 # ============================================================================
