@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
 // Types
 export type AccuracyLevel = "precise" | "approximate" | "city-level";
@@ -67,10 +67,20 @@ export const usePosition = (
   watch = false,
   userSettings: UsePositionSettings = {}
 ): UsePositionReturn => {
-  const settings = {
-    ...defaultSettings,
-    ...userSettings,
-  };
+  /* eslint-disable react-hooks/exhaustive-deps */
+  const settings = useMemo(
+    () => ({
+      ...defaultSettings,
+      ...userSettings,
+    }),
+    [
+      userSettings.enableHighAccuracy,
+      userSettings.timeout,
+      userSettings.maximumAge,
+      userSettings.fallbackToApproximate,
+    ]
+  );
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const [position, setPosition] = useState<PositionData>({});
   const [error, setError] = useState<PositionError | null>(null);

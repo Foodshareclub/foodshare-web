@@ -15,12 +15,12 @@ interface ZoomConfig {
 }
 
 const ZOOM_CONFIG: ZoomConfig = {
-  minZoom: 2,           // World view
-  maxZoom: 18,          // Building level
-  streetLevel: 16,      // See individual buildings
+  minZoom: 2, // World view
+  maxZoom: 18, // Building level
+  streetLevel: 16, // See individual buildings
   neighborhoodLevel: 13, // See neighborhood details
-  cityLevel: 11,        // See city overview
-  regionLevel: 8,       // See region/state
+  cityLevel: 11, // See city overview
+  regionLevel: 8, // See region/state
 };
 
 const STORAGE_KEY = "foodshare_map_zoom_preference";
@@ -96,6 +96,7 @@ export const useMapZoom = (options: UseMapZoomOptions) => {
     if (!hasUserInteracted) {
       const cached = getCachedZoom();
       const newZoom = cached !== null ? cached : optimalZoom;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Syncing zoom from localStorage/context changes
       setZoom(newZoom);
     }
   }, [optimalZoom, hasUserInteracted, getCachedZoom]);
@@ -103,10 +104,7 @@ export const useMapZoom = (options: UseMapZoomOptions) => {
   // Save zoom to cache when it changes
   const updateZoom = useCallback((newZoom: number, userInitiated: boolean = false) => {
     // Clamp zoom to valid range
-    const clampedZoom = Math.max(
-      ZOOM_CONFIG.minZoom,
-      Math.min(ZOOM_CONFIG.maxZoom, newZoom)
-    );
+    const clampedZoom = Math.max(ZOOM_CONFIG.minZoom, Math.min(ZOOM_CONFIG.maxZoom, newZoom));
 
     setZoom(clampedZoom);
 

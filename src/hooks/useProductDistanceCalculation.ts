@@ -18,6 +18,7 @@ export const useProductDistanceCalculation = (
 
   useEffect(() => {
     if (!enabled || !products.length || !userLat || !userLng) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Guard clause returning early with passthrough data
       setProductsWithDistance(products);
       return;
     }

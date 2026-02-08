@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { OpenStreetMapProvider } from "leaflet-geosearch";
 import { useState } from "react";
@@ -29,7 +29,7 @@ const SearchBox = () => {
       </form>
       <div>
         {results.map((item) => (
-          <p>{item.label}</p>
+          <p key={item.raw.place_id}>{item.label}</p>
         ))}
       </div>
     </div>

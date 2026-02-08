@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, RefObject } from "react";
+import { useEffect, useState, RefObject } from "react";
 import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -67,10 +67,13 @@ export function ScrollProgress({
     container: containerRef,
   });
 
-  // Apply spring animation for smoother movement
-  const scaleX = smooth
-    ? useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 })
-    : scrollYProgress;
+  // Always call useSpring (hooks must be called unconditionally)
+  const springProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
+  const scaleX = smooth ? springProgress : scrollYProgress;
 
   // Transform for percentage display
   const percentage = useTransform(scrollYProgress, [0, 1], [0, 100]);
@@ -100,10 +103,7 @@ export function ScrollProgress({
       aria-valuemax={100}
       aria-label="Page scroll progress"
     >
-      <motion.div
-        className={cn("h-full origin-left", color)}
-        style={{ scaleX }}
-      />
+      <motion.div className={cn("h-full origin-left", color)} style={{ scaleX }} />
 
       {showPercentage && (
         <div
@@ -214,11 +214,7 @@ export function CircularScrollProgress({
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.8 }}
-      className={cn(
-        "fixed z-50",
-        positionClasses[position],
-        className
-      )}
+      className={cn("fixed z-50", positionClasses[position], className)}
       style={{
         margin: offset,
       }}
@@ -229,12 +225,7 @@ export function CircularScrollProgress({
       aria-label="Page scroll progress"
     >
       <div className="relative glass rounded-full p-1.5 shadow-lg">
-        <svg
-          width={size}
-          height={size}
-          viewBox={`0 0 ${size} ${size}`}
-          className="-rotate-90"
-        >
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
           {/* Background circle */}
           <circle
             cx={size / 2}
@@ -265,9 +256,7 @@ export function CircularScrollProgress({
         {/* Percentage text */}
         {showPercentage && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-xs font-semibold text-foreground">
-              {progress}
-            </span>
+            <span className="text-xs font-semibold text-foreground">{progress}</span>
           </div>
         )}
       </div>

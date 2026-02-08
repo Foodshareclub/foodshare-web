@@ -23,7 +23,7 @@ const getLocationFromTimezone = (): Coordinates => {
   // Major timezone to coordinates mapping
   const timezoneMap: Record<string, Coordinates> = {
     // Americas
-    "America/New_York": [40.7128, -74.0060],
+    "America/New_York": [40.7128, -74.006],
     "America/Chicago": [41.8781, -87.6298],
     "America/Los_Angeles": [34.0522, -118.2437],
     "America/Toronto": [43.6532, -79.3832],
@@ -33,7 +33,7 @@ const getLocationFromTimezone = (): Coordinates => {
     // Europe
     "Europe/London": [51.5074, -0.1278],
     "Europe/Paris": [48.8566, 2.3522],
-    "Europe/Berlin": [52.5200, 13.4050],
+    "Europe/Berlin": [52.52, 13.405],
     "Europe/Madrid": [40.4168, -3.7038],
     "Europe/Rome": [41.9028, 12.4964],
     "Europe/Amsterdam": [52.3676, 4.9041],
@@ -61,12 +61,12 @@ const getLocationFromTimezone = (): Coordinates => {
   // Partial match (e.g., Europe/Bucharest -> Europe/Prague)
   const region = timezone.split("/")[0];
   const regionDefaults: Record<string, Coordinates> = {
-    "Europe": [50.0755, 14.4378], // Prague (central Europe)
-    "America": [39.8283, -98.5795], // Geographic center of USA
-    "Asia": [34.0479, 100.6197], // Geographic center of Asia
-    "Africa": [0.0236, 37.9062], // Nairobi
-    "Australia": [-25.2744, 133.7751], // Geographic center of Australia
-    "Pacific": [-17.7134, 178.0650], // Fiji
+    Europe: [50.0755, 14.4378], // Prague (central Europe)
+    America: [39.8283, -98.5795], // Geographic center of USA
+    Asia: [34.0479, 100.6197], // Geographic center of Asia
+    Africa: [0.0236, 37.9062], // Nairobi
+    Australia: [-25.2744, 133.7751], // Geographic center of Australia
+    Pacific: [-17.7134, 178.065], // Fiji
   };
 
   return regionDefaults[region] || [20.0, 0.0]; // Equator as ultimate fallback
@@ -92,7 +92,7 @@ const getLocationFromLocale = (): Coordinates => {
     JP: [36.2048, 138.2529],
     CN: [35.8617, 104.1954],
     IN: [20.5937, 78.9629],
-    BR: [-14.2350, -51.9253],
+    BR: [-14.235, -51.9253],
   };
 
   return localeMap[country] || getLocationFromTimezone();
@@ -124,7 +124,9 @@ export const useDefaultMapCenter = (): MapCenterResult => {
         },
         (error) => {
           clearTimeout(timeoutId);
-          logger.warn("Geolocation unavailable, using timezone/locale fallback", { error: error.message });
+          logger.warn("Geolocation unavailable, using timezone/locale fallback", {
+            error: error.message,
+          });
           // Keep the locale-based fallback
           setIsLoading(false);
         },
@@ -135,6 +137,7 @@ export const useDefaultMapCenter = (): MapCenterResult => {
         }
       );
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- No geolocation available, stop loading synchronously
       setIsLoading(false);
     }
   }, []);

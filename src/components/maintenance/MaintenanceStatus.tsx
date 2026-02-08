@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { cn } from "@/lib/utils";
 import { Check, X, Loader2, RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface HealthStatus {
   status: "healthy" | "degraded" | "maintenance";
@@ -198,16 +199,12 @@ export function MaintenanceStatus(): React.ReactElement {
               ? `Redirecting in ${redirectCountdown}...`
               : t("redirecting", { fallback: "Redirecting you back..." })}
           </p>
-          <a
+          <Link
             href="/"
-            onClick={(e) => {
-              e.preventDefault();
-              router.push("/");
-            }}
             className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
           >
             Go to Home →
-          </a>
+          </Link>
         </div>
       )}
 

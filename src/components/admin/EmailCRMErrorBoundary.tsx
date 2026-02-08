@@ -87,8 +87,8 @@ export class EmailCRMErrorBoundary extends Component<Props, State> {
             </h2>
 
             <p className="text-sm text-gray-600 text-center mb-6">
-              The Email CRM encountered an error. Please try refreshing the page or contact
-              support if the problem persists.
+              The Email CRM encountered an error. Please try refreshing the page or contact support
+              if the problem persists.
             </p>
 
             {process.env.NODE_ENV === "development" && this.state.error && (
@@ -138,9 +138,11 @@ export function withErrorBoundary<P extends object>(
   fallback?: ReactNode,
   onError?: (error: Error, errorInfo: ErrorInfo) => void
 ): React.FC<P> {
-  return (props: P) => (
+  const WrappedComponent = (props: P) => (
     <EmailCRMErrorBoundary fallback={fallback} onError={onError}>
       <Component {...props} />
     </EmailCRMErrorBoundary>
   );
+  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name || "Component"})`;
+  return WrappedComponent;
 }

@@ -13,8 +13,8 @@
 
 import React, { useState, useEffect } from "react";
 
-import { MFAService } from "@/lib/security/mfa";
 import { Loader2, AlertCircle, Shield, RefreshCw } from "lucide-react";
+import { MFAService } from "@/lib/security/mfa";
 
 interface MFAVerificationProps {
   profileId: string;
@@ -29,7 +29,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
 }) => {
   const [verificationCode, setVerificationCode] = useState("");
   const [challengeId, setChallengeId] = useState("");
-  const [method, setMethod] = useState<"sms" | "email">("email");
+  const [method, _setMethod] = useState<"sms" | "email">("email");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [attemptsRemaining, setAttemptsRemaining] = useState(5);
@@ -41,6 +41,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
   // Start challenge on mount
   useEffect(() => {
     startChallenge();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Resend countdown timer
@@ -73,7 +74,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
       setChallengeId(result.challenge_id || "");
       setCanResend(false);
       setResendCountdown(60);
-    } catch (err) {
+    } catch {
       setError("Failed to send verification code. Please try again.");
     } finally {
       setIsLoading(false);
@@ -110,7 +111,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
       if (onVerified) {
         onVerified();
       }
-    } catch (err) {
+    } catch {
       setError("Verification failed. Please try again.");
     } finally {
       setIsLoading(false);
@@ -139,7 +140,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
       if (onVerified) {
         onVerified();
       }
-    } catch (err) {
+    } catch {
       setError("Failed to verify backup code. Please try again.");
     } finally {
       setIsLoading(false);
@@ -159,9 +160,9 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
         <div className="space-y-6">
           <div className="text-center">
             <Shield className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
-            <h2 className="text-2xl font-bold text-foreground mb-2">"Enter Backup Code"</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Enter Backup Code</h2>
             <p className="text-muted-foreground">
-              "Use one of your backup codes to verify your identity"
+              Use one of your backup codes to verify your identity
             </p>
           </div>
 
@@ -173,9 +174,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
           )}
 
           <div>
-            <label className="block text-sm font-medium text-foreground/80 mb-2">
-              "Backup Code"
-            </label>
+            <label className="block text-sm font-medium text-foreground/80 mb-2">Backup Code</label>
             <input
               type="text"
               value={backupCode}
@@ -190,7 +189,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
               onClick={() => setShowBackupCodeInput(false)}
               className="flex-1 px-4 py-3 border border-border rounded-lg hover:bg-muted transition-colors"
             >
-              "Back"
+              Back
             </button>
             <button
               onClick={handleBackupCodeVerify}
@@ -200,10 +199,10 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
               {isLoading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  "Verifying..."
+                  Verifying...
                 </>
               ) : (
-                "Verify"
+                <>Verify</>
               )}
             </button>
           </div>
@@ -218,7 +217,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
       <div className="space-y-6">
         <div className="text-center">
           <Shield className="w-16 h-16 mx-auto mb-4 text-green-600 dark:text-green-400" />
-          <h2 className="text-2xl font-bold text-foreground mb-2">"Two-Factor Authentication"</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Two-Factor Authentication</h2>
           <p className="text-muted-foreground">
             Enter the verification code sent to your {method === "email" ? "email" : "phone"}
           </p>
@@ -231,7 +230,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
               <p className="text-sm text-red-800">{error}</p>
               {attemptsRemaining <= 2 && attemptsRemaining > 0 && (
                 <p className="text-xs text-red-600 mt-1">
-                  "Warning: Only {attemptsRemaining} attempts remaining!"
+                  Warning: Only {attemptsRemaining} attempts remaining!
                 </p>
               )}
             </div>
@@ -240,7 +239,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
 
         <div>
           <label className="block text-sm font-medium text-foreground/80 mb-2">
-            "Verification Code"
+            Verification Code
           </label>
           <input
             type="text"
@@ -252,7 +251,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
             autoFocus
           />
           <p className="mt-1 text-xs text-muted-foreground text-center">
-            "Code expires in 5 minutes"
+            Code expires in 5 minutes
           </p>
         </div>
 
@@ -264,10 +263,10 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
           {isLoading ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              "Verifying..."
+              Verifying...
             </>
           ) : (
-            "Verify Code"
+            <>Verify Code</>
           )}
         </button>
 
@@ -278,14 +277,14 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
             className="text-primary hover:text-primary/80 disabled:text-muted-foreground disabled:cursor-not-allowed flex items-center gap-1"
           >
             <RefreshCw className="w-4 h-4" />
-            {canResend ? "Resend Code" : "Resend in {resendCountdown}s"}
+            {canResend ? "Resend Code" : `Resend in ${resendCountdown}s`}
           </button>
 
           <button
             onClick={() => setShowBackupCodeInput(true)}
             className="text-muted-foreground hover:text-foreground underline"
           >
-            "Use Backup Code"
+            Use Backup Code
           </button>
         </div>
 
@@ -295,7 +294,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
               onClick={onCancel}
               className="text-muted-foreground hover:text-foreground underline text-sm"
             >
-              "Cancel and Logout"
+              Cancel and Logout
             </button>
           </div>
         )}

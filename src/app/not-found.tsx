@@ -1,5 +1,5 @@
-import Link from 'next/link'
-import { BackButton } from '@/components/navigation/BackButton'
+import Link from "next/link";
+import { BackButton } from "@/components/navigation/BackButton";
 
 export default function NotFound() {
   return (
@@ -8,7 +8,7 @@ export default function NotFound() {
         <div className="text-8xl font-bold text-[#FF2D55] mb-4">404</div>
         <h1 className="text-2xl font-bold text-foreground mb-2">Page Not Found</h1>
         <p className="text-muted-foreground mb-6">
-          This page doesn't exist or has been moved.
+          This page doesn&apos;t exist or has been moved.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -22,5 +22,5 @@ export default function NotFound() {
         </div>
       </div>
     </div>
-  )
+  );
 }

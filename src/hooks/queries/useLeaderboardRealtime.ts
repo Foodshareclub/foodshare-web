@@ -12,7 +12,7 @@
  * - Better engagement
  */
 
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { ConnectionStatus } from "../useRealtimeSubscription";
@@ -52,11 +52,12 @@ export function useLeaderboardRealtime({
   const channelRef = useRef<RealtimeChannel | null>(null);
   const reconnectAttempts = useRef(0);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const connectionStatusRef = useRef<ConnectionStatus>("disconnected");
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
+  const subscribeRef = useRef<() => void>(undefined);
 
   const updateStatus = useCallback(
     (status: ConnectionStatus) => {
-      connectionStatusRef.current = status;
+      setConnectionStatus(status);
       onStatusChange?.(status);
     },
     [onStatusChange]
@@ -138,7 +139,7 @@ export function useLeaderboardRealtime({
 
             reconnectTimeoutRef.current = setTimeout(() => {
               cleanup();
-              subscribe();
+              subscribeRef.current?.();
             }, delay);
           } else {
             updateStatus("disconnected");
@@ -151,6 +152,10 @@ export function useLeaderboardRealtime({
     channelRef.current = channel;
   }, [enabled, handleLeaderboardChange, updateStatus, cleanup]);
 
+  useEffect(() => {
+    subscribeRef.current = subscribe;
+  }, [subscribe]);
+
   const reconnect = useCallback(() => {
     reconnectAttempts.current = 0;
     subscribe();
@@ -162,7 +167,7 @@ export function useLeaderboardRealtime({
   }, [subscribe, cleanup]);
 
   return {
-    connectionStatus: connectionStatusRef.current,
+    connectionStatus,
     reconnect,
   };
 }

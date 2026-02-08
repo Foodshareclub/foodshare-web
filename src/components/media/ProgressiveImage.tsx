@@ -1,8 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { useState } from "react";
+import Image from "next/image";
+import { motion } from "framer-motion";
+
+const MotionImage = motion(Image);
 
 interface ProgressiveImageProps {
   src: string;
@@ -27,7 +29,7 @@ export function ProgressiveImage({
   src,
   placeholderSrc,
   alt,
-  className = '',
+  className = "",
   width,
   height,
   fill = false,
@@ -43,8 +45,6 @@ export function ProgressiveImage({
     onLoad?.();
   };
 
-  const MotionImage = motion(Image);
-
   return (
     <MotionImage
       src={src}
@@ -54,16 +54,16 @@ export function ProgressiveImage({
       fill={fill}
       sizes={sizes}
       className={className}
-      initial={{ opacity: 0, filter: 'blur(10px)' }}
+      initial={{ opacity: 0, filter: "blur(10px)" }}
       animate={{
         opacity: isLoading ? 0.6 : 1,
-        filter: isLoading ? 'blur(10px)' : 'blur(0px)',
+        filter: isLoading ? "blur(10px)" : "blur(0px)",
       }}
-      transition={{ duration: 0.4, ease: 'easeOut' }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
       onLoadingComplete={handleLoadingComplete}
       priority={priority}
       quality={quality}
-      placeholder={placeholderSrc ? 'blur' : 'empty'}
+      placeholder={placeholderSrc ? "blur" : "empty"}
       blurDataURL={placeholderSrc}
     />
   );

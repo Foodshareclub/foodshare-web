@@ -3,8 +3,8 @@
 import { forwardRef, useId, ReactNode, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Label } from "./label";
+import { cn } from "@/lib/utils";
 
 export interface FormFieldProps {
   /** Field label */
@@ -153,10 +153,12 @@ export const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
 
     useEffect(() => {
       if (error && error !== prevError) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Triggering shake animation on new errors
         setShouldShake(true);
         const timer = setTimeout(() => setShouldShake(false), 500);
         return () => clearTimeout(timer);
       }
+
       setPrevError(error);
     }, [error, prevError]);
 
@@ -200,9 +202,7 @@ export const FormField = forwardRef<HTMLDivElement, FormFieldProps>(
                   className="flex items-center gap-1 text-green-600 dark:text-green-500"
                 >
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  {successMessage && (
-                    <span className="text-xs font-medium">{successMessage}</span>
-                  )}
+                  {successMessage && <span className="text-xs font-medium">{successMessage}</span>}
                 </motion.span>
               )}
             </AnimatePresence>
@@ -285,12 +285,8 @@ export function FormFieldGroup({
     <fieldset className={cn("space-y-4", className)}>
       {(title || description) && (
         <div className="mb-4">
-          {title && (
-            <legend className="text-base font-semibold text-foreground">{title}</legend>
-          )}
-          {description && (
-            <p className="text-sm text-muted-foreground mt-1">{description}</p>
-          )}
+          {title && <legend className="text-base font-semibold text-foreground">{title}</legend>}
+          {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
         </div>
       )}
       {children}

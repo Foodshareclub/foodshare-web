@@ -240,6 +240,7 @@ function InitialContentPlugin({ content }: { content: string }) {
       });
     });
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Initialization flag, only runs once
     setInitialized(true);
   }, [editor, content, initialized]);
 

@@ -1,9 +1,15 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from "react";
 import { useUIStore } from "@/store/zustand/useUIStore";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +29,7 @@ export default function FiltersModal() {
 
   // Sync slider value with store state when geoDistance changes externally
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Syncing local slider state with external store value
     setSliderValue(geoDistance || 0);
   }, [geoDistance]);
 

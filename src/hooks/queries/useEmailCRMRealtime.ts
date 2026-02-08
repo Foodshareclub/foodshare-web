@@ -13,7 +13,7 @@
  * - Better admin experience
  */
 
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import type { ConnectionStatus } from "../useRealtimeSubscription";
@@ -72,12 +72,13 @@ export function useEmailCRMRealtime({
   const channelRef = useRef<RealtimeChannel | null>(null);
   const reconnectAttempts = useRef(0);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const connectionStatusRef = useRef<ConnectionStatus>("disconnected");
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
+  const subscribeRef = useRef<() => void>(undefined);
 
   // Track status changes
   const updateStatus = useCallback(
     (status: ConnectionStatus) => {
-      connectionStatusRef.current = status;
+      setConnectionStatus(status);
       onStatusChange?.(status);
     },
     [onStatusChange]
@@ -149,7 +150,7 @@ export function useEmailCRMRealtime({
 
           reconnectTimeoutRef.current = setTimeout(() => {
             cleanup();
-            subscribe();
+            subscribeRef.current?.();
           }, delay);
         } else {
           updateStatus("disconnected");
@@ -161,6 +162,10 @@ export function useEmailCRMRealtime({
 
     channelRef.current = channel;
   }, [enabled, handleTableChange, updateStatus, cleanup]);
+
+  useEffect(() => {
+    subscribeRef.current = subscribe;
+  }, [subscribe]);
 
   // Manual reconnect
   const reconnect = useCallback(() => {
@@ -175,7 +180,7 @@ export function useEmailCRMRealtime({
   }, [subscribe, cleanup]);
 
   return {
-    connectionStatus: connectionStatusRef.current,
+    connectionStatus,
     reconnect,
   };
 }

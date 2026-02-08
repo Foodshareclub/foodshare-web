@@ -41,7 +41,7 @@ export const EnhancedImage: React.FC<EnhancedImageProps> = ({
   m,
   _dark,
   className = "",
-  ...imageProps
+  ..._imageProps
 }) => {
   const { isHovered, hoverProps } = useHoverAnimation({ translateY: 0 });
 
@@ -128,7 +128,6 @@ export const EnhancedImage: React.FC<EnhancedImageProps> = ({
               }
             : undefined
         }
-        // @ts-ignore - framer-motion transition types
         transition={
           enableFloating
             ? {

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * Email Preferences Form Component
@@ -6,10 +6,7 @@
  */
 
 import React, { useState, useTransition } from "react";
-import {
-  saveEmailPreferences,
-  type EmailPreferencesInput,
-} from "@/app/actions/email-preferences";
+import { saveEmailPreferences, type EmailPreferencesInput } from "@/app/actions/email-preferences";
 import type { EmailPreferences } from "@/lib/data/email-preferences";
 
 interface EmailPreferencesFormProps {
@@ -70,9 +67,7 @@ export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFor
         {message && (
           <div
             className={`p-4 rounded-lg ${
-              message.type === "success"
-                ? "bg-green-100 text-green-800"
-                : "bg-red-100 text-red-800"
+              message.type === "success" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
             }`}
           >
             {message.text}
@@ -156,9 +151,7 @@ export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFor
               />
               <div>
                 <p className="font-medium">Instant</p>
-                <p className="text-sm text-muted-foreground">
-                  Receive emails as events happen
-                </p>
+                <p className="text-sm text-muted-foreground">Receive emails as events happen</p>
               </div>
             </label>
 
@@ -206,8 +199,8 @@ export function EmailPreferencesForm({ initialPreferences }: EmailPreferencesFor
         <div className="space-y-3">
           <h3 className="text-lg font-semibold">Quiet Hours</h3>
           <p className="text-sm text-muted-foreground">
-            Don't send me notifications during these hours (applies to instant
-            notifications only)
+            Don&apos;t send me notifications during these hours (applies to instant notifications
+            only)
           </p>
 
           <div className="grid grid-cols-2 gap-4">

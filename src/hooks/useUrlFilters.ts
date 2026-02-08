@@ -6,10 +6,10 @@
  * - Persisted filters across page reloads
  */
 
-'use client';
+"use client";
 
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { useCallback, useMemo, useTransition } from 'react';
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useCallback, useMemo, useTransition } from "react";
 
 // ============================================================================
 // Types
@@ -18,18 +18,18 @@ import { useCallback, useMemo, useTransition } from 'react';
 export interface ProductFilters extends Record<string, unknown> {
   search: string;
   category: string;
-  sortBy: 'created_at' | 'post_name' | 'post_views' | 'distance';
-  sortOrder: 'asc' | 'desc';
+  sortBy: "created_at" | "post_name" | "post_views" | "distance";
+  sortOrder: "asc" | "desc";
   page: number;
   limit: number;
 }
 
 export interface AdminFilters extends Record<string, unknown> {
-  status: 'all' | 'pending' | 'approved' | 'rejected' | 'flagged';
+  status: "all" | "pending" | "approved" | "rejected" | "flagged";
   search: string;
   category: string;
-  sortBy: 'created_at' | 'updated_at' | 'post_name' | 'status';
-  sortOrder: 'asc' | 'desc';
+  sortBy: "created_at" | "updated_at" | "post_name" | "status";
+  sortOrder: "asc" | "desc";
   dateFrom: string | null;
   dateTo: string | null;
   flaggedOnly: boolean;
@@ -42,20 +42,20 @@ export interface AdminFilters extends Record<string, unknown> {
 // ============================================================================
 
 const defaultProductFilters: ProductFilters = {
-  search: '',
-  category: 'all',
-  sortBy: 'created_at',
-  sortOrder: 'desc',
+  search: "",
+  category: "all",
+  sortBy: "created_at",
+  sortOrder: "desc",
   page: 1,
   limit: 20,
 };
 
 const defaultAdminFilters: AdminFilters = {
-  status: 'all',
-  search: '',
-  category: 'all',
-  sortBy: 'created_at',
-  sortOrder: 'desc',
+  status: "all",
+  search: "",
+  category: "all",
+  sortBy: "created_at",
+  sortOrder: "desc",
   dateFrom: null,
   dateTo: null,
   flaggedOnly: false,
@@ -92,6 +92,11 @@ export function useUrlFilters<T extends Record<string, unknown>>(
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
 
+  // Destructure options to stabilize dependency tracking for React Compiler
+  const parsers = options?.parsers;
+  const excludeFromUrl = options?.excludeFromUrl;
+  const serializers = options?.serializers;
+
   // Parse filters from URL
   const filters = useMemo(() => {
     const result = { ...defaults };
@@ -100,15 +105,15 @@ export function useUrlFilters<T extends Record<string, unknown>>(
       const urlValue = searchParams.get(String(key));
       if (urlValue !== null) {
         // Use custom parser if available
-        if (options?.parsers?.[key]) {
-          result[key] = options.parsers[key]!(urlValue);
+        if (parsers?.[key]) {
+          result[key] = parsers[key]!(urlValue);
         } else {
           // Default parsing based on type
           const defaultValue = defaults[key];
-          if (typeof defaultValue === 'number') {
+          if (typeof defaultValue === "number") {
             result[key] = parseInt(urlValue, 10) as T[keyof T];
-          } else if (typeof defaultValue === 'boolean') {
-            result[key] = (urlValue === 'true') as T[keyof T];
+          } else if (typeof defaultValue === "boolean") {
+            result[key] = (urlValue === "true") as T[keyof T];
           } else {
             result[key] = urlValue as T[keyof T];
           }
@@ -117,7 +122,7 @@ export function useUrlFilters<T extends Record<string, unknown>>(
     }
 
     return result;
-  }, [searchParams, defaults, options?.parsers]);
+  }, [searchParams, defaults, parsers]);
 
   // Update URL with new filters
   const setFilters = useCallback(
@@ -126,17 +131,17 @@ export function useUrlFilters<T extends Record<string, unknown>>(
 
       for (const [key, value] of Object.entries(newFilters)) {
         // Skip excluded keys
-        if (options?.excludeFromUrl?.includes(key as keyof T)) {
+        if (excludeFromUrl?.includes(key as keyof T)) {
           continue;
         }
 
         // Remove default values from URL
-        if (value === defaults[key as keyof T] || value === null || value === '') {
+        if (value === defaults[key as keyof T] || value === null || value === "") {
           params.delete(key);
         } else {
           // Use custom serializer if available
-          if (options?.serializers?.[key as keyof T]) {
-            params.set(key, options.serializers[key as keyof T]!(value as T[keyof T]));
+          if (serializers?.[key as keyof T]) {
+            params.set(key, serializers[key as keyof T]!(value as T[keyof T]));
           } else {
             params.set(key, String(value));
           }
@@ -147,7 +152,7 @@ export function useUrlFilters<T extends Record<string, unknown>>(
         router.push(`${pathname}?${params.toString()}`, { scroll: false });
       });
     },
-    [searchParams, pathname, router, defaults, options?.excludeFromUrl, options?.serializers]
+    [searchParams, pathname, router, defaults, excludeFromUrl, serializers]
   );
 
   // Reset all filters to defaults
@@ -191,7 +196,7 @@ export function useProductUrlFilters() {
 export function useAdminUrlFilters() {
   return useUrlFilters(defaultAdminFilters, {
     parsers: {
-      flaggedOnly: (v) => v === 'true',
+      flaggedOnly: (v) => v === "true",
       page: (v) => parseInt(v, 10),
       limit: (v) => parseInt(v, 10),
     },
@@ -218,7 +223,7 @@ export function createFilteredUrl<T extends Record<string, unknown>>(
     if (
       value === null ||
       value === undefined ||
-      value === '' ||
+      value === "" ||
       (defaults && value === defaults[key as keyof T])
     ) {
       continue;

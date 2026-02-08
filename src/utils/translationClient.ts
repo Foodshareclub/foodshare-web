@@ -14,7 +14,7 @@
  * - Memory-efficient caching
  */
 
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { createLogger } from "@/lib/logger";
 
 const logger = createLogger("TranslationClient");
@@ -221,7 +221,7 @@ export class TranslationClient {
   private config: TranslationClientConfig & { apiKey: string };
   private storage: StorageAdapter;
   private ws: WebSocket | null = null;
-  private pendingRequests = new Map<string, Promise<any>>();
+  private pendingRequests = new Map<string, Promise<TranslationData>>();
   private memoryCache = new Map<string, { data: TranslationData; timestamp: number }>();
   private prefetchQueue: Locale[] = [];
 
@@ -236,8 +236,8 @@ export class TranslationClient {
       cacheStrategy: "hybrid",
       retryAttempts: 3,
       retryDelay: 1000,
-      onUpdate: () => { },
-      onError: () => { },
+      onUpdate: () => {},
+      onError: () => {},
       ...config,
       apiKey: config.apiKey || "",
     };
@@ -324,7 +324,7 @@ export class TranslationClient {
         }
       };
 
-      this.ws.onerror = (err) => {
+      this.ws.onerror = (_err) => {
         logger.error("WebSocket error", new Error("WebSocket error")); // Event doesn't have message property always
         this.config.onError?.(new Error("WebSocket connection failed"));
       };
@@ -383,17 +383,19 @@ export class TranslationClient {
     }
   }
 
-  private getHeaders(options: {
-    locale?: string;
-    version?: string;
-    prefetch?: boolean;
-    stream?: boolean;
-    keys?: string[];
-  } = {}): Record<string, string> {
+  private getHeaders(
+    options: {
+      locale?: string;
+      version?: string;
+      prefetch?: boolean;
+      stream?: boolean;
+      keys?: string[];
+    } = {}
+  ): Record<string, string> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-    
+
     if (this.config.platform) {
       headers["X-Platform"] = this.config.platform;
     }
@@ -415,7 +417,7 @@ export class TranslationClient {
     if (options.keys) {
       headers["X-Keys"] = options.keys.join(",");
     }
-    
+
     return headers;
   }
 
@@ -442,7 +444,10 @@ export class TranslationClient {
     }
 
     // Check persistent cache
-    const cached = await this.storage.get(`translations:${locale}`) as { data: TranslationData; timestamp: number } | null;
+    const cached = (await this.storage.get(`translations:${locale}`)) as {
+      data: TranslationData;
+      timestamp: number;
+    } | null;
     if (cached) {
       const age = Date.now() - cached.timestamp;
       if (age < 86400000) {
@@ -523,7 +528,9 @@ export class TranslationClient {
         const result: TranslationResponse = await response.json();
 
         if (!result.success) {
-          throw new Error((result as any).error || "Translation fetch failed");
+          throw new Error(
+            (result as unknown as { error?: string }).error || "Translation fetch failed"
+          );
         }
 
         // Cache the result
@@ -708,7 +715,9 @@ export function useBatchTranslations(locales: Locale[]) {
 
   useEffect(() => {
     if (!globalClient) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Guard clause for missing client
       setError(new Error("Translation client not initialized"));
+
       setLoading(false);
       return;
     }
@@ -735,7 +744,9 @@ export function useTranslationStream(locales: Locale[]) {
 
   useEffect(() => {
     if (!globalClient) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Guard clause for missing client
       setError(new Error("Translation client not initialized"));
+
       setLoading(false);
       return;
     }

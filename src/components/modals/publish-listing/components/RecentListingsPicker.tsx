@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Copy, History, X } from "lucide-react";
 import { RECENT_LISTINGS_KEY } from "../constants";
 import type { RecentListing } from "../types";
@@ -14,18 +14,17 @@ export const RecentListingsPicker: React.FC<RecentListingsPickerProps> = ({
   onSelect,
   onClose,
 }) => {
-  const [recentListings, setRecentListings] = useState<RecentListing[]>([]);
-
-  useEffect(() => {
+  const [recentListings] = useState<RecentListing[]>(() => {
     try {
       const stored = localStorage.getItem(RECENT_LISTINGS_KEY);
       if (stored) {
-        setRecentListings(JSON.parse(stored));
+        return JSON.parse(stored);
       }
     } catch {
       // Invalid data
     }
-  }, []);
+    return [];
+  });
 
   if (recentListings.length === 0) {
     return (

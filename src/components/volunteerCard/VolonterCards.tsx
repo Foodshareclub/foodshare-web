@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -50,9 +50,18 @@ export function VolunteerCards({ volunteer, indicator }: VolunteerCardsProps) {
                 className="ml-10 cursor-pointer rounded-full p-2 border border-border bg-background"
                 aria-label="volunteer"
               >
-                <img src={HeartGrayImg.src} alt="like" style={{ filter: 'invert(27%) sepia(95%) saturate(6943%) hue-rotate(358deg) brightness(96%) contrast(117%)' }} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={HeartGrayImg.src}
+                  alt="like"
+                  style={{
+                    filter:
+                      "invert(27%) sepia(95%) saturate(6943%) hue-rotate(358deg) brightness(96%) contrast(117%)",
+                  }}
+                />
               </button>
             </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               className="mx-auto relative rounded-full w-[200px] h-[200px] sm:w-[250px] sm:h-[250px] object-cover cursor-pointer"
               onClick={indicator ? () => {} : onNavigateToOneProductHandler}
@@ -74,8 +83,9 @@ export function VolunteerCards({ volunteer, indicator }: VolunteerCardsProps) {
             </div>
             <div className="flex pt-3 justify-between items-center self-center">
               <p className="mt-1 text-sm text-muted-foreground uppercase">
-                "{volunteer.location ? String(volunteer.location) : ''}"
+                &quot;{volunteer.location ? String(volunteer.location) : ""}&quot;
               </p>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img className="cursor-pointer rounded-full" src={navIcon.src} alt="View on map" />
             </div>
           </div>

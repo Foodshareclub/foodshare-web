@@ -32,10 +32,19 @@ export const AnimatedGradientBackground: React.FC = () => {
   );
 };
 
+// Deterministic positions for floating orbs (avoids impure Math.random() during render)
+const ORB_POSITIONS = [
+  { top: 15, left: 72 },
+  { top: 48, left: 23 },
+  { top: 78, left: 85 },
+  { top: 32, left: 45 },
+  { top: 65, left: 10 },
+];
+
 export const FloatingOrbs: React.FC = () => {
   return (
     <>
-      {[...Array(5)].map((_, i) => (
+      {ORB_POSITIONS.map((pos, i) => (
         <MotionBox
           key={i}
           className="absolute rounded-full -z-10 blur-[40px]"
@@ -43,8 +52,8 @@ export const FloatingOrbs: React.FC = () => {
           style={{
             width: `${200 + i * 50}px`,
             height: `${200 + i * 50}px`,
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
+            top: `${pos.top}%`,
+            left: `${pos.left}%`,
             background: `radial-gradient(circle, rgba(255,${99 + i * 10},71,0.15) 0%, transparent 70%)`,
             willChange: "transform",
           }}

@@ -4,7 +4,7 @@
  * Uses Zustand instead of Redux for theme state management
  */
 
-'use client';
+"use client";
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -15,7 +15,6 @@ import {
   type ThemeTransition,
 } from "@/store/zustand/useUIStore";
 import { cn } from "@/lib/utils";
-
 
 // Icons
 const SunIcon = () => (
@@ -224,7 +223,7 @@ function ThemeSettingsPanel({ className }: { className?: string }) {
       <div>
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <SparklesIcon />
-          "Appearance"
+          &quot;Appearance&quot;
         </h3>
         <div className="grid grid-cols-3 gap-3">
           <ThemeOption
@@ -260,7 +259,7 @@ function ThemeSettingsPanel({ className }: { className?: string }) {
       {/* Transition Style */}
       <div>
         <h4 className="text-sm font-medium text-muted-foreground mb-3">
-          "Transition Style"
+          &quot;Transition Style&quot;
         </h4>
         <div className="flex gap-2">
           <TransitionOption
@@ -328,11 +327,9 @@ function ThemeSettingsPanel({ className }: { className?: string }) {
           <div className="flex items-center gap-3">
             <ClockIcon />
             <div className="text-left">
-              <p className="font-medium">
-                "Schedule"
-              </p>
+              <p className="font-medium">&quot;Schedule&quot;</p>
               <p className="text-xs text-muted-foreground">
-                "Auto-switch at specific times"
+                &quot;Auto-switch at specific times&quot;
               </p>
             </div>
           </div>
@@ -362,7 +359,7 @@ function ThemeSettingsPanel({ className }: { className?: string }) {
               <div className="grid grid-cols-2 gap-4 mt-4 p-4 bg-muted/50 rounded-xl">
                 <div>
                   <label className="block text-xs font-medium text-muted-foreground mb-2">
-                    "Light mode from"
+                    &quot;Light mode from&quot;
                   </label>
                   <input
                     type="time"
@@ -373,7 +370,7 @@ function ThemeSettingsPanel({ className }: { className?: string }) {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-muted-foreground mb-2">
-                    "Dark mode from"
+                    &quot;Dark mode from&quot;
                   </label>
                   <input
                     type="time"

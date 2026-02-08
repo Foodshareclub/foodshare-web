@@ -14,10 +14,10 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import { MFAVerification } from "./MFAVerification";
-import { checkAdminMFARequired, MFAService } from "@/lib/security/mfa";
 import { Loader2 } from "lucide-react";
+import { MFAVerification } from "./MFAVerification";
+import { useAuth } from "@/hooks/useAuth";
+import { checkAdminMFARequired, MFAService } from "@/lib/security/mfa";
 
 interface AdminMFAGuardProps {
   children: React.ReactNode;
@@ -40,11 +40,12 @@ export const AdminMFAGuard: React.FC<AdminMFAGuardProps> = ({ children }) => {
 
   const [isChecking, setIsChecking] = useState(true);
   const [requiresMFA, setRequiresMFA] = useState(false);
-  const [currentAAL, setCurrentAAL] = useState<"aal1" | "aal2">("aal1");
+  const [_currentAAL, setCurrentAAL] = useState<"aal1" | "aal2">("aal1");
 
   // Check MFA requirement on mount and when auth changes
   useEffect(() => {
     checkMFARequirement();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, isAdmin, user]);
 
   // Set up session activity tracking
@@ -99,6 +100,13 @@ export const AdminMFAGuard: React.FC<AdminMFAGuardProps> = ({ children }) => {
     window.location.href = "/login";
   };
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isChecking && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isChecking, isAuthenticated, router]);
+
   // Show loading state while checking
   if (isChecking) {
     return (
@@ -107,13 +115,6 @@ export const AdminMFAGuard: React.FC<AdminMFAGuardProps> = ({ children }) => {
       </div>
     );
   }
-
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!isChecking && !isAuthenticated) {
-      router.push("/login");
-    }
-  }, [isChecking, isAuthenticated, router]);
 
   if (!isAuthenticated) {
     return (

@@ -66,6 +66,7 @@ export function useRealtimeSubscription<T extends Record<string, unknown>>({
   const channelRef = useRef<RealtimeChannel | null>(null);
   const reconnectAttempts = useRef(0);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const subscribeRef = useRef<() => void>(undefined);
 
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
 
@@ -130,7 +131,7 @@ export function useRealtimeSubscription<T extends Record<string, unknown>>({
 
             reconnectTimeoutRef.current = setTimeout(() => {
               cleanup();
-              subscribe();
+              subscribeRef.current?.();
             }, delay);
           } else {
             updateStatus("disconnected");
@@ -142,6 +143,10 @@ export function useRealtimeSubscription<T extends Record<string, unknown>>({
 
     channelRef.current = channel;
   }, [enabled, channelName, table, schema, event, filter, onData, updateStatus, cleanup]);
+
+  useEffect(() => {
+    subscribeRef.current = subscribe;
+  }, [subscribe]);
 
   // Reconnect manually
   const reconnect = useCallback(() => {
@@ -199,6 +204,7 @@ export function useMultiRealtimeSubscription<T extends Record<string, unknown>>(
   const channelRef = useRef<RealtimeChannel | null>(null);
   const reconnectAttempts = useRef(0);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const multiSubscribeRef = useRef<() => void>(undefined);
 
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
 
@@ -261,7 +267,7 @@ export function useMultiRealtimeSubscription<T extends Record<string, unknown>>(
 
           reconnectTimeoutRef.current = setTimeout(() => {
             cleanup();
-            subscribe();
+            multiSubscribeRef.current?.();
           }, delay);
         } else {
           updateStatus("disconnected");
@@ -273,6 +279,10 @@ export function useMultiRealtimeSubscription<T extends Record<string, unknown>>(
 
     channelRef.current = channel;
   }, [enabled, channelName, schema, subscriptions, updateStatus, cleanup]);
+
+  useEffect(() => {
+    multiSubscribeRef.current = subscribe;
+  }, [subscribe]);
 
   const reconnect = useCallback(() => {
     reconnectAttempts.current = 0;

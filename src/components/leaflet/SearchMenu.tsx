@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
 import { useEffect, useRef } from "react";
 import { GeoSearchControl, OpenStreetMapProvider } from "leaflet-geosearch";
 import { useMap } from "react-leaflet";
 import "leaflet-geosearch/dist/geosearch.css";
-import { Icon } from "leaflet";
+import { Control, Icon } from "leaflet";
 import icon from "@/assets/location-red.svg";
 
 export const SearchMenu = () => {
   const map = useMap();
-  const controlRef = useRef<any>(null);
+  const controlRef = useRef<Control | null>(null);
 
   useEffect(() => {
     // Only add the control once
@@ -27,7 +27,7 @@ export const SearchMenu = () => {
       iconSize: [25, 25],
     });
 
-    // @ts-ignore
+    // @ts-expect-error - GeoSearchControl constructor types are incomplete
     const searchControl = new GeoSearchControl({
       style: "button",
       notFoundMessage: "Sorry, that address could not be found.",

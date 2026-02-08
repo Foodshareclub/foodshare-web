@@ -149,6 +149,24 @@ export function NotificationCenter({
     fetchNotifications();
   }, [isOpen, userId]);
 
+  // Helper to get notification URL
+  const getNotificationUrl = (notification: UserNotification): string | null => {
+    switch (notification.type) {
+      case "new_message":
+        return notification.room_id ? `/chat/${notification.room_id}` : "/chat";
+      case "post_claimed":
+      case "post_arranged":
+      case "post_expiring":
+      case "nearby_post":
+        return notification.post_id ? `/listing/${notification.post_id}` : null;
+      case "review_received":
+      case "review_reminder":
+        return "/profile/reviews";
+      default:
+        return null;
+    }
+  };
+
   // Realtime subscription
   useEffect(() => {
     const supabase = createClient();
@@ -210,24 +228,6 @@ export function NotificationCenter({
       supabase.removeChannel(channel);
     };
   }, [userId, isOpen, playSound, showBrowserNotification, showToast]);
-
-  // Helper to get notification URL
-  const getNotificationUrl = (notification: UserNotification): string | null => {
-    switch (notification.type) {
-      case "new_message":
-        return notification.room_id ? `/chat/${notification.room_id}` : "/chat";
-      case "post_claimed":
-      case "post_arranged":
-      case "post_expiring":
-      case "nearby_post":
-        return notification.post_id ? `/listing/${notification.post_id}` : null;
-      case "review_received":
-      case "review_reminder":
-        return "/profile/reviews";
-      default:
-        return null;
-    }
-  };
 
   const handleMarkAllAsRead = async () => {
     setIsMarkingAll(true);

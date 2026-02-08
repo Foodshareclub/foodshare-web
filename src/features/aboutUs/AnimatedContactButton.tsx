@@ -35,7 +35,6 @@ export const AnimatedContactButton: React.FC = () => {
           animate={{
             backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
           }}
-          // @ts-ignore
           transition={{
             backgroundPosition: {
               duration: 3,
@@ -55,16 +54,13 @@ export const AnimatedContactButton: React.FC = () => {
             {...shimmerAnimation}
           />
 
-          <span className="relative z-10">
-            "Contact Us"
-          </span>
+          <span className="relative z-10">&quot;Contact Us&quot;</span>
 
           <MotionBox
             className="inline-block relative z-10"
             animate={{
               x: [0, 5, 0],
             }}
-            // @ts-ignore
             transition={{
               duration: 1.5,
               repeat: Infinity,

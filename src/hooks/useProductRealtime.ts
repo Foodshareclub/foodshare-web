@@ -75,6 +75,7 @@ export function useProductRealtime({
   const channelRef = useRef<RealtimeChannel | null>(null);
   const reconnectAttempts = useRef(0);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const subscribeRef = useRef<() => void>(undefined);
 
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("disconnected");
   const [recentUpdates, setRecentUpdates] = useState<ProductUpdate[]>([]);
@@ -205,7 +206,7 @@ export function useProductRealtime({
 
           reconnectTimeoutRef.current = setTimeout(() => {
             cleanup();
-            subscribe();
+            subscribeRef.current?.();
           }, delay);
         } else {
           updateStatus("disconnected");
@@ -217,6 +218,10 @@ export function useProductRealtime({
 
     channelRef.current = channel;
   }, [enabled, postType, handleChange, updateStatus, cleanup]);
+
+  useEffect(() => {
+    subscribeRef.current = subscribe;
+  }, [subscribe]);
 
   const reconnect = useCallback(() => {
     reconnectAttempts.current = 0;

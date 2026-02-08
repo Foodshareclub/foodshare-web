@@ -133,6 +133,7 @@ export function SuccessAnimation({
 
   useEffect(() => {
     if (show) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Syncing visibility state from show prop for animation
       setIsVisible(true);
       setIsAnimating(true);
     } else {
@@ -308,6 +309,7 @@ export function InlineSuccessIndicator({ show, className }: { show: boolean; cla
 
   useEffect(() => {
     if (show) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Syncing visibility from show prop for animation
       setIsVisible(true);
     } else {
       const timer = setTimeout(() => setIsVisible(false), 200);

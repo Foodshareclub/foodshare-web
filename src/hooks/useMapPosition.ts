@@ -70,7 +70,7 @@ const getCachedPosition = (category: string): MapPosition | null => {
  * Remembers where the user was on the map for each category
  */
 export const useMapPosition = (options: UseMapPositionOptions): UseMapPositionResult => {
-  const { category, defaultCenter, defaultZoom } = options;
+  const { category, defaultCenter: _defaultCenter, defaultZoom: _defaultZoom } = options;
 
   const [savedPosition, setSavedPosition] = useState<MapPosition | null>(() =>
     getCachedPosition(category)
@@ -79,6 +79,7 @@ export const useMapPosition = (options: UseMapPositionOptions): UseMapPositionRe
   // Load saved position when category changes
   useEffect(() => {
     const cached = getCachedPosition(category);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Syncing state from localStorage when category changes
     setSavedPosition(cached);
   }, [category]);
 

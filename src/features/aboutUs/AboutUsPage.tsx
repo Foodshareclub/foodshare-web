@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
-import { PersonCard } from "@/components";
-import { teamMockArray } from "@/utils";
 import kitchen from "../../assets/Foodies Soup Kitchen.png";
 import company from "../../assets/AvoAcademy.png";
 import { MotionBox, MotionGrid, MotionGridItem } from "./MotionComponents";
@@ -10,6 +8,8 @@ import { AnimatedGradientBackground, FloatingOrbs } from "./BackgroundEffects";
 import { AnimatedHeader } from "./AnimatedHeader";
 import { AnimatedContactButton } from "./AnimatedContactButton";
 import { EnhancedImage } from "./components";
+import { teamMockArray } from "@/utils";
+import { PersonCard } from "@/components";
 
 const AboutUsPage = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -27,7 +27,7 @@ const AboutUsPage = () => {
       <FloatingOrbs />
 
       <AnimatedHeader mt={8} mb={10} animationDuration="5s">
-        "About Us"
+        &quot;About Us&quot;
       </AnimatedHeader>
 
       <MotionGrid
@@ -85,7 +85,7 @@ const AboutUsPage = () => {
                   transition={{ delay: idx * 0.2, duration: 0.6 }}
                 >
                   <p className="text-base md:text-lg leading-[1.9] text-gray-700 dark:text-gray-300 font-normal">
-                    "{text}"
+                    &quot;{text}&quot;
                   </p>
                 </MotionBox>
               ))}
@@ -94,9 +94,7 @@ const AboutUsPage = () => {
         </MotionGridItem>
       </MotionGrid>
 
-      <AnimatedHeader animationDuration="6s">
-        "Meet Our Team"
-      </AnimatedHeader>
+      <AnimatedHeader animationDuration="6s">&quot;Meet Our Team&quot;</AnimatedHeader>
 
       <div
         className="max-w-[1600px] mx-auto px-6 sm:px-8 md:px-12 py-4 md:py-6"
@@ -123,7 +121,7 @@ const AboutUsPage = () => {
       </div>
 
       <AnimatedHeader mt={20} animationDuration="7s" delay={1}>
-        "Design Tribute"
+        &quot;Design Tribute&quot;
       </AnimatedHeader>
 
       <div className="glass rounded-xl p-6 max-w-[1200px] mx-auto mb-10 transition-shadow duration-300 hover:shadow-[0_30px_60px_-12px_rgba(255,99,71,0.25)]">
@@ -158,7 +156,7 @@ const AboutUsPage = () => {
                   transition={{ delay: 0.3 + idx * 0.2, duration: 0.8 }}
                 >
                   <p className="text-base md:text-lg leading-[1.8] text-gray-700 dark:text-gray-300">
-                    "{text}"
+                    &quot;{text}&quot;
                   </p>
                 </MotionBox>
               ))}

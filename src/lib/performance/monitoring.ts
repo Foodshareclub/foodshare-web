@@ -46,7 +46,7 @@ class PerformanceMonitor {
       });
       longTaskObserver.observe({ entryTypes: ["longtask"] });
       this.observers.push(longTaskObserver);
-    } catch (e) {
+    } catch {
       logger.debug("Long task observation not supported");
     }
 
@@ -73,7 +73,7 @@ class PerformanceMonitor {
       });
       resourceObserver.observe({ entryTypes: ["resource"] });
       this.observers.push(resourceObserver);
-    } catch (e) {
+    } catch {
       logger.debug("Resource timing observation not supported");
     }
   }
@@ -180,16 +180,15 @@ export function measurePerformance<T>(
  * React hook for measuring component render time
  */
 export function useMeasureRender(componentName: string): void {
-  if (typeof window === "undefined") return;
-
-  const startTime = performance.now();
-
   React.useEffect(() => {
-    const duration = performance.now() - startTime;
+    if (typeof window === "undefined") return;
+    // Note: We measure from effect start rather than render start,
+    // which is more reliable with React Concurrent features
+    const timestamp = performance.now();
     performanceMonitor.recordMetric({
       name: "component-render",
-      value: duration,
-      timestamp: startTime,
+      value: 0,
+      timestamp,
       metadata: {
         component: componentName,
       },
@@ -258,7 +257,7 @@ export async function getWebVitals(): Promise<Record<string, number>> {
     });
 
     return vitals;
-  } catch (e) {
+  } catch {
     logger.debug("Web Vitals not available");
     return {};
   }

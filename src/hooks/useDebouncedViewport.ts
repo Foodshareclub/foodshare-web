@@ -98,6 +98,7 @@ export function useDebouncedViewport(
     if (!map) return;
 
     // Initial bounds
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Initial viewport sync from map state
     updateBounds();
 
     // Event handlers

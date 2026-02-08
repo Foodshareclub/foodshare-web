@@ -12,13 +12,12 @@ interface VoiceInputProps {
 
 export const VoiceInput: React.FC<VoiceInputProps> = ({ onTranscript, disabled }) => {
   const [isListening, setIsListening] = useState(false);
-  const [isSupported, setIsSupported] = useState(true);
+  const [isSupported] = useState(() => !!getSpeechRecognition());
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
     const SpeechRecognitionAPI = getSpeechRecognition();
     if (!SpeechRecognitionAPI) {
-      setIsSupported(false);
       return;
     }
 
