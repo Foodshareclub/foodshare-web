@@ -1,5 +1,6 @@
 services:
-  web:
+  foodshare-web:
+    container_name: foodshare-web
     build:
       context: .
       args:
