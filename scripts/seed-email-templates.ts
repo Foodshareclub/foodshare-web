@@ -1,7 +1,7 @@
-#!/usr/bin/env npx tsx
+#!/usr/bin/env bun
 /**
  * Seed Email Templates Script
- * Run: npx tsx scripts/seed-email-templates.ts
+ * Run: bun scripts/seed-email-templates.ts
  *
  * Seeds all email templates from welcome-series.ts into the database.
  * Uses service role key to bypass RLS.

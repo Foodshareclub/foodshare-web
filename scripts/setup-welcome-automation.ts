@@ -1,6 +1,6 @@
 /**
  * Script to run quickSetupWelcomeAutomation
- * Run with: npx tsx scripts/setup-welcome-automation.ts
+ * Run with: bun scripts/setup-welcome-automation.ts
  */
 
 import { quickSetupWelcomeAutomation } from "../src/app/actions/automations";

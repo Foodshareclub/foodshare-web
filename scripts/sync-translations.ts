@@ -1,4 +1,4 @@
-#!/usr/bin/env npx tsx
+#!/usr/bin/env bun
 /**
  * Translation Sync Script
  *
@@ -6,17 +6,17 @@
  * Supports delta detection, versioning, and change logging.
  *
  * Usage:
- *   npx tsx scripts/sync-translations.ts
- *   npx tsx scripts/sync-translations.ts --dry-run
- *   npx tsx scripts/sync-translations.ts --locale en
- *   npx tsx scripts/sync-translations.ts --force
+ *   bun scripts/sync-translations.ts
+ *   bun scripts/sync-translations.ts --dry-run
+ *   bun scripts/sync-translations.ts --locale en
+ *   bun scripts/sync-translations.ts --force
  */
 
-import { config } from "dotenv";
-import { createClient } from "@supabase/supabase-js";
 import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
+import { createClient } from "@supabase/supabase-js";
+import { config } from "dotenv";
 
 // Load environment variables
 config();
@@ -25,14 +25,6 @@ config();
 const MESSAGES_DIR = path.join(__dirname, "../messages");
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-interface TranslationRecord {
-  locale: string;
-  messages: Record<string, unknown>;
-  version: string;
-  created_at?: string;
-  updated_at?: string;
-}
 
 interface ChangeLogEntry {
   locale: string;

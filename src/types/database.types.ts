@@ -1,18 +1,12 @@
 /**
  * Supabase Database Types
  * Auto-generated types for the FoodShare database schema
- * 
+ *
  * NOTE: In production, these should be generated using:
- * npx supabase gen types typescript --project-id <project-id> > src/types/database.types.ts
+ * bunx supabase gen types typescript --project-id <project-id> > src/types/database.types.ts
  */
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export interface Database {
   public: {
@@ -215,18 +209,18 @@ export interface Database {
 }
 
 // Convenience type aliases
-export type Post = Database['public']['Tables']['posts']['Row'];
-export type PostInsert = Database['public']['Tables']['posts']['Insert'];
-export type PostUpdate = Database['public']['Tables']['posts']['Update'];
+export type Post = Database["public"]["Tables"]["posts"]["Row"];
+export type PostInsert = Database["public"]["Tables"]["posts"]["Insert"];
+export type PostUpdate = Database["public"]["Tables"]["posts"]["Update"];
 
-export type Profile = Database['public']['Tables']['profiles']['Row'];
-export type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
-export type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
+export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
-export type Review = Database['public']['Tables']['reviews']['Row'];
-export type ReviewInsert = Database['public']['Tables']['reviews']['Insert'];
+export type Review = Database["public"]["Tables"]["reviews"]["Row"];
+export type ReviewInsert = Database["public"]["Tables"]["reviews"]["Insert"];
 
-export type ChatRoom = Database['public']['Tables']['chat_rooms']['Row'];
-export type Message = Database['public']['Tables']['messages']['Row'];
+export type ChatRoom = Database["public"]["Tables"]["chat_rooms"]["Row"];
+export type Message = Database["public"]["Tables"]["messages"]["Row"];
 
-export type PostWithLocation = Database['public']['Views']['posts_with_location']['Row'];
+export type PostWithLocation = Database["public"]["Views"]["posts_with_location"]["Row"];

@@ -2,7 +2,7 @@
  * Test script for MailerSend email provider
  * Tests sending a simple email through MailerSend
  *
- * Usage: npx tsx scripts/test-mailersend.ts
+ * Usage: bun scripts/test-mailersend.ts
  */
 
 // Load environment variables

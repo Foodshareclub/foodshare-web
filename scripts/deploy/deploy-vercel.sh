@@ -32,10 +32,10 @@ fi
 # Check if Vercel CLI is installed
 if ! command -v vercel &> /dev/null; then
     echo -e "${RED}Error: Vercel CLI not found${NC}"
-    echo "Install with: npm install -g vercel"
+    echo "Install with: bun add -g vercel"
     echo ""
-    echo "Or use npx:"
-    echo "  npx vercel [--prod]"
+    echo "Or use bunx:"
+    echo "  bunx vercel [--prod]"
     exit 1
 fi
 
@@ -92,7 +92,7 @@ echo -e "${BLUE}Step 1/3: Building application...${NC}"
 if [ -f "./scripts/build/build-production.sh" ]; then
     ./scripts/build/build-production.sh
 else
-    npm run build
+    bun run build
 fi
 echo ""
 
