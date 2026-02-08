@@ -22,8 +22,7 @@ export interface EmailTemplateDefinition {
 }
 
 // Shared email constants
-const LOGO_URL =
-  "https://***REMOVED***.supabase.co/storage/v1/object/public/assets/logo-512.png";
+const LOGO_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/assets/logo-512.png`;
 const BRAND_COLOR = "#ff2d55";
 
 /**

@@ -139,8 +139,7 @@ export const styles = {
 } as const;
 
 // Logo URL
-const LOGO_URL =
-  "https://***REMOVED***.supabase.co/storage/v1/object/public/assets/logo-512.png";
+const LOGO_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/assets/logo-512.png`;
 
 interface EmailLayoutProps {
   preview: string;

@@ -8,8 +8,9 @@
  * Update this list when adding new image sources
  */
 export const CONFIGURED_IMAGE_HOSTS = [
-  'supabase.co',
-  'firebasestorage.googleapis.com',
+  "supabase.co",
+  "foodshare.club",
+  "firebasestorage.googleapis.com",
 ] as const;
 
 /**
@@ -19,13 +20,13 @@ export const CONFIGURED_IMAGE_HOSTS = [
  */
 export function isValidImageUrl(url: string | undefined): boolean {
   if (!url) return false;
-  if (url.startsWith('/')) return true; // Local images are always valid
+  if (url.startsWith("/")) return true; // Local images are always valid
 
   try {
     const urlObj = new URL(url);
     // Check if hostname matches any configured host (including subdomains)
-    return CONFIGURED_IMAGE_HOSTS.some(host =>
-      urlObj.hostname === host || urlObj.hostname.endsWith('.' + host)
+    return CONFIGURED_IMAGE_HOSTS.some(
+      (host) => urlObj.hostname === host || urlObj.hostname.endsWith("." + host)
     );
   } catch {
     return false;
@@ -36,5 +37,5 @@ export function isValidImageUrl(url: string | undefined): boolean {
  * Get a fallback image URL for when the primary image is unavailable
  */
 export function getFallbackImageUrl(): string {
-  return '/images/placeholder-food.png';
+  return "/images/placeholder-food.png";
 }

@@ -85,7 +85,7 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://ko-fi.com" />
-        <link rel="dns-prefetch" href="https://supabase.co" />
+        <link rel="dns-prefetch" href="https://api.foodshare.club" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         {/* Theme color for dark mode support */}
         <meta name="theme-color" content="#FF2D55" media="(prefers-color-scheme: light)" />

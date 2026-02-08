@@ -4,8 +4,7 @@
  */
 
 /** Default avatar URL for unauthenticated users or users without a profile picture */
-export const DEFAULT_AVATAR_URL =
-  "https://***REMOVED***.supabase.co/storage/v1/object/public/profiles/cuties/cute-strawberry.png";
+export const DEFAULT_AVATAR_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/profiles/cuties/cute-strawberry.png`;
 
 export const STORAGE_BUCKETS = {
   /** User profile pictures and avatars (public) */
