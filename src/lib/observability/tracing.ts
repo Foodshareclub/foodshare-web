@@ -92,8 +92,7 @@ let currentContext: TraceContext | null = null;
  * Create a new trace context
  */
 export function createTraceContext(sampled?: boolean): TraceContext {
-  const samplingRate =
-    process.env.NODE_ENV === "production" ? 0.1 : 1.0;
+  const samplingRate = process.env.NODE_ENV === "production" ? 0.1 : 1.0;
 
   return {
     traceId: generateTraceId(),
@@ -121,10 +120,7 @@ export function setTraceContext(context: TraceContext | null): void {
 /**
  * Run a function with a trace context
  */
-export async function withTraceContext<T>(
-  context: TraceContext,
-  fn: () => Promise<T>
-): Promise<T> {
+export async function withTraceContext<T>(context: TraceContext, fn: () => Promise<T>): Promise<T> {
   const previousContext = currentContext;
   currentContext = context;
 
@@ -266,11 +262,7 @@ export function startSpan(
 /**
  * End a span
  */
-export function endSpan(
-  span: Span,
-  status: "ok" | "error" = "ok",
-  error?: string
-): void {
+export function endSpan(span: Span, status: "ok" | "error" = "ok", error?: string): void {
   span.endTime = performance.now();
   span.durationMs = span.endTime - span.startTime;
   span.status = status;
@@ -365,10 +357,8 @@ export function clearCompletedSpans(): void {
 /**
  * Create a traced fetch function
  */
-export function createTracedFetch(
-  baseFetch: typeof fetch = fetch
-): typeof fetch {
-  return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+export function createTracedFetch(baseFetch: typeof fetch = fetch): typeof fetch {
+  return (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
     const method = init?.method || "GET";
 
@@ -400,7 +390,7 @@ export function createTracedFetch(
       endSpan(span, "error", error instanceof Error ? error.message : String(error));
       throw error;
     }
-  };
+  }) as typeof fetch;
 }
 
 // Expose in development

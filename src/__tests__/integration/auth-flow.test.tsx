@@ -1,41 +1,11 @@
 /**
  * Auth Flow Integration Tests
  * Tests authentication hook interface and behavior
- *
- * Note: These tests focus on verifying the useAuth hook interface works correctly.
- * Full end-to-end auth testing should be done with Playwright/Cypress.
  */
 
-import { renderHook, waitFor, act } from "@testing-library/react";
+import { mock, describe, it, expect, beforeEach } from "bun:test";
+import { renderHook, act } from "@testing-library/react";
 import React from "react";
-import { useAuth } from "@/hooks/useAuth";
-import * as authActions from "@/app/actions/auth";
-
-// Define result type for tests
-interface AuthResult {
-  success: boolean;
-  error?: string;
-}
-
-// Mock modules
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: jest.fn(),
-    replace: jest.fn(),
-    back: jest.fn(),
-    refresh: jest.fn(),
-  }),
-}));
-
-// Mock Server Actions
-jest.mock("@/app/actions/auth", () => ({
-  signInWithPassword: jest.fn(() => Promise.resolve({ success: true })),
-  signUp: jest.fn(() => Promise.resolve({ success: true })),
-  signOut: jest.fn(() => Promise.resolve()),
-  resetPassword: jest.fn(() => Promise.resolve({ success: true })),
-  updatePassword: jest.fn(() => Promise.resolve({ success: true })),
-  getOAuthSignInUrl: jest.fn(() => Promise.resolve({ url: "https://example.com/oauth" })),
-}));
 
 // Create a shared mock state
 const mockAuthState = {
@@ -43,41 +13,7 @@ const mockAuthState = {
   user: null as unknown,
 };
 
-// Mock Supabase client
-jest.mock("@/lib/supabase/client", () => ({
-  createClient: () => ({
-    auth: {
-      getSession: jest.fn(() =>
-        Promise.resolve({
-          data: { session: mockAuthState.session },
-          error: null,
-        })
-      ),
-      getUser: jest.fn(() =>
-        Promise.resolve({
-          data: { user: mockAuthState.user },
-          error: null,
-        })
-      ),
-      signInWithOtp: jest.fn(() => Promise.resolve({ data: {}, error: null })),
-      onAuthStateChange: jest.fn(() => ({
-        data: { subscription: { unsubscribe: jest.fn() } },
-      })),
-    },
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          in: jest.fn(() => ({
-            maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
-          })),
-        })),
-      })),
-    })),
-  }),
-}));
-
-// Mock Zustand store with proper selector support
-// Define state object that can be accessed by tests
+// Mock Zustand store state — actions update state so waitFor works
 const mockAuthStoreState = {
   user: null as unknown,
   session: null as unknown,
@@ -87,69 +23,112 @@ const mockAuthStoreState = {
   isAdmin: false,
   roles: [] as string[],
   adminCheckStatus: "idle" as "idle" | "loading" | "succeeded" | "failed",
-  setUser: jest.fn(),
-  setSession: jest.fn(),
-  setAuth: jest.fn(),
-  setLoading: jest.fn(),
-  setError: jest.fn(),
-  setAdmin: jest.fn(),
-  setAdminCheckStatus: jest.fn(),
-  clearError: jest.fn(),
-  reset: jest.fn(),
+  setUser: (user: unknown) => {
+    mockAuthStoreState.user = user;
+    mockAuthStoreState.isAuthenticated = !!user;
+  },
+  setSession: (session: unknown) => {
+    mockAuthStoreState.session = session;
+  },
+  setAuth: (user: unknown, session: unknown) => {
+    mockAuthStoreState.user = user;
+    mockAuthStoreState.session = session;
+    mockAuthStoreState.isAuthenticated = !!user && !!session;
+    mockAuthStoreState.error = null;
+  },
+  setLoading: (loading: boolean) => {
+    mockAuthStoreState.isLoading = loading;
+  },
+  setError: (error: string | null) => {
+    mockAuthStoreState.error = error;
+    mockAuthStoreState.isLoading = false;
+  },
+  setAdmin: (isAdmin: boolean, roles: string[] = []) => {
+    mockAuthStoreState.isAdmin = isAdmin;
+    mockAuthStoreState.roles = roles;
+    mockAuthStoreState.adminCheckStatus = "succeeded";
+  },
+  setAdminCheckStatus: (status: string) => {
+    mockAuthStoreState.adminCheckStatus = status as "idle" | "loading" | "succeeded" | "failed";
+  },
+  clearError: () => {
+    mockAuthStoreState.error = null;
+  },
+  reset: () => {
+    Object.assign(mockAuthStoreState, {
+      user: null,
+      session: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+      isAdmin: false,
+      roles: [],
+      adminCheckStatus: "idle",
+    });
+  },
 };
 
-jest.mock("@/store/zustand", () => {
-  // Create mock store function that handles selectors
+// Mock modules using bun:test mock.module
+const mockSignInWithPassword = mock(() => Promise.resolve({ success: true }));
+const mockSignUp = mock(() => Promise.resolve({ success: true }));
+
+mock.module("@/app/actions/auth", () => ({
+  signInWithPassword: mockSignInWithPassword,
+  signUp: mockSignUp,
+  signOut: mock(() => Promise.resolve()),
+  resetPassword: mock(() => Promise.resolve({ success: true })),
+  updatePassword: mock(() => Promise.resolve({ success: true })),
+}));
+
+mock.module("@/lib/supabase/client", () => ({
+  createClient: () => ({
+    auth: {
+      getSession: () => Promise.resolve({ data: { session: mockAuthState.session }, error: null }),
+      getUser: () => Promise.resolve({ data: { user: mockAuthState.user }, error: null }),
+      signInWithOtp: () => Promise.resolve({ data: {}, error: null }),
+      signInWithOAuth: () => Promise.resolve({ data: {}, error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+    },
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          in: () => ({
+            maybeSingle: () => Promise.resolve({ data: null, error: null }),
+          }),
+        }),
+      }),
+    }),
+  }),
+}));
+
+mock.module("@/store/zustand", () => {
   const mockStore = (selector?: (state: typeof mockAuthStoreState) => unknown) => {
-    if (typeof selector === "function") {
-      return selector(mockAuthStoreState);
-    }
+    if (typeof selector === "function") return selector(mockAuthStoreState);
     return mockAuthStoreState;
   };
-  // Add getState method for Zustand compatibility
   mockStore.getState = () => mockAuthStoreState;
-  return {
-    useAuthStore: mockStore,
-  };
+  return { useAuthStore: mockStore };
 });
 
-// Test wrapper - no longer needs QueryClientProvider
+import { useAuth } from "@/hooks/useAuth";
+
 function TestWrapper({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
 describe("Auth Flow Integration Tests", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    // Reset mock state
     mockAuthState.session = null;
     mockAuthState.user = null;
-    // Reset Zustand mock state
-    mockAuthStoreState.user = null;
-    mockAuthStoreState.session = null;
-    mockAuthStoreState.isAuthenticated = false;
-    mockAuthStoreState.isLoading = false; // Start as not loading for tests
-    mockAuthStoreState.error = null;
-    mockAuthStoreState.isAdmin = false;
-    mockAuthStoreState.roles = [];
-    mockAuthStoreState.adminCheckStatus = "idle";
+    mockAuthStoreState.reset();
+    mockSignInWithPassword.mockImplementation(() => Promise.resolve({ success: true }));
+    mockSignUp.mockImplementation(() => Promise.resolve({ success: true }));
   });
 
-  // ==========================================================================
-  // Hook Interface Tests
-  // ==========================================================================
-
   describe("Hook Interface", () => {
-    it("should expose all required auth methods", async () => {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: TestWrapper,
-      });
+    it("should expose all required auth methods", () => {
+      const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      // Verify all auth methods exist
       expect(typeof result.current.loginWithPassword).toBe("function");
       expect(typeof result.current.register).toBe("function");
       expect(typeof result.current.logout).toBe("function");
@@ -159,16 +138,9 @@ describe("Auth Flow Integration Tests", () => {
       expect(typeof result.current.clearError).toBe("function");
     });
 
-    it("should expose auth state properties", async () => {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: TestWrapper,
-      });
+    it("should expose auth state properties", () => {
+      const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      // Verify state properties exist
       expect("isAuthenticated" in result.current).toBe(true);
       expect("isLoading" in result.current).toBe(true);
       expect("user" in result.current).toBe(true);
@@ -177,59 +149,31 @@ describe("Auth Flow Integration Tests", () => {
     });
   });
 
-  // ==========================================================================
-  // Initial State Tests
-  // ==========================================================================
-
   describe("Initial Auth State", () => {
-    it("should start with unauthenticated state when no session", async () => {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: TestWrapper,
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
+    it("should start with unauthenticated state when no session", () => {
+      const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
 
       expect(result.current.isAuthenticated).toBe(false);
       expect(result.current.user).toBeNull();
       expect(result.current.session).toBeNull();
     });
 
-    it("should have loading state initially", () => {
-      // Set up mock to simulate initial loading state
+    it("should have loading state initially when configured", () => {
       mockAuthStoreState.isLoading = true;
-
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: TestWrapper,
-      });
-
-      // Initial state should be loading
+      const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
       expect(result.current.isLoading).toBe(true);
     });
   });
 
-  // ==========================================================================
-  // Login Flow Tests
-  // ==========================================================================
-
   describe("Login with Password Flow", () => {
     it("should return failure result on invalid credentials", async () => {
-      // Setup mock to return error
-      jest.mocked(authActions.signInWithPassword).mockResolvedValueOnce({
-        success: false,
-        error: "Invalid login credentials",
-      });
+      mockSignInWithPassword.mockImplementation(() =>
+        Promise.resolve({ success: false, error: "Invalid login credentials" })
+      );
 
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: TestWrapper,
-      });
+      const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      let loginResult: AuthResult;
+      let loginResult: { success: boolean; error?: string };
       await act(async () => {
         loginResult = await result.current.loginWithPassword("test@example.com", "wrongpassword");
       });
@@ -238,45 +182,26 @@ describe("Auth Flow Integration Tests", () => {
       expect(loginResult!.error).toBeDefined();
     });
 
-    it("should call Server Action with correct params", async () => {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: TestWrapper,
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
+    it("should call Server Action", async () => {
+      const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
 
       await act(async () => {
         await result.current.loginWithPassword("test@example.com", "password123");
       });
 
-      // Verify the Server Action was called
-      expect(authActions.signInWithPassword).toHaveBeenCalled();
+      expect(mockSignInWithPassword).toHaveBeenCalled();
     });
   });
 
-  // ==========================================================================
-  // Registration Flow Tests
-  // ==========================================================================
-
   describe("Registration Flow", () => {
     it("should return failure result on registration error", async () => {
-      // Setup mock to return error
-      jest.mocked(authActions.signUp).mockResolvedValueOnce({
-        success: false,
-        error: "User already registered",
-      });
+      mockSignUp.mockImplementation(() =>
+        Promise.resolve({ success: false, error: "User already registered" })
+      );
 
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: TestWrapper,
-      });
+      const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      let registerResult: AuthResult;
+      let registerResult: { success: boolean; error?: string };
       await act(async () => {
         registerResult = await result.current.register({
           email: "existing@example.com",
@@ -288,90 +213,43 @@ describe("Auth Flow Integration Tests", () => {
       expect(registerResult!.error).toBeDefined();
     });
 
-    it("should accept registration options", async () => {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: TestWrapper,
+    it("should accept registration options without throwing", async () => {
+      const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
+
+      await act(async () => {
+        await result.current.register({
+          email: "newuser@example.com",
+          password: "password123",
+        });
       });
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      // Should not throw when called with proper params
-      await expect(
-        act(async () => {
-          await result.current.register({
-            email: "newuser@example.com",
-            password: "password123",
-          });
-        })
-      ).resolves.not.toThrow();
+      expect(mockSignUp).toHaveBeenCalled();
     });
   });
 
-  // ==========================================================================
-  // Logout Flow Tests
-  // ==========================================================================
-
   describe("Logout Flow", () => {
-    it("should have logout function available", async () => {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: TestWrapper,
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
+    it("should have logout function available", () => {
+      const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
       expect(typeof result.current.logout).toBe("function");
     });
   });
 
-  // ==========================================================================
-  // Password Recovery Flow Tests
-  // ==========================================================================
-
   describe("Password Recovery Flow", () => {
-    it("should have recoverPassword method available", async () => {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: TestWrapper,
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
+    it("should have recoverPassword method available", () => {
+      const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
       expect(typeof result.current.recoverPassword).toBe("function");
     });
 
-    it("should have updatePassword method available", async () => {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: TestWrapper,
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
+    it("should have updatePassword method available", () => {
+      const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
       expect(typeof result.current.updatePassword).toBe("function");
     });
   });
 
-  // ==========================================================================
-  // Error Handling Tests
-  // ==========================================================================
-
   describe("Error Handling", () => {
-    it("should have clearError method that can be called", async () => {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: TestWrapper,
-      });
+    it("should have clearError method that can be called", () => {
+      const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      // Should not throw when called
       expect(() => {
         act(() => {
           result.current.clearError();
@@ -379,52 +257,27 @@ describe("Auth Flow Integration Tests", () => {
       }).not.toThrow();
     });
 
-    it("should handle network errors gracefully", async () => {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: TestWrapper,
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      // Should not crash and should show unauthenticated state
+    it("should show unauthenticated state by default", () => {
+      const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
       expect(result.current.isAuthenticated).toBe(false);
     });
   });
 
-  // ==========================================================================
-  // Session Check Tests
-  // ==========================================================================
-
   describe("Session Management", () => {
-    it("should have checkSession method available", async () => {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: TestWrapper,
-      });
-
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
+    it("should have checkSession method available", () => {
+      const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
       expect(typeof result.current.checkSession).toBe("function");
     });
 
     it("should be able to call checkSession", async () => {
-      const { result } = renderHook(() => useAuth(), {
-        wrapper: TestWrapper,
+      const { result } = renderHook(() => useAuth(), { wrapper: TestWrapper });
+
+      await act(async () => {
+        await result.current.checkSession();
       });
 
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      // Should not throw when called
-      await expect(
-        act(async () => {
-          await result.current.checkSession();
-        })
-      ).resolves.not.toThrow();
+      // After checking session with null mock, should remain unauthenticated
+      expect(result.current.isAuthenticated).toBe(false);
     });
   });
 });

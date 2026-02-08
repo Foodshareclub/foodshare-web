@@ -5,7 +5,7 @@
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 
-import { describe, it, expect, beforeEach, jest } from "@jest/globals";
+import { mock, describe, it, expect, beforeEach, afterAll } from "bun:test";
 
 // Mock state
 const mockState = {
@@ -20,12 +20,12 @@ const mockState = {
 
 // Mock limiter instance
 const mockLimiter = {
-  limit: jest.fn(() => Promise.resolve(mockState.rateLimitResult)),
+  limit: mock(() => Promise.resolve(mockState.rateLimitResult)),
 };
 
 // Mock headers from next/headers
-jest.mock("next/headers", () => ({
-  headers: jest.fn(() =>
+mock.module("next/headers", () => ({
+  headers: mock(() =>
     Promise.resolve({
       get: (name: string) => mockState.headersMap.get(name) || null,
     })
@@ -33,16 +33,16 @@ jest.mock("next/headers", () => ({
 }));
 
 // Mock Upstash Redis
-jest.mock("@upstash/redis", () => ({
-  Redis: jest.fn().mockImplementation(() => ({})),
+mock.module("@upstash/redis", () => ({
+  Redis: mock(() => ({})),
 }));
 
 // Mock Upstash Ratelimit with static methods
-jest.mock("@upstash/ratelimit", () => ({
+mock.module("@upstash/ratelimit", () => ({
   Ratelimit: Object.assign(
-    jest.fn().mockImplementation(() => mockLimiter),
+    mock(() => mockLimiter),
     {
-      slidingWindow: jest.fn().mockReturnValue("sliding-window-config"),
+      slidingWindow: mock(() => "sliding-window-config"),
     }
   ),
 }));
@@ -57,7 +57,6 @@ function setNodeEnv(value: string): void {
 
 describe("Rate Limiting", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     mockState.headersMap.clear();
     mockState.rateLimitResult = {
       success: true,
@@ -305,9 +304,7 @@ describe("Rate Limiting", () => {
 
       const { withRateLimit } = require("@/lib/security/rateLimit");
 
-      const mockAction = jest
-        .fn<(...args: unknown[]) => Promise<string>>()
-        .mockResolvedValue("success");
+      const mockAction = mock(() => Promise.resolve("success"));
       const wrappedAction = withRateLimit(mockAction, "standard");
 
       const result = await wrappedAction("arg1", "arg2");
@@ -330,7 +327,7 @@ describe("Rate Limiting", () => {
 
       const { withRateLimit } = require("@/lib/security/rateLimit");
 
-      const mockAction = jest.fn<() => Promise<string>>().mockResolvedValue("success");
+      const mockAction = mock(() => Promise.resolve("success"));
       const wrappedAction = withRateLimit(mockAction, "standard");
 
       await expect(wrappedAction()).rejects.toThrow(/Rate limit exceeded/);
@@ -342,9 +339,7 @@ describe("Rate Limiting", () => {
 
       const { withRateLimit } = require("@/lib/security/rateLimit");
 
-      const mockAction = jest
-        .fn<() => Promise<never>>()
-        .mockRejectedValue(new Error("Action failed"));
+      const mockAction = mock(() => Promise.reject(new Error("Action failed")));
       const wrappedAction = withRateLimit(mockAction, "standard");
 
       await expect(wrappedAction()).rejects.toThrow("Action failed");
@@ -355,15 +350,12 @@ describe("Rate Limiting", () => {
 
       const { withRateLimit } = require("@/lib/security/rateLimit");
 
-      interface ActionResult {
-        id: string;
-        data: number[];
-      }
-
-      const mockAction = jest.fn<() => Promise<ActionResult>>().mockResolvedValue({
-        id: "test",
-        data: [1, 2, 3],
-      });
+      const mockAction = mock(() =>
+        Promise.resolve({
+          id: "test",
+          data: [1, 2, 3],
+        })
+      );
 
       const wrappedAction = withRateLimit(mockAction, "standard");
       const result = await wrappedAction();
@@ -376,7 +368,7 @@ describe("Rate Limiting", () => {
 
       const { withRateLimit } = require("@/lib/security/rateLimit");
 
-      const mockAction = jest.fn<() => Promise<string>>().mockResolvedValue("done");
+      const mockAction = mock(() => Promise.resolve("done"));
       const wrappedAction = withRateLimit(mockAction, "strict");
 
       await wrappedAction();

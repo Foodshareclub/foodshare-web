@@ -3,6 +3,8 @@
  * Unit tests for product-related data fetching functions
  */
 
+import { mock, describe, it, expect, beforeEach } from "bun:test";
+
 // Shared mock state
 const mockState = {
   products: [] as Array<Record<string, unknown>>,
@@ -12,38 +14,38 @@ const mockState = {
   error: null as { message: string; code?: string } | null,
 };
 
-// Mock the approximateGeoJSON utility
-jest.mock("@/utils/postgis", () => ({
-  approximateGeoJSON: jest.fn((location, _id) => location),
+// Mock the approximateGeoJSON utility BEFORE any imports
+mock.module("@/utils/postgis", () => ({
+  approximateGeoJSON: mock((location: unknown, _id: unknown) => location),
 }));
 
 // Mock Supabase client
 const createMockSupabaseClient = () => {
   const createProductsChain = () => {
     const chain: Record<string, unknown> = {};
-    chain.select = jest.fn(() => chain);
-    chain.eq = jest.fn(() => chain);
-    chain.lt = jest.fn(() => chain);
-    chain.order = jest.fn(() => chain);
-    chain.limit = jest.fn(() =>
+    chain.select = mock(() => chain);
+    chain.eq = mock(() => chain);
+    chain.lt = mock(() => chain);
+    chain.order = mock(() => chain);
+    chain.limit = mock(() =>
       Promise.resolve({
         data: mockState.products,
         error: mockState.error,
       })
     );
-    chain.range = jest.fn(() =>
+    chain.range = mock(() =>
       Promise.resolve({
         data: mockState.products,
         error: mockState.error,
       })
     );
-    chain.textSearch = jest.fn(() =>
+    chain.textSearch = mock(() =>
       Promise.resolve({
         data: mockState.products,
         error: mockState.error,
       })
     );
-    chain.single = jest.fn(() =>
+    chain.single = mock(() =>
       Promise.resolve({
         data: mockState.product,
         error: mockState.error,
@@ -58,13 +60,13 @@ const createMockSupabaseClient = () => {
   };
 
   return {
-    from: jest.fn((table: string) => {
+    from: mock((table: string) => {
       if (table === "posts") {
         return {
-          select: jest.fn(() => ({
-            eq: jest.fn(() => ({
-              order: jest.fn(() => ({
-                limit: jest.fn(() =>
+          select: mock(() => ({
+            eq: mock(() => ({
+              order: mock(() => ({
+                limit: mock(() =>
                   Promise.resolve({
                     data: mockState.productIds,
                     error: mockState.error,
@@ -80,18 +82,14 @@ const createMockSupabaseClient = () => {
   };
 };
 
-// Mock Supabase module
-jest.mock("@/lib/supabase/server", () => ({
-  createCachedClient: jest.fn(() => createMockSupabaseClient()),
-  createClient: jest.fn(() => Promise.resolve(createMockSupabaseClient())),
+// Mock Supabase module BEFORE imports
+mock.module("@/lib/supabase/server", () => ({
+  createCachedClient: mock(() => createMockSupabaseClient()),
+  createClient: mock(() => Promise.resolve(createMockSupabaseClient())),
+  createServerClient: mock(() => Promise.resolve(createMockSupabaseClient())),
 }));
 
-// Mock Next.js cache
-jest.mock("next/cache", () => ({
-  unstable_cache: <T>(fn: () => Promise<T>) => fn,
-}));
-
-import { describe, it, expect, beforeEach } from "@jest/globals";
+// Import AFTER mocks are set up
 import {
   getProducts,
   getProductsPaginated,
@@ -106,7 +104,6 @@ import {
 
 describe("Products Data Functions", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     mockState.products = [];
     mockState.product = null;
     mockState.locations = [];
@@ -171,9 +168,7 @@ describe("Products Data Functions", () => {
     });
 
     it("should normalize product type to lowercase", async () => {
-      mockState.products = [
-        { id: 1, post_name: "Test", post_type: "food", is_active: true },
-      ];
+      mockState.products = [{ id: 1, post_name: "Test", post_type: "food", is_active: true }];
 
       const result = await getProducts("FOOD");
 
@@ -390,9 +385,7 @@ describe("Products Data Functions", () => {
     });
 
     it("should filter by product type when specified", async () => {
-      mockState.products = [
-        { id: 1, post_name: "Food Item", post_type: "food" },
-      ];
+      mockState.products = [{ id: 1, post_name: "Food Item", post_type: "food" }];
 
       const result = await searchProducts("item", "food");
 

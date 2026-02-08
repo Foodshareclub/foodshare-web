@@ -50,9 +50,7 @@ function createWrapper(options: CustomRenderOptions = {}) {
   });
 
   return function Wrapper({ children }: { children: ReactNode }) {
-    let wrapped = (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
+    let wrapped = <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 
     // Wrap with additional providers (innermost to outermost)
     for (const Provider of additionalProviders.reverse()) {
@@ -70,10 +68,7 @@ function createWrapper(options: CustomRenderOptions = {}) {
 /**
  * Custom render function with all providers
  */
-export function customRender(
-  ui: ReactElement,
-  options: CustomRenderOptions = {}
-): RenderResult {
+export function customRender(ui: ReactElement, options: CustomRenderOptions = {}): RenderResult {
   const { queryClientConfig, additionalProviders, ...renderOptions } = options;
 
   return render(ui, {
@@ -120,7 +115,7 @@ export async function waitForNetworkIdle(
   const originalFetch = global.fetch;
   let pendingRequests = 0;
 
-  global.fetch = async (...args) => {
+  global.fetch = (async (...args: Parameters<typeof fetch>) => {
     pendingRequests++;
     lastRequestTime = Date.now();
     try {
@@ -129,7 +124,7 @@ export async function waitForNetworkIdle(
       pendingRequests--;
       lastRequestTime = Date.now();
     }
-  };
+  }) as typeof fetch;
 
   try {
     while (Date.now() - startTime < timeout) {
@@ -222,7 +217,7 @@ export function mockIndexedDB() {
               createIndex: jest.fn(),
             };
           },
-          transaction: (storeNames: string[], mode: string) => ({
+          transaction: (_storeNames: string[], _mode: string) => ({
             objectStore: (storeName: string) => ({
               add: jest.fn((item: unknown) => {
                 databases[name][storeName].push(item);
@@ -317,20 +312,14 @@ export function mockOnlineStatus(isOnline: boolean = true) {
 /**
  * Assert that a function was called with specific arguments
  */
-export function expectCalledWith<T extends jest.Mock>(
-  fn: T,
-  ...args: Parameters<T>
-) {
+export function expectCalledWith<T extends jest.Mock>(fn: T, ...args: Parameters<T>) {
   expect(fn).toHaveBeenCalledWith(...args);
 }
 
 /**
  * Assert that an async function throws
  */
-export async function expectAsyncThrow(
-  fn: () => Promise<unknown>,
-  errorMessage?: string | RegExp
-) {
+export async function expectAsyncThrow(fn: () => Promise<unknown>, errorMessage?: string | RegExp) {
   let error: Error | undefined;
   try {
     await fn();

@@ -3,6 +3,8 @@
  * Unit tests for admin management server actions
  */
 
+import { mock, describe, it, expect, beforeEach } from "bun:test";
+
 // Shared mock state
 const mockState = {
   user: null as { id: string; email: string } | null,
@@ -30,120 +32,184 @@ const mockState = {
 };
 
 // Mock next/cache
-jest.mock("next/cache", () => ({
-  revalidatePath: jest.fn(),
-  revalidateTag: jest.fn(),
+mock.module("next/cache", () => ({
+  revalidatePath: mock(),
+  revalidateTag: mock(),
+  unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
+  unstable_noStore: () => {},
 }));
 
 // Mock cache-keys
-jest.mock("@/lib/data/cache-keys", () => ({
-  CACHE_TAGS: {
-    ADMIN: "admin",
-    ADMIN_LISTINGS: "admin-listings",
-    PRODUCTS: "products",
-    PRODUCT: (id: number) => `product-${id}`,
-    PROFILES: "profiles",
+mock.module("@/lib/data/cache-keys", () => ({
+  CACHE_TAGS: new Proxy({} as Record<string, unknown>, {
+    get: (_t, prop) => {
+      if (typeof prop === "string") {
+        const staticTags: Record<string, unknown> = {
+          ADMIN: "admin",
+          ADMIN_LISTINGS: "admin-listings",
+          ADMIN_USERS: "admin-users",
+          ADMIN_STATS: "admin-stats",
+          ADMIN_REPORTS: "admin-reports",
+          ADMIN_CRM: "admin-crm",
+          PRODUCTS: "products",
+          PRODUCT_LOCATIONS: "product-locations",
+          PROFILES: "profiles",
+          AUDIT_LOGS: "audit-logs",
+          POST_ACTIVITY: "post-activity",
+          POST_ACTIVITY_STATS: "post-activity-stats",
+          NEWSLETTER: "newsletter",
+          CAMPAIGNS: "campaigns",
+          SEGMENTS: "segments",
+          AUTOMATIONS: "automations",
+          SUBSCRIBERS: "subscribers",
+        };
+        return staticTags[prop] ?? ((id: unknown) => `${String(prop).toLowerCase()}-${id}`);
+      }
+      return "";
+    },
+  }),
+  CACHE_DURATIONS: {
+    SHORT: 60,
+    MEDIUM: 300,
+    LONG: 3600,
+    VERY_LONG: 86400,
+    PRODUCTS: 60,
+    PROFILES: 300,
   },
-  invalidateTag: jest.fn(),
+  CACHE_PROFILES: { DEFAULT: "default", INSTANT: { expire: 0 } },
+  invalidateTag: mock(),
+  logCacheOperation: () => {},
+  getProductTags: () => [],
+  getProfileTags: () => [],
+  getForumTags: () => [],
+  getChallengeTags: () => [],
+  getNotificationTags: () => [],
+  getAdminTags: () => [],
+  getNewsletterTags: () => [],
+  invalidateAdminCaches: () => {},
+  getPostActivityTags: () => [],
+  invalidatePostActivityCaches: () => {},
+  invalidateNewsletterCaches: () => {},
+  getEmailTags: () => [],
+  invalidateEmailCaches: () => {},
 }));
 
 // Define chain type for Supabase mock
 interface MockChain {
-  select: jest.Mock;
-  eq: jest.Mock;
-  or: jest.Mock;
-  order: jest.Mock;
-  range: jest.Mock;
-  single: jest.Mock;
-  update: jest.Mock;
-  delete: jest.Mock;
-  upsert: jest.Mock;
-  insert: jest.Mock;
+  select: ReturnType<typeof mock>;
+  eq: ReturnType<typeof mock>;
+  or: ReturnType<typeof mock>;
+  order: ReturnType<typeof mock>;
+  range: ReturnType<typeof mock>;
+  single: ReturnType<typeof mock>;
+  update: ReturnType<typeof mock>;
+  delete: ReturnType<typeof mock>;
+  upsert: ReturnType<typeof mock>;
+  insert: ReturnType<typeof mock>;
 }
 
-// Mock Supabase server
-jest.mock("@/lib/supabase/server", () => ({
-  createClient: jest.fn(() => {
-    const createSelectChain = (tableName?: string): MockChain => {
-      const chain: MockChain = {
-        select: jest.fn(() => chain),
-        eq: jest.fn(() => chain),
-        or: jest.fn(() => chain),
-        order: jest.fn(() => chain),
-        range: jest.fn(() => chain),
-        single: jest.fn(() => {
-          if (tableName === "profiles") {
-            return Promise.resolve({
-              data: mockState.profile,
-              error: mockState.dbError,
-            });
-          }
-          if (tableName === "posts") {
-            return Promise.resolve({
-              data: mockState.listing,
-              error: mockState.dbError,
-            });
-          }
-          if (tableName === "roles") {
-            return Promise.resolve({
-              data: mockState.roleData,
-              error: mockState.dbError,
-            });
-          }
-          return Promise.resolve({ data: null, error: mockState.dbError });
-        }),
-        update: jest.fn(() => ({
-          eq: jest.fn(() => Promise.resolve({ data: null, error: mockState.dbError })),
-        })),
-        delete: jest.fn(() => ({
-          eq: jest.fn(() => Promise.resolve({ data: null, error: mockState.dbError })),
-        })),
-        upsert: jest.fn(() => Promise.resolve({ data: null, error: mockState.dbError })),
-        insert: jest.fn(() => Promise.resolve({ data: null, error: mockState.dbError })),
-      };
-
-      // For user_roles table (array result)
-      if (tableName === "user_roles") {
-        Object.assign(chain, {
-          then: (resolve: (value: unknown) => void) =>
-            resolve({
-              data: mockState.userRoles,
-              error: mockState.dbError,
-            }),
-        });
-      }
-
-      // For profiles list query
-      if (tableName === "profiles" && mockState.usersData.length > 0) {
-        Object.assign(chain, {
-          then: (resolve: (value: unknown) => void) =>
-            resolve({
-              data: mockState.usersData,
-              count: mockState.usersCount,
-              error: mockState.dbError,
-            }),
-        });
-      }
-
-      return chain;
+// Helper function to create Supabase mock (shared between server and admin clients)
+const createSupabaseMock = () => {
+  const createSelectChain = (tableName?: string): MockChain => {
+    const chain: MockChain = {
+      select: mock(() => chain),
+      eq: mock(() => chain),
+      or: mock(() => chain),
+      order: mock(() => chain),
+      range: mock(() => chain),
+      single: mock(() => {
+        if (tableName === "profiles") {
+          return Promise.resolve({
+            data: mockState.profile,
+            error: mockState.dbError,
+          });
+        }
+        if (tableName === "posts") {
+          return Promise.resolve({
+            data: mockState.listing,
+            error: mockState.dbError,
+          });
+        }
+        if (tableName === "roles") {
+          return Promise.resolve({
+            data: mockState.roleData,
+            error: mockState.dbError,
+          });
+        }
+        return Promise.resolve({ data: null, error: mockState.dbError });
+      }),
+      update: mock(() => ({
+        eq: mock(() => Promise.resolve({ data: null, error: mockState.dbError })),
+      })),
+      delete: mock(() => ({
+        eq: mock(() => Promise.resolve({ data: null, error: mockState.dbError })),
+      })),
+      upsert: mock(() => Promise.resolve({ data: null, error: mockState.dbError })),
+      insert: mock(() => Promise.resolve({ data: null, error: mockState.dbError })),
     };
 
-    return Promise.resolve({
-      auth: {
-        getUser: jest.fn(() =>
-          Promise.resolve({
-            data: { user: mockState.user },
-            error: mockState.authError,
-          })
-        ),
-      },
-      from: jest.fn((tableName: string) => createSelectChain(tableName)),
-      rpc: jest.fn(() => Promise.resolve({ data: null, error: null })),
-    });
-  }),
+    // For user_roles table (array result)
+    if (tableName === "user_roles") {
+      Object.assign(chain, {
+        then: (resolve: (value: unknown) => void) =>
+          resolve({
+            data: mockState.userRoles,
+            error: mockState.dbError,
+          }),
+      });
+    }
+
+    // For profiles list query
+    if (tableName === "profiles" && mockState.usersData.length > 0) {
+      Object.assign(chain, {
+        then: (resolve: (value: unknown) => void) =>
+          resolve({
+            data: mockState.usersData,
+            count: mockState.usersCount,
+            error: mockState.dbError,
+          }),
+      });
+    }
+
+    return chain;
+  };
+
+  return {
+    auth: {
+      getUser: mock(() =>
+        Promise.resolve({
+          data: { user: mockState.user },
+          error: mockState.authError,
+        })
+      ),
+    },
+    from: mock((tableName: string) => createSelectChain(tableName)),
+    rpc: mock(() => Promise.resolve({ data: null, error: null })),
+  };
+};
+
+// Mock Supabase server
+mock.module("@/lib/supabase/server", () => ({
+  createClient: mock(() => Promise.resolve(createSupabaseMock())),
+  createCachedClient: mock(() => Promise.resolve(createSupabaseMock())),
+  createServerClient: mock(() => Promise.resolve(createSupabaseMock())),
 }));
 
-import { describe, it, expect, beforeEach } from "@jest/globals";
+// Mock Supabase admin (used by checkUserIsAdmin)
+mock.module("@/lib/supabase/admin", () => ({
+  createAdminClient: mock(() => createSupabaseMock()),
+}));
+
+// Mock admin-check directly (overrides any global mock and ensures isolation)
+mock.module("@/lib/data/admin-check", () => ({
+  checkUserIsAdmin: mock((_userId: string) => {
+    const hasAdminRole = mockState.userRoles?.some(
+      (ur: { roles: { name: string } }) =>
+        ur.roles.name === "admin" || ur.roles.name === "superadmin"
+    );
+    return Promise.resolve({ isAdmin: hasAdminRole || false });
+  }),
+}));
 
 // Import actions after mocks
 import {
@@ -165,7 +231,6 @@ function isFailedResult(result: { success: boolean }): result is FailedResult {
 
 describe("Admin Server Actions", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     mockState.user = null;
     mockState.profile = null;
     mockState.userRoles = null;

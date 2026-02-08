@@ -3,6 +3,8 @@
  * Unit tests for profile-related data fetching functions
  */
 
+import { mock, describe, it, expect, beforeEach } from "bun:test";
+
 // Shared mock state
 const mockState = {
   profile: null as Record<string, unknown> | null,
@@ -19,17 +21,17 @@ const mockState = {
 const createMockSupabaseClient = () => {
   const createChain = (resolveData: unknown = null) => {
     const chain: Record<string, unknown> = {};
-    chain.select = jest.fn(() => chain);
-    chain.eq = jest.fn(() => chain);
-    chain.in = jest.fn(() => chain);
-    chain.order = jest.fn(() => chain);
-    chain.maybeSingle = jest.fn(() =>
+    chain.select = mock(() => chain);
+    chain.eq = mock(() => chain);
+    chain.in = mock(() => chain);
+    chain.order = mock(() => chain);
+    chain.maybeSingle = mock(() =>
       Promise.resolve({
         data: mockState.userRoles.length > 0 ? mockState.userRoles[0] : null,
         error: null,
       })
     );
-    chain.single = jest.fn(() =>
+    chain.single = mock(() =>
       Promise.resolve({
         data: resolveData,
         error: mockState.error,
@@ -45,15 +47,15 @@ const createMockSupabaseClient = () => {
   };
 
   return {
-    from: jest.fn((table: string) => {
+    from: mock((table: string) => {
       switch (table) {
         case "profiles":
           return createChain(mockState.profile || mockState.volunteers);
         case "posts":
           return {
-            select: jest.fn(() => ({
-              eq: jest.fn(() => ({
-                eq: jest.fn(() =>
+            select: mock(() => ({
+              eq: mock(() => ({
+                eq: mock(() =>
                   Promise.resolve({
                     count: mockState.products.length,
                     error: null,
@@ -69,9 +71,9 @@ const createMockSupabaseClient = () => {
           };
         case "reviews":
           return {
-            select: jest.fn(() => ({
-              eq: jest.fn(() => ({
-                order: jest.fn(() =>
+            select: mock(() => ({
+              eq: mock(() => ({
+                order: mock(() =>
                   Promise.resolve({
                     data: mockState.profileReviews,
                     error: mockState.error,
@@ -87,10 +89,10 @@ const createMockSupabaseClient = () => {
           };
         case "user_roles":
           return {
-            select: jest.fn(() => ({
-              eq: jest.fn(() => ({
-                eq: jest.fn(() => ({
-                  maybeSingle: jest.fn(() =>
+            select: mock(() => ({
+              eq: mock(() => ({
+                eq: mock(() => ({
+                  maybeSingle: mock(() =>
                     Promise.resolve({
                       data: mockState.userRoles.length > 0 ? mockState.userRoles[0] : null,
                       error: null,
@@ -112,18 +114,14 @@ const createMockSupabaseClient = () => {
   };
 };
 
-// Mock Supabase module
-jest.mock("@/lib/supabase/server", () => ({
-  createClient: jest.fn(() => Promise.resolve(createMockSupabaseClient())),
-  createCachedClient: jest.fn(() => createMockSupabaseClient()),
+// Mock Supabase module BEFORE imports
+mock.module("@/lib/supabase/server", () => ({
+  createClient: mock(() => Promise.resolve(createMockSupabaseClient())),
+  createCachedClient: mock(() => createMockSupabaseClient()),
+  createServerClient: mock(() => Promise.resolve(createMockSupabaseClient())),
 }));
 
-// Mock Next.js cache
-jest.mock("next/cache", () => ({
-  unstable_cache: <T>(fn: () => Promise<T>) => fn,
-}));
-
-import { describe, it, expect, beforeEach } from "@jest/globals";
+// Import AFTER mocks are set up
 import {
   getProfile,
   getPublicProfile,
@@ -134,7 +132,6 @@ import {
 
 describe("Profiles Data Functions", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     mockState.profile = null;
     mockState.publicProfile = null;
     mockState.products = [];

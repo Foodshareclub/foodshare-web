@@ -3,7 +3,7 @@
  * Unit tests for auth operations
  */
 
-import { describe, it, expect } from "@jest/globals";
+import { describe, it, expect } from "bun:test";
 
 describe("Authentication API", () => {
   describe("auth object", () => {

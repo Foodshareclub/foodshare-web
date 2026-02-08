@@ -1,137 +1,144 @@
 /**
- * Jest Test Setup
+ * Bun Test Setup
  * Global configuration for all tests
  */
 
-import '@testing-library/jest-dom';
-import { TextEncoder, TextDecoder } from 'util';
-
-// Polyfill TextEncoder/TextDecoder for Next.js compatibility
-global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder as typeof global.TextDecoder;
-
-// Polyfill fetch globals for MSW (Node.js 18+ has these, but jsdom may not expose them)
-if (typeof global.Request === 'undefined') {
-  // @ts-expect-error - Polyfill for older Node versions
-  global.Request = class Request {
-    constructor(public url: string, public init?: RequestInit) {}
-  };
-}
-
-if (typeof global.Response === 'undefined') {
-  // @ts-expect-error - Polyfill for older Node versions
-  global.Response = class Response {
-    constructor(public body?: BodyInit | null, public init?: ResponseInit) {}
-    json() { return Promise.resolve({}); }
-    text() { return Promise.resolve(''); }
-  };
-}
-
-// Polyfill BroadcastChannel for MSW 2.x
-if (typeof global.BroadcastChannel === 'undefined') {
-  // @ts-expect-error - Polyfill for Node.js
-  global.BroadcastChannel = class BroadcastChannel {
-    name: string;
-    constructor(name: string) { this.name = name; }
-    postMessage() {}
-    close() {}
-    addEventListener() {}
-    removeEventListener() {}
-    onmessage = null;
-    onmessageerror = null;
-  };
-}
+import { mock } from "bun:test";
+import "@testing-library/jest-dom";
 
 // =============================================================================
-// MSW Setup (conditional - only if tests need it)
+// Module Mocks (bun:test mock.module)
 // =============================================================================
-
-// MSW is set up lazily in individual test files that need it
-// Use: import { setupMSW } from '@/lib/testing'; setupMSW();
 
 // Mock next/cache (Server Actions use this)
-jest.mock('next/cache', () => ({
-  revalidatePath: jest.fn(),
-  revalidateTag: jest.fn(),
-  unstable_cache: jest.fn((fn) => fn),
-  unstable_noStore: jest.fn(),
+mock.module("next/cache", () => ({
+  revalidatePath: () => {},
+  revalidateTag: () => {},
+  unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
+  unstable_noStore: () => {},
 }));
 
-// Mock the invalidateTag helper from cache-keys
-jest.mock('@/lib/data/cache-keys', () => ({
-  ...jest.requireActual('@/lib/data/cache-keys'),
-  invalidateTag: jest.fn(),
+// Mock cache-keys (avoid importing actual module which depends on next/cache)
+mock.module("@/lib/data/cache-keys", () => ({
+  CACHE_TAGS: new Proxy({}, { get: (_t, prop) => (typeof prop === "string" ? prop : "") }),
+  CACHE_DURATIONS: { short: 60, medium: 300, long: 3600 },
+  CACHE_PROFILES: {},
+  invalidateTag: () => {},
+  logCacheOperation: () => {},
+  getProductTags: () => [],
+  getProfileTags: () => [],
+  getForumTags: () => [],
+  getChallengeTags: () => [],
+  getNotificationTags: () => [],
+  getAdminTags: () => [],
+  getNewsletterTags: () => [],
+  invalidateAdminCaches: () => {},
+  getPostActivityTags: () => [],
+  invalidatePostActivityCaches: () => {},
+  invalidateNewsletterCaches: () => {},
+  getEmailTags: () => [],
+  invalidateEmailCaches: () => {},
+}));
+
+// Mock Supabase server (fallback — per-test mocks override this)
+mock.module("@/lib/supabase/server", () => {
+  const mockClient = {
+    auth: {
+      getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+    },
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          single: () => Promise.resolve({ data: null, error: null }),
+          maybeSingle: () => Promise.resolve({ data: null, error: null }),
+        }),
+      }),
+    }),
+  };
+  return {
+    createClient: () => Promise.resolve(mockClient),
+    createCachedClient: () => mockClient,
+    createServerClient: () => Promise.resolve(mockClient),
+  };
+});
+
+// Mock next/headers
+mock.module("next/headers", () => ({
+  headers: () => new Map(),
+  cookies: () => ({
+    get: () => null,
+    set: () => {},
+    delete: () => {},
+    getAll: () => [],
+    has: () => false,
+  }),
 }));
 
 // Mock Next.js router
-jest.mock('next/navigation', () => ({
+mock.module("next/navigation", () => ({
   useRouter: () => ({
-    push: jest.fn(),
-    replace: jest.fn(),
-    prefetch: jest.fn(),
-    back: jest.fn(),
-    forward: jest.fn(),
+    push: () => {},
+    replace: () => {},
+    prefetch: () => {},
+    back: () => {},
+    forward: () => {},
+    refresh: () => {},
   }),
-  usePathname: () => '/',
+  usePathname: () => "/",
   useSearchParams: () => new URLSearchParams(),
   useParams: () => ({}),
+  redirect: () => {},
+  notFound: () => {},
 }));
 
 // Mock next-intl
-jest.mock('next-intl', () => ({
+mock.module("next-intl", () => ({
   useTranslations: () => (key: string) => key,
-  useLocale: () => 'en',
+  useLocale: () => "en",
 }));
 
+// =============================================================================
+// Browser API Polyfills
+// =============================================================================
+
 // Mock window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: jest.fn().mockImplementation((query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: jest.fn(),
-    removeListener: jest.fn(),
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
-});
+if (typeof window !== "undefined") {
+  Object.defineProperty(window, "matchMedia", {
+    writable: true,
+    value: (query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }),
+  });
+}
 
 // Mock ResizeObserver
-global.ResizeObserver = class ResizeObserver {
-  observe = jest.fn();
-  unobserve = jest.fn();
-  disconnect = jest.fn();
-};
+if (typeof globalThis.ResizeObserver === "undefined") {
+  globalThis.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as unknown as typeof ResizeObserver;
+}
 
 // Mock IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
-  root = null;
-  rootMargin = '';
-  thresholds = [];
-  observe = jest.fn();
-  unobserve = jest.fn();
-  disconnect = jest.fn();
-  takeRecords = jest.fn().mockReturnValue([]);
-} as unknown as typeof IntersectionObserver;
-
-// Suppress console errors during tests (optional)
-const originalError = console.error;
-beforeAll(() => {
-  console.error = (...args: unknown[]) => {
-    // Filter out known React warnings during tests
-    if (
-      typeof args[0] === 'string' &&
-      (args[0].includes('Warning: ReactDOM.render') ||
-        args[0].includes('Warning: An update to'))
-    ) {
-      return;
+if (typeof globalThis.IntersectionObserver === "undefined") {
+  globalThis.IntersectionObserver = class IntersectionObserver {
+    root = null;
+    rootMargin = "";
+    thresholds: number[] = [];
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return [];
     }
-    originalError.call(console, ...args);
-  };
-});
-
-afterAll(() => {
-  console.error = originalError;
-});
+  } as unknown as typeof IntersectionObserver;
+}

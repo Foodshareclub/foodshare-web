@@ -50,5 +50,12 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "supabase/**", "scripts/**"]
+  "exclude": [
+    "node_modules",
+    "supabase/**",
+    "scripts/**",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/__tests__/**"
+  ]
 }

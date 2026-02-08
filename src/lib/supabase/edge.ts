@@ -37,11 +37,11 @@ export function createEdgeClient(): SupabaseClient {
   edgeClient = createClient(supabaseUrl, supabaseAnonKey, {
     global: {
       // 5-second timeout to prevent hanging requests
-      fetch: (url, options = {}) =>
+      fetch: ((url: URL | RequestInfo, options: RequestInit = {}) =>
         fetch(url, {
           ...options,
           signal: AbortSignal.timeout(5000),
-        }),
+        })) as typeof fetch,
     },
   });
 

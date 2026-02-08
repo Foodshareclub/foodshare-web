@@ -85,9 +85,7 @@ export function isSensitiveField(
   sensitiveFields: string[] = DEFAULT_SENSITIVE_FIELDS
 ): boolean {
   const lowerField = fieldName.toLowerCase();
-  return sensitiveFields.some((sensitive) =>
-    lowerField.includes(sensitive.toLowerCase())
-  );
+  return sensitiveFields.some((sensitive) => lowerField.includes(sensitive.toLowerCase()));
 }
 
 /**
@@ -114,10 +112,7 @@ export function redactValue(
   }
 
   // Partial redaction for phone numbers
-  if (
-    typeof value === "string" &&
-    fieldName.toLowerCase().includes("phone")
-  ) {
+  if (typeof value === "string" && fieldName.toLowerCase().includes("phone")) {
     return redactPhone(value);
   }
 
@@ -159,9 +154,9 @@ export function redactObject<T extends Record<string, unknown>>(
   const result: Record<string, unknown> = Array.isArray(obj) ? {} : {};
 
   if (Array.isArray(obj)) {
-    return obj.map((item) => 
-      typeof item === "object" && item !== null 
-        ? redactObject(item as Record<string, unknown>, config) 
+    return obj.map((item) =>
+      typeof item === "object" && item !== null
+        ? redactObject(item as Record<string, unknown>, config)
         : item
     ) as unknown as T;
   }
@@ -301,11 +296,10 @@ async function getEncryptionKey(): Promise<CryptoKey> {
   if (encryptionKey) return encryptionKey;
 
   // Generate a new key for this session
-  encryptionKey = await window.crypto.subtle.generateKey(
-    { name: "AES-GCM", length: 256 },
-    false,
-    ["encrypt", "decrypt"]
-  );
+  encryptionKey = await window.crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, [
+    "encrypt",
+    "decrypt",
+  ]);
 
   return encryptionKey;
 }
@@ -318,11 +312,7 @@ async function encryptData(data: string): Promise<string> {
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
   const encoded = new TextEncoder().encode(data);
 
-  const encrypted = await window.crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
-    key,
-    encoded
-  );
+  const encrypted = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, encoded);
 
   // Combine IV and encrypted data
   const combined = new Uint8Array(iv.length + encrypted.byteLength);
@@ -350,11 +340,7 @@ async function decryptData(encryptedData: string): Promise<string> {
   const iv = combined.slice(0, 12);
   const encrypted = combined.slice(12);
 
-  const decrypted = await window.crypto.subtle.decrypt(
-    { name: "AES-GCM", iv },
-    key,
-    encrypted
-  );
+  const decrypted = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, encrypted);
 
   return new TextDecoder().decode(decrypted);
 }
@@ -376,22 +362,11 @@ export function clearSensitiveData(): void {
   // Clear any in-memory caches that might contain sensitive data
   if (typeof window !== "undefined") {
     // Clear localStorage items with sensitive prefixes
-    const sensitiveLocalStorageKeys = [
-      "sb-",
-      "supabase",
-      "auth",
-      "token",
-      "session",
-    ];
+    const sensitiveLocalStorageKeys = ["sb-", "supabase", "auth", "token", "session"];
 
     for (let i = localStorage.length - 1; i >= 0; i--) {
       const key = localStorage.key(i);
-      if (
-        key &&
-        sensitiveLocalStorageKeys.some((prefix) =>
-          key.toLowerCase().includes(prefix)
-        )
-      ) {
+      if (key && sensitiveLocalStorageKeys.some((prefix) => key.toLowerCase().includes(prefix))) {
         localStorage.removeItem(key);
       }
     }
@@ -405,10 +380,7 @@ export function clearSensitiveData(): void {
 /**
  * Sanitize request body before logging
  */
-export function sanitizeRequestBody(
-  body: unknown,
-  config: SensitiveDataConfig = {}
-): unknown {
+export function sanitizeRequestBody(body: unknown, config: SensitiveDataConfig = {}): unknown {
   if (!body || typeof body !== "object") {
     return body;
   }
@@ -419,10 +391,7 @@ export function sanitizeRequestBody(
 /**
  * Sanitize response for logging
  */
-export function sanitizeResponse(
-  response: unknown,
-  config: SensitiveDataConfig = {}
-): unknown {
+export function sanitizeResponse(response: unknown, config: SensitiveDataConfig = {}): unknown {
   if (!response || typeof response !== "object") {
     return response;
   }
@@ -439,7 +408,7 @@ export function createSanitizedFetch(
 ): typeof fetch {
   const safeLogger = createSafeLogger(console, config);
 
-  return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  return (async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
 
     // Log sanitized request
@@ -452,5 +421,5 @@ export function createSanitizedFetch(
     const response = await baseFetch(input, init);
 
     return response;
-  };
+  }) as typeof fetch;
 }

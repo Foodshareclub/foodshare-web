@@ -3,6 +3,8 @@
  * Unit tests for newsletter and campaign management server actions
  */
 
+import { mock, describe, it, expect, beforeEach } from "bun:test";
+
 // Shared mock state
 const mockState = {
   user: null as { id: string; email: string } | null,
@@ -16,41 +18,71 @@ const mockState = {
 };
 
 // Mock next/cache
-jest.mock("next/cache", () => ({
-  revalidatePath: jest.fn(),
-  revalidateTag: jest.fn(),
+mock.module("next/cache", () => ({
+  revalidatePath: mock(),
+  revalidateTag: mock(),
+  unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
+  unstable_noStore: () => {},
 }));
 
 // Mock cache-keys
-jest.mock("@/lib/data/cache-keys", () => ({
-  CACHE_TAGS: {
-    CAMPAIGNS: "campaigns",
-    CAMPAIGN: (id: string) => `campaign-${id}`,
-    NEWSLETTER: "newsletter",
-    SEGMENTS: "segments",
-    AUTOMATIONS: "automations",
-    AUTOMATION: (id: string) => `automation-${id}`,
-  },
-  invalidateTag: jest.fn(),
+mock.module("@/lib/data/cache-keys", () => ({
+  CACHE_TAGS: new Proxy({} as Record<string, unknown>, {
+    get: (_t, prop) => {
+      if (typeof prop === "string") {
+        const staticTags: Record<string, string> = {
+          NEWSLETTER: "newsletter",
+          CAMPAIGNS: "campaigns",
+          SEGMENTS: "segments",
+          AUTOMATIONS: "automations",
+          SUBSCRIBERS: "subscribers",
+          POST_ACTIVITY: "post-activity",
+          POST_ACTIVITY_STATS: "post-activity-stats",
+          ADMIN: "admin",
+          PRODUCTS: "products",
+          PROFILES: "profiles",
+        };
+        return staticTags[prop] ?? ((id: unknown) => `${String(prop).toLowerCase()}-${id}`);
+      }
+      return "";
+    },
+  }),
+  CACHE_DURATIONS: { SHORT: 60, MEDIUM: 300, LONG: 3600, NEWSLETTER: 300, CAMPAIGNS: 300 },
+  CACHE_PROFILES: { DEFAULT: "default", INSTANT: { expire: 0 } },
+  invalidateTag: mock(),
+  logCacheOperation: () => {},
+  getProductTags: () => [],
+  getProfileTags: () => [],
+  getForumTags: () => [],
+  getChallengeTags: () => [],
+  getNotificationTags: () => [],
+  getAdminTags: () => [],
+  getNewsletterTags: () => [],
+  invalidateAdminCaches: () => {},
+  getPostActivityTags: () => [],
+  invalidatePostActivityCaches: () => {},
+  invalidateNewsletterCaches: () => {},
+  getEmailTags: () => [],
+  invalidateEmailCaches: () => {},
 }));
 
 // Define chain type for Supabase mock
 interface MockChain {
-  select: jest.Mock;
-  eq: jest.Mock;
-  single: jest.Mock;
-  update: jest.Mock;
-  insert: jest.Mock;
+  select: ReturnType<typeof mock>;
+  eq: ReturnType<typeof mock>;
+  single: ReturnType<typeof mock>;
+  update: ReturnType<typeof mock>;
+  insert: ReturnType<typeof mock>;
 }
 
 // Mock Supabase server
-jest.mock("@/lib/supabase/server", () => ({
-  createClient: jest.fn(() => {
+mock.module("@/lib/supabase/server", () => ({
+  createClient: mock(() => {
     const createSelectChain = (tableName?: string): MockChain => {
       const chain: MockChain = {
-        select: jest.fn(() => chain),
-        eq: jest.fn(() => chain),
-        single: jest.fn(() => {
+        select: mock(() => chain),
+        eq: mock(() => chain),
+        single: mock(() => {
           if (tableName === "newsletter_campaigns") {
             return Promise.resolve({
               data: mockState.campaignData,
@@ -83,12 +115,12 @@ jest.mock("@/lib/supabase/server", () => ({
           }
           return Promise.resolve({ data: null, error: mockState.dbError });
         }),
-        update: jest.fn(() => ({
-          eq: jest.fn(() => Promise.resolve({ data: null, error: mockState.dbError })),
+        update: mock(() => ({
+          eq: mock(() => Promise.resolve({ data: null, error: mockState.dbError })),
         })),
-        insert: jest.fn(() => ({
-          select: jest.fn(() => ({
-            single: jest.fn(() => {
+        insert: mock(() => ({
+          select: mock(() => ({
+            single: mock(() => {
               if (tableName === "newsletter_campaigns") {
                 return Promise.resolve({
                   data: mockState.campaignData,
@@ -130,20 +162,28 @@ jest.mock("@/lib/supabase/server", () => ({
 
     return Promise.resolve({
       auth: {
-        getUser: jest.fn(() =>
+        getUser: mock(() =>
           Promise.resolve({
             data: { user: mockState.user },
             error: mockState.authError,
           })
         ),
       },
-      from: jest.fn((tableName: string) => createSelectChain(tableName)),
-      rpc: jest.fn(() => Promise.resolve({ data: null, error: null })),
+      from: mock((tableName: string) => createSelectChain(tableName)),
+      rpc: mock(() => Promise.resolve({ data: null, error: null })),
     });
   }),
+  createCachedClient: mock(() =>
+    Promise.resolve({
+      from: mock(() => ({
+        select: mock(() => ({
+          eq: mock(() => ({ single: mock(() => Promise.resolve({ data: null, error: null })) })),
+        })),
+      })),
+    })
+  ),
+  createServerClient: mock(() => Promise.resolve({})),
 }));
-
-import { describe, it, expect, beforeEach } from "@jest/globals";
 
 // Import actions after mocks
 import {
@@ -182,7 +222,6 @@ describe("Newsletter Server Actions", () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
     mockState.user = null;
     mockState.authError = null;
     mockState.dbError = null;

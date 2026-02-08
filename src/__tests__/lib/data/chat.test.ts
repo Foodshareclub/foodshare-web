@@ -3,6 +3,8 @@
  * Unit tests for chat-related data fetching functions
  */
 
+import { mock, describe, it, expect, beforeEach } from "bun:test";
+
 // Shared mock state
 const mockState = {
   rooms: [] as Array<Record<string, unknown>>,
@@ -17,17 +19,17 @@ const mockState = {
 const createMockSupabaseClient = () => {
   const createRoomsChain = () => {
     const chain: Record<string, unknown> = {};
-    chain.select = jest.fn(() => chain);
-    chain.eq = jest.fn(() => chain);
-    chain.or = jest.fn(() => chain);
-    chain.neq = jest.fn(() => chain);
-    chain.order = jest.fn(() =>
+    chain.select = mock(() => chain);
+    chain.eq = mock(() => chain);
+    chain.or = mock(() => chain);
+    chain.neq = mock(() => chain);
+    chain.order = mock(() =>
       Promise.resolve({
         data: mockState.rooms,
         error: mockState.error,
       })
     );
-    chain.single = jest.fn(() =>
+    chain.single = mock(() =>
       Promise.resolve({
         data: mockState.room,
         error: mockState.error,
@@ -43,10 +45,10 @@ const createMockSupabaseClient = () => {
 
   const createMessagesChain = () => {
     const chain: Record<string, unknown> = {};
-    chain.select = jest.fn(() => chain);
-    chain.eq = jest.fn(() => chain);
-    chain.order = jest.fn(() => chain);
-    chain.range = jest.fn(() =>
+    chain.select = mock(() => chain);
+    chain.eq = mock(() => chain);
+    chain.order = mock(() => chain);
+    chain.range = mock(() =>
       Promise.resolve({
         data: mockState.messages,
         error: mockState.error,
@@ -57,9 +59,9 @@ const createMockSupabaseClient = () => {
 
   const createInsertChain = () => {
     const chain: Record<string, unknown> = {};
-    chain.insert = jest.fn(() => chain);
-    chain.select = jest.fn(() => chain);
-    chain.single = jest.fn(() =>
+    chain.insert = mock(() => chain);
+    chain.select = mock(() => chain);
+    chain.single = mock(() =>
       Promise.resolve({
         data: mockState.insertedRoom,
         error: mockState.error,
@@ -69,12 +71,12 @@ const createMockSupabaseClient = () => {
   };
 
   return {
-    from: jest.fn((table: string) => {
+    from: mock((table: string) => {
       switch (table) {
         case "rooms":
           return {
             ...createRoomsChain(),
-            insert: jest.fn(() => createInsertChain()),
+            insert: mock(() => createInsertChain()),
           };
         case "room_participants":
           return createMessagesChain();
@@ -85,17 +87,14 @@ const createMockSupabaseClient = () => {
   };
 };
 
-// Mock Supabase module
-jest.mock("@/lib/supabase/server", () => ({
-  createClient: jest.fn(() => Promise.resolve(createMockSupabaseClient())),
+// Mock Supabase module BEFORE imports
+mock.module("@/lib/supabase/server", () => ({
+  createClient: mock(() => Promise.resolve(createMockSupabaseClient())),
+  createCachedClient: mock(() => Promise.resolve(createMockSupabaseClient())),
+  createServerClient: mock(() => Promise.resolve(createMockSupabaseClient())),
 }));
 
-// Mock Next.js cache
-jest.mock("next/cache", () => ({
-  unstable_cache: <T>(fn: () => Promise<T>) => fn,
-}));
-
-import { describe, it, expect, beforeEach } from "@jest/globals";
+// Import AFTER mocks are set up
 import {
   getUserChatRooms,
   getChatRoom,
@@ -107,7 +106,6 @@ import {
 
 describe("Chat Data Functions", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     mockState.rooms = [];
     mockState.room = null;
     mockState.messages = [];

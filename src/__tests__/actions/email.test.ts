@@ -3,6 +3,8 @@
  * Unit tests for email sending server actions
  */
 
+import { mock, describe, it, expect, beforeEach } from "bun:test";
+
 // Shared mock state
 const mockState = {
   user: null as { id: string; email: string } | null,
@@ -24,41 +26,76 @@ const mockState = {
 };
 
 // Mock next/cache
-jest.mock("next/cache", () => ({
-  revalidatePath: jest.fn(),
-  revalidateTag: jest.fn(),
+mock.module("next/cache", () => ({
+  revalidatePath: mock(),
+  revalidateTag: mock(),
+  unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
+  unstable_noStore: () => {},
 }));
 
 // Mock email send module
-jest.mock("@/lib/email/send", () => ({
-  sendTemplateEmail: jest.fn(() => Promise.resolve(mockState.emailSendResult)),
-  previewEmail: jest.fn(() => Promise.resolve(mockState.emailPreviewResult)),
+mock.module("@/lib/email/send", () => ({
+  sendTemplateEmail: mock(() => Promise.resolve(mockState.emailSendResult)),
+  previewEmail: mock(() => Promise.resolve(mockState.emailPreviewResult)),
 }));
 
 // Mock unified email service
-jest.mock("@/lib/email/unified-service", () => ({
-  createUnifiedEmailService: jest.fn(() =>
+mock.module("@/lib/email/unified-service", () => ({
+  createUnifiedEmailService: mock(() =>
     Promise.resolve({
-      sendEmail: jest.fn(() => Promise.resolve(mockState.unifiedEmailResult)),
+      sendEmail: mock(() => Promise.resolve(mockState.unifiedEmailResult)),
     })
   ),
 }));
 
+// Mock notification API
+mock.module("@/lib/notifications", () => ({
+  sendEmailNotification: mock(() =>
+    Promise.resolve({
+      success: mockState.emailSendResult.success,
+      data: { notificationId: mockState.emailSendResult.messageId },
+      error: mockState.emailSendResult.error,
+    })
+  ),
+}));
+
+// Mock admin check
+mock.module("@/lib/data/admin-check", () => ({
+  checkUserIsAdmin: mock((_userId: string) => {
+    // Check if the user has admin role in mockState
+    const hasAdminRole = mockState.userRoles?.some(
+      (ur) => ur.roles.name === "admin" || ur.roles.name === "superadmin"
+    );
+    return Promise.resolve({
+      isAdmin: hasAdminRole || false,
+    });
+  }),
+}));
+
 // Define chain type for Supabase mock
 interface MockChain {
-  select: jest.Mock;
-  eq: jest.Mock;
-  single: jest.Mock;
+  select: ReturnType<typeof mock>;
+  eq: ReturnType<typeof mock>;
+  single: ReturnType<typeof mock>;
 }
 
 // Mock Supabase server
-jest.mock("@/lib/supabase/server", () => ({
-  createClient: jest.fn(() => {
+mock.module("@/lib/supabase/server", () => ({
+  createClient: mock(() => {
     const createSelectChain = (tableName?: string): MockChain => {
       const chain: MockChain = {
-        select: jest.fn(() => chain),
-        eq: jest.fn(() => chain),
-        single: jest.fn(() => Promise.resolve({ data: null, error: null })),
+        select: mock(() => chain),
+        eq: mock(() => chain),
+        single: mock(() => {
+          // For profiles table lookup by email
+          if (tableName === "profiles") {
+            return Promise.resolve({
+              data: { id: "test-profile-id" },
+              error: null,
+            });
+          }
+          return Promise.resolve({ data: null, error: null });
+        }),
       };
 
       // For user_roles table (array result)
@@ -77,19 +114,27 @@ jest.mock("@/lib/supabase/server", () => ({
 
     return Promise.resolve({
       auth: {
-        getUser: jest.fn(() =>
+        getUser: mock(() =>
           Promise.resolve({
             data: { user: mockState.user },
             error: mockState.authError,
           })
         ),
       },
-      from: jest.fn((tableName: string) => createSelectChain(tableName)),
+      from: mock((tableName: string) => createSelectChain(tableName)),
     });
   }),
+  createCachedClient: mock(() =>
+    Promise.resolve({
+      from: mock(() => ({
+        select: mock(() => ({
+          eq: mock(() => ({ single: mock(() => Promise.resolve({ data: null, error: null })) })),
+        })),
+      })),
+    })
+  ),
+  createServerClient: mock(() => Promise.resolve({})),
 }));
-
-import { describe, it, expect, beforeEach } from "@jest/globals";
 
 // Import actions after mocks
 import {
@@ -114,7 +159,6 @@ function isFailedResult(result: { success: boolean }): result is FailedResult {
 
 describe("Email Server Actions", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     mockState.user = null;
     mockState.userRoles = null;
     mockState.authError = null;
@@ -541,7 +585,7 @@ describe("Email Server Actions", () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.messageId).toBe("unified-msg-123");
+        expect(result.data.messageId).toBe("msg-123");
       }
     });
 
@@ -555,7 +599,7 @@ describe("Email Server Actions", () => {
     });
 
     it("should handle email service failure", async () => {
-      mockState.unifiedEmailResult = {
+      mockState.emailSendResult = {
         success: false,
         error: "Service unavailable",
       };
@@ -718,7 +762,7 @@ describe("Email Server Actions", () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.messageId).toBe("unified-msg-123");
+        expect(result.data.messageId).toBe("msg-123");
       }
     });
 
@@ -738,7 +782,7 @@ describe("Email Server Actions", () => {
     it("should handle email service failure", async () => {
       mockState.user = { id: "admin-123", email: "admin@example.com" };
       mockState.userRoles = [{ roles: { name: "admin" } }];
-      mockState.unifiedEmailResult = {
+      mockState.emailSendResult = {
         success: false,
         error: "SMTP error",
       };

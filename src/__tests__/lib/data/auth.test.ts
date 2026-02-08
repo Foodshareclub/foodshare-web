@@ -3,6 +3,8 @@
  * Unit tests for authentication-related data fetching functions
  */
 
+import { mock, describe, it, expect, beforeEach } from "bun:test";
+
 // Shared mock state
 const mockState = {
   user: null as { id: string; email: string } | null,
@@ -14,21 +16,21 @@ const mockState = {
 
 // Mock Supabase client
 const createMockSupabaseClient = () => {
-  const mockSingle = jest.fn(() =>
+  const mockSingle = mock(() =>
     Promise.resolve({
       data: mockState.profile,
       error: mockState.profileError,
     })
   );
 
-  const mockSelect = jest.fn(() => ({
-    eq: jest.fn(() => ({
+  const mockSelect = mock(() => ({
+    eq: mock(() => ({
       single: mockSingle,
     })),
   }));
 
-  const mockRolesSelect = jest.fn(() => ({
-    eq: jest.fn(() =>
+  const mockRolesSelect = mock(() => ({
+    eq: mock(() =>
       Promise.resolve({
         data: mockState.userRoles,
         error: null,
@@ -38,14 +40,14 @@ const createMockSupabaseClient = () => {
 
   return {
     auth: {
-      getUser: jest.fn(() =>
+      getUser: mock(() =>
         Promise.resolve({
           data: { user: mockState.user },
           error: mockState.authError,
         })
       ),
     },
-    from: jest.fn((table: string) => {
+    from: mock((table: string) => {
       if (table === "profiles") {
         return { select: mockSelect };
       }
@@ -55,8 +57,8 @@ const createMockSupabaseClient = () => {
       return { select: mockSelect };
     }),
     storage: {
-      from: jest.fn(() => ({
-        getPublicUrl: jest.fn((path: string) => ({
+      from: mock(() => ({
+        getPublicUrl: mock((path: string) => ({
           data: { publicUrl: `https://storage.example.com/${path}` },
         })),
       })),
@@ -64,22 +66,27 @@ const createMockSupabaseClient = () => {
   };
 };
 
-// Mock Supabase module
-jest.mock("@/lib/supabase/server", () => ({
-  createClient: jest.fn(() => Promise.resolve(createMockSupabaseClient())),
+// Mock Supabase module BEFORE imports
+mock.module("@/lib/supabase/server", () => ({
+  createClient: mock(() => Promise.resolve(createMockSupabaseClient())),
+  createCachedClient: mock(() => Promise.resolve(createMockSupabaseClient())),
+  createServerClient: mock(() => Promise.resolve(createMockSupabaseClient())),
 }));
 
-// Mock Next.js cache
-jest.mock("next/cache", () => ({
-  unstable_cache: <T>(fn: () => Promise<T>) => fn,
+// Mock admin check module to avoid real Supabase calls
+mock.module("@/lib/data/admin-check", () => ({
+  checkUserIsAdmin: mock(async (_userId: string) => {
+    const roles = mockState.userRoles.map((r) => r.roles.name);
+    const isAdmin = roles.includes("admin") || roles.includes("superadmin");
+    return { isAdmin, roles };
+  }),
 }));
 
-import { describe, it, expect, beforeEach } from "@jest/globals";
+// Import AFTER mocks are set up
 import { getCurrentUser, checkIsAdmin, getAuthSession } from "@/lib/data/auth";
 
 describe("Auth Data Functions", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     mockState.user = null;
     mockState.profile = null;
     mockState.userRoles = [];

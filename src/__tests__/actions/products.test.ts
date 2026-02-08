@@ -6,12 +6,60 @@
  * Server Actions (mutations) cannot re-export data functions due to 'use server' constraints.
  */
 
-// Shared mock state - must be outside jest.mock for it to be accessible
+import { mock, describe, it, expect, beforeEach } from "bun:test";
+
+// Shared mock state - must be outside mock.module for it to be accessible
 const mockState = {
   products: [] as unknown[],
   product: null as unknown,
   error: null as { message: string; code?: string } | null,
 };
+
+// Mock cache-keys with all the CACHE_TAGS used by products
+mock.module("@/lib/data/cache-keys", () => ({
+  CACHE_TAGS: new Proxy({} as Record<string, unknown>, {
+    get: (_t, prop) => {
+      if (typeof prop === "string") {
+        const staticTags: Record<string, string> = {
+          PRODUCTS: "products",
+          PRODUCT_LOCATIONS: "product-locations",
+          PRODUCT_SEARCH: "product-search",
+          POST_ACTIVITY: "post-activity",
+          POST_ACTIVITY_STATS: "post-activity-stats",
+          ADMIN: "admin",
+          PROFILES: "profiles",
+          NEWSLETTER: "newsletter",
+        };
+        return staticTags[prop] ?? ((id: unknown) => `${String(prop).toLowerCase()}-${id}`);
+      }
+      return "";
+    },
+  }),
+  CACHE_DURATIONS: {
+    SHORT: 60,
+    MEDIUM: 300,
+    LONG: 3600,
+    PRODUCTS: 60,
+    PRODUCT_DETAIL: 120,
+    PRODUCT_LOCATIONS: 300,
+  },
+  CACHE_PROFILES: { DEFAULT: "default", INSTANT: { expire: 0 } },
+  invalidateTag: mock(),
+  logCacheOperation: mock(),
+  getProductTags: () => [],
+  getProfileTags: () => [],
+  getForumTags: () => [],
+  getChallengeTags: () => [],
+  getNotificationTags: () => [],
+  getAdminTags: () => [],
+  getNewsletterTags: () => [],
+  invalidateAdminCaches: () => {},
+  getPostActivityTags: () => [],
+  invalidatePostActivityCaches: () => {},
+  invalidateNewsletterCaches: () => {},
+  getEmailTags: () => [],
+  invalidateEmailCaches: () => {},
+}));
 
 // Create the mock Supabase client factory
 const createMockSupabaseClient = () => {
@@ -19,20 +67,20 @@ const createMockSupabaseClient = () => {
   // Must be "thenable" for direct await (like Supabase query builder)
   const createChain = (): unknown => {
     const chain = {
-      eq: jest.fn(() => createChain()),
-      gt: jest.fn(() => createChain()),
-      gte: jest.fn(() => createChain()),
-      lt: jest.fn(() => createChain()),
-      lte: jest.fn(() => createChain()),
-      limit: jest.fn(() => createChain()),
-      order: jest.fn(() => createChain()),
-      range: jest.fn(() =>
+      eq: mock(() => createChain()),
+      gt: mock(() => createChain()),
+      gte: mock(() => createChain()),
+      lt: mock(() => createChain()),
+      lte: mock(() => createChain()),
+      limit: mock(() => createChain()),
+      order: mock(() => createChain()),
+      range: mock(() =>
         Promise.resolve({
           data: mockState.products,
           error: mockState.error,
         })
       ),
-      single: jest.fn(() =>
+      single: mock(() =>
         Promise.resolve({
           data: mockState.product,
           error: mockState.error,
@@ -48,9 +96,9 @@ const createMockSupabaseClient = () => {
     return chain;
   };
 
-  const mockSelect = jest.fn(() => createChain());
+  const mockSelect = mock(() => createChain());
 
-  const mockFrom = jest.fn(() => ({
+  const mockFrom = mock(() => ({
     select: mockSelect,
   }));
 
@@ -60,12 +108,10 @@ const createMockSupabaseClient = () => {
 };
 
 // Mock the Supabase server module BEFORE any imports
-jest.mock("@/lib/supabase/server", () => ({
-  createClient: jest.fn(() => Promise.resolve(createMockSupabaseClient())),
-  createCachedClient: jest.fn(() => createMockSupabaseClient()),
+mock.module("@/lib/supabase/server", () => ({
+  createClient: mock(() => Promise.resolve(createMockSupabaseClient())),
+  createCachedClient: mock(() => createMockSupabaseClient()),
 }));
-
-import { describe, it, expect, beforeEach } from "@jest/globals";
 
 // Import data functions from lib/data (not actions - 'use server' files can't re-export)
 import {
@@ -78,7 +124,6 @@ import {
 
 describe("Products Data Functions", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     mockState.products = [];
     mockState.product = null;
     mockState.error = null;

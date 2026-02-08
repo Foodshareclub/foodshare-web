@@ -3,6 +3,8 @@
  * Unit tests for chat management server actions
  */
 
+import { mock, describe, it, expect, beforeEach } from "bun:test";
+
 // Shared mock state
 const mockState = {
   user: null as { id: string; email: string } | null,
@@ -30,61 +32,125 @@ const mockState = {
 };
 
 // Mock next/cache
-jest.mock("next/cache", () => ({
-  revalidatePath: jest.fn(),
-  revalidateTag: jest.fn(),
+mock.module("next/cache", () => ({
+  revalidatePath: mock(),
+  revalidateTag: mock(),
+  unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
+  unstable_noStore: () => {},
 }));
 
 // Mock cache-keys
-jest.mock("@/lib/data/cache-keys", () => ({
-  CACHE_TAGS: {
-    CHATS: "chats",
-    CHAT: (id: string) => `chat-${id}`,
-    CHAT_MESSAGES: (id: string) => `chat-messages-${id}`,
-    USER_NOTIFICATIONS: (id: string) => `user-notifications-${id}`,
-    PROFILES: "profiles",
-    PROFILE: (id: string) => `profile-${id}`,
-    PRODUCTS: "products",
-  },
-  invalidateTag: jest.fn(),
-  invalidatePostActivityCaches: jest.fn(),
+mock.module("@/lib/data/cache-keys", () => ({
+  CACHE_TAGS: new Proxy({} as Record<string, unknown>, {
+    get: (_t, prop) => {
+      if (typeof prop === "string") {
+        const staticTags: Record<string, string> = {
+          CHATS: "chats",
+          PROFILES: "profiles",
+          PRODUCTS: "products",
+          POST_ACTIVITY: "post-activity",
+          POST_ACTIVITY_STATS: "post-activity-stats",
+          ADMIN: "admin",
+          NEWSLETTER: "newsletter",
+          CAMPAIGNS: "campaigns",
+          SEGMENTS: "segments",
+          AUTOMATIONS: "automations",
+          SUBSCRIBERS: "subscribers",
+        };
+        return staticTags[prop] ?? ((id: unknown) => `${String(prop).toLowerCase()}-${id}`);
+      }
+      return "";
+    },
+  }),
+  CACHE_DURATIONS: { SHORT: 60, MEDIUM: 300, LONG: 3600, CHATS: 30, CHAT_MESSAGES: 30 },
+  CACHE_PROFILES: { DEFAULT: "default", INSTANT: { expire: 0 } },
+  invalidateTag: mock(),
+  logCacheOperation: () => {},
+  getProductTags: () => [],
+  getProfileTags: () => [],
+  getForumTags: () => [],
+  getChallengeTags: () => [],
+  getNotificationTags: () => [],
+  getAdminTags: () => [],
+  getNewsletterTags: () => [],
+  invalidateAdminCaches: () => {},
+  getPostActivityTags: () => [],
+  invalidatePostActivityCaches: mock(),
+  invalidateNewsletterCaches: () => {},
+  getEmailTags: () => [],
+  invalidateEmailCaches: () => {},
 }));
 
-// Mock analytics
-jest.mock("@/app/actions/analytics", () => ({
-  trackEvent: jest.fn(() => Promise.resolve()),
+// Mock analytics — must include ALL exports to prevent global contamination
+const mockResult = () => Promise.resolve({ success: true, data: null });
+mock.module("@/app/actions/analytics", () => ({
+  trackEvent: mock(() => Promise.resolve()),
+  getAnalyticsSummary: mock(mockResult),
+  getMonthlyGrowth: mock(mockResult),
+  getDailyActiveUsers: mock(mockResult),
+  getEventDistribution: mock(mockResult),
+  getConversionFunnel: mock(mockResult),
+  getUserRetentionCohorts: mock(mockResult),
+  getInventoryAging: mock(mockResult),
+  getListingTypeDistribution: mock(mockResult),
+  getTopSharers: mock(mockResult),
+  getSyncStatus: mock(mockResult),
+  getGeographicHotspots: mock(mockResult),
+  getActivityByHour: mock(mockResult),
+  triggerAnalyticsSync: mock(mockResult),
 }));
 
-// Mock post-activity
-jest.mock("@/app/actions/post-activity", () => ({
-  logPostContact: jest.fn(() => Promise.resolve()),
-  logPostArrangement: jest.fn(() => Promise.resolve()),
+// Mock post-activity — must include ALL exports
+mock.module("@/app/actions/post-activity", () => ({
+  logPostActivity: mock(mockResult),
+  logPostView: mock(mockResult),
+  logPostContact: mock(mockResult),
+  logPostArrangement: mock(mockResult),
+  logArrangementCancelled: mock(mockResult),
+  logPostCollected: mock(mockResult),
+  logPostNotCollected: mock(mockResult),
+  logPostShared: mock(mockResult),
+  logAdminPostAction: mock(mockResult),
+  getPostActivityTimeline: mock(mockResult),
+  getUserPostActivitySummary: mock(mockResult),
+  getRecentPostActivities: mock(mockResult),
+  getPostActivityCounts: mock(mockResult),
+  bulkLogPostActivities: mock(mockResult),
 }));
 
-// Mock email
-jest.mock("@/app/actions/email", () => ({
-  sendExchangeCompletionEmail: jest.fn(() => Promise.resolve()),
+// Mock email — must include ALL exports
+mock.module("@/app/actions/email", () => ({
+  sendEmailAsync: mock(mockResult),
+  sendNewMessageNotification: mock(mockResult),
+  sendListingInterestNotification: mock(mockResult),
+  sendPickupReminder: mock(mockResult),
+  sendReviewRequest: mock(mockResult),
+  sendListingExpiredNotification: mock(mockResult),
+  sendExchangeCompletionEmail: mock(mockResult),
+  previewEmailTemplate: mock(mockResult),
+  sendAdminEmail: mock(mockResult),
+  sendTestEmailDirect: mock(mockResult),
 }));
 
 // Define chain type for Supabase mock
 interface MockChain {
-  select: jest.Mock;
-  eq: jest.Mock;
-  single: jest.Mock;
-  update: jest.Mock;
-  insert: jest.Mock;
-  gte: jest.Mock;
+  select: ReturnType<typeof mock>;
+  eq: ReturnType<typeof mock>;
+  single: ReturnType<typeof mock>;
+  update: ReturnType<typeof mock>;
+  insert: ReturnType<typeof mock>;
+  gte: ReturnType<typeof mock>;
 }
 
 // Mock Supabase server
-jest.mock("@/lib/supabase/server", () => ({
-  createClient: jest.fn(() => {
+mock.module("@/lib/supabase/server", () => ({
+  createClient: mock(() => {
     const createSelectChain = (tableName?: string): MockChain => {
       const chain: MockChain = {
-        select: jest.fn(() => chain),
-        eq: jest.fn(() => chain),
-        gte: jest.fn(() => chain),
-        single: jest.fn(() => {
+        select: mock(() => chain),
+        eq: mock(() => chain),
+        gte: mock(() => chain),
+        single: mock(() => {
           if (tableName === "rooms") {
             return Promise.resolve({
               data: mockState.room,
@@ -99,14 +165,14 @@ jest.mock("@/lib/supabase/server", () => ({
           }
           return Promise.resolve({ data: null, error: mockState.dbError });
         }),
-        update: jest.fn(() => ({
-          eq: jest.fn(() => Promise.resolve({ data: null, error: mockState.dbError })),
+        update: mock(() => ({
+          eq: mock(() => Promise.resolve({ data: null, error: mockState.dbError })),
         })),
-        insert: jest.fn(() => {
+        insert: mock(() => {
           if (tableName === "rooms" && mockState.newRoom) {
             return {
-              select: jest.fn(() => ({
-                single: jest.fn(() =>
+              select: mock(() => ({
+                single: mock(() =>
                   Promise.resolve({ data: mockState.newRoom, error: mockState.dbError })
                 ),
               })),
@@ -129,7 +195,7 @@ jest.mock("@/lib/supabase/server", () => ({
 
       // For existing room check
       if (tableName === "rooms" && mockState.existingRoom) {
-        chain.single = jest.fn(() =>
+        chain.single = mock(() =>
           Promise.resolve({
             data: mockState.existingRoom,
             error: null,
@@ -142,19 +208,27 @@ jest.mock("@/lib/supabase/server", () => ({
 
     return Promise.resolve({
       auth: {
-        getUser: jest.fn(() =>
+        getUser: mock(() =>
           Promise.resolve({
             data: { user: mockState.user },
             error: mockState.authError,
           })
         ),
       },
-      from: jest.fn((tableName: string) => createSelectChain(tableName)),
+      from: mock((tableName: string) => createSelectChain(tableName)),
     });
   }),
+  createCachedClient: mock(() =>
+    Promise.resolve({
+      from: mock(() => ({
+        select: mock(() => ({
+          eq: mock(() => ({ single: mock(() => Promise.resolve({ data: null, error: null })) })),
+        })),
+      })),
+    })
+  ),
+  createServerClient: mock(() => Promise.resolve({})),
 }));
-
-import { describe, it, expect, beforeEach } from "@jest/globals";
 
 // Import actions after mocks
 import {
@@ -184,7 +258,6 @@ describe("Chat Server Actions", () => {
   const validProfileId = "550e8400-e29b-41d4-a716-446655440004";
 
   beforeEach(() => {
-    jest.clearAllMocks();
     mockState.user = null;
     mockState.room = null;
     mockState.post = null;

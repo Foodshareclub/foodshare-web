@@ -3,6 +3,8 @@
  * Unit tests for authentication server actions
  */
 
+import { mock, describe, it, expect, beforeEach } from "bun:test";
+
 // Shared mock state
 const mockState = {
   user: null as { id: string; email: string } | null,
@@ -20,8 +22,8 @@ const mockState = {
 };
 
 // Mock next/navigation - redirect throws to simulate Next.js behavior
-jest.mock("next/navigation", () => ({
-  redirect: jest.fn((url: string) => {
+mock.module("next/navigation", () => ({
+  redirect: mock((url: string) => {
     const error = new Error("NEXT_REDIRECT") as Error & { url: string };
     error.url = url;
     throw error;
@@ -30,28 +32,28 @@ jest.mock("next/navigation", () => ({
 
 // Define chain type for Supabase mock
 interface MockChain {
-  eq: jest.Mock;
-  in: jest.Mock;
-  single: jest.Mock;
-  maybeSingle: jest.Mock;
+  eq: ReturnType<typeof mock>;
+  in: ReturnType<typeof mock>;
+  single: ReturnType<typeof mock>;
+  maybeSingle: ReturnType<typeof mock>;
   then: (resolve: (value: unknown) => void) => void;
 }
 
 // Mock Supabase server
-jest.mock("@/lib/supabase/server", () => ({
-  createClient: jest.fn(() => {
+mock.module("@/lib/supabase/server", () => ({
+  createClient: mock(() => {
     // Thenable chain for database queries
     const createEqChain = (tableName?: string): MockChain => {
       const chain: MockChain = {
-        eq: jest.fn((): MockChain => createEqChain(tableName)),
-        in: jest.fn((): MockChain => createEqChain(tableName)),
-        single: jest.fn(() =>
+        eq: mock((): MockChain => createEqChain(tableName)),
+        in: mock((): MockChain => createEqChain(tableName)),
+        single: mock(() =>
           Promise.resolve({
             data: mockState.profile,
             error: mockState.dbError,
           })
         ),
-        maybeSingle: jest.fn(() =>
+        maybeSingle: mock(() =>
           Promise.resolve({
             data: mockState.profile,
             error: mockState.dbError,
@@ -70,55 +72,55 @@ jest.mock("@/lib/supabase/server", () => ({
 
     return Promise.resolve({
       auth: {
-        getSession: jest.fn(() =>
+        getSession: mock(() =>
           Promise.resolve({
             data: { session: mockState.session },
             error: mockState.authError,
           })
         ),
-        getUser: jest.fn(() =>
+        getUser: mock(() =>
           Promise.resolve({
             data: { user: mockState.user },
             error: mockState.authError,
           })
         ),
-        signInWithPassword: jest.fn(() =>
+        signInWithPassword: mock(() =>
           Promise.resolve({
             data: { user: mockState.user, session: mockState.session },
             error: mockState.authError,
           })
         ),
-        signUp: jest.fn(() =>
+        signUp: mock(() =>
           Promise.resolve({
             data: { user: mockState.user, session: mockState.session },
             error: mockState.authError,
           })
         ),
-        signOut: jest.fn(() => Promise.resolve({ error: mockState.authError })),
-        resetPasswordForEmail: jest.fn(() =>
+        signOut: mock(() => Promise.resolve({ error: mockState.authError })),
+        resetPasswordForEmail: mock(() =>
           Promise.resolve({
             data: {},
             error: mockState.authError,
           })
         ),
-        updateUser: jest.fn(() =>
+        updateUser: mock(() =>
           Promise.resolve({
             data: { user: mockState.user },
             error: mockState.authError,
           })
         ),
-        signInWithOAuth: jest.fn(() =>
+        signInWithOAuth: mock(() =>
           Promise.resolve({
             data: { url: "https://oauth.example.com/authorize" },
             error: mockState.authError,
           })
         ),
       },
-      from: jest.fn((tableName: string) => ({
-        select: jest.fn(() => ({
-          eq: jest.fn(() => createEqChain(tableName)),
+      from: mock((tableName: string) => ({
+        select: mock(() => ({
+          eq: mock(() => createEqChain(tableName)),
         })),
-        insert: jest.fn(() =>
+        insert: mock(() =>
           Promise.resolve({
             data: mockState.profile,
             error: mockState.dbError,
@@ -126,17 +128,25 @@ jest.mock("@/lib/supabase/server", () => ({
         ),
       })),
       storage: {
-        from: jest.fn(() => ({
-          getPublicUrl: jest.fn((path: string) => ({
+        from: mock(() => ({
+          getPublicUrl: mock((path: string) => ({
             data: { publicUrl: `https://storage.example.com/${path}` },
           })),
         })),
       },
     });
   }),
+  createCachedClient: mock(() => {
+    return Promise.resolve({
+      from: mock(() => ({
+        select: mock(() => ({
+          eq: mock(() => ({ single: mock(() => Promise.resolve({ data: null, error: null })) })),
+        })),
+      })),
+    });
+  }),
+  createServerClient: mock(() => Promise.resolve({})),
 }));
-
-import { describe, it, expect, beforeEach } from "@jest/globals";
 
 // Import actions after mocks
 import {
@@ -153,7 +163,6 @@ import {
 
 describe("Auth Server Actions", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     mockState.user = null;
     mockState.session = null;
     mockState.profile = null;
@@ -393,8 +402,6 @@ describe("Auth Server Actions", () => {
     });
 
     it("should return error on invalid password", async () => {
-      mockState.authError = { message: "Password is too weak" };
-
       const formData = new FormData();
       formData.append("password", "123");
 
@@ -402,7 +409,7 @@ describe("Auth Server Actions", () => {
 
       expect(result).toEqual({
         success: false,
-        error: "Password is too weak",
+        error: "Password must be at least 8 characters",
       });
     });
   });

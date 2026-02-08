@@ -24,6 +24,7 @@ print = "yarn"
 [test]
 coverage = true
 coverageDir = "coverage"
+preload = ["./src/__tests__/happydom.ts", "./src/__tests__/setup.ts"]
 
 [run]
 # Don't force Bun runtime for all scripts (build needs Node)
