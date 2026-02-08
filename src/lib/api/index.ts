@@ -25,7 +25,7 @@
  * | Domain     | Status    | Notes |
  * |------------|-----------|-------|
  * | Products   | ✅ Ready  | createProduct, deleteProduct via Edge Functions |
- * | Chat       | ✅ Ready  | Uses api-v1-food-chat (food-sharing schema) |
+ * | Chat       | ✅ Ready  | Uses api-v1-chat?mode=food (food-sharing schema) |
  * | Profile    | ✅ Ready  | updateProfile, uploadAvatar, updateAddress |
  * | Reviews    | ✅ Ready  | submitReview via Edge Functions |
  * | Engagement | ✅ Ready  | toggleLike, toggleBookmark via Edge Functions |
@@ -65,11 +65,7 @@ export {
   getAllCircuitBreakerMetrics,
   resetAllCircuitBreakers,
 } from "./circuit-breaker";
-export type {
-  CircuitState,
-  CircuitBreakerConfig,
-  CircuitBreakerMetrics,
-} from "./circuit-breaker";
+export type { CircuitState, CircuitBreakerConfig, CircuitBreakerMetrics } from "./circuit-breaker";
 
 // Retry utilities
 export {
@@ -82,17 +78,8 @@ export {
 export type { RetryConfig } from "./retry";
 
 // Offline queue
-export {
-  OfflineQueue,
-  getOfflineQueue,
-  enqueueOffline,
-  useOfflineQueue,
-} from "./offline-queue";
-export type {
-  QueuedOperation,
-  OperationType,
-  OfflineQueueConfig,
-} from "./offline-queue";
+export { OfflineQueue, getOfflineQueue, enqueueOffline, useOfflineQueue } from "./offline-queue";
+export type { QueuedOperation, OperationType, OfflineQueueConfig } from "./offline-queue";
 
 // Types
 export type {
@@ -162,11 +149,7 @@ export {
   submitReviewAPI,
   formDataToReviewInput,
 } from "./reviews";
-export type {
-  SubmitReviewRequest,
-  ReviewResponse,
-  ReviewsListResponse,
-} from "./reviews";
+export type { SubmitReviewRequest, ReviewResponse, ReviewsListResponse } from "./reviews";
 
 // Engagement API
 export {

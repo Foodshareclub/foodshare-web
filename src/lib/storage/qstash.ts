@@ -2,7 +2,7 @@
  * Upstash QStash Client
  * Used for background jobs, scheduled tasks, and workflows
  */
-import { Client, Receiver } from '@upstash/qstash';
+import { Client, Receiver } from "@upstash/qstash";
 
 // Singleton instances
 let qstashClient: Client | null = null;
@@ -82,7 +82,7 @@ export async function publishMessage<T extends Record<string, unknown>>(
     return { messageId: result.messageId, success: true };
   } catch (error) {
     console.error(`[QStash] Failed to publish message to ${url}:`, error);
-    return { messageId: '', success: false };
+    return { messageId: "", success: false };
   }
 }
 
@@ -93,7 +93,7 @@ export async function publishDelayed<T extends Record<string, unknown>>(
   url: string,
   body: T,
   delaySeconds: number,
-  options?: Omit<PublishOptions, 'delay'>
+  options?: Omit<PublishOptions, "delay">
 ): Promise<PublishResult> {
   return publishMessage(url, body, { ...options, delay: delaySeconds });
 }
@@ -120,7 +120,7 @@ export async function createSchedule<T extends Record<string, unknown>>(
     return { scheduleId: result.scheduleId, success: true };
   } catch (error) {
     console.error(`[QStash] Failed to create schedule "${scheduleId}":`, error);
-    return { scheduleId: '', success: false };
+    return { scheduleId: "", success: false };
   }
 }
 
@@ -224,7 +224,7 @@ export async function verifySignature(signature: string, body: string): Promise<
  * Verify request from QStash (for Next.js API routes)
  */
 export async function verifyRequest(request: Request): Promise<boolean> {
-  const signature = request.headers.get('upstash-signature');
+  const signature = request.headers.get("upstash-signature");
   if (!signature) return false;
 
   const body = await request.text();
@@ -233,33 +233,33 @@ export async function verifyRequest(request: Request): Promise<boolean> {
 
 // Common job types for the application
 export const JOB_TYPES = {
-  SEND_EMAIL: 'send-email',
-  PROCESS_IMAGE: 'process-image',
-  CLEANUP_EXPIRED: 'cleanup-expired',
-  SYNC_SEARCH_INDEX: 'sync-search-index',
-  GENERATE_EMBEDDINGS: 'generate-embeddings',
-  SEND_NOTIFICATION: 'send-notification',
-  SYNC_ANALYTICS: 'sync-analytics',
+  SEND_EMAIL: "send-email",
+  PROCESS_IMAGE: "process-image",
+  CLEANUP_EXPIRED: "cleanup-expired",
+  SYNC_SEARCH_INDEX: "sync-search-index",
+  GENERATE_EMBEDDINGS: "generate-embeddings",
+  SEND_NOTIFICATION: "send-notification",
+  SYNC_ANALYTICS: "api-v1-analytics",
 } as const;
 
 export type JobType = (typeof JOB_TYPES)[keyof typeof JOB_TYPES];
 
 // Common cron expressions
 export const CRON_SCHEDULES = {
-  EVERY_MINUTE: '* * * * *',
-  EVERY_5_MINUTES: '*/5 * * * *',
-  EVERY_HOUR: '0 * * * *',
-  EVERY_DAY_MIDNIGHT: '0 0 * * *',
-  EVERY_DAY_6AM: '0 6 * * *',
-  EVERY_WEEK_MONDAY: '0 0 * * 1',
-  EVERY_MONTH_FIRST: '0 0 1 * *',
+  EVERY_MINUTE: "* * * * *",
+  EVERY_5_MINUTES: "*/5 * * * *",
+  EVERY_HOUR: "0 * * * *",
+  EVERY_DAY_MIDNIGHT: "0 0 * * *",
+  EVERY_DAY_6AM: "0 6 * * *",
+  EVERY_WEEK_MONDAY: "0 0 * * 1",
+  EVERY_MONTH_FIRST: "0 0 1 * *",
 } as const;
 
 /**
  * Get the full URL for a job endpoint
  */
 export function getJobEndpoint(jobType: JobType | string): string {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   return `${baseUrl}/api/jobs/${jobType}`;
 }
 
@@ -315,7 +315,7 @@ export async function queueNotification(
  */
 export async function queueSearchIndexSync(
   productId: string,
-  action: 'upsert' | 'delete'
+  action: "upsert" | "delete"
 ): Promise<PublishResult> {
   return publishMessage(
     getJobEndpoint(JOB_TYPES.SYNC_SEARCH_INDEX),
@@ -329,7 +329,7 @@ export async function queueSearchIndexSync(
  */
 export async function queueEmbeddingGeneration(
   contentId: string,
-  contentType: 'product' | 'user' | 'message',
+  contentType: "product" | "user" | "message",
   content: string
 ): Promise<PublishResult> {
   return publishMessage(

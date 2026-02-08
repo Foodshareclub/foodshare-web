@@ -48,10 +48,7 @@ export interface MockErrorResponse {
 /**
  * Create a successful API response matching Edge Function format
  */
-export function mockSuccess<T>(
-  data: T,
-  options: MockResponseOptions = {}
-): MockSuccessResponse<T> {
+export function mockSuccess<T>(data: T, options: MockResponseOptions = {}): MockSuccessResponse<T> {
   return {
     success: true,
     data,
@@ -66,11 +63,7 @@ export function mockSuccess<T>(
 /**
  * Create an error API response matching Edge Function format
  */
-export function mockError(
-  code: string,
-  message: string,
-  details?: unknown
-): MockErrorResponse {
+export function mockError(code: string, message: string, details?: unknown): MockErrorResponse {
   return {
     success: false,
     error: { code, message, details },
@@ -192,32 +185,29 @@ export const defaultHandlers = [
   // Products
   http.get(`${BASE_URL}/functions/v1/api-v1-products`, async () => {
     await delay(50);
-    return HttpResponse.json(
-      mockSuccess([mockFactories.product(), mockFactories.product()])
-    );
+    return HttpResponse.json(mockSuccess([mockFactories.product(), mockFactories.product()]));
   }),
 
   http.get(`${BASE_URL}/functions/v1/api-v1-products/:id`, async ({ params }) => {
     await delay(50);
-    return HttpResponse.json(
-      mockSuccess(mockFactories.product({ id: params.id as string }))
-    );
+    return HttpResponse.json(mockSuccess(mockFactories.product({ id: params.id as string })));
   }),
 
   http.post(`${BASE_URL}/functions/v1/api-v1-products`, async ({ request }) => {
     await delay(100);
-    const body = await request.json() as Record<string, unknown>;
-    return HttpResponse.json(
-      mockSuccess(mockFactories.product(body as Partial<MockProduct>)),
-      { status: 201 }
-    );
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(mockSuccess(mockFactories.product(body as Partial<MockProduct>)), {
+      status: 201,
+    });
   }),
 
   http.put(`${BASE_URL}/functions/v1/api-v1-products/:id`, async ({ params, request }) => {
     await delay(100);
-    const body = await request.json() as Record<string, unknown>;
+    const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json(
-      mockSuccess(mockFactories.product({ id: params.id as string, ...body as Partial<MockProduct> }))
+      mockSuccess(
+        mockFactories.product({ id: params.id as string, ...(body as Partial<MockProduct>) })
+      )
     );
   }),
 
@@ -227,35 +217,31 @@ export const defaultHandlers = [
   }),
 
   // Chat Rooms
-  http.get(`${BASE_URL}/functions/v1/api-v1-food-chat/rooms`, async () => {
+  http.get(`${BASE_URL}/functions/v1/api-v1-chat/rooms`, async () => {
     await delay(50);
     return HttpResponse.json(mockSuccess([mockFactories.room()]));
   }),
 
-  http.post(`${BASE_URL}/functions/v1/api-v1-food-chat/rooms`, async ({ request }) => {
+  http.post(`${BASE_URL}/functions/v1/api-v1-chat/rooms`, async ({ request }) => {
     await delay(100);
-    const body = await request.json() as Record<string, unknown>;
-    return HttpResponse.json(
-      mockSuccess(mockFactories.room(body as Partial<MockRoom>)),
-      { status: 201 }
-    );
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(mockSuccess(mockFactories.room(body as Partial<MockRoom>)), {
+      status: 201,
+    });
   }),
 
   // Messages
-  http.get(`${BASE_URL}/functions/v1/api-v1-food-chat/rooms/:roomId/messages`, async () => {
+  http.get(`${BASE_URL}/functions/v1/api-v1-chat/rooms/:roomId/messages`, async () => {
     await delay(50);
-    return HttpResponse.json(
-      mockSuccess([mockFactories.message(), mockFactories.message()])
-    );
+    return HttpResponse.json(mockSuccess([mockFactories.message(), mockFactories.message()]));
   }),
 
-  http.post(`${BASE_URL}/functions/v1/api-v1-food-chat/rooms/:roomId/messages`, async ({ request }) => {
+  http.post(`${BASE_URL}/functions/v1/api-v1-chat/rooms/:roomId/messages`, async ({ request }) => {
     await delay(100);
-    const body = await request.json() as Record<string, unknown>;
-    return HttpResponse.json(
-      mockSuccess(mockFactories.message(body as Partial<MockMessage>)),
-      { status: 201 }
-    );
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json(mockSuccess(mockFactories.message(body as Partial<MockMessage>)), {
+      status: 201,
+    });
   }),
 
   // Profile
@@ -266,7 +252,7 @@ export const defaultHandlers = [
 
   http.put(`${BASE_URL}/functions/v1/api-v1-profile`, async ({ request }) => {
     await delay(100);
-    const body = await request.json() as Record<string, unknown>;
+    const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json(mockSuccess(mockFactories.user(body as Partial<MockUser>)));
   }),
 ];
@@ -289,55 +275,41 @@ export const errorHandlers = {
   /** Simulate rate limiting */
   rateLimit: (endpoint: string) =>
     http.all(`${BASE_URL}/functions/v1/${endpoint}`, () =>
-      HttpResponse.json(
-        mockError("RATE_LIMIT_EXCEEDED", "Too many requests"),
-        { status: 429 }
-      )
+      HttpResponse.json(mockError("RATE_LIMIT_EXCEEDED", "Too many requests"), { status: 429 })
     ),
 
   /** Simulate server error */
   serverError: (endpoint: string) =>
     http.all(`${BASE_URL}/functions/v1/${endpoint}`, () =>
-      HttpResponse.json(
-        mockError("INTERNAL_ERROR", "Internal server error"),
-        { status: 500 }
-      )
+      HttpResponse.json(mockError("INTERNAL_ERROR", "Internal server error"), { status: 500 })
     ),
 
   /** Simulate authentication error */
   unauthorized: (endpoint: string) =>
     http.all(`${BASE_URL}/functions/v1/${endpoint}`, () =>
-      HttpResponse.json(
-        mockError("UNAUTHORIZED", "Authentication required"),
-        { status: 401 }
-      )
+      HttpResponse.json(mockError("UNAUTHORIZED", "Authentication required"), { status: 401 })
     ),
 
   /** Simulate not found */
   notFound: (endpoint: string) =>
     http.all(`${BASE_URL}/functions/v1/${endpoint}`, () =>
-      HttpResponse.json(
-        mockError("NOT_FOUND", "Resource not found"),
-        { status: 404 }
-      )
+      HttpResponse.json(mockError("NOT_FOUND", "Resource not found"), { status: 404 })
     ),
 
   /** Simulate validation error */
   validation: (endpoint: string, details: unknown) =>
     http.all(`${BASE_URL}/functions/v1/${endpoint}`, () =>
-      HttpResponse.json(
-        mockError("VALIDATION_ERROR", "Validation failed", details),
-        { status: 400 }
-      )
+      HttpResponse.json(mockError("VALIDATION_ERROR", "Validation failed", details), {
+        status: 400,
+      })
     ),
 
   /** Simulate circuit breaker open */
   circuitOpen: (endpoint: string) =>
     http.all(`${BASE_URL}/functions/v1/${endpoint}`, () =>
-      HttpResponse.json(
-        mockError("CIRCUIT_OPEN", "Service temporarily unavailable"),
-        { status: 503 }
-      )
+      HttpResponse.json(mockError("CIRCUIT_OPEN", "Service temporarily unavailable"), {
+        status: 503,
+      })
     ),
 };
 
@@ -359,7 +331,8 @@ export function createHandler<T>(
     if (options.delay) {
       await delay(options.delay);
     }
-    const data = typeof response === "function" ? await (response as () => T | Promise<T>)() : response;
+    const data =
+      typeof response === "function" ? await (response as () => T | Promise<T>)() : response;
     return HttpResponse.json(mockSuccess(data), {
       status: options.status || 200,
       headers: options.headers,

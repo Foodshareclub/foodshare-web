@@ -1,11 +1,11 @@
 /**
  * Food Chat API Client
  *
- * Provides functions for calling the api-v1-food-chat Edge Function.
+ * Provides functions for calling the api-v1-chat Edge Function with mode=food.
  * Used for food sharing chat operations (rooms, messages).
  */
 
-import { apiCall, apiGet, apiPost, apiPut, apiDelete } from "./client";
+import { apiCall, apiGet } from "./client";
 import type { ActionResult } from "@/lib/errors";
 
 // =============================================================================
@@ -85,7 +85,7 @@ export interface RoomWithMessagesResponse {
 // API Functions
 // =============================================================================
 
-const ENDPOINT = "api-v1-food-chat";
+const ENDPOINT = "api-v1-chat";
 
 /**
  * List user's food chat rooms
@@ -98,6 +98,7 @@ export async function listRoomsAPI(options?: {
     data: RoomResponse[];
     pagination: { total: number; hasMore: boolean };
   }>(ENDPOINT, {
+    mode: "food",
     cursor: options?.cursor,
     limit: options?.limit,
   });
@@ -123,6 +124,7 @@ export async function getRoomAPI(
   options?: { limit?: number }
 ): Promise<ActionResult<RoomWithMessagesResponse>> {
   return apiGet<RoomWithMessagesResponse>(ENDPOINT, {
+    mode: "food",
     roomId,
     limit: options?.limit,
   });
@@ -134,10 +136,11 @@ export async function getRoomAPI(
 export async function createRoomAPI(
   input: CreateRoomRequest
 ): Promise<ActionResult<{ roomId: string; created: boolean }>> {
-  return apiPost<{ roomId: string; created: boolean }, CreateRoomRequest>(
-    ENDPOINT,
-    input
-  );
+  return apiCall<{ roomId: string; created: boolean }, CreateRoomRequest>(ENDPOINT, {
+    method: "POST",
+    body: input,
+    query: { mode: "food" },
+  });
 }
 
 /**
@@ -149,7 +152,7 @@ export async function sendMessageAPI(
   return apiCall<MessageResponse, SendMessageRequest>(ENDPOINT, {
     method: "POST",
     body: input,
-    query: { action: "message" },
+    query: { mode: "food", action: "message" },
   });
 }
 
@@ -159,11 +162,11 @@ export async function sendMessageAPI(
 export async function acceptRequestAPI(
   roomId: string
 ): Promise<ActionResult<{ success: boolean; address: string }>> {
-  return apiPut<{ success: boolean; address: string }, UpdateRoomRequest>(
-    ENDPOINT,
-    { action: "accept" },
-    { roomId }
-  );
+  return apiCall<{ success: boolean; address: string }, UpdateRoomRequest>(ENDPOINT, {
+    method: "PUT",
+    body: { action: "accept" },
+    query: { mode: "food", roomId },
+  });
 }
 
 /**
@@ -172,18 +175,19 @@ export async function acceptRequestAPI(
 export async function completeExchangeAPI(
   roomId: string
 ): Promise<ActionResult<{ success: boolean }>> {
-  return apiPut<{ success: boolean }, UpdateRoomRequest>(
-    ENDPOINT,
-    { action: "complete" },
-    { roomId }
-  );
+  return apiCall<{ success: boolean }, UpdateRoomRequest>(ENDPOINT, {
+    method: "PUT",
+    body: { action: "complete" },
+    query: { mode: "food", roomId },
+  });
 }
 
 /**
  * Archive a chat room
  */
-export async function archiveRoomAPI(
-  roomId: string
-): Promise<ActionResult<undefined>> {
-  return apiDelete(ENDPOINT, { roomId });
+export async function archiveRoomAPI(roomId: string): Promise<ActionResult<undefined>> {
+  return apiCall<undefined>(ENDPOINT, {
+    method: "DELETE",
+    query: { mode: "food", roomId },
+  });
 }

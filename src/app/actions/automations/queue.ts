@@ -29,7 +29,7 @@ export async function triggerQueueProcessing(): Promise<
       return error("Missing Supabase configuration", "CONFIG_ERROR");
     }
 
-    const response = await fetch(`${projectUrl}/functions/v1/process-automation-queue`, {
+    const response = await fetch(`${projectUrl}/functions/v1/api-v1-email/process/automation`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -98,7 +98,7 @@ export async function toggleAutomationCron(
       user.id,
       enabled ? "ENABLE_CRON" : "DISABLE_CRON",
       "automation_cron",
-      "process-automation-queue",
+      "api-v1-email/process/automation",
       { enabled }
     );
 

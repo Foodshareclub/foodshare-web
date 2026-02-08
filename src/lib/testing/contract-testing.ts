@@ -206,13 +206,13 @@ export const productContracts: ContractDefinition[] = [
  */
 export const chatContracts: ContractDefinition[] = [
   {
-    endpoint: "api-v1-food-chat/rooms",
+    endpoint: "api-v1-chat/rooms",
     method: "GET",
     responseSchema: z.array(roomSchema),
     description: "List chat rooms",
   },
   {
-    endpoint: "api-v1-food-chat/rooms",
+    endpoint: "api-v1-chat/rooms",
     method: "POST",
     requestSchema: z.object({
       productId: z.string(),
@@ -222,13 +222,13 @@ export const chatContracts: ContractDefinition[] = [
     description: "Create a chat room",
   },
   {
-    endpoint: "api-v1-food-chat/rooms/:roomId/messages",
+    endpoint: "api-v1-chat/rooms/:roomId/messages",
     method: "GET",
     responseSchema: z.array(messageSchema),
     description: "List messages in a room",
   },
   {
-    endpoint: "api-v1-food-chat/rooms/:roomId/messages",
+    endpoint: "api-v1-chat/rooms/:roomId/messages",
     method: "POST",
     requestSchema: z.object({
       content: z.string().min(1),
@@ -283,9 +283,7 @@ export function validateRequest<T>(
 
   return {
     valid: false,
-    errors: result.error.issues.map(
-      (e) => `${e.path.join(".")}: ${e.message}`
-    ),
+    errors: result.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`),
   };
 }
 
@@ -303,9 +301,7 @@ export function validateResponse<TReq, TRes>(
 
   return {
     valid: false,
-    errors: result.error.issues.map(
-      (e) => `${e.path.join(".")}: ${e.message}`
-    ),
+    errors: result.error.issues.map((e) => `${e.path.join(".")}: ${e.message}`),
   };
 }
 
@@ -314,11 +310,7 @@ export function validateResponse<TReq, TRes>(
  */
 export async function runContractTests(
   contracts: ContractDefinition[],
-  fetchFn: (
-    endpoint: string,
-    method: string,
-    body?: unknown
-  ) => Promise<unknown>
+  fetchFn: (endpoint: string, method: string, body?: unknown) => Promise<unknown>
 ): Promise<ContractTestSuite> {
   const results: ContractTestResult[] = [];
 
@@ -333,10 +325,7 @@ export async function runContractTests(
     try {
       // Validate example request if provided
       if (contract.exampleRequest && contract.requestSchema) {
-        const requestValidation = validateRequest(
-          contract,
-          contract.exampleRequest
-        );
+        const requestValidation = validateRequest(contract, contract.exampleRequest);
         result.requestValid = requestValidation.valid;
         if (!requestValidation.valid) {
           result.errors.push(...requestValidation.errors.map((e) => `Request: ${e}`));
@@ -345,11 +334,7 @@ export async function runContractTests(
       }
 
       // Fetch and validate response
-      const response = await fetchFn(
-        contract.endpoint,
-        contract.method,
-        contract.exampleRequest
-      );
+      const response = await fetchFn(contract.endpoint, contract.method, contract.exampleRequest);
 
       const responseValidation = validateResponse(contract, response);
       result.responseValid = responseValidation.valid;
@@ -406,17 +391,13 @@ export function generateContractDocs(contracts: ContractDefinition[]): string {
 /**
  * Custom Jest matcher for contract validation
  */
-export function toMatchContract<T>(
-  received: unknown,
-  contract: ContractDefinition<unknown, T>
-) {
+export function toMatchContract<T>(received: unknown, contract: ContractDefinition<unknown, T>) {
   const validation = validateResponse(contract, received);
 
   if (validation.valid) {
     return {
       pass: true,
-      message: () =>
-        `Expected response not to match contract ${contract.endpoint}`,
+      message: () => `Expected response not to match contract ${contract.endpoint}`,
     };
   }
 
