@@ -634,3 +634,44 @@ export async function updateUserAddress(
     return serverActionError("Failed to update user address", "UNKNOWN_ERROR");
   }
 }
+
+/**
+ * Update address directly from an address object (upsert)
+ * Used by AddressBlock component
+ */
+export async function updateAddressDirect(address: {
+  address_line_1: string;
+  address_line_2: string;
+  city: string;
+  country: number;
+  county: string;
+  postal_code: string;
+  profile_id: string;
+  state_province: string;
+}): Promise<ServerActionResult<void>> {
+  try {
+    const { supabase, user, error: authError } = await verifyAuth();
+    if (authError || !supabase || !user) {
+      return serverActionError(authError || "Not authenticated", "UNAUTHORIZED");
+    }
+
+    if (address.profile_id !== user.id) {
+      return serverActionError("Not authorized to update this address", "FORBIDDEN");
+    }
+
+    const { error } = await supabase.from("address").upsert(address);
+
+    if (error) {
+      console.error("[updateAddressDirect] Failed:", error);
+      return serverActionError(error.message, "DATABASE_ERROR");
+    }
+
+    revalidatePath("/profile");
+    revalidatePath("/settings");
+
+    return successVoid();
+  } catch (error) {
+    console.error("[updateAddressDirect] Error:", error);
+    return serverActionError("Failed to update address", "INTERNAL_ERROR");
+  }
+}

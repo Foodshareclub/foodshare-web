@@ -10,14 +10,8 @@
 // Backward compatibility re-export
 export { auth, type AuthPayload, type ProviderType } from "@/lib/auth";
 
-// Profile & User
-export * from "./profileAPI";
-
 // Storage
 export * from "./storageAPI";
-
-// Products
-export * from "./productAPI";
 
 // Chat
 export * from "./chatAPI";

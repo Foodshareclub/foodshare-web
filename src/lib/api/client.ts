@@ -9,6 +9,8 @@ import type { APIResponse, APIErrorResponse } from "./types";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult, ErrorCode } from "@/lib/errors";
 
+const APP_VERSION = "3.0.1";
+
 // =============================================================================
 // Configuration
 // =============================================================================
@@ -52,8 +54,15 @@ const ERROR_CODE_MAP: Record<string, ErrorCode> = {
   CONFLICT: "CONFLICT",
   RATE_LIMITED: "RATE_LIMIT",
   RATE_LIMIT: "RATE_LIMIT",
+  RATE_LIMIT_EXCEEDED: "RATE_LIMIT",
   INTERNAL_ERROR: "INTERNAL_ERROR",
   NETWORK_ERROR: "NETWORK_ERROR",
+  TIMEOUT: "TIMEOUT",
+  SERVICE_UNAVAILABLE: "SERVICE_UNAVAILABLE",
+  PAYLOAD_TOO_LARGE: "PAYLOAD_TOO_LARGE",
+  CIRCUIT_OPEN: "CIRCUIT_OPEN",
+  AUTHENTICATION_ERROR: "UNAUTHORIZED",
+  AUTHORIZATION_ERROR: "FORBIDDEN",
 };
 
 function mapErrorCode(code: string): ErrorCode {
@@ -85,6 +94,7 @@ export async function apiCall<TResponse, TBody = unknown>(
   options: APICallOptions<TBody>
 ): Promise<ActionResult<TResponse>> {
   const { method, body, query, idempotencyKey, timeout = 30000, skipAuth = false } = options;
+  const correlationId = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
   try {
     // Build URL with query params
@@ -121,6 +131,8 @@ export async function apiCall<TResponse, TBody = unknown>(
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       "X-Client-Platform": "web",
+      "X-Correlation-Id": correlationId,
+      "X-App-Version": APP_VERSION,
     };
 
     if (authToken) {
@@ -197,7 +209,7 @@ export async function apiCall<TResponse, TBody = unknown>(
       }
     }
 
-    console.error("[apiCall] Unexpected error:", error);
+    console.error(`[apiCall] Unexpected error (correlation: ${correlationId}):`, error);
     return {
       success: false,
       error: {

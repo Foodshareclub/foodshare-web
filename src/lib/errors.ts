@@ -8,16 +8,20 @@
 // ============================================================================
 
 export type ErrorCode =
-  | 'UNAUTHORIZED'
-  | 'FORBIDDEN'
-  | 'NOT_FOUND'
-  | 'VALIDATION_ERROR'
-  | 'DATABASE_ERROR'
-  | 'NETWORK_ERROR'
-  | 'RATE_LIMIT'
-  | 'INTERNAL_ERROR'
-  | 'CONFLICT'
-  | 'UNKNOWN_ERROR';
+  | "UNAUTHORIZED"
+  | "FORBIDDEN"
+  | "NOT_FOUND"
+  | "VALIDATION_ERROR"
+  | "DATABASE_ERROR"
+  | "NETWORK_ERROR"
+  | "RATE_LIMIT"
+  | "INTERNAL_ERROR"
+  | "CONFLICT"
+  | "UNKNOWN_ERROR"
+  | "TIMEOUT"
+  | "SERVICE_UNAVAILABLE"
+  | "PAYLOAD_TOO_LARGE"
+  | "CIRCUIT_OPEN";
 
 export interface AppError {
   code: ErrorCode;
@@ -44,32 +48,44 @@ export function createError(code: ErrorCode, message: string, details?: unknown)
   return { code, message, details };
 }
 
-export function unauthorizedError(message = 'Authentication required'): AppError {
-  return createError('UNAUTHORIZED', message);
+export function unauthorizedError(message = "Authentication required"): AppError {
+  return createError("UNAUTHORIZED", message);
 }
 
-export function forbiddenError(message = 'You do not have permission to perform this action'): AppError {
-  return createError('FORBIDDEN', message);
+export function forbiddenError(
+  message = "You do not have permission to perform this action"
+): AppError {
+  return createError("FORBIDDEN", message);
 }
 
-export function notFoundError(resource = 'Resource'): AppError {
-  return createError('NOT_FOUND', `${resource} not found`);
+export function notFoundError(resource = "Resource"): AppError {
+  return createError("NOT_FOUND", `${resource} not found`);
 }
 
 export function validationError(message: string, details?: unknown): AppError {
-  return createError('VALIDATION_ERROR', message, details);
+  return createError("VALIDATION_ERROR", message, details);
 }
 
 export function databaseError(message: string, details?: unknown): AppError {
-  return createError('DATABASE_ERROR', message, details);
+  return createError("DATABASE_ERROR", message, details);
 }
 
-export function internalError(message = 'An unexpected error occurred'): AppError {
-  return createError('INTERNAL_ERROR', message);
+export function internalError(message = "An unexpected error occurred"): AppError {
+  return createError("INTERNAL_ERROR", message);
 }
 
 export function conflictError(message: string): AppError {
-  return createError('CONFLICT', message);
+  return createError("CONFLICT", message);
+}
+
+export function rateLimitError(
+  message = "Too many requests. Please wait a moment and try again."
+): AppError {
+  return createError("RATE_LIMIT", message);
+}
+
+export function timeoutError(message = "The request timed out. Please try again."): AppError {
+  return createError("TIMEOUT", message);
 }
 
 // ============================================================================
@@ -100,7 +116,7 @@ export async function withErrorHandling<T>(
   fn: () => Promise<T>,
   errorContext?: string
 ): Promise<ActionResult<T>> {
-  const ctx = errorContext ? `[${errorContext}]` : '[withErrorHandling]';
+  const ctx = errorContext ? `[${errorContext}]` : "[withErrorHandling]";
   console.log(`${ctx} 🔄 Starting...`);
 
   try {
@@ -114,18 +130,18 @@ export async function withErrorHandling<T>(
     // Handle known error types
     if (error instanceof Error) {
       // Supabase specific errors
-      if ('code' in error) {
+      if ("code" in error) {
         const pgError = error as Error & { code: string };
         console.error(`${ctx} 📋 Postgres error code:`, pgError.code);
 
         switch (pgError.code) {
-          case 'PGRST116': // Not found
+          case "PGRST116": // Not found
             return failure(notFoundError());
-          case '23505': // Unique violation
-            return failure(conflictError('This item already exists'));
-          case '23503': // Foreign key violation
-            return failure(validationError('Referenced item does not exist'));
-          case '42501': // Insufficient privilege
+          case "23505": // Unique violation
+            return failure(conflictError("This item already exists"));
+          case "23503": // Foreign key violation
+            return failure(validationError("Referenced item does not exist"));
+          case "42501": // Insufficient privilege
             return failure(forbiddenError());
           default:
             return failure(databaseError(error.message));
@@ -133,8 +149,7 @@ export async function withErrorHandling<T>(
       }
 
       // Auth errors
-      if (error.message.includes('not authenticated') ||
-        error.message.includes('JWT')) {
+      if (error.message.includes("not authenticated") || error.message.includes("JWT")) {
         console.error(`${ctx} 🔐 Auth error detected`);
         return failure(unauthorizedError());
       }
@@ -150,21 +165,18 @@ export async function withErrorHandling<T>(
 // Zod Validation Helper
 // ============================================================================
 
-import { z, type ZodError, type ZodSchema } from 'zod';
+import { type ZodError, type ZodSchema } from "zod";
 
 /**
  * Validate data against a Zod schema
  * Returns ActionResult with validation errors if invalid
  */
-export function validateWithSchema<T>(
-  schema: ZodSchema<T>,
-  data: unknown
-): ActionResult<T> {
+export function validateWithSchema<T>(schema: ZodSchema<T>, data: unknown): ActionResult<T> {
   const result = schema.safeParse(data);
 
   if (!result.success) {
     const errors = formatZodErrors(result.error);
-    return failure(validationError('Validation failed', errors));
+    return failure(validationError("Validation failed", errors));
   }
 
   return success(result.data);
@@ -177,7 +189,7 @@ export function formatZodErrors(error: ZodError): Record<string, string[]> {
   const errors: Record<string, string[]> = {};
 
   for (const issue of error.issues) {
-    const path = issue.path.join('.') || 'value';
+    const path = issue.path.join(".") || "value";
     if (!errors[path]) {
       errors[path] = [];
     }
@@ -203,44 +215,65 @@ export type ServerActionResult<T = void> = ActionResult<T>;
  * @param code - Optional error code (defaults to INTERNAL_ERROR)
  */
 export function serverActionError(message: string, code?: ErrorCode): ActionResult<never> {
-  return failure(createError(code ?? 'INTERNAL_ERROR', message));
+  return failure(createError(code ?? "INTERNAL_ERROR", message));
 }
 
 export const getAuthErrorMessage = getErrorMessage;
-export const sanitizeErrorMessage = (msg: string) => msg.replace(/[<>&'"]/g, '');
+export const sanitizeErrorMessage = (msg: string) => msg.replace(/[<>&'"]/g, "");
 export const isNetworkError = (error: unknown) =>
-  error instanceof Error && error.message.toLowerCase().includes('network');
+  error instanceof Error && error.message.toLowerCase().includes("network");
 export const isAuthError = (error: unknown) =>
-  isAppError(error) && (error.code === 'UNAUTHORIZED' || error.code === 'FORBIDDEN');
+  isAppError(error) && (error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN");
 export const getErrorSuggestion = (error: AppError) => {
   switch (error.code) {
-    case 'UNAUTHORIZED': return 'Try signing in again';
-    case 'NETWORK_ERROR': return 'Check your internet connection';
-    default: return 'Please try again later';
+    case "UNAUTHORIZED":
+      return "Try signing in again";
+    case "NETWORK_ERROR":
+      return "Check your internet connection";
+    case "TIMEOUT":
+      return "The server took too long to respond. Try again.";
+    case "SERVICE_UNAVAILABLE":
+      return "The service is temporarily down. Try again in a few minutes.";
+    case "PAYLOAD_TOO_LARGE":
+      return "The data you sent is too large. Try reducing the file size.";
+    case "CIRCUIT_OPEN":
+      return "This service is temporarily unavailable. Try again shortly.";
+    case "RATE_LIMIT":
+      return "You're making requests too quickly. Wait a moment and try again.";
+    default:
+      return "Please try again later";
   }
 };
 
 export function getErrorMessage(error: AppError): string {
   switch (error.code) {
-    case 'UNAUTHORIZED':
-      return 'Please sign in to continue';
-    case 'FORBIDDEN':
-      return 'You don\'t have permission to do this';
-    case 'NOT_FOUND':
-      return 'The item you\'re looking for doesn\'t exist';
-    case 'VALIDATION_ERROR':
+    case "UNAUTHORIZED":
+      return "Please sign in to continue";
+    case "FORBIDDEN":
+      return "You don't have permission to do this";
+    case "NOT_FOUND":
+      return "The item you're looking for doesn't exist";
+    case "VALIDATION_ERROR":
       return error.message;
-    case 'DATABASE_ERROR':
-      return 'A database error occurred. Please try again.';
-    case 'NETWORK_ERROR':
-      return 'Unable to connect. Please check your internet connection.';
-    case 'RATE_LIMIT':
-      return 'Too many requests. Please wait a moment and try again.';
-    case 'CONFLICT':
+    case "DATABASE_ERROR":
+      return "A database error occurred. Please try again.";
+    case "NETWORK_ERROR":
+      return "Unable to connect. Please check your internet connection.";
+    case "RATE_LIMIT":
+      return "Too many requests. Please wait a moment and try again.";
+    case "CONFLICT":
       return error.message;
-    case 'INTERNAL_ERROR':
+    case "TIMEOUT":
+      return "The request timed out. Please try again.";
+    case "SERVICE_UNAVAILABLE":
+      return "The service is temporarily unavailable. Please try again later.";
+    case "PAYLOAD_TOO_LARGE":
+      return "The request is too large. Please reduce the size and try again.";
+    case "CIRCUIT_OPEN":
+      return "This service is temporarily unavailable. Please try again shortly.";
+    case "INTERNAL_ERROR":
     default:
-      return 'Something went wrong. Please try again later.';
+      return "Something went wrong. Please try again later.";
   }
 }
 
@@ -249,19 +282,16 @@ export function getErrorMessage(error: AppError): string {
 // ============================================================================
 
 export function isAppError(error: unknown): error is AppError {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    'message' in error
-  );
+  return typeof error === "object" && error !== null && "code" in error && "message" in error;
 }
 
 export function isSuccessResult<T>(result: ActionResult<T>): result is { success: true; data: T } {
   return result.success === true;
 }
 
-export function isFailureResult<T>(result: ActionResult<T>): result is { success: false; error: AppError } {
+export function isFailureResult<T>(
+  result: ActionResult<T>
+): result is { success: false; error: AppError } {
   return result.success === false;
 }
 
@@ -277,13 +307,13 @@ export function getUnknownErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
   }
-  if (typeof error === 'string') {
+  if (typeof error === "string") {
     return error;
   }
-  if (typeof error === 'object' && error !== null && 'message' in error) {
+  if (typeof error === "object" && error !== null && "message" in error) {
     return String((error as { message: unknown }).message);
   }
-  return 'An unknown error occurred';
+  return "An unknown error occurred";
 }
 
 /**
@@ -305,8 +335,6 @@ export function hasErrorCode<T extends string>(
   code: T
 ): error is Error & { code: T } {
   return (
-    error instanceof Error &&
-    'code' in error &&
-    (error as Error & { code: unknown }).code === code
+    error instanceof Error && "code" in error && (error as Error & { code: unknown }).code === code
   );
 }

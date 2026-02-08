@@ -2,8 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
-// Structured logger available for future use
-// import { createActionLogger } from "@/lib/structured-logger";
+import { checkUserIsAdmin } from "@/lib/data/admin-check";
 
 // Type for forum comments (defined locally, not exported from "use server" file)
 interface ForumComment {
@@ -193,16 +192,10 @@ export async function deleteForumPost(id: number): Promise<{ success: boolean; e
   }
 
   // Verify ownership or admin
-  const { data: post } = await supabase.from("forum").select("profile_id").eq("id", id).single();
-
-  const { data: userRole } = await supabase
-    .from("user_roles")
-    .select("roles!inner(name)")
-    .eq("profile_id", user.id)
-    .in("roles.name", ["admin", "superadmin"])
-    .maybeSingle();
-
-  const isAdmin = !!userRole;
+  const [{ data: post }, { isAdmin }] = await Promise.all([
+    supabase.from("forum").select("profile_id").eq("id", id).single(),
+    checkUserIsAdmin(user.id),
+  ]);
 
   if (post?.profile_id !== user.id && !isAdmin) {
     return { success: false, error: "Not authorized to delete this post" };
@@ -296,20 +289,14 @@ export async function deleteComment(
     return { success: false, error: "Not authenticated" };
   }
 
-  // Fetch comment and profile in parallel to avoid waterfall
-  const [commentResult, profileResult] = await Promise.all([
+  // Fetch comment and admin status in parallel to avoid waterfall
+  const [commentResult, adminResult] = await Promise.all([
     supabase.from("comments").select("user_id, forum_id").eq("id", commentId).single(),
-    supabase
-      .from("user_roles")
-      .select("roles!inner(name)")
-      .eq("profile_id", user.id)
-      .in("roles.name", ["admin", "superadmin"])
-      .maybeSingle(),
+    checkUserIsAdmin(user.id),
   ]);
 
   const comment = commentResult.data;
-  const userRole = profileResult.data;
-  const isAdmin = !!userRole;
+  const isAdmin = adminResult.isAdmin;
 
   if (comment?.user_id !== user.id && !isAdmin) {
     return { success: false, error: "Not authorized to delete this comment" };

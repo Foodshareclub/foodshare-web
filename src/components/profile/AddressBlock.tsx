@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getAllCountries } from "@/hooks";
-import { profileAPI, type AddressType, type CountryType } from "@/api/profileAPI";
+import type { AddressType, CountryType } from "@/api/profileAPI";
+import { updateAddressDirect } from "@/app/actions/profile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -97,7 +98,7 @@ export const AddressBlock: React.FC<AddressBlockProps> = ({
   };
 
   const onSaveHandler = async () => {
-    await profileAPI.updateAddress(addressObject);
+    await updateAddressDirect(addressObject);
     toggleEditMode();
     router.refresh();
   };

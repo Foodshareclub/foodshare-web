@@ -16,7 +16,9 @@ export interface APISuccessResponse<T> {
     requestId: string;
     timestamp: string;
     version?: string;
+    responseTime?: number;
   };
+  uiHints?: UIHints;
 }
 
 export interface APIErrorResponse {
@@ -25,10 +27,13 @@ export interface APIErrorResponse {
     code: string;
     message: string;
     details?: unknown;
+    retryable?: boolean;
+    retryAfterMs?: number;
   };
   meta?: {
     requestId: string;
     timestamp: string;
+    responseTime?: number;
   };
 }
 
@@ -42,11 +47,27 @@ export interface APIPaginatedResponse<T> {
     limit: number;
     total: number;
     hasMore: boolean;
+    nextCursor?: string;
   };
   meta?: {
     requestId: string;
     timestamp: string;
+    responseTime?: number;
   };
+  uiHints?: UIHints;
+}
+
+// =============================================================================
+// UI Hints (sent by backend for client rendering guidance)
+// =============================================================================
+
+export interface UIHints {
+  refreshAfter?: number;
+  displayMode?: string;
+  badges?: string[];
+  pullToRefresh?: boolean;
+  showEmptyState?: boolean;
+  emptyStateMessage?: string;
 }
 
 // =============================================================================
@@ -177,5 +198,12 @@ export const ERROR_CODE_MAP: Record<string, string> = {
   FORBIDDEN: "FORBIDDEN",
   CONFLICT: "CONFLICT",
   RATE_LIMITED: "RATE_LIMIT",
+  RATE_LIMIT_EXCEEDED: "RATE_LIMIT",
   INTERNAL_ERROR: "INTERNAL_ERROR",
+  TIMEOUT: "TIMEOUT",
+  SERVICE_UNAVAILABLE: "SERVICE_UNAVAILABLE",
+  PAYLOAD_TOO_LARGE: "PAYLOAD_TOO_LARGE",
+  CIRCUIT_OPEN: "CIRCUIT_OPEN",
+  AUTHENTICATION_ERROR: "UNAUTHORIZED",
+  AUTHORIZATION_ERROR: "FORBIDDEN",
 } as const;

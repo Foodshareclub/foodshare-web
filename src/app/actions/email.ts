@@ -16,6 +16,7 @@ import { createClient } from "@/lib/supabase/server";
 import { serverActionError, type ServerActionResult } from "@/lib/errors";
 import type { ErrorCode } from "@/lib/errors";
 import { escapeHtml } from "@/lib/utils";
+import { checkUserIsAdmin } from "@/lib/data/admin-check";
 import { sendEmailTask, type SendEmailPayload } from "@/trigger/email-queue";
 import { sendEmailNotification } from "@/lib/notifications";
 
@@ -137,16 +138,7 @@ async function verifyAdminAccess(): Promise<AuthError | AuthSuccess> {
     return { error: "You must be logged in", code: "UNAUTHORIZED" };
   }
 
-  const { data: userRoles } = await supabase
-    .from("user_roles")
-    .select("roles!inner(name)")
-    .eq("profile_id", user.id);
-
-  const roles = (userRoles || [])
-    .map((r) => (r.roles as unknown as { name: string })?.name)
-    .filter(Boolean);
-
-  const isAdmin = roles.includes("admin") || roles.includes("superadmin");
+  const { isAdmin } = await checkUserIsAdmin(user.id);
 
   if (!isAdmin) {
     return { error: "Admin access required", code: "FORBIDDEN" };

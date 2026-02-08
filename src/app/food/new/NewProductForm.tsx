@@ -30,6 +30,7 @@ import {
   ImagePlus,
   Sparkles,
 } from "lucide-react";
+import { LISTING } from "@/constants/validation";
 import { createProduct } from "@/app/actions/products";
 import { generateListingDraft } from "@/app/actions/ai-draft";
 import { resizeImagesForAI } from "@/lib/image/resize-for-ai";
@@ -576,10 +577,10 @@ export function NewProductForm({
                     onChange={(e) => handleInputChange("post_name", e.target.value)}
                     placeholder='e.g., "Sarah M. - Community Food Rescuer"'
                     className="w-full"
-                    maxLength={100}
+                    maxLength={LISTING.title.maxLength}
                   />
                   <p className="text-sm text-muted-foreground mt-1">
-                    {formData.post_name.length}/100 characters
+                    {formData.post_name.length}/{LISTING.title.maxLength} characters
                   </p>
                 </div>
 
@@ -594,10 +595,10 @@ export function NewProductForm({
                     onChange={(e) => handleInputChange("post_description", e.target.value)}
                     placeholder="Why do you want to volunteer? What skills do you bring? What motivates you to help reduce food waste?"
                     className="w-full min-h-[140px]"
-                    maxLength={500}
+                    maxLength={LISTING.description.maxLength}
                   />
                   <p className="text-sm text-muted-foreground mt-1">
-                    {formData.post_description.length}/500 characters
+                    {formData.post_description.length}/{LISTING.description.maxLength} characters
                   </p>
                 </div>
 
@@ -824,10 +825,10 @@ export function NewProductForm({
                     onChange={(e) => handleInputChange("post_name", e.target.value)}
                     placeholder="e.g., Fresh Homemade Pasta"
                     className="w-full"
-                    maxLength={100}
+                    maxLength={LISTING.title.maxLength}
                   />
                   <p className="text-sm text-muted-foreground mt-1">
-                    {formData.post_name.length}/100 characters
+                    {formData.post_name.length}/{LISTING.title.maxLength} characters
                   </p>
                 </div>
 
@@ -842,10 +843,10 @@ export function NewProductForm({
                     onChange={(e) => handleInputChange("post_description", e.target.value)}
                     placeholder="Describe your item in detail..."
                     className="w-full min-h-[120px]"
-                    maxLength={500}
+                    maxLength={LISTING.description.maxLength}
                   />
                   <p className="text-sm text-muted-foreground mt-1">
-                    {formData.post_description.length}/500 characters
+                    {formData.post_description.length}/{LISTING.description.maxLength} characters
                   </p>
                 </div>
 
