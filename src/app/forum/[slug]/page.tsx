@@ -197,6 +197,7 @@ export default async function ForumPostPage({ params }: PageProps) {
           {/* Author & Meta */}
           <div className="flex items-center justify-between flex-wrap gap-4 mb-6 pb-6 border-b border-border">
             <div className="flex items-center gap-3">
+              {/* eslint-disable @next/next/no-img-element */}
               {post.profiles?.avatar_url ? (
                 <img
                   src={post.profiles.avatar_url}
@@ -210,6 +211,7 @@ export default async function ForumPostPage({ params }: PageProps) {
                   </span>
                 </div>
               )}
+              {/* eslint-enable @next/next/no-img-element */}
               <div>
                 <p className="font-semibold">
                   {post.profiles?.nickname || post.profiles?.first_name || "Anonymous"}
@@ -237,6 +239,7 @@ export default async function ForumPostPage({ params }: PageProps) {
           {/* Post Image */}
           {post.forum_post_image && (
             <div className="mb-6 rounded-xl overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={post.forum_post_image}
                 alt={post.forum_post_name || "Post image"}

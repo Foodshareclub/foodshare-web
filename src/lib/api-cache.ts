@@ -23,7 +23,9 @@ interface CacheOptions {
 }
 
 class APICache {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private cache = new Map<string, CacheEntry<any>>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private pendingRequests = new Map<string, PendingRequest<any>>();
   private stats = {
     hits: 0,
@@ -200,8 +202,8 @@ export const apiCache = new APICache();
 setInterval(() => apiCache.cleanup(), 300000);
 
 // Expose stats in development
-if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
-  (window as any).apiCacheStats = () => apiCache.getStats();
+if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
+  (window as unknown as Record<string, unknown>).apiCacheStats = () => apiCache.getStats();
 }
 
 /**

@@ -28,7 +28,11 @@
     "postinstall": "bun run patch-package",
     "import:foodbanks": "bun run scripts/foodbank-import/index.ts",
     "email:dev": "bunx email dev -p 3001 --dir src/emails",
-    "email:export": "bunx email export --outDir src/emails/templates/exported"
+    "email:export": "bunx email export --outDir src/emails/templates/exported",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f web"
   },
   "dependencies": {
     "@ai-sdk/xai": "^2.0.39",

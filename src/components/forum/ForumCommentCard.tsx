@@ -110,6 +110,7 @@ export function ForumCommentCard({
               <div className="flex items-center gap-3">
                 {/* Avatar with gradient fallback */}
                 <div className="relative">
+                  {/* eslint-disable @next/next/no-img-element */}
                   {comment.profiles?.avatar_url ? (
                     <img
                       src={comment.profiles.avatar_url}
@@ -123,6 +124,7 @@ export function ForumCommentCard({
                       </span>
                     </div>
                   )}
+                  {/* eslint-enable @next/next/no-img-element */}
                   {/* Post author badge */}
                   {isPostAuthor && (
                     <span className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
