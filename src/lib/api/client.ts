@@ -9,7 +9,7 @@ import type { APIResponse, APIErrorResponse } from "./types";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult, ErrorCode } from "@/lib/errors";
 
-const APP_VERSION = "3.0.1";
+const APP_VERSION = "3.0.2";
 
 // =============================================================================
 // Configuration
