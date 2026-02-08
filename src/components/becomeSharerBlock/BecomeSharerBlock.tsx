@@ -1,8 +1,9 @@
-'use client';
+"use client";
 
 import type { StaticImageData } from "next/image";
 import Link from "next/link";
 
+import { AddListingButton } from "./AddListingButton";
 import { photoObj } from "@/utils/navigationActions";
 import {
   DropdownMenu,
@@ -11,7 +12,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { AddListingButton } from "./AddListingButton";
 
 type ListingMenuItemProps = {
   value: string;
@@ -21,10 +21,14 @@ type ListingMenuItemProps = {
 
 // React Compiler handles memoization automatically
 function ListingMenuItem({ value, icon, label }: ListingMenuItemProps) {
-  const iconSrc = typeof icon === 'string' ? icon : icon.src;
+  const iconSrc = typeof icon === "string" ? icon : icon.src;
   return (
-    <DropdownMenuItem asChild className="rounded-lg hover:bg-[rgba(255,45,85,0.1)] transition-colors cursor-pointer">
+    <DropdownMenuItem
+      asChild
+      className="rounded-lg hover:bg-[rgba(255,45,85,0.1)] transition-colors cursor-pointer"
+    >
       <Link href={`/new?type=${value}`} className="flex items-center gap-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={iconSrc} className="w-5 h-5" alt={label} />
         <span className="text-sm">{label}</span>
       </Link>

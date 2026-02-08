@@ -16,10 +16,13 @@ export const TitleSuggestions: React.FC<TitleSuggestionsProps> = ({
   currentTitle,
 }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const suggestions =
-    category && category in titleSuggestions
-      ? titleSuggestions[category as keyof typeof titleSuggestions]
-      : [];
+  const suggestions = useMemo(
+    () =>
+      category && category in titleSuggestions
+        ? titleSuggestions[category as keyof typeof titleSuggestions]
+        : [],
+    [category]
+  );
 
   const filteredSuggestions = useMemo(() => {
     if (!currentTitle) return suggestions.slice(0, 4);

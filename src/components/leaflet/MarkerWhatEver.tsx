@@ -4,7 +4,7 @@ import type { LatLngExpression } from "leaflet";
 import { Icon } from "leaflet";
 import type { FC } from "react";
 import React, { useEffect } from "react";
-import { Circle, Marker, Popup, useMap } from "react-leaflet";
+import { Marker, Popup, useMap } from "react-leaflet";
 import icon from "@/assets/location-red.svg";
 
 type MarkerType = {
@@ -51,6 +51,7 @@ const MarkerWhatEver: FC<MarkerType> = ({
   useEffect(() => {
     if (valOne) mapFlyTo();
     if (valTwo) setView();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [valOne, valTwo]);
   return (
     <div>
@@ -65,7 +66,7 @@ const MarkerWhatEver: FC<MarkerType> = ({
         icon={skater}
         position={location}
         eventHandlers={{
-          click: (e) => {},
+          click: () => {},
         }}
       >
         <Popup>

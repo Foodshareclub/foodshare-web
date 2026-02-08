@@ -46,7 +46,7 @@ export function AdminBreadcrumb() {
       >
         <Home className="h-4 w-4" />
       </Link>
-      {items.slice(1).map((item, index) => (
+      {items.slice(1).map((item, _index) => (
         <div key={item.href} className="flex items-center gap-1">
           <ChevronRight className="h-4 w-4" />
           {item.isLast ? (

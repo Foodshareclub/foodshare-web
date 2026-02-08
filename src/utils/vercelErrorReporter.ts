@@ -20,7 +20,7 @@ interface ErrorReport {
     commit: string;
     branch: string;
   };
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
 }
 
 /**
@@ -45,7 +45,7 @@ function getDeploymentInfo() {
 /**
  * Create error report
  */
-function createErrorReport(error: Error, context?: Record<string, any>): ErrorReport {
+function createErrorReport(error: Error, context?: Record<string, unknown>): ErrorReport {
   return {
     id: generateErrorId(),
     timestamp: new Date().toISOString(),
@@ -65,8 +65,14 @@ async function sendToVercelAnalytics(report: ErrorReport) {
   try {
     // Vercel Analytics automatically tracks errors via window.onerror
     // But we can also send custom events
-    if ((window as any).va) {
-      (window as any).va("track", "Error", {
+    if ((window as unknown as Record<string, unknown>).va) {
+      (
+        (window as unknown as Record<string, unknown>).va as (
+          action: string,
+          event: string,
+          data: Record<string, string>
+        ) => void
+      )("track", "Error", {
         error_id: report.id,
         error_message: report.message,
         deployment_env: report.deployment.env,
@@ -102,7 +108,7 @@ function storeErrorLocally(report: ErrorReport) {
 /**
  * Report error
  */
-export async function reportError(error: Error, context?: Record<string, any>) {
+export async function reportError(error: Error, context?: Record<string, unknown>) {
   const report = createErrorReport(error, context);
 
   logger.error("Reporting error to Vercel", error, {
@@ -198,7 +204,7 @@ export function monitorDeploymentErrors() {
  * Expose to window for debugging
  */
 if (typeof window !== "undefined") {
-  (window as any).__vercelErrors = {
+  (window as unknown as Record<string, unknown>).__vercelErrors = {
     report: reportError,
     getStored: getStoredErrors,
     clear: clearStoredErrors,

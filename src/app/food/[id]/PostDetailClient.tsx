@@ -29,7 +29,6 @@ import { PostTypeBadge } from "@/components/post/PostTypeBadge";
 import { PostStatsCard } from "@/components/post/PostStatsCard";
 import { PostDetailSection } from "@/components/post/PostDetailSection";
 import { cn } from "@/lib/utils";
-import { getPostTypeConfig } from "@/lib/constants";
 import type { InitialProductStateType } from "@/types/product.types";
 import type { AuthUser } from "@/lib/data/auth";
 import { isValidImageUrl } from "@/lib/image";
@@ -65,7 +64,6 @@ export function PostDetailClient({ post, user, isAdmin = false }: PostDetailClie
   const isOwner = userId === post?.profile_id;
   const canEdit = isOwner || isAdmin; // Admins can edit any post
   const postType = post?.post_type || "food";
-  const typeConfig = getPostTypeConfig(postType);
 
   // Avatar URL: Avatar component handles default fallback
   const avatarUrl = profile?.avatar_url || "";

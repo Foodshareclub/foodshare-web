@@ -148,6 +148,7 @@ describe("Segment Builder API", () => {
 
     it("should detect invalid customer type", () => {
       const result = segmentBuilderAPI.validateSegmentFilters({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         customer_type: "invalid" as any,
       });
 

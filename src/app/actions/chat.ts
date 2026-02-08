@@ -16,13 +16,7 @@ import { CACHE_TAGS, invalidateTag, invalidatePostActivityCaches } from "@/lib/d
 import { trackEvent } from "@/app/actions/analytics";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import { logPostContact, logPostArrangement } from "@/app/actions/post-activity";
-import {
-  createRoomAPI,
-  sendMessageAPI,
-  acceptRequestAPI,
-  completeExchangeAPI,
-  archiveRoomAPI,
-} from "@/lib/api/chat";
+import { createRoomAPI, sendMessageAPI } from "@/lib/api/chat";
 import { submitReviewAPI, formDataToReviewInput } from "@/lib/api/reviews";
 
 // Feature flags for Edge Function migration
@@ -126,7 +120,9 @@ export async function sendFoodChatMessage(formData: FormData): Promise<ServerAct
         invalidateTag(CACHE_TAGS.USER_NOTIFICATIONS(user.id));
       }
 
-      return result.success ? successVoid() : serverActionError(result.error.message, result.error.code);
+      return result.success
+        ? successVoid()
+        : serverActionError(result.error.message, result.error.code);
     }
 
     // Fallback: Direct Supabase path

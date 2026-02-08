@@ -3,17 +3,17 @@
 import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { cn } from "@/lib/utils";
-import { useAdvancedScroll } from "@/hooks";
-import { useAuth } from "@/hooks/useAuth";
 import NavbarLogo from "./NavbarLogo";
 import SearchBar from "./SearchBar";
 import NavbarActions from "./NavbarActions";
 import { CategoryNavigation } from "./organisms";
+import type { NavbarProps } from "./types";
+import { cn } from "@/lib/utils";
+import { useAdvancedScroll } from "@/hooks";
+import { useAuth } from "@/hooks/useAuth";
 
 import { PATH } from "@/utils";
 import { CATEGORIES } from "@/constants/categories";
-import type { NavbarProps } from "./types";
 
 /**
  * Navbar Component - Airbnb Pattern Implementation
@@ -34,7 +34,7 @@ function Navbar({
   mapMode = false,
   initialUnreadCount = 0,
 }: NavbarProps) {
-  const t = useTranslations();
+  const _t = useTranslations();
   const { logout } = useAuth();
   const { isCompact, scrollY } = useAdvancedScroll({
     compactThreshold: 100,

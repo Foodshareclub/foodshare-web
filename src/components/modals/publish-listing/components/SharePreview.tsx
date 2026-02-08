@@ -45,6 +45,7 @@ export const SharePreview: React.FC<SharePreviewProps> = ({
       <div className="rounded-lg border bg-card overflow-hidden">
         {imageUrl && (
           <div className="h-32 bg-muted">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageUrl}
               alt=""

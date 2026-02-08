@@ -3,11 +3,11 @@
  * Fetches auth, chat, and notification data on the server and passes to client Header
  */
 
+import Header from "./Header";
 import { getAuthSession } from "@/lib/data/auth";
-import { getUserChatRooms, type ChatRoom } from "@/lib/data/chat";
+import { getUserChatRooms } from "@/lib/data/chat";
 import { getProfile } from "@/lib/data/profiles";
 import { getUnreadNotificationCount } from "@/lib/data/notifications";
-import Header from "./Header";
 import type { CustomRoomType } from "@/api/chatAPI";
 
 type HeaderServerProps = {

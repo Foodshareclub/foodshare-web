@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * MapViewController
@@ -40,11 +40,7 @@ const detectRefreshRate = (): Promise<number> => {
   });
 };
 
-const MapViewController: React.FC<MapViewControllerProps> = ({
-  center,
-  zoom,
-  isUserLocation,
-}) => {
+const MapViewController: React.FC<MapViewControllerProps> = ({ center, zoom, isUserLocation }) => {
   const map = useMap();
   const [refreshRate, setRefreshRate] = useState(60);
   const hasSetInitialView = useRef(false);
@@ -108,6 +104,7 @@ const MapViewController: React.FC<MapViewControllerProps> = ({
     } catch (error) {
       console.error("[MapViewController] Error updating map view:", error);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map]); // Only run when map instance is available
 
   return null;

@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { getPostTypeConfig, POST_TYPE_CONFIG } from "@/lib/constants";
+import { getPostTypeConfig } from "@/lib/constants";
 import type { InitialProductStateType } from "@/types/product.types";
 import type { AuthUser } from "@/lib/data/auth";
 import { refreshUserListingsCache } from "@/app/actions/products";
@@ -462,9 +462,7 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
                         className="gap-3 rounded-lg cursor-pointer transition-colors"
                       >
                         <span className="text-base">{getPostTypeConfig(type).emoji}</span>
-                        <span className="flex-1 font-medium">
-                          {getPostTypeConfig(type).label}
-                        </span>
+                        <span className="flex-1 font-medium">{getPostTypeConfig(type).label}</span>
                         {filterType === type && <Check className="h-4 w-4 text-emerald-600" />}
                       </DropdownMenuItem>
                     ))}

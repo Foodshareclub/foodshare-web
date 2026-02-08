@@ -26,7 +26,14 @@ const AvatarWithRipple: React.FC<PropsType> = ({ img }) => {
         />
         <div className="absolute top-0 w-full h-full">
           {img ? (
-            <img src={img} alt="User avatar" className="w-full h-full rounded-full object-cover" loading="lazy" decoding="async" />
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={img}
+              alt="User avatar"
+              className="w-full h-full rounded-full object-cover"
+              loading="lazy"
+              decoding="async"
+            />
           ) : (
             <div className="w-full h-full rounded-full bg-muted flex items-center justify-center text-4xl">
               👤

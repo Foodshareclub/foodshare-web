@@ -42,6 +42,7 @@ export function MinifiedUserInfo({
       onClick={onClick}
     >
       <div className="relative">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src || "/default-avatar.png"}
           alt={`${firstName} ${secondName}`}
@@ -54,9 +55,7 @@ export function MinifiedUserInfo({
         )}
       </div>
 
-      <div
-        className={`transition-opacity duration-200 ${isActive ? "opacity-100" : "opacity-60"}`}
-      >
+      <div className={`transition-opacity duration-200 ${isActive ? "opacity-100" : "opacity-60"}`}>
         <h4 className="text-sm font-semibold">{description}</h4>
         <p className="text-sm text-muted-foreground">
           {firstName} {secondName}

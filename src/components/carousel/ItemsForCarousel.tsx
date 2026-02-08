@@ -27,7 +27,7 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
 
   return (
     <div
-      className={`${isActive ? 'glass-subtle' : 'glass'} cursor-pointer rounded-xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative ${
+      className={`${isActive ? "glass-subtle" : "glass"} cursor-pointer rounded-xl transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] relative ${
         isCompact
           ? "min-w-[80px] md:min-w-[96px] px-2.5 md:px-3 py-1.5 md:py-2"
           : "min-w-[80px] md:min-w-[96px] px-3 md:px-4 py-2 md:py-3"
@@ -38,6 +38,7 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
     >
       <div className="text-center relative group">
         {/* Enhanced Icon Size - Airbnb-style prominence with scroll compaction */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           className={`m-auto transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isCompact

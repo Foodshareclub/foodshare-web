@@ -7,7 +7,6 @@
 
 import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { PasswordStrength } from "./PasswordStrength";
 import { InvitationStep } from "./InvitationStep";
 import { useAuth } from "@/hooks";
@@ -22,13 +21,7 @@ import {
   clearSupabaseStorage,
   type StorageErrorInfo,
 } from "@/utils/storageErrorHandler";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createLogger } from "@/lib/logger";
@@ -53,7 +46,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
   isOpen: externalIsOpen,
   onClose: externalOnClose,
 }) => {
-  const t = useTranslations();
+  const _t = useTranslations();
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const internalOnOpen = () => setInternalIsOpen(true);
   const internalOnClose = () => setInternalIsOpen(false);
@@ -111,6 +104,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
     if (isAuth) {
       handleClose();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuth]);
 
   const checkStorageAvailability = async () => {
@@ -601,6 +595,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     variant="outline"
                     className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={google.src} alt="Google" className="w-5 h-5 mr-3" />
                     &quot;Continue with Google&quot;
                   </Button>
@@ -611,6 +606,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     variant="outline"
                     className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={facebook.src} alt="Facebook" className="w-5 h-5 mr-3" />
                     &quot;Continue with Facebook&quot;
                   </Button>
@@ -621,6 +617,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     variant="outline"
                     className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
                   >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={apple.src} alt="Apple" className="w-5 h-5 mr-3" />
                     &quot;Continue with Apple&quot;
                   </Button>

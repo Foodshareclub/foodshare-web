@@ -3,8 +3,8 @@
  * Live performance and error monitoring with alerts
  */
 
-import { createLogger } from "@/lib/logger";
 import { productionErrorReporter } from "./productionErrorReporter";
+import { createLogger } from "@/lib/logger";
 import { getPerformanceMemory } from "@/types/web-apis.types";
 
 const logger = createLogger("RealTimeMonitor");
@@ -135,7 +135,7 @@ class RealTimeMonitor {
       });
 
       observer.observe({ entryTypes: ["resource"] });
-    } catch (error) {
+    } catch {
       logger.warn("Network monitoring not supported");
     }
   }
@@ -179,7 +179,7 @@ class RealTimeMonitor {
     this.checkThresholds(metrics);
 
     // Log metrics in dev
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       this.logMetrics(metrics);
     }
   }
@@ -263,7 +263,7 @@ class RealTimeMonitor {
         logger.warn(alert);
 
         // Report to production error reporter
-        if (process.env.NODE_ENV === 'production' && alert.startsWith("Critical")) {
+        if (process.env.NODE_ENV === "production" && alert.startsWith("Critical")) {
           productionErrorReporter.reportError(new Error(alert), "error", { metrics });
         }
       });
@@ -371,13 +371,13 @@ class RealTimeMonitor {
 export const realTimeMonitor = new RealTimeMonitor();
 
 // Auto-start in production
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === "production") {
   realTimeMonitor.start();
 }
 
 // Expose to window for debugging
 if (typeof window !== "undefined") {
-  (window as any).__monitor = realTimeMonitor;
+  (window as unknown as Record<string, unknown>).__monitor = realTimeMonitor;
 }
 
 export default realTimeMonitor;

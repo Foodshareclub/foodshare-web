@@ -23,13 +23,7 @@ import {
 } from "@/lib/errors";
 import { logPostActivity, logPostShared } from "@/app/actions/post-activity";
 import { CACHE_TAGS, invalidateTag, invalidatePostActivityCaches } from "@/lib/data/cache-keys";
-import {
-  toggleLikeAPI,
-  toggleBookmarkAPI,
-  recordShareAPI,
-  getUserBookmarksAPI,
-  getBatchEngagementAPI,
-} from "@/lib/api/engagement";
+import { toggleLikeAPI, toggleBookmarkAPI } from "@/lib/api/engagement";
 
 // Feature flag for Edge Function migration
 const USE_EDGE_FUNCTIONS = process.env.USE_EDGE_FUNCTIONS_FOR_ENGAGEMENT === "true";

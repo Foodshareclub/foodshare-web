@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 /**
  * WebGL-based rendering optimization for Leaflet
@@ -42,8 +42,8 @@ export const useWebGLRenderer = (options: WebGLRendererOptions = {}) => {
   useEffect(() => {
     return () => {
       // Cleanup renderer resources
-      if (renderer && (renderer as any)._container) {
-        (renderer as any)._container.remove();
+      if (renderer && (renderer as unknown as { _container?: HTMLElement })._container) {
+        (renderer as unknown as { _container?: HTMLElement })._container!.remove();
       }
     };
   }, [renderer]);

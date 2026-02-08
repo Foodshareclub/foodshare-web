@@ -2,9 +2,9 @@
 
 import type { FC } from "react";
 import { useState } from "react";
+import { AlertCircle, Info } from "lucide-react";
 import type { PositionError, AccuracyLevel } from "@/hooks/usePosition";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Info, MapPin } from "lucide-react";
 
 interface LocationPermissionBannerProps {
   error: PositionError | null;

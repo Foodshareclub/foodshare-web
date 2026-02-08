@@ -6,11 +6,8 @@
 import { supabase } from "@/lib/supabase/client";
 import type {
   Campaign,
-  CampaignSend,
-  CampaignGoal,
   Segment,
   SegmentFilters,
-  SegmentMember,
   SegmentPreviewResult,
   EmailTemplate,
   TemplatePreview,
@@ -19,7 +16,6 @@ import type {
   WorkflowExecutionWithDetails,
   WorkflowExecutionStatus,
   CampaignAnalytics,
-  CampaignPerformanceSummary,
   CreateCampaignPayload,
   UpdateCampaignPayload,
   CreateSegmentPayload,

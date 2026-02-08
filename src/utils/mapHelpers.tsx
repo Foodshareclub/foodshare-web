@@ -14,17 +14,18 @@ export const generateProductPopupHTML = (
   product: InitialProductStateType,
   productType: string
 ): string => {
-  const imageHtml = product.images && product.images[0]
-    ? `<img
+  const imageHtml =
+    product.images && product.images[0]
+      ? `<img
         src="${product.images[0]}"
         alt="${product.post_name}"
         class="product-popup-image"
       />`
-    : '';
+      : "";
 
-  const distanceHtml = (product as any).distance
-    ? `<p class="product-popup-distance">📍 ${((product as any).distance as number).toFixed(1)} km away</p>`
-    : '';
+  const distanceHtml = (product as unknown as { distance?: number }).distance
+    ? `<p class="product-popup-distance">📍 ${(product as unknown as { distance?: number }).distance!.toFixed(1)} km away</p>`
+    : "";
 
   return `
     <div class="product-popup-card">

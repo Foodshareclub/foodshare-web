@@ -13,7 +13,7 @@ interface ErrorReport {
   message: string;
   stack?: string;
   level: "error" | "warn" | "fatal";
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   userAgent: string;
   url: string;
   deployment: {
@@ -28,7 +28,7 @@ interface Breadcrumb {
   timestamp: string;
   category: "navigation" | "user" | "console" | "network" | "error";
   message: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 class ProductionErrorReporter {
@@ -42,7 +42,7 @@ class ProductionErrorReporter {
   private flushTimer?: number;
 
   constructor() {
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV === "production") {
       this.startAutoFlush();
       this.setupBeforeUnload();
     }
@@ -51,7 +51,7 @@ class ProductionErrorReporter {
   /**
    * Add breadcrumb for context
    */
-  addBreadcrumb(category: Breadcrumb["category"], message: string, data?: Record<string, any>) {
+  addBreadcrumb(category: Breadcrumb["category"], message: string, data?: Record<string, unknown>) {
     const breadcrumb: Breadcrumb = {
       timestamp: new Date().toISOString(),
       category,
@@ -66,7 +66,7 @@ class ProductionErrorReporter {
       this.breadcrumbs.shift();
     }
 
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       logger.debug(`Breadcrumb: ${category} - ${message}`, data);
     }
   }
@@ -74,7 +74,11 @@ class ProductionErrorReporter {
   /**
    * Report error to queue
    */
-  reportError(error: Error, level: ErrorReport["level"] = "error", context?: Record<string, any>) {
+  reportError(
+    error: Error,
+    level: ErrorReport["level"] = "error",
+    context?: Record<string, unknown>
+  ) {
     const report: ErrorReport = {
       id: this.generateId(),
       timestamp: new Date().toISOString(),
@@ -297,7 +301,7 @@ export const productionErrorReporter = new ProductionErrorReporter();
 
 // Expose to window for debugging
 if (typeof window !== "undefined") {
-  (window as any).__errorReporter = productionErrorReporter;
+  (window as unknown as Record<string, unknown>).__errorReporter = productionErrorReporter;
 }
 
 export default productionErrorReporter;

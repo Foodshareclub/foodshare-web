@@ -21,7 +21,7 @@ import { updateProduct, deleteProduct } from "@/app/actions/products";
 import { cn } from "@/lib/utils";
 import { isValidImageUrl } from "@/lib/image";
 import { getProductDetailUrl } from "@/utils/categoryMapping";
-import { getPostTypeConfig, POST_TYPE_CONFIG } from "@/lib/constants";
+import { getPostTypeConfig } from "@/lib/constants";
 import type { InitialProductStateType } from "@/types/product.types";
 
 // Lazy load the heavy modal
@@ -311,10 +311,7 @@ export function MyPostsClient({ posts }: MyPostsClientProps) {
                 Showing {filteredPosts.length} of {posts.length} posts
                 {filterType !== "all" && (
                   <span className="ml-1">
-                    in{" "}
-                    <span className="font-medium">
-                      {getPostTypeConfig(filterType).label}
-                    </span>
+                    in <span className="font-medium">{getPostTypeConfig(filterType).label}</span>
                   </span>
                 )}
               </p>

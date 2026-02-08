@@ -1,38 +1,63 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { getErrorHistory, clearErrorHistory, type ErrorLog, network, type NetworkEntry } from '@/lib/logger';
-import { cn } from '@/lib/utils';
+import { useState, useEffect, useRef } from "react";
+import { getErrorHistory, clearErrorHistory, type ErrorLog } from "@/lib/logger";
+import { cn } from "@/lib/utils";
 
 interface LogViewerProps {
   className?: string;
-  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  position?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
 }
 
 const LEVEL_CONFIG = {
-  debug: { bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-700 dark:text-gray-300', emoji: '🔍', label: 'DEBUG' },
-  info: { bg: 'bg-blue-50 dark:bg-blue-950', text: 'text-blue-700 dark:text-blue-300', emoji: 'ℹ️', label: 'INFO' },
-  warn: { bg: 'bg-amber-50 dark:bg-amber-950', text: 'text-amber-700 dark:text-amber-300', emoji: '⚠️', label: 'WARN' },
-  error: { bg: 'bg-red-50 dark:bg-red-950', text: 'text-red-700 dark:text-red-300', emoji: '❌', label: 'ERROR' },
-  success: { bg: 'bg-emerald-50 dark:bg-emerald-950', text: 'text-emerald-700 dark:text-emerald-300', emoji: '✅', label: 'OK' },
+  debug: {
+    bg: "bg-gray-100 dark:bg-gray-800",
+    text: "text-gray-700 dark:text-gray-300",
+    emoji: "🔍",
+    label: "DEBUG",
+  },
+  info: {
+    bg: "bg-blue-50 dark:bg-blue-950",
+    text: "text-blue-700 dark:text-blue-300",
+    emoji: "ℹ️",
+    label: "INFO",
+  },
+  warn: {
+    bg: "bg-amber-50 dark:bg-amber-950",
+    text: "text-amber-700 dark:text-amber-300",
+    emoji: "⚠️",
+    label: "WARN",
+  },
+  error: {
+    bg: "bg-red-50 dark:bg-red-950",
+    text: "text-red-700 dark:text-red-300",
+    emoji: "❌",
+    label: "ERROR",
+  },
+  success: {
+    bg: "bg-emerald-50 dark:bg-emerald-950",
+    text: "text-emerald-700 dark:text-emerald-300",
+    emoji: "✅",
+    label: "OK",
+  },
 };
 
 const POSITION_CLASSES = {
-  'bottom-right': 'bottom-4 right-4',
-  'bottom-left': 'bottom-4 left-4',
-  'top-right': 'top-4 right-4',
-  'top-left': 'top-4 left-4',
+  "bottom-right": "bottom-4 right-4",
+  "bottom-left": "bottom-4 left-4",
+  "top-right": "top-4 right-4",
+  "top-left": "top-4 left-4",
 };
 
 /**
  * Beautiful dev-only log viewer panel
  * Shows error history with filtering, search, and export
  */
-export function LogViewer({ className, position = 'bottom-right' }: LogViewerProps) {
+export function LogViewer({ className, position = "bottom-right" }: LogViewerProps) {
   const [logs, setLogs] = useState<ErrorLog[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const [filter, setFilter] = useState<string>('all');
-  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
   const [isPinned, setIsPinned] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
@@ -53,16 +78,17 @@ export function LogViewer({ className, position = 'bottom-right' }: LogViewerPro
     }
   }, [logs.length, isMinimized]);
 
-  const filteredLogs = logs.filter(log => {
-    const matchesFilter = filter === 'all' || log.level === filter;
-    const matchesSearch = !search || 
+  const filteredLogs = logs.filter((log) => {
+    const matchesFilter = filter === "all" || log.level === filter;
+    const matchesSearch =
+      !search ||
       log.message.toLowerCase().includes(search.toLowerCase()) ||
       log.context?.component?.toLowerCase().includes(search.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
-  const errorCount = logs.filter(l => l.level === 'error').length;
-  const warnCount = logs.filter(l => l.level === 'warn').length;
+  const errorCount = logs.filter((l) => l.level === "error").length;
+  const warnCount = logs.filter((l) => l.level === "warn").length;
 
   const handleClear = () => {
     clearErrorHistory();
@@ -70,11 +96,11 @@ export function LogViewer({ className, position = 'bottom-right' }: LogViewerPro
   };
 
   const handleExport = () => {
-    const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `foodshare-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+    a.download = `foodshare-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, "-")}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -83,7 +109,7 @@ export function LogViewer({ className, position = 'bottom-right' }: LogViewerPro
     navigator.clipboard.writeText(JSON.stringify(log, null, 2));
   };
 
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     return null;
   }
 
@@ -95,12 +121,12 @@ export function LogViewer({ className, position = 'bottom-right' }: LogViewerPro
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'fixed z-[9999] p-3 rounded-full shadow-lg transition-all duration-200',
-          'bg-gradient-to-br from-gray-900 to-gray-800 text-white',
-          'hover:scale-105 hover:shadow-xl',
-          'dark:from-gray-100 dark:to-gray-200 dark:text-gray-900',
-          errorCount > 0 && 'from-red-600 to-red-700 animate-pulse',
-          isOpen && 'opacity-0 pointer-events-none',
+          "fixed z-[9999] p-3 rounded-full shadow-lg transition-all duration-200",
+          "bg-gradient-to-br from-gray-900 to-gray-800 text-white",
+          "hover:scale-105 hover:shadow-xl",
+          "dark:from-gray-100 dark:to-gray-200 dark:text-gray-900",
+          errorCount > 0 && "from-red-600 to-red-700 animate-pulse",
+          isOpen && "opacity-0 pointer-events-none",
           positionClass,
           className
         )}
@@ -108,22 +134,24 @@ export function LogViewer({ className, position = 'bottom-right' }: LogViewerPro
       >
         <span className="text-xl">🍽️</span>
         {logs.length > 0 && (
-          <span className={cn(
-            'absolute -top-1 -right-1 text-white text-[10px] font-bold rounded-full min-w-5 h-5 flex items-center justify-center px-1',
-            errorCount > 0 ? 'bg-red-500' : warnCount > 0 ? 'bg-amber-500' : 'bg-blue-500'
-          )}>
-            {logs.length > 99 ? '99+' : logs.length}
+          <span
+            className={cn(
+              "absolute -top-1 -right-1 text-white text-[10px] font-bold rounded-full min-w-5 h-5 flex items-center justify-center px-1",
+              errorCount > 0 ? "bg-red-500" : warnCount > 0 ? "bg-amber-500" : "bg-blue-500"
+            )}
+          >
+            {logs.length > 99 ? "99+" : logs.length}
           </span>
         )}
       </button>
 
       {/* Log Panel */}
       {isOpen && (
-        <div 
+        <div
           className={cn(
-            'fixed z-[9999] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-200',
-            isMinimized ? 'w-80 h-12' : 'w-[420px] max-h-[70vh]',
-            isPinned ? 'opacity-100' : 'opacity-95 hover:opacity-100',
+            "fixed z-[9999] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-200",
+            isMinimized ? "w-80 h-12" : "w-[420px] max-h-[70vh]",
+            isPinned ? "opacity-100" : "opacity-95 hover:opacity-100",
             positionClass
           )}
         >
@@ -144,19 +172,21 @@ export function LogViewer({ className, position = 'bottom-right' }: LogViewerPro
               <button
                 onClick={() => setIsPinned(!isPinned)}
                 className={cn(
-                  'p-1.5 rounded-md transition-colors text-sm',
-                  isPinned ? 'bg-blue-100 dark:bg-blue-900 text-blue-600' : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+                  "p-1.5 rounded-md transition-colors text-sm",
+                  isPinned
+                    ? "bg-blue-100 dark:bg-blue-900 text-blue-600"
+                    : "hover:bg-gray-200 dark:hover:bg-gray-700"
                 )}
-                title={isPinned ? 'Unpin' : 'Pin'}
+                title={isPinned ? "Unpin" : "Pin"}
               >
                 📌
               </button>
               <button
                 onClick={() => setIsMinimized(!isMinimized)}
                 className="p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-sm"
-                title={isMinimized ? 'Expand' : 'Minimize'}
+                title={isMinimized ? "Expand" : "Minimize"}
               >
-                {isMinimized ? '🔼' : '🔽'}
+                {isMinimized ? "🔼" : "🔽"}
               </button>
               <button
                 onClick={handleExport}
@@ -194,26 +224,26 @@ export function LogViewer({ className, position = 'bottom-right' }: LogViewerPro
                   className="w-full px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-[#FF2D55]/50"
                 />
                 <div className="flex gap-1 overflow-x-auto pb-1">
-                  {['all', 'error', 'warn', 'info', 'success', 'debug'].map((level) => {
-                    const config = level === 'all' ? null : LEVEL_CONFIG[level as keyof typeof LEVEL_CONFIG];
-                    const count = level === 'all' ? logs.length : logs.filter(l => l.level === level).length;
-                    
+                  {["all", "error", "warn", "info", "success", "debug"].map((level) => {
+                    const config =
+                      level === "all" ? null : LEVEL_CONFIG[level as keyof typeof LEVEL_CONFIG];
+                    const count =
+                      level === "all" ? logs.length : logs.filter((l) => l.level === level).length;
+
                     return (
                       <button
                         key={level}
                         onClick={() => setFilter(level)}
                         className={cn(
-                          'px-2 py-1 text-xs rounded-md transition-all flex items-center gap-1 whitespace-nowrap',
+                          "px-2 py-1 text-xs rounded-md transition-all flex items-center gap-1 whitespace-nowrap",
                           filter === level
-                            ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm'
-                            : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            ? "bg-gray-900 text-white dark:bg-white dark:text-gray-900 shadow-sm"
+                            : "bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
                         )}
                       >
-                        {config ? config.emoji : '📋'}
-                        <span>{level === 'all' ? 'All' : config?.label}</span>
-                        {count > 0 && (
-                          <span className="text-[10px] opacity-60">({count})</span>
-                        )}
+                        {config ? config.emoji : "📋"}
+                        <span>{level === "all" ? "All" : config?.label}</span>
+                        {count > 0 && <span className="text-[10px] opacity-60">({count})</span>}
                       </button>
                     );
                   })}
@@ -226,14 +256,16 @@ export function LogViewer({ className, position = 'bottom-right' }: LogViewerPro
                   <div className="p-8 text-center">
                     <div className="text-4xl mb-2">🍽️</div>
                     <p className="text-gray-500 text-sm">No logs yet</p>
-                    <p className="text-gray-400 text-xs mt-1">Logs will appear here as they occur</p>
+                    <p className="text-gray-400 text-xs mt-1">
+                      Logs will appear here as they occur
+                    </p>
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100 dark:divide-gray-800">
                     {filteredLogs.map((log, i) => (
-                      <LogEntry 
-                        key={`${log.timestamp}-${i}`} 
-                        log={log} 
+                      <LogEntry
+                        key={`${log.timestamp}-${i}`}
+                        log={log}
                         onCopy={() => handleCopyLog(log)}
                       />
                     ))}
@@ -248,7 +280,9 @@ export function LogViewer({ className, position = 'bottom-right' }: LogViewerPro
                     {errorCount > 0 && <span className="text-red-500">❌ {errorCount}</span>}
                     {warnCount > 0 && <span className="text-amber-500">⚠️ {warnCount}</span>}
                   </div>
-                  <span>Last: {new Date(logs[logs.length - 1]?.timestamp).toLocaleTimeString()}</span>
+                  <span>
+                    Last: {new Date(logs[logs.length - 1]?.timestamp).toLocaleTimeString()}
+                  </span>
                 </div>
               )}
             </>
@@ -262,27 +296,24 @@ export function LogViewer({ className, position = 'bottom-right' }: LogViewerPro
 function LogEntry({ log, onCopy }: { log: ErrorLog; onCopy: () => void }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const config = LEVEL_CONFIG[log.level];
-  const time = new Date(log.timestamp).toLocaleTimeString('en-US', { 
-    hour12: false, 
-    hour: '2-digit', 
-    minute: '2-digit', 
-    second: '2-digit',
-    fractionalSecondDigits: 3
+  const time = new Date(log.timestamp).toLocaleTimeString("en-US", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    fractionalSecondDigits: 3,
   });
 
   return (
     <div
       className={cn(
-        'text-xs cursor-pointer transition-colors',
+        "text-xs cursor-pointer transition-colors",
         config.bg,
         config.text,
-        'hover:brightness-95 dark:hover:brightness-110'
+        "hover:brightness-95 dark:hover:brightness-110"
       )}
     >
-      <div 
-        className="flex items-start gap-2 p-2"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
+      <div className="flex items-start gap-2 p-2" onClick={() => setIsExpanded(!isExpanded)}>
         <span className="text-sm">{config.emoji}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -297,25 +328,32 @@ function LogEntry({ log, onCopy }: { log: ErrorLog; onCopy: () => void }) {
         </div>
         <div className="flex items-center gap-1">
           <button
-            onClick={(e) => { e.stopPropagation(); onCopy(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onCopy();
+            }}
             className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
             title="Copy"
           >
             📋
           </button>
-          <span className="opacity-40 text-[10px]">{isExpanded ? '▼' : '▶'}</span>
+          <span className="opacity-40 text-[10px]">{isExpanded ? "▼" : "▶"}</span>
         </div>
       </div>
 
       {isExpanded && (
         <div className="px-2 pb-2 pl-8 space-y-2">
-          {log.context && Object.keys(log.context).filter(k => k !== 'component').length > 0 && (
+          {log.context && Object.keys(log.context).filter((k) => k !== "component").length > 0 && (
             <div>
-              <span className="font-semibold text-[10px] uppercase tracking-wide opacity-60">Context</span>
+              <span className="font-semibold text-[10px] uppercase tracking-wide opacity-60">
+                Context
+              </span>
               <pre className="mt-1 p-2 bg-black/5 dark:bg-white/5 rounded text-[10px] overflow-x-auto font-mono">
                 {JSON.stringify(
-                  Object.fromEntries(Object.entries(log.context).filter(([k]) => k !== 'component')), 
-                  null, 
+                  Object.fromEntries(
+                    Object.entries(log.context).filter(([k]) => k !== "component")
+                  ),
+                  null,
                   2
                 )}
               </pre>
@@ -323,14 +361,16 @@ function LogEntry({ log, onCopy }: { log: ErrorLog; onCopy: () => void }) {
           )}
           {log.stack && (
             <div>
-              <span className="font-semibold text-[10px] uppercase tracking-wide opacity-60">Stack Trace</span>
+              <span className="font-semibold text-[10px] uppercase tracking-wide opacity-60">
+                Stack Trace
+              </span>
               <pre className="mt-1 p-2 bg-black/5 dark:bg-white/5 rounded text-[10px] overflow-x-auto whitespace-pre-wrap font-mono max-h-40">
                 {log.stack}
               </pre>
             </div>
           )}
           <div className="flex items-center gap-2 text-[10px] opacity-60">
-            <span>🌐 {log.url || 'N/A'}</span>
+            <span>🌐 {log.url || "N/A"}</span>
           </div>
         </div>
       )}

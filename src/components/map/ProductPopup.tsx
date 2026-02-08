@@ -38,6 +38,7 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
   return (
     <div className="product-popup-card">
       {image && (
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={image}
           alt={name}

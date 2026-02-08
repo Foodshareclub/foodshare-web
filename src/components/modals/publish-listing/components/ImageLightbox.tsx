@@ -90,6 +90,7 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, initialInd
           </>
         )}
 
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={images[currentIndex].url}
           alt={`Image ${currentIndex + 1}`}

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useEffect } from "react";
 import { chatAPI } from "@/api/chatAPI";
@@ -10,7 +10,7 @@ import { useChatStore } from "@/store/zustand/useChatStore";
  * Uses Zustand store instead of Redux
  */
 const ContainerForChat: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
-  const { setChannel, addMessage, channel } = useChatStore();
+  const { setChannel, addMessage } = useChatStore();
 
   useEffect(() => {
     // Set up global real-time subscription for chat messages
