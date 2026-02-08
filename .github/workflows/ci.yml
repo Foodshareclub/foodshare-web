@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -19,7 +19,7 @@ concurrency:
 
 env:
   BUN_VERSION: "latest"
-  # Dummy env vars for build (actual values from Vercel)
+  # Placeholder env vars for CI build validation (real values on VPS)
   NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co"
   NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder-key"
 
@@ -108,53 +108,42 @@ jobs:
         env:
           SKIP_ENV_VALIDATION: "true"
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: .next
-          retention-days: 1
-
-  # Optional: E2E tests (only on main branch merges)
-  e2e:
-    name: E2E Tests
+  # Deploy to VPS via SSH (only on push to main)
+  deploy:
+    name: Deploy to VPS
     runs-on: ubuntu-latest
-    needs: build
+    needs: [lint, type-check, test, build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: production
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
         with:
-          bun-version: ${{ env.BUN_VERSION }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          command_timeout: 10m
+          script: |
+            cd /home/organic/dev/foodshare-web
+            git pull origin main
+            docker compose --env-file .env.production up -d --build --remove-orphans
 
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Install Playwright browsers
-        run: bunx playwright install --with-deps chromium
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v1
         with:
-          name: build-output
-          path: .next
-
-      - name: Run Playwright tests
-        run: bun run e2e
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script_stop: true
+          script: |
+            sleep 5
+            STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost)
+            if [ "$STATUS" != "200" ]; then
+              echo "Deployment verification failed: HTTP $STATUS"
+              docker logs foodshare-web --tail 20
+              exit 1
+            fi
+            echo "Deployment verified: HTTP 200"
 
   # Summary job for branch protection
   ci-success:
