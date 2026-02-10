@@ -159,7 +159,7 @@ const { data, error } = await supabase.functions.invoke('function-name', {
 ### Via HTTP
 
 ```bash
-curl -X POST 'https://***REMOVED***.supabase.co/functions/v1/function-name' \
+curl -X POST 'https://api.foodshare.club/functions/v1/function-name' \
   -H 'Authorization: Bearer YOUR_ANON_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"param": "value"}'

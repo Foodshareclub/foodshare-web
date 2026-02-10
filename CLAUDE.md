@@ -6,6 +6,17 @@ Next.js 16 App Router + React 19 + TypeScript 5 + Tailwind CSS 4 + Self-hosted S
 - Studio (dashboard): https://studio.foodshare.club
 - API: https://api.foodshare.club
 
+## Deployment
+
+```bash
+# SSH into VPS
+autossh -M 0 -o ServerAliveInterval=6000 -o ServerAliveCountMax=6000 -o ConnectTimeout=10 -o ConnectionAttempts=6000 -i ~/.ssh/id_rsa_gitlab organic@vps.foodshare.club
+
+# Deploy
+cd /home/organic/dev/foodshare-web
+git pull && docker compose up -d --build
+```
+
 ## Commands
 
 | Command              | Purpose                           |

@@ -12,8 +12,8 @@
 
 ## API Endpoints
 
-- **API URL**: `https://***REMOVED***.supabase.co`
-- **Database Host**: `db.***REMOVED***.supabase.co`
+- **API URL**: `https://api.foodshare.club`
+- **Database Host**: `db.api.foodshare.club`
 
 ## Documentation Index
 
@@ -50,7 +50,7 @@
 Required environment variables for connecting:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://***REMOVED***.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://api.foodshare.club
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
 SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
 ```
