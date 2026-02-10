@@ -1,6 +1,10 @@
 # Foodshare Web
 
-Next.js 16 App Router + React 19 + TypeScript 5 + Tailwind CSS 4 + Supabase + shadcn/ui
+Next.js 16 App Router + React 19 + TypeScript 5 + Tailwind CSS 4 + Self-hosted Supabase + shadcn/ui
+
+**Self-hosted Supabase:**
+- Studio (dashboard): https://studio.foodshare.club
+- API: https://api.foodshare.club
 
 ## Commands
 

@@ -117,7 +117,7 @@ npm run dev
 1. After logging in, refresh the page multiple times
 2. **Verify**: You remain logged in (profile image still shows)
 3. Open DevTools → Application → Cookies
-4. **Verify**: You see cookies like `sb-***REMOVED***-auth-token`
+4. **Verify**: You see cookies like `sb-foodshare-auth-token`
 
 ### 4. Test Admin Routes (if applicable)
 

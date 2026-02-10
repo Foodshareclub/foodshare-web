@@ -196,8 +196,8 @@ export async function getUser() {
                              ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │  Cookies Set (by exchangeCodeForSession):                           │
-│  - sb-***REMOVED***-auth-token                              │
-│  - sb-***REMOVED***-auth-token-code-verifier               │
+│  - sb-foodshare-auth-token                              │
+│  - sb-foodshare-auth-token-code-verifier               │
 │                                                                     │
 │  Domain: localhost                                                  │
 │  Path: /                                                            │

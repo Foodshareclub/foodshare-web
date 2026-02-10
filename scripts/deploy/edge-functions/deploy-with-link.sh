@@ -5,7 +5,7 @@
 
 set -e
 
-PROJECT_REF="***REMOVED***"
+PROJECT_REF="foodshare"
 BACKUP_DIR="./backups/no-jwt-$(date +%Y%m%d_%H%M%S)"
 
 echo "🚀 FoodShare Edge Functions Deployment (NO JWT)"

@@ -14,7 +14,7 @@
 
 set -e  # Exit on error
 
-PROJECT_REF="***REMOVED***"
+PROJECT_REF="foodshare"
 BACKUP_DIR="./backups/$(date +%Y%m%d_%H%M%S)"
 LOG_FILE="./deployment-$(date +%Y%m%d_%H%M%S).log"
 

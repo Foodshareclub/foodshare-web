@@ -25,7 +25,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Email template definitions
 const LOGO_URL =
-  "https://***REMOVED***.supabase.co/storage/v1/object/public/assets/logo-512.png";
+  "https://api.foodshare.club/storage/v1/object/public/assets/logo-512.png";
 const BRAND_COLOR = "#ff2d55";
 const BRAND_GRADIENT = "linear-gradient(135deg, #ff2d55 0%, #ff5177 100%)";
 

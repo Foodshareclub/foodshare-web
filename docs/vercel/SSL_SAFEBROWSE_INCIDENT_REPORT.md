@@ -199,10 +199,10 @@ The issue was resolved by Vercel's infrastructure team. Domains are now operatio
 **Endpoints:**
 ```
 # Manual check with notification
-https://***REMOVED***.supabase.co/functions/v1/domain-monitor?notify=true
+https://api.foodshare.club/functions/v1/domain-monitor?notify=true
 
 # Silent check (JSON response only)
-https://***REMOVED***.supabase.co/functions/v1/domain-monitor
+https://api.foodshare.club/functions/v1/domain-monitor
 ```
 
 ### 2. Monitoring Checks

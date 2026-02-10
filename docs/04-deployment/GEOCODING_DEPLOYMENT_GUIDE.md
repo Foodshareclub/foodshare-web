@@ -131,7 +131,7 @@ Test the Edge Function by manually processing the queue.
 ```bash
 # Set your service role key
 export SERVICE_ROLE_KEY="your-service-role-key-here"
-export SUPABASE_URL="https://***REMOVED***.supabase.co"
+export SUPABASE_URL="https://api.foodshare.club"
 
 # Process batch
 curl -X POST "$SUPABASE_URL/functions/v1/update-post-coordinates" \

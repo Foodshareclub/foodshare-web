@@ -5,7 +5,7 @@
 
 set -e
 
-FUNCTION_URL="https://***REMOVED***.supabase.co/functions/v1/telegram-bot-foodshare"
+FUNCTION_URL="https://api.foodshare.club/functions/v1/telegram-bot-foodshare"
 
 echo "🔍 Verifying Telegram Bot Deployment..."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -40,7 +40,7 @@ echo "3️⃣  Checking recent function logs..."
 echo "   (Requires Supabase CLI and authentication)"
 if command -v supabase &> /dev/null; then
     echo "   Fetching logs..."
-    supabase functions logs telegram-bot-foodshare --project-ref ***REMOVED*** --limit 5 2>/dev/null || echo "   ⚠️  Could not fetch logs (authentication required)"
+    supabase functions logs telegram-bot-foodshare --project-ref foodshare --limit 5 2>/dev/null || echo "   ⚠️  Could not fetch logs (authentication required)"
 else
     echo "   ⚠️  Supabase CLI not installed"
 fi
@@ -68,7 +68,7 @@ echo "   - SUPABASE_SERVICE_ROLE_KEY"
 echo "   - APP_URL (https://foodshare.club)"
 echo "   - WEBHOOK_URL (function URL)"
 echo ""
-echo "   ℹ️  Set via: supabase secrets set --project-ref ***REMOVED***"
+echo "   ℹ️  Set via: supabase secrets set --project-ref foodshare"
 echo ""
 
 # Summary
