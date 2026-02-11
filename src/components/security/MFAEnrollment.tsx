@@ -11,7 +11,7 @@
  * - Security best practices
  */
 
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 
 import {
   Loader2,
@@ -43,93 +43,89 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
   const [verificationCode, setVerificationCode] = useState("");
   const [challengeId, setChallengeId] = useState("");
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [_attemptsRemaining, setAttemptsRemaining] = useState(5);
 
   // Handle method selection
-  const handleMethodSelection = async (method: MFAMethod) => {
+  const handleMethodSelection = (method: MFAMethod) => {
     setSelectedMethod(method);
     if (method === "sms") {
       setStep("phone_entry");
     } else {
       // For email, proceed directly to verification
-      await sendVerificationCode("email");
+      sendVerificationCode("email");
     }
   };
 
   // Handle phone number submission
-  const handlePhoneSubmit = async () => {
+  const handlePhoneSubmit = () => {
     if (!phoneNumber || phoneNumber.length < 10) {
       setError("Please enter a valid phone number");
       return;
     }
 
-    await sendVerificationCode("sms");
+    sendVerificationCode("sms");
   };
 
   // Send verification code
-  const sendVerificationCode = async (method: "sms" | "email") => {
-    setIsLoading(true);
+  const sendVerificationCode = (method: "sms" | "email") => {
     setError("");
 
-    try {
-      const result = await MFAService.createChallenge(profileId, method);
+    startTransition(async () => {
+      try {
+        const result = await MFAService.createChallenge(profileId, method);
 
-      if (!result.success) {
-        if (result.error === "rate_limit_exceeded") {
-          setError(`Too many attempts. Try again after ${result.locked_until}`);
-        } else {
-          setError(result.error || "Failed to send verification code");
+        if (!result.success) {
+          if (result.error === "rate_limit_exceeded") {
+            setError(`Too many attempts. Try again after ${result.locked_until}`);
+          } else {
+            setError(result.error || "Failed to send verification code");
+          }
+          return;
         }
-        return;
-      }
 
-      setChallengeId(result.challenge_id || "");
-      setStep("verification");
-    } catch {
-      setError("Failed to send verification code. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+        setChallengeId(result.challenge_id || "");
+        setStep("verification");
+      } catch {
+        setError("Failed to send verification code. Please try again.");
+      }
+    });
   };
 
   // Handle verification code submission
-  const handleVerificationSubmit = async () => {
+  const handleVerificationSubmit = () => {
     if (!verificationCode || verificationCode.length !== 6) {
       setError("Please enter a valid 6-digit code");
       return;
     }
 
-    setIsLoading(true);
     setError("");
 
-    try {
-      const result = await MFAService.verifyChallenge(challengeId, verificationCode, profileId);
+    startTransition(async () => {
+      try {
+        const result = await MFAService.verifyChallenge(challengeId, verificationCode, profileId);
 
-      if (!result.success) {
-        if (result.attempts_remaining !== undefined) {
-          setAttemptsRemaining(result.attempts_remaining);
-          setError(`Invalid code. ${result.attempts_remaining} attempts remaining.`);
-        } else {
-          setError(result.error || "Verification failed");
+        if (!result.success) {
+          if (result.attempts_remaining !== undefined) {
+            setAttemptsRemaining(result.attempts_remaining);
+            setError(`Invalid code. ${result.attempts_remaining} attempts remaining.`);
+          } else {
+            setError(result.error || "Verification failed");
+          }
+          return;
         }
-        return;
-      }
 
-      // Verification successful, now enroll the user
-      await completeEnrollment();
-    } catch {
-      setError("Verification failed. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+        // Verification successful, now enroll the user
+        await completeEnrollmentAsync();
+      } catch {
+        setError("Verification failed. Please try again.");
+      }
+    });
   };
 
-  // Complete MFA enrollment
-  const completeEnrollment = async () => {
-    setIsLoading(true);
-
+  // Complete MFA enrollment (called within a transition)
+  const completeEnrollmentAsync = async () => {
     try {
       const result = await MFAService.enrollMFA(
         profileId,
@@ -146,8 +142,6 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
       setStep("backup_codes");
     } catch {
       setError("Failed to complete enrollment. Please try again.");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -260,10 +254,10 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
         </button>
         <button
           onClick={handlePhoneSubmit}
-          disabled={isLoading}
+          disabled={isPending}
           className="flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          {isLoading ? (
+          {isPending ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
               <span>&quot;Sending...&quot;</span>
@@ -318,7 +312,7 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
       <div className="flex gap-3">
         <button
           onClick={() => sendVerificationCode(selectedMethod as "sms" | "email")}
-          disabled={isLoading}
+          disabled={isPending}
           className="px-4 py-2 text-sm text-primary hover:text-primary/80 underline"
         >
           &quot;Resend Code&quot;
@@ -327,10 +321,10 @@ export const MFAEnrollment: React.FC<MFAEnrollmentProps> = ({
 
       <button
         onClick={handleVerificationSubmit}
-        disabled={isLoading || verificationCode.length !== 6}
+        disabled={isPending || verificationCode.length !== 6}
         className="w-full px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
-        {isLoading ? (
+        {isPending ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
             <span>&quot;Verifying...&quot;</span>

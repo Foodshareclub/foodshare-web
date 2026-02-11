@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Target } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getAudienceSegments, getEmailDashboardStats } from "@/lib/data/admin-email";
-import { AudienceClient } from "@/components/admin/crm/AudienceClient";
+import { AudienceClient } from "@/app/admin/crm/components/AudienceClient";
 
 function AudienceSkeleton() {
   return (

@@ -9,7 +9,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Loader2, MapPin } from "lucide-react";
-import { getGeographicHotspots, type GeoHotspot } from "@/app/actions/analytics";
+import { getGeographicHotspots, type GeoHotspot } from "@/lib/data/analytics";
 
 // Color scale for heat intensity
 function getHeatColor(count: number, maxCount: number): string {

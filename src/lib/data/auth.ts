@@ -1,11 +1,12 @@
 /**
  * Auth Data Functions
  * Server-side data fetching for authentication
- * Uses unstable_cache for server-side caching with tag-based invalidation.
+ *
+ * NOTE: Auth functions use createClient() (cookies-dependent) and are
+ * user-specific. They are NOT cached with 'use cache' - the cookies()
+ * call makes them automatically dynamic.
  */
 
-import { unstable_cache } from "next/cache";
-import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
 import { checkUserIsAdmin } from "./admin-check";
 import { createClient } from "@/lib/supabase/server";
 
@@ -146,14 +147,8 @@ export async function getAuthSession(): Promise<AuthSession> {
 
 /**
  * Get cached auth session (for pages that don't need real-time auth)
+ * NOTE: This is an alias for getAuthSession since auth depends on cookies()
+ * and cannot be cached with 'use cache'. The cookies() call makes it
+ * automatically dynamic in Next.js 16.
  */
-export const getCachedAuthSession = unstable_cache(
-  async (): Promise<AuthSession> => {
-    return getAuthSession();
-  },
-  ["auth-session"],
-  {
-    revalidate: CACHE_DURATIONS.SHORT,
-    tags: [CACHE_TAGS.AUTH, CACHE_TAGS.SESSION],
-  }
-);
+export const getCachedAuthSession = getAuthSession;

@@ -5,7 +5,7 @@
  * Premium security settings with modern design
  */
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useTransition } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -55,7 +55,7 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
   const [editingPassword, setEditingPassword] = useState(false);
   const [email, setEmail] = useState(user.email || "");
   const [isEmailSent, setIsEmailSent] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -65,30 +65,29 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
     };
   }, []);
 
-  const handleSendResetEmail = async () => {
+  const handleSendResetEmail = () => {
     if (!email) {
       setError("Please enter your email address");
       return;
     }
-    setIsLoading(true);
     setError(null);
 
-    try {
-      const { error: resetError } = await auth.resetPassword(email);
-      if (resetError) {
-        setError(resetError.message || "Failed to send reset email");
-      } else {
-        setIsEmailSent(true);
-        timerRef.current = setTimeout(() => {
-          setIsEmailSent(false);
-          setEditingPassword(false);
-        }, 5000);
+    startTransition(async () => {
+      try {
+        const { error: resetError } = await auth.resetPassword(email);
+        if (resetError) {
+          setError(resetError.message || "Failed to send reset email");
+        } else {
+          setIsEmailSent(true);
+          timerRef.current = setTimeout(() => {
+            setIsEmailSent(false);
+            setEditingPassword(false);
+          }, 5000);
+        }
+      } catch {
+        setError("An unexpected error occurred. Please try again.");
       }
-    } catch {
-      setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   const handleCancelPasswordEdit = () => {
@@ -240,11 +239,11 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
                       <div className="flex gap-2">
                         <Button
                           onClick={handleSendResetEmail}
-                          disabled={isLoading || isEmailSent || !email}
+                          disabled={isPending || isEmailSent || !email}
                           size="sm"
                           className="bg-emerald-600 hover:bg-emerald-700"
                         >
-                          {isLoading ? (
+                          {isPending ? (
                             "Sending..."
                           ) : (
                             <>
@@ -257,7 +256,7 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
                           onClick={handleCancelPasswordEdit}
                           variant="outline"
                           size="sm"
-                          disabled={isLoading}
+                          disabled={isPending}
                         >
                           <X className="w-3 h-3 mr-1.5" />
                           Cancel

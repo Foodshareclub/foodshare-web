@@ -4,7 +4,7 @@
  */
 
 import { Suspense } from "react";
-import { CRMDashboard } from "@/components/admin/crm/CRMDashboard";
+import { CRMDashboard } from "@/app/admin/crm/components/CRMDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   getCustomerTagsCached,
@@ -17,8 +17,6 @@ import {
   getAutomationFlows,
   getNewsletterStats,
 } from "@/lib/data/newsletter";
-
-export const revalidate = 300;
 
 function DashboardSkeleton() {
   return (

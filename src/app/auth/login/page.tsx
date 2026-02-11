@@ -5,7 +5,7 @@
  * Beautiful full-page login experience with social OAuth
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -61,7 +61,7 @@ export default function LoginPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   // Get redirect URL from query params
   const from = searchParams.get("from") || "/";
@@ -77,12 +77,11 @@ export default function LoginPage() {
     clearError();
   }, [mode, clearError]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     clearError();
 
-    try {
+    startTransition(async () => {
       if (mode === "login") {
         const result = await loginWithPassword(email, password);
         if (result.success) {
@@ -99,9 +98,7 @@ export default function LoginPage() {
           setMode("login");
         }
       }
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   const handleSocialLogin = async (provider: "google" | "facebook" | "apple") => {
@@ -281,10 +278,10 @@ export default function LoginPage() {
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isPending}
                   className="w-full h-14 bg-gradient-to-r from-[#FF2D55] via-[#E6284D] to-[#CC2345] text-white font-semibold text-base rounded-xl hover:from-[#E6284D] hover:via-[#CC2345] hover:to-[#B31F3D] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(255,45,85,0.35)] active:translate-y-0 transition-all"
                 >
-                  {isLoading
+                  {isPending
                     ? mode === "login"
                       ? "Logging in..."
                       : "Creating account..."

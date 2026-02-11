@@ -8,8 +8,6 @@ import SkeletonCard from "@/components/productCard/SkeletonCard";
 import { generateBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 import { siteConfig } from "@/lib/metadata";
 
-export const revalidate = 60;
-
 interface PageProps {
   searchParams: Promise<{
     lat?: string;

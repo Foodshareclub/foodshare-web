@@ -1,11 +1,11 @@
 /**
  * Admin Listings Data Layer
  * Server-side data fetching for admin CRM listings management
- * Uses unstable_cache for server-side caching with tag-based invalidation
+ * Uses 'use cache' directive for cacheable functions (createCachedClient)
  */
 
-import { unstable_cache } from "next/cache";
-import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
+import { cacheLife, cacheTag } from "next/cache";
+import { CACHE_TAGS } from "./cache-keys";
 import { createClient, createCachedClient } from "@/lib/supabase/server";
 import { escapeFilterValue } from "@/lib/utils";
 
@@ -96,6 +96,7 @@ function deriveStatus(listing: {
 
 /**
  * Get admin listings with filters and pagination
+ * NOTE: Uses createClient() (cookies-dependent) - NOT cached
  */
 export async function getAdminListings(
   filters: AdminListingsFilter = {}
@@ -185,20 +186,14 @@ export async function getAdminListings(
 
 /**
  * Get cached admin listings
+ * NOTE: getAdminListings uses createClient() (cookies-dependent), so this
+ * cannot use 'use cache'. It's an alias for the uncached version.
  */
-export const getCachedAdminListings = unstable_cache(
-  async (filters: AdminListingsFilter = {}): Promise<AdminListingsResult> => {
-    return getAdminListings(filters);
-  },
-  ["admin-listings"],
-  {
-    revalidate: CACHE_DURATIONS.SHORT,
-    tags: [CACHE_TAGS.ADMIN_LISTINGS, CACHE_TAGS.ADMIN],
-  }
-);
+export const getCachedAdminListings = getAdminListings;
 
 /**
  * Get single listing by ID for admin
+ * NOTE: Uses createClient() (cookies-dependent) - NOT cached
  */
 export async function getAdminListingById(id: number): Promise<AdminListing | null> {
   const supabase = await createClient();
@@ -242,46 +237,44 @@ export async function getAdminListingById(id: number): Promise<AdminListing | nu
 
 /**
  * Get listing statistics for admin dashboard
+ * Uses createCachedClient() - SAFE to cache
  */
-export const getListingStats = unstable_cache(
-  async (): Promise<ListingStats> => {
-    const supabase = createCachedClient();
+export async function getListingStats(): Promise<ListingStats> {
+  'use cache';
+  cacheLife('admin-stats');
+  cacheTag(CACHE_TAGS.ADMIN_STATS, CACHE_TAGS.ADMIN);
 
-    const [
-      { count: total },
-      { count: active },
-      { count: inactive },
-      { count: arranged },
-      { data: categoryData },
-    ] = await Promise.all([
-      supabase.from("posts").select("*", { count: "exact", head: true }),
-      supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_active", true),
-      supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_active", false),
-      supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_arranged", true),
-      supabase.from("posts").select("post_type"),
-    ]);
+  const supabase = createCachedClient();
 
-    // Count by category
-    const byCategory: Record<string, number> = {};
-    (categoryData ?? []).forEach((item) => {
-      const type = item.post_type || "unknown";
-      byCategory[type] = (byCategory[type] || 0) + 1;
-    });
+  const [
+    { count: total },
+    { count: active },
+    { count: inactive },
+    { count: arranged },
+    { data: categoryData },
+  ] = await Promise.all([
+    supabase.from("posts").select("*", { count: "exact", head: true }),
+    supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_active", true),
+    supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_active", false),
+    supabase.from("posts").select("*", { count: "exact", head: true }).eq("is_arranged", true),
+    supabase.from("posts").select("post_type"),
+  ]);
 
-    return {
-      total: total ?? 0,
-      active: active ?? 0,
-      inactive: inactive ?? 0,
-      arranged: arranged ?? 0,
-      byCategory,
-    };
-  },
-  ["admin-listing-stats"],
-  {
-    revalidate: CACHE_DURATIONS.ADMIN_STATS,
-    tags: [CACHE_TAGS.ADMIN_STATS, CACHE_TAGS.ADMIN],
-  }
-);
+  // Count by category
+  const byCategory: Record<string, number> = {};
+  (categoryData ?? []).forEach((item) => {
+    const type = item.post_type || "unknown";
+    byCategory[type] = (byCategory[type] || 0) + 1;
+  });
+
+  return {
+    total: total ?? 0,
+    active: active ?? 0,
+    inactive: inactive ?? 0,
+    arranged: arranged ?? 0,
+    byCategory,
+  };
+}
 
 // Admin auth utilities moved to @/lib/data/admin-auth
 export { getAdminAuth, requireAdmin } from "./admin-auth";

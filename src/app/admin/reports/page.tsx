@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
-import { AdminReportsClient } from "@/components/admin/AdminReportsClient";
+import { AdminReportsClient } from "@/app/admin/reports/AdminReportsClient";
 import { getReportsData } from "@/lib/data/admin-reports";
 import { Skeleton } from "@/components/ui/skeleton";
 

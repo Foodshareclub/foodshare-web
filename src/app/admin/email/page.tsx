@@ -1,7 +1,7 @@
 "use client";
 
 import { Mail, Sparkles } from "lucide-react";
-import { EmailCRMDashboard } from "@/components/admin/email/EmailCRMDashboard";
+import { EmailCRMDashboard } from "@/app/admin/email/components/EmailCRMDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEmailCRMData } from "@/hooks/queries/useEmailCRM";
 import { useTranslations } from "next-intl";

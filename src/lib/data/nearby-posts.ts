@@ -11,8 +11,8 @@
  * - Bounding box queries for map viewport loading
  */
 
-import { unstable_cache } from "next/cache";
-import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
+import { cacheLife, cacheTag } from "next/cache";
+import { CACHE_TAGS } from "./cache-keys";
 import { createClient, createCachedClient } from "@/lib/supabase/server";
 
 // ============================================================================
@@ -109,6 +109,8 @@ const DEFAULT_LIMIT = 20;
  * Uses PostGIS ST_DWithin for efficient spatial index utilization.
  * Returns posts within the specified radius, sorted by distance.
  *
+ * NOTE: Uses createClient() (cookies-dependent) - NOT cached with 'use cache'
+ *
  * @example
  * ```ts
  * const { data, hasMore, nextCursor } = await getNearbyPosts({
@@ -178,31 +180,25 @@ export async function getNearbyPostsCounts(options: {
   lng: number;
   radiusMeters?: number;
 }): Promise<PostTypeCount[]> {
+  'use cache';
+  cacheLife('short');
+  cacheTag(CACHE_TAGS.PRODUCTS);
+
   const { lat, lng, radiusMeters = DEFAULT_RADIUS_METERS } = options;
 
-  // Cache the counts for a short period (they change frequently)
-  return unstable_cache(
-    async (): Promise<PostTypeCount[]> => {
-      const supabase = createCachedClient();
+  const supabase = createCachedClient();
 
-      const { data, error } = await supabase.rpc("get_nearby_posts_count", {
-        user_lat: lat,
-        user_lng: lng,
-        radius_meters: radiusMeters,
-      });
+  const { data, error } = await supabase.rpc("get_nearby_posts_count", {
+    user_lat: lat,
+    user_lng: lng,
+    radius_meters: radiusMeters,
+  });
 
-      if (error) {
-        throw new Error(`Failed to fetch nearby posts count: ${error.message}`);
-      }
+  if (error) {
+    throw new Error(`Failed to fetch nearby posts count: ${error.message}`);
+  }
 
-      return (data ?? []) as PostTypeCount[];
-    },
-    [`nearby-counts-${lat.toFixed(3)}-${lng.toFixed(3)}-${radiusMeters}`],
-    {
-      revalidate: CACHE_DURATIONS.SHORT, // 30 seconds
-      tags: [CACHE_TAGS.PRODUCTS],
-    }
-  )();
+  return (data ?? []) as PostTypeCount[];
 }
 
 /**

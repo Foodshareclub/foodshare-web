@@ -1,12 +1,8 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { ViewProfileClient } from "./ViewProfileClient";
-import { getPublicProfile, hasUserRole } from "@/lib/data/profiles";
-import { getUser } from "@/app/actions/auth";
+import { ProfileWithAuth } from "./ProfileWithAuth";
+import { getPublicProfile } from "@/lib/data/profiles";
 import { generatePersonJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
-
-// Route segment config for caching
-export const revalidate = 300;
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -14,23 +10,22 @@ interface PageProps {
 
 /**
  * View Profile Page - Server Component
- * Displays another user's public profile
+ *
+ * Fetches profile data eagerly (needed for notFound + SEO).
+ * Auth-dependent data (user session, volunteer role) streams
+ * independently via ProfileWithAuth Suspense boundary.
  */
 export default async function ViewProfilePage({ params }: PageProps) {
   const { id } = await params;
 
-  // Fetch data in parallel on the server
-  const [profile, user, isVolunteer] = await Promise.all([
-    getPublicProfile(id),
-    getUser(),
-    hasUserRole(id, "volunteer"),
-  ]);
+  // Profile is needed for the page - fetch eagerly for notFound check and SEO
+  const profile = await getPublicProfile(id);
 
   if (!profile) {
     notFound();
   }
 
-  // Generate Person structured data for SEO
+  // Generate Person structured data for SEO (no auth needed)
   const fullName = [profile.first_name, profile.second_name].filter(Boolean).join(" ") || "User";
   const personJsonLd = generatePersonJsonLd({
     id: profile.id,
@@ -41,6 +36,8 @@ export default async function ViewProfilePage({ params }: PageProps) {
     memberSince: profile.created_time || undefined,
   });
 
+  // JSON-LD renders immediately. ProfileWithAuth streams independently -
+  // it fetches user session and volunteer role in its own Suspense boundary.
   return (
     <>
       <script
@@ -48,7 +45,7 @@ export default async function ViewProfilePage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(personJsonLd) }}
       />
       <Suspense fallback={<ProfileSkeleton />}>
-        <ViewProfileClient profile={profile} user={user} isVolunteer={isVolunteer} />
+        <ProfileWithAuth profile={profile} profileId={id} />
       </Suspense>
     </>
   );

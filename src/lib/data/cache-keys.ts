@@ -1,7 +1,7 @@
 /**
  * Centralized Cache Keys & Tags
  *
- * Single source of truth for all cache tags used with unstable_cache and revalidateTag.
+ * Single source of truth for all cache tags used with 'use cache' directive and revalidateTag.
  * This ensures consistency across data fetching and cache invalidation.
  */
 
@@ -41,7 +41,7 @@ function logCacheOperation(
 }
 
 // ============================================================================
-// Cache Tags - Used with unstable_cache and revalidateTag
+// Cache Tags - Used with 'use cache' (cacheTag) and revalidateTag
 // ============================================================================
 
 export const CACHE_TAGS = {
@@ -85,6 +85,7 @@ export const CACHE_TAGS = {
   // Admin
   ADMIN: "admin",
   ADMIN_STATS: "admin-stats",
+  ADMIN_ANALYTICS: "admin-analytics",
   ADMIN_LISTINGS: "admin-listings",
   ADMIN_USERS: "admin-users",
   ADMIN_REPORTS: "admin-reports",
@@ -156,6 +157,7 @@ export const CACHE_DURATIONS = {
   CHALLENGE_LEADERBOARD: 120, // 2 minutes - leaderboard updates frequently
   FORUM: 120, // 2 minutes
   ADMIN_STATS: 300, // 5 minutes
+  ADMIN_ANALYTICS: 300, // 5 minutes
   NEWSLETTER: 300, // 5 minutes
   CAMPAIGNS: 300, // 5 minutes
   SEGMENTS: 600, // 10 minutes
@@ -253,6 +255,7 @@ export function getAdminTags(): string[] {
   return [
     CACHE_TAGS.ADMIN,
     CACHE_TAGS.ADMIN_STATS,
+    CACHE_TAGS.ADMIN_ANALYTICS,
     CACHE_TAGS.ADMIN_LISTINGS,
     CACHE_TAGS.ADMIN_USERS,
     CACHE_TAGS.ADMIN_REPORTS,

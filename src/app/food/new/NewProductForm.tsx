@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
@@ -119,7 +119,7 @@ export function NewProductForm({
   const isAuthenticated = !!userId;
   const avatarUrl = profile?.avatar_url;
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, startSubmitTransition] = useTransition();
   const [isDrafting, setIsDrafting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
@@ -245,7 +245,7 @@ export function NewProductForm({
     return result.data.results.map((r) => r.data.url);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -321,49 +321,48 @@ export function NewProductForm({
       }
     }
 
-    setIsSubmitting(true);
+    startSubmitTransition(async () => {
+      try {
+        const imageUrls = await uploadImages();
 
-    try {
-      const imageUrls = await uploadImages();
+        // Build FormData for Server Action
+        const serverFormData = new FormData();
+        serverFormData.set("post_name", formData.post_name.trim());
+        serverFormData.set("post_description", formData.post_description.trim());
+        serverFormData.set("post_type", formData.post_type);
+        serverFormData.set("post_address", formData.post_address.trim());
+        serverFormData.set("available_hours", formData.available_hours.trim());
+        serverFormData.set("transportation", formData.transportation);
+        serverFormData.set("images", JSON.stringify(imageUrls));
+        serverFormData.set("profile_id", userId);
 
-      // Build FormData for Server Action
-      const serverFormData = new FormData();
-      serverFormData.set("post_name", formData.post_name.trim());
-      serverFormData.set("post_description", formData.post_description.trim());
-      serverFormData.set("post_type", formData.post_type);
-      serverFormData.set("post_address", formData.post_address.trim());
-      serverFormData.set("available_hours", formData.available_hours.trim());
-      serverFormData.set("transportation", formData.transportation);
-      serverFormData.set("images", JSON.stringify(imageUrls));
-      serverFormData.set("profile_id", userId);
+        // For volunteers, store skills in the condition field
+        if (isVolunteerForm && formData.volunteer_skills.length > 0) {
+          const skillLabels = formData.volunteer_skills
+            .map((skillId) => VOLUNTEER_SKILLS.find((s) => s.id === skillId)?.label)
+            .filter(Boolean);
+          serverFormData.set("condition", skillLabels.join(","));
+        }
 
-      // For volunteers, store skills in the condition field
-      if (isVolunteerForm && formData.volunteer_skills.length > 0) {
-        const skillLabels = formData.volunteer_skills
-          .map((skillId) => VOLUNTEER_SKILLS.find((s) => s.id === skillId)?.label)
-          .filter(Boolean);
-        serverFormData.set("condition", skillLabels.join(","));
+        const result = await createProduct(serverFormData);
+
+        if (!result.success) {
+          throw new Error(result.error?.message || "Failed to create listing");
+        }
+
+        // Redirect to appropriate page based on type
+        const redirectMap: Record<string, string> = {
+          volunteer: "/volunteers?submitted=true",
+          challenge: "/challenge?submitted=true",
+        };
+        const redirectUrl = redirectMap[formData.post_type] || `/food?type=${formData.post_type}`;
+        router.push(redirectUrl);
+        router.refresh();
+      } catch (err) {
+        console.error("Error creating product:", err);
+        setError("Failed to create listing. Please try again.");
       }
-
-      const result = await createProduct(serverFormData);
-
-      if (!result.success) {
-        throw new Error(result.error?.message || "Failed to create listing");
-      }
-
-      // Redirect to appropriate page based on type
-      const redirectMap: Record<string, string> = {
-        volunteer: "/volunteers?submitted=true",
-        challenge: "/challenge?submitted=true",
-      };
-      const redirectUrl = redirectMap[formData.post_type] || `/food?type=${formData.post_type}`;
-      router.push(redirectUrl);
-      router.refresh();
-    } catch (err) {
-      console.error("Error creating product:", err);
-      setError("Failed to create listing. Please try again.");
-      setIsSubmitting(false);
-    }
+    });
   };
 
   const handleRouteChange = (route: string) => {

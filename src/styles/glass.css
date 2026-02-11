@@ -1,0 +1,171 @@
+/* ============================================================================
+   Glass Morphism Utilities (@utility directives)
+   ============================================================================
+   These create proper Tailwind utilities that work with variants like
+   hover:, dark:, md:, etc.
+   ============================================================================ */
+
+/* Glass morphism base */
+@utility glass {
+  background: hsl(var(--background) / var(--glass-bg-opacity));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  border: 1px solid hsl(var(--border) / var(--glass-border-opacity));
+}
+
+/* Glass variants */
+@utility glass-subtle {
+  background: hsl(var(--background) / 0.5);
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  border: 1px solid hsl(var(--border) / 0.2);
+}
+
+@utility glass-prominent {
+  background: hsl(var(--background) / 0.85);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border: 1px solid hsl(var(--border) / 0.4);
+  box-shadow: 0 4px 30px hsl(0 0% 0% / 0.1);
+}
+
+@utility glass-strong {
+  background: hsl(var(--background) / 0.9);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  border: 1px solid hsl(var(--border) / 0.5);
+  box-shadow: 0 8px 32px hsl(0 0% 0% / 0.12);
+}
+
+@utility glass-overlay {
+  background: hsl(var(--background) / 0.95);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid hsl(var(--border) / 0.5);
+  box-shadow: 0 8px 40px hsl(0 0% 0% / 0.15);
+}
+
+@utility glass-card {
+  background: hsl(var(--background) / 0.7);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid hsl(var(--border) / 0.15);
+  box-shadow:
+    0 4px 24px hsl(0 0% 0% / 0.06),
+    0 1px 2px hsl(0 0% 0% / 0.04);
+}
+
+@utility glass-input {
+  background: hsl(var(--background) / 0.6);
+  backdrop-filter: blur(10px) saturate(150%);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  border: 1px solid hsl(var(--border) / 0.4);
+}
+
+/* Accent glass variants */
+@utility glass-accent-primary {
+  background: hsl(var(--primary) / 0.15);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border: 1px solid hsl(var(--primary) / 0.3);
+}
+
+@utility glass-accent-orange {
+  background: hsl(27 87% 67% / 0.15);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border: 1px solid hsl(27 87% 67% / 0.3);
+}
+
+/* Glass transition utility */
+@utility glass-transition {
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Glass animation utilities */
+@utility glass-fade-in {
+  animation: glass-fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@utility glass-scale-in {
+  animation: glass-scale-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@utility glass-shimmer {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.05), transparent);
+    animation: shimmer 2s infinite;
+  }
+}
+
+@keyframes glass-fade-in {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(var(--glass-blur, 15px));
+  }
+}
+
+@keyframes glass-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================================================
+   Dark Mode Glass Adjustments (Claude AI warm palette)
+   Uses CSS variables for maintainability - change .dark variables to adjust
+   ============================================================================ */
+
+.dark .glass-prominent {
+  background: hsl(var(--glass-bg) / 0.88);
+  box-shadow: 0 4px 30px hsl(var(--glass-shadow) / 0.5);
+}
+
+.dark .glass-strong {
+  background: hsl(var(--glass-bg-strong) / 0.92);
+  box-shadow: 0 8px 32px hsl(var(--glass-shadow) / 0.6);
+}
+
+.dark .glass-overlay {
+  background: hsl(var(--background) / 0.95);
+  border: 1px solid hsl(var(--glass-border) / 0.35);
+  box-shadow: 0 8px 40px hsl(var(--glass-shadow) / 0.7);
+}
+
+.dark .glass-accent-primary {
+  background: hsl(var(--primary) / 0.18);
+}
+
+.dark .glass-accent-orange {
+  background: hsl(var(--brand-orange) / 0.18);
+}
+
+/* Warm glow effect for dark mode */
+.dark .glass-subtle {
+  background: hsl(var(--glass-bg-subtle) / 0.65);
+  border: 1px solid hsl(var(--glass-border) / 0.2);
+}
+
+/* Glass input focus state */
+.glass-input:focus-within {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+}

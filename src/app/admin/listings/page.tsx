@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 import { getAdminListings, getListingStats } from "@/lib/data/admin-listings";
-import { AdminListingsClient } from "@/components/admin/AdminListingsClient";
+import { AdminListingsClient } from "@/app/admin/listings/AdminListingsClient";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface PageProps {

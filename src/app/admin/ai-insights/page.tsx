@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
-import { AIInsightsClient } from "@/components/admin/AIInsightsClient";
+import { AIInsightsClient } from "@/app/admin/ai-insights/AIInsightsClient";
 import { getAIInsightsData } from "@/lib/data/admin-ai-insights";
 import { Skeleton } from "@/components/ui/skeleton";
 

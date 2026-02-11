@@ -29,3 +29,23 @@ export function ProfileSkeleton({ className }: ProfileSkeletonProps) {
     </div>
   );
 }
+
+/**
+ * Skeleton for profile page sections that depend on auth state.
+ * Displayed while user session and volunteer role data is loading.
+ */
+export function ProfileUserSkeleton() {
+  return (
+    <div className="animate-pulse space-y-4 mt-6">
+      {/* Volunteer badge placeholder */}
+      <div className="flex justify-center">
+        <div className="h-8 w-32 bg-muted rounded-full" />
+      </div>
+      {/* Action buttons placeholder */}
+      <div className="flex justify-center gap-3 mt-4">
+        <div className="h-10 w-28 bg-muted rounded-lg" />
+        <div className="h-10 w-28 bg-muted rounded-lg" />
+      </div>
+    </div>
+  );
+}

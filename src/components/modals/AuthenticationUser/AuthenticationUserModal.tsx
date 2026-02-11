@@ -5,7 +5,7 @@
  * Beautiful Airbnb-inspired login/signup experience
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { PasswordStrength } from "./PasswordStrength";
 import { InvitationStep } from "./InvitationStep";
@@ -20,7 +20,7 @@ import {
   testStorageAvailability,
   clearSupabaseStorage,
   type StorageErrorInfo,
-} from "@/utils/storageErrorHandler";
+} from "@/lib/errors/storage-handler";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -78,7 +78,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [storageError, setStorageError] = useState<StorageErrorInfo | null>(null);
   const [isCheckingStorage, setIsCheckingStorage] = useState(false);
   const [isRecoveringStorage, setIsRecoveringStorage] = useState(false);
@@ -167,7 +167,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
     setEmailError(error);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     logger.debug("Form submitted", { mode, email });
 
@@ -184,54 +184,53 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
       return;
     }
 
-    setIsLoading(true);
     clearError();
 
-    try {
-      if (mode === "login") {
-        logger.debug("Attempting login...");
-        const result = await loginWithPassword(email, password);
-        logger.debug("Login result", {
-          success: result.success,
-        });
+    startTransition(async () => {
+      try {
+        if (mode === "login") {
+          logger.debug("Attempting login...");
+          const result = await loginWithPassword(email, password);
+          logger.debug("Login result", {
+            success: result.success,
+          });
 
-        if (result.success) {
-          logger.info("Login successful, closing modal");
-          handleClose();
+          if (result.success) {
+            logger.info("Login successful, closing modal");
+            handleClose();
+          } else {
+            logger.error("Login failed", new Error(result.error || "Login failed"));
+          }
         } else {
-          logger.error("Login failed", new Error(result.error || "Login failed"));
+          logger.debug("Attempting registration...");
+          const result = await register({
+            email,
+            password,
+            firstName,
+            lastName,
+          });
+          logger.debug("Registration result", {
+            success: result.success,
+          });
+
+          if (result.success) {
+            logger.info("Registration successful, showing invitation");
+            setShowInvitation(true);
+          } else {
+            logger.error("Registration failed", new Error(result.error || "Registration failed"));
+          }
         }
-      } else {
-        logger.debug("Attempting registration...");
-        const result = await register({
-          email,
-          password,
-          firstName,
-          lastName,
-        });
-        logger.debug("Registration result", {
-          success: result.success,
-        });
-
-        if (result.success) {
-          logger.info("Registration successful, showing invitation");
-          setShowInvitation(true);
-        } else {
-          logger.error("Registration failed", new Error(result.error || "Registration failed"));
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message.toLowerCase() : "";
+        if (
+          errorMessage.includes("storage") ||
+          errorMessage.includes("indexeddb") ||
+          errorMessage.includes("ldb")
+        ) {
+          await checkStorageAvailability();
         }
       }
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message.toLowerCase() : "";
-      if (
-        errorMessage.includes("storage") ||
-        errorMessage.includes("indexeddb") ||
-        errorMessage.includes("ldb")
-      ) {
-        await checkStorageAvailability();
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   const handleSocialLogin = async (provider: "google" | "facebook" | "apple") => {
@@ -565,9 +564,9 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     <Button
                       type="submit"
                       className="h-11 w-full brand-gradient text-white font-semibold text-base rounded-lg hover:brand-gradient-hover hover:-translate-y-px hover:shadow-lg hover:shadow-primary/40 active:translate-y-0 transition-all"
-                      disabled={isLoading}
+                      disabled={isPending}
                     >
-                      {isLoading
+                      {isPending
                         ? mode === "login"
                           ? "Logging in..."
                           : "Signing up..."

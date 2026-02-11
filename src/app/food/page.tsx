@@ -10,9 +10,6 @@ import { categoryMetadata, generatePageMetadata, siteConfig } from "@/lib/metada
 import { isDatabaseHealthy } from "@/lib/data/health";
 import { generateItemListJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 
-// Route segment config for caching
-export const revalidate = 60;
-
 const CATEGORY_PATHS = [
   "food",
   "thing",

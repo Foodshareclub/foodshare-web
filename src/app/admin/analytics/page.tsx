@@ -33,7 +33,7 @@ function AIAnalyticsLoadingFallback() {
 // Lazy-load AnalyticsDashboard (includes Recharts ~290KB) - only loads on this route
 const AnalyticsDashboard = dynamic(
   () =>
-    import("@/components/admin/analytics/AnalyticsDashboard").then((m) => ({
+    import("@/app/admin/analytics/components/AnalyticsDashboard").then((m) => ({
       default: m.AnalyticsDashboard,
     })),
   {
@@ -45,7 +45,7 @@ const AnalyticsDashboard = dynamic(
 // Lazy-load AIAnalyticsPanel
 const AIAnalyticsPanel = dynamic(
   () =>
-    import("@/components/admin/analytics/AIAnalyticsPanel").then((m) => ({
+    import("@/app/admin/analytics/components/AIAnalyticsPanel").then((m) => ({
       default: m.AIAnalyticsPanel,
     })),
   {

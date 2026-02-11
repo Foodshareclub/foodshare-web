@@ -6,6 +6,11 @@
  *
  * SYNC: Mirrors Android CircuitBreaker.kt and backend circuit-breaker patterns
  *
+ * NOTE: A simpler, proxy-scoped circuit breaker also exists in src/proxy.ts:117-172.
+ * That version is intentionally separate — it runs in the proxy layer and cannot
+ * import from lib/. This version is the shared, configurable implementation for
+ * API clients and other lib consumers.
+ *
  * @module lib/api/circuit-breaker
  */
 

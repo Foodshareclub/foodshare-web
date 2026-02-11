@@ -14,8 +14,13 @@ export { ProductGridSkeleton } from "./ProductGridSkeleton";
 export { ProductDetailSkeleton } from "./ProductDetailSkeleton";
 export { ChatSkeleton } from "./ChatSkeleton";
 export { AdminDashboardSkeleton } from "./AdminDashboardSkeleton";
-export { ProfileSkeleton } from "./ProfileSkeleton";
+export { ProfileSkeleton, ProfileUserSkeleton } from "./ProfileSkeleton";
 export { SettingsSkeleton } from "./SettingsSkeleton";
+
+// Streaming boundary skeletons
+export { UserActionsSkeleton } from "./UserActionsSkeleton";
+export { ChallengeContentSkeleton } from "./ChallengeSkeleton";
+export { ForumContentSkeleton } from "./ForumSkeleton";
 
 // Generic layouts
 export { PageSkeleton, CenteredLoadingSkeleton, CardContentSkeleton } from "./PageSkeleton";

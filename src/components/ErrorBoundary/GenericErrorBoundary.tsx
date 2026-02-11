@@ -6,7 +6,7 @@
 import type { ReactNode, ErrorInfo } from "react";
 import React, { Component } from "react";
 import { Button } from "@/components/ui/button";
-import { detectStorageError, clearSupabaseStorage } from "@/utils/storageErrorHandler";
+import { detectStorageError, clearSupabaseStorage } from "@/lib/errors/storage-handler";
 
 // ============================================================================
 // Types

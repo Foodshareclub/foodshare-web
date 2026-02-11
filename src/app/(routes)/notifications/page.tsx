@@ -8,9 +8,6 @@ import { NotificationsPageClient } from "./NotificationsPageClient";
 import { createClient } from "@/lib/supabase/server";
 import { getUserNotifications, getUnreadNotificationCount } from "@/lib/data/notifications";
 
-// Force dynamic rendering - user-specific content
-export const dynamic = "force-dynamic";
-
 export const metadata = {
   title: "Notifications | FoodShare",
   description: "View your notifications",

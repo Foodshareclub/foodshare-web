@@ -4,9 +4,6 @@ import { getProducts } from "@/lib/data/products";
 import { VolunteerHero, BecomeVolunteerCTA, VolunteerGrid } from "@/components/volunteers";
 import { isDatabaseHealthy } from "@/lib/data/health";
 
-// Route segment config for caching
-export const revalidate = 60;
-
 interface PageProps {
   searchParams: Promise<{
     submitted?: string;

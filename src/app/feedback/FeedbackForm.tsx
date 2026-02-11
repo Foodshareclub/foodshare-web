@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { CheckCircle, AlertCircle, Send } from "lucide-react";
 import { submitFeedback, type FeedbackType } from "@/app/actions/feedback";
@@ -21,7 +21,7 @@ interface FeedbackFormProps {
 }
 
 export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [submitStatus, setSubmitStatus] = useState<"success" | "error" | null>(null);
 
   const {
@@ -39,39 +39,38 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
     },
   });
 
-  const onSubmit = async (data: FeedbackFormData) => {
-    setIsSubmitting(true);
+  const onSubmit = (data: FeedbackFormData) => {
     setSubmitStatus(null);
 
-    try {
-      const result = await submitFeedback({
-        name: data.name,
-        email: data.email,
-        subject: data.subject,
-        message: data.message,
-        feedback_type: data.feedback_type,
-      });
+    startTransition(async () => {
+      try {
+        const result = await submitFeedback({
+          name: data.name,
+          email: data.email,
+          subject: data.subject,
+          message: data.message,
+          feedback_type: data.feedback_type,
+        });
 
-      if (!result.success) {
-        throw new Error(result.error.message);
+        if (!result.success) {
+          throw new Error(result.error.message);
+        }
+
+        setSubmitStatus("success");
+        reset({
+          name: defaultName,
+          email: defaultEmail,
+          subject: "",
+          message: "",
+          feedback_type: "general",
+        });
+        setTimeout(() => setSubmitStatus(null), 5000);
+      } catch (error) {
+        console.error("Error submitting feedback:", error);
+        setSubmitStatus("error");
+        setTimeout(() => setSubmitStatus(null), 5000);
       }
-
-      setSubmitStatus("success");
-      reset({
-        name: defaultName,
-        email: defaultEmail,
-        subject: "",
-        message: "",
-        feedback_type: "general",
-      });
-      setTimeout(() => setSubmitStatus(null), 5000);
-    } catch (error) {
-      console.error("Error submitting feedback:", error);
-      setSubmitStatus("error");
-      setTimeout(() => setSubmitStatus(null), 5000);
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   };
 
   return (
@@ -202,10 +201,10 @@ export function FeedbackForm({ defaultName, defaultEmail }: FeedbackFormProps) {
               {/* Submit Button */}
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isPending}
                 className="font-semibold rounded-lg h-[42px]"
               >
-                {isSubmitting ? (
+                {isPending ? (
                   "Sending..."
                 ) : (
                   <>

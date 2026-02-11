@@ -8,8 +8,6 @@ export const metadata = generatePageMetadata({
   path: '/privacy',
 });
 
-export const dynamic = 'force-static'
-
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">

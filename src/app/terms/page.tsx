@@ -9,8 +9,6 @@ export const metadata = generatePageMetadata({
   path: '/terms',
 });
 
-export const dynamic = 'force-static'
-
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background">

@@ -85,6 +85,11 @@ mock.module("@/lib/data/cache-keys", () => ({
 const mockResult = () => Promise.resolve({ success: true, data: null });
 mock.module("@/app/actions/analytics", () => ({
   trackEvent: mock(() => Promise.resolve()),
+  triggerAnalyticsSync: mock(mockResult),
+}));
+
+// Mock analytics data layer
+mock.module("@/lib/data/analytics", () => ({
   getAnalyticsSummary: mock(mockResult),
   getMonthlyGrowth: mock(mockResult),
   getDailyActiveUsers: mock(mockResult),
@@ -97,7 +102,6 @@ mock.module("@/app/actions/analytics", () => ({
   getSyncStatus: mock(mockResult),
   getGeographicHotspots: mock(mockResult),
   getActivityByHour: mock(mockResult),
-  triggerAnalyticsSync: mock(mockResult),
 }));
 
 // Mock post-activity — must include ALL exports

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useTransition } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { ViewIcon, ViewOffIcon } from "@/utils/icons";
 import {
@@ -22,7 +22,7 @@ export const PasswordRecoveryModal = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [show, setShow] = useState(false);
   const [password, setPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const showPass = () => setShow(true);
   const hidePass = () => setShow(false);
 
@@ -36,18 +36,17 @@ export const PasswordRecoveryModal = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const createPasswordHandler = async () => {
-    setIsSubmitting(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) throw error;
-      setIsOpen(false);
-      setPassword("");
-    } catch (error) {
-      console.error("Error updating password:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
+  const createPasswordHandler = () => {
+    startTransition(async () => {
+      try {
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw error;
+        setIsOpen(false);
+        setPassword("");
+      } catch (error) {
+        console.error("Error updating password:", error);
+      }
+    });
   };
 
   return (
@@ -88,10 +87,10 @@ export const PasswordRecoveryModal = () => {
         <DialogFooter>
           <Button
             onClick={createPasswordHandler}
-            disabled={!password || isSubmitting}
+            disabled={!password || isPending}
             className="bg-blue-500 hover:bg-blue-600 text-white"
           >
-            {isSubmitting ? "Saving..." : "Save"}
+            {isPending ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -2,12 +2,12 @@
  * Forum Data Layer
  *
  * Server-side data fetching functions for forum posts, categories, and tags.
- * Uses unstable_cache for server-side caching with tag-based invalidation.
+ * Uses 'use cache' directive for server-side caching with tag-based invalidation.
  */
 
-import { unstable_cache } from 'next/cache';
+import { cacheLife, cacheTag } from 'next/cache';
 import { createCachedClient } from '@/lib/supabase/server';
-import { CACHE_TAGS, CACHE_DURATIONS } from './cache-keys';
+import { CACHE_TAGS } from './cache-keys';
 import type { ForumPost, ForumCategory, ForumTag } from '@/api/forumAPI';
 
 // ============================================================================
@@ -145,38 +145,35 @@ export function calculateStatsFromPosts(posts: ForumPost[]): Pick<ForumStats, 'a
 /**
  * Get forum stats from database (accurate totals)
  */
-export const getForumStats = unstable_cache(
-  async (): Promise<ForumStats> => {
-    const supabase = createCachedClient();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+export async function getForumStats(): Promise<ForumStats> {
+  'use cache';
+  cacheLife('forum');
+  cacheTag(CACHE_TAGS.FORUM);
 
-    const [postsResult, commentsResult, postsTodayResult, activeUsersResult] = await Promise.all([
-      supabase.from('forum').select('id', { count: 'exact', head: true }).eq('forum_published', true),
-      supabase.from('comments').select('id', { count: 'exact', head: true }).not('forum_id', 'is', null),
-      supabase
-        .from('forum')
-        .select('id', { count: 'exact', head: true })
-        .eq('forum_published', true)
-        .gte('forum_post_created_at', today.toISOString()),
-      supabase.from('forum').select('profile_id').eq('forum_published', true),
-    ]);
+  const supabase = createCachedClient();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-    const uniqueUsers = new Set(activeUsersResult.data?.map((p) => p.profile_id).filter(Boolean));
+  const [postsResult, commentsResult, postsTodayResult, activeUsersResult] = await Promise.all([
+    supabase.from('forum').select('id', { count: 'exact', head: true }).eq('forum_published', true),
+    supabase.from('comments').select('id', { count: 'exact', head: true }).not('forum_id', 'is', null),
+    supabase
+      .from('forum')
+      .select('id', { count: 'exact', head: true })
+      .eq('forum_published', true)
+      .gte('forum_post_created_at', today.toISOString()),
+    supabase.from('forum').select('profile_id').eq('forum_published', true),
+  ]);
 
-    return {
-      totalPosts: postsResult.count ?? 0,
-      totalComments: commentsResult.count ?? 0,
-      postsToday: postsTodayResult.count ?? 0,
-      activeUsers: uniqueUsers.size,
-    };
-  },
-  ['forum-stats'],
-  {
-    revalidate: CACHE_DURATIONS.FORUM,
-    tags: [CACHE_TAGS.FORUM],
-  }
-);
+  const uniqueUsers = new Set(activeUsersResult.data?.map((p) => p.profile_id).filter(Boolean));
+
+  return {
+    totalPosts: postsResult.count ?? 0,
+    totalComments: commentsResult.count ?? 0,
+    postsToday: postsTodayResult.count ?? 0,
+    activeUsers: uniqueUsers.size,
+  };
+}
 
 // ============================================================================
 // Cached Data Functions
@@ -185,114 +182,105 @@ export const getForumStats = unstable_cache(
 /**
  * Get forum posts with relations
  */
-export const getForumPosts = unstable_cache(
-  async (options?: { categoryId?: number; sortBy?: SortOption; limit?: number }): Promise<ForumPost[]> => {
-    const supabase = createCachedClient();
-    const limit = options?.limit ?? FORUM_LIMITS.POSTS;
+export async function getForumPosts(options?: { categoryId?: number; sortBy?: SortOption; limit?: number }): Promise<ForumPost[]> {
+  'use cache';
+  cacheLife('forum');
+  cacheTag(CACHE_TAGS.FORUM);
 
-    let query = supabase
-      .from('forum')
-      .select(
-        `*,
-        profiles!forum_profile_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url),
-        forum_categories!forum_category_id_fkey (*),
-        forum_post_tags (forum_tags (*))`
-      )
-      .eq('forum_published', true);
+  const supabase = createCachedClient();
+  const limit = options?.limit ?? FORUM_LIMITS.POSTS;
 
-    // Filter by category
-    if (options?.categoryId) {
-      query = query.eq('category_id', options.categoryId);
-    }
+  let query = supabase
+    .from('forum')
+    .select(
+      `*,
+      profiles!forum_profile_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url),
+      forum_categories!forum_category_id_fkey (*),
+      forum_post_tags (forum_tags (*))`
+    )
+    .eq('forum_published', true);
 
-    // Sorting
-    switch (options?.sortBy) {
-      case 'hot':
-        query = query.order('hot_score', { ascending: false });
-        break;
-      case 'top':
-        query = query.order('forum_likes_counter', { ascending: false });
-        break;
-      case 'unanswered':
-        query = query.eq('post_type', 'question').is('best_answer_id', null);
-        query = query.order('forum_post_created_at', { ascending: false });
-        break;
-      default:
-        query = query.order('last_activity_at', { ascending: false, nullsFirst: false });
-    }
-
-    // Pinned posts first
-    query = query.order('is_pinned', { ascending: false }).limit(limit);
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Failed to fetch forum posts:', error);
-      throw new Error(`Failed to fetch forum posts: ${error.message}`);
-    }
-
-    return (data ?? []) as ForumPost[];
-  },
-  ['forum-posts-v2'],
-  {
-    revalidate: CACHE_DURATIONS.FORUM,
-    tags: [CACHE_TAGS.FORUM],
+  // Filter by category
+  if (options?.categoryId) {
+    query = query.eq('category_id', options.categoryId);
   }
-);
+
+  // Sorting
+  switch (options?.sortBy) {
+    case 'hot':
+      query = query.order('hot_score', { ascending: false });
+      break;
+    case 'top':
+      query = query.order('forum_likes_counter', { ascending: false });
+      break;
+    case 'unanswered':
+      query = query.eq('post_type', 'question').is('best_answer_id', null);
+      query = query.order('forum_post_created_at', { ascending: false });
+      break;
+    default:
+      query = query.order('last_activity_at', { ascending: false, nullsFirst: false });
+  }
+
+  // Pinned posts first
+  query = query.order('is_pinned', { ascending: false }).limit(limit);
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Failed to fetch forum posts:', error);
+    throw new Error(`Failed to fetch forum posts: ${error.message}`);
+  }
+
+  return (data ?? []) as ForumPost[];
+}
 
 /**
  * Get active forum categories
  */
-export const getForumCategories = unstable_cache(
-  async (): Promise<ForumCategory[]> => {
-    const supabase = createCachedClient();
+export async function getForumCategories(): Promise<ForumCategory[]> {
+  'use cache';
+  cacheLife('long');
+  cacheTag(CACHE_TAGS.FORUM);
 
-    const { data, error } = await supabase
-      .from('forum_categories')
-      .select('*')
-      .eq('is_active', true)
-      .order('sort_order', { ascending: true });
+  const supabase = createCachedClient();
 
-    if (error) {
-      console.error('Failed to fetch forum categories:', error);
-      throw new Error(`Failed to fetch forum categories: ${error.message}`);
-    }
+  const { data, error } = await supabase
+    .from('forum_categories')
+    .select('*')
+    .eq('is_active', true)
+    .order('sort_order', { ascending: true });
 
-    return (data ?? []) as ForumCategory[];
-  },
-  ['forum-categories'],
-  {
-    revalidate: CACHE_DURATIONS.LONG,
-    tags: [CACHE_TAGS.FORUM],
+  if (error) {
+    console.error('Failed to fetch forum categories:', error);
+    throw new Error(`Failed to fetch forum categories: ${error.message}`);
   }
-);
+
+  return (data ?? []) as ForumCategory[];
+}
 
 /**
  * Get popular forum tags
  */
-export const getForumTags = unstable_cache(
-  async (limit = FORUM_LIMITS.POPULAR_TAGS): Promise<ForumTag[]> => {
-    const supabase = createCachedClient();
+export async function getForumTags(limit = FORUM_LIMITS.POPULAR_TAGS): Promise<ForumTag[]> {
+  'use cache';
+  cacheLife('long');
+  cacheTag(CACHE_TAGS.FORUM);
 
-    const { data, error } = await supabase
-      .from('forum_tags')
-      .select('*')
-      .order('usage_count', { ascending: false })
-      .limit(limit);
+  const supabase = createCachedClient();
 
-    if (error) {
-      console.error('Failed to fetch forum tags:', error);
-      throw new Error(`Failed to fetch forum tags: ${error.message}`);
-    }
+  const { data, error } = await supabase
+    .from('forum_tags')
+    .select('*')
+    .order('usage_count', { ascending: false })
+    .limit(limit);
 
-    return (data ?? []) as ForumTag[];
-  },
-  ['forum-tags'],
-  {
-    revalidate: CACHE_DURATIONS.LONG,
-    tags: [CACHE_TAGS.FORUM],
+  if (error) {
+    console.error('Failed to fetch forum tags:', error);
+    throw new Error(`Failed to fetch forum tags: ${error.message}`);
   }
-);
+
+  return (data ?? []) as ForumTag[];
+}
 
 /**
  * Get all forum page data in parallel

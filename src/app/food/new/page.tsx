@@ -3,9 +3,6 @@ import { NewProductForm } from "./NewProductForm";
 import { getAuthSession } from "@/lib/data/auth";
 import { generateNoIndexMetadata } from "@/lib/metadata";
 
-// Force dynamic rendering - auth-required page
-export const dynamic = "force-dynamic";
-
 export const metadata = generateNoIndexMetadata(
   "Create New Listing",
   "Share food or items with your community"

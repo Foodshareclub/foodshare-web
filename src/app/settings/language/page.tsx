@@ -27,8 +27,6 @@ export default async function LanguageRegionPage() {
   );
 }
 
-export const dynamic = "force-dynamic";
-
 function LanguageRegionSkeleton() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background">

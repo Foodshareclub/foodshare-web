@@ -23,7 +23,7 @@ function PerformanceLoadingFallback() {
 // Lazy-load WebVitalsDashboard (includes Recharts) - only loads on this route
 const WebVitalsDashboard = dynamic(
   () =>
-    import("@/components/admin/performance/WebVitalsDashboard").then((m) => ({
+    import("@/app/admin/performance/components/WebVitalsDashboard").then((m) => ({
       default: m.WebVitalsDashboard,
     })),
   {

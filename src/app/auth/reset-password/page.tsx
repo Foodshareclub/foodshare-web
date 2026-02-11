@@ -5,7 +5,7 @@
  * Allows users to set a new password after clicking the reset link
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,7 +22,7 @@ export default function ResetPasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isValidSession, setIsValidSession] = useState<boolean | null>(null);
@@ -49,7 +49,7 @@ export default function ResetPasswordPage() {
     return null;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     const validationError = validatePassword();
@@ -58,25 +58,24 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    setIsLoading(true);
     setError(null);
 
-    try {
-      const result = await updatePassword(password);
-      if (result.success) {
-        setIsSuccess(true);
-        // Redirect to home after 3 seconds
-        setTimeout(() => {
-          router.push("/");
-        }, 3000);
-      } else {
-        setError(result.error || "Failed to reset password. Please try again.");
+    startTransition(async () => {
+      try {
+        const result = await updatePassword(password);
+        if (result.success) {
+          setIsSuccess(true);
+          // Redirect to home after 3 seconds
+          setTimeout(() => {
+            router.push("/");
+          }, 3000);
+        } else {
+          setError(result.error || "Failed to reset password. Please try again.");
+        }
+      } catch {
+        setError("An unexpected error occurred. Please try again.");
       }
-    } catch {
-      setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   // Password strength indicator
@@ -315,10 +314,10 @@ export default function ResetPasswordPage() {
                     {/* Submit Button */}
                     <Button
                       type="submit"
-                      disabled={isLoading || !password || !confirmPassword}
+                      disabled={isPending || !password || !confirmPassword}
                       className="w-full h-14 bg-gradient-to-r from-[#FF2D55] via-[#E6284D] to-[#CC2345] text-white font-semibold text-base rounded-xl hover:from-[#E6284D] hover:via-[#CC2345] hover:to-[#B31F3D] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(255,45,85,0.35)] active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                     >
-                      {isLoading ? (
+                      {isPending ? (
                         <span className="flex items-center gap-2">
                           <Loader2 className="w-5 h-5 animate-spin" />
                           Updating...

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { isStorageHealthy } from "@/lib/supabase/client";
-import { testStorageAvailability, clearSupabaseStorage } from "@/utils/storageErrorHandler";
+import { testStorageAvailability, clearSupabaseStorage } from "@/lib/errors/storage-handler";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 

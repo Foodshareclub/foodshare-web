@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useTransition } from 'react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -107,33 +107,32 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
   const [step, setStep] = useState<ModalStep>('second');
   const [rating, setRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (step === 'second') {
       setStep('third');
       return;
     }
 
     if (step === 'third') {
-      setIsSubmitting(true);
-      try {
-        const formData = new FormData();
-        formData.set('reviewed_rating', String(rating));
-        formData.set('profile_id', sharerId === userID ? requesterId : sharerId);
-        formData.set('post_id', postId);
-        formData.set('feedback', feedbackText);
+      startTransition(async () => {
+        try {
+          const formData = new FormData();
+          formData.set('reviewed_rating', String(rating));
+          formData.set('profile_id', sharerId === userID ? requesterId : sharerId);
+          formData.set('post_id', postId);
+          formData.set('feedback', feedbackText);
 
-        const result = await writeReview(formData);
-        if (!result.success) {
-          throw new Error(result.error?.message || 'Failed to submit review');
+          const result = await writeReview(formData);
+          if (!result.success) {
+            throw new Error(result.error?.message || 'Failed to submit review');
+          }
+          setStep('fourth');
+        } catch {
+          // Error handling - could add toast notification here
         }
-        setStep('fourth');
-      } catch {
-        // Error handling - could add toast notification here
-      } finally {
-        setIsSubmitting(false);
-      }
+      });
     }
   };
 
@@ -258,9 +257,9 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
                 step === 'second' ? 'h-[55px] rounded-full' : 'h-10 rounded-lg'
               }`}
               onClick={handleSubmit}
-              disabled={isSubmitting}
+              disabled={isPending}
             >
-              {isSubmitting
+              {isPending
                 ? t('sending')
                 : step === 'second'
                   ? t('yes')

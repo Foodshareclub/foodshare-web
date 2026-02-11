@@ -111,7 +111,10 @@ if (typeof global !== "undefined") {
 }
 
 // ============================================================================
-// Circuit Breaker
+// Circuit Breaker (proxy-local, in-memory)
+// NOTE: Intentionally separate from src/lib/api/circuit-breaker.ts which is the
+// shared, configurable circuit breaker for API client use. This implementation
+// is simpler and scoped to the proxy runtime (cannot import from lib at this layer).
 // ============================================================================
 
 interface CircuitState {

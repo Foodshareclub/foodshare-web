@@ -13,7 +13,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
-import { getProfile, type Profile } from "@/lib/data/profiles";
+import { type UserAddress } from "@/lib/data/profiles";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import { createActionLogger } from "@/lib/structured-logger";
 import { trackEvent } from "@/app/actions/analytics";
@@ -63,20 +63,8 @@ export interface AvatarUploadResult {
   url: string;
 }
 
-export interface UserAddress {
-  profile_id: string;
-  address_line_1: string;
-  address_line_2: string;
-  address_line_3: string;
-  city: string;
-  state_province: string;
-  postal_code: string;
-  country: string;
-  lat: number | null;
-  long: number | null;
-  generated_full_address: string;
-  radius_meters: number | null;
-}
+// NOTE: UserAddress type and getCurrentProfile/getUserAddress READ functions
+// have been moved to @/lib/data/profiles per the architecture rule.
 
 // ============================================================================
 // Helper: Verify Auth
@@ -98,18 +86,8 @@ async function verifyAuth() {
 }
 
 // ============================================================================
-// Profile Actions
+// Profile Actions (WRITES only)
 // ============================================================================
-
-/**
- * Get current user's profile (not cached - depends on auth)
- */
-export async function getCurrentProfile(): Promise<Profile | null> {
-  const { user } = await verifyAuth();
-  if (!user) return null;
-
-  return getProfile(user.id);
-}
 
 /**
  * Update profile
@@ -482,54 +460,6 @@ export async function deleteAvatar(): Promise<ServerActionResult<void>> {
   } catch (error) {
     console.error("Failed to delete avatar:", error);
     return serverActionError("Failed to delete avatar", "UNKNOWN_ERROR");
-  }
-}
-
-/**
- * Get current user's address for pre-filling forms
- * Returns the user's saved address from the address table
- */
-export async function getUserAddress(): Promise<ServerActionResult<UserAddress | null>> {
-  try {
-    const { supabase, user, error: authError } = await verifyAuth();
-    if (authError || !supabase || !user) {
-      return serverActionError(authError || "Not authenticated", "UNAUTHORIZED");
-    }
-
-    const { data, error } = await supabase
-      .from("address")
-      .select(
-        `
-        profile_id,
-        address_line_1,
-        address_line_2,
-        address_line_3,
-        city,
-        state_province,
-        postal_code,
-        country,
-        lat,
-        long,
-        generated_full_address,
-        radius_meters
-      `
-      )
-      .eq("profile_id", user.id)
-      .single();
-
-    if (error) {
-      // No address found is not an error - just return null
-      if (error.code === "PGRST116") {
-        return { success: true, data: null };
-      }
-      console.error("Failed to fetch user address:", error);
-      return serverActionError(error.message, "DATABASE_ERROR");
-    }
-
-    return { success: true, data: data as UserAddress };
-  } catch (error) {
-    console.error("Failed to fetch user address:", error);
-    return serverActionError("Failed to fetch user address", "UNKNOWN_ERROR");
   }
 }
 

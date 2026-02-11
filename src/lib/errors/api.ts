@@ -17,9 +17,16 @@ const USER_MESSAGES: Record<ErrorCode, string> = {
   NOT_FOUND: "The requested item was not found.",
   PERMISSION_DENIED: "You don't have permission to perform this action.",
   RATE_LIMITED: "Too many requests. Please wait a moment and try again.",
+  RATE_LIMIT: "Too many requests. Please wait a moment and try again.",
   DATABASE_ERROR: "A database error occurred. Please try again.",
   SERVER_ERROR: "Something went wrong. Please try again later.",
   UNKNOWN_ERROR: "An unexpected error occurred. Please try again.",
+  TIMEOUT: "The request timed out. Please try again.",
+  SERVICE_UNAVAILABLE: "The service is temporarily unavailable. Please try again later.",
+  PAYLOAD_TOO_LARGE: "The request is too large. Please reduce the size and try again.",
+  CIRCUIT_OPEN: "This service is temporarily unavailable. Please try again shortly.",
+  INTERNAL_ERROR: "Something went wrong. Please try again later.",
+  CONFLICT: "A conflict occurred. The resource may have been modified.",
 };
 
 /**

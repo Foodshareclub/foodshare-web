@@ -18,8 +18,6 @@ export const metadata: Metadata = {
   },
 };
 
-export const dynamic = "force-static";
-
 const KOFI_URL = "https://ko-fi.com/organicnz";
 
 export default function DonationPage() {

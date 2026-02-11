@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useTransition } from "react";
 import { Users, Mail, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmailInput } from "@/components/ui/email-input";
@@ -13,35 +13,34 @@ interface InvitationStepProps {
 
 export const InvitationStep: React.FC<InvitationStepProps> = ({ onClose }) => {
   const [emails, setEmails] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const handleInvite = async () => {
+  const handleInvite = () => {
     if (emails.length === 0) {
       setError("Please add at least one email address");
       return;
     }
 
-    setIsLoading(true);
     setError(null);
 
-    try {
-      const result = await sendInvitations(emails);
-      if (result.success) {
-        setSuccess(true);
-        setTimeout(() => {
-          onClose();
-        }, 2000);
-      } else {
-        setError(result.error.message || "Failed to send invitations");
+    startTransition(async () => {
+      try {
+        const result = await sendInvitations(emails);
+        if (result.success) {
+          setSuccess(true);
+          setTimeout(() => {
+            onClose();
+          }, 2000);
+        } else {
+          setError(result.error.message || "Failed to send invitations");
+        }
+      } catch (err) {
+        logger.error("Failed to invite users", err as Error);
+        setError("An unexpected error occurred");
       }
-    } catch (err) {
-      logger.error("Failed to invite users", err as Error);
-      setError("An unexpected error occurred");
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   if (success) {
@@ -79,7 +78,7 @@ export const InvitationStep: React.FC<InvitationStepProps> = ({ onClose }) => {
             emails={emails}
             onEmailsChange={setEmails}
             placeholder="colleague@example.com"
-            disabled={isLoading}
+            disabled={isPending}
           />
           {error && (
             <p className="text-xs text-red-500 mt-2 pl-1 font-medium animate-in slide-in-from-top-1 fade-in">
@@ -91,10 +90,10 @@ export const InvitationStep: React.FC<InvitationStepProps> = ({ onClose }) => {
         <div className="flex flex-col gap-3 pt-2">
           <Button
             onClick={handleInvite}
-            disabled={isLoading || emails.length === 0}
+            disabled={isPending || emails.length === 0}
             className="w-full h-12 brand-gradient text-white font-semibold rounded-xl text-base hover:brand-gradient-hover hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg hover:shadow-primary/25 disabled:opacity-70 disabled:hover:scale-100"
           >
-            {isLoading ? (
+            {isPending ? (
               "Sending invites..."
             ) : (
               <span className="flex items-center gap-2">
@@ -106,7 +105,7 @@ export const InvitationStep: React.FC<InvitationStepProps> = ({ onClose }) => {
           <Button
             onClick={onClose}
             variant="ghost"
-            disabled={isLoading}
+            disabled={isPending}
             className="w-full h-12 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl"
           >
             I&apos;ll do this later

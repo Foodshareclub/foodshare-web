@@ -7,8 +7,6 @@ import { ChallengeDetailClient } from './ChallengeDetailClient';
 import { Skeleton } from '@/components/ui/skeleton';
 import { generateEventJsonLd, generateBreadcrumbJsonLd, safeJsonLdStringify } from '@/lib/jsonld';
 
-export const revalidate = 120;
-
 interface PageProps {
   params: Promise<{ id: string }>;
 }

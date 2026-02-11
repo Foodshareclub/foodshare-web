@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import React, { Component } from "react";
-import { detectStorageError, clearSupabaseStorage } from "@/utils/storageErrorHandler";
+import { detectStorageError, clearSupabaseStorage } from "@/lib/errors/storage-handler";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 

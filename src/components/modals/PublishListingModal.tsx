@@ -60,7 +60,7 @@ import { useImageUpload, useListingForm, useUndoRedo } from "./publish-listing/h
 import { RequiredStar } from "@/components";
 import { useAuth } from "@/hooks/useAuth";
 import { createProduct, updateProduct } from "@/app/actions/products";
-import { getUserAddress } from "@/app/actions/profile";
+import { getUserAddress } from "@/lib/data/profiles";
 import { useUIStore } from "@/store/zustand/useUIStore";
 import { imageAPI } from "@/api/imageAPI";
 import type { InitialProductStateType } from "@/types/product.types";

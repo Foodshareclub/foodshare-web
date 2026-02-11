@@ -4,9 +4,9 @@
  * Cached data fetching functions for post reports.
  */
 
-import { unstable_cache } from 'next/cache';
+import { cacheLife, cacheTag } from 'next/cache';
 import { createCachedClient } from '@/lib/supabase/server';
-import { CACHE_TAGS, CACHE_DURATIONS } from './cache-keys';
+import { CACHE_TAGS } from './cache-keys';
 
 // ============================================================================
 // Types
@@ -65,31 +65,26 @@ export interface ReportStats {
  * Get pending reports for admin review (sorted by AI severity)
  */
 export async function getPendingReports(limit = 50): Promise<PostReport[]> {
-  return unstable_cache(
-    async (): Promise<PostReport[]> => {
-      const supabase = createCachedClient();
+  'use cache';
+  cacheLife('short');
+  cacheTag(CACHE_TAGS.ADMIN, 'reports');
 
-      const { data, error } = await supabase
-        .from('post_reports')
-        .select(`
-          *,
-          post:posts(id, post_name, post_type, profile_id),
-          reporter:profiles!post_reports_reporter_id_fkey(id, nickname, avatar_url)
-        `)
-        .in('status', ['pending', 'ai_reviewed'])
-        .order('ai_severity_score', { ascending: false, nullsFirst: false })
-        .order('created_at', { ascending: false })
-        .limit(limit);
+  const supabase = createCachedClient();
 
-      if (error) throw new Error(error.message);
-      return (data ?? []) as PostReport[];
-    },
-    ['pending-reports'],
-    {
-      revalidate: CACHE_DURATIONS.SHORT,
-      tags: [CACHE_TAGS.ADMIN, 'reports'],
-    }
-  )();
+  const { data, error } = await supabase
+    .from('post_reports')
+    .select(`
+      *,
+      post:posts(id, post_name, post_type, profile_id),
+      reporter:profiles!post_reports_reporter_id_fkey(id, nickname, avatar_url)
+    `)
+    .in('status', ['pending', 'ai_reviewed'])
+    .order('ai_severity_score', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as PostReport[];
 }
 
 /**
@@ -129,47 +124,44 @@ export async function getReports(
 /**
  * Get report statistics for admin dashboard
  */
-export const getReportStats = unstable_cache(
-  async (): Promise<ReportStats> => {
-    const supabase = createCachedClient();
+export async function getReportStats(): Promise<ReportStats> {
+  'use cache';
+  cacheLife('short');
+  cacheTag(CACHE_TAGS.ADMIN, 'reports');
 
-    // Get counts by status
-    const { data: statusCounts, error: statusError } = await supabase
-      .from('post_reports')
-      .select('status')
-      .then(({ data, error }) => {
-        if (error) return { data: null, error };
-        const counts = {
-          total: data?.length || 0,
-          pending: data?.filter((r) => r.status === 'pending').length || 0,
-          aiReviewed: data?.filter((r) => r.status === 'ai_reviewed').length || 0,
-          resolved: data?.filter((r) => r.status === 'resolved').length || 0,
-        };
-        return { data: counts, error: null };
-      });
+  const supabase = createCachedClient();
 
-    if (statusError) throw new Error(statusError.message);
+  // Get counts by status
+  const { data: statusCounts, error: statusError } = await supabase
+    .from('post_reports')
+    .select('status')
+    .then(({ data, error }) => {
+      if (error) return { data: null, error };
+      const counts = {
+        total: data?.length || 0,
+        pending: data?.filter((r) => r.status === 'pending').length || 0,
+        aiReviewed: data?.filter((r) => r.status === 'ai_reviewed').length || 0,
+        resolved: data?.filter((r) => r.status === 'resolved').length || 0,
+      };
+      return { data: counts, error: null };
+    });
 
-    // Get high severity count (score >= 70)
-    const { count: highSeverity, error: severityError } = await supabase
-      .from('post_reports')
-      .select('*', { count: 'exact', head: true })
-      .gte('ai_severity_score', 70)
-      .in('status', ['pending', 'ai_reviewed']);
+  if (statusError) throw new Error(statusError.message);
 
-    if (severityError) throw new Error(severityError.message);
+  // Get high severity count (score >= 70)
+  const { count: highSeverity, error: severityError } = await supabase
+    .from('post_reports')
+    .select('*', { count: 'exact', head: true })
+    .gte('ai_severity_score', 70)
+    .in('status', ['pending', 'ai_reviewed']);
 
-    return {
-      ...statusCounts!,
-      highSeverity: highSeverity || 0,
-    };
-  },
-  ['report-stats'],
-  {
-    revalidate: CACHE_DURATIONS.SHORT,
-    tags: [CACHE_TAGS.ADMIN, 'reports'],
-  }
-);
+  if (severityError) throw new Error(severityError.message);
+
+  return {
+    ...statusCounts!,
+    highSeverity: highSeverity || 0,
+  };
+}
 
 /**
  * Get reports for a specific post

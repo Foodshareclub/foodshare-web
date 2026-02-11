@@ -19,7 +19,7 @@ export {
   logStorageError,
   type StorageErrorType,
   type StorageErrorInfo,
-} from "@/utils/storageErrorHandler";
+} from "@/lib/errors/storage-handler";
 
 // Mock Data
 export { teamMockArray } from "./mockArray";

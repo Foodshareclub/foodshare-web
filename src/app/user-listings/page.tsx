@@ -6,9 +6,6 @@ import { getUserProducts } from "@/lib/data/products";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
 import { noIndexMetadata } from "@/lib/metadata";
 
-// Route segment config for caching
-export const revalidate = 60;
-
 // Private page - should not be indexed
 export const metadata = noIndexMetadata;
 

@@ -10,8 +10,6 @@ export const metadata = generatePageMetadata({
   path: '/help',
 });
 
-export const dynamic = 'force-static'
-
 // FAQ data for structured data
 const faqs = [
   { question: 'How do I create an account?', answer: 'Click the "Sign Up" button and register with your email or social account. Complete your profile to start sharing food with your community.' },

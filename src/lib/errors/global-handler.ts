@@ -3,10 +3,10 @@
  * Catches unhandled promise rejections and storage errors at the application level
  */
 
-import { detectStorageError, clearSupabaseStorage, logStorageError, type StorageErrorInfo } from "./storageErrorHandler";
+import { detectStorageError, clearSupabaseStorage, logStorageError, type StorageErrorInfo } from "./storage-handler";
 import { createLogger } from "@/lib/logger";
-import { productionErrorReporter } from "./productionErrorReporter";
-import { autoRecovery } from "./autoRecovery";
+import { productionErrorReporter } from "./production-reporter";
+import { autoRecovery } from "./auto-recovery";
 
 const logger = createLogger("GlobalErrorHandler");
 let storageErrorShown = false;

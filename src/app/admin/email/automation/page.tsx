@@ -7,7 +7,7 @@ import { getActiveAutomations, getEmailDashboardStats } from "@/lib/data/admin-e
 
 // Dynamic import for code-splitting (~100KB saved from initial bundle)
 const AutomationClient = dynamic(() =>
-  import("@/components/admin/crm/AutomationClient").then((mod) => mod.AutomationClient)
+  import("@/app/admin/crm/components/AutomationClient").then((mod) => mod.AutomationClient)
 );
 
 function AutomationSkeleton() {

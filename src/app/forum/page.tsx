@@ -9,8 +9,6 @@ import {
   safeJsonLdStringify,
 } from "@/lib/jsonld";
 
-export const revalidate = 300;
-
 export const metadata = generatePageMetadata({
   title: "Community Forum",
   description:

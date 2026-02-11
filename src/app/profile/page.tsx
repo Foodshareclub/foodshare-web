@@ -9,9 +9,6 @@ export const metadata = generateNoIndexMetadata(
   "Manage your FoodShare profile settings"
 );
 
-// Force dynamic rendering - user-specific content
-export const dynamic = "force-dynamic";
-
 /**
  * Profile Settings Page - Server Component
  * Shows user profile card and settings options

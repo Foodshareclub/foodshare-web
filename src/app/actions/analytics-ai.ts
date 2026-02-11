@@ -8,8 +8,8 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
-import { serverActionError, serverActionSuccess } from "@/lib/errors/server-actions";
-import { ServerActionResult } from "@/lib/errors/types";
+import { serverActionError, serverActionSuccess } from "@/lib/errors";
+import type { ServerActionResult } from "@/lib/errors";
 import { getMotherDuckToken } from "@/lib/email/vault";
 
 // MotherDuck REST API endpoint

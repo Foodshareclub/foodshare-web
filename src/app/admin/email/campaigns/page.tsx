@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Megaphone } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getRecentCampaigns, getEmailDashboardStats } from "@/lib/data/admin-email";
-import { CampaignsClient } from "@/components/admin/crm/CampaignsClient";
+import { CampaignsClient } from "@/app/admin/crm/components/CampaignsClient";
 
 function CampaignsSkeleton() {
   return (

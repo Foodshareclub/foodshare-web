@@ -29,8 +29,6 @@ export default async function SettingsPage() {
   );
 }
 
-export const dynamic = "force-dynamic";
-
 /**
  * Skeleton loader for settings page
  * Matches the bento-grid layout with user profile header

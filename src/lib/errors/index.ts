@@ -6,6 +6,10 @@
 // Types
 export type {
   ErrorCode,
+  AppError,
+  ActionResult,
+  ActionResultWithData,
+  ActionResultVoid,
   ApiError,
   ErrorContext,
   ServerActionError,
@@ -14,18 +18,49 @@ export type {
   SupabaseError,
 } from "./types";
 
-// API Errors
-export { createApiError, isApiError, getUserMessage, isRetryable, generateRequestId } from "./api";
+// Server Action Factories (primary system)
+export {
+  createError,
+  unauthorizedError,
+  forbiddenError,
+  notFoundError,
+  validationError,
+  databaseError,
+  internalError,
+  conflictError,
+  rateLimitError,
+  timeoutError,
+  success,
+  successVoid,
+  failure,
+  withErrorHandling,
+} from "./server-actions";
 
-// Server Action Errors
+// Server Action Factories (secondary system)
 export {
   serverActionError,
   serverActionSuccess,
   isServerActionError,
   isServerActionSuccess,
-  getErrorMessage,
-  withErrorHandling,
+  getServerActionErrorMessage,
+  withServerActionErrorHandling,
 } from "./server-actions";
+
+// Type Guards & Unknown Error Utilities
+export {
+  isAppError,
+  isSuccessResult,
+  isFailureResult,
+  getUnknownErrorMessage,
+  toError,
+  hasErrorCode,
+} from "./guards";
+
+// Zod Validation Helpers
+export { validateWithSchema, formatZodErrors } from "./validation";
+
+// API Errors
+export { createApiError, isApiError, getUserMessage, isRetryable, generateRequestId } from "./api";
 
 // Supabase Error Mapping
 export { mapSupabaseError, isSupabaseError } from "./supabase";
@@ -42,7 +77,15 @@ export {
 } from "./auth";
 
 // Error Handler
-export { ApiErrorHandler, apiErrorHandler } from "./handler";
+export {
+  ApiErrorHandler,
+  apiErrorHandler,
+  getErrorMessage,
+  getAppErrorSuggestion,
+  isNetworkErrorFromAppError,
+  isAuthErrorFromAppError,
+  sanitizeAppErrorMessage,
+} from "./handler";
 
 // Recovery Strategies
 export {

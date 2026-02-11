@@ -49,10 +49,7 @@ const nextConfig: NextConfig = {
   htmlLimitedBots:
     /Googlebot|Bingbot|Yandex|YandexBot|DuckDuckBot|Slurp|Baiduspider|facebookexternalhit|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Applebot|PinterestBot|Discordbot|GPTBot|ChatGPT-User|PerplexityBot|Google-Extended|anthropic-ai|CCBot/,
 
-  // Cache Components disabled - incompatible with existing route segment configs
-  // TODO: Re-enable when migrating to 'use cache' directive (requires removing
-  // all dynamic/revalidate/runtime exports from pages/routes)
-  // cacheComponents: true,
+  cacheComponents: true,
 
   // Custom cache life profiles matching CACHE_DURATIONS
   cacheLife: {

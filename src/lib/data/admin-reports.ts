@@ -7,13 +7,13 @@
  * - Const assertions for immutable data structures
  * - Parallel data fetching with Promise.all
  * - Type-safe Supabase queries
- * - Centralized cache management
  * - Pure utility functions extracted
  * - Discriminated unions for type safety
+ *
+ * NOTE: Uses createClient() (cookies-dependent) - NOT cached with 'use cache'.
+ * The cookies() call makes these functions automatically dynamic.
  */
 
-import { unstable_cache } from "next/cache";
-import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
 import { createClient } from "@/lib/supabase/server";
 
 // ============================================================================
@@ -68,7 +68,6 @@ export interface ReportsData {
 // ============================================================================
 
 const DAYS_30_MS = 30 * 24 * 60 * 60 * 1000;
-const DAYS_60_MS = 60 * 24 * 60 * 60 * 1000;
 const MAX_CATEGORIES = 8;
 
 // ============================================================================
@@ -126,83 +125,6 @@ function aggregateByDay(
   return Array.from(dayMap.entries())
     .map(([date, count]) => ({ date, count }) as const)
     .sort((a, b) => a.date.localeCompare(b.date));
-}
-
-// ============================================================================
-// Query Builders - Type-safe Supabase query construction
-// ============================================================================
-
-type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
-
-interface DateRange {
-  readonly start: Date;
-  readonly end?: Date;
-}
-
-/**
- * Build count query for posts table
- */
-function postsCountQuery(
-  supabase: SupabaseClient,
-  options?: {
-    readonly dateRange?: DateRange;
-    readonly isArranged?: boolean;
-    readonly arrangedDateRange?: DateRange;
-  }
-) {
-  let query = supabase.from("posts").select("*", { count: "exact", head: true });
-
-  if (options?.isArranged !== undefined) {
-    query = query.eq("is_arranged", options.isArranged);
-  }
-
-  if (options?.dateRange) {
-    query = query.gte("created_at", options.dateRange.start.toISOString());
-    if (options.dateRange.end) {
-      query = query.lt("created_at", options.dateRange.end.toISOString());
-    }
-  }
-
-  if (options?.arrangedDateRange) {
-    query = query.gte("post_arranged_at", options.arrangedDateRange.start.toISOString());
-    if (options.arrangedDateRange.end) {
-      query = query.lt("post_arranged_at", options.arrangedDateRange.end.toISOString());
-    }
-  }
-
-  return query;
-}
-
-/**
- * Build count query for profiles table
- */
-function profilesCountQuery(supabase: SupabaseClient, dateRange?: DateRange) {
-  let query = supabase.from("profiles").select("*", { count: "exact", head: true });
-
-  if (dateRange) {
-    query = query.gte("created_time", dateRange.start.toISOString());
-    if (dateRange.end) {
-      query = query.lt("created_time", dateRange.end.toISOString());
-    }
-  }
-
-  return query;
-}
-
-/**
- * Build count query for rooms table
- */
-function roomsCountQuery(supabase: SupabaseClient, dateRange?: DateRange) {
-  let query = supabase.from("rooms").select("*", { count: "exact", head: true });
-
-  if (dateRange) {
-    query = query.gte("last_message_time", dateRange.start.toISOString());
-    if (dateRange.end) {
-      query = query.lt("last_message_time", dateRange.end.toISOString());
-    }
-  }
-
-  return query;
 }
 
 // ============================================================================
@@ -292,16 +214,8 @@ export async function getReportsData(): Promise<ReportsData> {
 // ============================================================================
 
 /**
- * Get cached reports data with automatic revalidation
- *
- * Note: unstable_cache cannot be used directly with createClient()
- * as it uses cookies() which is dynamic. This wrapper handles that case.
+ * Get cached reports data
+ * NOTE: getReportsData uses createClient() (cookies-dependent), so this
+ * cannot use 'use cache'. It's an alias for the uncached version.
  */
-export const getCachedReportsData = unstable_cache(
-  async (): Promise<ReportsData> => getReportsData(),
-  ["admin-reports"],
-  {
-    revalidate: CACHE_DURATIONS.ADMIN_STATS,
-    tags: [CACHE_TAGS.ADMIN_REPORTS, CACHE_TAGS.ADMIN],
-  }
-);
+export const getCachedReportsData = getReportsData;

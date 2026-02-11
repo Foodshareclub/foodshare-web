@@ -7,7 +7,7 @@ import { getCRMCustomers, getCRMDashboardStats, getCustomerTags } from "@/lib/da
 
 // Dynamic import for code-splitting (~150KB saved from initial bundle)
 const CRMDashboardClient = dynamic(() =>
-  import("@/components/admin/crm/CRMDashboardClient").then((mod) => mod.CRMDashboardClient)
+  import("@/app/admin/crm/components/CRMDashboardClient").then((mod) => mod.CRMDashboardClient)
 );
 
 function CRMSkeleton() {

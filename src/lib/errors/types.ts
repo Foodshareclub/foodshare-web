@@ -4,7 +4,7 @@
  */
 
 /**
- * Error codes for categorizing API errors
+ * Error codes for categorizing errors (merged superset)
  */
 export type ErrorCode =
   | "NETWORK_ERROR"
@@ -15,9 +15,43 @@ export type ErrorCode =
   | "NOT_FOUND"
   | "PERMISSION_DENIED"
   | "RATE_LIMITED"
+  | "RATE_LIMIT"
   | "DATABASE_ERROR"
   | "SERVER_ERROR"
-  | "UNKNOWN_ERROR";
+  | "UNKNOWN_ERROR"
+  | "TIMEOUT"
+  | "SERVICE_UNAVAILABLE"
+  | "PAYLOAD_TOO_LARGE"
+  | "CIRCUIT_OPEN"
+  | "INTERNAL_ERROR"
+  | "CONFLICT";
+
+// ============================================================================
+// Primary Error Types (used by ~28 files via @/lib/errors)
+// ============================================================================
+
+/**
+ * Application-level error with optional details
+ */
+export interface AppError {
+  code: ErrorCode;
+  message: string;
+  details?: unknown;
+}
+
+/**
+ * Action result type — primary pattern for server actions
+ */
+export type ActionResult<T = void> =
+  | { success: true; data: T }
+  | { success: false; error: AppError };
+
+export type ActionResultWithData<T> = ActionResult<T>;
+export type ActionResultVoid = ActionResult<undefined>;
+
+// ============================================================================
+// Secondary Error Types (used by errors/ subsystem)
+// ============================================================================
 
 /**
  * Structured API error with code and metadata
@@ -51,6 +85,7 @@ export interface ServerActionError {
   error: {
     message: string;
     code: ErrorCode;
+    details?: unknown;
   };
 }
 
@@ -59,7 +94,7 @@ export interface ServerActionError {
  */
 export interface ServerActionSuccess<T = void> {
   success: true;
-  data?: T;
+  data: T;
 }
 
 /**

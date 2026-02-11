@@ -11,9 +11,6 @@ export const metadata = generateNoIndexMetadata(
   "Manage your food sharing posts - create, edit, and delete your listings"
 );
 
-// Force dynamic rendering - user-specific content
-export const dynamic = "force-dynamic";
-
 /**
  * My Posts Page - Server Component
  * Full post management system for authenticated users

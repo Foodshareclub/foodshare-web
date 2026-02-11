@@ -3,7 +3,7 @@
  * Live performance and error monitoring with alerts
  */
 
-import { productionErrorReporter } from "./productionErrorReporter";
+import { productionErrorReporter } from "@/lib/errors/production-reporter";
 import { createLogger } from "@/lib/logger";
 import { getPerformanceMemory } from "@/types/web-apis.types";
 

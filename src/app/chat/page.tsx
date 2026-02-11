@@ -3,9 +3,6 @@ import { ChatPageClient } from "./ChatPageClient";
 import { createClient } from "@/lib/supabase/server";
 import { getAllUserChats, getChatMessages } from "@/lib/data/chat";
 
-// Force dynamic rendering - user-specific content
-export const dynamic = "force-dynamic";
-
 type SearchParams = Promise<{
   food?: string;
   room?: string;

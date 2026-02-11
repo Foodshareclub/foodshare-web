@@ -6,7 +6,7 @@
 
 import { Users, Package, MessageSquare, AlertTriangle, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { GrokAssistant } from "@/components/admin/GrokAssistant";
+import { GrokAssistant } from "@/app/admin/ai-insights/GrokAssistant";
 import type { AIInsightsData } from "@/lib/data/admin-ai-insights";
 
 interface Props {

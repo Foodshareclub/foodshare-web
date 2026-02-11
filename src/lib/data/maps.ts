@@ -2,14 +2,14 @@
  * Maps Data Layer
  *
  * Cached data fetching functions for map-related data.
- * Uses unstable_cache for server-side caching with tag-based invalidation.
+ * Uses 'use cache' directive for server-side caching with tag-based invalidation.
  *
  * NOTE: Uses createCachedClient() instead of createClient() because
- * cookies() cannot be called inside unstable_cache().
+ * cookies() cannot be called inside cached functions.
  */
 
-import { unstable_cache } from "next/cache";
-import { CACHE_TAGS, CACHE_DURATIONS, logCacheOperation } from "./cache-keys";
+import { cacheLife, cacheTag } from "next/cache";
+import { CACHE_TAGS, logCacheOperation } from "./cache-keys";
 import { createCachedClient } from "@/lib/supabase/server";
 import type { LocationType } from "@/types/product.types";
 import { approximateGeoJSON } from "@/utils/postgis";
@@ -42,58 +42,50 @@ function applyLocationPrivacy(locations: LocationType[]): LocationType[] {
  * Optimized query - only fetches fields needed for map markers
  */
 export async function getMapLocations(productType: string): Promise<LocationType[]> {
+  'use cache';
+  cacheLife('product-locations');
+  cacheTag(CACHE_TAGS.PRODUCT_LOCATIONS, CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(productType.toLowerCase()));
+
   const normalizedType = productType.toLowerCase();
   const cacheKey = `map-locations-${normalizedType}`;
 
-  return unstable_cache(
-    async (): Promise<LocationType[]> => {
-      logCacheOperation("miss", cacheKey, { type: normalizedType });
-      const supabase = createCachedClient();
+  logCacheOperation("miss", cacheKey, { type: normalizedType });
+  const supabase = createCachedClient();
 
-      const { data, error } = await supabase
-        .from("posts_with_location")
-        .select("id, location_json, post_name, post_type, images")
-        .eq("post_type", normalizedType)
-        .eq("is_active", true);
+  const { data, error } = await supabase
+    .from("posts_with_location")
+    .select("id, location_json, post_name, post_type, images")
+    .eq("post_type", normalizedType)
+    .eq("is_active", true);
 
-      if (error) throw new Error(error.message);
-      logCacheOperation("set", cacheKey, { count: data?.length ?? 0 });
-      // Apply location privacy (~200m approximation) for user safety
-      return applyLocationPrivacy(data ?? []);
-    },
-    [cacheKey],
-    {
-      revalidate: CACHE_DURATIONS.PRODUCT_LOCATIONS,
-      tags: [CACHE_TAGS.PRODUCT_LOCATIONS, CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(normalizedType)],
-    }
-  )();
+  if (error) throw new Error(error.message);
+  logCacheOperation("set", cacheKey, { count: data?.length ?? 0 });
+  // Apply location privacy (~200m approximation) for user safety
+  return applyLocationPrivacy(data ?? []);
 }
 
 /**
  * Get all product locations for map (all types)
  * Used for the "all" map view
  */
-export const getAllMapLocations = unstable_cache(
-  async (): Promise<LocationType[]> => {
-    logCacheOperation("miss", "all-map-locations");
-    const supabase = createCachedClient();
+export async function getAllMapLocations(): Promise<LocationType[]> {
+  'use cache';
+  cacheLife('product-locations');
+  cacheTag(CACHE_TAGS.PRODUCT_LOCATIONS);
 
-    const { data, error } = await supabase
-      .from("posts_with_location")
-      .select("id, location_json, post_name, post_type, images")
-      .eq("is_active", true);
+  logCacheOperation("miss", "all-map-locations");
+  const supabase = createCachedClient();
 
-    if (error) throw new Error(error.message);
-    logCacheOperation("set", "all-map-locations", { count: data?.length ?? 0 });
-    // Apply location privacy (~200m approximation) for user safety
-    return applyLocationPrivacy(data ?? []);
-  },
-  ["all-map-locations"],
-  {
-    revalidate: CACHE_DURATIONS.PRODUCT_LOCATIONS,
-    tags: [CACHE_TAGS.PRODUCT_LOCATIONS],
-  }
-);
+  const { data, error } = await supabase
+    .from("posts_with_location")
+    .select("id, location_json, post_name, post_type, images")
+    .eq("is_active", true);
+
+  if (error) throw new Error(error.message);
+  logCacheOperation("set", "all-map-locations", { count: data?.length ?? 0 });
+  // Apply location privacy (~200m approximation) for user safety
+  return applyLocationPrivacy(data ?? []);
+}
 
 /**
  * Get nearby locations within a bounding box
@@ -109,6 +101,10 @@ export async function getNearbyLocations(
   productType?: string,
   limit: number = 500
 ): Promise<LocationType[]> {
+  'use cache';
+  cacheLife('short');
+  cacheTag(CACHE_TAGS.PRODUCT_LOCATIONS);
+
   // Round bounds to reduce cache fragmentation (precision: ~10m)
   const precision = 4;
   const roundedBounds = {
@@ -118,56 +114,43 @@ export async function getNearbyLocations(
     west: Number(bounds.west.toFixed(precision)),
   };
 
-  const cacheKey = productType
-    ? `nearby-locations-${productType}-${roundedBounds.north}-${roundedBounds.south}-${roundedBounds.east}-${roundedBounds.west}`
-    : `nearby-locations-all-${roundedBounds.north}-${roundedBounds.south}-${roundedBounds.east}-${roundedBounds.west}`;
+  const supabase = createCachedClient();
 
-  return unstable_cache(
-    async (): Promise<LocationType[]> => {
-      const supabase = createCachedClient();
+  // Use PostGIS RPC for efficient spatial index query
+  const { data, error } = await supabase.rpc("get_posts_in_bounds", {
+    min_lng: roundedBounds.west,
+    min_lat: roundedBounds.south,
+    max_lng: roundedBounds.east,
+    max_lat: roundedBounds.north,
+    filter_post_type: productType?.toLowerCase() ?? null,
+    result_limit: limit,
+  });
 
-      // Use PostGIS RPC for efficient spatial index query
-      const { data, error } = await supabase.rpc("get_posts_in_bounds", {
-        min_lng: roundedBounds.west,
-        min_lat: roundedBounds.south,
-        max_lng: roundedBounds.east,
-        max_lat: roundedBounds.north,
-        filter_post_type: productType?.toLowerCase() ?? null,
-        result_limit: limit,
-      });
+  if (error) {
+    // Fallback to JS filtering if RPC not available (migration not applied)
+    console.warn("[getNearbyLocations] RPC failed, falling back to JS filter:", error.message);
+    return getNearbyLocationsFallback(bounds, productType);
+  }
 
-      if (error) {
-        // Fallback to JS filtering if RPC not available (migration not applied)
-        console.warn("[getNearbyLocations] RPC failed, falling back to JS filter:", error.message);
-        return getNearbyLocationsFallback(bounds, productType);
-      }
+  // Transform RPC result to LocationType format
+  const locations: LocationType[] = (data ?? []).map(
+    (item: {
+      id: number;
+      post_name: string;
+      post_type: string;
+      images: string[];
+      location_json: LocationType["location_json"];
+    }) => ({
+      id: item.id,
+      post_name: item.post_name,
+      post_type: item.post_type,
+      images: item.images,
+      location_json: item.location_json,
+    })
+  );
 
-      // Transform RPC result to LocationType format
-      const locations: LocationType[] = (data ?? []).map(
-        (item: {
-          id: number;
-          post_name: string;
-          post_type: string;
-          images: string[];
-          location_json: LocationType["location_json"];
-        }) => ({
-          id: item.id,
-          post_name: item.post_name,
-          post_type: item.post_type,
-          images: item.images,
-          location_json: item.location_json,
-        })
-      );
-
-      // Apply location privacy (~200m approximation) for user safety
-      return applyLocationPrivacy(locations);
-    },
-    [cacheKey],
-    {
-      revalidate: CACHE_DURATIONS.SHORT, // Shorter cache for viewport queries
-      tags: [CACHE_TAGS.PRODUCT_LOCATIONS],
-    }
-  )();
+  // Apply location privacy (~200m approximation) for user safety
+  return applyLocationPrivacy(locations);
 }
 
 /**
@@ -206,30 +189,27 @@ async function getNearbyLocationsFallback(
 /**
  * Get location counts by type for map statistics
  */
-export const getLocationCountsByType = unstable_cache(
-  async (): Promise<Record<string, number>> => {
-    const supabase = createCachedClient();
+export async function getLocationCountsByType(): Promise<Record<string, number>> {
+  'use cache';
+  cacheLife('short');
+  cacheTag(CACHE_TAGS.PRODUCT_LOCATIONS);
 
-    const { data, error } = await supabase
-      .from("posts_with_location")
-      .select("post_type")
-      .eq("is_active", true)
-      .not("location_json", "is", null);
+  const supabase = createCachedClient();
 
-    if (error) throw new Error(error.message);
+  const { data, error } = await supabase
+    .from("posts_with_location")
+    .select("post_type")
+    .eq("is_active", true)
+    .not("location_json", "is", null);
 
-    // Count by type
-    const counts: Record<string, number> = {};
-    for (const item of data ?? []) {
-      const type = item.post_type || "unknown";
-      counts[type] = (counts[type] || 0) + 1;
-    }
+  if (error) throw new Error(error.message);
 
-    return counts;
-  },
-  ["location-counts-by-type"],
-  {
-    revalidate: CACHE_DURATIONS.MEDIUM,
-    tags: [CACHE_TAGS.PRODUCT_LOCATIONS],
+  // Count by type
+  const counts: Record<string, number> = {};
+  for (const item of data ?? []) {
+    const type = item.post_type || "unknown";
+    counts[type] = (counts[type] || 0) + 1;
   }
-);
+
+  return counts;
+}

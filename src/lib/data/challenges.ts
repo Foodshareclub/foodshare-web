@@ -5,8 +5,8 @@
  * Fetches from the `challenges` table (not posts).
  */
 
-import { unstable_cache } from "next/cache";
-import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
+import { cacheLife, cacheTag } from "next/cache";
+import { CACHE_TAGS } from "./cache-keys";
 import { createCachedClient } from "@/lib/supabase/server";
 import type { InitialProductStateType } from "@/types/product.types";
 
@@ -99,63 +99,57 @@ export interface ChallengeStats {
 /**
  * Get challenge community stats with caching
  */
-export const getChallengeStats = unstable_cache(
-  async (): Promise<ChallengeStats> => {
-    const supabase = createCachedClient();
+export async function getChallengeStats(): Promise<ChallengeStats> {
+  'use cache';
+  cacheLife('challenges');
+  cacheTag(CACHE_TAGS.CHALLENGES);
 
-    const { data, error } = await supabase
-      .from("challenges")
-      .select("challenge_score, challenged_people, challenge_likes_counter")
-      .eq("challenge_published", true);
+  const supabase = createCachedClient();
 
-    if (error) throw new Error(error.message);
+  const { data, error } = await supabase
+    .from("challenges")
+    .select("challenge_score, challenged_people, challenge_likes_counter")
+    .eq("challenge_published", true);
 
-    const challenges = data ?? [];
+  if (error) throw new Error(error.message);
 
-    // Calculate totals
-    const totalChallenges = challenges.length;
-    const totalParticipants = challenges.reduce(
-      (sum, c) => sum + (Number(c.challenged_people) || 0),
-      0
-    );
-    // XP earned = sum of (score * participants who completed)
-    const totalXpEarned = challenges.reduce(
-      (sum, c) => sum + (Number(c.challenge_score) || 0) * (Number(c.challenged_people) || 0),
-      0
-    );
+  const challenges = data ?? [];
 
-    return { totalChallenges, totalParticipants, totalXpEarned };
-  },
-  ["challenge-stats"],
-  {
-    revalidate: CACHE_DURATIONS.CHALLENGES,
-    tags: [CACHE_TAGS.CHALLENGES],
-  }
-);
+  // Calculate totals
+  const totalChallenges = challenges.length;
+  const totalParticipants = challenges.reduce(
+    (sum, c) => sum + (Number(c.challenged_people) || 0),
+    0
+  );
+  // XP earned = sum of (score * participants who completed)
+  const totalXpEarned = challenges.reduce(
+    (sum, c) => sum + (Number(c.challenge_score) || 0) * (Number(c.challenged_people) || 0),
+    0
+  );
+
+  return { totalChallenges, totalParticipants, totalXpEarned };
+}
 
 /**
  * Get all published challenges with caching
  * Returns data transformed to InitialProductStateType for component compatibility
  */
-export const getChallenges = unstable_cache(
-  async (): Promise<InitialProductStateType[]> => {
-    const supabase = createCachedClient();
+export async function getChallenges(): Promise<InitialProductStateType[]> {
+  'use cache';
+  cacheLife('challenges');
+  cacheTag(CACHE_TAGS.CHALLENGES);
 
-    const { data, error } = await supabase
-      .from("challenges")
-      .select("*")
-      .eq("challenge_published", true)
-      .order("challenge_created_at", { ascending: false });
+  const supabase = createCachedClient();
 
-    if (error) throw new Error(error.message);
-    return (data ?? []).map(transformChallengeToProduct);
-  },
-  ["challenges"],
-  {
-    revalidate: CACHE_DURATIONS.CHALLENGES,
-    tags: [CACHE_TAGS.CHALLENGES],
-  }
-);
+  const { data, error } = await supabase
+    .from("challenges")
+    .select("*")
+    .eq("challenge_published", true)
+    .order("challenge_created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(transformChallengeToProduct);
+}
 
 /**
  * Get paginated challenges with lazy loading support
@@ -164,152 +158,129 @@ export const getChallenges = unstable_cache(
 export async function getChallengesPaginated(
   params: ChallengesPaginationParams = {}
 ): Promise<PaginatedChallengesResponse> {
+  'use cache';
+  cacheLife('challenges');
+  cacheTag(CACHE_TAGS.CHALLENGES);
+
   const { page = 1, limit = 12, difficulty } = params;
   const offset = (page - 1) * limit;
 
-  return unstable_cache(
-    async (): Promise<PaginatedChallengesResponse> => {
-      const supabase = createCachedClient();
+  const supabase = createCachedClient();
 
-      // Build query
-      let query = supabase
-        .from("challenges")
-        .select("*", { count: "exact" })
-        .eq("challenge_published", true);
+  // Build query
+  let query = supabase
+    .from("challenges")
+    .select("*", { count: "exact" })
+    .eq("challenge_published", true);
 
-      // Add difficulty filter if provided
-      if (difficulty && difficulty !== "all") {
-        query = query.eq("challenge_difficulty", difficulty);
-      }
+  // Add difficulty filter if provided
+  if (difficulty && difficulty !== "all") {
+    query = query.eq("challenge_difficulty", difficulty);
+  }
 
-      // Add pagination and ordering
-      const { data, error, count } = await query
-        .order("challenge_created_at", { ascending: false })
-        .range(offset, offset + limit - 1);
+  // Add pagination and ordering
+  const { data, error, count } = await query
+    .order("challenge_created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
 
-      if (error) throw new Error(error.message);
+  if (error) throw new Error(error.message);
 
-      const total = count ?? 0;
-      const totalPages = Math.ceil(total / limit);
+  const total = count ?? 0;
+  const totalPages = Math.ceil(total / limit);
 
-      return {
-        data: (data ?? []).map(transformChallengeToProduct),
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-          hasMore: page < totalPages,
-        },
-      };
+  return {
+    data: (data ?? []).map(transformChallengeToProduct),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages,
+      hasMore: page < totalPages,
     },
-    [`challenges-paginated-${page}-${limit}-${difficulty ?? "all"}`],
-    {
-      revalidate: CACHE_DURATIONS.CHALLENGES,
-      tags: [CACHE_TAGS.CHALLENGES],
-    }
-  )();
+  };
 }
 
 /**
  * Get single challenge by ID with caching
  */
 export async function getChallengeById(challengeId: number): Promise<Challenge | null> {
-  return unstable_cache(
-    async (): Promise<Challenge | null> => {
-      const supabase = createCachedClient();
+  'use cache';
+  cacheLife('challenges');
+  cacheTag(CACHE_TAGS.CHALLENGES, CACHE_TAGS.CHALLENGE(challengeId));
 
-      const { data, error } = await supabase
-        .from("challenges")
-        .select("*")
-        .eq("id", challengeId)
-        .single();
+  const supabase = createCachedClient();
 
-      if (error) {
-        if (error.code === "PGRST116") return null;
-        throw new Error(error.message);
-      }
-      return data;
-    },
-    [`challenge-${challengeId}`],
-    {
-      revalidate: CACHE_DURATIONS.CHALLENGE_DETAIL,
-      tags: [CACHE_TAGS.CHALLENGES, CACHE_TAGS.CHALLENGE(challengeId)],
-    }
-  )();
+  const { data, error } = await supabase
+    .from("challenges")
+    .select("*")
+    .eq("id", challengeId)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") return null;
+    throw new Error(error.message);
+  }
+  return data;
 }
 
 /**
  * Get challenges by difficulty
  */
 export async function getChallengesByDifficulty(difficulty: string): Promise<Challenge[]> {
-  return unstable_cache(
-    async (): Promise<Challenge[]> => {
-      const supabase = createCachedClient();
+  'use cache';
+  cacheLife('challenges');
+  cacheTag(CACHE_TAGS.CHALLENGES);
 
-      const { data, error } = await supabase
-        .from("challenges")
-        .select("*")
-        .eq("challenge_published", true)
-        .eq("challenge_difficulty", difficulty)
-        .order("challenge_created_at", { ascending: false });
+  const supabase = createCachedClient();
 
-      if (error) throw new Error(error.message);
-      return data ?? [];
-    },
-    [`challenges-difficulty-${difficulty}`],
-    {
-      revalidate: CACHE_DURATIONS.CHALLENGES,
-      tags: [CACHE_TAGS.CHALLENGES],
-    }
-  )();
+  const { data, error } = await supabase
+    .from("challenges")
+    .select("*")
+    .eq("challenge_published", true)
+    .eq("challenge_difficulty", difficulty)
+    .order("challenge_created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
 }
 
 /**
  * Get challenges by user ID
  */
 export async function getUserChallenges(userId: string): Promise<Challenge[]> {
-  return unstable_cache(
-    async (): Promise<Challenge[]> => {
-      const supabase = createCachedClient();
+  'use cache';
+  cacheLife('challenges');
+  cacheTag(CACHE_TAGS.CHALLENGES, CACHE_TAGS.USER_CHALLENGES(userId));
 
-      const { data, error } = await supabase
-        .from("challenges")
-        .select("*")
-        .eq("profile_id", userId)
-        .order("challenge_created_at", { ascending: false });
+  const supabase = createCachedClient();
 
-      if (error) throw new Error(error.message);
-      return data ?? [];
-    },
-    [`user-challenges-${userId}`],
-    {
-      revalidate: CACHE_DURATIONS.CHALLENGES,
-      tags: [CACHE_TAGS.CHALLENGES, CACHE_TAGS.USER_CHALLENGES(userId)],
-    }
-  )();
+  const { data, error } = await supabase
+    .from("challenges")
+    .select("*")
+    .eq("profile_id", userId)
+    .order("challenge_created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
 }
 
 /**
  * Get popular challenges (by views or likes)
  */
-export const getPopularChallenges = unstable_cache(
-  async (limit: number = 10): Promise<Challenge[]> => {
-    const supabase = createCachedClient();
+export async function getPopularChallenges(limit: number = 10): Promise<Challenge[]> {
+  'use cache';
+  cacheLife('challenges');
+  cacheTag(CACHE_TAGS.CHALLENGES);
 
-    const { data, error } = await supabase
-      .from("challenges")
-      .select("*")
-      .eq("challenge_published", true)
-      .order("challenge_views", { ascending: false })
-      .limit(limit);
+  const supabase = createCachedClient();
 
-    if (error) throw new Error(error.message);
-    return data ?? [];
-  },
-  ["popular-challenges"],
-  {
-    revalidate: CACHE_DURATIONS.CHALLENGES,
-    tags: [CACHE_TAGS.CHALLENGES],
-  }
-);
+  const { data, error } = await supabase
+    .from("challenges")
+    .select("*")
+    .eq("challenge_published", true)
+    .order("challenge_views", { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}

@@ -11,7 +11,7 @@
  * - Resend functionality
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 
 import { Loader2, AlertCircle, Shield, RefreshCw } from "lucide-react";
 import { MFAService } from "@/lib/security/mfa";
@@ -30,7 +30,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
   const [verificationCode, setVerificationCode] = useState("");
   const [challengeId, setChallengeId] = useState("");
   const [method, _setMethod] = useState<"sms" | "email">("email");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [attemptsRemaining, setAttemptsRemaining] = useState(5);
   const [showBackupCodeInput, setShowBackupCodeInput] = useState(false);
@@ -55,102 +55,105 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
   }, [resendCountdown]);
 
   // Start MFA challenge
-  const startChallenge = async () => {
-    setIsLoading(true);
+  const startChallenge = () => {
     setError("");
 
-    try {
-      const result = await MFAService.createChallenge(profileId, method);
+    startTransition(async () => {
+      try {
+        const result = await MFAService.createChallenge(profileId, method);
 
-      if (!result.success) {
-        if (result.error === "rate_limit_exceeded") {
-          setError(`Too many attempts. Try again after ${result.locked_until}`);
-        } else {
-          setError(result.error || "Failed to send verification code");
+        if (!result.success) {
+          if (result.error === "rate_limit_exceeded") {
+            setError(`Too many attempts. Try again after ${result.locked_until}`);
+          } else {
+            setError(result.error || "Failed to send verification code");
+          }
+          return;
         }
-        return;
-      }
 
-      setChallengeId(result.challenge_id || "");
-      setCanResend(false);
-      setResendCountdown(60);
-    } catch {
-      setError("Failed to send verification code. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+        setChallengeId(result.challenge_id || "");
+        setCanResend(false);
+        setResendCountdown(60);
+      } catch {
+        setError("Failed to send verification code. Please try again.");
+      }
+    });
   };
 
   // Handle code verification
-  const handleVerify = async () => {
+  const handleVerify = () => {
     if (!verificationCode || verificationCode.length !== 6) {
       setError("Please enter a valid 6-digit code");
       return;
     }
 
-    setIsLoading(true);
     setError("");
 
-    try {
-      const result = await MFAService.verifyChallenge(challengeId, verificationCode, profileId);
+    startTransition(async () => {
+      try {
+        const result = await MFAService.verifyChallenge(challengeId, verificationCode, profileId);
 
-      if (!result.success) {
-        if (result.attempts_remaining !== undefined) {
-          setAttemptsRemaining(result.attempts_remaining);
-          setError(`Invalid code. ${result.attempts_remaining} attempts remaining.`);
-        } else if (result.error === "challenge_expired") {
-          setError("Code expired. Requesting a new one...");
-          await startChallenge();
-        } else {
-          setError(result.error || "Verification failed");
+        if (!result.success) {
+          if (result.attempts_remaining !== undefined) {
+            setAttemptsRemaining(result.attempts_remaining);
+            setError(`Invalid code. ${result.attempts_remaining} attempts remaining.`);
+          } else if (result.error === "challenge_expired") {
+            setError("Code expired. Requesting a new one...");
+            // Start a new challenge inline since we're already in a transition
+            const retryResult = await MFAService.createChallenge(profileId, method);
+            if (retryResult.success) {
+              setChallengeId(retryResult.challenge_id || "");
+              setCanResend(false);
+              setResendCountdown(60);
+            }
+          } else {
+            setError(result.error || "Verification failed");
+          }
+          return;
         }
-        return;
-      }
 
-      // Success!
-      if (onVerified) {
-        onVerified();
+        // Success!
+        if (onVerified) {
+          onVerified();
+        }
+      } catch {
+        setError("Verification failed. Please try again.");
       }
-    } catch {
-      setError("Verification failed. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   // Handle backup code verification
-  const handleBackupCodeVerify = async () => {
+  const handleBackupCodeVerify = () => {
     if (!backupCode) {
       setError("Please enter a backup code");
       return;
     }
 
-    setIsLoading(true);
     setError("");
 
-    try {
-      const result = await MFAService.verifyBackupCode(profileId, backupCode);
+    startTransition(async () => {
+      try {
+        const result = await MFAService.verifyBackupCode(profileId, backupCode);
 
-      if (!result.success) {
-        setError(result.error || "Invalid backup code");
-        return;
-      }
+        if (!result.success) {
+          setError(result.error || "Invalid backup code");
+          return;
+        }
 
-      // Success!
-      if (onVerified) {
-        onVerified();
+        // Success!
+        if (onVerified) {
+          onVerified();
+        }
+      } catch {
+        setError("Failed to verify backup code. Please try again.");
       }
-    } catch {
-      setError("Failed to verify backup code. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   // Handle resend
-  const handleResend = async () => {
+  const handleResend = () => {
     setVerificationCode("");
-    await startChallenge();
+    startChallenge();
   };
 
   // Render backup code input
@@ -193,10 +196,10 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
             </button>
             <button
               onClick={handleBackupCodeVerify}
-              disabled={isLoading || !backupCode}
+              disabled={isPending || !backupCode}
               className="flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {isLoading ? (
+              {isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Verifying...
@@ -257,10 +260,10 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
 
         <button
           onClick={handleVerify}
-          disabled={isLoading || verificationCode.length !== 6}
+          disabled={isPending || verificationCode.length !== 6}
           className="w-full px-4 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          {isLoading ? (
+          {isPending ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
               Verifying...
@@ -273,7 +276,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
         <div className="flex items-center justify-between text-sm">
           <button
             onClick={handleResend}
-            disabled={!canResend || isLoading}
+            disabled={!canResend || isPending}
             className="text-primary hover:text-primary/80 disabled:text-muted-foreground disabled:cursor-not-allowed flex items-center gap-1"
           >
             <RefreshCw className="w-4 h-4" />

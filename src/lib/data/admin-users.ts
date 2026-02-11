@@ -3,8 +3,8 @@
  * Server-side data fetching for admin user management
  */
 
-import { unstable_cache } from "next/cache";
-import { CACHE_TAGS, CACHE_DURATIONS } from "./cache-keys";
+import { cacheLife, cacheTag } from "next/cache";
+import { CACHE_TAGS } from "./cache-keys";
 import { createClient, createCachedClient } from "@/lib/supabase/server";
 
 // ============================================================================
@@ -55,6 +55,7 @@ export interface UserStats {
 
 /**
  * Get admin users with filters and pagination
+ * NOTE: Uses createClient() (cookies-dependent) - NOT cached
  */
 export async function getAdminUsers(filters: AdminUsersFilter = {}): Promise<AdminUsersResult> {
   const supabase = await createClient();
@@ -147,20 +148,14 @@ export async function getAdminUsers(filters: AdminUsersFilter = {}): Promise<Adm
 
 /**
  * Get cached admin users
+ * NOTE: getAdminUsers uses createClient() (cookies-dependent), so this
+ * cannot use 'use cache'. It's an alias for the uncached version.
  */
-export const getCachedAdminUsers = unstable_cache(
-  async (filters: AdminUsersFilter = {}): Promise<AdminUsersResult> => {
-    return getAdminUsers(filters);
-  },
-  ["admin-users"],
-  {
-    revalidate: CACHE_DURATIONS.SHORT,
-    tags: [CACHE_TAGS.PROFILES, CACHE_TAGS.ADMIN],
-  }
-);
+export const getCachedAdminUsers = getAdminUsers;
 
 /**
  * Get single user by ID for admin
+ * NOTE: Uses createClient() (cookies-dependent) - NOT cached
  */
 export async function getAdminUserById(id: string): Promise<AdminUserProfile | null> {
   const supabase = await createClient();
@@ -190,46 +185,44 @@ export async function getAdminUserById(id: string): Promise<AdminUserProfile | n
 
 /**
  * Get user statistics for admin dashboard
+ * Uses createCachedClient() - SAFE to cache
  */
-export const getUserStats = unstable_cache(
-  async (): Promise<UserStats> => {
-    const supabase = createCachedClient();
+export async function getUserStats(): Promise<UserStats> {
+  'use cache';
+  cacheLife('admin-stats');
+  cacheTag(CACHE_TAGS.ADMIN_STATS, CACHE_TAGS.ADMIN);
 
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  const supabase = createCachedClient();
 
-    const [
-      { count: total },
-      { count: active },
-      { count: verified },
-      { count: admins },
-      { count: newThisWeek },
-    ] = await Promise.all([
-      supabase.from("profiles").select("*", { count: "exact", head: true }),
-      supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_active", true),
-      supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_verified", true),
-      // Count admins from user_roles table by joining with roles
-      supabase
-        .from("user_roles")
-        .select("*, roles!inner(name)", { count: "exact", head: true })
-        .eq("roles.name", "admin"),
-      supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .gte("created_time", oneWeekAgo.toISOString()),
-    ]);
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-    return {
-      total: total ?? 0,
-      active: active ?? 0,
-      verified: verified ?? 0,
-      admins: admins ?? 0,
-      newThisWeek: newThisWeek ?? 0,
-    };
-  },
-  ["admin-user-stats"],
-  {
-    revalidate: CACHE_DURATIONS.ADMIN_STATS,
-    tags: [CACHE_TAGS.ADMIN_STATS, CACHE_TAGS.ADMIN],
-  }
-);
+  const [
+    { count: total },
+    { count: active },
+    { count: verified },
+    { count: admins },
+    { count: newThisWeek },
+  ] = await Promise.all([
+    supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_active", true),
+    supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_verified", true),
+    // Count admins from user_roles table by joining with roles
+    supabase
+      .from("user_roles")
+      .select("*, roles!inner(name)", { count: "exact", head: true })
+      .eq("roles.name", "admin"),
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .gte("created_time", oneWeekAgo.toISOString()),
+  ]);
+
+  return {
+    total: total ?? 0,
+    active: active ?? 0,
+    verified: verified ?? 0,
+    admins: admins ?? 0,
+    newThisWeek: newThisWeek ?? 0,
+  };
+}

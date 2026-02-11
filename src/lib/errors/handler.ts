@@ -3,10 +3,11 @@
  * Centralized error handling with retry logic and logging
  */
 
-import type { ApiError, ErrorCode, ErrorContext } from "./types";
+import type { ApiError, AppError, ErrorCode, ErrorContext } from "./types";
 import { createApiError, isApiError } from "./api";
 import { mapSupabaseError, isSupabaseError } from "./supabase";
 import { generateRequestId } from "./api";
+import { isAppError } from "./guards";
 
 /**
  * Configuration for retry behavior
@@ -188,3 +189,83 @@ export class ApiErrorHandler {
  * Default singleton instance
  */
 export const apiErrorHandler = new ApiErrorHandler();
+
+// ============================================================================
+// User-Friendly Error Messages (from primary error system)
+// ============================================================================
+
+/**
+ * Convert AppError code to user-friendly message
+ */
+export function getErrorMessage(error: AppError): string {
+  switch (error.code) {
+    case "UNAUTHORIZED":
+      return "Please sign in to continue";
+    case "FORBIDDEN":
+      return "You don't have permission to do this";
+    case "NOT_FOUND":
+      return "The item you're looking for doesn't exist";
+    case "VALIDATION_ERROR":
+      return error.message;
+    case "DATABASE_ERROR":
+      return "A database error occurred. Please try again.";
+    case "NETWORK_ERROR":
+      return "Unable to connect. Please check your internet connection.";
+    case "RATE_LIMIT":
+      return "Too many requests. Please wait a moment and try again.";
+    case "CONFLICT":
+      return error.message;
+    case "TIMEOUT":
+      return "The request timed out. Please try again.";
+    case "SERVICE_UNAVAILABLE":
+      return "The service is temporarily unavailable. Please try again later.";
+    case "PAYLOAD_TOO_LARGE":
+      return "The request is too large. Please reduce the size and try again.";
+    case "CIRCUIT_OPEN":
+      return "This service is temporarily unavailable. Please try again shortly.";
+    case "INTERNAL_ERROR":
+    default:
+      return "Something went wrong. Please try again later.";
+  }
+}
+
+/**
+ * Get a suggestion for how to resolve an AppError
+ */
+export function getAppErrorSuggestion(error: AppError): string {
+  switch (error.code) {
+    case "UNAUTHORIZED":
+      return "Try signing in again";
+    case "NETWORK_ERROR":
+      return "Check your internet connection";
+    case "TIMEOUT":
+      return "The server took too long to respond. Try again.";
+    case "SERVICE_UNAVAILABLE":
+      return "The service is temporarily down. Try again in a few minutes.";
+    case "PAYLOAD_TOO_LARGE":
+      return "The data you sent is too large. Try reducing the file size.";
+    case "CIRCUIT_OPEN":
+      return "This service is temporarily unavailable. Try again shortly.";
+    case "RATE_LIMIT":
+      return "You're making requests too quickly. Wait a moment and try again.";
+    default:
+      return "Please try again later";
+  }
+}
+
+/**
+ * Check if an unknown error is a network error (using AppError check)
+ */
+export const isNetworkErrorFromAppError = (error: unknown) =>
+  error instanceof Error && error.message.toLowerCase().includes("network");
+
+/**
+ * Check if an unknown error is an auth-related AppError
+ */
+export const isAuthErrorFromAppError = (error: unknown) =>
+  isAppError(error) && (error.code === "UNAUTHORIZED" || error.code === "FORBIDDEN");
+
+/**
+ * Sanitize error message by removing special HTML characters
+ */
+export const sanitizeAppErrorMessage = (msg: string) => msg.replace(/[<>&'"]/g, "");

@@ -3,7 +3,7 @@
  * Automatically attempts to recover from errors
  */
 
-import { productionErrorReporter } from "./productionErrorReporter";
+import { productionErrorReporter } from "./production-reporter";
 import { createLogger } from "@/lib/logger";
 
 // Extend Window interface for optional debug/recovery methods

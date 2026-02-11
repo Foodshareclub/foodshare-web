@@ -27,8 +27,8 @@ import {
   getAIInsights,
 } from "@/app/actions/analytics-ai";
 import type { NLQueryResult, WeeklyReport, AIInsight } from "@/app/actions/analytics-ai";
-import { getSyncStatus, getTopSharers } from "@/app/actions/analytics";
-import type { SyncStatus, TopSharer } from "@/app/actions/analytics";
+import { getSyncStatus, getTopSharers } from "@/lib/data/analytics";
+import type { SyncStatus, TopSharer } from "@/lib/data/analytics";
 
 const EXAMPLE_QUESTIONS = [
   "How many users signed up this week?",

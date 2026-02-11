@@ -46,6 +46,8 @@ import {
   getInventoryAging,
   getListingTypeDistribution,
   getTopSharers,
+} from "@/lib/data/analytics";
+import type {
   AnalyticsSummary,
   MonthlyGrowth,
   DailyActiveUsers,
@@ -54,7 +56,7 @@ import {
   InventoryAge,
   ListingTypeDistribution,
   TopSharer,
-} from "@/app/actions/analytics";
+} from "@/lib/data/analytics";
 
 // Dynamic import for Leaflet-based component (client-side only)
 const GeoHeatMap = dynamic(() => import("./GeoHeatMap").then((mod) => mod.GeoHeatMap), {

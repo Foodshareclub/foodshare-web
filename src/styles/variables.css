@@ -1,0 +1,186 @@
+/* ============================================================================
+   CSS Variables - Light Theme (Default)
+   ============================================================================ */
+
+:root {
+  /* Base colors */
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+
+  /* Card */
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+
+  /* Popover */
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+
+  /* Primary - FoodShare Pink/Red #FF2D55 */
+  --primary: 345 100% 59%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary */
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
+
+  /* Muted */
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+
+  /* Accent */
+  --accent: 240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
+
+  /* Destructive */
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+
+  /* Border, Input, Ring */
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 345 100% 59%;
+
+  /* Radius */
+  --radius: 0.5rem;
+
+  /* Chart colors */
+  --chart-1: 345 100% 59%;
+  --chart-2: 173 58% 39%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
+
+  /* Sidebar */
+  --sidebar-background: 0 0% 98%;
+  --sidebar-foreground: 240 5.3% 26.1%;
+  --sidebar-primary: 345 100% 59%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 240 4.8% 95.9%;
+  --sidebar-accent-foreground: 240 5.9% 10%;
+  --sidebar-border: 220 13% 91%;
+  --sidebar-ring: 345 100% 59%;
+
+  /* Glass morphism variables */
+  --glass-blur: 15px;
+  --glass-saturation: 180%;
+  --glass-bg-opacity: 0.7;
+  --glass-border-opacity: 0.3;
+  --glass-bg: var(--background);
+  --glass-bg-subtle: var(--background);
+  --glass-bg-strong: var(--card);
+  --glass-border: var(--border);
+  --glass-shadow: 0 0% 0%;
+
+  /* Brand colors - FoodShare palette */
+  --brand-primary: 345 100% 59%; /* #FF2D55 */
+  --brand-primary-hover: 345 100% 52%; /* #E61E4D */
+  --brand-teal: 173 58% 39%; /* #00A699 */
+  --brand-orange: 27 87% 59%; /* #FC642D */
+  --brand-orange-light: 27 87% 67%; /* #FFA866 */
+
+  /* Layout dimensions */
+  --navbar-height: 170px;
+  --navbar-height-compact: 120px;
+  --footer-height: 60px;
+  --admin-sidebar-width: 260px;
+  --admin-sidebar-width-collapsed: 64px;
+}
+
+/* ============================================================================
+   CSS Variables - Dark Theme (Claude AI inspired warm palette)
+   ============================================================================
+   Inspired by Claude's warm, balanced dark UI:
+   - Deep warm charcoal background (#2a2520)
+   - Soft cream/beige text
+   - Coral/terracotta accent tones
+   ============================================================================ */
+
+/* ============================================================================
+   System Preference Fallback (for initial paint before JS loads)
+   ============================================================================
+   This ensures the loading spinner and initial content respect system theme
+   preference immediately, before next-themes applies the .dark class.
+   ============================================================================ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --background: 20 10% 15%;
+    --foreground: 35 25% 90%;
+    --card: 22 10% 17%;
+    --card-foreground: 35 25% 90%;
+    --primary: 345 85% 60%;
+    --primary-foreground: 0 0% 100%;
+    --muted: 22 10% 20%;
+    --muted-foreground: 25 12% 55%;
+    --border: 25 10% 24%;
+  }
+}
+
+.dark {
+  /* Claude AI warm charcoal background - #2a2520 */
+  --background: 20 10% 15%;
+  --foreground: 35 25% 90%;
+
+  /* Card - slightly elevated warm surface */
+  --card: 22 10% 17%;
+  --card-foreground: 35 25% 90%;
+
+  /* Popover - warm dark elevated */
+  --popover: 22 12% 16%;
+  --popover-foreground: 35 25% 90%;
+
+  /* Primary - FoodShare Pink/Coral for warm palette */
+  --primary: 345 85% 60%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary - warm muted brown */
+  --secondary: 25 12% 22%;
+  --secondary-foreground: 35 20% 88%;
+
+  /* Muted - warm gray-brown */
+  --muted: 22 10% 20%;
+  --muted-foreground: 25 12% 55%;
+
+  /* Accent - warm terracotta hint */
+  --accent: 25 15% 24%;
+  --accent-foreground: 35 25% 90%;
+
+  /* Destructive */
+  --destructive: 0 65% 55%;
+  --destructive-foreground: 0 0% 98%;
+
+  /* Border, Input, Ring - warm brown tones */
+  --border: 25 10% 24%;
+  --input: 22 10% 20%;
+  --ring: 345 85% 60%;
+
+  /* Chart colors - warm palette */
+  --chart-1: 345 85% 60%;
+  --chart-2: 165 45% 45%;
+  --chart-3: 35 65% 55%;
+  --chart-4: 280 50% 58%;
+  --chart-5: 15 70% 55%;
+
+  /* Sidebar - deeper warm dark */
+  --sidebar-background: 20 12% 12%;
+  --sidebar-foreground: 35 20% 88%;
+  --sidebar-primary: 345 85% 60%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 22 10% 18%;
+  --sidebar-accent-foreground: 35 20% 88%;
+  --sidebar-border: 25 10% 22%;
+  --sidebar-ring: 345 85% 60%;
+
+  /* Glass morphism - warm dark */
+  --glass-bg-opacity: 0.7;
+  --glass-border-opacity: 0.2;
+  --glass-bg: var(--card);
+  --glass-bg-subtle: var(--popover);
+  --glass-bg-strong: 22 10% 16%;
+  --glass-border: var(--border);
+  --glass-shadow: 20 15% 8%;
+
+  /* Brand colors - Dark mode warm adjustments */
+  --brand-primary: 345 85% 60%;
+  --brand-primary-hover: 345 85% 52%;
+}

@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getChallengesPaginated } from "@/lib/data/challenges";
 
-export const dynamic = "force-dynamic";
-
 /**
  * GET /api/challenges
  * Paginated challenges endpoint for lazy loading

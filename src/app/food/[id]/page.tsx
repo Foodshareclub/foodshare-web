@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
-import { PostDetailClient } from "./PostDetailClient";
+import { UserActions } from "./UserActions";
 import { getProductById, getPopularProductIds } from "@/lib/data/products";
 import { getChallengeById } from "@/lib/data/challenges";
 import type { InitialProductStateType } from "@/types/product.types";
@@ -11,8 +11,6 @@ import {
   calculateAggregateRating,
 } from "@/lib/jsonld";
 import { isDatabaseHealthy } from "@/lib/data/health";
-
-export const revalidate = 120;
 
 export async function generateStaticParams(): Promise<{ id: string }[]> {
   try {
@@ -26,30 +24,6 @@ export async function generateStaticParams(): Promise<{ id: string }[]> {
 interface PageProps {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ type?: string }>;
-}
-
-/**
- * Safely get user - only if DB is healthy
- */
-async function safeGetUser() {
-  try {
-    const { getUser } = await import("@/app/actions/auth");
-    return await getUser();
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Safely check if user is admin
- */
-async function safeCheckIsAdmin() {
-  try {
-    const { checkIsAdmin } = await import("@/app/actions/auth");
-    return await checkIsAdmin();
-  } catch {
-    return false;
-  }
 }
 
 function transformChallengeToProduct(
@@ -113,10 +87,7 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
       notFound();
     }
 
-    // Only fetch user and admin status if product succeeded
-    const [user, isAdmin] = await Promise.all([safeGetUser(), safeCheckIsAdmin()]);
-
-    // Generate JSON-LD structured data for SEO
+    // Generate JSON-LD structured data for SEO (no auth needed)
     const aggregateRating = calculateAggregateRating(product.five_star, product.four_star);
     const jsonLd = generateProductJsonLd({
       id: product.id,
@@ -135,6 +106,9 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
       { name: product.post_name || "Item", url: `https://foodshare.club/food/${product.id}` },
     ]);
 
+    // JSON-LD renders immediately. UserActions streams independently -
+    // it fetches user/admin auth data in its own Suspense boundary,
+    // so the page shell paints before auth resolves.
     return (
       <>
         <script
@@ -146,7 +120,7 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
           dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
         />
         <Suspense fallback={<PostDetailSkeleton />}>
-          <PostDetailClient post={product} user={user} isAdmin={isAdmin} />
+          <UserActions product={product} />
         </Suspense>
       </>
     );
