@@ -9,6 +9,7 @@ import { ChallengeRevealModal } from "@/components/modals/challenge-reveal";
 import { ChallengeDeck } from "@/components/challenges/ChallengeDeck";
 import { ChallengeLeaderboard } from "@/components/challenges/ChallengeLeaderboard";
 import { ActiveChallenges } from "@/components/challenges/ActiveChallenges";
+import { QueryErrorBoundary } from "@/components/ErrorBoundary";
 import { useDeckChallenges } from "@/hooks/queries/useChallenges";
 import type { InitialProductStateType } from "@/types/product.types";
 import type { AuthUser } from "@/lib/data/auth";
@@ -254,7 +255,11 @@ function HeroSection({
             className="w-full xl:w-80 xl:shrink-0 xl:sticky xl:top-24 space-y-4"
           >
             {/* Active Challenges (only shown when authenticated) */}
-            {isAuth && <ActiveChallenges />}
+            {isAuth && (
+              <QueryErrorBoundary featureName="Active Challenges">
+                <ActiveChallenges />
+              </QueryErrorBoundary>
+            )}
 
             {/* Leaderboard */}
             <ChallengeLeaderboard initialData={leaderboard} currentUserRank={currentUserRank} />

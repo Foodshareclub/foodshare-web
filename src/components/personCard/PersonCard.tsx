@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 type PropsType = {
@@ -38,8 +39,7 @@ const PersonCard: React.FC<PropsType> = ({ name, secondName, img, aboutExp, role
         />
 
         <div className="relative mb-6 md:mb-8">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             className={cn(
               "object-cover rounded-full w-[160px] h-[160px] sm:w-[180px] sm:h-[180px] border-[5px] border-solid shadow-2xl relative z-[1]",
               "transition-all duration-300",
@@ -50,6 +50,8 @@ const PersonCard: React.FC<PropsType> = ({ name, secondName, img, aboutExp, role
             }}
             src={img}
             alt={`${name} profile image`}
+            width={180}
+            height={180}
           />
 
           {/* Glow effect */}

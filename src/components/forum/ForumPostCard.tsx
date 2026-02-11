@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   TrendingUp,
@@ -58,13 +57,11 @@ export function ForumPostCard({
 
   const isHot = (post.views_count || 0) > 100 || (post.forum_likes_counter || 0) > 10;
   const isNew = MODULE_LOAD_TIME - new Date(post.forum_post_created_at).getTime() < 86400000;
-  const hasActivity = useMemo(() => {
-    const lastActivityTime = new Date(
-      post.last_activity_at || post.forum_post_created_at
-    ).getTime();
-    const oneHourAgo = MODULE_LOAD_TIME - 3600000;
-    return lastActivityTime > oneHourAgo;
-  }, [post.last_activity_at, post.forum_post_created_at]);
+  // React Compiler handles memoization automatically
+  const lastActivityTime = new Date(
+    post.last_activity_at || post.forum_post_created_at
+  ).getTime();
+  const hasActivity = lastActivityTime > MODULE_LOAD_TIME - 3600000;
 
   const postTypeStyles = {
     discussion: {

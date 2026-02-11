@@ -10,3 +10,4 @@ export {
   AsyncErrorBoundary,
 } from "./FeatureErrorBoundary";
 export type { ErrorFallbackProps, FeatureErrorBoundaryProps } from "./FeatureErrorBoundary";
+export { QueryErrorBoundary } from "./QueryErrorBoundary";

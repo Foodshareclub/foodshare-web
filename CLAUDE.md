@@ -111,3 +111,9 @@ See `foodshare-backend/CLAUDE.md` for Edge Function patterns, security docs, and
 - **AuthUser import error** -- Import from `@/lib/data/auth`, NOT `@/app/actions/auth`
 - **Edge Function not found** -- `supabase/` is a symlink; work in `foodshare-backend/` directly
 - **Migration conflicts** -- Backend changes affect all platforms; coordinate across iOS/Android
+
+## Architecture Decision Records
+
+- **Parallel routes for admin**: Deferred. Current admin layout with separate pages works well. Parallel routes would add complexity without clear UX benefit.
+- **Intercepting routes for product detail modal**: Planned for future sprint. Would allow opening product details in a modal from listing pages while preserving URL state.
+- **Route groups for settings/auth**: Evaluated, low value. Current flat structure under `/settings` and `/auth` is clear enough without grouping.

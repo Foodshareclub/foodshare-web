@@ -6,10 +6,14 @@
 
 import { NextResponse } from "next/server";
 import { getEmailLogs } from "@/lib/data/admin-email";
+import { requireAdmin } from "../_shared/requireAdmin";
 import type { EmailProvider, EmailType } from "@/lib/email/types";
 
 export async function GET(request: Request) {
   try {
+    const auth = await requireAdmin();
+    if (!auth.authorized) return auth.response;
+
     const { searchParams } = new URL(request.url);
 
     const params = {

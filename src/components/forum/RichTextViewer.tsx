@@ -140,9 +140,16 @@ export function RichTextViewer({ content, className }: RichTextViewerProps) {
 
     // Sanitize HTML before rendering
     if (typeof window !== "undefined") {
-      // Add target="_blank" and rel="noopener noreferrer" to all links
+      // Use DOMPurify hook to add target/rel during sanitization (not after)
+      DOMPurify.addHook("afterSanitizeAttributes", (node) => {
+        if (node.tagName === "A") {
+          node.setAttribute("target", "_blank");
+          node.setAttribute("rel", "noopener noreferrer");
+        }
+      });
       const clean = DOMPurify.sanitize(html, PURIFY_CONFIG);
-      return clean.replace(/<a /g, '<a target="_blank" rel="noopener noreferrer" ');
+      DOMPurify.removeHook("afterSanitizeAttributes");
+      return clean;
     }
 
     return html;

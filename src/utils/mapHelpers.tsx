@@ -7,6 +7,8 @@ import type { InitialProductStateType } from "@/types/product.types";
 
 /**
  * Generates HTML for product popup in vanilla Leaflet
+ * Note: Uses raw <img> intentionally — Leaflet popups render vanilla HTML strings,
+ * not React components, so next/image cannot be used here.
  * @param product - Product data
  * @param productType - Category type for navigation
  */

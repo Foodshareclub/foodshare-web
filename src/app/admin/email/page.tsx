@@ -5,6 +5,7 @@ import { EmailCRMDashboard } from "@/app/admin/email/components/EmailCRMDashboar
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEmailCRMData } from "@/hooks/queries/useEmailCRM";
 import { useTranslations } from "next-intl";
+import { QueryErrorBoundary } from "@/components/ErrorBoundary";
 
 function EmailSkeleton() {
   return (
@@ -53,10 +54,6 @@ function EmailSkeleton() {
 
 export default function AdminEmailCRMPage() {
   const t = useTranslations();
-  const { stats, providerHealth, campaigns, automations, segments, quotaDetails, bounceStats, isLoading } = useEmailCRMData();
-
-  // Show skeleton while loading or if data is not yet available
-  const hasData = stats && providerHealth && campaigns && automations && segments && quotaDetails && bounceStats;
 
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)] -mt-2">
@@ -78,22 +75,35 @@ export default function AdminEmailCRMPage() {
         </div>
       </div>
 
-      {/* CRM takes remaining height */}
-      {isLoading || !hasData ? (
-        <EmailSkeleton />
-      ) : (
-        <EmailCRMDashboard
-          initialData={{
-            stats,
-            providerHealth,
-            campaigns,
-            automations,
-            segments,
-            quotaDetails,
-            bounceStats,
-          }}
-        />
-      )}
+      {/* CRM takes remaining height — QueryErrorBoundary resets failed queries on retry */}
+      <QueryErrorBoundary featureName="Email CRM">
+        <EmailCRMContent />
+      </QueryErrorBoundary>
     </div>
+  );
+}
+
+function EmailCRMContent() {
+  const { stats, providerHealth, campaigns, automations, segments, quotaDetails, bounceStats, isLoading } = useEmailCRMData();
+
+  // Show skeleton while loading or if data is not yet available
+  const hasData = stats && providerHealth && campaigns && automations && segments && quotaDetails && bounceStats;
+
+  if (isLoading || !hasData) {
+    return <EmailSkeleton />;
+  }
+
+  return (
+    <EmailCRMDashboard
+      initialData={{
+        stats,
+        providerHealth,
+        campaigns,
+        automations,
+        segments,
+        quotaDetails,
+        bounceStats,
+      }}
+    />
   );
 }

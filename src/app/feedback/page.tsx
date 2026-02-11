@@ -1,17 +1,9 @@
-import { Metadata } from "next";
 import { FeedbackForm } from "./FeedbackForm";
 import { getCurrentUserInfo } from "@/app/actions/feedback";
 import { PageHeader } from "@/components/navigation/PageHeader";
+import { generateNoIndexMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = {
-  title: "Send Feedback | FoodShare",
-  description:
-    "Share your thoughts, report bugs, or suggest new features. We'd love to hear from you!",
-  openGraph: {
-    title: "Send Feedback | FoodShare",
-    description: "Tell us what you think or report any issues",
-  },
-};
+export const metadata = generateNoIndexMetadata("Send Feedback", "Share your thoughts, report bugs, or suggest new features.");
 
 export default async function FeedbackPage() {
   const result = await getCurrentUserInfo();

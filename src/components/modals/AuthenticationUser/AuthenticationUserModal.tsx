@@ -12,6 +12,7 @@ import { InvitationStep } from "./InvitationStep";
 import { useAuth } from "@/hooks";
 import { ViewIcon, ViewOffIcon } from "@/utils/icons";
 
+import Image from "next/image";
 import facebook from "@/assets/facebookblue.svg";
 import apple from "@/assets/apple.svg";
 import google from "@/assets/google.svg";
@@ -594,8 +595,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     variant="outline"
                     className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={google.src} alt="Google" className="w-5 h-5 mr-3" />
+                    <Image src={google} alt="Google" width={20} height={20} className="w-5 h-5 mr-3" />
                     &quot;Continue with Google&quot;
                   </Button>
 
@@ -605,8 +605,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     variant="outline"
                     className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={facebook.src} alt="Facebook" className="w-5 h-5 mr-3" />
+                    <Image src={facebook} alt="Facebook" width={20} height={20} className="w-5 h-5 mr-3" />
                     &quot;Continue with Facebook&quot;
                   </Button>
 
@@ -616,8 +615,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                     variant="outline"
                     className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={apple.src} alt="Apple" className="w-5 h-5 mr-3" />
+                    <Image src={apple} alt="Apple" width={20} height={20} className="w-5 h-5 mr-3" />
                     &quot;Continue with Apple&quot;
                   </Button>
                 </div>

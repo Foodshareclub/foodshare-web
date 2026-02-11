@@ -7,7 +7,7 @@
 
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { MapView } from "./MapView";
 import { useGridSize, useMediaQuery } from "@/hooks";
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
@@ -36,19 +36,18 @@ export function MainWithMap({ products, isLoading = false }: MainWithMapProps) {
   const showMap = useMediaQuery("(min-width: 1024px)");
 
   // Convert products to include coordinates for map display
-  const productsWithCoordinates = useMemo<ProductWithCoordinates[]>(() => {
-    return products
-      .map((product) => {
-        const coords = getCoordinates(product);
-        if (!coords) return null;
-        return {
-          ...product,
-          latitude: coords.lat,
-          longitude: coords.lng,
-        };
-      })
-      .filter((p): p is ProductWithCoordinates => p !== null);
-  }, [products]);
+  // React Compiler handles memoization automatically
+  const productsWithCoordinates: ProductWithCoordinates[] = products
+    .map((product) => {
+      const coords = getCoordinates(product);
+      if (!coords) return null;
+      return {
+        ...product,
+        latitude: coords.lat,
+        longitude: coords.lng,
+      };
+    })
+    .filter((p): p is ProductWithCoordinates => p !== null);
 
   // React Compiler optimizes these handlers automatically
   const handleProductHover = (productId: number | null) => {

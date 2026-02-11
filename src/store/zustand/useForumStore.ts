@@ -6,7 +6,7 @@
  */
 
 import { create } from "zustand";
-import type { ForumPostType, ForumNotification } from "@/api/forumAPI";
+import type { ForumPostType } from "@/api/forumAPI";
 
 // ============================================================================
 // Types
@@ -38,14 +38,6 @@ interface ForumState {
   // Currently selected/viewed post
   selectedPostId: number | null;
   setSelectedPostId: (id: number | null) => void;
-
-  // Notifications (kept in Zustand for real-time updates)
-  notifications: ForumNotification[];
-  setNotifications: (notifications: ForumNotification[]) => void;
-  addNotification: (notification: ForumNotification) => void;
-  markNotificationRead: (id: string) => void;
-  markAllNotificationsRead: () => void;
-  unreadCount: number;
 
   // UI State
   isComposerOpen: boolean;
@@ -100,32 +92,6 @@ export const useForumStore = create<ForumState>((set, get) => ({
   selectedPostId: null,
   setSelectedPostId: (id) => set({ selectedPostId: id }),
 
-  // Notifications
-  notifications: [],
-  setNotifications: (notifications) =>
-    set({
-      notifications,
-      unreadCount: notifications.filter((n) => !n.is_read).length,
-    }),
-  addNotification: (notification) =>
-    set((state) => ({
-      notifications: [notification, ...state.notifications],
-      unreadCount: state.unreadCount + (notification.is_read ? 0 : 1),
-    })),
-  markNotificationRead: (id) =>
-    set((state) => ({
-      notifications: state.notifications.map((n) =>
-        n.id === id ? { ...n, is_read: true } : n
-      ),
-      unreadCount: Math.max(0, state.unreadCount - 1),
-    })),
-  markAllNotificationsRead: () =>
-    set((state) => ({
-      notifications: state.notifications.map((n) => ({ ...n, is_read: true })),
-      unreadCount: 0,
-    })),
-  unreadCount: 0,
-
   // UI State
   isComposerOpen: false,
   setComposerOpen: (open) => set({ isComposerOpen: open }),
@@ -139,8 +105,6 @@ export const useForumStore = create<ForumState>((set, get) => ({
       offset: 0,
       hasMore: true,
       selectedPostId: null,
-      notifications: [],
-      unreadCount: 0,
       isComposerOpen: false,
       replyingToCommentId: null,
     }),
@@ -152,8 +116,6 @@ export const useForumStore = create<ForumState>((set, get) => ({
 
 export const selectForumFilters = (state: ForumState) => state.filters;
 export const selectForumOffset = (state: ForumState) => state.offset;
-export const selectUnreadCount = (state: ForumState) => state.unreadCount;
-export const selectNotifications = (state: ForumState) => state.notifications;
 
 // ============================================================================
 // Custom Hooks (convenience hooks for common selections)
@@ -161,5 +123,5 @@ export const selectNotifications = (state: ForumState) => state.notifications;
 
 export const useForumFilters = () => useForumStore(selectForumFilters);
 export const useForumOffset = () => useForumStore(selectForumOffset);
-export const useUnreadCount = () => useForumStore(selectUnreadCount);
-export const useNotifications = () => useForumStore(selectNotifications);
+
+// Note: Forum notifications migrated to React Query — see useForumNotifications.ts

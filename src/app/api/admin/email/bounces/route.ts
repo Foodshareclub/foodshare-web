@@ -6,9 +6,13 @@
 
 import { NextResponse } from "next/server";
 import { getBounceStats } from "@/lib/data/admin-email";
+import { requireAdmin } from "../_shared/requireAdmin";
 
 export async function GET() {
   try {
+    const auth = await requireAdmin();
+    if (!auth.authorized) return auth.response;
+
     const bounceStats = await getBounceStats();
     return NextResponse.json(bounceStats);
   } catch (error) {

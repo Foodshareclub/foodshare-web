@@ -8,10 +8,9 @@ import { NotificationsPageClient } from "./NotificationsPageClient";
 import { createClient } from "@/lib/supabase/server";
 import { getUserNotifications, getUnreadNotificationCount } from "@/lib/data/notifications";
 
-export const metadata = {
-  title: "Notifications | FoodShare",
-  description: "View your notifications",
-};
+import { generateNoIndexMetadata } from "@/lib/metadata";
+
+export const metadata = generateNoIndexMetadata("Notifications", "View your notifications");
 
 export default async function NotificationsPage() {
   const supabase = await createClient();

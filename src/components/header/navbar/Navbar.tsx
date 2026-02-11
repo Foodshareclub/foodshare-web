@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import NavbarLogo from "./NavbarLogo";
@@ -49,17 +49,13 @@ function Navbar({
   // Get category translations
   const tCategories = useTranslations("categories");
 
-  // Translate category labels
-  const translatedCategories = useMemo(
-    () =>
-      CATEGORIES.map((cat) => ({
-        id: cat.id,
-        // Extract key from "categories.food" -> "food"
-        label: tCategories(cat.labelKey.replace("categories.", "")),
-        icon: cat.icon,
-      })),
-    [tCategories]
-  );
+  // Translate category labels — React Compiler handles memoization
+  const translatedCategories = CATEGORIES.map((cat) => ({
+    id: cat.id,
+    // Extract key from "categories.food" -> "food"
+    label: tCategories(cat.labelKey.replace("categories.", "")),
+    icon: cat.icon,
+  }));
 
   // Navigation handlers - React Compiler optimizes these
   const handleLogoClick = () => {

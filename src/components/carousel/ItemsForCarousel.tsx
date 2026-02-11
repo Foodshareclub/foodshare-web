@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import React from "react";
+import Image from "next/image";
 import type { NavigationActionsSVGType } from "@/utils/navigationActions";
 
 type ItemsForCarouselType = {
@@ -38,8 +39,7 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
     >
       <div className="text-center relative group">
         {/* Enhanced Icon Size - Airbnb-style prominence with scroll compaction */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           className={`m-auto transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
             isCompact
               ? "w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8"
@@ -47,8 +47,9 @@ const ItemsForCarousel: FC<ItemsForCarouselType> = ({
           } ${isActive ? "opacity-100" : "opacity-85"} group-hover:scale-105`}
           src={changeAttributeValue(item.red, item.src)}
           alt={item.name}
+          width={40}
+          height={40}
           loading="lazy"
-          decoding="async"
         />
 
         {/* Category Label */}

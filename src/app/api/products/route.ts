@@ -164,19 +164,19 @@ export async function GET(request: NextRequest) {
     // Owner viewing their own products sees exact locations
     // IMPORTANT: Uses private cache because response varies by auth
     if (userId) {
-      const { data, error } = await supabase
-        .from("posts_with_location")
-        .select("*")
-        .eq("profile_id", userId)
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
       const isOwnProducts = user?.id === userId;
 
       if (isOwnProducts) {
-        // Owner sees exact locations - private cache
+        // Owner sees all fields + exact locations - private cache
+        const { data, error } = await supabase
+          .from("posts_with_location")
+          .select("*")
+          .eq("profile_id", userId)
+          .eq("is_active", true)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
         return NextResponse.json(data ?? [], {
           headers: {
             "Cache-Control": "private, max-age=60",
@@ -185,7 +185,16 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // Others see approximate locations
+      // Non-owner: restricted to public fields + approximate locations
+      const { data, error } = await supabase
+        .from("posts_with_location")
+        .select("id,post_name,post_type,images,created_at,post_views,post_like_counter,location_json")
+        .eq("profile_id", userId)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
       // CRITICAL: Use private cache because the owner check makes this auth-dependent
       return NextResponse.json(applyLocationPrivacy(data ?? []), {
         headers: {

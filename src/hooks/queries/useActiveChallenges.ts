@@ -56,8 +56,28 @@ export function useCompleteChallenge() {
 
   return useMutation({
     mutationFn: completeChallenge,
-    onSuccess: () => {
-      // Invalidate active challenges and leaderboard
+    onMutate: async (challengeId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: activeChallengesKeys.list() });
+
+      // Snapshot previous value
+      const previous = queryClient.getQueryData<ActiveChallenge[]>(activeChallengesKeys.list());
+
+      // Optimistically remove the completed challenge
+      queryClient.setQueryData<ActiveChallenge[]>(activeChallengesKeys.list(), (old) =>
+        old?.filter((c) => c.challengeId !== challengeId)
+      );
+
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      // Rollback on error
+      if (context?.previous) {
+        queryClient.setQueryData(activeChallengesKeys.list(), context.previous);
+      }
+    },
+    onSettled: () => {
+      // Refetch to ensure consistency
       queryClient.invalidateQueries({ queryKey: activeChallengesKeys.all });
       queryClient.invalidateQueries({ queryKey: ["challenge-leaderboard"] });
     },

@@ -6,9 +6,13 @@
 
 import { NextResponse } from "next/server";
 import { getComprehensiveQuotaStatus } from "@/lib/data/admin-email";
+import { requireAdmin } from "../_shared/requireAdmin";
 
 export async function GET() {
   try {
+    const auth = await requireAdmin();
+    if (!auth.authorized) return auth.response;
+
     const quotaData = await getComprehensiveQuotaStatus();
     return NextResponse.json(quotaData);
   } catch (error) {

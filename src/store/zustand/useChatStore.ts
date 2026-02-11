@@ -71,6 +71,12 @@ interface ChatState {
 }
 
 // ============================================================================
+// Constants
+// ============================================================================
+
+const MAX_MESSAGES_PER_ROOM = 200;
+
+// ============================================================================
 // Store Implementation
 // ============================================================================
 
@@ -94,17 +100,17 @@ export const useChatStore = create<ChatState>((set) => ({
       ),
     })),
 
-  // Messages
+  // Messages (capped at MAX_MESSAGES_PER_ROOM to prevent unbounded memory growth)
   messages: [],
-  setMessages: (messages) => set({ messages }),
+  setMessages: (messages) => set({ messages: messages.slice(0, MAX_MESSAGES_PER_ROOM) }),
   addMessage: (message) =>
     set((state) => ({
-      messages: [message, ...state.messages],
+      messages: [message, ...state.messages].slice(0, MAX_MESSAGES_PER_ROOM),
       newMessage: message,
     })),
   prependMessages: (messages) =>
     set((state) => ({
-      messages: [...state.messages, ...messages],
+      messages: [...state.messages, ...messages].slice(0, MAX_MESSAGES_PER_ROOM),
     })),
 
   // New message

@@ -5,6 +5,7 @@
  */
 
 import React from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { getProductDetailUrl } from "@/utils/categoryMapping";
 
@@ -38,13 +39,13 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
   return (
     <div className="product-popup-card">
       {image && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src={image}
           alt={name}
           className="product-popup-image"
+          width={280}
+          height={160}
           loading="lazy"
-          decoding="async"
         />
       )}
 

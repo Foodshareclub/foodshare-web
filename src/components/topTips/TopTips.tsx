@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import light from "@/assets/noto-v1_light-bulb.svg";
 
 const TopTips = () => {
@@ -6,8 +7,7 @@ const TopTips = () => {
     <div className="glass-accent-primary rounded-xl p-4 mt-1 mb-2">
       <div className="py-2 mx-auto w-[90%]">
         <div className="flex items-center gap-2 mb-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="w-5" src={light.src} alt="light" />
+          <Image className="w-5" src={light} alt="light" width={20} height={20} />
           <h3 className="font-medium text-xl">Top tips</h3>
         </div>
         <ul className="list-inside pl-2 space-y-1">
