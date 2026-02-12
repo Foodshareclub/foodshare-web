@@ -121,11 +121,13 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          command_timeout: 10m
+          command_timeout: 20m
           script: |
             cd /home/organic/dev/foodshare-web
             git pull origin main
-            docker compose --env-file .env.production up -d --build --remove-orphans
+            # Build with memory limits to prevent OOM
+            docker compose --env-file .env.production build --memory 2g
+            docker compose --env-file .env.production up -d --remove-orphans
 
       - name: Verify deployment
         uses: appleboy/ssh-action@v1
