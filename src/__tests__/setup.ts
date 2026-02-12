@@ -16,6 +16,8 @@ mock.module("next/cache", () => ({
   revalidateTag: () => {},
   unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
   unstable_noStore: () => {},
+  cacheLife: () => {},
+  cacheTag: () => {},
 }));
 
 // Mock cache-keys (avoid importing actual module which depends on next/cache)
