@@ -10,6 +10,9 @@ import "@testing-library/jest-dom";
 // Module Mocks (bun:test mock.module)
 // =============================================================================
 
+// Mock server-only package (prevents errors in test environment)
+mock.module("server-only", () => ({}));
+
 // Mock next/cache (Server Actions use this)
 mock.module("next/cache", () => ({
   revalidatePath: () => {},
