@@ -57,7 +57,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run TypeScript
-        run: bun run type-check
+        run: NODE_OPTIONS="--max-old-space-size=1536" bun run type-check
 
   test:
     name: Unit Tests
