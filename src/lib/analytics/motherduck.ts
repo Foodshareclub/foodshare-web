@@ -8,7 +8,7 @@ import { getMotherDuckToken } from "@/lib/email/vault";
 // let dbInstance: DatabaseInstance | null = null;
 
 type DatabaseInstance = any;
-let dbInstance: DatabaseInstance | null = null;
+const dbInstance: DatabaseInstance | null = null;
 
 export class MotherDuckService {
   private static async matchToken(token: string): Promise<string> {
