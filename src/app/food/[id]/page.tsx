@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { UserActions } from "./UserActions";
-import { getProductById, getPopularProductIds } from "@/lib/data/products";
+import { getProductById } from "@/lib/data/products";
 import { getChallengeById } from "@/lib/data/challenges";
 import type { InitialProductStateType } from "@/types/product.types";
 import {
@@ -11,15 +11,6 @@ import {
   calculateAggregateRating,
 } from "@/lib/jsonld";
 import { isDatabaseHealthy } from "@/lib/data/health";
-
-export async function generateStaticParams(): Promise<{ id: string }[]> {
-  try {
-    const productIds = await getPopularProductIds(50);
-    return productIds.map((id) => ({ id: String(id) }));
-  } catch {
-    return [{ id: '1' }]; // Return at least one for Cache Components
-  }
-}
 
 interface PageProps {
   params: Promise<{ id: string }>;
