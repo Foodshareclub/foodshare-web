@@ -1,9 +1,13 @@
 import { getMotherDuckToken } from "@/lib/email/vault";
 
+// TODO: Re-enable when DuckDB supports ARM64 or we move to x86 runners
 // Dynamic import to avoid Turbopack parsing native module at build time
 // Using Awaited<ReturnType> since Database.create() returns the instance
-type DuckDBModule = typeof import("duckdb-async");
-type DatabaseInstance = Awaited<ReturnType<DuckDBModule["Database"]["create"]>>;
+// type DuckDBModule = typeof import("duckdb-async");
+// type DatabaseInstance = Awaited<ReturnType<DuckDBModule["Database"]["create"]>>;
+// let dbInstance: DatabaseInstance | null = null;
+
+type DatabaseInstance = any;
 let dbInstance: DatabaseInstance | null = null;
 
 export class MotherDuckService {
@@ -12,37 +16,39 @@ export class MotherDuckService {
   }
 
   static async getConnection(): Promise<DatabaseInstance> {
-    if (dbInstance) return dbInstance;
+    throw new Error("MotherDuck is temporarily disabled due to ARM64 compatibility");
+    // if (dbInstance) return dbInstance;
 
-    const token = await getMotherDuckToken();
+    // const token = await getMotherDuckToken();
 
-    if (!token) {
-      throw new Error("MotherDuck token not found in Vault. Please configure MOTHERDUCK_TOKEN.");
-    }
+    // if (!token) {
+    //   throw new Error("MotherDuck token not found in Vault. Please configure MOTHERDUCK_TOKEN.");
+    // }
 
-    // "md:" connects to MotherDuck. If no token is provided in the connection string,
-    // it looks for the environment variable MOTHERDUCK_TOKEN, but since we are handling
-    // it explicitly from the vault, we pass it in.
-    const connectionString = `md:?motherduck_token=${token}`;
+    // // "md:" connects to MotherDuck. If no token is provided in the connection string,
+    // // it looks for the environment variable MOTHERDUCK_TOKEN, but since we are handling
+    // // it explicitly from the vault, we pass it in.
+    // const connectionString = `md:?motherduck_token=${token}`;
 
-    // Create simple connection
-    // Note: In serverless environments, we might need to be careful about connection
-    // pooling or reuse, but for now a singleton is a good starting point for
-    // persistent containers or long-running processes.
-    try {
-      // Dynamic import at runtime to avoid Turbopack parsing native module
-      const { Database } = await import("duckdb-async");
-      dbInstance = await Database.create(connectionString);
-      return dbInstance;
-    } catch (error) {
-      console.error("Failed to connect to MotherDuck:", error);
-      throw error;
-    }
+    // // Create simple connection
+    // // Note: In serverless environments, we might need to be careful about connection
+    // // pooling or reuse, but for now a singleton is a good starting point for
+    // // persistent containers or long-running processes.
+    // try {
+    //   // Dynamic import at runtime to avoid Turbopack parsing native module
+    //   const { Database } = await import("duckdb-async");
+    //   dbInstance = await Database.create(connectionString);
+    //   return dbInstance;
+    // } catch (error) {
+    //   console.error("Failed to connect to MotherDuck:", error);
+    //   throw error;
+    // }
   }
 
   static async runQuery<T = Record<string, unknown>>(query: string, params: unknown[] = []): Promise<T[]> {
-    const db = await this.getConnection();
-    // duckdb-async 'all' returns a promise
-    return (await db.all(query, ...params)) as T[];
+    throw new Error("MotherDuck is temporarily disabled due to ARM64 compatibility");
+    // const db = await this.getConnection();
+    // // duckdb-async 'all' returns a promise
+    // return (await db.all(query, ...params)) as T[];
   }
 }
