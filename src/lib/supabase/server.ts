@@ -13,7 +13,9 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing Supabase environment variables");
+  if (process.env.NODE_ENV !== 'test' && process.env.SKIP_ENV_VALIDATION !== 'true') {
+    throw new Error("Missing Supabase environment variables");
+  }
 }
 
 /**
@@ -21,6 +23,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * Use this inside unstable_cache() where cookies() cannot be called
  */
 export function createCachedClient() {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Missing Supabase environment variables");
+  }
   return createSupabaseClient(supabaseUrl, supabaseAnonKey);
 }
 

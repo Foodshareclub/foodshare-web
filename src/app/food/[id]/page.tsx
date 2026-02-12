@@ -17,7 +17,7 @@ export async function generateStaticParams(): Promise<{ id: string }[]> {
     const productIds = await getPopularProductIds(50);
     return productIds.map((id) => ({ id: String(id) }));
   } catch {
-    return [];
+    return [{ id: '1' }]; // Return at least one for Cache Components
   }
 }
 
