@@ -100,8 +100,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dompurify": "^3.3.1",
-    "duckdb": "1.4.3",
-    "duckdb-async": "^1.4.2",
     "framer-motion": "^12.23.24",
     "leaflet": "^1.9.4",
     "leaflet-geosearch": "^4.2.2",
@@ -131,9 +129,6 @@
     "zustand": "^5.0.9"
   },
   "overrides": {
-    "duckdb-async": {
-      "duckdb": "1.4.3"
-    },
     "qs": ">=6.14.1",
     "diff": ">=4.0.4",
     "@isaacs/brace-expansion": ">=5.0.1",
