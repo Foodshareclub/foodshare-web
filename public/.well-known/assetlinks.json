@@ -1,14 +1,28 @@
 [
-    {
-        "relation": [
-            "delegate_permission/common.handle_all_urls"
-        ],
-        "target": {
-            "namespace": "android_app",
-            "package_name": "club.foodshare.app",
-            "sha256_cert_fingerprints": [
-                "REPLACE_WITH_YOUR_SHA256_FINGERPRINT"
-            ]
-        }
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "club.foodshare.app",
+      "sha256_cert_fingerprints": [
+        "59:27:69:BA:B7:21:EF:3F:F9:F5:36:F2:A2:7F:FF:AA:64:81:D1:E3:F3:F9:21:F0:EA:86:DE:12:09:59:88:54"
+      ]
     }
+  },
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.flutterflow.foodshare",
+      "sha256_cert_fingerprints": [
+        "92:1B:AD:C6:C6:E1:2C:9A:7B:A5:9D:A5:AB:D7:B4:79:7F:70:02:23:CB:B2:EB:01:59:03:62:2D:DC:73:D9:9B",
+        "3F:70:8F:8F:A9:15:07:3C:58:11:63:B8:AB:C1:60:B9:FD:11:40:CF:E2:B6:41:89:01:AE:70:1A:B1:6D:18:7C"
+      ]
+    }
+  }
 ]
