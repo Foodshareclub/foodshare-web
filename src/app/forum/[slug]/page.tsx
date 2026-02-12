@@ -22,9 +22,13 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
       .order("views", { ascending: false })
       .limit(50);
 
-    return (data ?? []).filter((p) => p.slug).map((p) => ({ slug: p.slug }));
+    const results = (data ?? []).filter((p) => p.slug).map((p) => ({ slug: p.slug }));
+    
+    // When using Cache Components, must return at least one result
+    return results.length > 0 ? results : [{ slug: "placeholder" }];
   } catch {
-    return [];
+    // Return placeholder to satisfy Cache Components requirement
+    return [{ slug: "placeholder" }];
   }
 }
 
