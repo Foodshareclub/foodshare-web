@@ -277,7 +277,7 @@ export function RichTextEditor({
   );
 
   return (
-    <FeatureErrorBoundary feature="Rich Text Editor">
+    <FeatureErrorBoundary featureName="Rich Text Editor">
       <div className={cn("border border-border rounded-lg overflow-hidden bg-background", className)}>
         <LexicalComposer initialConfig={createEditorConfig(editable)}>
           {editable && <ToolbarPlugin />}

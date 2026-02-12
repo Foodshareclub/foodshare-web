@@ -243,7 +243,7 @@ export function AnalyticsDashboard() {
   }
 
   return (
-    <FeatureErrorBoundary feature="Analytics Dashboard">
+    <FeatureErrorBoundary featureName="Analytics Dashboard">
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header with Sync Status */}
       <div className="flex items-center justify-between">
