@@ -4,6 +4,8 @@ import { ProfileWithAuth } from "./ProfileWithAuth";
 import { getPublicProfile, getPopularProfileIds } from "@/lib/data/profiles";
 import { generatePersonJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 
+export const dynamic = 'force-dynamic';
+
 export async function generateStaticParams(): Promise<{ id: string }[]> {
   try {
     const profileIds = await getPopularProfileIds(100);
