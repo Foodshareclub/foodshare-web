@@ -149,7 +149,6 @@ export async function getAdminUsers(filters: AdminUsersFilter = {}): Promise<Adm
 /**
  * Get cached admin users
  * NOTE: getAdminUsers uses createClient() (cookies-dependent), so this
- * cannot use 'use cache'. It's an alias for the uncached version.
  */
 export const getCachedAdminUsers = getAdminUsers;
 
@@ -188,7 +187,6 @@ export async function getAdminUserById(id: string): Promise<AdminUserProfile | n
  * Uses createCachedClient() - SAFE to cache
  */
 export async function getUserStats(): Promise<UserStats> {
-  'use cache';
   cacheLife('admin-stats');
   cacheTag(CACHE_TAGS.ADMIN_STATS, CACHE_TAGS.ADMIN);
 

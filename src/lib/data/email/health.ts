@@ -64,7 +64,6 @@ export interface EmailTemplate {
 // ============================================================================
 
 export async function getBounceStats(): Promise<BounceStats> {
-  'use cache';
   cacheLife('short');
   cacheTag(CACHE_TAGS.EMAIL_STATS);
 

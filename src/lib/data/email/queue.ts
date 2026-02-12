@@ -135,7 +135,6 @@ export async function getQueuedEmails(params: { status?: string }) {
 // ============================================================================
 
 export async function getRecentCampaigns(limit = 10): Promise<RecentCampaign[]> {
-  'use cache';
   cacheLife('short');
   cacheTag(CACHE_TAGS.CAMPAIGNS);
 
@@ -179,7 +178,6 @@ export async function getRecentCampaigns(limit = 10): Promise<RecentCampaign[]> 
 // ============================================================================
 
 export async function getActiveAutomations(): Promise<ActiveAutomation[]> {
-  'use cache';
   cacheLife('short');
   cacheTag(CACHE_TAGS.AUTOMATIONS);
 
@@ -219,7 +217,6 @@ export async function getActiveAutomations(): Promise<ActiveAutomation[]> {
 // ============================================================================
 
 export async function getAudienceSegments(): Promise<AudienceSegment[]> {
-  'use cache';
   cacheLife('short');
   cacheTag(CACHE_TAGS.SEGMENTS);
 

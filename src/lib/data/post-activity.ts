@@ -2,7 +2,6 @@
  * Post Activity Data Functions
  *
  * Server-side data fetching for post activity logs.
- * Uses 'use cache' directive for server-side caching with tag-based invalidation.
  *
  * @module lib/data/post-activity
  */
@@ -24,7 +23,6 @@ import type {
 
 /**
  * Get activity timeline for a specific post
- * Uses 'use cache' for request deduplication and caching
  */
 export async function getPostActivityTimeline(
   postId: number,
@@ -34,7 +32,6 @@ export async function getPostActivityTimeline(
     activityTypes?: PostActivityType[];
   } = {}
 ): Promise<PostActivityTimelineItem[]> {
-  'use cache';
   cacheLife('short');
   cacheTag(CACHE_TAGS.POST_ACTIVITY, CACHE_TAGS.POST_ACTIVITY_LOGS(postId));
 
@@ -66,13 +63,11 @@ export async function getPostActivityTimeline(
 
 /**
  * Get recent activities for a post (raw logs)
- * Uses 'use cache' for request deduplication
  */
 export async function getRecentPostActivities(
   postId: number,
   limit: number = 20
 ): Promise<PostActivityLog[]> {
-  'use cache';
   cacheLife('short');
   cacheTag(CACHE_TAGS.POST_ACTIVITY, CACHE_TAGS.POST_ACTIVITY_LOGS(postId));
 
@@ -103,13 +98,11 @@ export async function getRecentPostActivities(
 
 /**
  * Get activity summary for a user
- * Uses 'use cache' with user-specific tags
  */
 export async function getUserActivitySummary(
   userId: string,
   days: number = 30
 ): Promise<UserActivitySummary[]> {
-  'use cache';
   cacheLife('short');
   cacheTag(CACHE_TAGS.POST_ACTIVITY, CACHE_TAGS.USER_ACTIVITY(userId));
 
@@ -143,7 +136,6 @@ export async function getUserActivitySummary(
 export async function getPostActivityCounts(
   postId: number
 ): Promise<Partial<Record<PostActivityType, number>>> {
-  'use cache';
   cacheLife('short');
   cacheTag(CACHE_TAGS.POST_ACTIVITY, CACHE_TAGS.POST_ACTIVITY_LOGS(postId));
 
@@ -178,7 +170,6 @@ export async function getPostActivityCounts(
 
 /**
  * Get daily activity statistics
- * Uses 'use cache' for dashboard performance
  */
 export async function getDailyActivityStats(
   options: {
@@ -188,7 +179,6 @@ export async function getDailyActivityStats(
     limit?: number;
   } = {}
 ): Promise<PostActivityDailyStats[]> {
-  'use cache';
   cacheLife('short');
   cacheTag(CACHE_TAGS.POST_ACTIVITY, CACHE_TAGS.POST_ACTIVITY_STATS);
 
@@ -353,7 +343,6 @@ export interface ActivityDashboardStats {
  * Uses optimized RPC for counts + parallel fetch for top types
  */
 export async function getActivityDashboardStats(): Promise<ActivityDashboardStats> {
-  'use cache';
   cacheLife('short');
   cacheTag(CACHE_TAGS.POST_ACTIVITY, CACHE_TAGS.POST_ACTIVITY_STATS);
 

@@ -3,7 +3,6 @@
  * Server-side data fetching for authentication
  *
  * NOTE: Auth functions use createClient() (cookies-dependent) and are
- * user-specific. They are NOT cached with 'use cache' - the cookies()
  * call makes them automatically dynamic.
  */
 
@@ -148,7 +147,6 @@ export async function getAuthSession(): Promise<AuthSession> {
 /**
  * Get cached auth session (for pages that don't need real-time auth)
  * NOTE: This is an alias for getAuthSession since auth depends on cookies()
- * and cannot be cached with 'use cache'. The cookies() call makes it
  * automatically dynamic in Next.js 16.
  */
 export const getCachedAuthSession = getAuthSession;

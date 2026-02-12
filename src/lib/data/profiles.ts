@@ -4,7 +4,6 @@ import "server-only";
  * Profiles Data Layer
  *
  * Cached data fetching functions for user profiles.
- * Uses 'use cache' directive for server-side caching with tag-based invalidation.
  */
 
 import { cacheLife, cacheTag } from "next/cache";
@@ -87,7 +86,6 @@ export interface UserAddress {
  * Get profile by user ID with caching
  */
 export async function getProfile(userId: string): Promise<Profile | null> {
-  'use cache';
   cacheLife('profiles');
   cacheTag(CACHE_TAGS.PROFILES, CACHE_TAGS.PROFILE(userId));
 
@@ -107,7 +105,6 @@ export async function getProfile(userId: string): Promise<Profile | null> {
  * Get public profile for viewing with caching
  */
 export async function getPublicProfile(userId: string): Promise<PublicProfile | null> {
-  'use cache';
   cacheLife('profiles');
   cacheTag(CACHE_TAGS.PROFILES, CACHE_TAGS.PROFILE(userId));
 
@@ -133,7 +130,6 @@ export async function getPublicProfile(userId: string): Promise<PublicProfile | 
  * Get user statistics with caching
  */
 export async function getUserStats(userId: string): Promise<ProfileStats> {
-  'use cache';
   cacheLife('profile-stats');
   cacheTag(CACHE_TAGS.PROFILES, CACHE_TAGS.PROFILE_STATS(userId));
 
@@ -172,7 +168,6 @@ export async function getUserStats(userId: string): Promise<ProfileStats> {
  * Uses user_roles table to find users with volunteer role
  */
 export async function getVolunteers(): Promise<Profile[]> {
-  'use cache';
   cacheLife('long');
   cacheTag(CACHE_TAGS.VOLUNTEERS, CACHE_TAGS.PROFILES);
 
@@ -228,7 +223,6 @@ export async function getUserRoles(userId: string): Promise<string[]> {
  * Get profile reviews with caching
  */
 export async function getProfileReviews(userId: string): Promise<ProfileReview[]> {
-  'use cache';
   cacheLife('profiles');
   cacheTag(CACHE_TAGS.PROFILES, CACHE_TAGS.PROFILE_REVIEWS(userId));
 

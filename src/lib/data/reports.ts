@@ -65,7 +65,6 @@ export interface ReportStats {
  * Get pending reports for admin review (sorted by AI severity)
  */
 export async function getPendingReports(limit = 50): Promise<PostReport[]> {
-  'use cache';
   cacheLife('short');
   cacheTag(CACHE_TAGS.ADMIN, 'reports');
 
@@ -125,7 +124,6 @@ export async function getReports(
  * Get report statistics for admin dashboard
  */
 export async function getReportStats(): Promise<ReportStats> {
-  'use cache';
   cacheLife('short');
   cacheTag(CACHE_TAGS.ADMIN, 'reports');
 

@@ -37,10 +37,8 @@ interface RawLeaderboardRow {
 
 /**
  * Get challenge leaderboard - top users by completed challenges
- * Uses two-tier caching: Redis (distributed) -> 'use cache' -> RPC
  */
 export async function getChallengeLeaderboard(limit: number = LEADERBOARD_LIMIT): Promise<LeaderboardUser[]> {
-  'use cache';
   cacheLife('challenge-leaderboard');
   cacheTag(CACHE_TAGS.CHALLENGE_LEADERBOARD);
 
@@ -193,7 +191,6 @@ function transformLeaderboardData(data: RawLeaderboardRow[]): LeaderboardUser[] 
  * Uses optimized RPC function with fallback to manual query
  */
 export async function getLeaderboardUserProfile(userId: string): Promise<LeaderboardUserProfile | null> {
-  'use cache';
   cacheLife('challenge-leaderboard');
   cacheTag(CACHE_TAGS.CHALLENGE_LEADERBOARD);
 

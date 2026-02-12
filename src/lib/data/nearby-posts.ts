@@ -109,7 +109,6 @@ const DEFAULT_LIMIT = 20;
  * Uses PostGIS ST_DWithin for efficient spatial index utilization.
  * Returns posts within the specified radius, sorted by distance.
  *
- * NOTE: Uses createClient() (cookies-dependent) - NOT cached with 'use cache'
  *
  * @example
  * ```ts
@@ -180,7 +179,6 @@ export async function getNearbyPostsCounts(options: {
   lng: number;
   radiusMeters?: number;
 }): Promise<PostTypeCount[]> {
-  'use cache';
   cacheLife('short');
   cacheTag(CACHE_TAGS.PRODUCTS);
 

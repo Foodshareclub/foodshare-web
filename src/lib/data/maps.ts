@@ -2,7 +2,6 @@
  * Maps Data Layer
  *
  * Cached data fetching functions for map-related data.
- * Uses 'use cache' directive for server-side caching with tag-based invalidation.
  *
  * NOTE: Uses createCachedClient() instead of createClient() because
  * cookies() cannot be called inside cached functions.
@@ -42,7 +41,6 @@ function applyLocationPrivacy(locations: LocationType[]): LocationType[] {
  * Optimized query - only fetches fields needed for map markers
  */
 export async function getMapLocations(productType: string): Promise<LocationType[]> {
-  'use cache';
   cacheLife('product-locations');
   cacheTag(CACHE_TAGS.PRODUCT_LOCATIONS, CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(productType.toLowerCase()));
 
@@ -69,7 +67,6 @@ export async function getMapLocations(productType: string): Promise<LocationType
  * Used for the "all" map view
  */
 export async function getAllMapLocations(): Promise<LocationType[]> {
-  'use cache';
   cacheLife('product-locations');
   cacheTag(CACHE_TAGS.PRODUCT_LOCATIONS);
 
@@ -101,7 +98,6 @@ export async function getNearbyLocations(
   productType?: string,
   limit: number = 500
 ): Promise<LocationType[]> {
-  'use cache';
   cacheLife('short');
   cacheTag(CACHE_TAGS.PRODUCT_LOCATIONS);
 
@@ -190,7 +186,6 @@ async function getNearbyLocationsFallback(
  * Get location counts by type for map statistics
  */
 export async function getLocationCountsByType(): Promise<Record<string, number>> {
-  'use cache';
   cacheLife('short');
   cacheTag(CACHE_TAGS.PRODUCT_LOCATIONS);
 

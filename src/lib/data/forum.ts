@@ -2,7 +2,6 @@
  * Forum Data Layer
  *
  * Server-side data fetching functions for forum posts, categories, and tags.
- * Uses 'use cache' directive for server-side caching with tag-based invalidation.
  */
 
 import { cacheLife, cacheTag } from 'next/cache';
@@ -146,7 +145,6 @@ export function calculateStatsFromPosts(posts: ForumPost[]): Pick<ForumStats, 'a
  * Get forum stats from database (accurate totals)
  */
 export async function getForumStats(): Promise<ForumStats> {
-  'use cache';
   cacheLife('forum');
   cacheTag(CACHE_TAGS.FORUM);
 
@@ -183,7 +181,6 @@ export async function getForumStats(): Promise<ForumStats> {
  * Get forum posts with relations
  */
 export async function getForumPosts(options?: { categoryId?: number; sortBy?: SortOption; limit?: number }): Promise<ForumPost[]> {
-  'use cache';
   cacheLife('forum');
   cacheTag(CACHE_TAGS.FORUM);
 
@@ -238,7 +235,6 @@ export async function getForumPosts(options?: { categoryId?: number; sortBy?: So
  * Get active forum categories
  */
 export async function getForumCategories(): Promise<ForumCategory[]> {
-  'use cache';
   cacheLife('long');
   cacheTag(CACHE_TAGS.FORUM);
 
@@ -262,7 +258,6 @@ export async function getForumCategories(): Promise<ForumCategory[]> {
  * Get popular forum tags
  */
 export async function getForumTags(limit = FORUM_LIMITS.POPULAR_TAGS): Promise<ForumTag[]> {
-  'use cache';
   cacheLife('long');
   cacheTag(CACHE_TAGS.FORUM);
 

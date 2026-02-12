@@ -100,7 +100,6 @@ export interface ChallengeStats {
  * Get challenge community stats with caching
  */
 export async function getChallengeStats(): Promise<ChallengeStats> {
-  'use cache';
   cacheLife('challenges');
   cacheTag(CACHE_TAGS.CHALLENGES);
 
@@ -135,7 +134,6 @@ export async function getChallengeStats(): Promise<ChallengeStats> {
  * Returns data transformed to InitialProductStateType for component compatibility
  */
 export async function getChallenges(): Promise<InitialProductStateType[]> {
-  'use cache';
   cacheLife('challenges');
   cacheTag(CACHE_TAGS.CHALLENGES);
 
@@ -158,7 +156,6 @@ export async function getChallenges(): Promise<InitialProductStateType[]> {
 export async function getChallengesPaginated(
   params: ChallengesPaginationParams = {}
 ): Promise<PaginatedChallengesResponse> {
-  'use cache';
   cacheLife('challenges');
   cacheTag(CACHE_TAGS.CHALLENGES);
 
@@ -204,7 +201,6 @@ export async function getChallengesPaginated(
  * Get single challenge by ID with caching
  */
 export async function getChallengeById(challengeId: number): Promise<Challenge | null> {
-  'use cache';
   cacheLife('challenges');
   cacheTag(CACHE_TAGS.CHALLENGES, CACHE_TAGS.CHALLENGE(challengeId));
 
@@ -227,7 +223,6 @@ export async function getChallengeById(challengeId: number): Promise<Challenge |
  * Get challenges by difficulty
  */
 export async function getChallengesByDifficulty(difficulty: string): Promise<Challenge[]> {
-  'use cache';
   cacheLife('challenges');
   cacheTag(CACHE_TAGS.CHALLENGES);
 
@@ -248,7 +243,6 @@ export async function getChallengesByDifficulty(difficulty: string): Promise<Cha
  * Get challenges by user ID
  */
 export async function getUserChallenges(userId: string): Promise<Challenge[]> {
-  'use cache';
   cacheLife('challenges');
   cacheTag(CACHE_TAGS.CHALLENGES, CACHE_TAGS.USER_CHALLENGES(userId));
 
@@ -268,7 +262,6 @@ export async function getUserChallenges(userId: string): Promise<Challenge[]> {
  * Get popular challenges (by views or likes)
  */
 export async function getPopularChallenges(limit: number = 10): Promise<Challenge[]> {
-  'use cache';
   cacheLife('challenges');
   cacheTag(CACHE_TAGS.CHALLENGES);
 

@@ -1,7 +1,6 @@
 /**
  * Centralized Cache Keys & Tags
  *
- * Single source of truth for all cache tags used with 'use cache' directive and revalidateTag.
  * This ensures consistency across data fetching and cache invalidation.
  */
 
@@ -41,7 +40,6 @@ function logCacheOperation(
 }
 
 // ============================================================================
-// Cache Tags - Used with 'use cache' (cacheTag) and revalidateTag
 // ============================================================================
 
 export const CACHE_TAGS = {

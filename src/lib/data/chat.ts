@@ -3,7 +3,6 @@
  * Server-side data fetching for food sharing chat system
  *
  * NOTE: Chat functions use createClient() (cookies-dependent) and are
- * user-specific. They are NOT cached with 'use cache' - the cookies()
  * call makes them automatically dynamic.
  */
 

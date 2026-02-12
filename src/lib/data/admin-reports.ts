@@ -10,7 +10,6 @@
  * - Pure utility functions extracted
  * - Discriminated unions for type safety
  *
- * NOTE: Uses createClient() (cookies-dependent) - NOT cached with 'use cache'.
  * The cookies() call makes these functions automatically dynamic.
  */
 
@@ -216,6 +215,5 @@ export async function getReportsData(): Promise<ReportsData> {
 /**
  * Get cached reports data
  * NOTE: getReportsData uses createClient() (cookies-dependent), so this
- * cannot use 'use cache'. It's an alias for the uncached version.
  */
 export const getCachedReportsData = getReportsData;

@@ -1,7 +1,6 @@
 /**
  * Admin Listings Data Layer
  * Server-side data fetching for admin CRM listings management
- * Uses 'use cache' directive for cacheable functions (createCachedClient)
  */
 
 import { cacheLife, cacheTag } from "next/cache";
@@ -187,7 +186,6 @@ export async function getAdminListings(
 /**
  * Get cached admin listings
  * NOTE: getAdminListings uses createClient() (cookies-dependent), so this
- * cannot use 'use cache'. It's an alias for the uncached version.
  */
 export const getCachedAdminListings = getAdminListings;
 
@@ -240,7 +238,6 @@ export async function getAdminListingById(id: number): Promise<AdminListing | nu
  * Uses createCachedClient() - SAFE to cache
  */
 export async function getListingStats(): Promise<ListingStats> {
-  'use cache';
   cacheLife('admin-stats');
   cacheTag(CACHE_TAGS.ADMIN_STATS, CACHE_TAGS.ADMIN);
 
