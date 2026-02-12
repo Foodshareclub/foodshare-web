@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Suspense } from "react";
 import { BackButton } from "@/components/navigation/BackButton";
 
 export const dynamic = 'force-dynamic';
@@ -21,9 +20,7 @@ export default function NotFound() {
           >
             Go Home
           </Link>
-          <Suspense fallback={<div className="px-6 py-2.5">Loading...</div>}>
-            <BackButton className="px-6 py-2.5 bg-card border border-border text-foreground rounded-lg font-medium hover:border-foreground/50 transition-colors" />
-          </Suspense>
+          <BackButton className="px-6 py-2.5 bg-card border border-border text-foreground rounded-lg font-medium hover:border-foreground/50 transition-colors" />
         </div>
       </div>
     </div>
