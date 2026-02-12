@@ -9,7 +9,8 @@ import React, { useEffect, useState, useMemo } from "react";
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Loader2, MapPin } from "lucide-react";
-import { getGeographicHotspots, type GeoHotspot } from "@/lib/data/analytics";
+import { fetchGeographicHotspots } from "@/app/actions/analytics-data";
+import type { GeoHotspot } from "@/lib/data/analytics";
 
 // Color scale for heat intensity
 function getHeatColor(count: number, maxCount: number): string {
@@ -44,7 +45,7 @@ export function GeoHeatMap() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const result = await getGeographicHotspots();
+        const result = await fetchGeographicHotspots();
         if (result.success && result.data) {
           setHotspots(result.data);
         } else {

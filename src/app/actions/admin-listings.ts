@@ -10,7 +10,8 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { requireAdmin, logAdminAction } from "@/lib/data/admin-auth";
 import {
   updateListingAPI,

@@ -9,15 +9,18 @@ export {
   CACHE_TAGS,
   CACHE_DURATIONS,
   CACHE_PROFILES,
-  invalidateTag,
   getProductTags,
   getProfileTags,
   getForumTags,
   getChallengeTags,
   getNotificationTags,
   getAdminTags,
-  invalidateAdminCaches,
 } from "./cache-keys";
+
+export {
+  invalidateTag,
+  invalidateAdminCaches,
+} from "./cache-invalidation";
 
 // Product data functions
 export {

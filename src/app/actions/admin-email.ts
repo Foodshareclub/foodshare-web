@@ -8,7 +8,8 @@
 "use server";
 
 import type { EmailProvider, EmailType } from "@/lib/email/types";
-import { invalidateTag, CACHE_TAGS } from "@/lib/data/cache-keys";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
 import {
   retryEmailAPI,
   deleteQueuedEmailAPI,

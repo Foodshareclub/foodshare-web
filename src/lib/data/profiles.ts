@@ -1,3 +1,5 @@
+import "server-only";
+
 /**
  * Profiles Data Layer
  *
@@ -176,21 +178,11 @@ export async function getVolunteers(): Promise<Profile[]> {
 
   const supabase = createCachedClient();
 
-  // Get volunteer profile IDs from user_roles
-  const { data: volunteerRoles, error: rolesError } = await supabase
-    .from("user_roles")
-    .select("profile_id, roles!inner(name)")
-    .eq("roles.name", "volunteer");
-
-  if (rolesError) throw new Error(rolesError.message);
-
-  const profileIds = (volunteerRoles || []).map((r) => r.profile_id);
-  if (profileIds.length === 0) return [];
-
+  // Single JOIN query: profiles with volunteer role
   const { data, error } = await supabase
     .from("profiles")
-    .select("*")
-    .in("id", profileIds)
+    .select("*,user_roles!inner(roles!inner(name))")
+    .eq("user_roles.roles.name", "volunteer")
     .order("first_name");
 
   if (error) throw new Error(error.message);
@@ -348,5 +340,23 @@ export async function getUserAddress(): Promise<ServerActionResult<UserAddress |
   } catch (error) {
     console.error("Failed to fetch user address:", error);
     return serverActionError("Failed to fetch user address", "UNKNOWN_ERROR");
+  }
+}
+
+/**
+ * Get popular profile IDs for static generation (ISR)
+ */
+export async function getPopularProfileIds(limit: number = 100): Promise<string[]> {
+  try {
+    const supabase = createCachedClient();
+    const { data } = await supabase
+      .from("profiles")
+      .select("id")
+      .order("created_time", { ascending: false })
+      .limit(limit);
+
+    return (data ?? []).map((p) => p.id);
+  } catch {
+    return [];
   }
 }

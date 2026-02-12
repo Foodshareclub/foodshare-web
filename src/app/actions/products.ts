@@ -5,10 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import { type ActionResult, withErrorHandling, validateWithSchema } from "@/lib/errors";
 import {
   CACHE_TAGS,
-  invalidateTag,
-  invalidatePostActivityCaches,
   getProductTags,
 } from "@/lib/data/cache-keys";
+import { invalidateTag, invalidatePostActivityCaches } from "@/lib/data/cache-invalidation";
 import { trackEvent } from "@/app/actions/analytics";
 import { logPostActivity as _logPostActivity } from "@/app/actions/post-activity";
 import {

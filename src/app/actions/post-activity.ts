@@ -23,7 +23,7 @@ import {
   failure,
   createError,
 } from "@/lib/errors";
-import { invalidatePostActivityCaches } from "@/lib/data/cache-keys";
+import { invalidatePostActivityCaches } from "@/lib/data/cache-invalidation";
 
 // ============================================================================
 // Rate Limiting (In-Memory for Edge Runtime)

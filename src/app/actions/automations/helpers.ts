@@ -7,7 +7,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { invalidateTag } from "@/lib/data/cache-keys";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
 
 // ============================================================================
 // Auth Helper with Role Check (uses user_roles table)

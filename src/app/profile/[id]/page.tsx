@@ -1,8 +1,17 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ProfileWithAuth } from "./ProfileWithAuth";
-import { getPublicProfile } from "@/lib/data/profiles";
+import { getPublicProfile, getPopularProfileIds } from "@/lib/data/profiles";
 import { generatePersonJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
+
+export async function generateStaticParams(): Promise<{ id: string }[]> {
+  try {
+    const profileIds = await getPopularProfileIds(100);
+    return profileIds.map((id) => ({ id }));
+  } catch {
+    return [];
+  }
+}
 
 interface PageProps {
   params: Promise<{ id: string }>;

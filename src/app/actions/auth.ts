@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import type { Session } from "@supabase/supabase-js";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { trackEvent } from "@/app/actions/analytics";
 import { createActionLogger } from "@/lib/structured-logger";
 

@@ -12,7 +12,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { invalidateTag } from "@/lib/data/cache-keys";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { CRM_CACHE_TAGS } from "@/lib/data/crm";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import type { ErrorCode } from "@/lib/errors";

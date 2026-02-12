@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
 import {
   getChallengeLeaderboard as getLeaderboardData,
   getCurrentUserRank as getUserRankData,

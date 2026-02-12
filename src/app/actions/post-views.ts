@@ -17,7 +17,8 @@ import { headers, cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { type ActionResult, withErrorHandling, failure, createError } from "@/lib/errors";
 import { logPostView } from "@/app/actions/post-activity";
-import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
 
 // ============================================================================
 // View Deduplication (Session-based)

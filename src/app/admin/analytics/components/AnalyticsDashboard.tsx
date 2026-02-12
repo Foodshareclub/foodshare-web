@@ -35,18 +35,19 @@ import { InsightCard } from "./InsightCard";
 import { ChartCard, EmptyState } from "./ChartCard";
 import { SyncStatusBadge } from "./SyncStatusBadge";
 import { GlassPanel } from "@/components/ui/glass";
+import { FeatureErrorBoundary } from "@/components/ErrorBoundary";
 import { cn } from "@/lib/utils";
 
 import {
-  getAnalyticsSummary,
-  getMonthlyGrowth,
-  getDailyActiveUsers,
-  getConversionFunnel,
-  getUserRetentionCohorts,
-  getInventoryAging,
-  getListingTypeDistribution,
-  getTopSharers,
-} from "@/lib/data/analytics";
+  fetchAnalyticsSummary,
+  fetchMonthlyGrowth,
+  fetchDailyActiveUsers,
+  fetchConversionFunnel,
+  fetchUserRetentionCohorts,
+  fetchInventoryAging,
+  fetchListingTypeDistribution,
+  fetchTopSharers,
+} from "@/app/actions/analytics-data";
 import type {
   AnalyticsSummary,
   MonthlyGrowth,
@@ -201,14 +202,14 @@ export function AnalyticsDashboard() {
   const fetchData = useCallback(async () => {
     try {
       const results = await Promise.all([
-        getAnalyticsSummary(),
-        getMonthlyGrowth(),
-        getDailyActiveUsers(),
-        getConversionFunnel(),
-        getUserRetentionCohorts(),
-        getInventoryAging(),
-        getListingTypeDistribution(),
-        getTopSharers(5),
+        fetchAnalyticsSummary(),
+        fetchMonthlyGrowth(),
+        fetchDailyActiveUsers(),
+        fetchConversionFunnel(),
+        fetchUserRetentionCohorts(),
+        fetchInventoryAging(),
+        fetchListingTypeDistribution(),
+        fetchTopSharers(5),
       ]);
 
       if (results[0].success && results[0].data) setSummary(results[0].data);
@@ -242,6 +243,7 @@ export function AnalyticsDashboard() {
   }
 
   return (
+    <FeatureErrorBoundary feature="Analytics Dashboard">
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header with Sync Status */}
       <div className="flex items-center justify-between">
@@ -737,5 +739,6 @@ export function AnalyticsDashboard() {
         )}
       </ChartCard>
     </div>
+    </FeatureErrorBoundary>
   );
 }

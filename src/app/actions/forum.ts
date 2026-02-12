@@ -1,7 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { checkUserIsAdmin } from "@/lib/data/admin-check";
 
 // Type for forum comments (defined locally, not exported from "use server" file)

@@ -8,7 +8,8 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
-import { invalidateTag, CACHE_TAGS } from "@/lib/data/cache-keys";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
 
 export interface UpdateUserLocationParams {
   lat: number;

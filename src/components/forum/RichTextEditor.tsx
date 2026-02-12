@@ -6,6 +6,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { FeatureErrorBoundary } from "@/components/ErrorBoundary";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
@@ -276,31 +277,33 @@ export function RichTextEditor({
   );
 
   return (
-    <div className={cn("border border-border rounded-lg overflow-hidden bg-background", className)}>
-      <LexicalComposer initialConfig={createEditorConfig(editable)}>
-        {editable && <ToolbarPlugin />}
-        <div className="relative">
-          <RichTextPlugin
-            contentEditable={
-              <ContentEditable
-                className={cn(
-                  "prose prose-sm dark:prose-invert max-w-none focus:outline-none p-4",
-                  "prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-blockquote:my-2",
-                  "prose-headings:font-semibold prose-h2:text-xl prose-h3:text-lg"
-                )}
-                style={{ minHeight }}
-              />
-            }
-            placeholder={<Placeholder text={placeholder} />}
-            ErrorBoundary={LexicalErrorBoundary}
-          />
-        </div>
-        <HistoryPlugin />
-        <ListPlugin />
-        <LinkPlugin />
-        <OnChangePlugin onChange={handleChange} />
-        <InitialContentPlugin content={content} />
-      </LexicalComposer>
-    </div>
+    <FeatureErrorBoundary feature="Rich Text Editor">
+      <div className={cn("border border-border rounded-lg overflow-hidden bg-background", className)}>
+        <LexicalComposer initialConfig={createEditorConfig(editable)}>
+          {editable && <ToolbarPlugin />}
+          <div className="relative">
+            <RichTextPlugin
+              contentEditable={
+                <ContentEditable
+                  className={cn(
+                    "prose prose-sm dark:prose-invert max-w-none focus:outline-none p-4",
+                    "prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-blockquote:my-2",
+                    "prose-headings:font-semibold prose-h2:text-xl prose-h3:text-lg"
+                  )}
+                  style={{ minHeight }}
+                />
+              }
+              placeholder={<Placeholder text={placeholder} />}
+              ErrorBoundary={LexicalErrorBoundary}
+            />
+          </div>
+          <HistoryPlugin />
+          <ListPlugin />
+          <LinkPlugin />
+          <OnChangePlugin onChange={handleChange} />
+          <InitialContentPlugin content={content} />
+        </LexicalComposer>
+      </div>
+    </FeatureErrorBoundary>
   );
 }

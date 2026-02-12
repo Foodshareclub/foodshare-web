@@ -11,7 +11,8 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS, invalidateTag, getNotificationTags } from "@/lib/data/cache-keys";
+import { CACHE_TAGS, getNotificationTags } from "@/lib/data/cache-keys";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import type { NotificationType } from "@/types/notifications.types";
 

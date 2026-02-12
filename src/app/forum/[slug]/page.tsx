@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Eye, Heart, Clock, CheckCircle, Pin, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { createCachedClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/utils";
 import { generateArticleJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 import { siteConfig } from "@/lib/metadata";
@@ -11,6 +12,21 @@ import { RichTextViewer } from "@/components/forum/RichTextViewer";
 import { BackButton } from "@/components/navigation/BackButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { ForumPost, ForumComment } from "@/api/forumAPI";
+
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  try {
+    const supabase = createCachedClient();
+    const { data } = await supabase
+      .from("forum")
+      .select("slug")
+      .order("views", { ascending: false })
+      .limit(50);
+
+    return (data ?? []).filter((p) => p.slug).map((p) => ({ slug: p.slug }));
+  } catch {
+    return [];
+  }
+}
 
 type PageProps = {
   params: Promise<{ slug: string }>;

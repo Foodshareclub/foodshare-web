@@ -12,7 +12,8 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { CACHE_TAGS, invalidateTag } from "@/lib/data/cache-keys";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { type UserAddress } from "@/lib/data/profiles";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import { createActionLogger } from "@/lib/structured-logger";
@@ -64,7 +65,18 @@ export interface AvatarUploadResult {
 }
 
 // NOTE: UserAddress type and getCurrentProfile/getUserAddress READ functions
-// have been moved to @/lib/data/profiles per the architecture rule.
+// live in @/lib/data/profiles per the architecture rule.
+// fetchUserAddress wraps the data layer function as a server action for client components.
+
+import { getUserAddress } from "@/lib/data/profiles";
+
+/**
+ * Server action wrapper for getUserAddress.
+ * Client components should call this instead of importing from the data layer directly.
+ */
+export async function fetchUserAddress(): Promise<ServerActionResult<UserAddress | null>> {
+  return getUserAddress();
+}
 
 // ============================================================================
 // Helper: Verify Auth

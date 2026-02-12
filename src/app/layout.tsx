@@ -49,7 +49,7 @@ export default async function RootLayout({
   const appRating = await getAppRatingStats();
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} suppressHydrationWarning>
       <head>
         {/* JSON-LD Structured Data for SEO */}
         <script

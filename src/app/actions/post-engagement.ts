@@ -22,7 +22,8 @@ import {
   createError,
 } from "@/lib/errors";
 import { logPostActivity, logPostShared } from "@/app/actions/post-activity";
-import { CACHE_TAGS, invalidateTag, invalidatePostActivityCaches } from "@/lib/data/cache-keys";
+import { CACHE_TAGS } from "@/lib/data/cache-keys";
+import { invalidateTag, invalidatePostActivityCaches } from "@/lib/data/cache-invalidation";
 import { toggleLikeAPI, toggleBookmarkAPI } from "@/lib/api/engagement";
 
 // Feature flag for Edge Function migration

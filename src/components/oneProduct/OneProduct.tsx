@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import loc from "@/assets/location-red.svg";
 import likes from "@/assets/likes.svg";
@@ -140,8 +141,7 @@ export function OneProduct({
 
         {/* Location */}
         <div className="flex items-center gap-2 mb-4 text-muted-foreground">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={loc.src} alt="location" className="w-5 h-5" />
+          <Image src={loc} alt="location" width={20} height={20} />
           <p className="text-base">{product.post_stripped_address}</p>
         </div>
 
@@ -150,8 +150,7 @@ export function OneProduct({
         {/* Stats Row */}
         <div className="flex justify-between mb-4 flex-wrap gap-3">
           <div className="flex items-center gap-2 text-muted-foreground">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={likes.src} alt="likes" className="w-5 h-5" />
+            <Image src={likes} alt="likes" width={20} height={20} />
             <p className="text-sm">{product.post_like_counter || 0} likes</p>
           </div>
           <div className="flex items-center gap-2 text-muted-foreground">
@@ -204,8 +203,7 @@ export function OneProduct({
           {product.transportation && (
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2 text-foreground/80">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={bus.src} alt="transport" className="w-4 h-4" />
+                <Image src={bus} alt="transport" width={16} height={16} />
                 <p className="font-medium">&quot;Transport&quot;</p>
               </div>
               <p className="text-muted-foreground uppercase text-sm">{product.transportation}</p>

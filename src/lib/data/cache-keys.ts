@@ -185,21 +185,6 @@ export const CACHE_PROFILES = {
   INSTANT: { expire: 0 },
 } as const;
 
-// ============================================================================
-// Helper function for revalidation (Next.js 16 requires profile)
-// ============================================================================
-
-import { revalidateTag as nextRevalidateTag } from "next/cache";
-
-/**
- * Revalidate a cache tag with default profile
- * Wrapper around Next.js 16's revalidateTag which requires a profile
- */
-export function invalidateTag(tag: string): void {
-  logCacheOperation("invalidate", tag);
-  nextRevalidateTag(tag, CACHE_PROFILES.DEFAULT);
-}
-
 // Export for use in data functions
 export { logCacheOperation };
 
@@ -282,38 +267,11 @@ export function getNewsletterTags(
   return tags;
 }
 
-/**
- * Invalidate all admin-related caches
- */
-export function invalidateAdminCaches(): void {
-  getAdminTags().forEach((tag) => invalidateTag(tag));
-}
-
 export function getPostActivityTags(postId?: number, userId?: string): string[] {
   const tags: string[] = [CACHE_TAGS.POST_ACTIVITY, CACHE_TAGS.POST_ACTIVITY_STATS];
   if (postId) tags.push(CACHE_TAGS.POST_ACTIVITY_LOGS(postId));
   if (userId) tags.push(CACHE_TAGS.USER_ACTIVITY(userId));
   return tags;
-}
-
-/**
- * Invalidate post activity caches
- */
-export function invalidatePostActivityCaches(postId?: number, userId?: string): void {
-  getPostActivityTags(postId, userId).forEach((tag) => invalidateTag(tag));
-}
-
-/**
- * Invalidate all newsletter-related caches
- */
-export function invalidateNewsletterCaches(): void {
-  [
-    CACHE_TAGS.NEWSLETTER,
-    CACHE_TAGS.CAMPAIGNS,
-    CACHE_TAGS.SEGMENTS,
-    CACHE_TAGS.AUTOMATIONS,
-    CACHE_TAGS.SUBSCRIBERS,
-  ].forEach((tag) => invalidateTag(tag));
 }
 
 /**
@@ -331,9 +289,3 @@ export function getEmailTags(): string[] {
   ];
 }
 
-/**
- * Invalidate all email system caches
- */
-export function invalidateEmailCaches(): void {
-  getEmailTags().forEach((tag) => invalidateTag(tag));
-}

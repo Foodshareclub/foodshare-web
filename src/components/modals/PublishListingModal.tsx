@@ -60,7 +60,7 @@ import { useImageUpload, useListingForm, useUndoRedo } from "./publish-listing/h
 import { RequiredStar } from "@/components";
 import { useAuth } from "@/hooks/useAuth";
 import { createProduct, updateProduct } from "@/app/actions/products";
-import { getUserAddress } from "@/lib/data/profiles";
+import { fetchUserAddress } from "@/app/actions/profile";
 import { useUIStore } from "@/store/zustand/useUIStore";
 import { imageAPI } from "@/api/imageAPI";
 import type { InitialProductStateType } from "@/types/product.types";
@@ -158,7 +158,7 @@ function PublishListingModal({
   useEffect(() => {
     if (isOpen && id && !product) {
       // Only fetch for new listings, not edits
-      getUserAddress().then((result) => {
+      fetchUserAddress().then((result) => {
         if (result.success && result.data?.generated_full_address) {
           setUserSavedAddress(result.data.generated_full_address);
         }

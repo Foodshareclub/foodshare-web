@@ -27,7 +27,7 @@ import {
   getAIInsights,
 } from "@/app/actions/analytics-ai";
 import type { NLQueryResult, WeeklyReport, AIInsight } from "@/app/actions/analytics-ai";
-import { getSyncStatus, getTopSharers } from "@/lib/data/analytics";
+import { fetchSyncStatus, fetchTopSharers } from "@/app/actions/analytics-data";
 import type { SyncStatus, TopSharer } from "@/lib/data/analytics";
 
 const EXAMPLE_QUESTIONS = [
@@ -410,7 +410,7 @@ export function AIAnalyticsPanel() {
 
   const handleRefreshSync = async () => {
     setLoading("sync");
-    const result = await getSyncStatus();
+    const result = await fetchSyncStatus();
     if (result.success && result.data) {
       setSyncStatus(result.data);
     }
@@ -420,7 +420,7 @@ export function AIAnalyticsPanel() {
   // Fetch sync status on mount
   useEffect(() => {
     const fetchInitialSync = async () => {
-      const result = await getSyncStatus();
+      const result = await fetchSyncStatus();
       if (result.success && result.data) {
         setSyncStatus(result.data);
       }
@@ -492,7 +492,7 @@ export function AIAnalyticsPanel() {
     setLoading("sharers");
     setError(null);
 
-    const result = await getTopSharers(10);
+    const result = await fetchTopSharers(10);
 
     if (result.success) {
       setTopSharers(result.data || []);

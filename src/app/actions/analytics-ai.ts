@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/server";
 import { serverActionError, serverActionSuccess } from "@/lib/errors";
 import type { ServerActionResult } from "@/lib/errors";
 import { getMotherDuckToken } from "@/lib/email/vault";
+import { checkUserIsAdmin } from "@/lib/data/admin-check";
 
 // MotherDuck REST API endpoint
 const MOTHERDUCK_API = "https://api.motherduck.com/v1/sql";
@@ -52,6 +53,40 @@ async function executeMotherDuckSQL(sql: string): Promise<MotherDuckResponse> {
   return response.json();
 }
 
+// SQL safety: blocked keywords for LLM-generated queries
+const SQL_BLOCKLIST = /\b(DROP|DELETE|INSERT|UPDATE|ALTER|TRUNCATE|CREATE|GRANT|REVOKE|EXEC|EXECUTE|MERGE|REPLACE|CALL|COPY|LOAD|ATTACH|DETACH)\b/i;
+const MAX_QUERY_ROWS = 1000;
+
+/**
+ * Validate and sanitize LLM-generated SQL before execution.
+ * Returns null if safe, or an error message if blocked.
+ */
+function validateGeneratedSQL(sql: string): string | null {
+  const trimmed = sql.trim();
+
+  if (!trimmed.toUpperCase().startsWith("SELECT")) {
+    return "Only SELECT queries are allowed";
+  }
+
+  if (trimmed.includes(";")) {
+    return "Multiple statements are not allowed";
+  }
+
+  if (SQL_BLOCKLIST.test(trimmed)) {
+    return "Query contains disallowed SQL keywords";
+  }
+
+  return null;
+}
+
+/**
+ * Inject a LIMIT clause if one is not already present.
+ */
+function ensureLimit(sql: string): string {
+  if (/\bLIMIT\b/i.test(sql)) return sql;
+  return `${sql.replace(/;?\s*$/, "")} LIMIT ${MAX_QUERY_ROWS}`;
+}
+
 /**
  * Natural Language Query
  *
@@ -77,6 +112,12 @@ export async function askAnalyticsQuestion(
 
     if (!user) {
       return serverActionError("Unauthorized", "UNAUTHORIZED");
+    }
+
+    // Require admin role for analytics AI queries
+    const adminCheck = await checkUserIsAdmin(user.id);
+    if (!adminCheck.isAdmin) {
+      return serverActionError("Admin access required", "UNAUTHORIZED");
     }
 
     // Sanitize question to prevent injection
@@ -107,13 +148,15 @@ export async function askAnalyticsQuestion(
       return serverActionError("Could not generate SQL for this question", "VALIDATION_ERROR");
     }
 
-    // Step 2: Execute the generated SQL (with safety checks)
-    const safeSql = generatedSQL.trim();
-
-    // Only allow SELECT queries for safety
-    if (!safeSql.toUpperCase().startsWith("SELECT")) {
-      return serverActionError("Only SELECT queries are allowed", "VALIDATION_ERROR");
+    // Step 2: Validate and execute the generated SQL
+    const validationError = validateGeneratedSQL(generatedSQL);
+    if (validationError) {
+      console.warn("[analytics-ai] Blocked SQL:", generatedSQL);
+      return serverActionError(validationError, "VALIDATION_ERROR");
     }
+
+    const safeSql = ensureLimit(generatedSQL.trim());
+    console.info("[analytics-ai] Executing SQL:", safeSql);
 
     const dataResult = await executeMotherDuckSQL(safeSql);
     const data = dataResult.data || [];
@@ -178,6 +221,11 @@ export async function generateWeeklyReport(): Promise<ServerActionResult<WeeklyR
 
     if (!user) {
       return serverActionError("Unauthorized", "UNAUTHORIZED");
+    }
+
+    const adminCheck = await checkUserIsAdmin(user.id);
+    if (!adminCheck.isAdmin) {
+      return serverActionError("Admin access required", "UNAUTHORIZED");
     }
 
     // Gather metrics for the past week
@@ -271,6 +319,11 @@ export async function getAIInsights(): Promise<ServerActionResult<AIInsight[]>> 
 
     if (!user) {
       return serverActionError("Unauthorized", "UNAUTHORIZED");
+    }
+
+    const adminCheck = await checkUserIsAdmin(user.id);
+    if (!adminCheck.isAdmin) {
+      return serverActionError("Admin access required", "UNAUTHORIZED");
     }
 
     // Gather data for analysis

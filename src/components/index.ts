@@ -45,7 +45,6 @@ export { Navbar } from "./header/navbar";
 export { default as AuthenticationUserModal } from "./modals/AuthenticationUser/AuthenticationUserModal";
 export { PasswordRecoveryModal } from "./modals/AuthenticationUser/PasswordRecoveryModal";
 export { default as NavDrawer } from "./modals/NavDrawer";
-export { default as PublishListingModal } from "./modals/PublishListingModal";
 export { default as VolunteerInfoModal } from "./modals/VolunteerInfoModal";
 export { default as DeleteCardModal } from "./modals/DeleteCardModal";
 export { ConfirmationModal, DeleteConfirmationModal } from "./modals/ConfirmationModal";

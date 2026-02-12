@@ -9,8 +9,6 @@
 
 import { NextResponse } from "next/server";
 
-export const runtime = "edge";
-
 const API_TIMEOUT_MS = 30000; // 30s for Management API
 
 interface HealthStatus {

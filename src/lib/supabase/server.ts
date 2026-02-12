@@ -1,3 +1,5 @@
+import "server-only";
+
 /**
  * Supabase Server Configuration for Next.js App Router
  * Cookie-based session handling for Server Components and Server Actions
