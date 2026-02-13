@@ -2,15 +2,9 @@ name: CI/CD
 
 on:
   push:
-    branches:
-      - main
-      - develop
-      - organic
+    branches: [main, develop, organic]
   pull_request:
-    branches:
-      - main
-      - develop
-      - organic
+    branches: [main, develop, organic]
   workflow_dispatch:
 
 concurrency:
@@ -18,174 +12,198 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  BUN_VERSION: "latest"
-  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+  BUN_VERSION: "1.1.38"
+  NODE_OPTIONS: "--max-old-space-size=4096"
 
 jobs:
-  # Install dependencies once and cache for all jobs
   setup:
     name: Setup
     runs-on: self-hosted
+    timeout-minutes: 5
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v4
+      
+      - name: Generate cache key
+        id: cache-key
+        run: echo "key=${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}-${{ github.sha }}" >> $GITHUB_OUTPUT
+      
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
-
+      
       - name: Install dependencies
         run: bun install --frozen-lockfile
-
-      - name: Cache node_modules
-        uses: actions/cache/save@v4
+      
+      - uses: actions/cache/save@v4
         with:
-          path: node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          path: |
+            node_modules
+            .next/cache
+          key: ${{ steps.cache-key.outputs.key }}
 
-  # Parallel checks - all run at the same time after setup
   checks:
-    name: Checks (Lint, Type, Test)
+    name: ${{ matrix.check }}
     runs-on: self-hosted
     needs: setup
-    timeout-minutes: 15
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
         check: [lint, type-check, test]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v4
+      
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Restore node_modules
-        uses: actions/cache/restore@v4
+      
+      - uses: actions/cache/restore@v4
         with:
-          path: node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          path: |
+            node_modules
+            .next/cache
+          key: ${{ needs.setup.outputs.cache-key }}
           fail-on-cache-miss: true
-
+      
       - name: Run ${{ matrix.check }}
         run: |
-          if [ "${{ matrix.check }}" = "type-check" ]; then
-            NODE_OPTIONS="--max-old-space-size=1536" bun run type-check
-          elif [ "${{ matrix.check }}" = "test" ]; then
-            bun run test:ci
-          else
-            bun run ${{ matrix.check }}
-          fi
-
-      - name: Upload coverage reports
-        if: matrix.check == 'test'
+          case "${{ matrix.check }}" in
+            type-check) bun run type-check ;;
+            test) bun run test:ci ;;
+            *) bun run ${{ matrix.check }} ;;
+          esac
+      
+      - if: matrix.check == 'test'
         uses: codecov/codecov-action@v4
         continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
-          fail_ci_if_error: false
 
   build:
     name: Build
     runs-on: self-hosted
-    needs: checks
-    timeout-minutes: 20
+    needs: [setup, checks]
+    timeout-minutes: 15
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v4
+      
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Restore node_modules
-        uses: actions/cache/restore@v4
+      
+      - uses: actions/cache/restore@v4
         with:
-          path: node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          path: |
+            node_modules
+            .next/cache
+          key: ${{ needs.setup.outputs.cache-key }}
           fail-on-cache-miss: true
-
-      - name: Build application
+      
+      - name: Build
         run: bun run build
         env:
           SKIP_ENV_VALIDATION: "true"
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      
+      - name: Archive build
+        run: tar -czf build.tar.gz .next package.json bun.lock
+      
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ github.sha }}
+          path: build.tar.gz
+          retention-days: 7
 
-  # Deploy to VPS via SSH (only on push to main)
   deploy:
-    name: Deploy to VPS
+    name: Deploy
     runs-on: self-hosted
-    needs: [checks, build]
+    needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    timeout-minutes: 25
-    environment: production
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://foodshare.club
     steps:
-      - name: Deploy via SSH
+      - uses: actions/download-artifact@v4
+        with:
+          name: build-${{ github.sha }}
+      
+      - name: Deploy with rollback
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          command_timeout: 20m
+          command_timeout: 15m
           script: |
             set -e
             cd /home/organic/dev/foodshare-web
+            
+            # Backup current version
+            BACKUP_DIR="/tmp/foodshare-backup-$(date +%s)"
+            mkdir -p "$BACKUP_DIR"
+            docker commit foodshare-web "$BACKUP_DIR/image" 2>/dev/null || true
+            
+            # Pull and deploy
             git pull origin main
-            # Build with memory limits to prevent OOM
-            docker compose --env-file .env.production build --memory 2g
-            docker compose --env-file .env.production up -d --remove-orphans
-
-      - name: Verify deployment
+            
+            # Transfer and extract build artifact
+            scp -i ~/.ssh/id_rsa_gitlab organic@localhost:/tmp/build.tar.gz .
+            tar -xzf build.tar.gz
+            
+            # Build and start new container
+            docker compose --env-file .env.production build --no-cache
+            docker compose --env-file .env.production up -d --force-recreate
+            
+            # Health check with rollback
+            echo "Waiting for service..."
+            for i in {1..60}; do
+              if curl -sf http://localhost/api/health > /dev/null; then
+                echo "✅ Deploy successful"
+                rm -rf "$BACKUP_DIR"
+                exit 0
+              fi
+              sleep 2
+            done
+            
+            # Rollback on failure
+            echo "❌ Deploy failed, rolling back..."
+            docker stop foodshare-web || true
+            docker rm foodshare-web || true
+            docker run -d --name foodshare-web "$BACKUP_DIR/image" || true
+            docker logs foodshare-web --tail 100
+            exit 1
+      
+      - name: Smoke tests
+        if: success()
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          script_stop: true
           script: |
-            set -e
-            echo "Waiting for container to start..."
-            sleep 10
-            
-            # Check container is running
-            if ! docker ps | grep -q foodshare-web; then
-              echo "Container not running!"
-              docker logs foodshare-web --tail 50
-              exit 1
-            fi
-            
-            # Check health endpoint
-            for i in {1..30}; do
-              STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost/api/health || echo "000")
-              if [ "$STATUS" = "200" ]; then
-                echo "✅ Deployment verified: HTTP 200"
-                exit 0
-              fi
-              echo "Attempt $i/30: HTTP $STATUS, retrying..."
-              sleep 2
-            done
-            
-            echo "❌ Deployment verification failed after 30 attempts"
-            docker logs foodshare-web --tail 50
-            exit 1
+            # Critical endpoints
+            curl -sf http://localhost/ > /dev/null || exit 1
+            curl -sf http://localhost/api/health > /dev/null || exit 1
+            curl -sf http://localhost/food > /dev/null || exit 1
+            echo "✅ Smoke tests passed"
+      
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Deployment failed - check logs"
+          # Add Slack/Discord webhook here
 
-  # Summary job for branch protection
-  ci-success:
-    name: CI Success
+  status:
+    name: CI Status
     runs-on: self-hosted
     needs: [checks, build]
     if: always()
     steps:
-      - name: Check all jobs passed
-        run: |
-          if [[ "${{ needs.checks.result }}" != "success" ]] || \
-             [[ "${{ needs.build.result }}" != "success" ]]; then
-            echo "One or more CI jobs failed"
-            exit 1
-          fi
-          echo "All CI jobs passed"
+      - run: |
+          [[ "${{ needs.checks.result }}" == "success" ]] || exit 1
+          [[ "${{ needs.build.result }}" == "success" ]] || exit 1
