@@ -42,6 +42,11 @@ const nextConfig: NextConfig = {
   // Enable React Compiler (stable in Next.js 16)
   reactCompiler: true,
 
+  // Skip TypeScript checks during build (already checked in CI)
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
   // HTML-limited bots that cannot execute JavaScript
   // These bots receive blocking metadata instead of streaming metadata
   // to ensure they always get complete meta tags in <head>
