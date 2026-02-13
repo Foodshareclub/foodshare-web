@@ -39,8 +39,8 @@ const withBundleAnalyzer = (config: NextConfig) => {
 };
 
 const nextConfig: NextConfig = {
-  // Enable React Compiler (stable in Next.js 16)
-  reactCompiler: true,
+  // Disable React Compiler temporarily (causes build issues with Next.js 16)
+  // reactCompiler: true,
 
   // Skip TypeScript checks during build (already checked in CI)
   typescript: {
