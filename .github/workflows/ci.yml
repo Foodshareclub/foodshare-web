@@ -50,6 +50,7 @@ jobs:
     name: Checks (Lint, Type, Test)
     runs-on: self-hosted
     needs: setup
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -68,6 +69,7 @@ jobs:
         with:
           path: node_modules
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          fail-on-cache-miss: true
 
       - name: Run ${{ matrix.check }}
         run: |
@@ -80,7 +82,7 @@ jobs:
           fi
 
       - name: Upload coverage reports
-        if: matrix.check == 'test' && env.CODECOV_TOKEN != ''
+        if: matrix.check == 'test'
         uses: codecov/codecov-action@v4
         continue-on-error: true
         with:
@@ -92,6 +94,7 @@ jobs:
     name: Build
     runs-on: self-hosted
     needs: checks
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -106,6 +109,7 @@ jobs:
         with:
           path: node_modules
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          fail-on-cache-miss: true
 
       - name: Build application
         run: bun run build
@@ -118,6 +122,7 @@ jobs:
     runs-on: self-hosted
     needs: [checks, build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    timeout-minutes: 25
     environment: production
     steps:
       - name: Deploy via SSH
@@ -128,6 +133,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           command_timeout: 20m
           script: |
+            set -e
             cd /home/organic/dev/foodshare-web
             git pull origin main
             # Build with memory limits to prevent OOM
@@ -142,14 +148,31 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script_stop: true
           script: |
-            sleep 5
-            STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost)
-            if [ "$STATUS" != "200" ]; then
-              echo "Deployment verification failed: HTTP $STATUS"
-              docker logs foodshare-web --tail 20
+            set -e
+            echo "Waiting for container to start..."
+            sleep 10
+            
+            # Check container is running
+            if ! docker ps | grep -q foodshare-web; then
+              echo "Container not running!"
+              docker logs foodshare-web --tail 50
               exit 1
             fi
-            echo "Deployment verified: HTTP 200"
+            
+            # Check health endpoint
+            for i in {1..30}; do
+              STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://localhost/api/health || echo "000")
+              if [ "$STATUS" = "200" ]; then
+                echo "✅ Deployment verified: HTTP 200"
+                exit 0
+              fi
+              echo "Attempt $i/30: HTTP $STATUS, retrying..."
+              sleep 2
+            done
+            
+            echo "❌ Deployment verification failed after 30 attempts"
+            docker logs foodshare-web --tail 50
+            exit 1
 
   # Summary job for branch protection
   ci-success:
