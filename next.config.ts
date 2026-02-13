@@ -54,8 +54,8 @@ const nextConfig: NextConfig = {
   htmlLimitedBots:
     /Googlebot|Bingbot|Yandex|YandexBot|DuckDuckBot|Slurp|Baiduspider|facebookexternalhit|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Applebot|PinterestBot|Discordbot|GPTBot|ChatGPT-User|PerplexityBot|Google-Extended|anthropic-ai|CCBot/,
 
-  // Disabled due to build issues with dynamic routes
-  // cacheComponents: true,
+  // Enable component caching for cacheLife profiles
+  cacheComponents: true,
 
   // Custom cache life profiles matching CACHE_DURATIONS
   cacheLife: {
