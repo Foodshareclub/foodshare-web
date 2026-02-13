@@ -45,10 +45,15 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
 
-  lint:
-    name: Lint
+  # Parallel checks - all run at the same time after setup
+  checks:
+    name: Checks (Lint, Type, Test)
     runs-on: self-hosted
     needs: setup
+    strategy:
+      fail-fast: false
+      matrix:
+        check: [lint, type-check, test]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -64,67 +69,29 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
 
-      - name: Run ESLint
-        run: bun run lint
-
-  type-check:
-    name: Type Check
-    runs-on: self-hosted
-    needs: setup
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Restore node_modules
-        uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
-
-      - name: Run TypeScript
-        run: NODE_OPTIONS="--max-old-space-size=1536" bun run type-check
-
-  test:
-    name: Unit Tests
-    runs-on: self-hosted
-    needs: setup
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Restore node_modules
-        uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
-
-      - name: Run tests with coverage
-        run: bun run test:ci
+      - name: Run ${{ matrix.check }}
+        run: |
+          if [ "${{ matrix.check }}" = "type-check" ]; then
+            NODE_OPTIONS="--max-old-space-size=1536" bun run type-check
+          elif [ "${{ matrix.check }}" = "test" ]; then
+            bun run test:ci
+          else
+            bun run ${{ matrix.check }}
+          fi
 
       - name: Upload coverage reports
+        if: matrix.check == 'test' && env.CODECOV_TOKEN != ''
         uses: codecov/codecov-action@v4
-        if: always() && env.CODECOV_TOKEN != ''
         continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
           fail_ci_if_error: false
-          verbose: true
 
   build:
     name: Build
     runs-on: self-hosted
-    needs: [lint, type-check, test]
+    needs: checks
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -149,7 +116,7 @@ jobs:
   deploy:
     name: Deploy to VPS
     runs-on: self-hosted
-    needs: [lint, type-check, test, build]
+    needs: [checks, build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production
     steps:
@@ -188,14 +155,12 @@ jobs:
   ci-success:
     name: CI Success
     runs-on: self-hosted
-    needs: [lint, type-check, test, build]
+    needs: [checks, build]
     if: always()
     steps:
       - name: Check all jobs passed
         run: |
-          if [[ "${{ needs.lint.result }}" != "success" ]] || \
-             [[ "${{ needs.type-check.result }}" != "success" ]] || \
-             [[ "${{ needs.test.result }}" != "success" ]] || \
+          if [[ "${{ needs.checks.result }}" != "success" ]] || \
              [[ "${{ needs.build.result }}" != "success" ]]; then
             echo "One or more CI jobs failed"
             exit 1
