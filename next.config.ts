@@ -54,40 +54,40 @@ const nextConfig: NextConfig = {
   htmlLimitedBots:
     /Googlebot|Bingbot|Yandex|YandexBot|DuckDuckBot|Slurp|Baiduspider|facebookexternalhit|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Applebot|PinterestBot|Discordbot|GPTBot|ChatGPT-User|PerplexityBot|Google-Extended|anthropic-ai|CCBot/,
 
-  // Enable component caching for cacheLife profiles
-  cacheComponents: true,
+  // Disabled due to React version compatibility with cacheComponents
+  // cacheComponents: true,
 
-  // Custom cache life profiles matching CACHE_DURATIONS
-  cacheLife: {
-    // Short-lived (real-time data)
-    short: { stale: 60, revalidate: 30, expire: 300 },
-    // Products cache - 60s revalidation
-    products: { stale: 300, revalidate: 60, expire: 3600 },
-    // Product detail - 120s revalidation
-    "product-detail": { stale: 300, revalidate: 120, expire: 3600 },
-    // Product locations - 300s revalidation
-    "product-locations": { stale: 300, revalidate: 300, expire: 3600 },
-    // Profiles - 300s revalidation
-    profiles: { stale: 300, revalidate: 300, expire: 3600 },
-    // Profile stats - 600s revalidation
-    "profile-stats": { stale: 300, revalidate: 600, expire: 7200 },
-    // Challenges - 300s revalidation
-    challenges: { stale: 300, revalidate: 300, expire: 3600 },
-    // Challenge leaderboard - 120s revalidation
-    "challenge-leaderboard": { stale: 300, revalidate: 120, expire: 3600 },
-    // Forum - 120s revalidation
-    forum: { stale: 300, revalidate: 120, expire: 3600 },
-    // Chat - 30s revalidation (real-time)
-    chat: { stale: 30, revalidate: 30, expire: 300 },
-    // Admin stats - 300s revalidation
-    "admin-stats": { stale: 300, revalidate: 300, expire: 3600 },
-    // Email system - 60s revalidation
-    email: { stale: 60, revalidate: 60, expire: 600 },
-    // Post activity - 60s revalidation
-    "post-activity": { stale: 60, revalidate: 60, expire: 600 },
-    // Long-lived (rarely changing)
-    long: { stale: 3600, revalidate: 3600, expire: 86400 },
-  },
+  // Custom cache life profiles - disabled until cacheComponents is stable
+  // cacheLife: {
+  //   // Short-lived (real-time data)
+  //   short: { stale: 60, revalidate: 30, expire: 300 },
+  //   // Products cache - 60s revalidation
+  //   products: { stale: 300, revalidate: 60, expire: 3600 },
+  //   // Product detail - 120s revalidation
+  //   "product-detail": { stale: 300, revalidate: 120, expire: 3600 },
+  //   // Product locations - 300s revalidation
+  //   "product-locations": { stale: 300, revalidate: 300, expire: 3600 },
+  //   // Profiles - 300s revalidation
+  //   profiles: { stale: 300, revalidate: 300, expire: 3600 },
+  //   // Profile stats - 600s revalidation
+  //   "profile-stats": { stale: 300, revalidate: 600, expire: 7200 },
+  //   // Challenges - 300s revalidation
+  //   challenges: { stale: 300, revalidate: 300, expire: 3600 },
+  //   // Challenge leaderboard - 120s revalidation
+  //   "challenge-leaderboard": { stale: 300, revalidate: 120, expire: 3600 },
+  //   // Forum - 120s revalidation
+  //   forum: { stale: 300, revalidate: 120, expire: 3600 },
+  //   // Chat - 30s revalidation (real-time)
+  //   chat: { stale: 30, revalidate: 30, expire: 300 },
+  //   // Admin stats - 300s revalidation
+  //   "admin-stats": { stale: 300, revalidate: 300, expire: 3600 },
+  //   // Email system - 60s revalidation
+  //   email: { stale: 60, revalidate: 60, expire: 600 },
+  //   // Post activity - 60s revalidation
+  //   "post-activity": { stale: 60, revalidate: 60, expire: 600 },
+  //   // Long-lived (rarely changing)
+  //   long: { stale: 3600, revalidate: 3600, expire: 86400 },
+  // },
 
   // Set Turbopack root to silence monorepo lockfile warning
   turbopack: {
