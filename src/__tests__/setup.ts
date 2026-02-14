@@ -3,8 +3,7 @@
  * Global configuration for all tests
  */
 
-import { mock } from "bun:test";
-import "@testing-library/jest-dom";
+import { mock, expect } from "bun:test";
 
 // =============================================================================
 // Environment Variables (set before module loading)
@@ -12,6 +11,17 @@ import "@testing-library/jest-dom";
 
 process.env.NEXT_PUBLIC_SUPABASE_URL ??= "https://test.supabase.co";
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= "test-anon-key";
+
+// Make expect globally available then load jest-dom matchers
+// (preload files don't auto-inject `expect` as a global like .test.ts files)
+if (typeof globalThis.expect === "undefined") {
+  (globalThis as Record<string, unknown>).expect = expect;
+}
+try {
+  require("@testing-library/jest-dom");
+} catch {
+  // jest-dom matchers unavailable — non-critical for unit tests
+}
 
 // =============================================================================
 // Module Mocks (bun:test mock.module)
