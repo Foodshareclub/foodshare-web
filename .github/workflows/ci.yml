@@ -56,7 +56,7 @@ jobs:
     name: ${{ matrix.check }}
     runs-on: self-hosted
     needs: setup
-    timeout-minutes: 10
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
