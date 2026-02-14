@@ -17,11 +17,7 @@ process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= "test-anon-key";
 if (typeof globalThis.expect === "undefined") {
   (globalThis as Record<string, unknown>).expect = expect;
 }
-try {
-  require("@testing-library/jest-dom");
-} catch {
-  // jest-dom matchers unavailable — non-critical for unit tests
-}
+await import("@testing-library/jest-dom").catch(() => {});
 
 // =============================================================================
 // Module Mocks (bun:test mock.module)
