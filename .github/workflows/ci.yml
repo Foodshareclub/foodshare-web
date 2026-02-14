@@ -81,7 +81,7 @@ jobs:
       - name: Run ${{ matrix.check }}
         run: |
           case "${{ matrix.check }}" in
-            type-check) bun run type-check ;;
+            type-check) ./node_modules/.bin/tsc --noEmit ;;
             test) bun run test:ci ;;
             *) bun run ${{ matrix.check }} ;;
           esac
