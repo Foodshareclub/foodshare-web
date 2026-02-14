@@ -1,15 +1,13 @@
 # Bun configuration for FoodShare
 # https://bun.sh/docs/runtime/bunfig
 
-# Bun is used for:
-# - Package management (bun install) - 10x faster than npm
-# - Dev server (bun --bun next dev) - faster HMR
-# - Production server (bun --bun next start) - lower memory
-# - Testing (bun test) - native test runner
-# - Script execution (bun run) - faster startup
-#
-# Node is used for:
-# - Production builds (npx next build) - React SSR compatibility
+# Bun is used for everything:
+# - Package management (bun install)
+# - Dev server (bun --bun next dev)
+# - Production builds (bun --bun next build)
+# - Production server (bun --bun next start)
+# - Testing (bun test)
+# - Script execution (bun run)
 
 [install]
 # Exact versions for reproducible builds
@@ -27,5 +25,5 @@ coverageDir = "coverage"
 preload = ["./src/__tests__/happydom.ts", "./src/__tests__/setup.ts"]
 
 [run]
-# Don't force Bun runtime for all scripts (build needs Node)
-bun = false
+# Use Bun runtime for all scripts
+bun = true
