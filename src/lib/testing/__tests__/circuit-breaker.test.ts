@@ -4,21 +4,16 @@
  * Demonstrates testing the circuit breaker with enterprise test utilities.
  */
 
+import { describe, it, expect, beforeEach } from "bun:test";
 import {
   createTestCircuitBreaker,
   createFailingThenSucceedingFn,
 } from "../enterprise-test-utils";
 import { CircuitOpenError } from "../../api/circuit-breaker";
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
 describe("CircuitBreaker", () => {
-  beforeEach(() => {
-    jest.useFakeTimers();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
   describe("state transitions", () => {
     it("should start in CLOSED state", () => {
       const breaker = createTestCircuitBreaker();
@@ -58,7 +53,7 @@ describe("CircuitBreaker", () => {
     it("should transition to HALF_OPEN after reset timeout", async () => {
       const breaker = createTestCircuitBreaker({
         failureThreshold: 1,
-        resetTimeoutMs: 100,
+        resetTimeoutMs: 50,
       });
 
       // Open the circuit
@@ -68,8 +63,8 @@ describe("CircuitBreaker", () => {
 
       expect(breaker.getMetrics().state).toBe("OPEN");
 
-      // Advance time past reset timeout
-      jest.advanceTimersByTime(150);
+      // Wait past reset timeout
+      await sleep(80);
 
       // Next call should be allowed (HALF_OPEN)
       const result = await breaker.execute(() => Promise.resolve("success"));
@@ -82,7 +77,7 @@ describe("CircuitBreaker", () => {
     it("should close circuit after successful call in HALF_OPEN", async () => {
       const breaker = createTestCircuitBreaker({
         failureThreshold: 1,
-        resetTimeoutMs: 100,
+        resetTimeoutMs: 50,
         halfOpenRequests: 1,
       });
 
@@ -92,7 +87,7 @@ describe("CircuitBreaker", () => {
       ).rejects.toThrow();
 
       // Wait for HALF_OPEN
-      jest.advanceTimersByTime(150);
+      await sleep(80);
 
       // Successful call should close circuit
       await breaker.execute(() => Promise.resolve("success"));
@@ -104,7 +99,7 @@ describe("CircuitBreaker", () => {
     it("should reopen circuit on failure in HALF_OPEN", async () => {
       const breaker = createTestCircuitBreaker({
         failureThreshold: 1,
-        resetTimeoutMs: 100,
+        resetTimeoutMs: 50,
       });
 
       // Open circuit
@@ -113,7 +108,7 @@ describe("CircuitBreaker", () => {
       ).rejects.toThrow();
 
       // Wait for HALF_OPEN
-      jest.advanceTimersByTime(150);
+      await sleep(80);
 
       // Failure should reopen circuit
       await expect(
