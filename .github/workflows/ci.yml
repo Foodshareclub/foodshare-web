@@ -67,7 +67,9 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - uses: actions/cache/restore@v4
+      - name: Restore cache
+        id: cache
+        uses: actions/cache/restore@v4
         with:
           path: |
             node_modules
@@ -87,11 +89,12 @@ jobs:
           esac
 
       - if: matrix.check == 'test'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
+          fail_ci_if_error: false
 
   build:
     name: Build
@@ -105,7 +108,9 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - uses: actions/cache/restore@v4
+      - name: Restore cache
+        id: cache
+        uses: actions/cache/restore@v4
         with:
           path: |
             node_modules
@@ -123,15 +128,6 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
-      - name: Archive build
-        run: tar -czf build.tar.gz .next package.json bun.lock
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: build-${{ github.sha }}
-          path: build.tar.gz
-          retention-days: 7
-
   deploy:
     name: Deploy
     runs-on: self-hosted
@@ -142,69 +138,66 @@ jobs:
       name: production
       url: https://foodshare.club
     steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: build-${{ github.sha }}
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Deploy with rollback
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          command_timeout: 15m
-          script: |
-            set -e
-            cd /home/organic/dev/foodshare-web
+        run: |
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+            -i ~/.ssh/deploy_key "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" << 'DEPLOY_SCRIPT'
+          set -e
+          cd /home/organic/dev/foodshare-web
 
-            # Backup current version
-            BACKUP_DIR="/tmp/foodshare-backup-$(date +%s)"
-            mkdir -p "$BACKUP_DIR"
-            docker commit foodshare-web "$BACKUP_DIR/image" 2>/dev/null || true
+          # Backup current container image
+          BACKUP_DIR="/tmp/foodshare-backup-$(date +%s)"
+          mkdir -p "$BACKUP_DIR"
+          docker commit foodshare-web "$BACKUP_DIR/image" 2>/dev/null || true
 
-            # Pull and deploy
-            git pull origin main
+          # Pull latest code
+          git pull origin main
 
-            # Transfer and extract build artifact
-            scp -i ~/.ssh/id_rsa_gitlab organic@localhost:/tmp/build.tar.gz .
-            tar -xzf build.tar.gz
+          # Build and start new container
+          docker compose --env-file .env.production build --no-cache
+          docker compose --env-file .env.production up -d --force-recreate
 
-            # Build and start new container
-            docker compose --env-file .env.production build --no-cache
-            docker compose --env-file .env.production up -d --force-recreate
+          # Health check with rollback
+          echo "Waiting for service..."
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost/api/health > /dev/null; then
+              echo "Deploy successful"
+              rm -rf "$BACKUP_DIR"
+              exit 0
+            fi
+            sleep 2
+          done
 
-            # Health check with rollback
-            echo "Waiting for service..."
-            for i in {1..60}; do
-              if curl -sf http://localhost/api/health > /dev/null; then
-                echo "Deploy successful"
-                rm -rf "$BACKUP_DIR"
-                exit 0
-              fi
-              sleep 2
-            done
-
-            # Rollback on failure
-            echo "Deploy failed, rolling back..."
-            docker stop foodshare-web || true
-            docker rm foodshare-web || true
-            docker run -d --name foodshare-web "$BACKUP_DIR/image" || true
-            docker logs foodshare-web --tail 100
-            exit 1
+          # Rollback on failure
+          echo "Deploy failed, rolling back..."
+          docker stop foodshare-web || true
+          docker rm foodshare-web || true
+          docker run -d --name foodshare-web "$BACKUP_DIR/image" || true
+          docker logs foodshare-web --tail 100
+          exit 1
+          DEPLOY_SCRIPT
 
       - name: Smoke tests
         if: success()
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            # Critical endpoints
-            curl -sf http://localhost/ > /dev/null || exit 1
-            curl -sf http://localhost/api/health > /dev/null || exit 1
-            curl -sf http://localhost/food > /dev/null || exit 1
-            echo "Smoke tests passed"
+        run: |
+          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
+            -i ~/.ssh/deploy_key "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" << 'SMOKE_SCRIPT'
+          curl -sf http://localhost/ > /dev/null || exit 1
+          curl -sf http://localhost/api/health > /dev/null || exit 1
+          curl -sf http://localhost/food > /dev/null || exit 1
+          echo "Smoke tests passed"
+          SMOKE_SCRIPT
+
+      - name: Cleanup SSH
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
 
       - name: Notify on failure
         if: failure()
