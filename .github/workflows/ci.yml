@@ -146,54 +146,58 @@ jobs:
           ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Deploy with rollback
+        env:
+          SSH_OPTS: "-T -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i ~/.ssh/deploy_key"
+          SSH_TARGET: "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
         run: |
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
-            -i ~/.ssh/deploy_key "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" << 'DEPLOY_SCRIPT'
+          ssh $SSH_OPTS "$SSH_TARGET" bash -s <<'EOF'
           set -e
           cd /home/organic/dev/foodshare-web
 
-          # Backup current container image
           BACKUP_DIR="/tmp/foodshare-backup-$(date +%s)"
           mkdir -p "$BACKUP_DIR"
           docker commit foodshare-web "$BACKUP_DIR/image" 2>/dev/null || true
 
-          # Pull latest code
           git pull origin main
 
-          # Build and start new container
           docker compose --env-file .env.production build --no-cache
           docker compose --env-file .env.production up -d --force-recreate
 
-          # Health check with rollback
           echo "Waiting for service..."
+          DEPLOY_OK=false
           for i in $(seq 1 60); do
             if curl -sf http://localhost/api/health > /dev/null; then
-              echo "Deploy successful"
-              rm -rf "$BACKUP_DIR"
-              exit 0
+              DEPLOY_OK=true
+              break
             fi
             sleep 2
           done
 
-          # Rollback on failure
-          echo "Deploy failed, rolling back..."
-          docker stop foodshare-web || true
-          docker rm foodshare-web || true
-          docker run -d --name foodshare-web "$BACKUP_DIR/image" || true
-          docker logs foodshare-web --tail 100
-          exit 1
-          DEPLOY_SCRIPT
+          if [ "$DEPLOY_OK" = true ]; then
+            echo "Deploy successful"
+            rm -rf "$BACKUP_DIR"
+          else
+            echo "Deploy failed, rolling back..."
+            docker stop foodshare-web || true
+            docker rm foodshare-web || true
+            docker run -d --name foodshare-web "$BACKUP_DIR/image" || true
+            docker logs foodshare-web --tail 100
+            exit 1
+          fi
+          EOF
 
       - name: Smoke tests
         if: success()
+        env:
+          SSH_OPTS: "-T -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i ~/.ssh/deploy_key"
+          SSH_TARGET: "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
         run: |
-          ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 \
-            -i ~/.ssh/deploy_key "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" << 'SMOKE_SCRIPT'
+          ssh $SSH_OPTS "$SSH_TARGET" bash -s <<'EOF'
           curl -sf http://localhost/ > /dev/null || exit 1
           curl -sf http://localhost/api/health > /dev/null || exit 1
           curl -sf http://localhost/food > /dev/null || exit 1
           echo "Smoke tests passed"
-          SMOKE_SCRIPT
+          EOF
 
       - name: Cleanup SSH
         if: always()
