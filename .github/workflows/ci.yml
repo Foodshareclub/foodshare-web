@@ -97,7 +97,7 @@ jobs:
     name: Build
     runs-on: self-hosted
     needs: [setup, checks]
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
 
