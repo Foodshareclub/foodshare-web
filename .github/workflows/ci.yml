@@ -18,7 +18,7 @@ env:
 jobs:
   setup:
     name: Setup
-    runs-on: ${{ vars.RUNNER_AVAILABLE == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ vars.RUNNER_AVAILABLE == 'true' && fromJSON('["self-hosted", "Linux", "X64"]') || 'ubuntu-latest' }}
     timeout-minutes: 10
     outputs:
       cache-key: ${{ steps.cache-key.outputs.key }}
@@ -54,7 +54,7 @@ jobs:
 
   checks:
     name: ${{ matrix.check }}
-    runs-on: ${{ vars.RUNNER_AVAILABLE == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ vars.RUNNER_AVAILABLE == 'true' && fromJSON('["self-hosted", "Linux", "X64"]') || 'ubuntu-latest' }}
     needs: setup
     timeout-minutes: 20
     strategy:
@@ -99,7 +99,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: ${{ vars.RUNNER_AVAILABLE == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ vars.RUNNER_AVAILABLE == 'true' && fromJSON('["self-hosted", "Linux", "X64"]') || 'ubuntu-latest' }}
     needs: [setup, checks]
     timeout-minutes: 25
     steps:
@@ -131,7 +131,7 @@ jobs:
 
   deploy:
     name: Deploy
-    runs-on: self-hosted
+    runs-on: ${{ vars.RUNNER_AVAILABLE == 'true' && fromJSON('["self-hosted", "Linux", "X64"]') || 'ubuntu-latest' }}
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 20
@@ -221,7 +221,7 @@ jobs:
 
   status:
     name: CI Status
-    runs-on: ${{ vars.RUNNER_AVAILABLE == 'true' && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ vars.RUNNER_AVAILABLE == 'true' && fromJSON('["self-hosted", "Linux", "X64"]') || 'ubuntu-latest' }}
     needs: [checks, build]
     if: always()
     steps:
