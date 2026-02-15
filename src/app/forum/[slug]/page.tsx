@@ -270,7 +270,9 @@ export default async function ForumPostPage({ params }: PageProps) {
 
           {/* Post Content */}
           <div className="prose prose-lg dark:prose-invert max-w-none mb-6">
-            {post.rich_content ? (
+            {post.rich_content &&
+            typeof post.rich_content === "object" &&
+            Object.keys(post.rich_content as Record<string, unknown>).length > 0 ? (
               <RichTextViewer content={post.rich_content} />
             ) : post.forum_post_description ? (
               <RichTextViewer content={post.forum_post_description} />

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { HomeClient } from "./HomeClient";
-import { getProducts } from "@/lib/data/products";
+import { getProductsPaginated } from "@/lib/data/products";
 import { getNearbyPosts } from "@/lib/data/nearby-posts";
 import { isDatabaseHealthy } from "@/lib/data/health";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
@@ -73,14 +73,25 @@ async function fetchHomeData(locationParams: { lat: number; lng: number; radius:
         lng: locationParams.lng,
         radiusMeters: locationParams.radius,
         postType: "food",
-        limit: 100,
+        limit: 20,
       });
-      return { type: "nearby" as const, data: result.data, radius: locationParams.radius };
+      return {
+        type: "nearby" as const,
+        data: result.data,
+        radius: locationParams.radius,
+        hasMore: result.hasMore,
+        nextCursor: result.nextCursor,
+      };
     }
 
-    // No location filter - fetch all food products
-    const products = await getProducts("food");
-    return { type: "all" as const, data: products };
+    // No location filter - fetch paginated food products
+    const result = await getProductsPaginated("food", { limit: 20 });
+    return {
+      type: "all" as const,
+      data: result.data,
+      hasMore: result.hasMore,
+      nextCursor: result.nextCursor,
+    };
   } catch {
     return null;
   }
@@ -118,6 +129,8 @@ export default async function Home({ searchParams }: PageProps) {
             nearbyPosts={homeData.data}
             isLocationFiltered={true}
             radiusMeters={homeData.radius}
+            initialHasMore={homeData.hasMore}
+            initialNextCursor={homeData.nextCursor}
           />
         </Suspense>
       </>
@@ -128,7 +141,12 @@ export default async function Home({ searchParams }: PageProps) {
     <>
       {generateJsonLdScripts()}
       <Suspense fallback={<HomePageSkeleton />}>
-        <HomeClient initialProducts={homeData.data} productType="food" />
+        <HomeClient
+          initialProducts={homeData.data}
+          productType="food"
+          initialHasMore={homeData.hasMore}
+          initialNextCursor={homeData.nextCursor}
+        />
       </Suspense>
     </>
   );

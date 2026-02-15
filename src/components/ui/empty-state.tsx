@@ -1,7 +1,6 @@
 "use client";
 
 import { ReactNode } from "react";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -107,11 +106,8 @@ export function EmptyState({
   const displayIcon = icon ?? variantIcons[variant];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className={cn("glass rounded-xl text-center", sizes.container, className)}
+    <div
+      className={cn("glass rounded-xl text-center animate-in fade-in slide-in-from-bottom-2 duration-300", sizes.container, className)}
     >
       {displayIcon && (
         <div className={cn(sizes.icon, "select-none")}>
@@ -153,6 +149,6 @@ export function EmptyState({
           )}
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

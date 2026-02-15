@@ -1,11 +1,17 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { Mail, Sparkles } from "lucide-react";
-import { EmailCRMDashboard } from "@/app/admin/email/components/EmailCRMDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEmailCRMData } from "@/hooks/queries/useEmailCRM";
 import { useTranslations } from "next-intl";
 import { QueryErrorBoundary } from "@/components/ErrorBoundary";
+
+// Dynamic import: ~150KB+ saved (Framer Motion + complex dashboard)
+const EmailCRMDashboard = dynamic(
+  () => import("@/app/admin/email/components/EmailCRMDashboard").then((mod) => ({ default: mod.EmailCRMDashboard })),
+  { ssr: false }
+);
 
 function EmailSkeleton() {
   return (

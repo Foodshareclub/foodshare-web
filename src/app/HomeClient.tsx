@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { ProductGrid } from "@/components/productCard/ProductGrid";
 import NavigateButtons from "@/components/navigateButtons/NavigateButtons";
 import { useUIStore } from "@/store/zustand/useUIStore";
+import { fetchNearbyListings, fetchProductsPaginated } from "@/app/actions/nearby-listings";
 import type { InitialProductStateType } from "@/types/product.types";
 import type { NearbyPost } from "@/lib/data/nearby-posts";
 
@@ -28,6 +29,10 @@ interface HomeClientProps {
   isLocationFiltered?: boolean;
   /** Current radius in meters */
   radiusMeters?: number;
+  /** Whether more pages are available (from server) */
+  initialHasMore?: boolean;
+  /** Cursor for next page (from server) */
+  initialNextCursor?: number | null;
 }
 
 // Default search radius in meters (5km)
@@ -38,10 +43,11 @@ const DEFAULT_RADIUS_METERS = 5000;
  * Automatically detects user location and shows nearby posts
  *
  * Flow:
- * 1. On mount, check if URL already has location params
+ * 1. On mount, check if URL already has location params (server-rendered with nearby data)
  * 2. If not, request browser geolocation automatically
- * 3. Once location is obtained, update URL with lat/lng/radius
- * 4. Server Component re-renders with nearby posts
+ * 3. Once location is obtained, fetch nearby posts via Server Action (no server re-render)
+ * 4. Update URL with history.replaceState for shareability (no navigation)
+ * 5. Infinite scroll loads more pages via Server Actions
  */
 export function HomeClient({
   initialProducts,
@@ -49,40 +55,131 @@ export function HomeClient({
   nearbyPosts,
   isLocationFiltered = false,
   radiusMeters = DEFAULT_RADIUS_METERS,
+  initialHasMore = false,
+  initialNextCursor = null,
 }: HomeClientProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const locale = useLocale();
-  const [isPending, startTransition] = useTransition();
 
   // Get stored location from Zustand (persisted across sessions)
   const userLocation = useUIStore((state) => state.userLocation);
   const setUserLocation = useUIStore((state) => state.setUserLocation);
   const geoDistance = useUIStore((state) => state.geoDistance);
 
-  // Use nearby posts if location filter is active, otherwise use initial products
-  const products =
-    isLocationFiltered && nearbyPosts
-      ? (nearbyPosts as unknown as InitialProductStateType[])
+  // Client-side nearby posts state (populated after geolocation detection)
+  const [clientNearbyPosts, setClientNearbyPosts] = useState<NearbyPost[] | null>(null);
+  const [isClientLocationFiltered, setIsClientLocationFiltered] = useState(false);
+  const [clientRadius, setClientRadius] = useState(radiusMeters);
+  const [isFetchingNearby, setIsFetchingNearby] = useState(false);
+
+  // Pagination state
+  const [extraProducts, setExtraProducts] = useState<InitialProductStateType[]>([]);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [nextCursor, setNextCursor] = useState<number | null>(initialNextCursor);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+
+  // Track location for paginated nearby fetching
+  const locationRef = useRef<{ lat: number; lng: number; radius: number } | null>(null);
+
+  // Use server-rendered nearby posts if available, otherwise use client-fetched ones
+  const effectiveNearbyPosts = isLocationFiltered ? nearbyPosts : clientNearbyPosts;
+  const effectiveIsLocationFiltered = isLocationFiltered || isClientLocationFiltered;
+  const effectiveRadius = isLocationFiltered ? radiusMeters : clientRadius;
+
+  const baseProducts =
+    effectiveIsLocationFiltered && effectiveNearbyPosts
+      ? (effectiveNearbyPosts as unknown as InitialProductStateType[])
       : initialProducts;
+
+  // Combine base products with extra pages loaded via infinite scroll
+  const products = [...baseProducts, ...extraProducts];
+
+  // Fetch nearby posts via Server Action (no server re-render)
+  const fetchNearby = useCallback(
+    async (lat: number, lng: number, radius: number) => {
+      setIsFetchingNearby(true);
+      try {
+        const result = await fetchNearbyListings({ lat, lng, radius });
+        if (result.success) {
+          setClientNearbyPosts(result.data);
+          setIsClientLocationFiltered(true);
+          setClientRadius(radius);
+          setHasMore(result.hasMore);
+          setNextCursor(result.nextCursor);
+          setExtraProducts([]);
+          locationRef.current = { lat, lng, radius };
+        }
+      } finally {
+        setIsFetchingNearby(false);
+      }
+    },
+    []
+  );
+
+  // Load more products (infinite scroll)
+  const handleLoadMore = useCallback(async () => {
+    if (isFetchingMore || !hasMore || nextCursor === null) return;
+
+    setIsFetchingMore(true);
+    try {
+      if (effectiveIsLocationFiltered && locationRef.current) {
+        // Location mode: fetch more nearby posts
+        const { lat, lng, radius } = locationRef.current;
+        const result = await fetchNearbyListings({ lat, lng, radius, cursor: nextCursor });
+        if (result.success) {
+          setExtraProducts((prev) => [...prev, ...(result.data as unknown as InitialProductStateType[])]);
+          setHasMore(result.hasMore);
+          setNextCursor(result.nextCursor);
+        }
+      } else {
+        // Non-location mode: fetch more products
+        const result = await fetchProductsPaginated("food", nextCursor);
+        if (result.success) {
+          setExtraProducts((prev) => [...prev, ...result.data]);
+          setHasMore(result.hasMore);
+          setNextCursor(result.nextCursor);
+        }
+      }
+    } finally {
+      setIsFetchingMore(false);
+    }
+  }, [isFetchingMore, hasMore, nextCursor, effectiveIsLocationFiltered]);
+
+  // Store location ref for server-rendered nearby case
+  useEffect(() => {
+    if (isLocationFiltered) {
+      const lat = searchParams.get("lat");
+      const lng = searchParams.get("lng");
+      const radius = searchParams.get("radius");
+      if (lat && lng) {
+        locationRef.current = {
+          lat: parseFloat(lat),
+          lng: parseFloat(lng),
+          radius: radius ? parseInt(radius, 10) : DEFAULT_RADIUS_METERS,
+        };
+      }
+    }
+  }, [isLocationFiltered, searchParams]);
 
   // Auto-detect location on mount
   useEffect(() => {
-    // Skip if URL already has location params
+    // Skip if URL already has location params (server already rendered nearby data)
     if (searchParams.has("lat") && searchParams.has("lng")) {
       return;
     }
 
-    // If we have stored location, use it immediately
+    // If we have stored location, use it immediately via Server Action
     if (userLocation) {
+      const radius = geoDistance || DEFAULT_RADIUS_METERS;
+
+      // Update URL for shareability without triggering navigation
       const newParams = new URLSearchParams(searchParams.toString());
       newParams.set("lat", userLocation.latitude.toFixed(6));
       newParams.set("lng", userLocation.longitude.toFixed(6));
-      newParams.set("radius", (geoDistance || DEFAULT_RADIUS_METERS).toString());
+      newParams.set("radius", radius.toString());
+      window.history.replaceState({}, "", `?${newParams.toString()}`);
 
-      startTransition(() => {
-        router.replace(`?${newParams.toString()}`);
-      });
+      fetchNearby(userLocation.latitude, userLocation.longitude, radius);
       return;
     }
 
@@ -91,23 +188,23 @@ export function HomeClient({
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
+          const radius = geoDistance || DEFAULT_RADIUS_METERS;
 
           // Store in Zustand for future visits
           setUserLocation({ latitude, longitude });
 
-          // Update URL to trigger server-side fetch
+          // Update URL for shareability without triggering navigation
           const newParams = new URLSearchParams(searchParams.toString());
           newParams.set("lat", latitude.toFixed(6));
           newParams.set("lng", longitude.toFixed(6));
-          newParams.set("radius", (geoDistance || DEFAULT_RADIUS_METERS).toString());
+          newParams.set("radius", radius.toString());
+          window.history.replaceState({}, "", `?${newParams.toString()}`);
 
-          startTransition(() => {
-            router.replace(`?${newParams.toString()}`);
-          });
+          // Fetch nearby posts via Server Action
+          fetchNearby(latitude, longitude, radius);
         },
         (_error) => {
           // Silently fail - user will see all posts instead of nearby
-          // This is fine for users who deny location permission
         },
         {
           enableHighAccuracy: false,
@@ -116,28 +213,21 @@ export function HomeClient({
         }
       );
     }
-  }, [searchParams, userLocation, setUserLocation, geoDistance, router]);
-
-  // Handle load more - triggers server-side fetch
-  const handleLoadMore = () => {
-    startTransition(() => {
-      router.refresh();
-    });
-  };
+  }, [searchParams, userLocation, setUserLocation, geoDistance, fetchNearby]);
 
   return (
     <>
       <NavigateButtons title="Show map" />
       <ProductGrid
         products={products}
-        isLoading={isPending}
+        isLoading={isFetchingNearby}
         onLoadMore={handleLoadMore}
-        isFetchingMore={isPending}
-        hasMore={false}
+        isFetchingMore={isFetchingMore}
+        hasMore={hasMore}
       />
-      {isLocationFiltered && nearbyPosts && nearbyPosts.length === 0 && !isPending && (
+      {effectiveIsLocationFiltered && effectiveNearbyPosts && effectiveNearbyPosts.length === 0 && !isFetchingNearby && (
         <div className="text-center py-8 text-muted-foreground">
-          Nothing shared within {formatDistance(radiusMeters, locale)} yet — be the first to post in
+          Nothing shared within {formatDistance(effectiveRadius, locale)} yet — be the first to post in
           your area!
         </div>
       )}

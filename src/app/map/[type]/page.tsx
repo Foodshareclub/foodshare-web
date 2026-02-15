@@ -1,9 +1,7 @@
 import { Suspense } from "react";
 import { Metadata } from "next";
 import { MapClient } from "./MapClient";
-import { getMapLocations } from "@/lib/data/maps";
 import { getUser } from "@/app/actions/auth";
-import { urlToDbType } from "@/utils/categoryMapping";
 import { categoryMetadata, siteConfig } from "@/lib/metadata";
 
 interface PageProps {
@@ -60,15 +58,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function MapPage({ params }: PageProps) {
   const { type = "food" } = await params;
 
-  // Convert URL slug to database type
-  const dbType = urlToDbType(type);
-
-  // Fetch data in parallel on the server (cached via unstable_cache)
-  const [locations, user] = await Promise.all([getMapLocations(dbType), getUser()]);
+  // Only fetch user data on server - locations are loaded client-side
+  // via ViewportLoader based on the visible map area (viewport-based loading)
+  const user = await getUser();
 
   return (
     <Suspense fallback={<MapPageSkeleton type={type} />}>
-      <MapClient type={type} initialLocations={locations} user={user} />
+      <MapClient type={type} initialLocations={[]} user={user} />
     </Suspense>
   );
 }

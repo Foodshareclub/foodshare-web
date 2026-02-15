@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
-
-const MotionImage = motion(Image);
+import { cn } from "@/lib/utils";
 
 interface ProgressiveImageProps {
   src: string;
@@ -46,20 +44,18 @@ export function ProgressiveImage({
   };
 
   return (
-    <MotionImage
+    <Image
       src={src}
       alt={alt}
       width={!fill && width ? width : undefined}
       height={!fill && height ? height : undefined}
       fill={fill}
       sizes={sizes}
-      className={className}
-      initial={{ opacity: 0, filter: "blur(10px)" }}
-      animate={{
-        opacity: isLoading ? 0.6 : 1,
-        filter: isLoading ? "blur(10px)" : "blur(0px)",
-      }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      className={cn(
+        className,
+        "transition-[opacity,filter] duration-400 ease-out",
+        isLoading ? "opacity-60 blur-[10px]" : "opacity-100 blur-0"
+      )}
       onLoadingComplete={handleLoadingComplete}
       priority={priority}
       quality={quality}

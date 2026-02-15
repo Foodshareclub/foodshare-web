@@ -10,9 +10,10 @@ Sentry.init({
   // Performance Monitoring
   tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
 
-  // Session Replay for debugging user issues
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
+  // Session Replay disabled to reduce client bundle (~50KB savings)
+  // Re-enable if debugging specific user issues
+  replaysSessionSampleRate: 0,
+  replaysOnErrorSampleRate: 0,
 
   // Environment
   environment: process.env.NODE_ENV,
@@ -23,14 +24,8 @@ Sentry.init({
   // Only enable in production
   enabled: process.env.NODE_ENV === "production",
 
-  // Integrations
-  integrations: [
-    Sentry.replayIntegration({
-      maskAllText: true,
-      blockAllMedia: true,
-    }),
-    Sentry.browserTracingIntegration(),
-  ],
+  // Integrations - replay removed to reduce bundle size
+  integrations: [Sentry.browserTracingIntegration()],
 
   // Filter out noisy errors
   ignoreErrors: [

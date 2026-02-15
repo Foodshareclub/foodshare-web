@@ -68,6 +68,11 @@ const ProductPopup = dynamic(
   { ssr: false }
 );
 
+const ViewportLoader = dynamic(
+  () => import("@/components/leaflet/ViewportLoader"),
+  { ssr: false }
+);
+
 interface MapClientProps {
   type: string;
   initialLocations: LocationType[];
@@ -80,8 +85,13 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
   // State to track if component is mounted (for SSR safety)
   const [mounted, setMounted] = useState(false);
 
-  // Locations state - initialized with server data, can be updated client-side
+  // Locations state - initialized with server data, updated by ViewportLoader
   const [locations, setLocations] = useState<LocationType[]>(initialLocations);
+
+  // Viewport-based loading callback
+  const handleLocationsLoaded = useCallback((newLocations: LocationType[]) => {
+    setLocations(newLocations);
+  }, []);
 
   // Auth state from user prop
   const isAuth = !!user;
@@ -250,6 +260,12 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
             <MapPositionTracker category={type} onPositionChange={savePosition} />
 
             <SearchMenu />
+
+            {/* Viewport-based location loading - fetches markers as user pans/zooms */}
+            <ViewportLoader
+              productType={type}
+              onLocationsLoaded={handleLocationsLoaded}
+            />
 
             {/* Beautiful CartoDB Voyager tiles with GPU acceleration */}
             <TileLayer

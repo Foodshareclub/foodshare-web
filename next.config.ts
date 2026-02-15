@@ -39,8 +39,8 @@ const withBundleAnalyzer = (config: NextConfig) => {
 };
 
 const nextConfig: NextConfig = {
-  // Disable React Compiler temporarily (causes build issues with Next.js 16)
-  // reactCompiler: true,
+  // React Compiler - automatic memoization for +15-20% render performance
+  reactCompiler: true,
 
   // Skip TypeScript checks during build (already checked in CI)
   typescript: {
@@ -54,40 +54,40 @@ const nextConfig: NextConfig = {
   htmlLimitedBots:
     /Googlebot|Bingbot|Yandex|YandexBot|DuckDuckBot|Slurp|Baiduspider|facebookexternalhit|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Applebot|PinterestBot|Discordbot|GPTBot|ChatGPT-User|PerplexityBot|Google-Extended|anthropic-ai|CCBot/,
 
-  // Disabled due to React version compatibility with cacheComponents
+  // cacheComponents disabled — requires further React 19 compatibility testing
   // cacheComponents: true,
 
-  // Custom cache life profiles - disabled until cacheComponents is stable
-  // cacheLife: {
-  //   // Short-lived (real-time data)
-  //   short: { stale: 60, revalidate: 30, expire: 300 },
-  //   // Products cache - 60s revalidation
-  //   products: { stale: 300, revalidate: 60, expire: 3600 },
-  //   // Product detail - 120s revalidation
-  //   "product-detail": { stale: 300, revalidate: 120, expire: 3600 },
-  //   // Product locations - 300s revalidation
-  //   "product-locations": { stale: 300, revalidate: 300, expire: 3600 },
-  //   // Profiles - 300s revalidation
-  //   profiles: { stale: 300, revalidate: 300, expire: 3600 },
-  //   // Profile stats - 600s revalidation
-  //   "profile-stats": { stale: 300, revalidate: 600, expire: 7200 },
-  //   // Challenges - 300s revalidation
-  //   challenges: { stale: 300, revalidate: 300, expire: 3600 },
-  //   // Challenge leaderboard - 120s revalidation
-  //   "challenge-leaderboard": { stale: 300, revalidate: 120, expire: 3600 },
-  //   // Forum - 120s revalidation
-  //   forum: { stale: 300, revalidate: 120, expire: 3600 },
-  //   // Chat - 30s revalidation (real-time)
-  //   chat: { stale: 30, revalidate: 30, expire: 300 },
-  //   // Admin stats - 300s revalidation
-  //   "admin-stats": { stale: 300, revalidate: 300, expire: 3600 },
-  //   // Email system - 60s revalidation
-  //   email: { stale: 60, revalidate: 60, expire: 600 },
-  //   // Post activity - 60s revalidation
-  //   "post-activity": { stale: 60, revalidate: 60, expire: 600 },
-  //   // Long-lived (rarely changing)
-  //   long: { stale: 3600, revalidate: 3600, expire: 86400 },
-  // },
+  // Custom cache life profiles for "use cache" / cacheLife() in data layer
+  cacheLife: {
+    // Short-lived (real-time data)
+    short: { stale: 60, revalidate: 30, expire: 300 },
+    // Products cache - 60s revalidation
+    products: { stale: 300, revalidate: 60, expire: 3600 },
+    // Product detail - 120s revalidation
+    "product-detail": { stale: 300, revalidate: 120, expire: 3600 },
+    // Product locations - 300s revalidation
+    "product-locations": { stale: 300, revalidate: 300, expire: 3600 },
+    // Profiles - 300s revalidation
+    profiles: { stale: 300, revalidate: 300, expire: 3600 },
+    // Profile stats - 600s revalidation
+    "profile-stats": { stale: 300, revalidate: 600, expire: 7200 },
+    // Challenges - 300s revalidation
+    challenges: { stale: 300, revalidate: 300, expire: 3600 },
+    // Challenge leaderboard - 120s revalidation
+    "challenge-leaderboard": { stale: 300, revalidate: 120, expire: 3600 },
+    // Forum - 120s revalidation
+    forum: { stale: 300, revalidate: 120, expire: 3600 },
+    // Chat - 30s revalidation (real-time)
+    chat: { stale: 30, revalidate: 30, expire: 300 },
+    // Admin stats - 300s revalidation
+    "admin-stats": { stale: 300, revalidate: 300, expire: 3600 },
+    // Email system - 60s revalidation
+    email: { stale: 60, revalidate: 60, expire: 600 },
+    // Post activity - 60s revalidation
+    "post-activity": { stale: 60, revalidate: 60, expire: 600 },
+    // Long-lived (rarely changing)
+    long: { stale: 3600, revalidate: 3600, expire: 86400 },
+  },
 
   // Set Turbopack root to silence monorepo lockfile warning
   turbopack: {
@@ -97,18 +97,10 @@ const nextConfig: NextConfig = {
   experimental: {
     // Optimize package imports for better tree-shaking
     optimizePackageImports: [
-      "@radix-ui/react-accordion",
-      "@radix-ui/react-alert-dialog",
-      "@radix-ui/react-aspect-ratio",
       "@radix-ui/react-avatar",
       "@radix-ui/react-checkbox",
-      "@radix-ui/react-collapsible",
-      "@radix-ui/react-context-menu",
       "@radix-ui/react-dialog",
       "@radix-ui/react-dropdown-menu",
-      "@radix-ui/react-hover-card",
-      "@radix-ui/react-menubar",
-      "@radix-ui/react-navigation-menu",
       "@radix-ui/react-popover",
       "@radix-ui/react-progress",
       "@radix-ui/react-radio-group",
@@ -119,13 +111,11 @@ const nextConfig: NextConfig = {
       "@radix-ui/react-slot",
       "@radix-ui/react-switch",
       "@radix-ui/react-tabs",
-      "@radix-ui/react-toast",
-      "@radix-ui/react-toggle",
-      "@radix-ui/react-toggle-group",
       "@radix-ui/react-tooltip",
       "react-icons",
       "framer-motion",
       "leaflet",
+      "lucide-react",
     ],
 
     // Enable Web Vitals attribution for debugging

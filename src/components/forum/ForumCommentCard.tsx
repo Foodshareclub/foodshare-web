@@ -231,11 +231,13 @@ export function ForumCommentCard({
 
             {/* Comment Content */}
             <div className="text-foreground/80 leading-relaxed mb-4 pl-[52px]">
-              {comment.rich_content ? (
+              {comment.rich_content &&
+              typeof comment.rich_content === "object" &&
+              Object.keys(comment.rich_content as Record<string, unknown>).length > 0 ? (
                 <RichTextViewer content={comment.rich_content} />
-              ) : (
-                <p className="whitespace-pre-wrap">{comment.comment}</p>
-              )}
+              ) : comment.comment ? (
+                <RichTextViewer content={comment.comment} />
+              ) : null}
             </div>
 
             {/* Footer: Actions */}
