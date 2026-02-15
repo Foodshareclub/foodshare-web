@@ -17,7 +17,7 @@ env:
 jobs:
   setup:
     name: Setup
-    runs-on: [self-hosted, ubuntu-latest]
+    runs-on: self-hosted
     timeout-minutes: 10
     outputs:
       cache-key: ${{ steps.cache-key.outputs.key }}
@@ -53,7 +53,7 @@ jobs:
 
   checks:
     name: ${{ matrix.check }}
-    runs-on: [self-hosted, ubuntu-latest]
+    runs-on: self-hosted
     needs: setup
     timeout-minutes: 20
     strategy:
@@ -98,7 +98,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: [self-hosted, ubuntu-latest]
+    runs-on: self-hosted
     needs: [setup, checks]
     timeout-minutes: 25
     steps:
@@ -220,7 +220,7 @@ jobs:
 
   status:
     name: CI Status
-    runs-on: [self-hosted, ubuntu-latest]
+    runs-on: self-hosted
     needs: [checks, build]
     if: always()
     steps:
