@@ -17,7 +17,7 @@ env:
 jobs:
   ci:
     name: CI
-    runs-on: [self-hosted, Linux]
+    runs-on: [self-hosted]
     timeout-minutes: 20
     outputs:
       cache-key: ${{ steps.cache-key.outputs.key }}
@@ -79,7 +79,7 @@ jobs:
 
   deploy:
     name: Deploy
-    runs-on: [self-hosted, Linux]
+    runs-on: [self-hosted]
     needs: ci
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 15
