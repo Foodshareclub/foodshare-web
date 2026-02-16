@@ -13,114 +13,52 @@ concurrency:
 
 env:
   BUN_VERSION: "1.3.9"
-  PREFER_SELF_HOSTED: true
 
 jobs:
-  setup:
-    name: Setup
+  ci:
+    name: CI
     runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 10
+    timeout-minutes: 20
     outputs:
       cache-key: ${{ steps.cache-key.outputs.key }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Generate cache key
-        id: cache-key
-        run: echo "key=${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}" >> $GITHUB_OUTPUT
-
-      - name: Check cache
-        id: cache-check
-        uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: ${{ steps.cache-key.outputs.key }}
-          lookup-only: true
-
-      - if: steps.cache-check.outputs.cache-hit != 'true'
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - if: steps.cache-check.outputs.cache-hit != 'true'
-        name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - if: steps.cache-check.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: node_modules
-          key: ${{ steps.cache-key.outputs.key }}
-
-  checks:
-    name: ${{ matrix.check }}
-    runs-on: [self-hosted, Linux, X64]
-    needs: setup
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      matrix:
-        check: [lint, type-check, test]
-    steps:
-      - uses: actions/checkout@v4
-
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
+      - name: Generate cache key
+        id: cache-key
+        run: echo "key=${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}" >> $GITHUB_OUTPUT
+
       - name: Restore cache
-        id: cache
         uses: actions/cache/restore@v4
         with:
           path: |
             node_modules
             .next/cache
-          key: ${{ needs.setup.outputs.cache-key }}
+          key: ${{ steps.cache-key.outputs.key }}
 
-      - if: steps.cache.outputs.cache-hit != 'true'
-        name: Install dependencies
+      - name: Install dependencies
+        if: steps.cache.outputs.cache-hit != 'true'
         run: bun install --frozen-lockfile
 
-      - name: Run ${{ matrix.check }}
-        run: |
-          case "${{ matrix.check }}" in
-            type-check) ./node_modules/.bin/tsc --noEmit ;;
-            test) bun run test:ci ;;
-            *) bun run ${{ matrix.check }} ;;
-          esac
+      - name: Lint
+        run: bun run lint
 
-      - if: matrix.check == 'test'
+      - name: Type check
+        run: ./node_modules/.bin/tsc --noEmit
+
+      - name: Test
+        run: bun run test:ci
+
+      - name: Upload coverage
         uses: codecov/codecov-action@v5
         continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
-          fail_ci_if_error: false
-
-  build:
-    name: Build
-    runs-on: [self-hosted, Linux, X64]
-    needs: [setup, checks]
-    timeout-minutes: 25
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Restore cache
-        id: cache
-        uses: actions/cache/restore@v4
-        with:
-          path: |
-            node_modules
-            .next/cache
-          key: ${{ needs.setup.outputs.cache-key }}
-
-      - if: steps.cache.outputs.cache-hit != 'true'
-        name: Install dependencies
-        run: bun install --frozen-lockfile
 
       - name: Build
         run: bun run build
@@ -129,102 +67,64 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
+      - name: Save cache
+        if: steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            node_modules
+            .next/cache
+          key: ${{ steps.cache-key.outputs.key }}
+
+
   deploy:
     name: Deploy
     runs-on: [self-hosted, Linux, X64]
-    needs: build
+    needs: ci
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    timeout-minutes: 20
+    timeout-minutes: 15
     environment:
       name: production
       url: https://foodshare.club
     steps:
-      - name: Setup SSH
+      - uses: actions/checkout@v4
+
+      - name: Deploy
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          SSH_HOST: ${{ secrets.VPS_HOST }}
+          SSH_USER: ${{ secrets.VPS_USER }}
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Deploy with rollback
-        env:
-          SSH_OPTS: "-T -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i ~/.ssh/deploy_key"
-          SSH_TARGET: "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
-        run: |
-          ssh $SSH_OPTS "$SSH_TARGET" bash -s <<'EOF'
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" << 'EOF'
           set -e
           cd /home/organic/dev/foodshare-web
-
-          # Cleanup old backups (keep last 3 days)
-          find /tmp -name "foodshare-backup-*" -type d -mtime +3 -exec rm -rf {} + 2>/dev/null || true
-
-          # Check disk space (require at least 2GB free)
-          AVAILABLE_KB=$(df /tmp | tail -1 | awk '{print $4}')
-          if [ "$AVAILABLE_KB" -lt 2097152 ]; then
-            echo "Low disk space, cleaning old backups..."
-            find /tmp -name "foodshare-backup-*" -type d -mtime +1 -exec rm -rf {} + 2>/dev/null || true
-          fi
-
+          
           BACKUP_DIR="/tmp/foodshare-backup-$(date +%s)"
           mkdir -p "$BACKUP_DIR"
           docker commit foodshare-web "$BACKUP_DIR/image" 2>/dev/null || true
-
+          
           git pull origin main
-
-          docker compose --env-file .env.production build --no-cache
+          docker compose --env-file .env.production build
           docker compose --env-file .env.production up -d --force-recreate
-
-          echo "Waiting for service..."
-          DEPLOY_OK=false
-          for i in $(seq 1 60); do
+          
+          for i in {1..30}; do
             if curl -sf http://localhost/api/health > /dev/null; then
-              DEPLOY_OK=true
-              break
+              echo "Deploy successful"
+              rm -rf "$BACKUP_DIR"
+              exit 0
             fi
             sleep 2
           done
-
-          if [ "$DEPLOY_OK" = true ]; then
-            echo "Deploy successful"
-            rm -rf "$BACKUP_DIR"
-          else
-            echo "Deploy failed, rolling back..."
-            docker stop foodshare-web || true
-            docker rm foodshare-web || true
-            docker run -d --name foodshare-web "$BACKUP_DIR/image" || true
-            docker logs foodshare-web --tail 100
-            exit 1
-          fi
+          
+          echo "Deploy failed, rolling back"
+          docker stop foodshare-web && docker rm foodshare-web
+          docker run -d --name foodshare-web "$BACKUP_DIR/image"
+          exit 1
           EOF
 
-      - name: Smoke tests
-        if: success()
-        env:
-          SSH_OPTS: "-T -o StrictHostKeyChecking=no -o ConnectTimeout=10 -i ~/.ssh/deploy_key"
-          SSH_TARGET: "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}"
-        run: |
-          ssh $SSH_OPTS "$SSH_TARGET" bash -s <<'EOF'
-          curl -sf http://localhost/ > /dev/null || exit 1
-          curl -sf http://localhost/api/health > /dev/null || exit 1
-          curl -sf http://localhost/food > /dev/null || exit 1
-          echo "Smoke tests passed"
-          EOF
-
-      - name: Cleanup SSH
-        if: always()
-        run: rm -f ~/.ssh/deploy_key
-
-      - name: Notify on failure
-        if: failure()
-        run: |
-          echo "::error::Deployment failed - check logs"
-
-  status:
-    name: CI Status
-    runs-on: [self-hosted, Linux, X64]
-    needs: [checks, build]
-    if: always()
-    steps:
-      - run: |
-          [[ "${{ needs.checks.result }}" == "success" ]] || exit 1
-          [[ "${{ needs.build.result }}" == "success" ]] || exit 1
+          rm -f ~/.ssh/deploy_key
