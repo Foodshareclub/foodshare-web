@@ -163,7 +163,8 @@ jobs:
           mkdir -p "$BACKUP_DIR"
           docker commit foodshare-web "$BACKUP_DIR/image" 2>/dev/null || true
           
-          git pull origin main
+          git fetch origin main
+          git reset --hard origin/main
           docker compose --env-file .env.production build
           docker compose --env-file .env.production up -d --force-recreate
           
