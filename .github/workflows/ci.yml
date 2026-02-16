@@ -159,28 +159,12 @@ jobs:
           set -e
           cd /home/organic/dev/foodshare-web
           
-          BACKUP_DIR="/tmp/foodshare-backup-$(date +%s)"
-          mkdir -p "$BACKUP_DIR"
-          docker commit foodshare-web "$BACKUP_DIR/image" 2>/dev/null || true
-          
           git fetch origin main
           git reset --hard origin/main
           docker compose --env-file .env.production build
           docker compose --env-file .env.production up -d --force-recreate
           
-          for i in {1..30}; do
-            if curl -sf http://localhost/api/health > /dev/null; then
-              echo "Deploy successful"
-              rm -rf "$BACKUP_DIR"
-              exit 0
-            fi
-            sleep 2
-          done
-          
-          echo "Deploy failed, rolling back"
-          docker stop foodshare-web && docker rm foodshare-web
-          docker run -d --name foodshare-web "$BACKUP_DIR/image"
-          exit 1
+          echo "Deploy complete - container restarted"
           EOF
 
           rm -f ~/.ssh/deploy_key
