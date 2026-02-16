@@ -15,18 +15,20 @@ env:
   BUN_VERSION: "1.3.9"
 
 jobs:
-  cancel-previous:
-    name: Cancel Previous Runs
+  cleanup:
+    name: Cancel Stale Workflows
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 2
     steps:
-      - uses: styfle/cancel-workflow-action@0.12.1
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.12.1
         with:
           access_token: ${{ github.token }}
           all_but_latest: true
 
   setup:
     name: Setup
+    needs: cleanup
     runs-on: [self-hosted]
     timeout-minutes: 10
     outputs:
