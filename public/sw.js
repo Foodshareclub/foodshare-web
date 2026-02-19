@@ -2,8 +2,8 @@
 // Provides offline functionality and caching
 // Enterprise-grade: Includes API response caching for map viewport queries
 
-const STATIC_CACHE = "foodshare-static-v5";
-const DYNAMIC_CACHE = "foodshare-dynamic-v5";
+const STATIC_CACHE = "foodshare-static";
+const DYNAMIC_CACHE = "foodshare-dynamic";
 const API_CACHE = "foodshare-api-v1";
 const API_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes for API responses
 

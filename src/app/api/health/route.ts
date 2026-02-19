@@ -265,8 +265,7 @@ function createResponse(
 
 export async function GET(): Promise<NextResponse<HealthStatus>> {
   try {
-    // Prefer internal Kong URL (avoids Cloudflare hairpin), fall back to public URL
-    const supabaseUrl = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseKey) {

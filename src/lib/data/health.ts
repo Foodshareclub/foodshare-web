@@ -16,8 +16,7 @@
  */
 export async function isDatabaseHealthy(timeoutMs = 30000, maxRetries = 2): Promise<boolean> {
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  // Prefer internal Kong URL (avoids Cloudflare hairpin), fall back to public URL
-  const supabaseUrl = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
   if (!supabaseUrl || !supabaseKey) {
     return false;
