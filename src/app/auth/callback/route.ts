@@ -20,6 +20,7 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get("code");
   const next = requestUrl.searchParams.get("next") ?? "/";
   const type = requestUrl.searchParams.get("type");
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin;
 
   if (code) {
     const supabase = await createClient();
@@ -35,12 +36,12 @@ export async function GET(request: Request) {
 
       // Handle password recovery redirect
       if (type === "recovery") {
-        const redirectUrl = new URL("/auth/reset-password", requestUrl.origin);
+        const redirectUrl = new URL("/auth/reset-password", origin);
         return NextResponse.redirect(redirectUrl);
       }
 
       // Redirect to the intended destination
-      const redirectUrl = new URL(next, requestUrl.origin);
+      const redirectUrl = new URL(next, origin);
       return NextResponse.redirect(redirectUrl);
     }
 
@@ -51,6 +52,6 @@ export async function GET(request: Request) {
   }
 
   // Return the user to an error page with instructions
-  const errorUrl = new URL("/auth/login?error=auth_error", requestUrl.origin);
+  const errorUrl = new URL("/auth/login?error=auth_error", origin);
   return NextResponse.redirect(errorUrl);
 }
