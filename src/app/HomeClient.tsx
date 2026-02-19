@@ -51,7 +51,7 @@ const DEFAULT_RADIUS_METERS = 5000;
  */
 export function HomeClient({
   initialProducts,
-  productType: _productType = "food",
+  productType = "food",
   nearbyPosts,
   isLocationFiltered = false,
   radiusMeters = DEFAULT_RADIUS_METERS,
@@ -133,7 +133,7 @@ export function HomeClient({
         }
       } else {
         // Non-location mode: fetch more products
-        const result = await fetchProductsPaginated("food", nextCursor);
+        const result = await fetchProductsPaginated(productType, nextCursor);
         if (result.success) {
           setExtraProducts((prev) => [...prev, ...result.data]);
           setHasMore(result.hasMore);
@@ -143,7 +143,7 @@ export function HomeClient({
     } finally {
       setIsFetchingMore(false);
     }
-  }, [isFetchingMore, hasMore, nextCursor, effectiveIsLocationFiltered]);
+  }, [isFetchingMore, hasMore, nextCursor, effectiveIsLocationFiltered, productType]);
 
   // Store location ref for server-rendered nearby case
   useEffect(() => {

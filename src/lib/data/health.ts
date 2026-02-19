@@ -38,8 +38,13 @@ export async function isDatabaseHealthy(timeoutMs = 30000, maxRetries = 2): Prom
       });
 
       clearTimeout(timeoutId);
-      
+
       if (response.ok || response.status < 500) {
+        // Verify response is JSON (not HTML from a misconfigured proxy)
+        const contentType = response.headers.get("content-type") || "";
+        if (contentType.includes("text/html")) {
+          return false;
+        }
         return true;
       }
 

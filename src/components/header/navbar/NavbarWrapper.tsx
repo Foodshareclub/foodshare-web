@@ -67,8 +67,9 @@ export function NavbarWrapper({
   // Use client admin status (from useAuth) with server fallback
   const isAdmin = clientIsAdmin || initialIsAdmin;
 
-  const handleRouteChange = (route: string) => {
-    router.push(`/${route}`);
+  const handleRouteChange = (_route: string) => {
+    // Navigation is handled directly by Navbar.handleCategoryChange
+    // This callback is kept for API compatibility
   };
 
   const handleProductTypeChange = (type: string) => {

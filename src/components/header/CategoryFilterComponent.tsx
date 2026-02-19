@@ -14,6 +14,16 @@ type CategoryFilterComponentProps = {
   isCompact?: boolean;
 };
 
+/** Map plural category IDs to singular post_type values used by the database */
+const CATEGORY_TO_POST_TYPE: Record<string, string> = {
+  things: "thing",
+  foodbanks: "foodbank",
+  fridges: "fridge",
+  organisations: "business",
+  volunteers: "volunteer",
+  challenges: "challenge",
+};
+
 // React Compiler handles memoization automatically
 export default function CategoryFilterComponent({
   getRoute,
@@ -29,10 +39,21 @@ export default function CategoryFilterComponent({
   // Handle category change
   const handleCategoryChange = (categoryId: string) => {
     const routeName = categoryId.toLowerCase();
-    router.push(`/${routeName}`);
+
+    // Map to singular post_type for the query param
+    const postType = CATEGORY_TO_POST_TYPE[routeName] || routeName;
+
+    // Forum has its own page
+    if (routeName === "forum") {
+      router.push("/forum");
+    } else if (postType === "food") {
+      router.push("/food");
+    } else {
+      router.push(`/food?type=${postType}`);
+    }
+
     getRoute(routeName);
     setPageType("productComponent");
-    setIsSearchModalOpen(true);
   };
 
   // Handle search

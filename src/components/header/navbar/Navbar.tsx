@@ -65,16 +65,32 @@ function Navbar({
 
   const handleCategoryChange = (categoryId: string) => {
     const routeName = categoryId.toLowerCase();
-    onRouteChange(routeName);
     onProductTypeChange(categoryId);
-    // Forum is a special case - it's not a product type filter
+
+    // Forum has its own route
     if (routeName === "forum") {
       router.push("/forum");
       return;
     }
-    // Use /[category] route for all category pages
-    const path = mapMode ? `/map/${routeName}` : `/${routeName}`;
-    router.push(path);
+
+    // Map plural category IDs to singular post_type values for the query param
+    const CATEGORY_TO_POST_TYPE: Record<string, string> = {
+      things: "thing",
+      foodbanks: "foodbank",
+      fridges: "fridge",
+      organisations: "business",
+      volunteers: "volunteer",
+      challenges: "challenge",
+    };
+    const postType = CATEGORY_TO_POST_TYPE[routeName] || routeName;
+
+    if (mapMode) {
+      router.push(`/map/${routeName}`);
+    } else if (postType === "food") {
+      router.push("/food");
+    } else {
+      router.push(`/food?type=${postType}`);
+    }
   };
 
   const handleSearchClick = () => {
