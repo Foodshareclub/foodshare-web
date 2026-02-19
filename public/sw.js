@@ -2,13 +2,13 @@
 // Provides offline functionality and caching
 // Enterprise-grade: Includes API response caching for map viewport queries
 
-const STATIC_CACHE = "foodshare-static-v4";
-const DYNAMIC_CACHE = "foodshare-dynamic-v4";
+const STATIC_CACHE = "foodshare-static-v5";
+const DYNAMIC_CACHE = "foodshare-dynamic-v5";
 const API_CACHE = "foodshare-api-v1";
 const API_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes for API responses
 
 // Assets to cache immediately on install
-const STATIC_ASSETS = ["/", "/index.html", "/manifest.json", "/logo192.png", "/logo512.png"];
+const STATIC_ASSETS = ["/manifest.json", "/logo192.png", "/logo512.png"];
 
 // Install event - cache static assets
 self.addEventListener("install", (event) => {
@@ -59,6 +59,17 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Never cache health check or API routes — always go to network
+  if (request.url.includes("/api/")) {
+    return;
+  }
+
+  // Never cache navigation requests (HTML pages) — always go to network
+  // This prevents caching redirects (e.g., maintenance redirects)
+  if (request.mode === "navigate") {
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -73,7 +84,7 @@ self.addEventListener("fetch", (event) => {
           // Clone response as it can only be consumed once
           const responseClone = response.clone();
 
-          // Cache successful responses
+          // Cache successful responses (only static assets like JS/CSS/images)
           if (response.status === 200) {
             caches.open(DYNAMIC_CACHE).then((cache) => {
               cache.put(request, responseClone);
