@@ -94,4 +94,4 @@ console.log("💰 This will save ~50,000 function invocations per month!\n");
 console.log("Next steps:");
 console.log("1. Update metadata in layout.tsx files to use /og/*.svg");
 console.log("2. Delete all opengraph-image.tsx files");
-console.log("3. Deploy and monitor Vercel usage");
+console.log("3. Deploy and monitor usage");

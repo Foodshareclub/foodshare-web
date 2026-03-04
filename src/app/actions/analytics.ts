@@ -13,14 +13,14 @@ import type { ServerActionResult } from "@/lib/errors";
 
 /**
  * Track an analytics event.
- * Currently a no-op since we don't have MotherDuck in Vercel.
+ * Currently a no-op since MotherDuck doesn't work in Docker.
  * In production, you'd send this to a dedicated analytics service.
  */
 export async function trackEvent(
   _eventName: string,
   _properties: Record<string, unknown> = {}
 ): Promise<void> {
-  // No-op - MotherDuck doesn't work in Vercel
+  // No-op - MotherDuck doesn't work in Docker
   // Consider using a service like PostHog, Mixpanel, or Amplitude
 }
 

@@ -1,5 +1,5 @@
 /**
- * Vercel Edge Config Client
+ * Edge Config Client
  * Used for feature flags and ultra-low latency configuration
  */
 import { get, getAll, has } from '@vercel/edge-config';

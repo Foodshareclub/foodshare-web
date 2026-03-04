@@ -7,7 +7,7 @@
 export { getRedis, cache, rateLimiter, lock, REDIS_KEYS, CACHE_TTL } from "./redis";
 export type { RateLimitResult, CacheTTL } from "./redis";
 
-// Vercel Blob (File Storage)
+// Blob (File Storage)
 export {
   uploadBlob,
   deleteBlob,
@@ -93,7 +93,7 @@ export type {
   ProductSearchDocument,
 } from "./search";
 
-// Vercel Edge Config (Feature Flags)
+// Edge Config (Feature Flags)
 export {
   getConfig,
   getAllConfig,

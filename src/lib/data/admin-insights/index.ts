@@ -1,7 +1,7 @@
 /**
  * Admin AI Insights Data Layer
  * Server-side only - contains API keys
- * Supports both direct xAI API and Vercel AI Gateway
+ * Supports both direct xAI API and AI Gateway
  */
 
 // Export all types

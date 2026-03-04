@@ -119,7 +119,7 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
       return serverActionError("Unauthorized", "UNAUTHORIZED");
     }
 
-    // Query Supabase directly (MotherDuck doesn't work in Vercel)
+    // Query Supabase directly (MotherDuck doesn't work in Docker)
     // Note: profiles uses created_time, last_seen_at; posts uses is_active, is_arranged
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);

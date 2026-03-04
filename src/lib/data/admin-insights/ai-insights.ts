@@ -92,12 +92,12 @@ ${
 
   const model = selectModel(userQuery);
 
-  // Use Vercel AI SDK with xAI provider
-  // AI Gateway keys (vck_) use Vercel's AI Gateway proxy
+  // Use AI SDK with xAI provider
+  // AI Gateway keys (vck_) use AI Gateway proxy
   const isGatewayKey = apiKey.startsWith("vck_");
   const xai = createXai({
     apiKey,
-    // Vercel AI Gateway endpoint for xAI/Grok
+    // AI Gateway endpoint for xAI/Grok
     baseURL: isGatewayKey ? "https://ai-gateway.vercel.sh/xai/v1" : undefined,
   });
 

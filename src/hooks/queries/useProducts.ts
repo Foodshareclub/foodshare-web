@@ -4,7 +4,7 @@
  * Products React Query Hooks
  *
  * Provides infinite scroll and pagination hooks for products.
- * Now uses unified API client for Supabase/Vercel migration.
+ * Now uses unified API client for Supabase.
  */
 
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";

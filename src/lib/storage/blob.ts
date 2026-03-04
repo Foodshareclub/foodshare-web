@@ -1,5 +1,5 @@
 /**
- * Vercel Blob Storage Client
+ * Blob Storage Client
  * Used for file uploads (images, documents)
  */
 import { put, del, list, head, copy } from "@vercel/blob";
@@ -67,7 +67,7 @@ export function validateFile(
 }
 
 /**
- * Upload a file to Vercel Blob storage
+ * Upload a file to Blob storage
  */
 export async function uploadBlob(
   pathname: string,

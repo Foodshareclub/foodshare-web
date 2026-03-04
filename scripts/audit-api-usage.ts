@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 /**
- * Audit Vercel API Routes Usage
+ * Audit API Routes Usage
  *
  * Scans codebase to find which API routes are actually called
  */
@@ -67,7 +67,7 @@ async function findAPIUsage(dir: string, apiRoute: string): Promise<string[]> {
 
 // Main audit
 async function audit() {
-  console.log("🔍 Auditing Vercel API Routes Usage\n");
+  console.log("🔍 Auditing API Routes Usage\n");
 
   const routes = await findAPIRoutes(API_ROUTES_DIR);
   console.log(`Found ${routes.length} API routes\n`);

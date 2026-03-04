@@ -91,7 +91,7 @@ class ProductionErrorReporter {
       deployment: {
         env: process.env.NODE_ENV,
         version: "3.0.0",
-        commit: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
+        commit: process.env.NEXT_PUBLIC_GIT_COMMIT_SHA,
       },
       breadcrumbs: [...this.breadcrumbs],
     };

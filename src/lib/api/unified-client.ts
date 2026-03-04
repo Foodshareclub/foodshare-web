@@ -1,5 +1,5 @@
 /**
- * Migration Layer: Vercel → Supabase
+ * Unified API Client
  * Gradual rollout with automatic fallback
  */
 
@@ -63,7 +63,7 @@ async function listProducts(params?: {
     }
   }
 
-  // Fallback to Vercel
+  // Fallback to local API
   const url = new URL("/api/products", window.location.origin);
   if (params?.postType) url.searchParams.set("post_type", params.postType);
   if (params?.cursor) url.searchParams.set("cursor", String(params.cursor));
@@ -71,11 +71,11 @@ async function listProducts(params?: {
   if (params?.userId) url.searchParams.set("user_id", params.userId);
 
   const res = await fetch(url.toString());
-  if (!res.ok) throw new Error(`Vercel: ${res.status}`);
+  if (!res.ok) throw new Error(`API: ${res.status}`);
   const result = await res.json();
 
   if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_API_MONITORING === "true") {
-    console.log(`[API] products via vercel: ${Date.now() - start}ms ✓`);
+    console.log(`[API] products via local: ${Date.now() - start}ms ✓`);
   }
 
   return result;

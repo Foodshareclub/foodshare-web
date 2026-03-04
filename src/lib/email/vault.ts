@@ -70,7 +70,7 @@ function createServiceRoleClient() {
     serviceRoleKeyLength: serviceRoleKey?.length ?? 0,
     serviceRoleKeyPrefix: serviceRoleKey?.slice(0, 20) ?? "NOT_SET",
     nodeEnv: process.env.NODE_ENV,
-    vercelEnv: process.env.VERCEL_ENV ?? "not-vercel",
+    env: process.env.NODE_ENV ?? "production",
   });
 
   if (!supabaseUrl) {
@@ -81,7 +81,7 @@ function createServiceRoleClient() {
   if (!serviceRoleKey) {
     console.error("[Vault] ❌ Missing SUPABASE_SERVICE_ROLE_KEY - vault access disabled");
     console.error(
-      "[Vault] 💡 Add SUPABASE_SERVICE_ROLE_KEY to Vercel env vars, or add RESEND_API_KEY directly"
+      "[Vault] 💡 Add SUPABASE_SERVICE_ROLE_KEY to your env vars, or add RESEND_API_KEY directly"
     );
     return null;
   }
