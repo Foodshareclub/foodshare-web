@@ -131,9 +131,11 @@ jobs:
           SKIP_ENV_VALIDATION: "true"
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
   deploy:
     name: Deploy
+    # Ensure VPS_HOST is set to web.foodshare.club in GitHub Secrets
     runs-on: [self-hosted]
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -155,14 +157,20 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" << 'EOF'
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" << EOF
           set -e
           cd /home/organic/dev/foodshare-web
           
           git fetch origin main
           git reset --hard origin/main
-          docker compose --env-file .env.production build
-          docker compose --env-file .env.production up -d --force-recreate
+
+          # Pass GitHub Secrets as build arguments
+          export NEXT_PUBLIC_SUPABASE_URL="${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}"
+          export NEXT_PUBLIC_SUPABASE_ANON_KEY="${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}"
+          export SUPABASE_SERVICE_ROLE_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+
+          docker compose build --no-cache
+          docker compose up -d --force-recreate
           
           echo "Deploy complete - container restarted"
           EOF

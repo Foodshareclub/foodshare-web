@@ -39,8 +39,13 @@ ENV SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
 RUN bun run build
 
 # ---- Stage 3: Production runner ----
-FROM node:20-slim AS runner
+FROM node:24-slim AS runner
 WORKDIR /app
+
+# Install curl for healthchecks and dumb-init for proper process signal handling
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends dumb-init curl && \
+    rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -67,4 +72,6 @@ USER nextjs
 
 EXPOSE 3000
 
+# Use dumb-init to handle PID 1 signals gracefully
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["node", "--max-http-header-size=32768", "server.js"]
