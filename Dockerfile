@@ -42,9 +42,9 @@ RUN bun run build
 FROM node:24-slim AS runner
 WORKDIR /app
 
-# Install curl for healthchecks and dumb-init for proper process signal handling
+# Install curl for healthchecks, dumb-init for proper process signal handling, and ca-certificates for HTTPS
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends dumb-init curl && \
+    apt-get install -y --no-install-recommends dumb-init curl ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
