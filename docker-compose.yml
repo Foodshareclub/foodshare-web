@@ -17,6 +17,8 @@ services:
       - "3000"
     env_file:
       - .env.production
+    environment:
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
     restart: unless-stopped
     read_only: true
     tmpfs:
