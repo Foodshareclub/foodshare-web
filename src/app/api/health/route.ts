@@ -221,7 +221,8 @@ async function checkDatabaseConnectivity(
         await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
         continue;
       }
-    } catch {
+    } catch (error) {
+      console.error(`Database connectivity attempt ${attempt + 1} failed:`, error);
       // Timeout or network error - retry if we have attempts left
       if (attempt < maxRetries) {
         await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
