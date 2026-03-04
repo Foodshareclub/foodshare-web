@@ -22,7 +22,6 @@ services:
     tmpfs:
       - /tmp
       - /app/.next/cache
-    pids_limit: 100
     ulimits:
       nofile:
         soft: 65536
@@ -41,6 +40,7 @@ services:
       resources:
         limits:
           memory: 1G
+          pids: 100
         reservations:
           memory: 256M
     logging:
@@ -71,7 +71,6 @@ services:
       - /var/tmp
       - /var/run
       - /var/log
-    pids_limit: 100
     ulimits:
       nofile:
         soft: 65536
@@ -92,6 +91,7 @@ services:
       resources:
         limits:
           memory: 256M
+          pids: 100
         reservations:
           memory: 64M
     logging:
