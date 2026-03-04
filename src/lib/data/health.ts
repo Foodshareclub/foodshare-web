@@ -4,17 +4,34 @@
  * Centralized health check utility for verifying database availability.
  * Used by Server Components to gracefully redirect to maintenance page
  * when the database is unavailable.
+ *
+ * Includes a circuit breaker to avoid redundant checks when the DB
+ * was recently confirmed healthy — prevents the annoying
+ * maintenance-page redirect loop.
  */
 
+/** Timestamp of last successful health check (module-level, survives across requests in Node) */
+let lastHealthyTimestamp = 0;
+
+/** Skip the health check if we were healthy within this window */
+const HEALTH_CACHE_MS = 60_000; // 60 seconds
+
 /**
- * Check if database is healthy before making any calls
- * Uses retry logic with exponential backoff for production reliability
+ * Check if database is healthy before making any calls.
  *
- * @param timeoutMs - Timeout per attempt in milliseconds (default: 30000ms)
- * @param maxRetries - Maximum retry attempts (default: 2)
+ * Uses a circuit breaker: if the database was confirmed healthy within
+ * the last 60 seconds, returns true immediately without making a request.
+ *
+ * @param timeoutMs - Timeout per attempt in milliseconds (default: 8000ms)
+ * @param maxRetries - Maximum retry attempts (default: 1)
  * @returns Promise<boolean> - true if database is healthy
  */
-export async function isDatabaseHealthy(timeoutMs = 30000, maxRetries = 2): Promise<boolean> {
+export async function isDatabaseHealthy(timeoutMs = 8000, maxRetries = 1): Promise<boolean> {
+  // Circuit breaker: skip check if recently healthy
+  if (Date.now() - lastHealthyTimestamp < HEALTH_CACHE_MS) {
+    return true;
+  }
+
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -45,6 +62,8 @@ export async function isDatabaseHealthy(timeoutMs = 30000, maxRetries = 2): Prom
         if (contentType.includes("text/html")) {
           return false;
         }
+        // Success — update circuit breaker
+        lastHealthyTimestamp = Date.now();
         return true;
       }
 

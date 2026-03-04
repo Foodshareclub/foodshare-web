@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getProducts } from "@/lib/data/products";
 import { VolunteerHero, BecomeVolunteerCTA, VolunteerGrid } from "@/components/volunteers";
-import { isDatabaseHealthy } from "@/lib/data/health";
 
 interface PageProps {
   searchParams: Promise<{
@@ -16,13 +15,6 @@ interface PageProps {
  * Displays approved volunteer postcards with hero section and CTA
  */
 export default async function VolunteersPage({ searchParams }: PageProps) {
-  // Check DB health first
-  const dbHealthy = await isDatabaseHealthy();
-
-  if (!dbHealthy) {
-    redirect("/maintenance");
-  }
-
   const params = await searchParams;
   const showSubmissionMessage = params.submitted === "true";
 

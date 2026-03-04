@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { HomeClient } from "./HomeClient";
 import { getProductsPaginated } from "@/lib/data/products";
 import { getNearbyPosts } from "@/lib/data/nearby-posts";
-import { isDatabaseHealthy } from "@/lib/data/health";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
 import { generateBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 import { siteConfig } from "@/lib/metadata";
@@ -102,11 +101,6 @@ async function fetchHomeData(locationParams: { lat: number; lng: number; radius:
  * Supports location-based filtering via URL params: ?lat=X&lng=Y&radius=Z
  */
 export default async function Home({ searchParams }: PageProps) {
-  // Check DB health first
-  const dbHealthy = await isDatabaseHealthy();
-  if (!dbHealthy) {
-    redirect("/maintenance");
-  }
 
   const params = await searchParams;
   const locationParams = parseLocationParams(params);

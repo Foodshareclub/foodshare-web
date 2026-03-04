@@ -7,7 +7,6 @@ import { getNearbyPosts } from "@/lib/data/nearby-posts";
 import { HomeClient } from "@/app/HomeClient";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
 import { categoryMetadata, generatePageMetadata, siteConfig } from "@/lib/metadata";
-import { isDatabaseHealthy } from "@/lib/data/health";
 import { generateItemListJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 
 const CATEGORY_PATHS = [
@@ -110,13 +109,6 @@ function parseLocationParams(params: {
  * - Without location params, fetches all products of the type
  */
 export default async function ProductsPage({ searchParams }: PageProps) {
-  // First check if DB is healthy
-  const dbHealthy = await isDatabaseHealthy();
-
-  if (!dbHealthy) {
-    redirect("/maintenance");
-  }
-
   const params = await searchParams;
   const productType = params.type && CATEGORY_PATHS.includes(params.type) ? params.type : "food";
 

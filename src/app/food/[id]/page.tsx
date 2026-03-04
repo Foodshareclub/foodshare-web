@@ -10,7 +10,6 @@ import {
   safeJsonLdStringify,
   calculateAggregateRating,
 } from "@/lib/jsonld";
-import { isDatabaseHealthy } from "@/lib/data/health";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -48,13 +47,6 @@ function transformChallengeToProduct(
  * Gracefully handles DB unavailability
  */
 export default async function ProductDetailPage({ params, searchParams }: PageProps) {
-  // First check if DB is healthy
-  const dbHealthy = await isDatabaseHealthy();
-
-  if (!dbHealthy) {
-    redirect("/maintenance");
-  }
-
   try {
     const [{ id }, search] = await Promise.all([params, searchParams]);
     const productId = parseInt(id, 10);
@@ -64,15 +56,10 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
       notFound();
     }
 
-    // Fetch product first
-    let product;
-    try {
-      product = isChallenge
-        ? await getChallengeById(productId).then((c) => (c ? transformChallengeToProduct(c) : null))
-        : await getProductById(productId);
-    } catch {
-      redirect("/maintenance");
-    }
+    // Fetch product — if this throws, the outer catch redirects to /maintenance
+    const product = isChallenge
+      ? await getChallengeById(productId).then((c) => (c ? transformChallengeToProduct(c) : null))
+      : await getProductById(productId);
 
     if (!product) {
       notFound();

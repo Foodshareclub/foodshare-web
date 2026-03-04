@@ -188,14 +188,13 @@ async function checkDatabaseConnectivity(
   supabaseUrl: string,
   supabaseKey: string
 ): Promise<{ ok: boolean; status: number | null }> {
-  const maxRetries = 2;
+  const maxRetries = 1;
   let lastStatus: number | null = null;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const controller = new AbortController();
-      // Shorter timeout per attempt, but multiple attempts
-      const timeoutMs = attempt === 0 ? 10000 : 15000; // 10s first, 15s retry
+      const timeoutMs = attempt === 0 ? 5000 : 8000; // 5s first, 8s retry
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
       const response = await fetch(`${supabaseUrl}/rest/v1/profiles?select=id&limit=1`, {
@@ -219,7 +218,7 @@ async function checkDatabaseConnectivity(
 
       // Server error - retry if we have attempts left
       if (attempt < maxRetries) {
-        await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1))); // 1s, 2s backoff
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
         continue;
       }
     } catch {

@@ -90,7 +90,7 @@ export function MaintenanceStatus(): React.ReactElement {
 
       // Start countdown and redirect to home if healthy
       if (data.status === "healthy") {
-        setRedirectCountdown(3);
+        setRedirectCountdown(5);
       }
     } catch {
       // Network error = maintenance mode
@@ -110,8 +110,8 @@ export function MaintenanceStatus(): React.ReactElement {
   useEffect(() => {
     checkHealth();
 
-    // Poll every 15 seconds
-    const interval = setInterval(checkHealth, 15000);
+    // Poll every 30 seconds (less aggressive to avoid redirect loop)
+    const interval = setInterval(checkHealth, 30000);
     return () => clearInterval(interval);
   }, []);
 
