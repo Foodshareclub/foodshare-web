@@ -48,6 +48,8 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
+# Force Node to use the OS CA certificates we just installed
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
