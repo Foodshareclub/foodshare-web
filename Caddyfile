@@ -1,0 +1,3 @@
+foodshare.club, www.foodshare.club {
+	reverse_proxy foodshare-web:3000
+}

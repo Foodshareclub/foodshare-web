@@ -13,8 +13,27 @@ services:
         - SENTRY_ORG=${SENTRY_ORG}
         - SENTRY_PROJECT=${SENTRY_PROJECT}
         - SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
-    ports:
-      - "127.0.0.1:80:3000"
+    expose:
+      - "3000"
     env_file:
       - .env.production
     restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: foodshare-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - foodshare-web
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
