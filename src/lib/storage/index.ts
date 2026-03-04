@@ -7,23 +7,7 @@
 export { getRedis, cache, rateLimiter, lock, REDIS_KEYS, CACHE_TTL } from "./redis";
 export type { RateLimitResult, CacheTTL } from "./redis";
 
-// Blob (File Storage)
-export {
-  uploadBlob,
-  deleteBlob,
-  deleteBlobs,
-  listBlobs,
-  getBlobMetadata,
-  copyBlob,
-  uploadChatAttachment,
-  deleteProductBlobs,
-  validateFile,
-  BLOB_PATHS,
-  MAX_FILE_SIZES,
-  ALLOWED_IMAGE_TYPES,
-  ALLOWED_DOCUMENT_TYPES,
-} from "./blob";
-export type { UploadOptions, BlobAccess, BlobUploadResult } from "./blob";
+
 
 // Upstash Vector (Embeddings)
 export {
@@ -93,20 +77,7 @@ export type {
   ProductSearchDocument,
 } from "./search";
 
-// Edge Config (Feature Flags)
-export {
-  getConfig,
-  getAllConfig,
-  hasConfig,
-  isFeatureEnabled,
-  getFeatureFlags,
-  isMaintenanceMode,
-  getRateLimitConfig,
-  getSupportedLocales,
-  FEATURE_FLAGS,
-  CONFIG_KEYS,
-} from "./edge-config";
-export type { FeatureFlagKey, ConfigKey } from "./edge-config";
+
 
 // MotherDuck (Analytics)
 export { getMotherDuckConfig, ANALYTICS_QUERIES, MOTHERDUCK_ENV } from "./motherduck";

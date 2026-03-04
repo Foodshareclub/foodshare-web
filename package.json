@@ -74,8 +74,6 @@
     "@upstash/redis": "^1.35.7",
     "@upstash/search": "^0.1.7",
     "@upstash/vector": "^1.2.2",
-    "@vercel/blob": "^2.1.0",
-    "@vercel/edge-config": "^1.4.3",
     "ai": "^5.0.108",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
