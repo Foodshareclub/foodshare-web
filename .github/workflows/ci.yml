@@ -164,13 +164,25 @@ jobs:
           git fetch origin main
           git reset --hard origin/main
 
-          # Pass GitHub Secrets as build arguments
-          export NEXT_PUBLIC_SUPABASE_URL="${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}"
-          export NEXT_PUBLIC_SUPABASE_ANON_KEY="${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}"
-          export SUPABASE_SERVICE_ROLE_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+          # 1. Initialize .env.production with GitHub Actions secrets
+          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" > .env.production
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.production
+          echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env.production
 
-          docker compose build --no-cache
-          docker compose up -d --force-recreate
+          # 2. Retrieve edge function secrets from backend
+          if [ -f ../foodshare-backend/.env.functions ]; then
+            echo "Pulling edge function secrets..."
+            grep -E '^[A-Za-z0-9_]+=' ../foodshare-backend/.env.functions >> .env.production || true
+          fi
+
+          # 3. Retrieve vault secrets from backend DB
+          echo "Pulling vault secrets..."
+          if docker ps | grep -q 'supabase-db'; then
+            docker exec supabase-db psql -U postgres -d postgres -A -t -c "SELECT name || '=' || secret FROM vault.decrypted_secrets;" >> .env.production || echo "Warning: failed to fetch vault secrets"
+          fi
+
+          docker compose --env-file .env.production build --no-cache
+          docker compose --env-file .env.production up -d --force-recreate
           
           echo "Deploy complete - container restarted"
           EOF
