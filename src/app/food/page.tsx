@@ -128,8 +128,8 @@ export default async function ProductsPage({ searchParams }: PageProps) {
         limit: 100,
       });
       nearbyPosts = result.data;
-    } catch {
-      redirect("/maintenance");
+    } catch (error) {
+      console.error("Failed to fetch nearby posts:", error);
     }
 
     return (
@@ -149,8 +149,8 @@ export default async function ProductsPage({ searchParams }: PageProps) {
   let products: Awaited<ReturnType<typeof getProducts>> = [];
   try {
     products = productType === "challenge" ? await getChallenges() : await getProducts(productType);
-  } catch {
-    redirect("/maintenance");
+  } catch (error) {
+    console.error("Failed to fetch products:", error);
   }
 
   // Generate ItemList structured data for SEO (first 10 items for rich carousel)

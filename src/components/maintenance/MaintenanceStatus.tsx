@@ -120,7 +120,10 @@ export function MaintenanceStatus(): React.ReactElement {
     if (redirectCountdown === null) return;
 
     if (redirectCountdown <= 0) {
-      router.push("/");
+      // Get 'from' query param if it exists, otherwise go to home
+      const searchParams = new URLSearchParams(window.location.search);
+      const from = searchParams.get("from") || "/";
+      router.push(from);
       return;
     }
 
@@ -200,10 +203,10 @@ export function MaintenanceStatus(): React.ReactElement {
               : t("redirecting", { fallback: "Redirecting you back..." })}
           </p>
           <Link
-            href="/"
+            href={typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("from") || "/" : "/"}
             className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
           >
-            Go to Home →
+            {typeof window !== "undefined" && new URLSearchParams(window.location.search).get("from") ? "Go Back →" : "Go to Home →"}
           </Link>
         </div>
       )}

@@ -108,7 +108,8 @@ export default async function Home({ searchParams }: PageProps) {
   // Fetch data outside of JSX rendering
   const homeData = await fetchHomeData(locationParams);
   if (!homeData) {
-    redirect("/maintenance");
+    console.error("Home data fetch failed");
+    return <HomePageSkeleton />;
   }
 
   // Render based on data type

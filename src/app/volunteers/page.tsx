@@ -22,8 +22,8 @@ export default async function VolunteersPage({ searchParams }: PageProps) {
   let volunteers: Awaited<ReturnType<typeof getProducts>> = [];
   try {
     volunteers = await getProducts("volunteer");
-  } catch {
-    redirect("/maintenance");
+  } catch (error) {
+    console.error("Failed to fetch volunteers:", error);
   }
 
   return (

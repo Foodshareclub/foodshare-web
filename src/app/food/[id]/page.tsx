@@ -102,8 +102,9 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
         </Suspense>
       </>
     );
-  } catch {
-    redirect("/maintenance");
+  } catch (error) {
+    console.error("Failed to fetch product details:", error);
+    notFound();
   }
 }
 
