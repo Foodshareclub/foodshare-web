@@ -670,7 +670,7 @@ NEXT_PUBLIC_VAPID_PUBLIC_KEY=your-vapid-public-key
 Generate VAPID keys using:
 
 ```bash
-npx web-push generate-vapid-keys
+bunx web-push generate-vapid-keys
 ```
 
 Store the private key in Supabase Edge Function secrets for sending push notifications.

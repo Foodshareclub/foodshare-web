@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
     if (id) {
       const { data, error } = await supabase
         .from("posts_with_location")
-        .select("*, reviews(*)")
+        .select("*,reviews(*)")
         .eq("id", parseInt(id))
         .eq("is_active", true)
         .single();
@@ -209,7 +209,7 @@ export async function GET(request: NextRequest) {
     if (search) {
       let query = supabase
         .from("posts_with_location")
-        .select("*, reviews(*)")
+        .select("*,reviews(*)")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
 
@@ -230,7 +230,7 @@ export async function GET(request: NextRequest) {
     if (locations) {
       let query = supabase
         .from("posts_with_location")
-        .select("id, location_json, post_name, post_type, images")
+        .select("id,location_json,post_name,post_type,images")
         .eq("is_active", true);
 
       if (type && type !== "all") {

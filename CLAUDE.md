@@ -10,7 +10,7 @@ Next.js 16 App Router + React 19 + TypeScript 5 + Tailwind CSS 4 + Self-hosted S
 
 ```bash
 # SSH into VPS
-autossh -M 0 -o ServerAliveInterval=6000 -o ServerAliveCountMax=6000 -o ConnectTimeout=10 -o ConnectionAttempts=6000 -i ~/.ssh/id_rsa_gitlab organic@vps.foodshare.club
+autossh -M 0 -o ServerAliveInterval=6000 -o ServerAliveCountMax=6000 -o ConnectTimeout=10 -o ConnectionAttempts=6000 -i ~/.ssh/foodshare_id_ed25519 organic@web.foodshare.club
 
 # Deploy
 cd /home/organic/dev/foodshare-web
@@ -21,21 +21,23 @@ git pull && docker compose up -d --build
 
 | Command              | Purpose                           |
 | -------------------- | --------------------------------- |
-| `npm run dev`        | Dev server (Turbopack, port 3000) |
-| `npm run build`      | Production build                  |
-| `npm run type-check` | TypeScript checking (`bunx tsc`)  |
-| `npm run lint:fix`   | ESLint with auto-fix              |
-| `npm run test:build` | Type-check + lint + build         |
+| `bun run dev`        | Dev server (Turbopack, port 3000) |
+| `bun run build`      | Production build                  |
+| `bun run type-check` | TypeScript checking (`bunx tsc`)  |
+| `bun run lint:fix`   | ESLint with auto-fix              |
+| `bun run test:build` | Type-check + lint + build         |
 
 ## Critical Rules
 
-1. **proxy.ts, NOT middleware.ts** -- Next.js 16 renamed middleware. Export `async function proxy()` from `proxy.ts` at root. Runtime is Node.js (not Edge), so direct imports work.
+1. **src/proxy.ts, NOT middleware.ts** -- Next.js 16 renamed middleware. Export `async function proxy()` from `src/proxy.ts`. Runtime is Node.js (not Edge), so direct imports work.
 2. **Never re-export types from server action files** -- `'use server'` files cannot re-export types. Import `AuthUser` from `@/lib/data/auth`, never from `@/app/actions/auth`.
 3. **Admin check requires service role client** -- `user_roles` table has RLS blocking anon reads. Always use `checkUserIsAdmin()` from `@/lib/data/admin-check.ts` (uses admin client internally). If modifying admin logic, update BOTH `admin-check.ts` and the inlined version in `proxy.ts`.
 4. **No Redux** -- State: Server Components (fetch) + Server Actions (mutate) + React Query (client cache) + Zustand (UI only).
 5. **Server Components by default** -- Only add `'use client'` when you need hooks, event handlers, browser APIs, or third-party client libs.
 6. **Never use Chakra UI** -- Legacy, fully removed. All UI is shadcn/ui + Radix + Tailwind.
 7. **Map components need dynamic import** -- Leaflet requires `'use client'` and `dynamic(() => import(...), { ssr: false })`.
+8. **Supabase Vault is Primary** -- Sensitive secrets (API keys, etc.) must be stored in Supabase Vault and accessed via the admin client (`src/lib/supabase/admin.ts`).
+9. **Use Structured Logger** -- Avoid `console.log`. Use the structured logger for all production-ready code to ensure observability.
 
 ## Architecture
 

@@ -6,7 +6,7 @@ Imports foodbank locations from OpenStreetMap into the FoodShare database.
 
 1. Install dependencies:
    ```bash
-   npm install
+   bun install
    ```
 
 2. Set up environment variables in `.env.local`:
@@ -27,20 +27,20 @@ Imports foodbank locations from OpenStreetMap into the FoodShare database.
 Test without making database changes:
 
 ```bash
-npm run import:foodbanks -- --country=US --dry-run
+bun run import:foodbanks -- --country=US --dry-run
 ```
 
 ### Import Specific Countries
 
 ```bash
 # Single country
-npm run import:foodbanks -- --country=US
+bun run import:foodbanks -- --country=US
 
 # Multiple countries
-npm run import:foodbanks -- --country=US,UK,DE
+bun run import:foodbanks -- --country=US,UK,DE
 
 # All supported countries
-npm run import:foodbanks -- --country=all
+bun run import:foodbanks -- --country=all
 ```
 
 ### Options

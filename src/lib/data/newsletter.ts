@@ -172,7 +172,7 @@ export async function getNewsletterStats(): Promise<NewsletterStats> {
   // Fetch campaign stats
   const { data: campaigns } = await supabase
     .from("newsletter_campaigns")
-    .select("total_sent, total_opened, total_clicked")
+    .select("total_sent,total_opened,total_clicked")
     .eq("status", "sent");
 
   const totalCampaigns = campaigns?.length || 0;
@@ -233,7 +233,7 @@ export async function getRecentSubscribers(limit = 10): Promise<
 
   const { data, error } = await supabase
     .from("newsletter_subscribers")
-    .select("id, email, first_name, subscribed_at, source")
+    .select("id,email,first_name,subscribed_at,source")
     .eq("status", "active")
     .order("subscribed_at", { ascending: false })
     .limit(limit);

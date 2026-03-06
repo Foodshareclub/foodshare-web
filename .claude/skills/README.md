@@ -65,7 +65,7 @@ Component library patterns with shadcn/ui and Radix UI.
 
 **Topics Covered:**
 
-- Component installation (`npx shadcn@latest add`)
+- Component installation (`bunx shadcn@latest add`)
 - Customization with CSS variables
 - Dark mode with `next-themes`
 - Form integration with React Hook Form

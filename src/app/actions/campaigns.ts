@@ -159,7 +159,7 @@ export async function createCampaign(
         status: validated.data.scheduledAt ? "scheduled" : "draft",
         created_by: user.id,
       })
-      .select("id, name, status")
+      .select("id,name,status")
       .single();
 
     if (error) {
@@ -230,7 +230,7 @@ export async function updateCampaign(
       .from("newsletter_campaigns")
       .update(updates)
       .eq("id", validated.data.id)
-      .select("id, name, status")
+      .select("id,name,status")
       .single();
 
     if (error) {
@@ -281,7 +281,7 @@ export async function deleteCampaign(id: string): Promise<ServerActionResult<voi
     // Check campaign status - only allow deleting drafts
     const { data: campaign } = await supabase
       .from("newsletter_campaigns")
-      .select("status, name")
+      .select("status,name")
       .eq("id", id)
       .single();
 
@@ -339,7 +339,7 @@ export async function duplicateCampaign(id: string): Promise<ServerActionResult<
     // Get original campaign
     const { data: original, error: fetchError } = await supabase
       .from("newsletter_campaigns")
-      .select("name, subject, content, campaign_type, segment_id")
+      .select("name,subject,content,campaign_type,segment_id")
       .eq("id", id)
       .single();
 
@@ -372,7 +372,7 @@ export async function duplicateCampaign(id: string): Promise<ServerActionResult<
         status: "draft",
         created_by: user.id,
       })
-      .select("id, name, status")
+      .select("id,name,status")
       .single();
 
     if (error) {
@@ -465,7 +465,7 @@ export async function resumeCampaign(id: string): Promise<ServerActionResult<voi
     // Check if campaign has a scheduled time
     const { data: campaign } = await supabase
       .from("newsletter_campaigns")
-      .select("scheduled_at, name")
+      .select("scheduled_at,name")
       .eq("id", id)
       .single();
 

@@ -12,7 +12,7 @@
 cd /Users/organic/dev/work/foodshare/frontend
 
 # Install Vitest and testing utilities
-npm install -D vitest@^2.1.0 \
+bun install -D vitest@^2.1.0 \
   @vitest/ui@^2.1.0 \
   jsdom@^25.0.0 \
   msw@^2.6.0 \
@@ -21,7 +21,7 @@ npm install -D vitest@^2.1.0 \
   happy-dom@^15.11.0
 
 # Verify installation
-npm list vitest
+bun pm ls vitest
 ```
 
 ### Step 2: Create Vitest Configuration
@@ -199,7 +199,7 @@ Update scripts in `/Users/organic/dev/work/foodshare/frontend/package.json`:
 
 ```bash
 # Run the existing test
-npm test -- --run
+bun test -- --run
 
 # Should pass the App.test.tsx
 ```
@@ -606,13 +606,13 @@ describe("productAPI", () => {
 
 ```bash
 # Run all tests
-npm test -- --run
+bun test -- --run
 
 # Run with coverage
-npm run test:coverage
+bun run test:coverage
 
 # Watch mode
-npm test
+bun test
 ```
 
 ---
@@ -773,19 +773,19 @@ describe('ProductCard', () => {
 
 ```bash
 # Run all tests with coverage
-npm run test:coverage
+bun run test:coverage
 
 # Open coverage report in browser
 open coverage/index.html
 
 # Run tests in watch mode
-npm test
+bun test
 
 # Run tests with UI
-npm run test:ui
+bun run test:ui
 
 # Run only failing tests
-npm test -- --only
+bun test -- --only
 ```
 
 ---
@@ -809,7 +809,7 @@ After completing this quick start:
 ### Issue: "Cannot find module '@testing-library/jest-dom'"
 
 ```bash
-npm install -D @testing-library/jest-dom@^6.9.1
+bun install -D @testing-library/jest-dom@^6.9.1
 ```
 
 ### Issue: TypeScript errors in tests
@@ -843,7 +843,7 @@ Ensure mock is defined in `setupTests.ts` BEFORE importing any files that use su
 ## Next Steps
 
 1. Complete all tests from Day 3-7
-2. Run `npm run test:coverage` to verify 20% coverage
+2. Run `bun run test:coverage` to verify 20% coverage
 3. Fix any failing tests
 4. Move to Phase 2 of QA_TESTING_STRATEGY.md
 5. Set up CI/CD integration

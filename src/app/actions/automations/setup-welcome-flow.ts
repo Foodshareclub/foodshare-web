@@ -95,7 +95,7 @@ export async function setupWelcomeAutomation(
     // Step 2: Check if automation already exists
     const { data: existingFlow } = await supabase
       .from("email_automation_flows")
-      .select("id, name, status")
+      .select("id,name,status")
       .ilike("name", `%${preset === "welcome_with_testers" ? "Welcome Series + Tester" : "Welcome Series"}%`)
       .not("status", "eq", "archived")
       .single();
@@ -206,7 +206,7 @@ export async function checkWelcomeAutomationStatus(): Promise<
     // Check automation
     const { data: automation } = await supabase
       .from("email_automation_flows")
-      .select("id, status")
+      .select("id,status")
       .or("name.ilike.%Welcome Series + Tester%,name.eq.Welcome Series")
       .not("status", "eq", "archived")
       .single();

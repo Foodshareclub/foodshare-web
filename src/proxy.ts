@@ -512,7 +512,7 @@ export async function proxy(request: NextRequest) {
     if (adminClient) {
       const { data: userRoles } = await adminClient
         .from("user_roles")
-        .select("role_id, roles(name)")
+        .select("role_id,roles(name)")
         .eq("profile_id", user.id);
 
       type RoleRow = { role_id: string; roles: { name: string } | null };

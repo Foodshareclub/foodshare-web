@@ -385,7 +385,7 @@ export async function updateProduct(
     // Get current product info for cache invalidation and ownership check
     const { data: currentProduct } = await supabase
       .from("posts")
-      .select("post_type, profile_id")
+      .select("post_type,profile_id")
       .eq("id", id)
       .single();
 
@@ -410,7 +410,7 @@ export async function updateProduct(
     if (validation.data.post_name || validation.data.post_description) {
       const { data: updatedProduct } = await supabase
         .from("posts")
-        .select("post_name, post_description, post_type, post_address, profile_id")
+        .select("post_name,post_description,post_type,post_address,profile_id")
         .eq("id", id)
         .single();
 
@@ -477,7 +477,7 @@ export async function deleteProduct(id: number): Promise<ActionResult<undefined>
     // Get product info for cache invalidation and ownership check
     const { data: product } = await supabase
       .from("posts")
-      .select("post_type, profile_id, is_active")
+      .select("post_type,profile_id,is_active")
       .eq("id", id)
       .single();
 

@@ -138,7 +138,7 @@ export async function getQueueStatus(): Promise<
     // Get queue counts by status
     const { data: queueItems } = await supabase
       .from("email_automation_queue")
-      .select("status, scheduled_for")
+      .select("status,scheduled_for")
       .order("scheduled_for", { ascending: true });
 
     const counts = {
@@ -330,7 +330,7 @@ export async function getAutomationInsights(flowId: string): Promise<
     // Get flow for conversion data
     const { data: flow } = await supabase
       .from("email_automation_flows")
-      .select("total_completed, total_converted")
+      .select("total_completed,total_converted")
       .eq("id", flowId)
       .single();
 

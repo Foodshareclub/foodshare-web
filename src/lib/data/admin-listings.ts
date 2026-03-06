@@ -274,4 +274,4 @@ export async function getListingStats(): Promise<ListingStats> {
 }
 
 // Admin auth utilities moved to @/lib/data/admin-auth
-export { getAdminAuth, requireAdmin } from "./admin-auth";
+export { getAdminAuth, requireAdmin } from "./admin-check";

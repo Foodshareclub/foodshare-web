@@ -333,20 +333,6 @@ curl "https://your-domain.com/api/admin/sync-analytics" \
   -H "Authorization: Bearer $CRON_SECRET"
 ```
 
-**Vercel Cron Setup:**
-
-Add to `vercel.json`:
-
-```json
-{
-  "crons": [
-    {
-      "path": "/api/admin/sync-analytics",
-      "schedule": "0 * * * *"
-    }
-  ]
-}
-```
 
 **Related Documentation:** See `docs/analytics/MOTHERDUCK_INTEGRATION.md` for full architecture details.
 
@@ -3595,7 +3581,7 @@ const checkHealth = async () => {
 **Use Cases:**
 
 - Display maintenance banners during database downtime (`MaintenanceBanner` component)
-- Uptime monitoring integrations (Vercel, UptimeRobot, etc.)
+- Uptime monitoring integrations (BetterStack, UptimeRobot, etc.)
 - Graceful degradation in client applications
 - Load balancer health checks
 
@@ -4787,14 +4773,14 @@ interface AIAnalysis {
 
 Located: `src/lib/data/admin-insights.ts`
 
-Server-side data fetching functions for AI-powered admin insights using xAI's Grok models via Vercel AI SDK. Provides platform metrics, churn analysis, and AI-generated business insights.
+Server-side data fetching functions for AI-powered admin insights using xAI's Grok models via standard AI SDK. Provides platform metrics, churn analysis, and AI-generated business insights.
 
 > **Note:** This module contains API keys and must only be used server-side. Use the server actions in `src/app/actions/admin-insights.ts` for client components.
 
 **Dependencies:**
 
-- `@ai-sdk/xai` - xAI provider for Vercel AI SDK
-- `ai` - Vercel AI SDK for `generateText`
+- `@ai-sdk/xai` - xAI provider for AI SDK
+- `ai` - Standard AI SDK for `generateText`
 
 ### Types
 
@@ -4904,9 +4890,9 @@ const insight = await getGrokInsights("General question", false);
 
 **Caching:** Results are cached for 1 hour based on query + includeMetrics.
 
-**Model:** Uses `grok-3-mini` for all queries via Vercel AI Gateway for optimal cost/performance balance.
+**Model:** Uses `grok-3-mini` for all queries via AI Gateway for optimal cost/performance balance.
 
-**Implementation:** Uses Vercel AI SDK (`generateText`) with xAI provider for standardized AI integration.
+**Implementation:** Uses AI SDK (`generateText`) with xAI provider for standardized AI integration.
 
 **Rate Limiting:** Includes robust rate limit handling with:
 

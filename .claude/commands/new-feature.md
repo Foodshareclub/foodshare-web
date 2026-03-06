@@ -24,9 +24,9 @@ Implement: $ARGUMENTS
    - Translations (`messages/`)
 
 4. **Verify**
-   - `npm run type-check`
-   - `npm run lint`
-   - `npm run build` (optional)
+   - `bun run type-check`
+   - `bun run lint`
+   - `bun run build` (optional)
 
 ## Patterns to Follow
 

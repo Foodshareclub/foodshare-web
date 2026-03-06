@@ -32,7 +32,7 @@ export async function enrollUserInAutomation(
     // Check if flow is active
     const { data: flow } = await supabase
       .from("email_automation_flows")
-      .select("status, name")
+      .select("status,name")
       .eq("id", flowId)
       .single();
 

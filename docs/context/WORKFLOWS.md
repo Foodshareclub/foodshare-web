@@ -64,7 +64,7 @@ nvm install
 nvm use
 
 # 3. Install dependencies
-npm install
+bun install
 
 # 4. Set up environment variables
 cp .env.example .env.local
@@ -74,7 +74,7 @@ cp .env.example .env.local
 # SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 # 5. Start development server (Turbopack)
-npm run dev
+bun run dev
 
 # 6. Open browser to http://localhost:3000
 ```
@@ -88,8 +88,8 @@ npm run dev
 
 **Troubleshooting:**
 
-- If port 3000 is in use: Pass a different port with `npm run dev -- -p 3001`
-- If dependencies fail: Try `rm -rf node_modules package-lock.json && npm install`
+- If port 3000 is in use: Pass a different port with `bun run dev -- -p 3001`
+- If dependencies fail: Try `rm -rf node_modules package-lock.json && bun install`
 - If env vars not working: Check `NEXT_PUBLIC_` prefix is used (not `VITE_` or `REACT_APP_`)
 
 ---
@@ -143,10 +143,10 @@ git checkout -b feature/your-feature-name
 git checkout feature/your-feature-name
 
 # 3. Ensure dependencies are up to date
-npm install
+bun install
 
 # 4. Start development server (Turbopack for fast HMR)
-npm run dev
+bun run dev
 
 # 5. Open project in editor
 code .
@@ -433,7 +433,7 @@ export function ProductCard({ product, isFavorite }: ProductCardProps) {
 
 ```bash
 # Ensure dev server is running
-npm run dev
+bun run dev
 
 # Test scenarios:
 # 1. Click favorite button - should add to favorites
@@ -910,19 +910,19 @@ export function ProductList() {
 
 ```bash
 # Check TypeScript
-npm run type-check
+bun run type-check
 
 # Run linter
-npm run lint
+bun run lint
 
 # Fix lint issues
-npm run lint:fix
+bun run lint:fix
 
 # Build production bundle
-npm run build
+bun run build
 
 # Start production server
-npm run start
+bun run start
 ```
 
 ---
@@ -974,34 +974,21 @@ Closes #123
 
 ## Deployment Workflow
 
-### Deploying to Vercel
+### Deploying to VPS
 
 **Automatic Deployment:**
 
-Vercel automatically deploys:
+GitHub Actions automatically deploys:
 
 - `main` branch → Production
-- Pull requests → Preview deployments
-
-**Manual Deployment:**
-
-```bash
-# Install Vercel CLI
-npm install -g vercel
-
-# Deploy to preview
-vercel
-
-# Deploy to production
-vercel --prod
-```
+- Pull requests → Staging/Preview
 
 ### Pre-Deployment Checklist
 
 - [ ] All tests pass
 - [ ] TypeScript compiles
-- [ ] Build succeeds locally (`npm run build`)
-- [ ] Environment variables set in Vercel
+- [ ] Build succeeds locally (`bun run build`)
+- [ ] Environment variables set in GitHub Secrets and VPS
 - [ ] Database migrations applied (if any)
 - [ ] No sensitive data in code
 - [ ] Performance tested
@@ -1019,15 +1006,15 @@ vercel --prod
 
 ```bash
 # 1. Check exact error
-npm run type-check
+bun run type-check
 
 # 2. Common fixes:
 
 # Missing types
-npm install --save-dev @types/package-name
+bun install --save-dev @types/package-name
 
 # Outdated types
-npm update @types/*
+bun update @types/*
 
 # Clear cache
 rm -rf node_modules/.cache .next
@@ -1040,21 +1027,21 @@ rm -rf node_modules/.cache .next
 
 ### Build Failures
 
-**Problem:** `npm run build` fails
+**Problem:** `bun run build` fails
 
 **Solution Steps:**
 
 ```bash
 # 1. Clear everything
-npm run clean
-npm install
+bun run clean
+bun install
 
 # 2. Check environment variables
 cat .env.local
 # Ensure NEXT_PUBLIC_ prefix for client-side vars
 
 # 3. Run build with verbose output
-npm run build
+bun run build
 
 # 4. Check for issues in console output
 ```
@@ -1174,14 +1161,14 @@ git stash pop
 ### NPM Scripts
 
 ```bash
-npm run dev          # Start dev server (Turbopack, port 3000)
-npm run build        # Production build
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm run lint:fix     # Fix ESLint issues
-npm run type-check   # TypeScript type checking
-npm run test:build   # Type check + lint + build
-npm run clean        # Clean build artifacts
+bun run dev          # Start dev server (Turbopack, port 3000)
+bun run build        # Production build
+bun run start        # Start production server
+bun run lint         # Run ESLint
+bun run lint:fix     # Fix ESLint issues
+bun run type-check   # TypeScript type checking
+bun run test:build   # Type check + lint + build
+bun run clean        # Clean build artifacts
 ```
 
 ---

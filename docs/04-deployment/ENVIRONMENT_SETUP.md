@@ -14,7 +14,7 @@ This guide walks you through setting up all required environment variables for t
 
 3. Restart your development server:
    ```bash
-   npm run dev
+   bun run dev
    ```
 
 ---
@@ -142,7 +142,7 @@ NEXT_PUBLIC_SITE_URL=https://foodshare.club
 #### Generate VAPID Keys
 
 ```bash
-npx web-push generate-vapid-keys
+bunx web-push generate-vapid-keys
 ```
 
 This outputs a public and private key pair.
@@ -233,7 +233,7 @@ testEmailService();
 Run it:
 
 ```bash
-npx tsx scripts/test-email-service.ts
+bunx tsx scripts/test-email-service.ts
 ```
 
 ### 2. Test Supabase Connection
@@ -356,7 +356,7 @@ clearR2SecretsCache();
 | Use Case                       | Recommendation                       |
 | ------------------------------ | ------------------------------------ |
 | Local development              | Environment variables (`.env.local`) |
-| Vercel deployment              | Supabase Vault (production)          |
+| Self-hosted VPS                | Supabase Vault (production)          |
 | Shared secrets across services | Supabase Vault                       |
 | Secrets that need rotation     | Supabase Vault                       |
 | Edge Functions needing secrets | Supabase Vault                       |
@@ -416,7 +416,7 @@ Create different env files for each environment:
 
 1. Stop your development server (Ctrl+C)
 2. Clear Next.js cache: `rm -rf .next`
-3. Restart: `npm run dev`
+3. Restart: `bun run dev`
 
 ### Invalid API Key Errors
 

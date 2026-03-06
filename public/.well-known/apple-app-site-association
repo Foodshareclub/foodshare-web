@@ -3,7 +3,7 @@
     "apps": [],
     "details": [
       {
-        "appID": "TEAMID.club.foodshare.app",
+        "appID": "TEAMID.com.flutterflow.foodshare",
         "paths": [
           "/food/*",
           "/forum/*",
@@ -16,9 +16,9 @@
     ]
   },
   "webcredentials": {
-    "apps": ["TEAMID.club.foodshare.app"]
+    "apps": ["TEAMID.com.flutterflow.foodshare"]
   },
   "activitycontinuation": {
-    "apps": ["TEAMID.club.foodshare.app"]
+    "apps": ["TEAMID.com.flutterflow.foodshare"]
   }
 }

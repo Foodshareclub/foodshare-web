@@ -198,7 +198,7 @@ Use ATX-style headings (`#`) with proper hierarchy:
 - Click the **Save** button to save your changes
 - The _recommended_ approach is to use TypeScript
 - Edit the `next.config.ts` file
-- Run `npm run dev` to start the server
+- Run `bun run dev` to start the server
 ```
 
 ### Links
@@ -233,7 +233,7 @@ Check the [API Reference](API_REFERENCE.md#productapi) for methods.
 Use single backticks for:
 
 - Filenames: `package.json`
-- Commands: `npm install`
+- Commands: `bun install`
 - Variables: `userEmail`
 - Functions: `getProducts()`
 - Paths: `src/components/`
@@ -634,7 +634,7 @@ Before committing documentation changes:
 
 3. **Missing context**
    - Bad: "Run the command"
-   - Good: "Run `npm install` to install dependencies"
+   - Good: "Run `bun install` to install dependencies"
 
 4. **Inconsistent terminology**
    - Pick one term and stick with it
@@ -763,7 +763,7 @@ console.log(data);
 **Solution:** Check that you've installed dependencies:
 
 ```bash
-npm install required-package
+bun install required-package
 ```
 
 ---

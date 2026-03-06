@@ -41,8 +41,8 @@ Core development guides, architecture, and best practices for FoodShare.
 ### Working with Translations
 
 1. Read [I18N_GUIDE.md](./I18N_GUIDE.md)
-2. Extract: `npm run extract`
-3. Compile: `npm run compile`
+2. Extract: `bun run extract`
+3. Compile: `bun run compile`
 
 ## 🏗️ Tech Stack
 

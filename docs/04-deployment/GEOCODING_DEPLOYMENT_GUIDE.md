@@ -4,7 +4,7 @@ This guide walks through deploying and testing the new queue-based geocoding sys
 
 ## Prerequisites
 
-- Supabase CLI installed (`npm install -g supabase`)
+- Supabase CLI installed (`bun install -g supabase`)
 - Access to Supabase Dashboard
 - Service role key for testing
 
@@ -57,7 +57,7 @@ For automatic batch processing every 5 minutes:
 # 4. Re-run the migration to create the cron job
 ```
 
-**Note:** If pg_cron is not available, you'll need to schedule the Edge Function externally (e.g., via GitHub Actions, cron job, or Vercel Cron).
+**Note:** If pg_cron is not available, you'll need to schedule the Edge Function externally (e.g., via GitHub Actions or another cron service).
 
 ### Step 4: Verify Deployment
 
@@ -430,49 +430,6 @@ jobs:
             -d '{"operation": "BATCH_UPDATE"}'
 ```
 
-### Option B: Vercel Cron (Next.js Route Handler)
-
-Create `src/app/api/cron/geocode/route.ts`:
-
-```typescript
-import { NextRequest, NextResponse } from "next/server";
-
-export async function GET(request: NextRequest) {
-  // Verify cron secret
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/update-post-coordinates`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ operation: "BATCH_UPDATE" }),
-    }
-  );
-
-  const data = await response.json();
-  return NextResponse.json(data);
-}
-```
-
-Then configure in `vercel.json`:
-
-```json
-{
-  "crons": [
-    {
-      "path": "/api/cron/geocode",
-      "schedule": "*/5 * * * *"
-    }
-  ]
-}
-```
 
 ## Rollback Plan
 

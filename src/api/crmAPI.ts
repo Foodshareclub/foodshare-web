@@ -531,7 +531,7 @@ export async function fetchCRMDashboardStats() {
     // Fetch average metrics
     const { data: metricsData } = await supabase
       .from("crm_customers")
-      .select("engagement_score, churn_risk_score, ltv_score, total_interactions")
+      .select("engagement_score,churn_risk_score,ltv_score,total_interactions")
       .eq("is_archived", false);
 
     const averages = {

@@ -46,10 +46,10 @@ inclusion: always
 ## Commands
 
 ```bash
-npm run dev          # Turbopack dev server (port 3000)
-npm run build        # Production build
-npm run lint         # ESLint
-npm run type-check   # TypeScript check
+bun run dev          # Turbopack dev server (port 3000)
+bun run build        # Production build
+bun run lint         # ESLint
+bun run type-check   # TypeScript check
 npm test             # Jest tests
 
 # Rust tools (build once)

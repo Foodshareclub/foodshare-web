@@ -210,7 +210,7 @@ export async function getProductById(productId: number): Promise<InitialProductS
 
   const { data, error } = await supabase
     .from("posts_with_location")
-    .select("*, reviews(*)")
+    .select("*,reviews(*)")
     .eq("id", productId)
     .eq("is_active", true)
     .single();
@@ -236,7 +236,7 @@ export async function getProductLocations(productType: string): Promise<Location
 
   const { data, error } = await supabase
     .from("posts_with_location")
-    .select("id, location_json, post_name, post_type, images")
+    .select("id,location_json,post_name,post_type,images")
     .eq("post_type", normalizedType)
     .eq("is_active", true);
 
@@ -256,7 +256,7 @@ export async function getAllProductLocations(): Promise<LocationType[]> {
 
   const { data, error } = await supabase
     .from("posts_with_location")
-    .select("id, location_json, post_name, post_type, images")
+    .select("id,location_json,post_name,post_type,images")
     .eq("is_active", true);
 
   if (error) throw new Error(error.message);
@@ -299,7 +299,7 @@ export async function searchProducts(searchWord: string, productSearchType?: str
 
   let query = supabase
     .from("posts_with_location")
-    .select("*, reviews(*)")
+    .select("*,reviews(*)")
     .eq("is_active", true)
     .order("created_at", { ascending: false });
 

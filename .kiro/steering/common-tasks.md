@@ -135,8 +135,8 @@ SKIP_TESTS=1 SKIP_BUILD=1 git push
 
 ```bash
 npm test              # Run tests
-npm run test:watch    # Watch mode
-npm run test:coverage # Coverage report
+bun run test:watch    # Watch mode
+bun run test:coverage # Coverage report
 ```
 
 ## Debugging

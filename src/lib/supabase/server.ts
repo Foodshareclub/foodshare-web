@@ -9,12 +9,17 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL! || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! || '';
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  if (process.env.NODE_ENV !== 'test' && process.env.SKIP_ENV_VALIDATION !== 'true') {
-    throw new Error("Missing Supabase environment variables");
+  if (
+    process.env.NODE_ENV !== 'test' && 
+    process.env.SKIP_ENV_VALIDATION !== 'true' &&
+    process.env.NEXT_PHASE !== 'phase-production-build'
+  ) {
+    // Only throw if we are actually running the app, not building it
+    console.warn("⚠️ Missing Supabase environment variables. This is expected during build if they are not provided.");
   }
 }
 

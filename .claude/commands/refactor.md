@@ -20,8 +20,8 @@ Refactor: $ARGUMENTS
    - Keep the app functional
 
 4. **Verify**
-   - `npm run type-check`
-   - `npm run lint`
+   - `bun run type-check`
+   - `bun run lint`
    - Run tests if applicable
 
 ## Common Refactors

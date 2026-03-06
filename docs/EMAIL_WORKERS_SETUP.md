@@ -83,7 +83,7 @@ Method: POST
 
 ```bash
 # Install QStash CLI
-npm install -g @upstash/qstash-cli
+bun install -g @upstash/qstash-cli
 
 # Create schedules
 qstash schedule create \
@@ -97,24 +97,6 @@ qstash schedule create \
   --name "email-health-monitor"
 ```
 
-### Using Vercel Integration
-
-Add to `vercel.json`:
-
-```json
-{
-  "crons": [
-    {
-      "path": "/api/email/worker/queue-processor",
-      "schedule": "*/2 * * * *"
-    },
-    {
-      "path": "/api/email/worker/health-monitor",
-      "schedule": "*/5 * * * *"
-    }
-  ]
-}
-```
 
 ## Environment Variables Required
 
@@ -194,7 +176,7 @@ curl -X POST https://foodshare.club/api/email/worker/queue-processor \
 
 ### Logs
 
-Workers log to Vercel/Console:
+Workers log to Console:
 ```
 [email-worker] Processing 50 emails...
 [health-monitor] Critical alerts: 1

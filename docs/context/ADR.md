@@ -25,7 +25,7 @@
 13. [ADR-012: Feature-Based Folder Structure](#adr-012-feature-based-folder-structure)
 14. [ADR-013: API Layer Abstraction](#adr-013-api-layer-abstraction)
 15. [ADR-014: Server Components and SSR](#adr-014-server-components-and-ssr)
-16. [ADR-015: Vercel for Hosting](#adr-015-vercel-for-hosting)
+16. [ADR-015: Self-hosted VPS (Supersedes Vercel)](#adr-015-self-hosted-vps-supersedes-vercel)
 
 ---
 
@@ -1203,51 +1203,59 @@ Previously a pure SPA, migrated to Next.js for:
 
 ---
 
-## ADR-015: Vercel for Hosting
+## ADR-015: Self-hosted VPS (Supersedes Vercel)
 
-**Status:** ✅ Accepted
+**Status:** ✅ Accepted (Updated Q1 2026)
 
-**Date:** Q3 2024
+**Date:** Q1 2026
 
 ### Context
 
-We need hosting for the production application.
+As the project matured and moved towards a self-hosted Supabase infrastructure, we decided to consolidate hosting to a dedicated VPS to gain better control over the networking edge, reduce dependency on Vercel's proprietary middleware/limitations, and align with the `foodshare-backend` self-hosted strategy.
 
 **Requirements:**
 
-- Static site hosting
-- CDN distribution
-- Automatic deployments
-- Preview deployments for PRs
-- HTTPS included
-- Affordable
+- Full control over the server environment
+- Direct integration with self-hosted Supabase
+- Docker-based deployments
+- No proprietary vendor lock-in
+- High performance for global users
 
 ### Decision
 
-**We deploy to Vercel for hosting.**
+**We migrated from Vercel to a self-hosted VPS using Docker Compose and GitHub Actions.**
 
 ### Rationale
 
-1. **Next.js Integration:**
-   - Official support
-   - Zero configuration
-   - Automatic builds
+1. **Unity of Infrastructure:**
+   - Both Web and Backend now share the same self-hosted philosophy.
+   - Simplified DNS and networking via Cloudflare tunnels.
 
-2. **Developer Experience:**
-   - GitHub integration
-   - Automatic deployments
-   - Preview URLs for PRs
-   - Easy rollbacks
+2. **Control & Customization:**
+   - No "Edge Function" limitations or cold starts.
+   - Standard Node.js runtime for proxy and background tasks.
+   - Direct access to server-level logs and metrics.
 
-3. **Performance:**
-   - Global CDN
-   - Edge network
-   - Fast response times
-   - Automatic compression
+3. **CI/CD:**
+   - Automated deployments via GitHub Actions to the VPS.
+   - Simplified secret management via GitHub Secrets and Supabase Vault.
 
-4. **Cost:**
-   - Free for hobby projects
-   - Predictable pricing
+### Consequences
+
+**Positive:**
+
+- ✅ Lower long-term costs
+- ✅ No vendor proprietary middleware lock-in
+- ✅ Consistent environment with backend
+- ✅ Better performance for complex SSR tasks
+
+**Negative:**
+
+- ⚠️ Manual infrastructure management
+- ⚠️ Need to handle own SSL (managed via Cloudflare/Caddy)
+- ⚠️ More complex initial setup
+
+**Current Status:** Active. Fully migrated to `web.foodshare.club`.
    - Generous limits
 
 5. **Features:**

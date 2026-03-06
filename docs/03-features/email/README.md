@@ -1223,15 +1223,11 @@ The vault service logs detailed environment diagnostics:
   hasSupabaseUrl: true,
   hasServiceRoleKey: false,
   serviceRoleKeyLength: 0,
-  nodeEnv: "production",
-  vercelEnv: "production"
+  nodeEnv: "production"
 }
 ```
 
-**Production requires Supabase Vault access.** Fix by adding `SUPABASE_SERVICE_ROLE_KEY` to Vercel:
-
-1. Go to Vercel Dashboard → Project → Settings → Environment Variables
-2. Add `SUPABASE_SERVICE_ROLE_KEY` with your service role key from Supabase
+**Production requires Supabase Vault access.** Fix by ensuring `SUPABASE_SERVICE_ROLE_KEY` is available to the application.
 3. Ensure secrets are stored in Supabase Vault (Dashboard → Settings → Vault)
 
 **Important:** In production, environment variables for email providers (`RESEND_API_KEY`, etc.) are ignored. All secrets must be stored in Supabase Vault for centralized, secure management.

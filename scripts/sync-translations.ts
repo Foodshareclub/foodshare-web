@@ -154,7 +154,7 @@ async function syncTranslations() {
   // Fetch existing translations
   const { data: existingTranslations, error: fetchError } = await supabase
     .from("translations")
-    .select("locale, messages, version");
+    .select("locale,messages,version");
 
   if (fetchError) {
     log(`Failed to fetch existing translations: ${fetchError.message}`, "error");

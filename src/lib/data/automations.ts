@@ -153,7 +153,7 @@ export async function getAutomationStats(): Promise<{
   // Get flow counts
   const { data: flows } = await supabase
     .from("email_automation_flows")
-    .select("status, total_enrolled, total_completed");
+    .select("status,total_enrolled,total_completed");
 
   // Get pending queue count
   const { count: pendingCount } = await supabase

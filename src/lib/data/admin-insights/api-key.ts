@@ -6,7 +6,7 @@
 
 /**
  * Get AI configuration from environment variables
- * Checks for GROQ_API_KEY first, then ZAI_API_KEY, then AI_GATEWAY_API_KEY
+ * Checks for GROQ_API_KEY first, then ZAI_API_KEY, then OPENAI_API_KEY
  */
 export async function getAiConfig(): Promise<{ apiKey: string; baseURL?: string } | null> {
   if (process.env.GROQ_API_KEY) {
@@ -21,10 +21,10 @@ export async function getAiConfig(): Promise<{ apiKey: string; baseURL?: string 
       baseURL: "https://api.z.ai/v1",
     };
   }
-  if (process.env.AI_GATEWAY_API_KEY) {
+  if (process.env.OPENAI_API_KEY) {
     return {
-      apiKey: process.env.AI_GATEWAY_API_KEY,
-      baseURL: "https://ai-gateway.vercel.sh/openai/v1",
+      apiKey: process.env.OPENAI_API_KEY,
+      baseURL: "https://api.openai.com/v1",
     };
   }
 

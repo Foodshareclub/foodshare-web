@@ -12,7 +12,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS } from "@/lib/data/cache-keys";
 import { invalidateTag } from "@/lib/data/cache-invalidation";
-import { requireAdmin, logAdminAction } from "@/lib/data/admin-auth";
+import { requireAdmin, logAdminAction } from "@/lib/data/admin-check";
 import {
   updateListingAPI,
   activateListingAPI,
@@ -413,7 +413,7 @@ export async function updateUserRoles(
     }
 
     // Get all role IDs from roles table
-    const { data: allRoles, error: rolesError } = await supabase.from("roles").select("id, name");
+    const { data: allRoles, error: rolesError } = await supabase.from("roles").select("id,name");
 
     if (rolesError) return { success: false, error: rolesError.message };
 

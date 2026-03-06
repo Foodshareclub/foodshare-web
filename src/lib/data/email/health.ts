@@ -77,14 +77,14 @@ export async function getBounceStats(): Promise<BounceStats> {
     // Bounce events by type (last 30 days)
     supabase
       .from("email_bounce_events")
-      .select("event_type, bounce_type")
+      .select("event_type,bounce_type")
       .gte("created_at", thirtyDaysAgo.toISOString()),
     // Suppression list by reason
     supabase.from("email_suppression_list").select("reason"),
     // Daily bounces (last 7 days)
     supabase
       .from("email_bounce_events")
-      .select("created_at, event_type")
+      .select("created_at,event_type")
       .gte("created_at", sevenDaysAgo.toISOString())
       .order("created_at", { ascending: true }),
     // Total emails sent (for bounce rate calculation)

@@ -276,7 +276,7 @@ supabase
 - Macros: `<Trans>`, `t` macro
 - Locales: `src/locales/{locale}/messages.{js,po}`
 - Component: `ChangeLanguageContainer`
-- Commands: `npm run extract`, `npm run compile`
+- Commands: `bun run extract`, `bun run compile`
 
 ---
 
@@ -472,7 +472,7 @@ useUIStore; // UI state management
 - **Image optimization** - Next.js Image with Supabase CDN
 - **Marker clustering** - Map performance with many items
 - **React Query caching** - Smart server state management
-- **Bundle analysis** - Available via `npm run build:analyze`
+- **Bundle analysis** - Available via `bun run build:analyze`
 
 ### Responsive Design
 
@@ -738,7 +738,7 @@ Real-time Message Delay:     <100ms
 
 - **Type checking** - TypeScript compiler
 - **Linting** - Pre-commit hooks (Lefthook)
-- **Build verification** - `npm run test:build`
+- **Build verification** - `bun run test:build`
 
 ---
 

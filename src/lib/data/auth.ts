@@ -78,7 +78,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id, first_name, second_name, nickname, avatar_url, email")
+        .select("id,first_name,second_name,nickname,avatar_url,email")
         .eq("id", user.id)
         .single();
 
@@ -109,7 +109,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 }
 
 // Re-export admin auth utilities from centralized location
-export { getAdminAuth, requireAdmin, requireSuperAdmin } from "./admin-auth";
+export { getAdminAuth, requireAdmin, requireSuperAdmin } from "./admin-check";
 export { checkUserIsAdmin } from "./admin-check";
 
 /**

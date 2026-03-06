@@ -25,7 +25,6 @@ foodshare/
 ├── postcss.config.js    # PostCSS configuration
 ├── README.md            # Main project README
 ├── tsconfig.json        # TypeScript configuration
-├── vercel.json          # Vercel deployment config
 ├── vite.config.ts       # Vite build configuration
 └── vitest.config.ts     # Vitest testing configuration
 ```
@@ -128,7 +127,7 @@ scripts/
 ├── git-hooks/          # Git hook scripts
 ├── lefthook/           # Lefthook configurations
 ├── monitoring/         # Monitoring scripts
-├── add-*.sh            # Vercel environment setup
+├── setup-env.sh         # Environment variables setup
 ├── sync-translations-to-db.ts
 └── test-localization-edge-function.ts
 ```
@@ -172,7 +171,6 @@ public/
 
 ### Deployment
 
-- **vercel.json** - Vercel deployment settings
 - **.env.local.example** - Environment variables template
 
 ### UI Framework
@@ -190,22 +188,22 @@ Translation files: `src/locales/{locale}/messages.po`
 
 ## 🚀 Key Technologies
 
+- **Next.js 16.0.0** - Framework
 - **React 19.2.0** - UI library
 - **TypeScript 5.9.3** - Type safety
-- **Vite 7.2.2** - Build tool
-- **Chakra UI 3.29.0** - Component library
-- **Redux Toolkit 2.10.1** - State management
-- **React Router 7.9.5** - Client-side routing
+- **Tailwind CSS 4.0.0** - Styling
+- **shadcn/ui 2.0.0** - Component library
+- **Zustand 5.0.1** - State management
 - **Supabase 2.81.1** - Backend (PostgreSQL, Auth, Realtime, Storage)
-- **Lingui 5.6.0** - Internationalization
+- **next-intl 3.25.0** - Internationalization
 - **Leaflet 1.9.4** - Interactive maps
-- **Framer Motion 12.23.24** - Animations
+- **Framer Motion 12.0.0** - Animations
 
 ## 📦 Build Output
 
-- **Development**: `npm run dev` → http://localhost:3000
-- **Production**: `npm run build` → `build/` directory
-- **Preview**: `npm run preview` → Preview production build
+- **Development**: `bun run dev` → http://localhost:3000
+- **Production**: `bun run build` → `build/` directory
+- **Preview**: `bun run preview` → Preview production build
 
 ## 🔐 Environment Variables
 
@@ -244,21 +242,21 @@ The following are not tracked in git:
 
 ```bash
 # Development
-npm run dev              # Start dev server (port 3000)
-npm run build            # Production build
-npm run preview          # Preview production build
+bun run dev              # Start dev server (port 3000)
+bun run build            # Production build
+bun run preview          # Preview production build
 
 # Internationalization
-npm run extract          # Extract translatable strings
-npm run compile          # Compile translations (required before dev)
+bun run extract          # Extract translatable strings
+bun run compile          # Compile translations (required before dev)
 
 # Code Quality
-npm run lint             # Run ESLint
-npm run format           # Format with Prettier
-npm run type-check       # TypeScript type checking
+bun run lint             # Run ESLint
+bun run format           # Format with Prettier
+bun run type-check       # TypeScript type checking
 
 # Testing
-npm test                 # Run tests
+bun test                 # Run tests
 ```
 
 ## 🔗 Quick Links
@@ -280,4 +278,4 @@ For questions or issues:
 
 ---
 
-**This is NOT a Next.js project** - It's a Vite-powered React SPA with client-side routing.
+**This IS a Next.js 16 project** - It uses the App Router, Server Components, and Server Actions for a hybrid SSR/client experience.

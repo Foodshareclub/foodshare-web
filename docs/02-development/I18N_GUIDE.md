@@ -36,16 +36,16 @@
 
 ```bash
 # Extract translatable strings
-npm run extract
+bun run extract
 
 # Compile translations
-npm run compile
+bun run compile
 
 # Start dev server (requires compiled translations)
-npm run dev
+bun run dev
 
 # Type check
-npm run type-check
+bun run type-check
 ```
 
 ---
@@ -201,7 +201,7 @@ document.dir = direction;
 2. **Extract strings**
 
    ```bash
-   npm run extract
+   bun run extract
    ```
 
 3. **Translate in .po files**
@@ -214,12 +214,12 @@ document.dir = direction;
 4. **Compile translations**
 
    ```bash
-   npm run compile
+   bun run compile
    ```
 
 5. **Test in app**
    ```bash
-   npm run dev
+   bun run dev
    ```
 
 ---
@@ -228,15 +228,15 @@ document.dir = direction;
 
 ### Issue: Translations not showing
 
-**Solution**: Run `npm run compile` before `npm run dev`
+**Solution**: Run `bun run compile` before `bun run dev`
 
 ### Issue: New language not appearing
 
 **Solution**:
 
 1. Check `lingui.config.js` includes the locale
-2. Run `npm run extract`
-3. Run `npm run compile`
+2. Run `bun run extract`
+3. Run `bun run compile`
 
 ### Issue: RTL not working for Arabic
 

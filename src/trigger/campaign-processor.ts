@@ -78,7 +78,7 @@ export const processCampaignTask = task({
     const recipientEmails = recipientList.map((r: { email: string }) => r.email);
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, email, first_name")
+      .select("id,email,first_name")
       .in("email", recipientEmails);
 
     if (!profiles || profiles.length === 0) {
@@ -155,7 +155,7 @@ export const checkScheduledCampaignsTask = schedules.task({
     // Find campaigns that are scheduled and due
     const { data: dueCampaigns, error } = await supabase
       .from("newsletter_campaigns")
-      .select("id, name")
+      .select("id,name")
       .eq("status", "scheduled")
       .lte("scheduled_at", new Date().toISOString())
       .limit(10);

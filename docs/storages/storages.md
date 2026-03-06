@@ -1,6 +1,6 @@
 # Storage Services
 
-FoodShare uses several Vercel/Upstash storage services for different purposes.
+FoodShare uses Upstash and R2 storage services for different purposes.
 
 ## Upstash Redis
 
@@ -333,96 +333,6 @@ type UploadResult = {
 
 ---
 
-## Vercel Blob
-
-**Purpose:** File storage for user uploads (images, documents)
-
-**Client Location:** `src/lib/storage/blob.ts`
-
-### Usage
-
-```typescript
-import {
-  uploadBlob,
-  deleteBlob,
-  listBlobs,
-  getBlobMetadata,
-  validateFile,
-  uploadProductImage,
-  uploadUserAvatar,
-  uploadChatAttachment,
-  deleteProductBlobs,
-  MAX_FILE_SIZES,
-  ALLOWED_IMAGE_TYPES,
-  BLOB_PATHS,
-} from "@/lib/storage/blob";
-
-// Upload with validation
-const result = await uploadProductImage(productId, file, "photo.jpg");
-if ("error" in result) {
-  console.error(result.error);
-} else {
-  console.log(result.url);
-}
-
-// Upload user avatar
-const avatarResult = await uploadUserAvatar(userId, file);
-
-// Upload chat attachment
-const attachmentResult = await uploadChatAttachment(roomId, file, "document.pdf");
-
-// Generic upload
-const blob = await uploadBlob("images/photo.jpg", file, {
-  access: "public",
-  cacheControlMaxAge: 31536000, // 1 year
-});
-
-// Delete single blob
-await deleteBlob(url);
-
-// Delete all product images
-const deletedCount = await deleteProductBlobs(productId);
-
-// List blobs with prefix
-const { blobs, hasMore, cursor } = await listBlobs({
-  prefix: "products/",
-  limit: 100,
-});
-
-// Get blob metadata
-const metadata = await getBlobMetadata(url);
-
-// Validate file before upload
-const validation = validateFile(file, {
-  maxSize: MAX_FILE_SIZES.IMAGE, // 5MB
-  allowedTypes: ALLOWED_IMAGE_TYPES,
-});
-if (!validation.valid) {
-  console.error(validation.error);
-}
-```
-
-### File Size Limits
-
-```typescript
-MAX_FILE_SIZES.IMAGE; // 5MB - Product images
-MAX_FILE_SIZES.AVATAR; // 2MB - User avatars
-MAX_FILE_SIZES.DOCUMENT; // 10MB - Documents
-```
-
-### Blob Path Organization
-
-```typescript
-BLOB_PATHS.PRODUCT_IMAGES(productId); // 'products/{productId}/'
-BLOB_PATHS.USER_AVATARS(userId); // 'avatars/{userId}/'
-BLOB_PATHS.CHAT_ATTACHMENTS(roomId); // 'chat/{roomId}/'
-BLOB_PATHS.DOCUMENTS; // 'documents/'
-```
-
-### Environment Variables
-
-Automatically configured when linked to Vercel project.
-
 ## Upstash Vector
 
 **Purpose:** Vector embeddings for semantic search
@@ -754,50 +664,6 @@ UPSTASH_SEARCH_REST_URL=<your-url>
 UPSTASH_SEARCH_REST_TOKEN=<your-token>
 ```
 
-## Vercel Edge Config
-
-**Purpose:** Ultra-low latency key-value store for feature flags and configuration
-
-**Client Location:** `src/lib/storage/edge-config.ts`
-
-### Usage
-
-```typescript
-import {
-  isFeatureEnabled,
-  getFeatureFlags,
-  isMaintenanceMode,
-  getConfig,
-  FEATURE_FLAGS,
-  CONFIG_KEYS
-} from '@/lib/storage/edge-config';
-
-// Check single feature flag
-const newUiEnabled = await isFeatureEnabled(FEATURE_FLAGS.NEW_UI);
-
-// Check multiple flags at once
-const flags = await getFeatureFlags([
-  FEATURE_FLAGS.NEW_UI,
-  FEATURE_FLAGS.AI_SEARCH,
-  FEATURE_FLAGS.REALTIME_CHAT,
-]);
-
-// Check maintenance mode
-if (await isMaintenanceMode()) {
-  return <MaintenancePage />;
-}
-
-// Get custom config value
-const rateLimit = await getConfig<{ requests: number; windowSeconds: number }>(
-  CONFIG_KEYS.RATE_LIMIT
-);
-```
-
-### Available Feature Flags
-
-```typescript
-FEATURE_FLAGS.NEW_UI; // 'feature_new_ui'
-FEATURE_FLAGS.DARK_MODE; // 'feature_dark_mode'
 FEATURE_FLAGS.BETA_FEATURES; // 'feature_beta'
 FEATURE_FLAGS.MAINTENANCE_MODE; // 'maintenance_mode'
 FEATURE_FLAGS.AI_SEARCH; // 'feature_ai_search'
@@ -815,16 +681,16 @@ CONFIG_KEYS.DEFAULT_LOCALE; // 'config_default_locale'
 
 ### Environment Variables
 
-Automatically configured when linked to Vercel project.
+Managed via Edge Config.
 
 ## Setup
 
-1. Link storage services via Vercel dashboard or CLI
-2. Run `vercel env pull .env.development.local` to sync environment variables
+1. Configure storage services in your local environment
+2. Ensure `EDGE_CONFIG` is set in your `.env.local`
 3. Install required SDKs:
 
 ```bash
-npm install @upstash/redis @upstash/vector @upstash/qstash @upstash/search @vercel/blob @vercel/edge-config
+bun install @upstash/redis @upstash/vector @upstash/qstash @upstash/search
 ```
 
 ## Architecture
@@ -856,6 +722,6 @@ npm install @upstash/redis @upstash/vector @upstash/qstash @upstash/search @verc
 | Use Case               | Recommended | Why                |
 | ---------------------- | ----------- | ------------------ |
 | High-traffic images    | **R2**      | Zero egress fees   |
-| User uploads (general) | **Blob**    | Vercel integration |
+| User uploads (general) | **Blob**    | Cloudflare R2 / S3 |
 | Temporary files        | **Blob**    | Easy cleanup       |
 | CDN-served assets      | **R2**      | Cloudflare edge    |

@@ -221,7 +221,9 @@ export async function deleteProduct(id: number) {
 │                  Infrastructure Layer                            │
 │  External Services                                               │
 │  • Supabase (DB, Auth, Storage, Realtime)                       │
-│  • Vercel (Hosting, Edge)                                       │
+│  • Supabase (DB, Auth, Storage, Realtime)                       │
+│  • VPS (Self-hosting, Edge)                                     │
+│  • Email providers (Brevo, SES)                                 │
 │  • Email providers (Brevo, SES)                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -810,9 +812,9 @@ Server Components compiled
     ↓
 Client bundles optimized
     ↓
-Deploy to Vercel
+Deploy to VPS (GitHub Actions)
     ↓
-Edge Network Distribution
+Self-hosted Edge Runtime
 ```
 
 ### Environment Configuration

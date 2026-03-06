@@ -153,7 +153,7 @@ window.apiCacheStats();
 
 ```bash
 # Build and check sizes
-npm run build
+bun run build
 ls -lh build/assets/js/
 
 # Dev console
@@ -180,7 +180,7 @@ const products = useAppSelector((s) => selectActiveProducts(s)); // ❌
 
 ```bash
 rm -rf node_modules/.vite
-npm run build
+bun run build
 ```
 
 ## 📈 Expected Results

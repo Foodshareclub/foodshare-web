@@ -30,7 +30,7 @@ export default async function ChatPage({ searchParams }: { searchParams: SearchP
   // Get user profile for name and avatar
   const { data: profile } = await supabase
     .from("profiles")
-    .select("first_name, second_name, avatar_url")
+    .select("first_name,second_name,avatar_url")
     .eq("id", user.id)
     .single();
 

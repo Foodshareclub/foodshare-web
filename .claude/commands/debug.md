@@ -39,7 +39,7 @@ Debug: $ARGUMENTS
 
 ### Type Errors
 
-- Run `npm run type-check`
+- Run `bun run type-check`
 - Check Supabase types are up to date
 - Verify import paths
 
@@ -59,5 +59,5 @@ Debug: $ARGUMENTS
 
 - Browser DevTools (Console, Network)
 - Supabase Dashboard (Logs, SQL Editor)
-- `npm run type-check` for type issues
-- `npm run lint` for code issues
+- `bun run type-check` for type issues
+- `bun run lint` for code issues

@@ -30,9 +30,8 @@
 
 ## Deployment
 
-- [Deployment Guide](./04-deployment/DEPLOYMENT_GUIDE.md) - Production setup
+- [Deployment Guide](./04-deployment/DEPLOYMENT_GUIDE.md) - Production setup (Docker)
 - [Environment Setup](./04-deployment/ENVIRONMENT_SETUP.md) - Configuration
-- [Vercel Setup](./04-deployment/VERCEL_SETUP.md) - Vercel deployment
 
 ## Reference
 

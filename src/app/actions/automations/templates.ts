@@ -55,7 +55,7 @@ export async function saveEmailTemplate(
           updated_at: new Date().toISOString(),
         })
         .eq("id", validated.data.id)
-        .select("id, slug")
+        .select("id,slug")
         .single();
 
       if (dbError) {
@@ -79,7 +79,7 @@ export async function saveEmailTemplate(
           variables: validated.data.variables || [],
           created_by: user.id,
         })
-        .select("id, slug")
+        .select("id,slug")
         .single();
 
       if (dbError) {
@@ -112,7 +112,7 @@ export async function deleteEmailTemplate(id: string): Promise<ActionResult<{ id
     // Check if template is in use
     const { data: flows } = await supabase
       .from("email_automation_flows")
-      .select("id, name")
+      .select("id,name")
       .contains("steps", [{ template_slug: id }]);
 
     if (flows && flows.length > 0) {

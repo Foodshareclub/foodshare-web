@@ -58,7 +58,7 @@ export const sendPushTask = task({
     // Get user's device tokens
     const { data: devices, error } = await supabase
       .from("push_subscriptions")
-      .select("token, platform")
+      .select("token,platform")
       .eq("user_id", payload.userId)
       .eq("is_active", true);
 

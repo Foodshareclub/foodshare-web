@@ -33,13 +33,13 @@ cd airbnb-clone
 npx shadcn@latest init
 
 # Install required dependencies
-npm install @supabase/supabase-js @supabase/ssr
-npm install date-fns react-day-picker
-npm install framer-motion
-npm install zustand
-npm install react-hook-form zod @hookform/resolvers
-npm install lucide-react
-npm install next-themes
+bun add @supabase/supabase-js @supabase/ssr
+bun add date-fns react-day-picker
+bun add framer-motion
+bun add zustand
+bun add react-hook-form zod @hookform/resolvers
+bun add lucide-react
+bun add next-themes
 ```
 
 ### Shadcn Components to Install
@@ -1550,16 +1550,16 @@ export function useInfiniteProperties(filters: any = {}) {
 
 ```bash
 # Install Vercel CLI
-npm i -g vercel
+npm i -g 
 
 # Deploy
-vercel
+
 
 # Set environment variables in Vercel dashboard
 # or use CLI:
-vercel env add NEXT_PUBLIC_SUPABASE_URL
-vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY
-vercel env add SUPABASE_SERVICE_ROLE_KEY
+ env add NEXT_PUBLIC_SUPABASE_URL
+ env add NEXT_PUBLIC_SUPABASE_ANON_KEY
+ env add SUPABASE_SERVICE_ROLE_KEY
 ```
 
 ### Production Checklist

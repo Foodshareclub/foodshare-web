@@ -259,7 +259,7 @@ export async function getChallengeStatus(challengeId: number): Promise<Challenge
   // Check if accepted (in participants table)
   const { data: participation } = await supabase
     .from("challenge_participants")
-    .select("accepted_at, is_completed, completed_at")
+    .select("accepted_at,is_completed,completed_at")
     .eq("challenge_id", challengeId)
     .eq("profile_id", user.id)
     .single();
@@ -324,7 +324,7 @@ export async function getUserInteractedChallengeIds(): Promise<{
   // Get accepted/completed from participants
   const { data: participants } = await supabase
     .from("challenge_participants")
-    .select("challenge_id, is_completed")
+    .select("challenge_id,is_completed")
     .eq("profile_id", user.id);
 
   const accepted: number[] = [];

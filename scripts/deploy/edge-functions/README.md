@@ -7,17 +7,9 @@ This directory contains all deployment scripts for Supabase Edge Functions.
 ### Modern Deployment (Recommended)
 
 - **deploy-all-modern.sh** - Modern deployment with latest optimizations
-- **deploy-all-optimized.sh** - Optimized deployment script
+### Modern Deployment (Recommended)
 
-### No-JWT Deployment
-
-- **deploy-all-no-jwt.sh** - Deploy without JWT verification
-- **deploy-all-no-jwt-optimized.sh** - Optimized no-JWT deployment
-- **redeploy-no-jwt.sh** - Redeploy without JWT
-
-### Legacy/Alternative
-
-- **deploy-with-link.sh** - Deploy with Supabase link
+- **deploy-all-modern.sh** - Modern deployment with latest optimizations
 
 ## 📋 Usage
 
@@ -26,16 +18,6 @@ This directory contains all deployment scripts for Supabase Edge Functions.
 ```bash
 # Modern optimized deployment
 ./scripts/deploy/edge-functions/deploy-all-modern.sh
-
-# Or optimized version
-./scripts/deploy/edge-functions/deploy-all-optimized.sh
-```
-
-### No-JWT Deployment
-
-```bash
-# If you need to deploy without JWT verification
-./scripts/deploy/edge-functions/deploy-all-no-jwt-optimized.sh
 ```
 
 ### Individual Function Deployment

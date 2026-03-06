@@ -14,7 +14,7 @@ inclusion: always
 ## Installation
 
 ```bash
-npx shadcn@latest add [component]
+bunx shadcn@latest add [component]
 ```
 
 ## Available Components

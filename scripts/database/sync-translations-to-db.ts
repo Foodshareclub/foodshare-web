@@ -6,7 +6,7 @@
  * for use by the localization edge function and cross-platform apps.
  *
  * Usage:
- *   npm run sync-translations
+ *   bun run sync-translations
  *   tsx scripts/sync-translations-to-db.ts
  */
 

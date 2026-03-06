@@ -4,7 +4,7 @@
  * Admin AI Insights Server Actions
  */
 
-import { requireAdmin } from "@/lib/data/admin-auth";
+import { requireAdmin } from "@/lib/data/admin-check";
 import {
   getGrokInsights as getInsights,
   getSuggestedQuestions as getSuggestions,

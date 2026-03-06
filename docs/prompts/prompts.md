@@ -184,6 +184,7 @@
         - The rest of the operational secrets must be retrieved from the self-hosted supabase backend foodshare-backend vault and its edge fucntion secrets. 
         - Check the all secrets are in place and are correct.
         - Double check the current implementation and make sure the requested is correct.
+        - Commit and opush the latest changes and then monitor the CI/ CD pipeline execution. 
 
 ### Localization
 

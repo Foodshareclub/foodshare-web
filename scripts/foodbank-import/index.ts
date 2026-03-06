@@ -5,11 +5,11 @@
  * Imports foodbank and community fridge locations from OpenStreetMap into the FoodShare database.
  *
  * Usage:
- *   npm run import:foodbanks -- --country=US --dry-run
- *   npm run import:foodbanks -- --country=US,UK,DE --verbose
- *   npm run import:foodbanks -- --country=all
- *   npm run import:foodbanks -- --country=all --type=fridge
- *   npm run import:foodbanks -- --country=all --type=all
+ *   bun run import:foodbanks -- --country=US --dry-run
+ *   bun run import:foodbanks -- --country=US,UK,DE --verbose
+ *   bun run import:foodbanks -- --country=all
+ *   bun run import:foodbanks -- --country=all --type=fridge
+ *   bun run import:foodbanks -- --country=all --type=all
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';

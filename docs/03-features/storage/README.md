@@ -622,7 +622,7 @@ if (!validation.valid) {
 Run the comprehensive storage validation test suite:
 
 ```bash
-npm run test:storage
+bun run test:storage
 ```
 
 This runs `scripts/test-storage-validation.ts` which tests:

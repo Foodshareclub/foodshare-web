@@ -6,8 +6,7 @@
 
 ### Prerequisites
 
-- **Node.js**: 18.0.0 or higher
-- **npm**: 9.0.0 or higher (or yarn/pnpm)
+- **Bun**: 1.2+ (Primary runtime and package manager)
 - **Git**: For version control
 - **Supabase Account**: For backend services
 
@@ -25,7 +24,7 @@ cd foodshare/frontend
 ### 2. Install Dependencies
 
 ```bash
-npm install
+bun install
 ```
 
 ### 3. Configure Environment Variables
@@ -38,7 +37,7 @@ VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 
 # Optional: Analytics
-VITE_VERCEL_ANALYTICS_ID=your-analytics-id
+VITE_ANALYTICS_ID=your-analytics-id
 ```
 
 **Where to find Supabase credentials:**
@@ -51,7 +50,7 @@ VITE_VERCEL_ANALYTICS_ID=your-analytics-id
 ### 4. Start Development Server
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Application opens at `http://localhost:5173`
@@ -71,7 +70,7 @@ Application opens at `http://localhost:5173`
 2. **Start dev server**
 
    ```bash
-   npm run dev
+   bun run dev
    ```
 
 3. **Make changes** to code
@@ -93,17 +92,16 @@ Application opens at `http://localhost:5173`
 
 ```bash
 # Development
-npm run dev          # Start dev server (Vite)
-npm start            # Alias for dev
+bun run dev          # Start dev server (Vite)
 
 # Build
-npm run build        # Type check + build for production
-npm run preview      # Preview production build
+bun run build        # Type check + build for production
+bun run preview      # Preview production build
 
 # i18n (Translations)
-npm run extract      # Extract translatable strings
-npm run compile      # Compile translations
-npm run add-locale   # Add new language
+bun run extract      # Extract translatable strings
+bun run compile      # Compile translations
+bun run add-locale   # Add new language
 ```
 
 ---
@@ -234,7 +232,7 @@ const placeholder = t`Enter your name`;
 #### 2. Extract Strings
 
 ```bash
-npm run extract
+bun run extract
 ```
 
 This creates/updates `.po` files in `src/locales/{locale}/`
@@ -251,7 +249,7 @@ msgstr "Ahoj Světe"
 #### 4. Compile Translations
 
 ```bash
-npm run compile
+bun run compile
 ```
 
 This generates `.js` files that the app uses at runtime.
@@ -259,7 +257,7 @@ This generates `.js` files that the app uses at runtime.
 #### 5. Add New Language
 
 ```bash
-npm run add-locale -- cs  # Example: Czech
+bun run add-locale -- cs  # Example: Czech
 ```
 
 ---
@@ -278,7 +276,7 @@ npm run add-locale -- cs  # Example: Czech
 
 3. **Test locally**
    ```bash
-   npm run dev
+   bun run dev
    ```
 
 ### Storage (Images)
@@ -356,13 +354,13 @@ import { Box, Button, Text } from "@chakra-ui/react";
 
 ```bash
 # Run all tests
-npm test
+bun test
 
 # Run in watch mode
-npm run test:watch
+bun run test:watch
 
 # Run with coverage
-npm run test:coverage
+bun run test:coverage
 ```
 
 ### Writing Tests
@@ -721,7 +719,7 @@ Cannot find module '@/components/...'
 String not translated
 ```
 
-**Fix**: Run `npm run extract` then `npm run compile`
+**Fix**: Run `bun run extract` then `bun run compile`
 
 ---
 
@@ -753,7 +751,7 @@ const MyHeavyComponent = lazy(() =>
 ### Bundle Analysis
 
 ```bash
-npm run build
+bun run build
 # Check dist/ folder size
 ```
 
@@ -764,26 +762,16 @@ npm run build
 ### Build for Production
 
 ```bash
-npm run build
+bun run build
 ```
 
 Outputs to `dist/` folder.
 
-### Deploy to Vercel
+### Build for Production (Docker)
 
-1. **Install Vercel CLI**
-
-   ```bash
-   npm i -g vercel
-   ```
-
-2. **Deploy**
-
-   ```bash
-   vercel --prod
-   ```
-
-3. **Configure Environment Variables** in Vercel Dashboard
+```bash
+docker compose up -d --build
+```
 
 ---
 
@@ -792,19 +780,19 @@ Outputs to `dist/` folder.
 ### Clear Cache
 
 ```bash
-# Clear npm cache
-npm cache clean --force
+# Clear Bun cache
+bun pm cache rm --force
 
 # Remove node_modules and reinstall
 rm -rf node_modules package-lock.json
-npm install
+bun install
 ```
 
 ### Reset Vite Cache
 
 ```bash
 rm -rf .vite
-npm run dev
+bun run dev
 ```
 
 ---

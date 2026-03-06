@@ -152,7 +152,7 @@ export async function approveListing(id: number): Promise<ServerActionResult<voi
     // Check if listing exists
     const { data: listing } = await supabase
       .from("posts")
-      .select("id, post_name")
+      .select("id,post_name")
       .eq("id", id)
       .single();
 
@@ -206,7 +206,7 @@ export async function rejectListing(id: number, reason: string): Promise<ServerA
     // Check if listing exists
     const { data: listing } = await supabase
       .from("posts")
-      .select("id, post_name, profile_id")
+      .select("id,post_name,profile_id")
       .eq("id", id)
       .single();
 
@@ -472,7 +472,7 @@ export async function banUser(userId: string, reason: string): Promise<ServerAct
     // Check if user exists
     const { data: targetUser } = await supabase
       .from("profiles")
-      .select("id, first_name, second_name, email")
+      .select("id,first_name,second_name,email")
       .eq("id", userId)
       .single();
 
@@ -550,7 +550,7 @@ export async function unbanUser(userId: string): Promise<ServerActionResult<void
     // Check if user exists
     const { data: targetUser } = await supabase
       .from("profiles")
-      .select("id, email, is_active")
+      .select("id,email,is_active")
       .eq("id", userId)
       .single();
 

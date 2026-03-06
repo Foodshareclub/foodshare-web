@@ -106,8 +106,8 @@ To manually trigger deployment:
 
 #### Workflow fails at "Test" step
 
-- Check if translations are compiled: `npm run compile`
-- Verify test suite passes locally: `npm run test-localization`
+- Check if translations are compiled: `bun run compile`
+- Verify test suite passes locally: `bun run test-localization`
 
 #### Workflow fails at "Deploy" step
 
@@ -126,9 +126,9 @@ To manually trigger deployment:
 1. **Always test locally first**:
 
    ```bash
-   npm run compile
-   npm run test-localization
-   npm run sync-translations
+   bun run compile
+   bun run test-localization
+   bun run sync-translations
    ```
 
 2. **Use develop branch for testing**:

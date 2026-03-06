@@ -6,8 +6,7 @@
 
 ### Prerequisites
 
-- **Node.js**: 24.11.1 (see `.nvmrc`)
-- **npm**: 10.0.0 or higher
+- **Bun**: 1.2+ (Primary runtime and package manager)
 - **Git**: For version control
 - **Supabase Account**: For backend services
 
@@ -35,7 +34,7 @@ nvm use
 ### 3. Install Dependencies
 
 ```bash
-npm install
+bun install
 ```
 
 ### 4. Configure Environment Variables
@@ -65,7 +64,7 @@ BREVO_API_KEY=your-brevo-key
 ### 5. Start Development Server
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Application opens at `http://localhost:3000`
@@ -85,7 +84,7 @@ Application opens at `http://localhost:3000`
 2. **Start dev server** (uses Turbopack for fast HMR)
 
    ```bash
-   npm run dev
+   bun run dev
    ```
 
 3. **Make changes** to code
@@ -95,8 +94,8 @@ Application opens at `http://localhost:3000`
 5. **Run type check and lint**
 
    ```bash
-   npm run type-check
-   npm run lint
+   bun run type-check
+   bun run lint
    ```
 
 6. **Commit changes**
@@ -114,21 +113,21 @@ Application opens at `http://localhost:3000`
 
 ```bash
 # Development
-npm run dev              # Start dev server (Turbopack, port 3000)
+bun run dev              # Start dev server (Turbopack, port 3000)
 
 # Build
-npm run build            # Production build
-npm run build:analyze    # Build with bundle analyzer
-npm run start            # Start production server
+bun run build            # Production build
+bun run build:analyze    # Build with bundle analyzer
+bun run start            # Start production server
 
 # Quality
-npm run lint             # Run ESLint
-npm run lint:fix         # Fix ESLint issues
-npm run type-check       # TypeScript type checking
-npm run test:build       # Type check + lint + build
+bun run lint             # Run ESLint
+bun run lint:fix         # Fix ESLint issues
+bun run type-check       # TypeScript type checking
+bun run test:build       # Type check + lint + build
 
 # Cleanup
-npm run clean            # Clean build artifacts
+bun run clean            # Clean build artifacts
 ```
 
 ---
@@ -309,9 +308,9 @@ export function MyFeature() {
 
 ```bash
 # Add new shadcn/ui component
-npx shadcn@latest add button
-npx shadcn@latest add dialog
-npx shadcn@latest add input
+bunx shadcn@latest add button
+bunx shadcn@latest add dialog
+bunx shadcn@latest add input
 ```
 
 ### Adding Zustand Store (for lightweight UI state)
@@ -829,7 +828,7 @@ import Image from "next/image";
 ### Bundle Analysis
 
 ```bash
-npm run build:analyze
+bun run build:analyze
 ```
 
 Opens bundle analyzer to identify large dependencies.
@@ -841,7 +840,7 @@ Opens bundle analyzer to identify large dependencies.
 ### Build for Production
 
 ```bash
-npm run build
+bun run build
 ```
 
 Outputs to `.next/` folder.
@@ -858,10 +857,10 @@ Outputs to `.next/` folder.
 
 ```bash
 # Install Vercel CLI
-npm i -g vercel
+bun add -g 
 
 # Deploy
-vercel --prod
+ --prod
 ```
 
 ---
@@ -872,23 +871,23 @@ vercel --prod
 
 ```bash
 # Clean Next.js build artifacts
-npm run clean
+bun run clean
 
 # Or manually
 rm -rf .next node_modules/.cache
 
 # Full reset
 rm -rf node_modules package-lock.json
-npm install
+bun install
 ```
 
 ### Reset Everything
 
 ```bash
-npm run clean
+bun run clean
 rm -rf node_modules package-lock.json
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 ---

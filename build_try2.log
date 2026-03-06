@@ -1,0 +1,125 @@
+$ bun --bun next build
+▲ Next.js 16.1.6 (Turbopack)
+- Experiments (use with caution):
+  · clientTraceMetadata
+  · optimizePackageImports
+  · webVitalsAttribution
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 13.6s
+  Running next.config.js provided runAfterProductionCompile ...
+✓ Completed runAfterProductionCompile in 329ms
+  Skipping validation of types
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/72) ...
+  Generating static pages using 11 workers (18/72) 
+  Generating static pages using 11 workers (36/72) 
+Failed to get user info: Error: Dynamic server usage: Route /feedback couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at h (.next/server/chunks/ssr/[root-of-the-server]__47ae5d87._.js:2:349)
+    at u (.next/server/chunks/ssr/_8f55e79e._.js:15:5292)
+    at g (.next/server/chunks/ssr/[root-of-the-server]__04ad3e76._.js:2:1998)
+    at stringify (null) {
+  description: "Route /feedback couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+  digest: 'DYNAMIC_SERVER_USAGE'
+}
+  Generating static pages using 11 workers (54/72) 
+Error fetching forum posts for sitemap
+Error fetching forum categories for sitemap
+Error fetching food posts for sitemap
+Error fetching challenges for sitemap
+[Admin] CRM data fetch error: Error: Dynamic server usage: Route /admin couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at h (.next/server/chunks/ssr/[root-of-the-server]__47ae5d87._.js:2:349)
+    at d (.next/server/chunks/ssr/[root-of-the-server]__0b5d2738._.js:29:1373)
+    at o (.next/server/chunks/ssr/[root-of-the-server]__8423d85a._.js:9:2380)
+    at p (.next/server/chunks/ssr/[root-of-the-server]__8423d85a._.js:9:2857) {
+  description: "Route /admin couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+  digest: 'DYNAMIC_SERVER_USAGE'
+}
+✓ Generating static pages using 11 workers (72/72) in 257.3ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /.well-known/apple-app-site-association
+├ ƒ /admin
+├ ƒ /admin/ai-insights
+├ ƒ /admin/analytics
+├ ƒ /admin/analytics/sync
+├ ƒ /admin/crm
+├ ƒ /admin/email
+├ ƒ /admin/email/audience
+├ ƒ /admin/email/automation
+├ ƒ /admin/email/campaigns
+├ ƒ /admin/email/monitor
+├ ƒ /admin/email/templates
+├ ƒ /admin/email/test
+├ ƒ /admin/listings
+├ ƒ /admin/performance
+├ ƒ /admin/reports
+├ ƒ /admin/users
+├ ƒ /api/admin/email/automations
+├ ƒ /api/admin/email/bounces
+├ ƒ /api/admin/email/campaigns
+├ ƒ /api/admin/email/health
+├ ƒ /api/admin/email/logs
+├ ƒ /api/admin/email/queue
+├ ƒ /api/admin/email/quotas
+├ ƒ /api/admin/email/segments
+├ ƒ /api/admin/email/stats
+├ ƒ /api/admin/email/sync
+├ ƒ /api/admin/email/templates
+├ ƒ /api/admin/email/templates/[templateId]
+├ ƒ /api/challenges
+├ ƒ /api/challenges/active
+├ ƒ /api/challenges/complete
+├ ƒ /api/chat/messages
+├ ƒ /api/health
+├ ƒ /api/products
+├ ƒ /auth/callback
+├ ƒ /auth/forgot-password
+├ ƒ /auth/login
+├ ƒ /auth/reset-password
+├ ƒ /challenge
+├ ƒ /challenge/[id]
+├ ƒ /chat
+├ ƒ /donation
+├ ƒ /feedback
+├ ƒ /food
+├ ƒ /food/[id]
+├ ƒ /food/new
+├ ƒ /forum
+├ ƒ /forum/[slug]
+├ ƒ /forum/feed.xml
+├ ƒ /forum/new
+├ ƒ /help
+├ ƒ /maintenance
+├ ○ /manifest.webmanifest
+├ ƒ /map/[type]
+├ ƒ /messages
+├ ƒ /messages/[id]
+├ ƒ /my-posts
+├ ƒ /new
+├ ƒ /notifications
+├ ƒ /offline
+├ ƒ /privacy
+├ ƒ /profile
+├ ƒ /profile/[id]
+├ ƒ /profile/edit
+├ ○ /robots.txt
+├ ƒ /settings
+├ ƒ /settings/language
+├ ƒ /settings/login-and-security
+├ ƒ /settings/notifications
+├ ƒ /settings/personal-info
+├ ○ /sitemap.xml
+├ ƒ /terms
+├ ƒ /user-listings
+└ ƒ /volunteers
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

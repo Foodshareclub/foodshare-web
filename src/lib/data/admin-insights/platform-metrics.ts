@@ -17,8 +17,8 @@ export async function getPlatformMetrics(): Promise<PlatformMetrics> {
   const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
   const [{ data: profiles }, { data: posts }, { count: messageCount }] = await Promise.all([
-    supabase.from("profiles").select("id, created_time, last_seen_at"),
-    supabase.from("posts").select("id, created_at, is_active, post_type, post_views"),
+    supabase.from("profiles").select("id,created_time,last_seen_at"),
+    supabase.from("posts").select("id,created_at,is_active,post_type,post_views"),
     supabase.from("messages").select("*", { count: "exact", head: true }),
   ]);
 
@@ -60,7 +60,7 @@ export async function getPlatformMetrics(): Promise<PlatformMetrics> {
 export async function getChurnData(): Promise<ChurnData> {
   const supabase = await createClient();
 
-  const { data: profiles } = await supabase.from("profiles").select("id, last_seen_at");
+  const { data: profiles } = await supabase.from("profiles").select("id,last_seen_at");
 
   const now = new Date();
   const inactiveThreshold = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -86,7 +86,7 @@ export async function getEmailCampaignData(): Promise<EmailCampaignData | null> 
 
   const { data: emails, error } = await supabase
     .from("email_logs")
-    .select("id, created_at, status, provider_used")
+    .select("id,created_at,status,provider_used")
     .order("created_at", { ascending: false })
     .limit(1000);
 

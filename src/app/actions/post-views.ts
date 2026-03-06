@@ -185,7 +185,7 @@ export async function getBatchViewCounts(
   return withErrorHandling(async () => {
     const supabase = await createClient();
 
-    const { data, error } = await supabase.from("posts").select("id, post_views").in("id", postIds);
+    const { data, error } = await supabase.from("posts").select("id,post_views").in("id", postIds);
 
     if (error) throw new Error(error.message);
 

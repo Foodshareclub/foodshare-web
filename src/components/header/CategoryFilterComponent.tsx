@@ -40,16 +40,15 @@ export default function CategoryFilterComponent({
   const handleCategoryChange = (categoryId: string) => {
     const routeName = categoryId.toLowerCase();
 
-    // Map to singular post_type for the query param
+    // Map to singular post_type for the URL
     const postType = CATEGORY_TO_POST_TYPE[routeName] || routeName;
+    const targetRoute = postType === "food" ? "/food" : `/${postType}`;
 
     // Forum has its own page
     if (routeName === "forum") {
       router.push("/forum");
-    } else if (postType === "food") {
-      router.push("/food");
     } else {
-      router.push(`/food?type=${postType}`);
+      router.push(targetRoute);
     }
 
     getRoute(routeName);

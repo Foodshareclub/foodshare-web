@@ -174,7 +174,7 @@ FoodShare follows a server-first architecture leveraging Next.js 16 capabilities
 │  (Polling, real-time, UI state only)    │
 ├─────────────────────────────────────────┤
 │         Infrastructure Layer            │  ← External services
-│  (Supabase, Vercel, Email providers)    │
+│  (Supabase, Self-hosted VPS, Email providers)    │
 └─────────────────────────────────────────┘
 ```
 

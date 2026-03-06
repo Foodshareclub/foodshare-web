@@ -54,7 +54,7 @@ export const processAutomationEmailTask = task({
     // 1. Fetch queue item
     const { data: queueItem, error: fetchError } = await supabase
       .from("email_automation_queue")
-      .select("*, automation:email_automations(*)")
+      .select("*,automation:email_automations(*)")
       .eq("id", payload.queueItemId)
       .single();
 

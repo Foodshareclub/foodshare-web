@@ -133,7 +133,7 @@ export {
 } from "./auth";
 
 // Admin auth utilities (centralized)
-export { logAdminAction, type AdminAuthResult } from "./admin-auth";
+export { logAdminAction, type AdminCheckResult as AdminAuthResult } from "./admin-check";
 
 // Chat data functions
 export {

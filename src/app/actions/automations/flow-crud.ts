@@ -53,7 +53,7 @@ export async function createAutomationFlow(
         status: "draft",
         created_by: user.id,
       })
-      .select("id, name")
+      .select("id,name")
       .single();
 
     if (dbError) {
@@ -104,7 +104,7 @@ export async function updateAutomationFlow(
     // Check if automation exists and get current state
     const { data: current, error: fetchError } = await supabase
       .from("email_automation_flows")
-      .select("id, status, name")
+      .select("id,status,name")
       .eq("id", id)
       .single();
 
@@ -139,7 +139,7 @@ export async function updateAutomationFlow(
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
-      .select("id, status")
+      .select("id,status")
       .single();
 
     if (dbError) {
@@ -182,7 +182,7 @@ export async function deleteAutomationFlow(
     // Check if automation exists
     const { data: current, error: fetchError } = await supabase
       .from("email_automation_flows")
-      .select("id, status, name, total_enrolled")
+      .select("id,status,name,total_enrolled")
       .eq("id", id)
       .single();
 
@@ -276,7 +276,7 @@ export async function toggleAutomationStatus(
     // Get current automation state
     const { data: current, error: fetchError } = await supabase
       .from("email_automation_flows")
-      .select("id, status, name, steps, trigger_type")
+      .select("id,status,name,steps,trigger_type")
       .eq("id", id)
       .single();
 
@@ -311,7 +311,7 @@ export async function toggleAutomationStatus(
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
-      .select("id, status")
+      .select("id,status")
       .single();
 
     if (dbError) {
@@ -413,7 +413,7 @@ export async function duplicateAutomation(
         conversion_goal: source.conversion_goal,
         created_by: user.id,
       })
-      .select("id, name")
+      .select("id,name")
       .single();
 
     if (dbError) {

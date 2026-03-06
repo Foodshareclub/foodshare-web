@@ -122,7 +122,7 @@ export function useAuth(): UseAuthReturn {
       try {
         const { data, error: roleError } = await supabase
           .from("user_roles")
-          .select("role_id, roles!user_roles_role_id_fkey(name)")
+          .select("role_id,roles!user_roles_role_id_fkey(name)")
           .eq("profile_id", userId);
 
         console.log("[checkAdminStatus] userId:", userId);

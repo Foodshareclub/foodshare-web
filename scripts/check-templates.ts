@@ -12,7 +12,7 @@ const supabase = createClient(
 async function check() {
   const { data, error } = await supabase
     .from("email_templates")
-    .select("slug, name, category, is_active")
+    .select("slug,name,category,is_active")
     .order("name");
 
   if (error) {

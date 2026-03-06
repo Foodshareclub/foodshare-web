@@ -130,7 +130,7 @@ export async function sendFoodChatMessage(formData: FormData): Promise<ServerAct
     // Verify user is a participant in this room
     const { data: room, error: roomError } = await supabase
       .from("rooms")
-      .select("sharer, requester")
+      .select("sharer,requester")
       .eq("id", validated.data.roomId)
       .single();
 
@@ -803,7 +803,7 @@ export async function archiveChatRoom(roomId: string): Promise<ServerActionResul
     // Verify user is part of the room
     const { data: room } = await supabase
       .from("rooms")
-      .select("sharer, requester")
+      .select("sharer,requester")
       .eq("id", roomId)
       .single();
 

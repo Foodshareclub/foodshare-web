@@ -4,6 +4,7 @@
  */
 
 import type { InitialProductStateType } from "@/types/product.types";
+import { logger } from "@/lib/logger";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -54,7 +55,7 @@ async function listProducts(params?: {
       const result = await res.json();
 
       if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_API_MONITORING === "true") {
-        console.log(`[API] products via supabase: ${Date.now() - start}ms ✓`);
+        logger.debug(`[API] products via supabase: ${Date.now() - start}ms ✓`, { component: "UnifiedClient" });
       }
 
       return result;
@@ -75,7 +76,7 @@ async function listProducts(params?: {
   const result = await res.json();
 
   if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_API_MONITORING === "true") {
-    console.log(`[API] products via local: ${Date.now() - start}ms ✓`);
+    logger.debug(`[API] products via local: ${Date.now() - start}ms ✓`, { component: "UnifiedClient" });
   }
 
   return result;

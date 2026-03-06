@@ -132,7 +132,7 @@ export async function fetchAllTemplates(category?: string): Promise<DatabaseTemp
 
     let query = supabase
       .from("email_templates")
-      .select("id, slug, name, category, subject, variables, metadata, version, is_active")
+      .select("id,slug,name,category,subject,variables,metadata,version,is_active")
       .eq("is_active", true)
       .order("name");
 

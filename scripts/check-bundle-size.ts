@@ -142,7 +142,7 @@ async function checkBundleSizes() {
 
   if (hasFailures) {
     console.log(`${RED}${BOLD}Bundle size budget exceeded!${RESET}`);
-    console.log(`Run 'bun run build:analyze' to investigate.\n`);
+    console.log(`Run 'bun run build:analyze' to investigate using Turbopack analysis.\n`);
     process.exit(1);
   } else {
     console.log(`${GREEN}${BOLD}All bundle size budgets pass.${RESET}\n`);

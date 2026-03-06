@@ -377,7 +377,7 @@ export async function getCurrentUserInfo(): Promise<ServerActionResult<UserInfo 
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("first_name, second_name")
+      .select("first_name,second_name")
       .eq("id", user.id)
       .single();
 

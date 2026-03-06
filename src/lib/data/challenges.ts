@@ -107,7 +107,7 @@ export async function getChallengeStats(): Promise<ChallengeStats> {
 
   const { data, error } = await supabase
     .from("challenges")
-    .select("challenge_score, challenged_people, challenge_likes_counter")
+    .select("challenge_score,challenged_people,challenge_likes_counter")
     .eq("challenge_published", true);
 
   if (error) throw new Error(error.message);

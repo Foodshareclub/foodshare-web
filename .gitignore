@@ -2,7 +2,8 @@
 
 # dependencies
 /node_modules
-yarn.lock
+bun.lock
+.bun-build
 package-lock.json
 /.pnp
 .pnp.*
@@ -38,9 +39,6 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.production.example
-
-# vercel
-.vercel
 
 # typescript
 *.tsbuildinfo

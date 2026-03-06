@@ -27,14 +27,14 @@ Understanding the codebase organization.
 # Clone and install
 git clone <repository-url>
 cd foodshare
-npm install
+bun install
 
 # Set up environment
 cp .env.local.example .env.local
 # Edit .env.local with your Supabase credentials
 
 # Start development
-npm run dev
+bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view the app.
@@ -43,10 +43,10 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 
 | Command              | Description              |
 | -------------------- | ------------------------ |
-| `npm run dev`        | Start development server |
-| `npm run build`      | Build for production     |
-| `npm run lint`       | Run ESLint               |
-| `npm run type-check` | TypeScript checking      |
+| `bun run dev`        | Start development server |
+| `bun run build`      | Build for production     |
+| `bun run lint`       | Run ESLint               |
+| `bun run type-check` | TypeScript checking      |
 
 ## Key Concepts
 

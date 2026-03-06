@@ -22,16 +22,9 @@ Environment variable configuration.
 - Security considerations
 - Platform-specific setup
 
-### [VERCEL_SETUP.md](./VERCEL_SETUP.md)
-
-Vercel-specific deployment.
-
-- Project configuration
-- Build settings
-- Domain setup
-- Favicon configuration
-
 ### [MONITORING.md](./MONITORING.md)
+
+Production monitoring and observability.
 
 Production monitoring and observability.
 
@@ -49,21 +42,24 @@ Production monitoring and observability.
 - [ ] Build tested locally
 - [ ] Translations compiled
 
-### Deploy to Vercel
+## ⚡ Quick Deployment (Docker)
+
+### Prerequisites
+
+- [ ] Supabase project configured (backend.foodshare.club)
+- [ ] Environment variables set in `.env`
+- [ ] Build tested locally
+- [ ] Translations compiled
+
+### Deploy to VPS
 
 ```bash
-# Install Vercel CLI
-npm i -g vercel
+# SSH into VPS
+autossh -M 0 -o ... organic@web.foodshare.club
 
 # Deploy
-vercel
-
-# Set environment variables
-vercel env add VITE_SUPABASE_URL
-vercel env add VITE_SUPABASE_ANON_KEY
-
-# Deploy to production
-vercel --prod
+cd /home/organic/dev/work/foodshare/foodshare-web
+git pull && docker compose up -d --build
 ```
 
 ## 🔐 Environment Variables
@@ -172,9 +168,9 @@ export default defineConfig({
 ```json
 {
   "scripts": {
-    "build": "npm run compile && vite build",
-    "preview": "vite preview",
-    "deploy": "npm run build && vercel --prod"
+    "build": "bun run compile && next build",
+    "start": "next start",
+    "dev": "next dev"
   }
 }
 ```
@@ -224,9 +220,9 @@ git pull origin develop
 git checkout -b feature/my-feature
 
 # 3. Make changes and test
-npm run dev
-npm run build
-npm run preview
+bun run dev
+bun run build
+bun run preview
 
 # 4. Commit and push
 git add .
@@ -256,25 +252,25 @@ git push origin main
 
 ### Build Fails
 
-- Check TypeScript errors: `npm run type-check`
-- Check ESLint: `npm run lint`
+- Check TypeScript errors: `bun run type-check`
+- Check ESLint: `bun run lint`
 - Clear cache: `rm -rf node_modules/.vite`
 
 ### Environment Variables Not Working
 
-- Ensure `VITE_` prefix
+- Check environment variable prefix (if using Vite/Legacy) or `NEXT_PUBLIC_`
 - Restart dev server after changes
-- Check Vercel dashboard for production
+- Verify Docker environment variables in `docker-compose.yml`
 
 ### Translations Missing
 
-- Run `npm run compile` before build
+- Run `bun run compile` before build
 - Check `.po` files are committed
 - Verify compiled `.js` files exist
 
 ### Performance Issues
 
-- Check bundle size: `npm run build -- --analyze`
+- Check bundle size: `bun run build -- --analyze`
 - Optimize images
 - Enable code splitting
 - Configure caching

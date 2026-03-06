@@ -345,7 +345,7 @@ python foodshare-backend/tools/sync-to-motherduck.py --test
 
    ```bash
    cd foodshare-backend
-   npx supabase functions deploy sync-analytics
+   bunx supabase functions deploy sync-analytics
    ```
 
 3. **Run initial full sync:**

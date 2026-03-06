@@ -64,7 +64,7 @@ export async function createForumPost(
       slug,
       forum_published: true,
     })
-    .select("id, slug")
+    .select("id,slug")
     .single();
 
   if (error) {
@@ -292,7 +292,7 @@ export async function deleteComment(
 
   // Fetch comment and admin status in parallel to avoid waterfall
   const [commentResult, adminResult] = await Promise.all([
-    supabase.from("comments").select("user_id, forum_id").eq("id", commentId).single(),
+    supabase.from("comments").select("user_id,forum_id").eq("id", commentId).single(),
     checkUserIsAdmin(user.id),
   ]);
 

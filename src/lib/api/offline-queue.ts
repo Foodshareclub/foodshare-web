@@ -10,6 +10,9 @@
  */
 
 import { enterpriseClient, ErrorCodes, type EnterpriseResult } from "./enterprise-client";
+import { logger } from "@/lib/logger";
+
+const LOG_CONTEXT = { component: "OfflineQueue" };
 
 // =============================================================================
 // Types
@@ -165,7 +168,7 @@ export class OfflineQueue {
    */
   private handleOnline = () => {
     this.isOnline = true;
-    console.log("[OfflineQueue] Online - starting sync");
+    logger.info("[OfflineQueue] Online - starting sync", LOG_CONTEXT);
     this.startSync();
   };
 
@@ -174,7 +177,7 @@ export class OfflineQueue {
    */
   private handleOffline = () => {
     this.isOnline = false;
-    console.log("[OfflineQueue] Offline - pausing sync");
+    logger.info("[OfflineQueue] Offline - pausing sync", LOG_CONTEXT);
     this.stopSync();
   };
 

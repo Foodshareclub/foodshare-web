@@ -446,17 +446,15 @@ function ClientComponent() {
 
 ---
 
-## Analytics & Monitoring
+---
 
-### **Vercel Analytics 1.5**
+## Monitoring & Observability
 
-- **Purpose**: Web analytics
-- **Features**: Pageviews, user tracking, performance metrics
+### **Sentry**
 
-### **Vercel Speed Insights 1.2**
-
-- **Purpose**: Performance monitoring
-- **Metrics**: Core Web Vitals, real user monitoring
+- **Purpose**: Error tracking and performance monitoring
+- **Features**: Core Web Vitals, real user monitoring, session replay
+- **Config**: `src/instrumentation.ts`, `sentry.client.config.ts`, `sentry.server.config.ts`
 
 ---
 
@@ -481,7 +479,7 @@ function ClientComponent() {
 ### **Webpack Bundle Analyzer**
 
 - **Purpose**: Analyze production bundles
-- **Command**: `npm run build:analyze`
+- **Command**: `bun run build:analyze`
 
 ### **React Compiler (Babel Plugin)**
 
@@ -513,9 +511,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 SUPABASE_JWT_SECRET=your_jwt_secret
 
-# Optional: OpenAI
-OPENAI_API_KEY=your_openai_key
-
 # Optional: Email (Brevo)
 BREVO_API_KEY=your_brevo_key
 
@@ -529,15 +524,15 @@ AWS_SECRET_ACCESS_KEY=your_aws_secret
 ## NPM Scripts
 
 ```bash
-npm run dev          # Start dev server with Turbopack (port 3000)
-npm run build        # Production build
-npm run build:analyze # Build with bundle analyzer
-npm run start        # Start production server
-npm run lint         # Run ESLint
-npm run lint:fix     # Fix ESLint issues
-npm run type-check   # TypeScript type checking
-npm run test:build   # Type check + lint + build
-npm run clean        # Clean build artifacts
+bun run dev          # Start dev server with Turbopack (port 3000)
+bun run build        # Production build
+bun run build:analyze # Build with bundle analyzer
+bun run start        # Start production server
+bun run lint         # Run ESLint
+bun run lint:fix     # Fix ESLint issues
+bun run type-check   # TypeScript type checking
+bun run test:build   # Type check + lint + build
+bun run clean        # Clean build artifacts
 ```
 
 ---
@@ -568,7 +563,7 @@ npm run clean        # Clean build artifacts
 6. **Image Optimization**: Next.js built-in optimization with Supabase CDN
 7. **Code Splitting**: Automatic with App Router
 8. **Caching**: Next.js cache with `revalidatePath`/`revalidateTag`
-9. **Bundle Analysis**: Available via `npm run build:analyze`
+9. **Bundle Analysis**: Available via `bun run build:analyze`
 
 ---
 

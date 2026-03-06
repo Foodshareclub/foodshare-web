@@ -70,7 +70,7 @@ print_step "Running pre-flight checks..."
 # Check Supabase CLI
 if ! command -v supabase &> /dev/null; then
     print_error "Supabase CLI not found. Please install it first:"
-    echo "  npm install -g supabase"
+    echo "  bun install -g supabase"
     exit 1
 fi
 print_success "Supabase CLI found: $(supabase --version)"

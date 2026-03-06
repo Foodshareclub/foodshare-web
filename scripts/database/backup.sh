@@ -24,10 +24,10 @@ if ! command -v supabase &> /dev/null; then
     echo -e "${RED}Error: Supabase CLI not found${NC}"
     echo ""
     echo "Install Supabase CLI:"
-    echo "  npm install -g supabase"
+    echo "  bun install -g supabase"
     echo ""
     echo "Or use npx:"
-    echo "  npx supabase db dump"
+    echo "  bunx supabase db dump"
     exit 1
 fi
 

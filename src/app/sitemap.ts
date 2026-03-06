@@ -190,7 +190,7 @@ async function getForumPostsForSitemap() {
 
     const { data, error } = await supabase
       .from("forum")
-      .select("id, slug, forum_post_updated_at, last_activity_at, is_pinned, is_featured")
+      .select("id,slug,forum_post_updated_at,last_activity_at,is_pinned,is_featured")
       .eq("forum_published", true)
       .order("forum_post_created_at", { ascending: false });
 
@@ -215,7 +215,7 @@ async function getForumCategoriesForSitemap() {
 
     const { data, error } = await supabase
       .from("forum_categories")
-      .select("slug, updated_at")
+      .select("slug,updated_at")
       .eq("is_active", true)
       .order("sort_order", { ascending: true });
 
@@ -241,7 +241,7 @@ async function getFoodProductsForSitemap() {
 
     const { data, error } = await supabase
       .from("posts")
-      .select("id, created_at, updated_at")
+      .select("id,created_at,updated_at")
       .eq("is_active", true)
       .order("id", { ascending: false });
 
@@ -266,7 +266,7 @@ async function getChallengesForSitemap() {
 
     const { data, error } = await supabase
       .from("challenges")
-      .select("id, challenge_created_at, challenge_updated_at")
+      .select("id,challenge_created_at,challenge_updated_at")
       .eq("challenge_published", true)
       .order("id", { ascending: false });
 

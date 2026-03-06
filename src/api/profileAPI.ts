@@ -117,7 +117,7 @@ export const profileAPI = {
   async getVolunteers(): Promise<PostgrestSingleResponse<ProfileType[]>> {
     return supabase
       .from("profiles")
-      .select("*, user_roles!inner(roles!inner(name))")
+      .select("*,user_roles!inner(roles!inner(name))")
       .eq("user_roles.roles.name", "volunteer")
       .limit(50);
   },

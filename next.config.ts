@@ -4,39 +4,6 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 const withNextIntl = createNextIntlPlugin();
 
-// Bundle analyzer for build:analyze script (ANALYZE=true)
-// Uses webpack-bundle-analyzer under the hood
-const withBundleAnalyzer = (config: NextConfig) => {
-  if (process.env.ANALYZE !== "true") return config;
-
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
-
-  return {
-    ...config,
-    webpack: (webpackConfig: { plugins: unknown[] }, options: { isServer: boolean }) => {
-      // Run original webpack config first if it exists
-      const modifiedConfig =
-        config.webpack?.(
-          webpackConfig,
-          options as Parameters<NonNullable<NextConfig["webpack"]>>[1]
-        ) ?? webpackConfig;
-
-      // Only add analyzer for client bundle
-      if (!options.isServer) {
-        modifiedConfig.plugins.push(
-          new BundleAnalyzerPlugin({
-            analyzerMode: "static",
-            reportFilename: "../bundle-report.html",
-            openAnalyzer: true,
-          })
-        );
-      }
-
-      return modifiedConfig;
-    },
-  };
-};
 
 const nextConfig: NextConfig = {
   // React Compiler - automatic memoization for +15-20% render performance
@@ -131,16 +98,6 @@ const nextConfig: NextConfig = {
     "duckdb-async",
   ],
 
-  // Webpack config to handle node-pre-gyp conditional requires
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      "aws-sdk": false,
-      nock: false,
-      "mock-aws-s3": false,
-    };
-    return config;
-  },
 
   // Enhanced image optimization
   images: {
@@ -445,8 +402,8 @@ const sentryWebpackPluginOptions = {
   },
 };
 
-// Chain: bundleAnalyzer -> nextIntl -> sentry
+// Chain: nextIntl -> sentry
 export default withSentryConfig(
-  withNextIntl(withBundleAnalyzer(nextConfig)),
+  withNextIntl(nextConfig),
   sentryWebpackPluginOptions
 );

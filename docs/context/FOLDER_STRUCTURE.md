@@ -29,7 +29,7 @@ foodshare/
 ├── context/                    # Project documentation (this folder)
 ├── docs/                       # Additional documentation
 ├── messages/                   # next-intl translation JSON files
-├── node_modules/               # npm dependencies (generated)
+├── node_modules/               # Bun dependencies (generated)
 ├── public/                     # Static assets
 ├── scripts/                    # Build and utility scripts
 ├── src/                        # Application source code
@@ -42,7 +42,7 @@ foodshare/
 ├── eslint.config.mjs           # ESLint 9 flat config
 ├── lefthook.yml                # Git hooks configuration
 ├── next.config.ts              # Next.js configuration
-├── package.json                # npm dependencies and scripts
+├── package.json                # Bun dependencies and scripts
 ├── package-lock.json           # Locked dependency versions
 ├── postcss.config.mjs          # PostCSS configuration
 ├── README.md                   # Project overview
@@ -78,7 +78,7 @@ foodshare/
 | **scripts/**      | Build and utility scripts                         | Yes             |
 | **supabase/**     | Symlink → `../foodshare-backend` (shared backend) | Yes (symlink)   |
 | **.github/**      | GitHub Actions workflows                          | Yes             |
-| **node_modules/** | npm dependencies                                  | No (.gitignore) |
+| **node_modules/** | Bun dependencies                                  | No (.gitignore) |
 | **.next/**        | Next.js build output                              | No (.gitignore) |
 
 ---
@@ -372,7 +372,7 @@ const nextConfig: NextConfig = {
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "type-check": "tsc --noEmit",
-    "test:build": "npm run type-check && npm run lint && npm run build",
+    "test:build": "bun run type-check && bun run lint && bun run build",
     "clean": "rm -rf .next out node_modules/.cache"
   }
 }
@@ -402,7 +402,7 @@ const nextConfig: NextConfig = {
 
 ## Build Output
 
-### Development (`npm run dev`)
+### Development (`bun run dev`)
 
 ```
 http://localhost:3000/            # Next.js dev server
@@ -412,7 +412,7 @@ http://localhost:3000/            # Next.js dev server
 └── Fast refresh                  # React state preservation
 ```
 
-### Production (`npm run build`)
+### Production (`bun run build`)
 
 ```
 .next/
@@ -543,7 +543,7 @@ useFilterStore.ts
 | **Add category page**    | `src/app/s/[category]/page.tsx` (add to CATEGORY_PATHS) |
 | **Add a Server Action**  | `src/app/actions/[entity].ts`                           |
 | **Add a component**      | `src/components/[category]/ComponentName.tsx`           |
-| **Add shadcn component** | Run `npx shadcn@latest add [component]`                 |
+| **Add shadcn component** | Run `bunx shadcn@latest add [component]`                 |
 | **Add Zustand store**    | `src/store/zustand/use[Name]Store.ts`                   |
 | **Add React Query hook** | `src/hooks/queries/use[Entity]Queries.ts`               |
 | **Add custom hook**      | `src/hooks/use[HookName].ts`                            |
@@ -551,7 +551,7 @@ useFilterStore.ts
 | **Add translation**      | Edit `messages/{locale}.json`                           |
 | **Configure Next.js**    | `next.config.ts`                                        |
 | **Configure TypeScript** | `tsconfig.json`                                         |
-| **Add npm dependency**   | `npm install package-name`                              |
+| **Add Bun dependency**   | `bun install package-name`                              |
 
 ### "How do I...?"
 
@@ -561,9 +561,9 @@ useFilterStore.ts
 | **Create a mutation**    | Create Server Action in `src/app/actions/[entity].ts`       |
 | **Create a new feature** | 1. Create page 2. Add Server Actions 3. Create components   |
 | **Add a new language**   | Add JSON file to `messages/` → Update i18n config           |
-| **Add shadcn component** | `npx shadcn@latest add [component-name]`                    |
+| **Add shadcn component** | `bunx shadcn@latest add [component-name]`                    |
 | **Change env vars**      | Update `.env.local` → Restart dev server                    |
-| **Deploy to production** | `npm run build` → Deploy `.next/` to Vercel                 |
+| **Deploy to production** | `bun run build` → Deploy `.next/` to Vercel                 |
 | **Debug client state**   | Install React Query DevTools / use Zustand devtools         |
 
 ---

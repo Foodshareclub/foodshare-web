@@ -22,7 +22,7 @@ A modern food sharing platform that connects people to reduce food waste by enab
 - **React 19** with React Compiler
 - **TypeScript 5**
 - **Tailwind CSS 4**
-- **Redux Toolkit** + **React Query** for state management
+- **Zustand** + **React Query** for state management
 - **Framer Motion** for animations
 - **Radix UI** primitives with shadcn/ui components
 - **Leaflet** for interactive maps
@@ -36,7 +36,7 @@ A modern food sharing platform that connects people to reduce food waste by enab
 ### Infrastructure
 
 - **Upstash** - Redis caching, Vector search, QStash queues
-- **Vercel** - Hosting and deployment
+- **Self-hosted VPS** - Hosting and deployment (Docker Compose + Caddy)
 - **Sentry** - Error tracking and performance monitoring
 - **AWS SES / Brevo / Resend** - Email services
 - **Twilio** - Phone verification
@@ -44,8 +44,7 @@ A modern food sharing platform that connects people to reduce food waste by enab
 
 ## Prerequisites
 
-- Node.js 22+ (see `.nvmrc` for exact version)
-- npm 10+
+- Bun 1.2+ (Primary runtime and package manager)
 - Supabase CLI (for local development)
 - Git
 
@@ -61,7 +60,7 @@ cd foodshare
 ### 2. Install dependencies
 
 ```bash
-npm install
+bun install
 ```
 
 ### 3. Set up environment variables
@@ -75,24 +74,27 @@ Edit `.env.local` with your actual values. See the [Environment Variables](#envi
 ### 4. Start the development server
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view the application.
+
+> [!NOTE]
+> This project uses `src/proxy.ts` and `src/instrumentation.ts` for core middleware and observability. The `proxy.ts` file handles routing, security, and session management.
 
 ## Scripts
 
 | Command                 | Description                             |
 | ----------------------- | --------------------------------------- |
-| `npm run dev`           | Start development server with Turbopack |
-| `npm run build`         | Build for production                    |
-| `npm run build:analyze` | Build with bundle analyzer              |
-| `npm run start`         | Start production server                 |
-| `npm run lint`          | Run ESLint                              |
-| `npm run lint:fix`      | Fix ESLint errors                       |
-| `npm run type-check`    | TypeScript type checking                |
-| `npm run test:build`    | Run type-check, lint, and build         |
-| `npm run clean`         | Clean build artifacts and cache         |
+| `bun run dev`           | Start development server with Turbopack |
+| `bun run build`         | Build for production                    |
+| `bun run build:analyze` | Build with bundle analyzer              |
+| `bun run start`         | Start production server                 |
+| `bun run lint`          | Run ESLint                              |
+| `bun run lint:fix`      | Fix ESLint errors                       |
+| `bun run type-check`    | TypeScript type checking                |
+| `bun run test:build`    | Run type-check, lint, and build         |
+| `bun run clean`         | Clean build artifacts and cache         |
 
 ## Project Structure
 
@@ -103,6 +105,8 @@ foodshare/
 │   ├── telegram-webapp/   # Telegram Mini App files
 │   └── sw.js              # Service worker
 ├── src/
+│   ├── proxy.ts           # Next.js 16 Proxy (Core Routing)
+│   ├── instrumentation.ts # Observability & Early Init
 │   ├── api/               # API client functions
 │   ├── app/               # Next.js App Router pages
 │   │   ├── admin/         # Admin dashboard
@@ -122,13 +126,10 @@ foodshare/
 │   ├── hooks/             # Custom React hooks
 │   ├── lib/               # Utilities and configurations
 │   ├── locales/           # Translation files (21 languages)
-│   ├── store/             # Redux store and slices
+│   ├── store/             # Zustand stores
 │   ├── types/             # TypeScript type definitions
-│   ├── utils/             # Helper functions
-│   └── workers/           # Web Workers
-├── supabase/
-│   ├── functions/         # Supabase Edge Functions
-│   └── migrations/        # Database migrations
+│   └── utils/             # Helper functions
+├── supabase/ -> ../foodshare-backend  # SYMLINK
 └── docs/                  # Documentation
 ```
 
@@ -168,61 +169,61 @@ FoodShare supports 21 languages using [next-intl](https://next-intl-docs.vercel.
 - Italian (it), Polish (pl), Dutch (nl)
 - Japanese (ja), Korean (ko), Turkish (tr)
 
-Translation files are located in `src/locales/{locale}/messages.po`.
+Translation files are located in `messages/{locale}.json`.
 
 ### Adding translations
 
 ```bash
 # Extract new strings
-npx lingui extract
+bunx lingui extract
 
 # Compile translations
-npx lingui compile
+bunx lingui compile
 ```
 
 ## Supabase Edge Functions
 
-Located in `supabase/functions/`:
+All Edge Functions are maintained in the `foodshare-backend` repository. Locally, the `supabase/` directory is a symlink.
 
-| Function                     | Description                    |
-| ---------------------------- | ------------------------------ |
-| `telegram-bot-foodshare`     | Telegram bot webhooks          |
-| `smart-email-route`          | Email routing and delivery     |
-| `process-email-queue`        | Email queue processing         |
-| `search-functions`           | Product search                 |
-| `update-coordinates`         | Geocoding and location updates |
-| `resize-tinify-upload-image` | Image processing               |
-| `get-translations`           | Dynamic translations           |
-| `cors-proxy-images`          | Image proxy for CORS           |
+| Category | Functions |
+| -------- | --------- |
+| Core API | `api-v1-admin`, `api-v1-auth`, `api-v1-products`, `api-v1-chat`, etc. |
+| Comms    | `api-v1-notifications`, `api-v1-email` |
+| Bots     | `telegram-bot-foodshare`, `whatsapp-bot-foodshare` |
 
-### Deploy functions
-
-```bash
-cd supabase/functions
-supabase functions deploy <function-name>
-```
+**Total: 28 functions.** See `foodshare-backend/README.md` for the full list and deployment guides.
 
 ## Deployment
 
-### Vercel (Recommended)
+The application is fully self-hosted on a VPS using Docker Compose.
 
-1. Connect your repository to Vercel
-2. Configure environment variables in Vercel dashboard
-3. Deploy
+### VPS Deployment (Recommended)
 
-### Docker
+1. **SSH into the VPS**:
+   ```bash
+   autossh -M 0 -o ServerAliveInterval=6000 -o ServerAliveCountMax=6000 -o ConnectTimeout=10 -o ConnectionAttempts=6000 -i ~/.ssh/foodshare_id_ed25519 organic@web.foodshare.club
+   ```
 
-Build standalone output:
+2. **Deploy updates**:
+   ```bash
+   cd /home/organic/dev/work/foodshare/foodshare-web
+   git pull
+   docker compose up -d --build
+   ```
+
+### Docker Build
+
+The Dockerfile uses a multi-stage build to create a small production image. Build-time environment variables (like `NEXT_PUBLIC_SUPABASE_URL`) must be passed as `--build-arg` if they are not in the `.env` file at build time.
 
 ```bash
-BUILD_STANDALONE=true npm run build
+docker compose build --build-arg NEXT_PUBLIC_SUPABASE_URL=https://backend.foodshare.club
 ```
 
-### Manual
+### Local Manual Build
 
 ```bash
-npm run build
-npm run start
+bun run build
+bun run start
 ```
 
 ## Documentation
@@ -244,6 +245,17 @@ Detailed documentation is available in the `/docs` directory:
 - CSRF protection via Supabase Auth
 - Row Level Security (RLS) on all tables
 
+## Secret Management
+
+We use a tiered approach to secret management:
+
+1. **GitHub Actions / Environment Variables**: Used for Next.js build-time and runtime web secrets (e.g., `NEXT_PUBLIC_SUPABASE_URL`, `SENTRY_DSN`).
+2. **Supabase Vault**: Primary encrypted storage for sensitive backend credentials. Accessed via `src/lib/supabase/admin.ts` using the service role key.
+3. **.env.production**: Local fallback for non-sensitive configuration on the VPS.
+
+> [!IMPORTANT]
+> Never store plain-text secrets in the repository. Use Supabase Vault for any sensitive API keys or credentials.
+
 ## Contributing
 
 1. Fork the repository
@@ -255,3 +267,11 @@ Detailed documentation is available in the `/docs` directory:
 ## License
 
 This project is proprietary software. All rights reserved.
+
+## VPS Access
+
+To access the self-hosted web VPS:
+
+```bash
+autossh -M 0 -o ServerAliveInterval=6000 -o ServerAliveCountMax=6000 -o ConnectTimeout=10 -o ConnectionAttempts=6000 -i ~/.ssh/foodshare_id_ed25519 organic@web.foodshare.club
+```

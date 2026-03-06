@@ -68,7 +68,7 @@ export async function safeGetUserWithProfile(): Promise<SafeAuthUser | null> {
     try {
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("id, first_name, second_name, avatar_url, email")
+        .select("id,first_name,second_name,avatar_url,email")
         .eq("id", data.user.id)
         .single();
       profile = profileData;
@@ -93,7 +93,7 @@ export async function safeGetUserWithProfile(): Promise<SafeAuthUser | null> {
  */
 export async function safeCheckIsAdmin(): Promise<boolean> {
   try {
-    const { getAdminAuth } = await import("@/lib/data/admin-auth");
+    const { getAdminAuth } = await import("@/lib/data/admin-check");
     const { isAdmin } = await getAdminAuth();
     return isAdmin;
   } catch {

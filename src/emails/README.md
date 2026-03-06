@@ -14,10 +14,10 @@ Bleeding-edge email templates using React Email (`@react-email/components`).
 
 ```bash
 # Start email preview server
-npm run email:dev
+bun run email:dev
 
 # Export to static HTML
-npm run email:export
+bun run email:export
 ```
 
 ## Templates
@@ -192,7 +192,7 @@ Configure in Supabase Dashboard → Authentication → Email Templates.
 
 ```bash
 # Run email preview server
-npm run email:dev
+bun run email:dev
 
 # Visit http://localhost:3001 to preview all templates
 ```

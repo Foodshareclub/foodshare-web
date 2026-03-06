@@ -11,7 +11,6 @@ scripts/
 ├── foodbank-import/  # Foodbank data import from OSM
 ├── monitoring/       # SQL dashboards
 ├── telegram-bot/     # Telegram bot utilities
-├── vercel-setup/     # Vercel environment configuration
 └── README.md
 ```
 
@@ -38,17 +37,10 @@ Creates a backup of the Supabase database.
 Syncs translation files to database for edge function use.
 
 ```bash
-npx tsx scripts/database/sync-translations-to-db.ts
+bunx tsx scripts/database/sync-translations-to-db.ts
 ```
 
 ## Deployment Scripts
-
-### `deploy/deploy-vercel.sh`
-Deploys to Vercel.
-
-```bash
-./scripts/deploy/deploy-vercel.sh [production|preview]
-```
 
 ### `deploy/edge-functions/`
 Supabase edge function deployment scripts.
@@ -58,8 +50,8 @@ Supabase edge function deployment scripts.
 Imports foodbank and community fridge data from OpenStreetMap.
 
 ```bash
-npx tsx scripts/foodbank-import/index.ts --country=US --dry-run
-npx tsx scripts/foodbank-import/index.ts --country=all --type=fridge
+bunx tsx scripts/foodbank-import/index.ts --country=US --dry-run
+bunx tsx scripts/foodbank-import/index.ts --country=all --type=fridge
 ```
 
 See `scripts/foodbank-import/README.md` for details.
@@ -73,7 +65,7 @@ Environment variable configuration scripts for Vercel projects.
 Required for scripts:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `VERCEL_TOKEN` (for deploy scripts)
+- `DOCKER_PASSWORD` (for registry authentication)
 
 ---
 

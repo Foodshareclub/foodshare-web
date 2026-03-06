@@ -52,7 +52,7 @@ export async function getMapLocations(productType: string): Promise<LocationType
 
   const { data, error } = await supabase
     .from("posts_with_location")
-    .select("id, location_json, post_name, post_type, images")
+    .select("id,location_json,post_name,post_type,images")
     .eq("post_type", normalizedType)
     .eq("is_active", true);
 
@@ -75,7 +75,7 @@ export async function getAllMapLocations(): Promise<LocationType[]> {
 
   const { data, error } = await supabase
     .from("posts_with_location")
-    .select("id, location_json, post_name, post_type, images")
+    .select("id,location_json,post_name,post_type,images")
     .eq("is_active", true);
 
   if (error) throw new Error(error.message);
@@ -161,7 +161,7 @@ async function getNearbyLocationsFallback(
 
   let query = supabase
     .from("posts_with_location")
-    .select("id, location_json, post_name, post_type, images")
+    .select("id,location_json,post_name,post_type,images")
     .eq("is_active", true);
 
   if (productType) {

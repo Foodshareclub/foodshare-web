@@ -241,7 +241,7 @@ dispatch(
 Run the comprehensive test suite to verify validation logic:
 
 ```bash
-npm run test:storage
+bun run test:storage
 ```
 
 This tests:
@@ -258,7 +258,7 @@ This tests:
 Run the verification script to ensure everything is configured correctly:
 
 ```bash
-npm run verify:storage
+bun run verify:storage
 ```
 
 This checks:

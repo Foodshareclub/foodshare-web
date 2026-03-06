@@ -111,7 +111,7 @@ export async function getUser(): Promise<AuthUser | null> {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id, first_name, second_name, nickname, avatar_url, email")
+        .select("id,first_name,second_name,nickname,avatar_url,email")
         .eq("id", user.id)
         .single();
 
@@ -151,7 +151,7 @@ export async function getUser(): Promise<AuthUser | null> {
  */
 export async function checkIsAdmin(): Promise<boolean> {
   try {
-    const { getAdminAuth } = await import("@/lib/data/admin-auth");
+    const { getAdminAuth } = await import("@/lib/data/admin-check");
     const { isAdmin } = await getAdminAuth();
     return isAdmin;
   } catch {

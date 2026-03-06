@@ -109,7 +109,7 @@ export const productAPI = {
   getProductsLocation(productType: string): PromiseLike<PostgrestResponse<LocationType>> {
     return supabase
       .from("posts_with_location")
-      .select("id, location_json, post_name, post_type, images")
+      .select("id,location_json,post_name,post_type,images")
       .eq("post_type", productType.toLowerCase())
       .eq("is_active", true);
   },
@@ -170,7 +170,7 @@ export const productAPI = {
   searchProducts(searchWord: string, productSearchType: string): PromiseLike<PostgrestResponse<InitialProductStateType>> {
     let query = supabase
       .from("posts_with_location")
-      .select("*, reviews(*)")
+      .select("*,reviews(*)")
       .eq("is_active", true)
       .order("created_at", { ascending: false });
 

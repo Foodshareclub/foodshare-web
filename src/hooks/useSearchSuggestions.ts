@@ -173,7 +173,7 @@ export function useSearchSuggestions(
         // Build query
         let query = supabase
           .from("posts")
-          .select("post_name, post_type")
+          .select("post_name,post_type")
           .eq("is_active", true)
           .textSearch("post_name", term, { type: "websearch" })
           .limit(maxSuggestions);

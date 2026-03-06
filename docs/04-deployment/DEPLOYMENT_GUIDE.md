@@ -17,16 +17,16 @@ Run these tests before deploying:
 
 ```bash
 # 1. Verify storage system
-npm run verify:storage
+bun run verify:storage
 
 # 2. Type check
-npm run type-check
+bun run type-check
 
 # 3. Build test
-npm run build
+bun run build
 
 # 4. Preview build
-npm run preview
+bun run preview
 ```
 
 ---
@@ -56,29 +56,21 @@ supabase functions list
 └──────────────────────────────────┴─────────┴────────────────────┘
 ```
 
-### Step 2: Deploy Client Application
-
-#### Option A: Vercel (Recommended)
+#### VPS Deployment (Docker Compose)
 
 ```bash
-# Build production bundle
-npm run build
-
-# Deploy to Vercel
-vercel --prod
-
-# Or use Vercel CLI
-vercel deploy --prod
+# Build and run
+docker compose up -d --build
 ```
 
-#### Option B: Manual Deployment
+#### Manual Deployment
 
 ```bash
 # Build
-npm run build
+bun run build
 
-# The build/ directory contains your production files
-# Upload to your hosting provider
+# Start
+bun run start
 ```
 
 ### Step 3: Verify Deployment
@@ -164,8 +156,7 @@ supabase functions deploy resize-tinify-upload-image --version <previous-version
 git revert HEAD
 
 # Rebuild and redeploy
-npm run build
-vercel --prod
+docker compose up -d --build
 ```
 
 ---
@@ -286,7 +277,7 @@ supabase secrets set TINIFY_API_KEY=your-key
 2. **Monitor Bundle Size**
 
    ```bash
-   npm run build
+   bun run build
    # Check build/assets/*.js sizes
    ```
 
@@ -382,7 +373,7 @@ Deployment is successful when:
 ### Verification
 
 ```bash
-npm run verify:storage
+bun run verify:storage
 ```
 
 ---

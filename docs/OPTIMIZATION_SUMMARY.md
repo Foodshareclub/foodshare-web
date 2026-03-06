@@ -104,7 +104,6 @@
 ## Monitoring
 
 Check Vercel dashboard weekly:
-https://vercel.com/organicnz/foodshare-web/analytics
 
 Expected: ~11,000 invocations/month (stable)
 

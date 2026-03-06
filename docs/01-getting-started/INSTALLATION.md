@@ -6,16 +6,14 @@ Complete setup instructions for the FoodShare web application.
 
 Before starting, ensure you have:
 
-- **Node.js 22+** - [Download](https://nodejs.org/) (v24 recommended, see `.nvmrc`)
-- **npm 10+** - Comes with Node.js
+- **Bun 1.2+** - Primary runtime and package manager
 - **Git** - [Download](https://git-scm.com/)
 - **Supabase Account** - [Sign up](https://supabase.com/)
 
 Verify installations:
 
 ```bash
-node --version  # Should be 22.x or higher
-npm --version   # Should be 10.x or higher
+bun --version   # Should be 1.2.x or higher
 git --version   # Any recent version
 ```
 
@@ -33,18 +31,19 @@ cd foodshare/frontend
 This will automatically install Lefthook git hooks via the `prepare` script:
 
 ```bash
-npm install
+bun install
 ```
 
 **What gets installed:**
 
-- React 19.2.0 + Vite 7.2.2
-- Chakra UI components
-- Redux Toolkit state management
-- Supabase client
+- Next.js 16 (App Router) + React 19
+- shadcn/ui + Tailwind CSS 4
+- Zustand state management
+- next-intl internationalization
+- Supabase client (@supabase/ssr)
 - Lefthook git hooks
 - ESLint + Prettier
-- TypeScript
+- TypeScript 5
 - And all other dependencies...
 
 ### 3. Configure Environment
@@ -59,8 +58,8 @@ Edit `.env` with your Supabase credentials:
 
 ```env
 # Supabase Configuration
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
+NEXT_PUBLIC_SUPABASE_URL=https://backend.foodshare.club
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
 **Where to find these:**
@@ -74,15 +73,15 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 
 ```bash
 # Start development server
-npm run dev
+bun run dev
 
-# Should open at http://localhost:5173
+# Should open at http://localhost:3000
 ```
 
 **Verify git hooks:**
 
 ```bash
-npx lefthook version
+bunx lefthook version
 # Should show: Lefthook version 1.10.10 (or similar)
 
 ls -la .git/hooks/ | grep -E "(pre-commit|commit-msg|pre-push)"
@@ -115,19 +114,19 @@ If everything passes, you're all set! 🎉
 
 ```bash
 # Start dev server with hot reload
-npm run dev
+bun run dev
 
 # Lint code
-npm run lint
+bun run lint
 
 # Format code
-npm run format
+bun run format
 
 # Type check
-npm run type-check
+bun run type-check
 
 # Build for production
-npm run build
+bun run build
 ```
 
 ### Git Workflow
@@ -168,13 +167,13 @@ git push
 
 ```bash
 # Extract translatable strings
-npm run extract
+bun run extract
 
 # Compile translations for runtime
-npm run compile
+bun run compile
 
 # Add a new locale
-npm run add-locale
+bun run add-locale
 ```
 
 ## Project Structure
@@ -182,19 +181,16 @@ npm run add-locale
 ```
 foodshare/frontend/
 ├── src/
-│   ├── api/              # Supabase API layer
-│   ├── app/              # Application routes (React Router)
+├── src/
+│   ├── app/              # Next.js App Router (pages/layouts)
 │   ├── assets/           # Images, icons, static files
-│   ├── components/       # Reusable UI components
-│   ├── config/           # Configuration files
-│   ├── context/          # React Context providers
-│   ├── hooks/            # Custom React hooks
-│   ├── locales/          # i18n translations (en, cs, fr, ru)
-│   ├── pages/            # Page components
-│   ├── store/            # Redux store and slices
-│   ├── styles/           # Global styles
+│   ├── components/       # UI components (shadcn/ui in src/components/ui/)
+│   ├── hooks/            # Custom React hooks (React Query in src/hooks/queries/)
+│   ├── lib/              # Core logic, Supabase clients, utils
+│   ├── messages/         # i18n translations (.json files)
+│   ├── store/            # Zustand stores
 │   ├── types/            # TypeScript type definitions
-│   └── utils/            # Utility functions
+│   └── proxy.ts          # Core request handler (Next.js 16 Proxy)
 ├── scripts/              # Build and automation scripts
 ├── context/              # Project documentation
 ├── public/               # Static assets
@@ -250,7 +246,7 @@ Git hooks automation:
 - Commit-msg: Message format validation
 - Pre-push: Tests, build, branch protection
 - Post-checkout: Dependency checks
-- Post-merge: Auto npm install
+- Post-merge: Auto bun install
 
 ## Common Tasks
 
@@ -323,8 +319,8 @@ Git hooks automation:
 2. Extract and compile:
 
    ```bash
-   npm run extract
-   npm run compile
+   bun run extract
+   bun run compile
    ```
 
 3. Translate in `src/locales/{locale}/messages.po`
@@ -333,14 +329,14 @@ Git hooks automation:
 
 ### Port Already in Use
 
-If port 5173 is in use:
+If port 3000 is in use:
 
 ```bash
-# Kill process on port 5173
-npx kill-port 5173
+# Kill process on port 3000
+bunx kill-port 3000
 
-# Or use a different port (default is 3000)
-npm run dev -- --port 3001
+# Or use a different port
+bun run dev -- --port 3001
 ```
 
 ### Hooks Not Running
@@ -349,7 +345,7 @@ If git hooks aren't executing:
 
 ```bash
 # Reinstall hooks
-npx lefthook install
+bunx lefthook install
 
 # Verify installation
 ls -la .git/hooks/pre-commit
@@ -360,7 +356,7 @@ ls -la .git/hooks/pre-commit
 Fix linting errors automatically:
 
 ```bash
-npm run lint -- --fix
+bun run lint -- --fix
 ```
 
 ### TypeScript Errors
@@ -368,13 +364,13 @@ npm run lint -- --fix
 Check type errors:
 
 ```bash
-npm run type-check
+bun run type-check
 ```
 
 ### Environment Variables Not Loading
 
 1. Verify `.env` file exists in project root
-2. Ensure variables use `VITE_` prefix
+2. Ensure variables use `NEXT_PUBLIC_` prefix for client access
 3. Restart dev server after .env changes
 4. Check variables are not quoted incorrectly
 
@@ -385,8 +381,8 @@ Common solutions:
 ```bash
 # Clear cache and rebuild
 rm -rf node_modules dist
-npm install
-npm run build
+bun install
+bun run build
 ```
 
 ### Supabase Connection Issues
@@ -439,7 +435,7 @@ After installation:
 
 1. **Explore the codebase**: Start with `src/app/App.tsx` and `src/pages/`
 2. **Read documentation**: Check `context/` directory for detailed guides
-3. **Run the app**: `npm run dev` and explore features
+3. **Run the app**: `bun run dev` and explore features
 4. **Make a test commit**: Verify git hooks work correctly
 5. **Join team communication**: Get added to project channels
 

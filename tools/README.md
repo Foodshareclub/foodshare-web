@@ -4,7 +4,7 @@ This tools directory has been merged into the unified **foodshare-tools** reposi
 
 ## New Location
 
-https://github.com/Foodshareclub/foodshare-tools
+https://github.com/Foodsharecom.flutterflow.foodshare-tools
 
 ## Migration
 
@@ -14,7 +14,7 @@ The unified repository provides the same `lefthook-rs` binary with additional fe
 
 ```bash
 # Clone the unified tools repo
-git clone https://github.com/Foodshareclub/foodshare-tools.git ../foodshare-tools
+git clone https://github.com/Foodsharecom.flutterflow.foodshare-tools.git ../foodshare-tools
 
 # Build
 cd ../foodshare-tools

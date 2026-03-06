@@ -92,7 +92,7 @@ Current version has security patches available. Schedule maintenance window for 
 ```typescript
 // Production CSP without unsafe-inline
 const CSP = process.env.NODE_ENV === 'production'
-  ? "script-src 'self' 'strict-dynamic' https://vercel.live ..."
+  ? "script-src 'self' 'strict-dynamic' ..."
   : "script-src 'self' 'unsafe-inline' 'unsafe-eval' ...";
 ```
 
@@ -293,7 +293,7 @@ export async function GET() {
   return Response.json({
     status: checks.every(c => c.status === 'fulfilled') ? 'healthy' : 'degraded',
     timestamp: new Date().toISOString(),
-    version: process.env.npm_package_version,
+    version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
     checks: formatChecks(checks),
   });
 }

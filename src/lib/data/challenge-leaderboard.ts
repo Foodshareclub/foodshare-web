@@ -252,7 +252,7 @@ async function getLeaderboardUserProfileManual(
   // Get user profile
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id, nickname, first_name, avatar_url, created_time")
+    .select("id,nickname,first_name,avatar_url,created_time")
     .eq("id", userId)
     .single();
 
@@ -364,7 +364,7 @@ export async function getCurrentUserRank(): Promise<UserRankInfo | null> {
   // Get user profile
   const { data: profile } = await supabase
     .from("profiles")
-    .select("nickname, first_name, avatar_url")
+    .select("nickname,first_name,avatar_url")
     .eq("id", user.id)
     .single();
 

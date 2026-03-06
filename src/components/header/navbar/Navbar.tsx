@@ -83,13 +83,12 @@ function Navbar({
       challenges: "challenge",
     };
     const postType = CATEGORY_TO_POST_TYPE[routeName] || routeName;
+    const targetRoute = postType === "food" ? "/food" : `/${postType}`;
 
     if (mapMode) {
       router.push(`/map/${routeName}`);
-    } else if (postType === "food") {
-      router.push("/food");
     } else {
-      router.push(`/food?type=${postType}`);
+      router.push(targetRoute);
     }
   };
 

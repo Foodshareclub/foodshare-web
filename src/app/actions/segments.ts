@@ -170,7 +170,7 @@ export async function createSegment(
         is_system: false,
         created_by: user.id,
       })
-      .select("id, name, cached_count")
+      .select("id,name,cached_count")
       .single();
 
     if (error) {
@@ -232,7 +232,7 @@ export async function updateSegment(
     // Check if segment is system segment
     const { data: existing } = await supabase
       .from("audience_segments")
-      .select("is_system, name")
+      .select("is_system,name")
       .eq("id", id)
       .single();
 
@@ -256,7 +256,7 @@ export async function updateSegment(
       .from("audience_segments")
       .update(updates)
       .eq("id", id)
-      .select("id, name, cached_count")
+      .select("id,name,cached_count")
       .single();
 
     if (error) {
@@ -307,7 +307,7 @@ export async function deleteSegment(id: string): Promise<ServerActionResult<void
     // Check if segment is system segment
     const { data: existing } = await supabase
       .from("audience_segments")
-      .select("is_system, name")
+      .select("is_system,name")
       .eq("id", id)
       .single();
 

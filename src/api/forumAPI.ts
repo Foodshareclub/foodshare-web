@@ -522,7 +522,7 @@ export const forumAPI = {
   getPostReactions(forumId: number): PromiseLike<PostgrestSingleResponse<ForumReaction[]>> {
     return supabase
       .from("forum_reactions")
-      .select("*, profiles:profile_id (id, nickname, avatar_url)")
+      .select("*,profiles:profile_id (id,nickname,avatar_url)")
       .eq("forum_id", forumId);
   },
 
@@ -675,7 +675,7 @@ export const forumAPI = {
   getPoll(forumId: number): PromiseLike<PostgrestSingleResponse<ForumPoll>> {
     return supabase
       .from("forum_polls")
-      .select("*, forum_poll_options (*)")
+      .select("*,forum_poll_options (*)")
       .eq("forum_id", forumId)
       .single();
   },

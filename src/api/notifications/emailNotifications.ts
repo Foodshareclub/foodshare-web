@@ -359,7 +359,7 @@ export async function notifyAdminsOfFeedback(params: {
     // Fetch all admin users using user_roles table (source of truth for admin status)
     const { data: admins, error } = await supabase
       .from("user_roles")
-      .select("profiles!inner(id, email, first_name, second_name), roles!inner(name)")
+      .select("profiles!inner(id,email,first_name,second_name),roles!inner(name)")
       .in("roles.name", ["admin", "superadmin"]);
 
     if (error) {

@@ -23,8 +23,8 @@ Add to `.env.local`:
 # Sentry DSN (Data Source Name)
 NEXT_PUBLIC_SENTRY_DSN=https://your-key@your-org.ingest.sentry.io/your-project-id
 
-# Optional: Git commit SHA for release tracking (auto-set by Vercel)
-NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA=abc123...
+# Optional: Git commit SHA for release tracking
+NEXT_PUBLIC_GIT_COMMIT_SHA=abc123...
 ```
 
 ### Configuration Files
@@ -366,10 +366,10 @@ Source maps are automatically uploaded to Sentry during build:
 
 ```bash
 # Production build with source maps
-npm run build
+bun run build
 
-# Vercel automatically uploads source maps
-# For other platforms, configure in next.config.ts
+# Source maps are uploaded during build or via CI/CD
+# For details, see the Sentry Webpack Plugin configuration.
 ```
 
 Configuration in `next.config.ts`:
@@ -486,8 +486,8 @@ echo $NEXT_PUBLIC_SENTRY_DSN
 curl http://localhost:3000/api/sentry-test
 
 # Test in production mode
-NODE_ENV=production npm run build
-NODE_ENV=production npm run start
+NODE_ENV=production bun run build
+NODE_ENV=production bun run start
 
 # Visit /sentry-example-page and trigger test error
 ```

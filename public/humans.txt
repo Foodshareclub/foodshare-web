@@ -7,7 +7,7 @@ Location: New Zealand
 Last update: 2024/12/06
 Language: English
 Standards: HTML5, CSS3, TypeScript, React, Next.js
-Platform: Vercel
+Platform: Self-hosted VPS
 Components: Supabase, TailwindCSS
 
 /* THANKS */

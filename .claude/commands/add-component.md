@@ -7,7 +7,7 @@ Add component: $ARGUMENTS
 1. **Check shadcn/ui First**
 
    ```bash
-   npx shadcn@latest add [component-name]
+   bunx shadcn@latest add [component-name]
    ```
 
    Available: button, card, dialog, form, input, select, toast, etc.

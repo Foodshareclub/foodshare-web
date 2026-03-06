@@ -25,8 +25,8 @@ Fix the GitHub issue: $ARGUMENTS
    - Add/update tests if needed
 
 5. **Verify**
-   - Run type-check: `npm run type-check`
-   - Run lint: `npm run lint`
+   - Run type-check: `bun run type-check`
+   - Run lint: `bun run lint`
    - Test the fix manually if applicable
 
 ## Guidelines

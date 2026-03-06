@@ -200,7 +200,7 @@ export async function getAnalyticsSummary(): Promise<ServerActionResult<Analytic
     // Get aggregate stats (views and likes)
     const { data: statsData } = await supabase
       .from("posts")
-      .select("post_views, post_like_counter");
+      .select("post_views,post_like_counter");
 
     const totalViews = statsData?.reduce((sum, p) => sum + (p.post_views || 0), 0) || 0;
     const totalLikes = statsData?.reduce((sum, p) => sum + (p.post_like_counter || 0), 0) || 0;
@@ -462,7 +462,7 @@ export async function getUserRetentionCohorts(): Promise<ServerActionResult<Rete
 
     const { data: users } = await supabase
       .from("profiles")
-      .select("id, created_time, last_seen_at")
+      .select("id,created_time,last_seen_at")
       .gte("created_time", sixMonthsAgo.toISOString());
 
     // Group by cohort month
@@ -601,7 +601,7 @@ export async function getTopSharers(limit: number = 10): Promise<ServerActionRes
     // Query Supabase directly - get listings with profile info (use is_arranged column)
     const { data: listings } = await supabase
       .from("posts")
-      .select("profile_id, is_arranged, profiles(nickname)")
+      .select("profile_id,is_arranged,profiles(nickname)")
       .not("profile_id", "is", null);
 
     // Aggregate by user
@@ -705,7 +705,7 @@ export async function getGeographicHotspots(): Promise<ServerActionResult<GeoHot
     // Query Supabase directly (use location_json for coordinates, is_active/is_arranged columns)
     const { data: listings } = await supabase
       .from("posts")
-      .select("location_json, is_arranged, post_type")
+      .select("location_json,is_arranged,post_type")
       .eq("is_active", true)
       .not("location_json", "is", null);
 

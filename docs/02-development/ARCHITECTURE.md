@@ -812,7 +812,7 @@ Mobile First Approach
 │  ├── <Trans>Hello</Trans>                                  │
 │  └── t`Welcome`                                            │
 │                                                             │
-│  Extract (npm run extract)                                 │
+│  Extract (bun run extract)                                 │
 │  ├── src/locales/en/messages.po                           │
 │  ├── src/locales/cs/messages.po                           │
 │  ├── src/locales/fr/messages.po                           │
@@ -822,7 +822,7 @@ Mobile First Approach
 │  Translate                                                 │
 │  └── Edit .po files                                        │
 │                                                             │
-│  Compile (npm run compile)                                 │
+│  Compile (bun run compile)                                 │
 │  ├── src/locales/{locale}/messages.mjs                    │
 │                                                             │
 │  Runtime                                                   │

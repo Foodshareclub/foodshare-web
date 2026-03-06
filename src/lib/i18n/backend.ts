@@ -288,7 +288,7 @@ export async function getUserLocalePreference(
 ): Promise<UserLocalePreference | null> {
   const { data, error } = await supabase
     .from("user_preferences")
-    .select("locale, timezone, date_format, number_format")
+    .select("locale,timezone,date_format,number_format")
     .eq("user_id", userId)
     .single();
 

@@ -35,7 +35,7 @@ FoodShare is a community-driven platform that connects people who have surplus f
 - Multilingual support (18 languages including RTL)
 - Zero-cost food sharing (no transactions)
 - Community-focused design
-- Mobile-responsive progressive web app with SSR/SSG
+- Mobile-responsive progressive web app with SSR/SSG (Self-hosted)
 
 ---
 
@@ -723,9 +723,8 @@ All text translated → Preferences saved
 
 **Hosting:**
 
-- Vercel (preferred)
-- Netlify (alternative)
-- Cloudflare Pages (alternative)
+- Self-hosted VPS (backend.foodshare.club)
+- Cloudflare
 
 **CDN:**
 
