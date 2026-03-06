@@ -3,7 +3,7 @@
  * Provides AI-powered insights using Grok models
  */
 
-import { createXai } from "@ai-sdk/xai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { getAiApiKey } from "./api-key";
 import { getPlatformMetrics, getChurnData, getEmailCampaignData } from "./platform-metrics";
@@ -92,20 +92,20 @@ ${
 
   const model = selectModel(userQuery);
 
-  // Use AI SDK with xAI provider
+  // Use AI SDK with OpenAI provider
   // AI Gateway keys (vck_) use AI Gateway proxy
   const isGatewayKey = apiKey.startsWith("vck_");
-  const xai = createXai({
+  const openai = createOpenAI({
     apiKey,
-    // AI Gateway endpoint for xAI/Grok
-    baseURL: isGatewayKey ? "https://ai-gateway.vercel.sh/xai/v1" : undefined,
+    // AI Gateway endpoint for OpenAI
+    baseURL: isGatewayKey ? "https://ai-gateway.vercel.sh/openai/v1" : undefined,
   });
 
   // Execute with rate limit handling and exponential backoff
   const result = await executeWithRateLimitHandling(
     () =>
       generateText({
-        model: xai(model),
+        model: openai(model),
         system: `You are an AI business analyst for FoodShare, a food sharing platform.
 Analyze the provided metrics and answer admin questions with actionable insights.
 Be concise, data-driven, and provide specific recommendations.

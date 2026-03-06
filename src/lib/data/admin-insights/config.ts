@@ -2,11 +2,11 @@
  * Configuration constants for Admin Insights
  */
 
-// Grok model configuration
+// OpenAI model configuration
 export const MODELS = {
-  QUICK_INSIGHTS: "grok-3-mini",
-  FAST_REASONING: "grok-3-mini", // Use grok-3-mini for all queries via AI Gateway
-  DEEP_ANALYSIS: "grok-3-mini",
+  QUICK_INSIGHTS: "gpt-4o-mini",
+  FAST_REASONING: "gpt-4o-mini", // Use gpt-4o-mini for all queries via AI Gateway
+  DEEP_ANALYSIS: "gpt-4o-mini",
 } as const;
 
 // Cache for insights

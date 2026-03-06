@@ -3,7 +3,7 @@
  * AI generates and executes SQL queries for detailed analysis
  */
 
-import { createXai } from "@ai-sdk/xai";
+import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { getAiApiKey } from "./api-key";
 import { executeWithRateLimitHandling } from "./rate-limiter";
@@ -88,16 +88,16 @@ export async function getDeepAnalysis(userQuery: string): Promise<string> {
   }
 
   const isGatewayKey = apiKey.startsWith("vck_");
-  const xai = createXai({
+  const openai = createOpenAI({
     apiKey,
-    baseURL: isGatewayKey ? "https://ai-gateway.vercel.sh/xai/v1" : undefined,
+    baseURL: isGatewayKey ? "https://ai-gateway.vercel.sh/openai/v1" : undefined,
   });
 
   // Step 1: Generate SQL query
   const sqlGenerationResult = await executeWithRateLimitHandling(
     () =>
       generateText({
-        model: xai(MODELS.DEEP_ANALYSIS),
+        model: openai(MODELS.DEEP_ANALYSIS),
         system: `You are a PostgreSQL expert for FoodShare, a food sharing platform.
 Generate a single SELECT query to answer the user's question.
 
@@ -148,7 +148,7 @@ RULES:
   const analysisResult = await executeWithRateLimitHandling(
     () =>
       generateText({
-        model: xai(MODELS.DEEP_ANALYSIS),
+        model: openai(MODELS.DEEP_ANALYSIS),
         system: `You are a data analyst for FoodShare. Analyze the query results and provide insights.
 Be concise, highlight key findings, and suggest actionable recommendations.
 Format numbers nicely (e.g., 1,234 not 1234).

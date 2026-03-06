@@ -57,7 +57,6 @@ const serverEnvSchema = z.object({
   AWS_REGION: z.string().optional(),
 
   // AI Services (optional)
-  XAI_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
   AI_GATEWAY_API_KEY: z.string().optional(),
   MOTHERDUCK_TOKEN: z.string().optional(),
@@ -236,7 +235,6 @@ export function getConfiguredServices(): {
   mailersend: boolean;
   awsSes: boolean;
   openai: boolean;
-  xai: boolean;
   sentry: boolean;
   analytics: boolean;
 } {
@@ -251,7 +249,6 @@ export function getConfiguredServices(): {
     mailersend: !!process.env.MAILERSEND_API_KEY,
     awsSes: !!(process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY),
     openai: !!process.env.OPENAI_API_KEY,
-    xai: !!process.env.XAI_API_KEY,
     sentry: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
     analytics: !!process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
   };

@@ -36,7 +36,7 @@
     "docker:logs": "docker compose logs -f foodshare-web"
   },
   "dependencies": {
-    "@ai-sdk/xai": "^2.0.39",
+    "@ai-sdk/openai": "3.0.41",
     "@aws-sdk/client-ses": "^3.985.0",
     "@getbrevo/brevo": "^3.0.1",
     "@motherduck/wasm-client": "^0.8.0",
@@ -74,7 +74,7 @@
     "@upstash/redis": "^1.35.7",
     "@upstash/search": "^0.1.7",
     "@upstash/vector": "^1.2.2",
-    "ai": "^5.0.108",
+    "ai": "6.0.116",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
