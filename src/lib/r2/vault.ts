@@ -1,24 +1,13 @@
 /**
- * R2 Secrets Vault Service
+ * R2 Secrets Service
  *
- * Fetches Cloudflare R2 credentials from Supabase Vault.
- * Falls back to environment variables for local development.
- *
- * Secrets stored in Vault:
- * - R2_ACCOUNT_ID
- * - R2_ACCESS_KEY_ID
- * - R2_SECRET_ACCESS_KEY
- * - R2_BUCKET_NAME
+ * Retrieves Cloudflare R2 credentials from environment variables.
+ * In production, these are injected into `.env.production` during the deployment
+ * process by fetching them from the backend's `supabase/functions/.env.functions`
+ * and the database vault.
  */
 
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-
 // Types
-interface VaultSecret {
-  name: string;
-  value: string;
-}
-
 export interface R2Secrets {
   accountId: string | null;
   accessKeyId: string | null;
@@ -34,15 +23,6 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 let secretsCache: R2Secrets | null = null;
 let cacheExpiry = 0;
 
-// Secret names in Vault
-const SECRET_NAMES = {
-  R2_ACCOUNT_ID: "R2_ACCOUNT_ID",
-  R2_ACCESS_KEY_ID: "R2_ACCESS_KEY_ID",
-  R2_SECRET_ACCESS_KEY: "R2_SECRET_ACCESS_KEY",
-  R2_BUCKET_NAME: "R2_BUCKET_NAME",
-  R2_PUBLIC_URL: "R2_PUBLIC_URL",
-} as const;
-
 /** Mask a secret for safe logging */
 function maskSecret(secret: string | null): string {
   if (!secret) return "null";
@@ -51,26 +31,7 @@ function maskSecret(secret: string | null): string {
 }
 
 /**
- * Create a service role client for vault access
- */
-function createServiceRoleClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    return null;
-  }
-
-  return createSupabaseClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
-
-/**
- * Get R2 secrets from Vault (with caching)
+ * Get R2 secrets from environment variables (with caching)
  */
 export async function getR2Secrets(): Promise<R2Secrets> {
   // Check cache first
@@ -81,82 +42,29 @@ export async function getR2Secrets(): Promise<R2Secrets> {
   // Public URL can come from env (NEXT_PUBLIC_ for client, R2_PUBLIC_URL for server)
   const publicUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || process.env.R2_PUBLIC_URL || "";
 
-  // Default empty secrets
-  const emptySecrets: R2Secrets = {
-    accountId: null,
-    accessKeyId: null,
-    secretAccessKey: null,
-    bucketName: "foodshare",
-    publicUrl,
+  const envSecrets: R2Secrets = {
+    accountId: process.env.R2_ACCOUNT_ID || null,
+    accessKeyId: process.env.R2_ACCESS_KEY_ID || null,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || null,
+    bucketName: process.env.R2_BUCKET_NAME || "foodshare",
+    publicUrl: process.env.NEXT_PUBLIC_R2_PUBLIC_URL || process.env.R2_PUBLIC_URL || publicUrl,
   };
 
-  // In development, use env vars directly
-  if (process.env.NODE_ENV === "development") {
-    const envSecrets: R2Secrets = {
-      accountId: process.env.R2_ACCOUNT_ID || null,
-      accessKeyId: process.env.R2_ACCESS_KEY_ID || null,
-      secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || null,
-      bucketName: process.env.R2_BUCKET_NAME || "foodshare",
-      publicUrl: process.env.NEXT_PUBLIC_R2_PUBLIC_URL || process.env.R2_PUBLIC_URL || publicUrl,
-    };
-
-    if (envSecrets.accountId && envSecrets.accessKeyId && envSecrets.secretAccessKey) {
-      console.info("[R2 Vault] ✅ DEV MODE - Using environment variables");
-      secretsCache = envSecrets;
-      cacheExpiry = Date.now() + CACHE_TTL;
-      return envSecrets;
-    }
+  if (envSecrets.accountId && envSecrets.accessKeyId && envSecrets.secretAccessKey) {
+    console.info(`[R2 Secrets] ✅ Using environment variables (Env: ${process.env.NODE_ENV ?? "production"}):`, {
+      accountId: maskSecret(envSecrets.accountId),
+      accessKeyId: maskSecret(envSecrets.accessKeyId),
+      hasSecretKey: !!envSecrets.secretAccessKey,
+      bucketName: envSecrets.bucketName,
+      publicUrl: envSecrets.publicUrl ? `${envSecrets.publicUrl.slice(0, 30)}...` : "NOT SET",
+    });
+  } else {
+    console.warn("[R2 Secrets] ⚠️ Missing R2 credentials in environment variables.");
   }
 
-  // Fetch from Supabase Vault
-  try {
-    const supabase = createServiceRoleClient();
-
-    if (!supabase) {
-      console.warn("[R2 Vault] ⚠️ No service role client - using env vars");
-      return {
-        accountId: process.env.R2_ACCOUNT_ID || null,
-        accessKeyId: process.env.R2_ACCESS_KEY_ID || null,
-        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || null,
-        bucketName: process.env.R2_BUCKET_NAME || "foodshare",
-        publicUrl,
-      };
-    }
-
-    const { data, error } = await supabase.rpc("get_secrets", {
-      secret_names: Object.values(SECRET_NAMES),
-    });
-
-    if (error || !data || !Array.isArray(data)) {
-      console.error("[R2 Vault] ❌ Failed to fetch secrets:", error?.message);
-      return emptySecrets;
-    }
-
-    const secretsMap = new Map((data as VaultSecret[]).map((s) => [s.name, s.value]));
-
-    const secrets: R2Secrets = {
-      accountId: secretsMap.get(SECRET_NAMES.R2_ACCOUNT_ID) || null,
-      accessKeyId: secretsMap.get(SECRET_NAMES.R2_ACCESS_KEY_ID) || null,
-      secretAccessKey: secretsMap.get(SECRET_NAMES.R2_SECRET_ACCESS_KEY) || null,
-      bucketName: secretsMap.get(SECRET_NAMES.R2_BUCKET_NAME) || "foodshare",
-      publicUrl: secretsMap.get(SECRET_NAMES.R2_PUBLIC_URL) || publicUrl,
-    };
-
-    console.info("[R2 Vault] ✅ Retrieved R2 secrets:", {
-      accountId: maskSecret(secrets.accountId),
-      accessKeyId: maskSecret(secrets.accessKeyId),
-      hasSecretKey: !!secrets.secretAccessKey,
-      bucketName: secrets.bucketName,
-      publicUrl: secrets.publicUrl ? `${secrets.publicUrl.slice(0, 30)}...` : "NOT SET",
-    });
-
-    secretsCache = secrets;
-    cacheExpiry = Date.now() + CACHE_TTL;
-    return secrets;
-  } catch (err) {
-    console.error("[R2 Vault] ❌ Exception:", err);
-    return emptySecrets;
-  }
+  secretsCache = envSecrets;
+  cacheExpiry = Date.now() + CACHE_TTL;
+  return envSecrets;
 }
 
 /**

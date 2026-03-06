@@ -134,7 +134,7 @@
         - Use the best bleeding edge practices
         - Use the latest packages compatible with the stack
 
-### Supabase
+### Supabase Self-Hosted Backend
 
     - Improve the Supabase auth system to ensure robust user authentication:
         - Use an appropriate subagent
@@ -178,6 +178,12 @@
 
     - Authorized but don't see the proper drop down menu according to that witht the profile avatar, crm dasgboard etc:
         - Use the NextJS expert to deeply modify and optimize the auth implementation.
+
+    - Refactor the secret managment system:
+        - For the foodshare-web (Web App) we must use the initial github actions Supabase self-hosted secrets 
+        - The rest of the operational secrets must be retrieved from the self-hosted supabase backend foodshare-backend vault and its edge fucntion secrets. 
+        - Check the all secrets are in place and are correct.
+        - Double check the current implementation and make sure the requested is correct.
 
 ### Localization
 

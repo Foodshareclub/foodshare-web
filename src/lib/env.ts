@@ -22,9 +22,9 @@ const serverEnvSchema = z.object({
 
   // Email providers (at least one should be configured in production)
   RESEND_API_KEY: z.string().optional(),
-  AWS_SES_ACCESS_KEY_ID: z.string().optional(),
-  AWS_SES_SECRET_ACCESS_KEY: z.string().optional(),
-  AWS_SES_REGION: z.string().optional(),
+  AWS_ACCESS_KEY_ID: z.string().optional(),
+  AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  AWS_REGION: z.string().optional(),
   BREVO_API_KEY: z.string().optional(),
   MAILERSEND_API_KEY: z.string().optional(),
 
@@ -151,7 +151,7 @@ export function hasEnvVar(key: keyof Env): boolean {
 export function isEmailConfigured(): boolean {
   return !!(
     process.env.RESEND_API_KEY ||
-    (process.env.AWS_SES_ACCESS_KEY_ID && process.env.AWS_SES_SECRET_ACCESS_KEY) ||
+    (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) ||
     process.env.BREVO_API_KEY
   );
 }
