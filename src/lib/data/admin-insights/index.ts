@@ -20,7 +20,7 @@ export type {
 export { MODELS, CACHE_TTL, CIRCUIT_BREAKER_CONFIG, RATE_LIMIT_CONFIG } from "./config";
 
 // Export API key management
-export { getAiApiKey } from "./api-key";
+export { getAiConfig } from "./api-key";
 
 // Export platform metrics
 export { getPlatformMetrics, getChurnData, getEmailCampaignData } from "./platform-metrics";

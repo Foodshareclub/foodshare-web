@@ -2,11 +2,11 @@
  * Configuration constants for Admin Insights
  */
 
-// OpenAI model configuration
+// AI model configuration (Groq / Z.ai)
 export const MODELS = {
-  QUICK_INSIGHTS: "gpt-4o-mini",
-  FAST_REASONING: "gpt-4o-mini", // Use gpt-4o-mini for all queries via AI Gateway
-  DEEP_ANALYSIS: "gpt-4o-mini",
+  QUICK_INSIGHTS: "llama-3.1-8b-instant",
+  FAST_REASONING: "llama-3.1-8b-instant",
+  DEEP_ANALYSIS: "llama-3.3-70b-versatile",
 } as const;
 
 // Cache for insights

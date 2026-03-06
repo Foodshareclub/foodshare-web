@@ -5,7 +5,7 @@
 
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
-import { getAiApiKey } from "./api-key";
+import { getAiConfig } from "./api-key";
 import { executeWithRateLimitHandling } from "./rate-limiter";
 import { MODELS, DATABASE_SCHEMA, ALLOWED_SQL_PATTERNS, FORBIDDEN_SQL_PATTERNS } from "./config";
 import { createClient } from "@/lib/supabase/server";
@@ -82,15 +82,14 @@ async function executeSqlQuery(
  * Deep analysis mode - AI generates and executes SQL queries
  */
 export async function getDeepAnalysis(userQuery: string): Promise<string> {
-  const apiKey = await getAiApiKey();
-  if (!apiKey) {
+  const aiConfig = await getAiConfig();
+  if (!aiConfig) {
     return "AI insights unavailable - API key not configured.";
   }
 
-  const isGatewayKey = apiKey.startsWith("vck_");
   const openai = createOpenAI({
-    apiKey,
-    baseURL: isGatewayKey ? "https://ai-gateway.vercel.sh/openai/v1" : undefined,
+    apiKey: aiConfig.apiKey,
+    baseURL: aiConfig.baseURL,
   });
 
   // Step 1: Generate SQL query

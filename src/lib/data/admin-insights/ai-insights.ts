@@ -5,7 +5,7 @@
 
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
-import { getAiApiKey } from "./api-key";
+import { getAiConfig } from "./api-key";
 import { getPlatformMetrics, getChurnData, getEmailCampaignData } from "./platform-metrics";
 import { executeWithRateLimitHandling } from "./rate-limiter";
 import { MODELS, CACHE_TTL } from "./config";
@@ -85,20 +85,17 @@ ${
 `;
   }
 
-  const apiKey = await getAiApiKey();
-  if (!apiKey) {
+  const aiConfig = await getAiConfig();
+  if (!aiConfig) {
     return "AI insights unavailable - API key not configured in vault or environment variables.";
   }
 
   const model = selectModel(userQuery);
 
-  // Use AI SDK with OpenAI provider
-  // AI Gateway keys (vck_) use AI Gateway proxy
-  const isGatewayKey = apiKey.startsWith("vck_");
+  // Use AI SDK with OpenAI-compatible provider (Groq/Z.ai)
   const openai = createOpenAI({
-    apiKey,
-    // AI Gateway endpoint for OpenAI
-    baseURL: isGatewayKey ? "https://ai-gateway.vercel.sh/openai/v1" : undefined,
+    apiKey: aiConfig.apiKey,
+    baseURL: aiConfig.baseURL,
   });
 
   // Execute with rate limit handling and exponential backoff
