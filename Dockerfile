@@ -39,7 +39,7 @@ ENV SENTRY_AUTH_TOKEN=$SENTRY_AUTH_TOKEN
 RUN bun run build
 
 # ---- Stage 3: Production runner ----
-FROM node:24-slim AS runner
+FROM oven/bun:1-slim AS runner
 WORKDIR /app
 
 # Install curl for healthchecks, dumb-init for proper process signal handling, and ca-certificates for HTTPS
@@ -48,27 +48,25 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
-# Force Node to use the OS CA certificates we just installed
-ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 
 # Don't run as root
-RUN addgroup --system --gid 1001 nodejs && \
+RUN addgroup --system --gid 1001 bunjs && \
     adduser --system --uid 1001 nextjs
 
 # Copy standalone server
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:bunjs /app/.next/standalone ./
 # Copy static assets
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:bunjs /app/.next/static ./.next/static
 # Copy public assets
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:bunjs /app/public ./public
 # Copy i18n messages (next-intl)
-COPY --from=builder --chown=nextjs:nodejs /app/messages ./messages
+COPY --from=builder --chown=nextjs:bunjs /app/messages ./messages
 
 # Create cache directory with correct permissions
-RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next/cache
+RUN mkdir -p .next/cache && chown -R nextjs:bunjs .next/cache
 
 USER nextjs
 
@@ -76,4 +74,4 @@ EXPOSE 3000
 
 # Use dumb-init to handle PID 1 signals gracefully
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["node", "--max-http-header-size=32768", "server.js"]
+CMD ["bun", "run", "server.js"]

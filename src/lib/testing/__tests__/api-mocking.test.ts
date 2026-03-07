@@ -4,7 +4,7 @@
  * Demonstrates MSW-based API mocking for testing.
  * 
  * NOTE: These tests require Node.js 18+ with native fetch support.
- * Run with: NODE_OPTIONS='--experimental-vm-modules' npm test
+ * Run with: bun test
  */
 
 import {

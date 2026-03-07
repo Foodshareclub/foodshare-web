@@ -17,7 +17,6 @@ concurrentScripts = 16
 
 [install.lockfile]
 save = true
-print = "yarn"
 
 [test]
 coverage = true
