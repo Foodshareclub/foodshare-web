@@ -357,16 +357,25 @@ jobs:
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" << EOF
           set -e
           
-          # Debugging context
           echo "Current user: \$(whoami)"
-          echo "Current directory: \$(pwd)"
+          echo "Current machine: \$(hostname)"
+          echo "Home directory content:"
+          ls -F ~
           
-          if [ ! -d "/home/organic/dev/foodshare-web" ]; then
-            echo "Error: Directory /home/organic/dev/foodshare-web not found"
+          # Try to find the foodshare-web directory
+          TARGET_DIR="/home/organic/dev/foodshare-web"
+          if [ ! -d "\$TARGET_DIR" ]; then
+            echo "Primary path \$TARGET_DIR not found. Searching..."
+            TARGET_DIR=\$(find ~ -maxdepth 3 -name "foodshare-web" -type d | head -n 1)
+          fi
+          
+          if [ -z "\$TARGET_DIR" ] || [ ! -d "\$TARGET_DIR" ]; then
+            echo "Error: Could not locate foodshare-web directory"
             exit 1
           fi
           
-          cd /home/organic/dev/foodshare-web
+          echo "Using directory: \$TARGET_DIR"
+          cd "\$TARGET_DIR"
           
           if [ ! -d ".git" ]; then
             echo "Error: .git directory not found in \$(pwd)"
@@ -374,7 +383,7 @@ jobs:
           fi
 
           echo "Fetching latest changes..."
-          git fetch origin main || { echo "Git fetch failed with exit code \$?"; exit 128; }
+          git fetch origin main || { echo "Git fetch failed. Trying with verbose git..."; git fetch -v origin main; }
           
           echo "Resetting to origin/main..."
           git reset --hard origin/main
