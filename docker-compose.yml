@@ -1,18 +1,7 @@
 services:
   foodshare-web:
     container_name: foodshare-web
-    build:
-      context: .
-      args:
-        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-https://backend.foodshare.club}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://foodshare.club}
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://foodshare.club}
-        SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
-        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN}
-        SENTRY_ORG: ${SENTRY_ORG}
-        SENTRY_PROJECT: ${SENTRY_PROJECT}
-        SENTRY_AUTH_TOKEN: ${SENTRY_AUTH_TOKEN}
+    image: ghcr.io/foodshareclub/foodshare-web:latest
     expose:
       - "3000"
     env_file:
