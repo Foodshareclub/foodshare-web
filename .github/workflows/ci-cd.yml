@@ -382,8 +382,16 @@ jobs:
             exit 1
           fi
 
+          echo "Remote origin URL:"
+          git config --get remote.origin.url
+
           echo "Fetching latest changes..."
-          git fetch origin main || { echo "Git fetch failed. Trying with verbose git..."; git fetch -v origin main; }
+          # Try to use the GITHUB_TOKEN if SSH fails or just to be safe
+          git fetch origin main || { 
+            echo "SSH Fetch failed. Checking SSH connectivity..."
+            ssh -T git@github.com || echo "SSH connection to GitHub failed"
+            exit 128
+          }
           
           echo "Resetting to origin/main..."
           git reset --hard origin/main
