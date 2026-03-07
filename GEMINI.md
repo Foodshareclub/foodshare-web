@@ -26,6 +26,7 @@ git pull && docker compose up -d --build
 | `bun run build`      | Production build                  |
 | `bun run type-check` | TypeScript checking (`bunx tsc`)  |
 | `bun run lint:fix`   | ESLint with auto-fix              |
+| `bun run test:ci`    | Run all tests with bun:test       |
 | `bun run test:build` | Type-check + lint + build         |
 
 ## Critical Rules
@@ -35,6 +36,7 @@ git pull && docker compose up -d --build
 3. **Admin check requires service role client** -- `user_roles` table has RLS blocking anon reads. Always use `checkUserIsAdmin()` from `@/lib/data/admin-check.ts` (uses admin client internally). If modifying admin logic, update BOTH `admin-check.ts` and the inlined version in `proxy.ts`.
 4. **No Redux** -- State: Server Components (fetch) + Server Actions (mutate) + React Query (client cache) + Zustand (UI only).
 5. **Server Components by default** -- Only add `'use client'` when you need hooks, event handlers, browser APIs, or third-party client libs.
+6. **Testing with Bun ONLY** -- The project extensively uses `bun:test`. Do not use Jest globals or `npm test`. Test scripts are `bun run test` and `bun run test:ci` (for CI/CD runs).
 6. **Never use Chakra UI** -- Legacy, fully removed. All UI is shadcn/ui + Radix + Tailwind.
 7. **Map components need dynamic import** -- Leaflet requires `'use client'` and `dynamic(() => import(...), { ssr: false })`.
 8. **Supabase Vault is Primary** -- Sensitive secrets (API keys, etc.) must be stored in Supabase Vault and accessed via the admin client (`src/lib/supabase/admin.ts`).
