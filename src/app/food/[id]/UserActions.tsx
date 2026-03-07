@@ -18,8 +18,8 @@ async function safeGetUser() {
  */
 async function safeCheckIsAdmin() {
   try {
-    const { checkIsAdmin } = await import("@/app/actions/auth");
-    return await checkIsAdmin();
+    const { checkUserIsAdmin } = await import("@/app/actions/auth");
+    return await checkUserIsAdmin();
   } catch {
     return false;
   }

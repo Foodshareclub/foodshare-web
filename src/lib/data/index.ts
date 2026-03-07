@@ -122,7 +122,7 @@ export {
 // Auth data functions
 export {
   getCurrentUser,
-  checkIsAdmin,
+  checkUserIsAdmin,
   getAuthSession,
   getCachedAuthSession,
   getAdminAuth,

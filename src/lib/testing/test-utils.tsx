@@ -9,6 +9,7 @@
 
 import React, { ReactElement, ReactNode } from "react";
 import { render, RenderOptions, RenderResult } from "@testing-library/react";
+import { mock, expect } from "bun:test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // =============================================================================
@@ -166,30 +167,29 @@ export function createMockFn<T extends (...args: unknown[]) => unknown>() {
 export function mockLocalStorage() {
   const store: Record<string, string> = {};
 
-  const mock = {
-    getItem: jest.fn((key: string) => store[key] || null),
-    setItem: jest.fn((key: string, value: string) => {
+  const storageMock = {
+    getItem: mock((key: string) => store[key] || null),
+    setItem: mock((key: string, value: string) => {
       store[key] = value;
     }),
-    removeItem: jest.fn((key: string) => {
+    removeItem: mock((key: string) => {
       delete store[key];
     }),
-    clear: jest.fn(() => {
+    clear: mock(() => {
       Object.keys(store).forEach((key) => delete store[key]);
     }),
     get length() {
       return Object.keys(store).length;
     },
-    key: jest.fn((index: number) => Object.keys(store)[index] || null),
+    key: mock((index: number) => Object.keys(store)[index] || null),
   };
 
-  Object.defineProperty(window, "localStorage", { value: mock });
+  Object.defineProperty(window, "localStorage", { value: storageMock });
 
   return {
-    mock,
+    mock: storageMock,
     reset: () => {
       Object.keys(store).forEach((key) => delete store[key]);
-      jest.clearAllMocks();
     },
   };
 }
@@ -200,8 +200,8 @@ export function mockLocalStorage() {
 export function mockIndexedDB() {
   const databases: Record<string, Record<string, unknown[]>> = {};
 
-  const mock = {
-    open: jest.fn((name: string) => {
+  const idbMock = {
+    open: mock((name: string) => {
       if (!databases[name]) {
         databases[name] = {};
       }
@@ -214,36 +214,36 @@ export function mockIndexedDB() {
           createObjectStore: (storeName: string) => {
             databases[name][storeName] = [];
             return {
-              createIndex: jest.fn(),
+              createIndex: mock(),
             };
           },
           transaction: (_storeNames: string[], _mode: string) => ({
             objectStore: (storeName: string) => ({
-              add: jest.fn((item: unknown) => {
+              add: mock((item: unknown) => {
                 databases[name][storeName].push(item);
                 return { onsuccess: null };
               }),
-              put: jest.fn((item: unknown) => {
+              put: mock((item: unknown) => {
                 databases[name][storeName].push(item);
                 return { onsuccess: null };
               }),
-              get: jest.fn((key: string) => ({
+              get: mock((key: string) => ({
                 result: databases[name][storeName].find(
                   (item) => (item as Record<string, unknown>).id === key
                 ),
                 onsuccess: null,
               })),
-              getAll: jest.fn(() => ({
+              getAll: mock(() => ({
                 result: databases[name][storeName],
                 onsuccess: null,
               })),
-              delete: jest.fn((key: string) => {
+              delete: mock((key: string) => {
                 databases[name][storeName] = databases[name][storeName].filter(
                   (item) => (item as Record<string, unknown>).id !== key
                 );
                 return { onsuccess: null };
               }),
-              clear: jest.fn(() => {
+              clear: mock(() => {
                 databases[name][storeName] = [];
                 return { onsuccess: null };
               }),
@@ -257,20 +257,19 @@ export function mockIndexedDB() {
         onupgradeneeded: null,
       };
     }),
-    deleteDatabase: jest.fn((name: string) => {
+    deleteDatabase: mock((name: string) => {
       delete databases[name];
       return { onsuccess: null };
     }),
   };
 
-  Object.defineProperty(window, "indexedDB", { value: mock });
+  Object.defineProperty(window, "indexedDB", { value: idbMock });
 
   return {
-    mock,
+    mock: idbMock,
     databases,
     reset: () => {
       Object.keys(databases).forEach((key) => delete databases[key]);
-      jest.clearAllMocks();
     },
   };
 }
@@ -312,7 +311,7 @@ export function mockOnlineStatus(isOnline: boolean = true) {
 /**
  * Assert that a function was called with specific arguments
  */
-export function expectCalledWith<T extends jest.Mock>(fn: T, ...args: Parameters<T>) {
+export function expectCalledWith(fn: ReturnType<typeof mock>, ...args: unknown[]) {
   expect(fn).toHaveBeenCalledWith(...args);
 }
 

@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { getUser, checkIsAdmin } from '@/app/actions/auth';
+import { getUser, checkUserIsAdmin } from '@/app/actions/auth';
 import { createClient } from '@/lib/supabase/server';
 import { SettingsNavbar } from './SettingsNavbar';
 
@@ -46,7 +46,7 @@ export default async function SettingsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [user, isAdmin] = await Promise.all([getUser(), checkIsAdmin()]);
+  const [user, isAdmin] = await Promise.all([getUser(), checkUserIsAdmin()]);
 
   // Get profile data if user is authenticated (direct fetch, no cache)
   let profile = null;

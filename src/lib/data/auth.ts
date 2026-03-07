@@ -113,12 +113,6 @@ export { getAdminAuth, requireAdmin, requireSuperAdmin } from "./admin-check";
 export { checkUserIsAdmin } from "./admin-check";
 
 /**
- * Check if current user is admin
- * @deprecated Use checkUserIsAdmin() from @/lib/data/admin-check instead
- */
-export { checkUserIsAdmin as checkIsAdmin } from "./admin-check";
-
-/**
  * Get full auth session with user, profile, and admin status
  * This is the main function for Server Components
  */

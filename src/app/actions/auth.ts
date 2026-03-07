@@ -146,10 +146,10 @@ export async function getUser(): Promise<AuthUser | null> {
 
 /**
  * Check if current user is admin
- * Uses centralized admin auth from @/lib/data/admin-auth
+ * Uses centralized admin auth from @/lib/data/admin-check
  * Returns false if DB is unavailable (graceful degradation)
  */
-export async function checkIsAdmin(): Promise<boolean> {
+export async function checkUserIsAdmin(): Promise<boolean> {
   try {
     const { getAdminAuth } = await import("@/lib/data/admin-check");
     const { isAdmin } = await getAdminAuth();

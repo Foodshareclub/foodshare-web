@@ -83,7 +83,7 @@ mock.module("@/lib/data/admin-check", () => ({
 }));
 
 // Import AFTER mocks are set up
-import { getCurrentUser, checkIsAdmin, getAuthSession } from "@/lib/data/auth";
+import { getCurrentUser, checkUserIsAdmin, getAuthSession } from "@/lib/data/auth";
 
 describe("Auth Data Functions", () => {
   beforeEach(() => {
@@ -142,11 +142,11 @@ describe("Auth Data Functions", () => {
     });
   });
 
-  describe("checkIsAdmin", () => {
+  describe("checkUserIsAdmin", () => {
     it("should return isAdmin true for admin role", async () => {
       mockState.userRoles = [{ roles: { name: "admin" } }];
 
-      const result = await checkIsAdmin("user-123");
+      const result = await checkUserIsAdmin("user-123");
 
       expect(result.isAdmin).toBe(true);
       expect(result.roles).toContain("admin");
@@ -155,7 +155,7 @@ describe("Auth Data Functions", () => {
     it("should return isAdmin true for superadmin role", async () => {
       mockState.userRoles = [{ roles: { name: "superadmin" } }];
 
-      const result = await checkIsAdmin("user-123");
+      const result = await checkUserIsAdmin("user-123");
 
       expect(result.isAdmin).toBe(true);
       expect(result.roles).toContain("superadmin");
@@ -164,7 +164,7 @@ describe("Auth Data Functions", () => {
     it("should return isAdmin false for regular user", async () => {
       mockState.userRoles = [{ roles: { name: "user" } }];
 
-      const result = await checkIsAdmin("user-123");
+      const result = await checkUserIsAdmin("user-123");
 
       expect(result.isAdmin).toBe(false);
       expect(result.roles).toContain("user");
@@ -173,7 +173,7 @@ describe("Auth Data Functions", () => {
     it("should return isAdmin false when no roles", async () => {
       mockState.userRoles = [];
 
-      const result = await checkIsAdmin("user-123");
+      const result = await checkUserIsAdmin("user-123");
 
       expect(result.isAdmin).toBe(false);
       expect(result.roles).toEqual([]);

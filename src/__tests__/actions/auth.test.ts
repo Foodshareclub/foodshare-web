@@ -39,37 +39,37 @@ interface MockChain {
   then: (resolve: (value: unknown) => void) => void;
 }
 
+// Global Eq Chain for mocks
+const createEqChain = (tableName?: string): MockChain => {
+  const chain: MockChain = {
+    eq: mock((): MockChain => createEqChain(tableName)),
+    in: mock((): MockChain => createEqChain(tableName)),
+    single: mock(() =>
+      Promise.resolve({
+        data: mockState.profile,
+        error: mockState.dbError,
+      })
+    ),
+    maybeSingle: mock(() =>
+      Promise.resolve({
+        data: mockState.profile,
+        error: mockState.dbError,
+      })
+    ),
+    // For user_roles table, the chain resolves to an array (not single)
+    then: (resolve: (value: unknown) => void) =>
+      resolve({
+        // user_roles returns array of roles, profiles returns single profile
+        data: tableName === "user_roles" ? mockState.userRoles : mockState.profile,
+        error: mockState.dbError,
+      }),
+  };
+  return chain;
+};
+
 // Mock Supabase server
 mock.module("@/lib/supabase/server", () => ({
   createClient: mock(() => {
-    // Thenable chain for database queries
-    const createEqChain = (tableName?: string): MockChain => {
-      const chain: MockChain = {
-        eq: mock((): MockChain => createEqChain(tableName)),
-        in: mock((): MockChain => createEqChain(tableName)),
-        single: mock(() =>
-          Promise.resolve({
-            data: mockState.profile,
-            error: mockState.dbError,
-          })
-        ),
-        maybeSingle: mock(() =>
-          Promise.resolve({
-            data: mockState.profile,
-            error: mockState.dbError,
-          })
-        ),
-        // For user_roles table, the chain resolves to an array (not single)
-        then: (resolve: (value: unknown) => void) =>
-          resolve({
-            // user_roles returns array of roles, profiles returns single profile
-            data: tableName === "user_roles" ? mockState.userRoles : mockState.profile,
-            error: mockState.dbError,
-          }),
-      };
-      return chain;
-    };
-
     return Promise.resolve({
       auth: {
         getSession: mock(() =>
@@ -148,11 +148,23 @@ mock.module("@/lib/supabase/server", () => ({
   createServerClient: mock(() => Promise.resolve({})),
 }));
 
+mock.module("@/lib/supabase/admin", () => ({
+  createAdminClient: mock(() => {
+    return {
+      from: mock((tableName: string) => ({
+        select: mock(() => ({
+          eq: mock(() => createEqChain(tableName)),
+        })),
+      })),
+    };
+  }),
+}));
+
 // Import actions after mocks
 import {
   getSession,
   getUser,
-  checkIsAdmin,
+  checkUserIsAdmin,
   signInWithPassword,
   signUp,
   signOut,
@@ -236,15 +248,15 @@ describe("Auth Server Actions", () => {
   });
 
   // ==========================================================================
-  // checkIsAdmin Tests
+  // checkUserIsAdmin Tests
   // ==========================================================================
 
-  describe("checkIsAdmin", () => {
+  describe("checkUserIsAdmin", () => {
     it("should return true for admin user", async () => {
       mockState.user = { id: "admin-123", email: "admin@example.com" };
       mockState.userRoles = [{ roles: { name: "admin" } }];
 
-      const result = await checkIsAdmin();
+      const result = await checkUserIsAdmin();
 
       expect(result).toBe(true);
     });
@@ -253,7 +265,7 @@ describe("Auth Server Actions", () => {
       mockState.user = { id: "super-123", email: "super@example.com" };
       mockState.userRoles = [{ roles: { name: "superadmin" } }];
 
-      const result = await checkIsAdmin();
+      const result = await checkUserIsAdmin();
 
       expect(result).toBe(true);
     });
@@ -262,7 +274,7 @@ describe("Auth Server Actions", () => {
       mockState.user = { id: "user-123", email: "user@example.com" };
       mockState.userRoles = []; // No admin role in user_roles junction table
 
-      const result = await checkIsAdmin();
+      const result = await checkUserIsAdmin();
 
       expect(result).toBe(false);
     });
@@ -271,7 +283,7 @@ describe("Auth Server Actions", () => {
       mockState.user = null;
       mockState.userRoles = null;
 
-      const result = await checkIsAdmin();
+      const result = await checkUserIsAdmin();
 
       expect(result).toBe(false);
     });

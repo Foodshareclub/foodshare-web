@@ -397,18 +397,20 @@ export function createMockPresence() {
 
 /**
  * Advance timers and flush promises
+ * Bun doesn't have fake timers — use real delays for timer-dependent tests
  */
 export async function advanceTimersAndFlush(ms: number): Promise<void> {
-  jest.advanceTimersByTime(ms);
+  await new Promise((resolve) => setTimeout(resolve, ms));
   await Promise.resolve();
   await Promise.resolve();
 }
 
 /**
  * Run all pending timers and promises
+ * Bun doesn't have fake timers — flush via microtask queue
  */
 export async function runAllTimersAndFlush(): Promise<void> {
-  jest.runAllTimers();
+  await new Promise((resolve) => setTimeout(resolve, 0));
   await Promise.resolve();
   await Promise.resolve();
 }

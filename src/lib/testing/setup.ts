@@ -8,6 +8,7 @@
  */
 
 import { defaultHandlers } from "./msw-handlers";
+import { beforeAll, afterEach, afterAll } from "bun:test";
 
 // =============================================================================
 // Server Setup (Lazy initialization)
@@ -51,7 +52,7 @@ export const server = {
 };
 
 /**
- * Setup function for Jest/Vitest
+ * Setup function for bun:test
  * Call this in your test setup file
  */
 export function setupMSW() {

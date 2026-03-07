@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { LoginSecurityClient } from "./LoginSecurityClient";
-import { getUser, checkIsAdmin } from "@/app/actions/auth";
+import { getUser, checkUserIsAdmin } from "@/app/actions/auth";
 import { generateNoIndexMetadata } from "@/lib/metadata";
 
 export const metadata = generateNoIndexMetadata(
@@ -15,7 +15,7 @@ export const metadata = generateNoIndexMetadata(
  * Requires authentication
  */
 export default async function LoginAndSecurityPage() {
-  const [user, isAdmin] = await Promise.all([getUser(), checkIsAdmin()]);
+  const [user, isAdmin] = await Promise.all([getUser(), checkUserIsAdmin()]);
 
   // Redirect if not authenticated
   if (!user) {

@@ -8,6 +8,7 @@
  */
 
 import { z, ZodSchema } from "zod";
+import { expect } from "bun:test";
 
 // =============================================================================
 // Types
@@ -385,11 +386,11 @@ export function generateContractDocs(contracts: ContractDefinition[]): string {
 }
 
 // =============================================================================
-// Jest Matchers
+// Custom Matchers
 // =============================================================================
 
 /**
- * Custom Jest matcher for contract validation
+ * Custom matcher for contract validation
  */
 export function toMatchContract<T>(received: unknown, contract: ContractDefinition<unknown, T>) {
   const validation = validateResponse(contract, received);
@@ -408,17 +409,9 @@ export function toMatchContract<T>(received: unknown, contract: ContractDefiniti
   };
 }
 
-// Extend Jest matchers
-declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
-  namespace jest {
-    interface Matchers<R> {
-      toMatchContract<T>(contract: ContractDefinition<unknown, T>): R;
-    }
-  }
-}
-
-// Register the matcher
-if (typeof expect !== "undefined") {
+// Register the matcher with bun:test expect
+try {
   expect.extend({ toMatchContract });
+} catch {
+  // expect.extend may not be available in all contexts
 }
