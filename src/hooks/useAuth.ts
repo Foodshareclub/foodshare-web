@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import type { Session, AuthChangeEvent } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/store/zustand";
+import { pretty } from "@/lib/logger";
 import {
   signInWithPassword,
   signUp,
@@ -125,11 +126,11 @@ export function useAuth(): UseAuthReturn {
           .select("role_id,roles!user_roles_role_id_fkey(name)")
           .eq("profile_id", userId);
 
-        console.log("[checkAdminStatus] userId:", userId);
-        console.log("[checkAdminStatus] data:", JSON.stringify(data));
+        pretty.debug("[checkAdminStatus] Fetching roles", { userId });
+        pretty.debug("[checkAdminStatus] Role data", { data });
 
         if (roleError) {
-          console.error("[checkAdminStatus] Query error:", roleError);
+          pretty.error("[checkAdminStatus] Query error", roleError);
           useAuthStore.getState().setAdminCheckStatus("failed");
           return;
         }
@@ -141,12 +142,12 @@ export function useAuth(): UseAuthReturn {
 
         const isUserAdmin = userRoles.includes("admin") || userRoles.includes("superadmin");
 
-        console.log("[checkAdminStatus] userRoles:", userRoles, "isUserAdmin:", isUserAdmin);
+        pretty.debug("[checkAdminStatus] Results", { userRoles, isUserAdmin });
 
         // Use fresh reference to avoid stale closure
         useAuthStore.getState().setAdmin(isUserAdmin, userRoles);
       } catch (error) {
-        console.error("[checkAdminStatus] Error:", error);
+        pretty.error("[checkAdminStatus] Unexpected error", error as Error);
         useAuthStore.getState().setAdminCheckStatus("failed");
       }
     },
@@ -384,7 +385,7 @@ export function useAuth(): UseAuthReturn {
       await signOut();
       reset();
     } catch (err) {
-      console.error("Logout error:", err);
+      pretty.error("Logout error", err as Error);
     } finally {
       setLoading(false);
     }

@@ -133,7 +133,7 @@ test.describe("Home Page - Navigation", () => {
       // Should navigate to category page
       const url = page.url();
       expect(
-        url.includes("/thing") || url.includes("/things") || url.includes("type=")
+        url.includes("/thing") || url.includes("/things")
       ).toBeTruthy();
     } else {
       // No category buttons visible - pass test (may be mobile view)

@@ -32,16 +32,18 @@ test.describe("Food Listings Page", () => {
     expect(isVisible).toBeTruthy();
   });
 
-  test("should filter by category type via URL params", async ({ page }) => {
-    // Test different category types
-    const categories = ["thing", "borrow", "wanted"];
+  test("should filter by category type via singular routes", async ({ page }) => {
+    // Test different category types using new singular routes
+    const categories = ["thing", "borrow", "wanted", "fridge", "volunteer", "organisation"];
 
     for (const type of categories) {
-      await page.goto(`/food?type=${type}`);
+      await page.goto(`/${type}`);
       // Wait for content to load
       await page.waitForSelector('[class*="grid"], [class*="empty"], main', { timeout: 30000 });
 
-      // Page should load without errors
+      // Page should load without errors and exhibit the correct URL
+      await expect(page).toHaveURL(new RegExp(`/${type}`));
+      
       const content = page.locator('[class*="grid"], [class*="empty"], main').first();
       await expect(content).toBeVisible({ timeout: 10000 });
     }

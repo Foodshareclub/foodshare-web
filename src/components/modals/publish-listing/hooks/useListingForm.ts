@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { DRAFT_KEY, MIN_TITLE_LENGTH, MIN_DESCRIPTION_LENGTH } from "../constants";
+import { pretty } from "@/lib/logger";
 
 export interface ListingFormData {
   category: string;
@@ -231,7 +232,7 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
   const showDescriptionError = touched.description && !description;
 
   // Log validation state when it changes
-  console.log("[useListingForm] 📋 Validation state:", {
+  pretty.debug("[useListingForm] 📋 Validation state", {
     isFormValid: !!isFormValid,
     category: !!category,
     title: !!title,
@@ -353,7 +354,7 @@ export function useListingForm(options: UseListingFormOptions): UseListingFormRe
 
   // Touch all fields
   const touchAll = useCallback(() => {
-    console.log("[useListingForm] 👆 touchAll called - marking all fields as touched");
+    pretty.debug("[useListingForm] 👆 touchAll called - marking all fields as touched");
     setTouched({ category: true, title: true, description: true, image: true });
   }, []);
 
