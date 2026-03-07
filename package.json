@@ -27,6 +27,7 @@
     "clean": "rm -rf .next out node_modules/.cache .turbo",
     "postinstall": "bun run patch-package",
     "import:foodbanks": "bun run scripts/foodbank-import/index.ts",
+    "translations:sync": "bun scripts/sync-translations.ts",
     "email:dev": "bunx email dev -p 3001 --dir src/emails",
     "email:export": "bunx email export --outDir src/emails/templates/exported",
     "docker:build": "docker compose build",
