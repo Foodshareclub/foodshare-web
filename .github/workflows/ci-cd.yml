@@ -356,9 +356,27 @@ jobs:
 
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" << EOF
           set -e
+          
+          # Debugging context
+          echo "Current user: \$(whoami)"
+          echo "Current directory: \$(pwd)"
+          
+          if [ ! -d "/home/organic/dev/foodshare-web" ]; then
+            echo "Error: Directory /home/organic/dev/foodshare-web not found"
+            exit 1
+          fi
+          
           cd /home/organic/dev/foodshare-web
           
-          git fetch origin main
+          if [ ! -d ".git" ]; then
+            echo "Error: .git directory not found in \$(pwd)"
+            exit 1
+          fi
+
+          echo "Fetching latest changes..."
+          git fetch origin main || { echo "Git fetch failed with exit code \$?"; exit 128; }
+          
+          echo "Resetting to origin/main..."
           git reset --hard origin/main
 
           # 1. Initialize .env.production with GitHub Actions secrets
