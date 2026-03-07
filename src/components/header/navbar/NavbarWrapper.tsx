@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Navbar from "@/components/header/navbar/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import type { AuthUser } from "@/lib/data/auth";
 import type { CustomRoomType } from "@/api/chatAPI";
+import { CATEGORIES, type CategoryId } from "@/constants/categories";
 
 interface NavbarWrapperProps {
   defaultProductType?: string;
@@ -38,7 +39,26 @@ export function NavbarWrapper({
 }: NavbarWrapperProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [productType, setProductType] = useState(defaultProductType);
+  
+  // Initialize productType from pathname if possible
+  const getInitialProductType = () => {
+    if (!pathname) return defaultProductType;
+    const path = pathname.split('/')[1] || "food";
+    // Check if the path matches a valid category ID
+    const validCategory = CATEGORIES.find(cat => cat.id === path);
+    return (validCategory?.id as string) || defaultProductType;
+  };
+
+  const [productType, setProductType] = useState(getInitialProductType());
+
+  // Update productType when pathname changes (direct navigation or back/forward)
+  useEffect(() => {
+    const path = pathname?.split('/')[1] || "food";
+    const validCategory = CATEGORIES.find(cat => cat.id === path);
+    if (validCategory && validCategory.id !== productType) {
+      setProductType(validCategory.id);
+    }
+  }, [pathname, productType]);
 
   // Client-side auth for real-time updates (login/logout)
   // Must be called before any conditional returns (React hooks rules)

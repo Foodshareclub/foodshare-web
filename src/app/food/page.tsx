@@ -22,31 +22,48 @@ export default async function ProductsPage(props: PageProps) {
   const productType = searchParams.type;
 
   // If type is specified and it's not "food", redirect to the dedicated route
-  if (productType && productType !== "food" && CATEGORIES_TO_REDIRECT.includes(productType)) {
-    const params = new URLSearchParams();
-    Object.entries(searchParams).forEach(([key, value]) => {
-      if (key !== "type" && value !== undefined) {
-        params.set(key, value as string);
-      }
-    });
+  if (productType && productType !== "food") {
+    const normalizedType = LEGACY_TYPE_MAP[productType] || productType;
     
-    const queryString = params.toString();
-    const targetPath = `/${productType}${queryString ? `?${queryString}` : ""}`;
-    redirect(targetPath);
+    // Check if this type belongs in a dedicated route
+    if (REDIRECT_TARGETS.includes(normalizedType)) {
+      const params = new URLSearchParams();
+      Object.entries(searchParams).forEach(([key, value]) => {
+        if (key !== "type" && value !== undefined) {
+          params.set(key, value as string);
+        }
+      });
+      
+      const queryString = params.toString();
+      const targetPath = `/${normalizedType}${queryString ? `?${queryString}` : ""}`;
+      redirect(targetPath);
+    }
   }
 
   return <CategoryPageContent type="food" searchParams={props.searchParams} />;
 }
 
-const CATEGORIES_TO_REDIRECT = [
+const REDIRECT_TARGETS = [
   "thing",
   "borrow",
   "wanted",
   "fridge",
   "foodbank",
-  "business",
+  "organisation",
   "volunteer",
   "challenge",
   "zerowaste",
-  "vegan"
+  "vegan",
+  "forum"
 ];
+
+const LEGACY_TYPE_MAP: Record<string, string> = {
+  "things": "thing",
+  "foodbanks": "foodbank",
+  "fridges": "fridge",
+  "organisations": "organisation",
+  "business": "organisation",
+  "volunteers": "volunteer",
+  "challenges": "challenge",
+  "organisation": "organisation"
+};

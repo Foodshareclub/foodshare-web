@@ -73,17 +73,7 @@ function Navbar({
       return;
     }
 
-    // Map plural category IDs to singular post_type values for the query param
-    const CATEGORY_TO_POST_TYPE: Record<string, string> = {
-      things: "thing",
-      foodbanks: "foodbank",
-      fridges: "fridge",
-      organisations: "business",
-      volunteers: "volunteer",
-      challenges: "challenge",
-    };
-    const postType = CATEGORY_TO_POST_TYPE[routeName] || routeName;
-    const targetRoute = postType === "food" ? "/food" : `/${postType}`;
+    const targetRoute = routeName === "food" ? "/food" : `/${routeName}`;
 
     if (mapMode) {
       router.push(`/map/${routeName}`);

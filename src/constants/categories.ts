@@ -22,16 +22,16 @@ import {
 // Order: Food basics → Community resources → Lifestyle → Engagement → Forum
 export const CATEGORIES = [
   { id: "food", labelKey: "categories.food", icon: Apple },
-  { id: "things", labelKey: "categories.things", icon: LampDesk },
+  { id: "thing", labelKey: "categories.things", icon: LampDesk },
   { id: "borrow", labelKey: "categories.borrow", icon: HandHelping },
   { id: "wanted", labelKey: "categories.wanted", icon: PackageSearch },
-  { id: "foodbanks", labelKey: "categories.foodbanks", icon: Warehouse },
-  { id: "fridges", labelKey: "categories.fridges", icon: Refrigerator },
+  { id: "foodbank", labelKey: "categories.foodbanks", icon: Warehouse },
+  { id: "fridge", labelKey: "categories.fridges", icon: Refrigerator },
   { id: "zerowaste", labelKey: "categories.zerowaste", icon: Recycle },
   { id: "vegan", labelKey: "categories.vegan", icon: Sprout },
-  { id: "organisations", labelKey: "categories.organisations", icon: Landmark },
-  { id: "volunteers", labelKey: "categories.volunteers", icon: HeartHandshake },
-  { id: "challenges", labelKey: "categories.challenges", icon: Trophy },
+  { id: "organisation", labelKey: "categories.organisations", icon: Landmark },
+  { id: "volunteer", labelKey: "categories.volunteers", icon: HeartHandshake },
+  { id: "challenge", labelKey: "categories.challenges", icon: Trophy },
   { id: "forum", labelKey: "categories.forum", icon: MessageSquare },
 ] as const;
 

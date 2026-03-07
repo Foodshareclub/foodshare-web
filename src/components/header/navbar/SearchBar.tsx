@@ -498,16 +498,16 @@ function SearchBar({ isCompact = false, onSearchClick, defaultCategory = "all" }
             {[
               { id: "all", label: "All Categories", icon: "🔍" },
               { id: "food", label: "Food", icon: "🍎" },
-              { id: "things", label: "Things", icon: "🎁" },
+              { id: "thing", label: "Things", icon: "🎁" },
               { id: "borrow", label: "Borrow", icon: "🔧" },
               { id: "wanted", label: "Wanted", icon: "📦" },
-              { id: "foodbanks", label: "FoodBanks", icon: "🏠" },
-              { id: "fridges", label: "Fridges", icon: "❄️" },
+              { id: "foodbank", label: "FoodBanks", icon: "🏠" },
+              { id: "fridge", label: "Fridges", icon: "❄️" },
               { id: "zerowaste", label: "Zero Waste", icon: "♻️" },
               { id: "vegan", label: "Vegan", icon: "🌱" },
-              { id: "organisations", label: "Organisations", icon: "🏛️" },
-              { id: "volunteers", label: "Volunteers", icon: "🙌🏻" },
-              { id: "challenges", label: "Challenges", icon: "🏆" },
+              { id: "organisation", label: "Organisations", icon: "🏛️" },
+              { id: "volunteer", label: "Volunteers", icon: "🙌🏻" },
+              { id: "challenge", label: "Challenges", icon: "🏆" },
             ].map((category) => (
               <div
                 key={category.id}
