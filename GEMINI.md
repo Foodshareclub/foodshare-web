@@ -20,14 +20,15 @@ git pull && docker compose up -d --build
 
 ## Commands
 
-| Command              | Purpose                           |
-| -------------------- | --------------------------------- |
-| `bun run dev`        | Dev server (Turbopack, port 3000) |
-| `bun run build`      | Production build                  |
-| `bun run type-check` | TypeScript checking (`bunx tsc`)  |
-| `bun run lint:fix`   | ESLint with auto-fix              |
-| `bun run test:ci`    | Run all tests with bun:test       |
-| `bun run test:build` | Type-check + lint + build         |
+| Command                     | Purpose                           |
+| --------------------------- | --------------------------------- |
+| `bun run dev`               | Dev server (Turbopack, port 3000) |
+| `bun run build`             | Production build                  |
+| `bun run type-check`        | TypeScript checking (`bunx tsc`)  |
+| `bun run lint:fix`          | ESLint with auto-fix              |
+| `bun run test:ci`           | Run all tests with bun:test       |
+| `bun run test:build`        | Type-check + lint + build         |
+| `bun run translations:sync` | Sync translations to Supabase     |
 
 ## Critical Rules
 
@@ -41,6 +42,8 @@ git pull && docker compose up -d --build
 7. **Map components need dynamic import** -- Leaflet requires `'use client'` and `dynamic(() => import(...), { ssr: false })`.
 8. **Supabase Vault is Primary** -- Sensitive secrets (API keys, etc.) must be stored in Supabase Vault and accessed via the admin client (`src/lib/supabase/admin.ts`).
 9. **Use Structured Logger** -- Avoid `console.log`. Use the structured logger for all production-ready code to ensure observability.
+10. **Singular Top-Level Routes** -- All category pages must use singular top-level routes (e.g., `/thing`, `/volunteer`, `/organisation`). Legacy plural query parameters (e.g., `?type=things`) are handled by redirects in `/food/page.tsx`.
+11. **CI/CD Concurrency (Latest-Wins)** -- The pipeline is configured to cancel previous runs on the same branch. Only the latest commit is built and deployed.
 
 # Web Build & CI/CD
 # CI/CD: .github/workflows/ci-cd.yml
@@ -80,7 +83,7 @@ src/
   app/                  # App Router pages + layouts
     actions/            # Server Actions (products, auth, chat)
     admin/              # Admin routes (defense-in-depth layout protection)
-    auth/, map/, food/, profile/, settings/
+    auth/, map/, food/, thing/, volunteer/, organisation/, profile/, settings/
   components/           # React components
     ui/                 # shadcn/ui primitives
     leaflet/            # Map components (client-only)

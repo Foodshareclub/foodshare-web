@@ -9,7 +9,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         User Interface                          │
-│                    (React 19 + Chakra UI)                       │
+│                    (React 19 + Tailwind 4)                      │
 └─────────────────────────────────────────────────────────────────┘
                                  │
                                  ▼
@@ -17,10 +17,10 @@
 │                      Presentation Layer                         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
 │  │   Pages      │  │  Components  │  │    Hooks     │         │
-│  │              │  │              │  │              │         │
-│  │ - ProductPage│  │ - ProductCard│  │ - useAuth    │         │
-│  │ - ChatPage   │  │ - Header     │  │ - useProducts│         │
-│  │ - ProfilePage│  │ - Footer     │  │ - usePosition│         │
+│  │ (Server-First)│  │ (Actions)    │  │ (Client-Only)│         │
+│  │ - /thing     │  │ - GlassCard  │  │ - useAuth    │         │
+│  │ - /volunteer │  │ - Navbar     │  │ - useMap     │         │
+│  │ - /profile   │  │ - Form       │  │ - usePosition│         │
 │  └──────────────┘  └──────────────┘  └──────────────┘         │
 └─────────────────────────────────────────────────────────────────┘
                                  │
@@ -28,11 +28,11 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                      Application Layer                          │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │ Auth Context │  │ Redux Store  │  │   Routing    │         │
-│  │              │  │              │  │              │         │
-│  │ - AuthProvider│ │ - Products   │  │ - AuthGuard  │         │
-│  │ - useAuth    │  │ - Chat       │  │ - Routes     │         │
-│  │ - Session Mgr│  │ - Profile    │  │ - Navigation │         │
+│  │ Auth Context │  │ Zustand Store│  │   Routing    │         │
+│  │ (React 19)   │  │ (UI State)   │  │ (App Router) │         │
+│  │ - AuthSession│  │ - Sidebar    │  │ - proxy.ts   │         │
+│  │ - Roles      │  │ - Modals     │  │ - ROUTES.ts  │         │
+│  │ - Session Mgr│  │ - Cache      │  │ - Navigation │         │
 │  └──────────────┘  └──────────────┘  └──────────────┘         │
 └─────────────────────────────────────────────────────────────────┘
                                  │
@@ -40,11 +40,11 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                         Data Layer                              │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │   API Layer  │  │  Validation  │  │   Utilities  │         │
-│  │              │  │              │  │              │         │
-│  │ - authAPI    │  │ - Zod schemas│  │ - formatDate │         │
-│  │ - productAPI │  │ - Form rules │  │ - distance   │         │
-│  │ - chatAPI    │  │ - Input check│  │ - storage    │         │
+│  │ Server Funcs │  │  Validation  │  │   Utilities  │         │
+│  │ (lib/data)   │  │ (Zod/Valibot)│  │ (next-intl)  │         │
+│  │ - getProducts│  │ - Zod schemas│  │ - formatDate │         │
+│  │ - getAuth    │  │ - Form rules │  │ - distance   │         │
+│  │ - getStats   │  │ - Input check│  │ - i18n       │         │
 │  └──────────────┘  └──────────────┘  └──────────────┘         │
 └─────────────────────────────────────────────────────────────────┘
                                  │
@@ -52,12 +52,11 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Infrastructure Layer                         │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │   Supabase   │  │   Browser    │  │   External   │         │
-│  │              │  │              │  │              │         │
-│  │ - Auth       │  │ - LocalStorage│ │ - Leaflet    │         │
-│  │ - Database   │  │ - Geolocation│  │ - Analytics  │         │
-│  │ - Realtime   │  │ - IndexedDB  │  │ - i18n       │         │
-│  │ - Storage    │  │ - Service SW │  │              │         │
+│  │   Supabase   │  │   Runtime    │  │   External   │         │
+│  │ (Self-Hosted)│  │ (Bun/Node)   │  │ (Kingfisher) │         │
+│  │ - PostGIS    │  │ - Edge Funcs │  │ - Mapbox     │         │
+│  │ - Realtime   │  │ - Cron Jobs  │  │ - Sentry     │         │
+│  │ - Storage    │  │ - Web Cache  │  │ - Attest     │         │
 │  └──────────────┘  └──────────────┘  └──────────────┘         │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -66,54 +65,41 @@
 
 ## 🔗 URL Routing Configuration
 
-The application uses Next.js routing with custom configuration in `next.config.ts`:
+The application uses Next.js 16 App Router with a centralized proxy in `src/proxy.ts`.
 
-### Category URLs
+### Singular Category URLs
 
-Category pages use the `/{category}` route pattern:
+To simplify the user experience and SEO, we use singular top-level routes for all categories.
 
-| URL              | Description             |
-| ---------------- | ----------------------- |
-| `/food`          | Food listings           |
-| `/things`        | Things to share         |
-| `/borrow`        | Items to borrow         |
-| `/wanted`        | Wanted items            |
-| `/fridges`       | Community fridges       |
-| `/foodbanks`     | Food banks              |
-| `/organisations` | Organisations           |
-| `/volunteers`    | Volunteer opportunities |
-| `/zerowaste`     | Zero waste listings     |
-| `/vegan`         | Vegan listings          |
+| URL             | Description             | Legacy (Redirected) |
+| --------------- | ----------------------- | ------------------- |
+| `/food`         | Food listings           | `/food?type=food`   |
+| `/thing`        | Things to share         | `/food?type=thing`  |
+| `/borrow`       | Items to borrow         | `/food?type=borrow` |
+| `/wanted`       | Wanted items            | `/food?type=wanted` |
+| `/fridge`       | Community fridges       | `/fridges`          |
+| `/foodbank`     | Food banks              | `/foodbanks`        |
+| `/organisation` | Organisations           | `/business`         |
+| `/volunteer`    | Volunteer opportunities | `/volunteers`       |
 
 #### Query Parameters
+
+All singular routes support standardized location and search parameters:
 
 | Parameter  | Type   | Description                                          |
 | ---------- | ------ | ---------------------------------------------------- |
 | `key_word` | string | Full-text search within category                     |
 | `lat`      | number | Latitude for location-based filtering (-90 to 90)    |
 | `lng`      | number | Longitude for location-based filtering (-180 to 180) |
-| `radius`   | number | Search radius in meters (default: 5000, max: 100000) |
+| `radius`   | number | Search radius in meters (default: 5000)              |
 
-**Examples:**
+**Standard Route Transition Policy:**
+- Always use the singular form for new features (e.g., `/challenge` not `/challenges`).
+- Plural forms are kept in `LEGACY_TYPE_MAP` in `src/app/food/page.tsx` for 301 redirection.
 
-- `/food?key_word=apples` - Search for "apples" in food listings
-- `/food?lat=51.5074&lng=-0.1278&radius=10000` - Food within 10km of London
-- `/fridges?lat=50.0755&lng=14.4378` - Fridges within 5km of Prague (default radius)
+### Unified Navigation
 
-> **Note:** Location filtering and keyword search are mutually exclusive. When both are provided, keyword search takes precedence.
-
-### Dedicated Feature Routes
-
-Some features have their own dedicated routes instead of using the `/s/[category]` pattern:
-
-| Route             | Description                      |
-| ----------------- | -------------------------------- |
-| `/food`           | Food listings page               |
-| `/food/[id]`      | Individual food listing detail   |
-| `/challenge`      | Challenges listing page          |
-| `/challenge/[id]` | Individual challenge detail page |
-| `/forum`          | Community forum                  |
-| `/forum/[slug]`   | Individual forum post            |
+The `NavbarWrapper.tsx` and `ROUTES.ts` are the source of truth for these paths. The `Navbar` automatically highlights the active category based on the current top-level path segment.
 
 ---
 

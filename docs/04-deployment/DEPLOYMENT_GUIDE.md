@@ -1,428 +1,133 @@
-# 🚀 Storage System Deployment Guide
+# 🚀 FoodShare Web Deployment Guide
 
-## Pre-Deployment Checklist
+This guide covers the deployment of the FoodShare Web application to production on our self-hosted VPS.
 
-### ✅ Code Verification
+## 🏗️ Architecture Summary
 
-- [x] All TypeScript files compile without errors
-- [x] Storage constants defined and exported
-- [x] Validation functions working
-- [x] Edge function updated with validation
-- [x] Components using new constants
-- [x] Verification script passes
+- **App**: Next.js 16 (App Router)
+- **Runtime**: Bun 1.2+
+- **Infrastructure**: Docker Compose + Nginx (Host)
+- **CI/CD**: GitHub Actions (Docker Build → GHCR → Deploy)
+- **Registry**: GitHub Container Registry (ghcr.io)
+- **Monitoring**: Sentry + Structured Logging
 
-### ✅ Testing Checklist
+---
 
-Run these tests before deploying:
+## 🛠️ Local Development
+
+Before deploying, ensure your local environment is correctly configured.
 
 ```bash
-# 1. Verify storage system
-bun run verify:storage
+# 1. Install dependencies
+bun install
 
-# 2. Type check
-bun run type-check
+# 2. Run dev server
+bun run dev
 
-# 3. Build test
-bun run build
-
-# 4. Preview build
-bun run preview
+# 3. Full project audit (lint + type-check + build)
+bun run build:check
 ```
 
 ---
 
-## Deployment Steps
+## 🚀 CI/CD Pipeline
 
-### Step 1: Deploy Edge Function
+We use **"Latest-Wins" Concurrency**. Pushing a new commit to `main` will automatically cancel any in-progress builds for that branch.
 
-```bash
-# Navigate to project root
-cd /path/to/foodshare
+### 1. Build Phase (GitHub Actions)
+- Linting & Type-checking
+- Bun:test suite execution
+- Docker image build (multi-stage)
+- Push to `ghcr.io/foodshareclub/foodshare-web:latest`
 
-# Deploy the resize function
-supabase functions deploy resize-tinify-upload-image
-
-# Verify deployment
-supabase functions list
-```
-
-**Expected Output:**
-
-```
-┌──────────────────────────────────┬─────────┬────────────────────┐
-│ NAME                             │ STATUS  │ UPDATED AT         │
-├──────────────────────────────────┼─────────┼────────────────────┤
-│ resize-tinify-upload-image       │ ACTIVE  │ 2024-12-01 ...     │
-└──────────────────────────────────┴─────────┴────────────────────┘
-```
-
-#### VPS Deployment (Docker Compose)
-
-```bash
-# Build and run
-docker compose up -d --build
-```
-
-#### Manual Deployment
-
-```bash
-# Build
-bun run build
-
-# Start
-bun run start
-```
-
-### Step 3: Verify Deployment
-
-#### Test Edge Function
-
-```bash
-# Test the resize function endpoint
-curl -X POST https://your-project.supabase.co/functions/v1/resize-tinify-upload-image \
-  -H "Authorization: Bearer YOUR_ANON_KEY" \
-  -H "Content-Type: image/jpeg" \
-  --data-binary @test-image.jpg
-```
-
-#### Test Client Application
-
-1. Open your deployed app
-2. Navigate to profile settings
-3. Try uploading an avatar
-4. Verify validation works (try invalid file type)
-5. Check that upload succeeds with valid image
+### 2. Deployment Phase
+- SSH into VPS via `autossh`
+- `docker compose pull`
+- `docker compose up -d`
+- `bun run translations:sync` (Updates Edge Function translations)
 
 ---
 
-## Post-Deployment Verification
+## 🖥️ VPS Management (Manual)
 
-### 1. Test Avatar Upload
+While deployment is automated, you may need to access the VPS for debugging.
 
-- [ ] Navigate to profile page
-- [ ] Click avatar upload
-- [ ] Select valid image (JPEG/PNG/WebP)
-- [ ] Verify upload succeeds
-- [ ] Check image appears correctly
-
-### 2. Test Post Image Upload
-
-- [ ] Create new food listing
-- [ ] Upload food image
-- [ ] Verify validation works
-- [ ] Check image displays correctly
-
-### 3. Test Validation
-
-- [ ] Try uploading .exe file → Should be rejected
-- [ ] Try uploading oversized file → Should be rejected
-- [ ] Try uploading invalid MIME type → Should be rejected
-- [ ] Verify error messages are user-friendly
-
-### 4. Check Browser Console
-
-- [ ] No console errors
-- [ ] No TypeScript errors
-- [ ] No network errors
-- [ ] Validation messages appear correctly
-
-### 5. Monitor Supabase Dashboard
-
-- [ ] Check Storage usage
-- [ ] Verify files in correct buckets
-- [ ] Check Edge Function logs
-- [ ] Monitor for errors
-
----
-
-## Rollback Plan
-
-If issues occur, you can rollback:
-
-### Rollback Edge Function
-
+### SSH Access
 ```bash
-# List function versions
-supabase functions list --version
-
-# Rollback to previous version
-supabase functions deploy resize-tinify-upload-image --version <previous-version>
+autossh -M 0 -o ServerAliveInterval=600 -o ServerAliveCountMax=600 -o ConnectTimeout=10 -o ConnectionAttempts=60 -i ~/.ssh/foodshare_id_ed25519 organic@web.foodshare.club
 ```
 
-### Rollback Client Code
-
+### Common Operations
 ```bash
-# Revert to previous commit
-git revert HEAD
+# Check service health
+docker compose ps
 
-# Rebuild and redeploy
-docker compose up -d --build
+# View production logs
+docker compose logs -f next-app
+
+# Restart the application
+docker compose restart next-app
+
+# Manual sync of translations
+bun run translations:sync
 ```
 
 ---
 
-## Environment Variables
+## 🔐 Environment Variables
 
-Ensure these are set in your deployment environment:
+Secrets are managed via **GitHub Actions Secrets** and **Supabase Vault**.
 
-### Client (.env)
-
-```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
-
-### Edge Function (Supabase Dashboard)
-
-```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-TINIFY_API_KEY=your-tinify-key
-```
-
-**Set via Supabase CLI:**
-
-```bash
-supabase secrets set TINIFY_API_KEY=your-key
-```
+### Required Production Secrets
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (Used for admin checks)
+- `UPSTASH_REDIS_REST_URL/TOKEN` (Rate limiting)
+- `SENTRY_AUTH_TOKEN`
 
 ---
 
-## Monitoring
+## ⚡ Performance Optimization
 
-### What to Monitor
-
-1. **Storage Usage**
-   - Dashboard → Storage → Usage
-   - Watch for unusual spikes
-   - Monitor bucket sizes
-
-2. **Edge Function Logs**
-   - Dashboard → Edge Functions → Logs
-   - Check for validation errors
-   - Monitor success rate
-
-3. **Error Tracking**
-   - Client-side errors (Sentry/LogRocket)
-   - Server-side errors (Supabase logs)
-   - User reports
-
-### Key Metrics
-
-- Upload success rate (should be >95%)
-- Validation rejection rate
-- Average upload time
-- Storage growth rate
+Our production Docker build includes:
+1. **Next.js Standalone Mode**: Minimized bundle for containerization.
+2. **Sharp**: Automatic image optimization.
+3. **Multi-stage Build**: Final image contains only production dependencies.
+4. **Aggressive Caching**: Configured in `proxy.ts` for static-like routes.
 
 ---
 
-## Troubleshooting
+## 🛠️ Troubleshooting
 
-### Issue: Edge Function Returns 500
+### Issue: Build Hanging
+**Cause:** JSR imports or large bundle size.
+**Solution:** Check `next.config.ts` for bundle analyzer and ensure no JSR imports in shared backend symlinks.
 
-**Cause:** Missing environment variables
+### Issue: Translation Sync Failed
+**Cause:** Supabase Service Role key expired or network timeout.
+**Solution:** Run `bun run translations:sync` manually on the VPS to identify the error.
 
-**Solution:**
-
-```bash
-# Check secrets
-supabase secrets list
-
-# Set missing secrets
-supabase secrets set TINIFY_API_KEY=your-key
-```
-
-### Issue: Validation Not Working
-
-**Cause:** Old client code cached
-
-**Solution:**
-
-1. Clear browser cache
-2. Hard refresh (Cmd+Shift+R / Ctrl+Shift+R)
-3. Check Network tab for correct bundle version
-
-### Issue: Files Upload to Wrong Bucket
-
-**Cause:** Code not using new constants
-
-**Solution:**
-
-1. Verify `STORAGE_BUCKETS` import
-2. Check component code
-3. Rebuild and redeploy
-
-### Issue: MIME Type Rejected
-
-**Cause:** File type not in allowed list
-
-**Solution:**
-
-1. Check `ALLOWED_MIME_TYPES` in `storage.ts`
-2. Add new MIME type if needed
-3. Update documentation
-4. Redeploy
+### Issue: 429 Too Many Requests
+**Cause:** Rate limit triggered in `proxy.ts`.
+**Solution:** Check Upstash dashboard to verify Redis connection health.
 
 ---
 
-## Performance Optimization
+## 🔄 Rollback Plan
 
-### After Deployment
-
-1. **Enable CDN Caching**
-   - Configure Supabase Storage CDN
-   - Set appropriate cache headers
-   - Use image transformations
-
-2. **Monitor Bundle Size**
-
+If a deployment fails:
+1. **GitHub Action**: Re-run the last successful workflow.
+2. **Manual VPS**:
    ```bash
-   bun run build
-   # Check build/assets/*.js sizes
+   docker compose rollback # If using docker rollout
+   # OR
+   docker compose up -d --build --force-recreate
    ```
 
-3. **Optimize Images**
-   - Ensure resize function is working
-   - Check compressed file sizes
-   - Monitor Tinify API usage
-
-4. **Database Indexes**
-   - Verify indexes on storage-related queries
-   - Monitor query performance
-
 ---
 
-## Security Checklist
-
-### Post-Deployment Security
-
-- [ ] Verify RLS policies on storage buckets
-- [ ] Check CORS configuration
-- [ ] Validate authentication requirements
-- [ ] Test unauthorized access attempts
-- [ ] Review bucket permissions
-- [ ] Monitor for abuse patterns
-
-### Bucket Security Settings
-
-Check in Supabase Dashboard → Storage:
-
-1. **Public Access:** Only for necessary buckets
-2. **File Size Limits:** Configured per bucket
-3. **MIME Type Restrictions:** Enforced
-4. **RLS Policies:** Active and tested
-
----
-
-## Success Criteria
-
-Deployment is successful when:
-
-- ✅ All tests pass
-- ✅ Edge function deploys without errors
-- ✅ Client application loads correctly
-- ✅ Avatar upload works
-- ✅ Post image upload works
-- ✅ Validation rejects invalid files
-- ✅ No console errors
-- ✅ No TypeScript errors
-- ✅ Storage buckets receiving files correctly
-- ✅ Monitoring shows healthy metrics
-
----
-
-## Next Steps After Deployment
-
-### Immediate (Week 1)
-
-1. Monitor error rates closely
-2. Gather user feedback
-3. Watch storage usage
-4. Check performance metrics
-
-### Short-term (Month 1)
-
-1. Add client-side validation to remaining forms
-2. Implement upload progress indicators
-3. Add image compression before upload
-4. Create automated tests
-
-### Long-term (Quarter 1)
-
-1. Implement thumbnail generation
-2. Add image optimization pipeline
-3. Consider CDN integration
-4. Implement storage cleanup automation
-
----
-
-## Support Resources
-
-### Documentation
-
-- Quick Reference: `docs/STORAGE_QUICK_REFERENCE.md`
-- Migration Guide: `docs/STORAGE_MIGRATION_GUIDE.md`
-- Investigation Report: `docs/DEEP_INVESTIGATION_REPORT.md`
-
-### Code Examples
-
-- Example Component: `src/components/examples/StorageUploadExample.tsx`
-- Storage Constants: `src/constants/storage.ts`
-- Storage API: `src/api/storageAPI.ts`
-
-### Verification
-
-```bash
-bun run verify:storage
-```
-
----
-
-## Contact & Escalation
-
-### For Issues
-
-1. Check documentation first
-2. Review error logs
-3. Test in development environment
-4. Check Supabase status page
-5. Review recent commits
-
-### Emergency Rollback
-
-If critical issues occur:
-
-1. Rollback client deployment immediately
-2. Rollback edge function if needed
-3. Notify team
-4. Document issue
-5. Fix in development
-6. Test thoroughly
-7. Redeploy
-
----
-
-## Deployment Checklist Summary
-
-### Pre-Deployment
-
-- [x] Code verified
-- [x] Tests passing
-- [x] Documentation complete
-- [x] Environment variables set
-
-### Deployment
-
-- [ ] Edge function deployed
-- [ ] Client application deployed
-- [ ] DNS configured (if needed)
-- [ ] SSL certificate active
-
-### Post-Deployment
-
-- [ ] Functionality tested
-- [ ] Validation working
-- [ ] No errors in console
+_For more detailed infrastructure info, see `docs/02-development/ARCHITECTURE.md`._
+console
 - [ ] Monitoring active
 - [ ] Team notified
 

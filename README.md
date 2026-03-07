@@ -90,10 +90,11 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 | `bun run build`         | Build for production                    |
 | `bun run build:analyze` | Build with bundle analyzer              |
 | `bun run start`         | Start production server                 |
-| `bun run lint`          | Run ESLint                              |
 | `bun run lint:fix`      | Fix ESLint errors                       |
 | `bun run type-check`    | TypeScript type checking                |
-| `bun run test:build`    | Run type-check, lint, and build         |
+| `bun run test:ci`       | Run all tests with bun:test (CI)        |
+| `bun run test:build`    | Run type-check + lint + build           |
+| `bun run translations:sync` | Sync translations to Supabase       |
 | `bun run clean`         | Clean build artifacts and cache         |
 
 ## Project Structure
@@ -112,23 +113,22 @@ foodshare/
 │   │   ├── admin/         # Admin dashboard
 │   │   ├── auth/          # Authentication pages
 │   │   ├── map/           # Map view
-│   │   ├── products/      # Product pages
+│   │   ├── food/          # Food category
+│   │   ├── thing/         # Things category (singular)
+│   │   ├── volunteer/     # Volunteer category (singular)
+│   │   ├── organisation/  # Organisations category (singular)
 │   │   ├── profile/       # User profile
 │   │   └── settings/      # User settings
-│   ├── assets/            # Static assets (SVGs, etc.)
 │   ├── components/        # React components
 │   │   ├── ui/            # Base UI components (shadcn)
 │   │   ├── leaflet/       # Map components
-│   │   ├── modals/        # Modal dialogs
 │   │   └── ...            # Feature components
-│   ├── constants/         # App constants
-│   ├── features/          # Feature modules
 │   ├── hooks/             # Custom React hooks
 │   ├── lib/               # Utilities and configurations
-│   ├── locales/           # Translation files (21 languages)
 │   ├── store/             # Zustand stores
 │   ├── types/             # TypeScript type definitions
 │   └── utils/             # Helper functions
+├── messages/              # Translation files (21 languages)
 ├── supabase/ -> ../foodshare-backend  # SYMLINK
 └── docs/                  # Documentation
 ```
@@ -168,6 +168,7 @@ FoodShare supports 21 languages using [next-intl](https://next-intl-docs.vercel.
 - Chinese (zh), Hindi (hi), Arabic (ar) - RTL
 - Italian (it), Polish (pl), Dutch (nl)
 - Japanese (ja), Korean (ko), Turkish (tr)
+- Indonesian (id), Thai (th), Swedish (sv), Vietnamese (vi)
 
 Translation files are located in `messages/{locale}.json`.
 
@@ -197,19 +198,19 @@ All Edge Functions are maintained in the `foodshare-backend` repository. Locally
 
 The application is fully self-hosted on a VPS using Docker Compose.
 
-### VPS Deployment (Recommended)
+### VPS Deployment (CI/CD)
 
-1. **SSH into the VPS**:
-   ```bash
-   autossh -M 0 -o ServerAliveInterval=6000 -o ServerAliveCountMax=6000 -o ConnectTimeout=10 -o ConnectionAttempts=6000 -i ~/.ssh/foodshare_id_ed25519 organic@web.foodshare.club
-   ```
+The application is deployed automatically via GitHub Actions. The pipeline:
+1.  **Builds** the Docker image locally on the runner.
+2.  **Pushes** the image to **GitHub Container Registry (GHCR)**.
+3.  **Deploys** by pulling the new image on the VPS, ensuring no heavy build processing occurs on production.
 
-2. **Deploy updates**:
-   ```bash
-   cd /home/organic/dev/work/foodshare/foodshare-web
-   git pull
-   docker compose up -d --build
-   ```
+### Manual Deploys
+
+```bash
+# Deploy (latest tags from GHCR)
+docker compose pull && docker compose up -d
+```
 
 ### Docker Build
 
