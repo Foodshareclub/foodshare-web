@@ -65,7 +65,7 @@ const defaultFilters: ForumFilters = {
 // Store Implementation
 // ============================================================================
 
-export const useForumStore = create<ForumState>((set, get) => ({
+export const useForumStore = create<ForumState>((set, _get) => ({
   // Filters
   filters: defaultFilters,
   setFilters: (newFilters) =>

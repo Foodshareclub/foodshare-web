@@ -1,10 +1,10 @@
 import tarlan from "../assets/Tarlan.png";
 import denis from "../assets/den.jpg";
-import imruz from "../assets/imrus.png";
+import _imruz from "../assets/imrus.png";
 import stanislav from "../assets/stanislav.png";
 import telman from "../assets/telman.png";
-import pitman from "../assets/pitman.png";
-import pavel from "../assets/pavel.png";
+import _pitman from "../assets/pitman.png";
+import _pavel from "../assets/pavel.png";
 
 export type MockTeamArr = {
   img: string;

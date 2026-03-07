@@ -14,7 +14,7 @@ import { sendEmailTask } from "./email-queue";
 // Types
 // ============================================================================
 
-interface AutomationQueueItem {
+interface _AutomationQueueItem {
   id: string;
   automation_id: string;
   profile_id: string;

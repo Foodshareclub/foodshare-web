@@ -52,13 +52,12 @@ export function NavbarWrapper({
   const [productType, setProductType] = useState(getInitialProductType());
 
   // Update productType when pathname changes (direct navigation or back/forward)
-  useEffect(() => {
-    const path = pathname?.split('/')[1] || "food";
-    const validCategory = CATEGORIES.find(cat => cat.id === path);
-    if (validCategory && validCategory.id !== productType) {
-      setProductType(validCategory.id);
-    }
-  }, [pathname, productType]);
+  const path = pathname?.split('/')[1] || "food";
+  const validCategory = CATEGORIES.find(cat => cat.id === path);
+  
+  if (validCategory && validCategory.id !== productType) {
+    setProductType(validCategory.id);
+  }
 
   // Client-side auth for real-time updates (login/logout)
   // Must be called before any conditional returns (React hooks rules)
