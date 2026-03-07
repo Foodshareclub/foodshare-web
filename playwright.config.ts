@@ -29,7 +29,7 @@ export default defineConfig({
   },
 
   // Reporter configuration
-  reporter: [["html", { open: "never" }], ["list"]],
+  reporter: [["html", { open: "never" }], ["list"], ["blob"]],
 
   // Shared settings for all projects
   use: {
