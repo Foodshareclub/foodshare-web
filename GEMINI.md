@@ -42,6 +42,15 @@ git pull && docker compose up -d --build
 8. **Supabase Vault is Primary** -- Sensitive secrets (API keys, etc.) must be stored in Supabase Vault and accessed via the admin client (`src/lib/supabase/admin.ts`).
 9. **Use Structured Logger** -- Avoid `console.log`. Use the structured logger for all production-ready code to ensure observability.
 
+# Web Build & CI/CD
+# CI/CD: .github/workflows/ci-cd.yml
+# Jobs: Setup -> [Lint, TypeCheck, Test, E2E] -> Build -> Docker -> SyncTranslations -> Deploy
+
+# Local Web Dev
+bun run dev                              # Start dev server
+bun run build:check                      # Project audit: build + bundle size check
+bun run translations:sync                # Manual translation sync to Supabase
+
 ## Architecture
 
 | Layer          | Location                                 | Role                                                                                      |
