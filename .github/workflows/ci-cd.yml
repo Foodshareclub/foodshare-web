@@ -7,11 +7,10 @@ on:
     branches: [main, develop, organic]
   workflow_dispatch:
 
-# Cancel in-progress runs on PRs if a new commit is pushed.
-# Do not cancel runs on main to ensure deployments complete.
+# Cancel in-progress runs when a new commit is pushed to the same branch.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
