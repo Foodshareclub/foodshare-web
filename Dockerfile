@@ -53,8 +53,8 @@ ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
 
 # Don't run as root
-RUN addgroup --system --gid 1001 bunjs && \
-    adduser --system --uid 1001 nextjs
+RUN groupadd --system --gid 1001 bunjs && \
+    useradd --system --uid 1001 --gid bunjs nextjs
 
 # Copy standalone server
 COPY --from=builder --chown=nextjs:bunjs /app/.next/standalone ./
