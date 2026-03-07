@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Home Page", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
   });
 
   test("should load the home page with FoodShare branding", async ({ page }) => {
@@ -66,7 +66,7 @@ test.describe("Home Page", () => {
   test("should support location-based filtering via URL params", async ({ page }) => {
     // Navigate with location params (London coordinates)
     await page.goto("/?lat=51.5074&lng=-0.1278&radius=5000");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Page should load with location filter active
     await expect(page.locator('[class*="grid"]').first()).toBeVisible({ timeout: 15000 });
@@ -97,7 +97,7 @@ test.describe("Home Page", () => {
 test.describe("Home Page - Navigation", () => {
   test("should navigate to map when clicking Show map button", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Click the "Show map" button
     const mapButton = page.locator("button").filter({ hasText: /show map/i });
@@ -105,7 +105,7 @@ test.describe("Home Page - Navigation", () => {
 
     if (isVisible) {
       await mapButton.click();
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       // Should navigate to map page
       await expect(page).toHaveURL(/\/map/);
@@ -145,7 +145,7 @@ test.describe("Home Page - Navigation", () => {
 test.describe("Home Page - Product Cards", () => {
   test("should display product cards when data is available", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(3000);
 
     // Check for product cards (links to /food/[id] or similar)
@@ -158,7 +158,7 @@ test.describe("Home Page - Product Cards", () => {
 
   test("should navigate to product detail when clicking a card", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(3000);
 
     // Find first product link
@@ -167,7 +167,7 @@ test.describe("Home Page - Product Cards", () => {
 
     if (isVisible) {
       await productLink.click();
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       // Should navigate to product detail page
       await expect(page).toHaveURL(/\/food\/[a-zA-Z0-9-]+/);

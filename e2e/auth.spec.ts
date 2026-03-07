@@ -133,7 +133,7 @@ test.describe("Authentication - Login", () => {
 test.describe("Authentication - Signup", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/auth/login");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     // Toggle to signup mode
     await page.getByText("Sign up").click();
   });
@@ -171,7 +171,7 @@ test.describe("Authentication - Protected Routes", () => {
     await page.goto("/settings");
 
     // Should redirect to auth page or show settings page with login prompt
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     const url = page.url();
     expect(url.includes("auth") || url.includes("login") || url.includes("settings")).toBeTruthy();
   });

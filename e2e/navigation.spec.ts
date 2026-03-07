@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Site Navigation", () => {
   test("should navigate between main pages", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Navigate to food listings via category button
     const foodButton = page
@@ -14,19 +14,19 @@ test.describe("Site Navigation", () => {
 
     if (isFoodVisible) {
       await foodButton.click();
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await expect(page).toHaveURL(/\/food/);
     }
 
     // Navigate back to home via logo
     await page.getByText("FoodShare").first().click();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     await expect(page).toHaveURL("/");
   });
 
   test("should have working footer links", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Scroll to footer
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
@@ -41,21 +41,21 @@ test.describe("Site Navigation", () => {
 
     if (hasTerms) {
       await termsLink.click();
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await expect(page).toHaveURL(/\/terms/);
       await page.goBack();
     }
 
     if (hasPrivacy) {
       await privacyLink.click();
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await expect(page).toHaveURL(/\/privacy/);
     }
   });
 
   test("should show 404 page for unknown routes", async ({ page }) => {
     await page.goto("/this-page-does-not-exist-12345");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Should show 404 or not found message
     const notFoundText = page.getByText(/not found|404|doesn't exist/i);
@@ -69,7 +69,7 @@ test.describe("Site Navigation", () => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Look for hamburger menu or mobile nav trigger
     const mobileMenuButton = page
@@ -126,7 +126,7 @@ test.describe("Static Pages", () => {
 
   test("should display feedback page or redirect to auth", async ({ page }) => {
     await page.goto("/feedback");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Either shows feedback form or redirects to auth
     const hasFeedbackForm = await page
@@ -143,7 +143,7 @@ test.describe("Static Pages", () => {
 test.describe("Forum", () => {
   test("should display forum page", async ({ page }) => {
     await page.goto("/forum");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     await expect(page).toHaveURL(/\/forum/);
 
@@ -154,7 +154,7 @@ test.describe("Forum", () => {
 
   test("should require auth to create new forum post", async ({ page }) => {
     await page.goto("/forum/new");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Should redirect to auth
     await expect(page).toHaveURL(/\/(auth|login|forum)/);
@@ -164,7 +164,7 @@ test.describe("Forum", () => {
 test.describe("Challenges", () => {
   test("should display challenges page", async ({ page }) => {
     await page.goto("/challenge");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     await expect(page).toHaveURL(/\/challenge/);
 
@@ -177,7 +177,7 @@ test.describe("Challenges", () => {
 test.describe("Donations", () => {
   test("should display donation page", async ({ page }) => {
     await page.goto("/donation");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     await expect(page).toHaveURL(/\/donation/);
 

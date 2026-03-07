@@ -12,7 +12,7 @@ test.describe("Map Page", () => {
 
   test("should load the map page", async ({ page }) => {
     await page.goto("/map/food");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     await expect(page).toHaveURL(/\/map/);
 
@@ -22,7 +22,7 @@ test.describe("Map Page", () => {
 
   test("should render Leaflet map container", async ({ page }) => {
     await page.goto("/map/food");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Wait for loading to finish and map to render
     await page.waitForTimeout(3000);
@@ -34,7 +34,7 @@ test.describe("Map Page", () => {
 
   test("should display map zoom controls", async ({ page }) => {
     await page.goto("/map/food");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Wait for map to fully load
     const mapContainer = page.locator(".leaflet-container");
@@ -52,7 +52,7 @@ test.describe("Map Page", () => {
 
   test("should allow zooming with controls", async ({ page }) => {
     await page.goto("/map/food");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     const mapContainer = page.locator(".leaflet-container");
     await expect(mapContainer).toBeVisible({ timeout: 20000 });
@@ -104,7 +104,7 @@ test.describe("Map Page", () => {
 
   test('should display "Show posts" navigation button', async ({ page }) => {
     await page.goto("/map/food");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // NavigateButtons shows "Show posts" button on map pages
     const postsButton = page.locator("button").filter({ hasText: /show posts/i });
@@ -115,7 +115,7 @@ test.describe("Map Page", () => {
 
   test("should display markers when data is available", async ({ page }) => {
     await page.goto("/map/food");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     const mapContainer = page.locator(".leaflet-container");
     await expect(mapContainer).toBeVisible({ timeout: 20000 });
@@ -136,7 +136,7 @@ test.describe("Map Page", () => {
 
   test("should open popup when clicking a marker", async ({ page }) => {
     await page.goto("/map/food");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     const mapContainer = page.locator(".leaflet-container");
     await expect(mapContainer).toBeVisible({ timeout: 20000 });
@@ -163,7 +163,7 @@ test.describe("Map Page", () => {
 
   test("should handle map drag interaction", async ({ page }) => {
     await page.goto("/map/food");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     const mapContainer = page.locator(".leaflet-container");
     await expect(mapContainer).toBeVisible({ timeout: 20000 });
@@ -206,7 +206,7 @@ test.describe("Map with Location", () => {
     await context.setGeolocation({ latitude: 51.5074, longitude: -0.1278 });
 
     await page.goto("/map/food");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Click "Show posts" button
     const postsButton = page.locator("button").filter({ hasText: /show posts/i });
@@ -214,7 +214,7 @@ test.describe("Map with Location", () => {
 
     if (isVisible) {
       await postsButton.click();
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
 
       // Should navigate to food listings page
       await expect(page).toHaveURL(/\/food/);

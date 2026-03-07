@@ -18,7 +18,7 @@ test.describe("Accessibility", () => {
 
   test("should have proper heading hierarchy on home page", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(2000);
 
     // Check for headings (h1, h2, h3)
@@ -32,7 +32,7 @@ test.describe("Accessibility", () => {
 
   test("should have alt text on images", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(2000);
 
     const images = page.locator("img");
@@ -53,7 +53,7 @@ test.describe("Accessibility", () => {
 
   test("should be keyboard navigable", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Tab through focusable elements
     await page.keyboard.press("Tab");
@@ -67,7 +67,7 @@ test.describe("Accessibility", () => {
 
   test("should have visible focus indicators", async ({ page }) => {
     await page.goto("/auth/login");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Tab through elements
     await page.keyboard.press("Tab");
@@ -94,7 +94,7 @@ test.describe("Accessibility", () => {
 
   test("should have proper button text or aria-label", async ({ page }) => {
     await page.goto("/auth/login");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     const buttons = page.locator("button");
     const buttonCount = await buttons.count();
@@ -113,7 +113,7 @@ test.describe("Accessibility", () => {
     // Set reduced motion preference
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Page should load without animation issues
     await expect(page.getByText("FoodShare").first()).toBeVisible();
@@ -121,7 +121,7 @@ test.describe("Accessibility", () => {
 
   test("should have sufficient color contrast on login page", async ({ page }) => {
     await page.goto("/auth/login");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Basic check - heading should be visible
     const heading = page.getByRole("heading", { name: /welcome back/i });
@@ -136,7 +136,7 @@ test.describe("Accessibility", () => {
 test.describe("Dark Mode", () => {
   test("should toggle dark mode if toggle exists", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Look for theme toggle
     const themeToggle = page
@@ -170,7 +170,7 @@ test.describe("Dark Mode", () => {
     // Emulate dark mode preference
     await page.emulateMedia({ colorScheme: "dark" });
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Page should load (respecting preference if implemented)
     await expect(page.getByText("FoodShare").first()).toBeVisible();

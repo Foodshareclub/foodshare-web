@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Food Listings Page", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/food");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
   });
 
   test("should load food listings page", async ({ page }) => {
@@ -52,7 +52,7 @@ test.describe("Food Listings Page", () => {
   test("should support location-based filtering", async ({ page }) => {
     // Navigate with location params
     await page.goto("/food?lat=51.5074&lng=-0.1278&radius=10000");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Page should load with location filter active
     await expect(page.locator('[class*="grid"]').first()).toBeVisible({ timeout: 10000 });
@@ -93,7 +93,7 @@ test.describe("Food Detail Page", () => {
   test("should display food item details", async ({ page }) => {
     // First go to listings and get a real food item URL
     await page.goto("/food");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(2000);
 
     const productLink = page.locator('a[href^="/food/"]').first();
@@ -103,7 +103,7 @@ test.describe("Food Detail Page", () => {
       const href = await productLink.getAttribute("href");
       if (href) {
         await page.goto(href);
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
 
         // Should show product details
         await expect(page).toHaveURL(/\/food\/[a-zA-Z0-9-]+/);
@@ -118,7 +118,7 @@ test.describe("Food Detail Page", () => {
 test.describe("Create Food Listing", () => {
   test("should redirect to login when not authenticated", async ({ page }) => {
     await page.goto("/food/new");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Should redirect to auth page
     await expect(page).toHaveURL(/\/(auth|login)/);
