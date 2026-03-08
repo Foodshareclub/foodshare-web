@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { HomeClient } from "./HomeClient";
 import { getProductsPaginated } from "@/lib/data/products";
 import { getNearbyPosts } from "@/lib/data/nearby-posts";
+import { getAuthSession } from "@/lib/data/auth";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
 import { generateBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
 import { siteConfig } from "@/lib/metadata";
@@ -18,14 +19,17 @@ interface PageProps {
 /**
  * Parse and validate location params from URL
  */
-function parseLocationParams(params: {
-  lat?: string;
-  lng?: string;
-  radius?: string;
-}): { lat: number; lng: number; radius: number } | null {
+function parseLocationParams(
+  params: {
+    lat?: string;
+    lng?: string;
+    radius?: string;
+  },
+  defaultRadius: number = 5000
+): { lat: number; lng: number; radius: number } | null {
   const lat = params.lat ? parseFloat(params.lat) : null;
   const lng = params.lng ? parseFloat(params.lng) : null;
-  const radius = params.radius ? parseInt(params.radius, 10) : 5000;
+  const radius = params.radius ? parseInt(params.radius, 10) : defaultRadius;
 
   if (
     lat === null ||
@@ -101,9 +105,13 @@ async function fetchHomeData(locationParams: { lat: number; lng: number; radius:
  * Supports location-based filtering via URL params: ?lat=X&lng=Y&radius=Z
  */
 export default async function Home({ searchParams }: PageProps) {
-
   const params = await searchParams;
-  const locationParams = parseLocationParams(params);
+
+  // Fetch session to get user settings (like search radius)
+  const session = await getAuthSession();
+  const userRadiusMeters = (session.user?.profile?.search_radius_km || 5) * 1000;
+
+  const locationParams = parseLocationParams(params, userRadiusMeters);
 
   // Fetch data outside of JSX rendering
   const homeData = await fetchHomeData(locationParams);
@@ -139,6 +147,7 @@ export default async function Home({ searchParams }: PageProps) {
         <HomeClient
           initialProducts={homeData.data}
           productType="food"
+          radiusMeters={userRadiusMeters}
           initialHasMore={homeData.hasMore}
           initialNextCursor={homeData.nextCursor}
         />

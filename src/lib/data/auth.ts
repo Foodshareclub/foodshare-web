@@ -23,6 +23,7 @@ export interface AuthUser {
     nickname?: string | null;
     avatar_url: string | null;
     email: string | null;
+    search_radius_km: number | null;
   } | null;
 }
 
@@ -78,7 +79,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id,first_name,second_name,nickname,avatar_url,email")
+        .select("id,first_name,second_name,nickname,avatar_url,email,search_radius_km")
         .eq("id", user.id)
         .single();
 

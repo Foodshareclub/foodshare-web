@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getProducts } from "@/lib/data/products";
 import { getChallenges } from "@/lib/data/challenges";
 import { getNearbyPosts } from "@/lib/data/nearby-posts";
+import { getAuthSession } from "@/lib/data/auth";
 import { HomeClient } from "@/app/HomeClient";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
 import { categoryMetadata, generatePageMetadata, siteConfig } from "@/lib/metadata";
@@ -57,14 +58,17 @@ export interface PageProps {
 /**
  * Parse and validate location params from URL
  */
-export function parseLocationParams(params: {
-  lat?: string;
-  lng?: string;
-  radius?: string;
-}): { lat: number; lng: number; radius: number } | null {
+export function parseLocationParams(
+  params: {
+    lat?: string;
+    lng?: string;
+    radius?: string;
+  },
+  defaultRadius: number = 5000
+): { lat: number; lng: number; radius: number } | null {
   const lat = params.lat ? parseFloat(params.lat) : null;
   const lng = params.lng ? parseFloat(params.lng) : null;
-  const radius = params.radius ? parseInt(params.radius, 10) : 5000;
+  const radius = params.radius ? parseInt(params.radius, 10) : defaultRadius;
 
   // Validate coordinates
   if (
@@ -103,8 +107,12 @@ export default async function CategoryPageContent({ type, searchParams }: { type
   const params = await searchParams;
   const productType = type;
 
+  // Fetch session to get user settings (like search radius)
+  const session = await getAuthSession();
+  const userRadiusMeters = (session.user?.profile?.search_radius_km || 5) * 1000;
+
   // Parse location params for nearby filtering
-  const locationParams = parseLocationParams(params);
+  const locationParams = parseLocationParams(params, userRadiusMeters);
   const isLocationFiltered = locationParams !== null;
 
   // If location params provided, fetch nearby posts using PostGIS
@@ -165,7 +173,11 @@ export default async function CategoryPageContent({ type, searchParams }: { type
         dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(itemListJsonLd) }}
       />
       <Suspense fallback={<ProductsPageSkeleton />}>
-        <HomeClient initialProducts={products} productType={productType} />
+        <HomeClient
+          initialProducts={products}
+          productType={productType}
+          radiusMeters={userRadiusMeters}
+        />
       </Suspense>
     </>
   );

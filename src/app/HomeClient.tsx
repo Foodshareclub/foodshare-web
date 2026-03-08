@@ -35,8 +35,7 @@ interface HomeClientProps {
   initialNextCursor?: number | null;
 }
 
-// Default search radius in meters (5km)
-const DEFAULT_RADIUS_METERS = 5000;
+// Default search radius in meters (passed as prop, falls back to 5km if not provided)
 
 /**
  * HomeClient - Client wrapper for the home page
@@ -54,7 +53,7 @@ export function HomeClient({
   productType = "food",
   nearbyPosts,
   isLocationFiltered = false,
-  radiusMeters = DEFAULT_RADIUS_METERS,
+  radiusMeters = 5000,
   initialHasMore = false,
   initialNextCursor = null,
 }: HomeClientProps) {
@@ -155,7 +154,7 @@ export function HomeClient({
         locationRef.current = {
           lat: parseFloat(lat),
           lng: parseFloat(lng),
-          radius: radius ? parseInt(radius, 10) : DEFAULT_RADIUS_METERS,
+          radius: radius ? parseInt(radius, 10) : radiusMeters,
         };
       }
     }
@@ -170,7 +169,7 @@ export function HomeClient({
 
     // If we have stored location, use it immediately via Server Action
     if (userLocation) {
-      const radius = geoDistance || DEFAULT_RADIUS_METERS;
+      const radius = geoDistance || radiusMeters;
 
       // Update URL for shareability without triggering navigation
       const newParams = new URLSearchParams(searchParams.toString());
@@ -188,7 +187,7 @@ export function HomeClient({
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          const radius = geoDistance || DEFAULT_RADIUS_METERS;
+          const radius = geoDistance || radiusMeters;
 
           // Store in Zustand for future visits
           setUserLocation({ latitude, longitude });
