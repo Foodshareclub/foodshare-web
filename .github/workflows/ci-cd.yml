@@ -47,6 +47,19 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Initialize Swap (Robustness)
+        run: |
+          if [ ! -f /tmp/runner/swapfile ]; then
+            echo "Creating 2GB swap file on persistent volume..."
+            fallocate -l 2G /tmp/runner/swapfile
+            chmod 600 /tmp/runner/swapfile
+            mkswap /tmp/runner/swapfile
+          fi
+          if ! swapon --show | grep -q "/tmp/runner/swapfile"; then
+            swapon /tmp/runner/swapfile
+          fi
+          free -m
+
   lint:
     name: Lint & Audit
     runs-on: [self-hosted]
@@ -74,6 +87,8 @@ jobs:
 
   type-check:
     name: Type Check
+    env:
+      NODE_OPTIONS: "--max-old-space-size=3072"
     runs-on: [self-hosted]
     needs: [setup, lint]
     timeout-minutes: 60
@@ -123,6 +138,8 @@ jobs:
 
   build:
     name: Build
+    env:
+      NODE_OPTIONS: "--max-old-space-size=3072"
     runs-on: [self-hosted]
     needs: [setup, test]
     timeout-minutes: 30
