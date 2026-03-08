@@ -16,14 +16,13 @@ permissions:
   contents: read
   packages: write
 
-
 env:
   BUN_VERSION: "1.3.9"
 
 jobs:
   setup:
     name: Setup
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
       cache-key: ${{ steps.cache-key.outputs.key }}
@@ -36,7 +35,7 @@ jobs:
 
       - name: Generate cache key
         id: cache-key
-        run: echo "key=self-hosted-bun-${{ hashFiles('bun.lock') }}" >> $GITHUB_OUTPUT
+        run: echo "key=bun-${{ hashFiles('bun.lock') }}" >> $GITHUB_OUTPUT
 
       - name: Cache node_modules
         uses: actions/cache@v4
@@ -47,24 +46,11 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Initialize Swap (Robustness)
-        run: |
-          if [ ! -f /tmp/runner/swapfile ]; then
-            echo "Creating 2GB swap file on persistent volume..."
-            fallocate -l 2G /tmp/runner/swapfile
-            chmod 600 /tmp/runner/swapfile
-            mkswap /tmp/runner/swapfile
-          fi
-          if ! swapon --show | grep -q "/tmp/runner/swapfile"; then
-            swapon /tmp/runner/swapfile
-          fi
-          free -m
-
   lint:
     name: Lint & Audit
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     needs: setup
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -87,11 +73,9 @@ jobs:
 
   type-check:
     name: Type Check
-    env:
-      NODE_OPTIONS: "--max-old-space-size=3072"
-    runs-on: [self-hosted]
-    needs: [setup, lint]
-    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    needs: setup
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -110,9 +94,9 @@ jobs:
 
   test:
     name: Test
-    runs-on: [self-hosted]
-    needs: [setup, type-check]
-    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    needs: setup
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -138,11 +122,9 @@ jobs:
 
   build:
     name: Build
-    env:
-      NODE_OPTIONS: "--max-old-space-size=3072"
-    runs-on: [self-hosted]
-    needs: [setup, test]
-    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    needs: [lint, type-check, test]
+    timeout-minutes: 15
     outputs:
       build-artifact: build-output
     steps:
@@ -156,15 +138,15 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: node_modules
-          key: ${{ needs.setup.outputs.cache-key }}
+          key: bun-${{ hashFiles('bun.lock') }}
 
       - name: Restore Next.js build cache
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/.next/cache
-          key: self-hosted-nextjs-${{ hashFiles('**/bun.lock') }}-${{ hashFiles('**/*.ts', '**/*.tsx') }}
+          key: nextjs-${{ hashFiles('**/bun.lock') }}-${{ hashFiles('**/*.ts', '**/*.tsx') }}
           restore-keys: |
-            self-hosted-nextjs-${{ hashFiles('**/bun.lock') }}-
+            nextjs-${{ hashFiles('**/bun.lock') }}-
 
       - name: Build
         run: bun run build
@@ -191,9 +173,9 @@ jobs:
 
   e2e:
     name: E2E Tests (${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
-    runs-on: [self-hosted]
-    needs: [setup, build]
-    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 30
     strategy:
       matrix:
         shardIndex: [1, 2, 3, 4]
@@ -209,7 +191,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: node_modules
-          key: ${{ needs.setup.outputs.cache-key }}
+          key: bun-${{ hashFiles('bun.lock') }}
 
       - name: Download Build Artifact
         uses: actions/download-artifact@v4
@@ -221,9 +203,9 @@ jobs:
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: self-hosted-playwright-${{ hashFiles('**/bun.lock') }}
+          key: playwright-${{ hashFiles('**/bun.lock') }}
           restore-keys: |
-            self-hosted-playwright-
+            playwright-
 
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
@@ -252,7 +234,7 @@ jobs:
 
   merge-e2e-reports:
     name: Merge E2E Reports
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     needs: e2e
     if: always()
     steps:
@@ -284,10 +266,10 @@ jobs:
 
   docker:
     name: Docker Build & Push
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    timeout-minutes: 60
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -328,8 +310,8 @@ jobs:
 
   sync-translations:
     name: Sync Translations
-    runs-on: [self-hosted]
-    needs: [setup, build]
+    runs-on: ubuntu-latest
+    needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
@@ -340,7 +322,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: node_modules
-          key: ${{ needs.setup.outputs.cache-key }}
+          key: bun-${{ hashFiles('bun.lock') }}
       - name: Sync translations to Supabase
         run: bun run translations:sync
         env:
@@ -349,8 +331,7 @@ jobs:
 
   deploy:
     name: Deploy
-    # Ensure VPS_HOST is set to web.foodshare.club in GitHub Secrets
-    runs-on: [self-hosted]
+    runs-on: ubuntu-latest
     needs: docker
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 10
@@ -375,7 +356,7 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" << EOF
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" <<EOF
           set -e
           
           # Target directory confirmed via diagnostics
