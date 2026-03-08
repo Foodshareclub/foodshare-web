@@ -346,6 +346,7 @@ export async function getOAuthSignInUrl(
     provider,
     options: {
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+      skipBrowserRedirect: false,
     },
   });
 
