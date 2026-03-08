@@ -1,7 +1,7 @@
 {
-    email contact@foodshare.club
+    email {$CADDY_ACME_EMAIL}
 }
 
-foodshare.club, www.foodshare.club {
+{$SITE_DOMAIN}, www.{$SITE_DOMAIN} {
 	reverse_proxy foodshare-web:3000
 }

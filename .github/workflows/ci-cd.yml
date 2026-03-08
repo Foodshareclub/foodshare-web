@@ -389,6 +389,8 @@ jobs:
           echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" > .env.production
           echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.production
           echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env.production
+          echo "SITE_DOMAIN=${{ secrets.SITE_DOMAIN }}" >> .env.production
+          echo "CADDY_ACME_EMAIL=${{ secrets.CADDY_ACME_EMAIL }}" >> .env.production
 
           # 2. Retrieve edge function secrets from backend
           if [ -f ../foodshare-backend/.env.functions ]; then

@@ -49,6 +49,9 @@ services:
       - "80:80"
       - "443:443"
       - "443:443/udp"
+    environment:
+      - SITE_DOMAIN=${SITE_DOMAIN}
+      - CADDY_ACME_EMAIL=${CADDY_ACME_EMAIL}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
