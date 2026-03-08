@@ -357,25 +357,13 @@ jobs:
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" << EOF
           set -e
           
-          echo "Current user: \$(whoami)"
-          echo "Current machine: \$(hostname)"
-          echo "Home directory content:"
-          ls -F ~
-          
-          # Try to find the foodshare-web directory more aggressively
+          # Target directory confirmed via diagnostics
           TARGET_DIR="/home/organic/dev/foodshare-web"
           if [ ! -d "\$TARGET_DIR" ]; then
-            echo "Primary path \$TARGET_DIR not found. Searching in /home/organic..."
-            TARGET_DIR=\$(find /home/organic -maxdepth 5 -name "foodshare-web" -type d | head -n 1)
-          fi
-          
-          if [ -z "\$TARGET_DIR" ] || [ ! -d "\$TARGET_DIR" ]; then
-            echo "Search in /home/organic failed. Checking root subdirectories..."
-            ls -ld /home/organic/* || echo "Cannot list /home/organic/*"
+            echo "Error: Directory \$TARGET_DIR not found on VPS"
             exit 1
           fi
           
-          echo "Using directory: \$TARGET_DIR"
           cd "\$TARGET_DIR"
           
           if [ ! -d ".git" ]; then
@@ -383,16 +371,12 @@ jobs:
             exit 1
           fi
 
-          echo "Remote origin URL:"
-          git config --get remote.origin.url
-
-          echo "Fetching latest changes..."
-          # Try to use the GITHUB_TOKEN if SSH fails or just to be safe
-          git fetch origin main || { 
-            echo "SSH Fetch failed. Checking SSH connectivity..."
-            ssh -T git@github.com || echo "SSH connection to GitHub failed"
-            exit 128
-          }
+          # Use GITHUB_TOKEN for HTTPS fetch to bypass SSH host key issues on VPS
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          
+          echo "Fetching latest changes using token..."
+          git fetch origin main
           
           echo "Resetting to origin/main..."
           git reset --hard origin/main
@@ -404,20 +388,17 @@ jobs:
 
           # 2. Retrieve edge function secrets from backend
           if [ -f ../foodshare-backend/.env.functions ]; then
-            echo "Pulling edge function secrets..."
             grep -E '^[A-Za-z0-9_]+=' ../foodshare-backend/.env.functions >> .env.production || true
           fi
 
           # 3. Retrieve vault secrets from backend DB
-          echo "Pulling vault secrets..."
           if docker ps | grep -q 'supabase-db'; then
             docker exec supabase-db psql -U postgres -d postgres -A -t -c "SELECT name || '=' || secret FROM vault.decrypted_secrets;" >> .env.production || echo "Warning: failed to fetch vault secrets"
           fi
 
           # Lowercase repo name for GHCR (Docker requirement)
-          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          docker pull "ghcr.io/$REPO_LOWER:latest"
+          docker pull "ghcr.io/\$REPO_LOWER:latest"
           
           docker compose --env-file .env.production up -d --force-recreate
           
