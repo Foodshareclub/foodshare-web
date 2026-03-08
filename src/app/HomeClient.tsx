@@ -96,10 +96,10 @@ export function HomeClient({
 
   // Fetch nearby posts via Server Action (no server re-render)
   const fetchNearby = useCallback(
-    async (lat: number, lng: number, radius: number) => {
+    async (lat: number, lng: number, radius: number, postType: string) => {
       setIsFetchingNearby(true);
       try {
-        const result = await fetchNearbyListings({ lat, lng, radius });
+        const result = await fetchNearbyListings({ lat, lng, radius, postType });
         if (result.success) {
           setClientNearbyPosts(result.data);
           setIsClientLocationFiltered(true);
@@ -125,7 +125,7 @@ export function HomeClient({
       if (effectiveIsLocationFiltered && locationRef.current) {
         // Location mode: fetch more nearby posts
         const { lat, lng, radius } = locationRef.current;
-        const result = await fetchNearbyListings({ lat, lng, radius, cursor: nextCursor });
+        const result = await fetchNearbyListings({ lat, lng, radius, postType: productType, cursor: nextCursor });
         if (result.success) {
           setExtraProducts((prev) => [...prev, ...(result.data as unknown as InitialProductStateType[])]);
           setHasMore(result.hasMore);
@@ -179,7 +179,7 @@ export function HomeClient({
       newParams.set("radius", radius.toString());
       window.history.replaceState({}, "", `?${newParams.toString()}`);
 
-      fetchNearby(userLocation.latitude, userLocation.longitude, radius);
+      fetchNearby(userLocation.latitude, userLocation.longitude, radius, productType);
       return;
     }
 
@@ -201,7 +201,7 @@ export function HomeClient({
           window.history.replaceState({}, "", `?${newParams.toString()}`);
 
           // Fetch nearby posts via Server Action
-          fetchNearby(latitude, longitude, radius);
+          fetchNearby(latitude, longitude, radius, productType);
         },
         (_error) => {
           // Silently fail - user will see all posts instead of nearby
