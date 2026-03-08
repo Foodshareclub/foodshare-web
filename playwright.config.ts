@@ -18,7 +18,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 1,
 
   // Limit parallel workers on CI (GitHub runners have 2 cores)
-  workers: process.env.CI ? 2 : undefined,
+  workers: process.env.CI ? 1 : undefined,
 
   // Global timeout for each test (SSR apps may need more time)
   timeout: 60000,

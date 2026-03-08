@@ -362,15 +362,16 @@ jobs:
           echo "Home directory content:"
           ls -F ~
           
-          # Try to find the foodshare-web directory
+          # Try to find the foodshare-web directory more aggressively
           TARGET_DIR="/home/organic/dev/foodshare-web"
           if [ ! -d "\$TARGET_DIR" ]; then
-            echo "Primary path \$TARGET_DIR not found. Searching..."
-            TARGET_DIR=\$(find ~ -maxdepth 3 -name "foodshare-web" -type d | head -n 1)
+            echo "Primary path \$TARGET_DIR not found. Searching in /home/organic..."
+            TARGET_DIR=\$(find /home/organic -maxdepth 5 -name "foodshare-web" -type d | head -n 1)
           fi
           
           if [ -z "\$TARGET_DIR" ] || [ ! -d "\$TARGET_DIR" ]; then
-            echo "Error: Could not locate foodshare-web directory"
+            echo "Search in /home/organic failed. Checking root subdirectories..."
+            ls -ld /home/organic/* || echo "Cannot list /home/organic/*"
             exit 1
           fi
           
