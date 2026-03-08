@@ -6,6 +6,7 @@ import { getNearbyPosts } from "@/lib/data/nearby-posts";
 import { getAuthSession } from "@/lib/data/auth";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
 import { generateBreadcrumbJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
+import { createRequestLogger } from "@/lib/structured-logger";
 import { siteConfig } from "@/lib/metadata";
 
 interface PageProps {
@@ -105,6 +106,7 @@ async function fetchHomeData(locationParams: { lat: number; lng: number; radius:
  * Supports location-based filtering via URL params: ?lat=X&lng=Y&radius=Z
  */
 export default async function Home({ searchParams }: PageProps) {
+  const logger = await createRequestLogger({ action: "Home" });
   const params = await searchParams;
 
   // Fetch session to get user settings (like search radius)
@@ -116,7 +118,7 @@ export default async function Home({ searchParams }: PageProps) {
   // Fetch data outside of JSX rendering
   const homeData = await fetchHomeData(locationParams);
   if (!homeData) {
-    console.error("Home data fetch failed");
+    logger.error("Home data fetch failed");
     return <HomePageSkeleton />;
   }
 

@@ -8,6 +8,7 @@ import { HomeClient } from "@/app/HomeClient";
 import SkeletonCard from "@/components/productCard/SkeletonCard";
 import { categoryMetadata, generatePageMetadata, siteConfig } from "@/lib/metadata";
 import { generateItemListJsonLd, safeJsonLdStringify } from "@/lib/jsonld";
+import { createRequestLogger } from "@/lib/structured-logger";
 
 export const CATEGORY_PATHS = [
   "food",
@@ -104,6 +105,7 @@ export async function generateCategoryMetadata(type: string, searchParams: Promi
 }
 
 export default async function CategoryPageContent({ type, searchParams }: { type: string } & PageProps) {
+  const logger = await createRequestLogger({ action: "CategoryPageContent", type });
   const params = await searchParams;
   const productType = type;
 
@@ -128,7 +130,7 @@ export default async function CategoryPageContent({ type, searchParams }: { type
       });
       nearbyPosts = result.data;
     } catch (error) {
-      console.error("Failed to fetch nearby posts:", error);
+      logger.error("Failed to fetch nearby posts", error);
     }
 
     return (
@@ -149,7 +151,7 @@ export default async function CategoryPageContent({ type, searchParams }: { type
   try {
     products = productType === "challenge" ? await getChallenges() : await getProducts(productType);
   } catch (error) {
-    console.error("Failed to fetch products:", error);
+    logger.error("Failed to fetch products", error);
   }
 
   // Generate ItemList structured data for SEO (first 10 items for rich carousel)

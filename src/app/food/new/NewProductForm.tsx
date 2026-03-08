@@ -352,7 +352,7 @@ export function NewProductForm({
 
         // Redirect to appropriate page based on type
         const redirectMap: Record<string, string> = {
-          volunteer: "/volunteers?submitted=true",
+          volunteer: "/volunteer?submitted=true",
           challenge: "/challenge?submitted=true",
         };
         const redirectUrl = redirectMap[formData.post_type] || `/food?type=${formData.post_type}`;
