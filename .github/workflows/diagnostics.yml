@@ -1,0 +1,25 @@
+name: Runner Diagnostics
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    name: Diagnose Self-Hosted Runner
+    runs-on: [self-hosted]
+    steps:
+      - name: System Info
+        run: |
+          uname -a
+          nproc
+          free -h
+          df -h
+      
+      - name: Tool Check
+        run: |
+          which bun || echo "bun not found"
+          bun --version || echo "bun --version failed"
+          which docker || echo "docker not found"
+          docker --version || echo "docker --version failed"
+          which docker-compose || echo "docker-compose not found"
+          docker compose version || echo "docker compose version failed"
