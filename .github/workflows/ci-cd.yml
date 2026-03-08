@@ -248,17 +248,30 @@ jobs:
 
       - name: Download blob reports
         uses: actions/download-artifact@v4
+        continue-on-error: true
+        id: download-reports
         with:
           pattern: blob-report-*
           path: all-blob-reports
           merge-multiple: true
 
+      - name: Check if reports exist
+        id: check-reports
+        run: |
+          if [ -d "all-blob-reports" ] && [ "$(ls -A all-blob-reports)" ]; then
+            echo "reports_exist=true" >> $GITHUB_OUTPUT
+          else
+            echo "reports_exist=false" >> $GITHUB_OUTPUT
+            echo "No E2E test reports found (tests may have been cancelled or skipped)"
+          fi
+
       - name: Merge reports
+        if: steps.check-reports.outputs.reports_exist == 'true'
         run: bunx playwright merge-reports --reporter html ./all-blob-reports
 
       - name: Upload Full Playwright report
+        if: always() && steps.check-reports.outputs.reports_exist == 'true'
         uses: actions/upload-artifact@v4
-        if: always()
         with:
           name: playwright-report
           path: playwright-report/

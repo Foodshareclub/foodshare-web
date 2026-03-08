@@ -273,8 +273,14 @@ export function useAuth(): UseAuthReturn {
         });
 
         if (oauthError) {
-          setError(oauthError.message);
-          return { success: false, error: oauthError.message };
+          // Provide user-friendly error for missing OAuth configuration
+          const errorMessage = oauthError.message.includes("missing OAuth secret") || 
+                               oauthError.message.includes("Unsupported provider")
+            ? `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not configured yet. Please use email/password or magic link.`
+            : oauthError.message;
+          
+          setError(errorMessage);
+          return { success: false, error: errorMessage };
         }
 
         return { success: true };

@@ -351,6 +351,13 @@ export async function getOAuthSignInUrl(
   });
 
   if (error) {
+    // Provide user-friendly error for missing OAuth configuration
+    if (error.message.includes("missing OAuth secret") || error.message.includes("Unsupported provider")) {
+      return { 
+        url: null, 
+        error: `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not configured yet. Please use email/password or magic link.` 
+      };
+    }
     return { url: null, error: error.message };
   }
 
