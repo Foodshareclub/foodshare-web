@@ -1,0 +1,38 @@
+name: Test Runner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-runner:
+    name: Test Self-Hosted Runner
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 5
+    steps:
+      - name: Check runner environment
+        run: |
+          echo "✓ Runner is working!"
+          echo "Hostname: $(hostname)"
+          echo "User: $(whoami)"
+          echo "OS: $(uname -a)"
+          echo "Working directory: $(pwd)"
+          
+      - name: Check backend directory
+        run: |
+          if [ -d "/home/organic/dev/foodshare-backend" ]; then
+            echo "✓ Backend directory exists"
+            ls -la /home/organic/dev/foodshare-backend
+          else
+            echo "✗ Backend directory not found"
+          fi
+          
+      - name: Check Docker
+        run: |
+          docker --version
+          docker compose version
+          
+      - name: Test backend access
+        run: |
+          cd /home/organic/dev/foodshare-backend
+          echo "✓ Can access backend directory"
+          echo "Current branch: $(git branch --show-current)"
