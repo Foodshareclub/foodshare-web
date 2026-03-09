@@ -1,8 +1,8 @@
-# OAuth Provider Setup Guide
+# OAuth Provider Setup Guide (Self-Hosted Supabase)
 
 ## Issue
 
-If you see the error: `{"code": 400,"error_code": "validation_failed","msg": "Unsupported provider: missing OAuth secret"}`, it means an OAuth provider button is shown but not configured in Supabase.
+If you see the error: `{"code": 400,"error_code": "validation_failed","msg": "Unsupported provider: missing OAuth secret"}`, it means an OAuth provider button is shown but not configured in your self-hosted Supabase instance.
 
 ## Quick Fix (Recommended)
 
@@ -10,16 +10,33 @@ The app now automatically hides OAuth buttons for unconfigured providers. **All 
 
 ### To Enable a Provider:
 
-**Step 1: Configure in Supabase Dashboard** (see detailed steps below)
+**Step 1: Configure in Self-Hosted Supabase Backend**
 
-**Step 2: Set Environment Variable**
+Edit `foodshare-backend/.env` and add:
 
-Add to your `.env.local` (development) or GitHub Secrets (production):
+```bash
+# Google OAuth Configuration
+GOTRUE_EXTERNAL_GOOGLE_ENABLED=true
+GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID=your-google-client-id
+GOTRUE_EXTERNAL_GOOGLE_SECRET=your-google-client-secret
+GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI=https://api.foodshare.club/auth/v1/callback
+```
+
+**Step 2: Restart Supabase Services**
+
+```bash
+cd foodshare-backend
+docker-compose restart auth
+```
+
+**Step 3: Enable in Web App**
+
+Add to GitHub Secrets (for production) or `.env.local` (for development):
 ```bash
 NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=true
 ```
 
-**Step 3: Restart/Redeploy**
+**Step 4: Redeploy Web App**
 - Development: Restart your dev server
 - Production: Push to trigger deployment
 
@@ -31,11 +48,11 @@ NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=true
 
 **Note:** Providers are disabled by default in both development and production for security.
 
-## Solution
+## Solution (Detailed Setup)
 
-### 1. Access Supabase Dashboard
+### 1. Access Self-Hosted Supabase Configuration
 
-Go to: `https://supabase.com/dashboard/project/[your-project-id]/auth/providers`
+Edit: `foodshare-backend/.env`
 
 ### 2. Configure Each Provider
 
@@ -47,11 +64,22 @@ Go to: `https://supabase.com/dashboard/project/[your-project-id]/auth/providers`
    - Add authorized redirect URI: `https://api.foodshare.club/auth/v1/callback`
    - Copy Client ID and Client Secret
 
-2. **Configure in Supabase:**
-   - Enable Google provider
-   - Paste Client ID
-   - Paste Client Secret
-   - Redirect URL: `https://api.foodshare.club/auth/v1/callback`
+2. **Configure in Backend .env:**
+   ```bash
+   GOTRUE_EXTERNAL_GOOGLE_ENABLED=true
+   GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID=your-client-id-here
+   GOTRUE_EXTERNAL_GOOGLE_SECRET=your-client-secret-here
+   GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI=https://api.foodshare.club/auth/v1/callback
+   ```
+
+3. **Restart Auth Service:**
+   ```bash
+   cd foodshare-backend
+   docker-compose restart auth
+   ```
+
+4. **Enable in Web App:**
+   Add to GitHub Secrets: `NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=true`
 
 #### GitHub OAuth
 
@@ -61,11 +89,22 @@ Go to: `https://supabase.com/dashboard/project/[your-project-id]/auth/providers`
    - Authorization callback URL: `https://api.foodshare.club/auth/v1/callback`
    - Copy Client ID and Client Secret
 
-2. **Configure in Supabase:**
-   - Enable GitHub provider
-   - Paste Client ID
-   - Paste Client Secret
-   - Redirect URL: `https://api.foodshare.club/auth/v1/callback`
+2. **Configure in Backend .env:**
+   ```bash
+   GOTRUE_EXTERNAL_GITHUB_ENABLED=true
+   GOTRUE_EXTERNAL_GITHUB_CLIENT_ID=your-client-id-here
+   GOTRUE_EXTERNAL_GITHUB_SECRET=your-client-secret-here
+   GOTRUE_EXTERNAL_GITHUB_REDIRECT_URI=https://api.foodshare.club/auth/v1/callback
+   ```
+
+3. **Restart Auth Service:**
+   ```bash
+   cd foodshare-backend
+   docker-compose restart auth
+   ```
+
+4. **Enable in Web App:**
+   Add to GitHub Secrets: `NEXT_PUBLIC_OAUTH_GITHUB_ENABLED=true`
 
 #### Facebook OAuth
 
