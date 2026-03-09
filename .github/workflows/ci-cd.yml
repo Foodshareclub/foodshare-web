@@ -1,427 +1,113 @@
-name: CI/CD
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main, develop, organic]
+    branches: [main]
   pull_request:
-    branches: [main, develop, organic]
+    branches: [main]
   workflow_dispatch:
 
-# Cancel in-progress runs when a new commit is pushed to the same branch.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
-  packages: write
-
-env:
-  BUN_VERSION: "1.3.9"
 
 jobs:
-  setup:
-    name: Setup
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    outputs:
-      cache-key: ${{ steps.cache-key.outputs.key }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Generate cache key
-        id: cache-key
-        run: echo "key=bun-${{ hashFiles('bun.lock') }}" >> $GITHUB_OUTPUT
-
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ steps.cache-key.outputs.key }}
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
   lint:
-    name: Lint & Audit
-    runs-on: ubuntu-latest
-    needs: setup
+    name: Lint
+    runs-on: [self-hosted, Linux, ARM64]
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
+      
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
         with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Restore cache
-        uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: ${{ needs.setup.outputs.cache-key }}
-
-      - name: Security audit
-        # Warns about vulns but doesn't hard-fail the pipeline yet
-        run: bun audit || true
-
-      - name: Run lint
-        run: bun run lint
+          deno-version: v1.x
+      
+      - run: deno fmt --check
+      - run: deno lint
 
   type-check:
     name: Type Check
-    runs-on: ubuntu-latest
-    needs: setup
-    timeout-minutes: 15
+    runs-on: [self-hosted, Linux, ARM64]
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
+      
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
         with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Restore cache
-        uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: ${{ needs.setup.outputs.cache-key }}
-
-      - name: Run type check
-        run: bun run type-check
+          deno-version: v1.x
+      
+      - run: deno check supabase/functions/**/*.ts
 
   test:
     name: Test
-    runs-on: ubuntu-latest
-    needs: setup
+    runs-on: [self-hosted, Linux, ARM64]
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
+      
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
         with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Restore cache
-        uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: ${{ needs.setup.outputs.cache-key }}
-
-      - name: Run tests
-        run: bun run test:ci
-
+          deno-version: v1.x
+      
+      - run: deno test --allow-all --coverage=coverage
+      
+      - name: Generate coverage
+        run: deno coverage coverage --lcov --output=coverage.lcov
+      
       - name: Upload coverage
         uses: codecov/codecov-action@v5
         continue-on-error: true
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/lcov.info
+          files: ./coverage.lcov
 
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    needs: [lint, type-check, test]
-    timeout-minutes: 15
-    outputs:
-      build-artifact: build-output
+  security-scan:
+    name: Security Scan
+    runs-on: [self-hosted, Linux, ARM64]
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
+      
+      - name: Scan for secrets
+        uses: trufflesecurity/trufflehog@main
         with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Restore node_modules cache
-        uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: bun-${{ hashFiles('bun.lock') }}
-
-      - name: Restore Next.js build cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ github.workspace }}/.next/cache
-          key: nextjs-${{ hashFiles('**/bun.lock') }}-${{ hashFiles('**/*.ts', '**/*.tsx') }}
-          restore-keys: |
-            nextjs-${{ hashFiles('**/bun.lock') }}-
-
-      - name: Build
-        run: bun run build
-        env:
-          SKIP_ENV_VALIDATION: "true"
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: |
-            .next
-            public
-            messages
-            package.json
-            bun.lock
-          retention-days: 1
-
-      - name: Check Bundle Size Budget
-        run: bun scripts/check-bundle-size.ts
-
-  e2e:
-    name: E2E Tests (${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
-    runs-on: ubuntu-latest
-    needs: build
-    timeout-minutes: 30
-    strategy:
-      matrix:
-        shardIndex: [1, 2, 3, 4]
-        shardTotal: [4]
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Restore cache
-        uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: bun-${{ hashFiles('bun.lock') }}
-
-      - name: Download Build Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-output
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ hashFiles('**/bun.lock') }}
-          restore-keys: |
-            playwright-
-
-      - name: Install Playwright Browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: bunx playwright install --with-deps
-
-      - name: Install Playwright Dependencies (if cache hit)
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: bunx playwright install-deps
-
-      - name: Run Playwright tests
-        run: bun run e2e --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
-        env:
-          SKIP_ENV_VALIDATION: "true"
-          SKIP_WEBSERVER: "false"
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-
-      - name: Upload Blob report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: blob-report-${{ matrix.shardIndex }}
-          path: blob-report/
-          retention-days: 14
-
-  merge-e2e-reports:
-    name: Merge E2E Reports
-    runs-on: ubuntu-latest
-    needs: e2e
-    if: always()
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-
-      - name: Install playwright
-        run: bun install @playwright/test
-
-      - name: Download blob reports
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        id: download-reports
-        with:
-          pattern: blob-report-*
-          path: all-blob-reports
-          merge-multiple: true
-
-      - name: Check if reports exist
-        id: check-reports
-        run: |
-          if [ -d "all-blob-reports" ] && [ "$(ls -A all-blob-reports)" ]; then
-            echo "reports_exist=true" >> $GITHUB_OUTPUT
-          else
-            echo "reports_exist=false" >> $GITHUB_OUTPUT
-            echo "No E2E test reports found (tests may have been cancelled or skipped)"
-          fi
-
-      - name: Merge reports
-        if: steps.check-reports.outputs.reports_exist == 'true'
-        run: bunx playwright merge-reports --reporter html ./all-blob-reports
-
-      - name: Upload Full Playwright report
-        if: always() && steps.check-reports.outputs.reports_exist == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 14
-
-  docker:
-    name: Docker Build & Push
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: type=raw,value=latest
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-            SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-            NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
-            NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL }}
-
-  sync-translations:
-    name: Sync Translations
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ env.BUN_VERSION }}
-      - name: Restore cache
-        uses: actions/cache/restore@v4
-        with:
-          path: node_modules
-          key: bun-${{ hashFiles('bun.lock') }}
-      - name: Sync translations to Supabase
-        run: bun run translations:sync
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
 
   deploy:
-    name: Deploy
-    runs-on: ubuntu-latest
-    needs: docker
+    name: Deploy Edge Functions
+    runs-on: [self-hosted, Linux, ARM64]
+    needs: [lint, type-check, test]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    timeout-minutes: 10
-    # Process deployments sequentially to prevent race conditions on the VPS
-    concurrency:
-      group: production_deploy
-      cancel-in-progress: false
+    timeout-minutes: 15
     environment:
       name: production
-      url: https://foodshare.club
     steps:
       - uses: actions/checkout@v4
-
-      - name: Deploy
-        env:
-          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          SSH_HOST: ${{ secrets.VPS_HOST }}
-          SSH_USER: ${{ secrets.VPS_USER }}
-          VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
+      
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+      
+      - name: Deploy to Supabase
         run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
-
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" <<EOF
-          set -e
+          # Deploy edge functions using local Supabase instance
+          cd /home/organic/dev/foodshare-backend
           
-          TARGET_DIR="$VPS_DEPLOY_PATH"
-          if [ ! -d "\$TARGET_DIR" ]; then
-            echo "Error: Directory \$TARGET_DIR not found on VPS"
-            exit 1
-          fi
-          
-          cd "\$TARGET_DIR"
-          
-          if [ ! -d ".git" ]; then
-            echo "Error: .git directory not found in \$(pwd)"
-            exit 1
-          fi
-
-          # Use GITHUB_TOKEN for HTTPS fetch to bypass SSH host key issues on VPS
-          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
-          
-          echo "Fetching latest changes using token..."
+          # Pull latest changes
           git fetch origin main
-          
-          echo "Resetting to origin/main..."
           git reset --hard origin/main
-
-          # 1. Initialize .env.production with GitHub Actions secrets
-          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" > .env.production
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.production
-          echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env.production
-          echo "SITE_DOMAIN=${{ secrets.SITE_DOMAIN }}" >> .env.production
-          echo "CADDY_ACME_EMAIL=${{ secrets.CADDY_ACME_EMAIL }}" >> .env.production
-
-          # 2. Retrieve edge function secrets from backend
-          if [ -f ../foodshare-backend/.env.functions ]; then
-            grep -E '^[A-Za-z0-9_]+=' ../foodshare-backend/.env.functions >> .env.production || true
-          fi
-
-          # 3. Retrieve vault secrets from backend DB
-          if docker ps | grep -q 'supabase-db'; then
-            docker exec supabase-db psql -U postgres -d postgres -A -t -c "SELECT name || '=' || secret FROM vault.decrypted_secrets;" >> .env.production || echo "Warning: failed to fetch vault secrets"
-          fi
-
-          # Lowercase repo name for GHCR (Docker requirement)
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          docker pull "ghcr.io/\$REPO_LOWER:latest"
           
-          docker compose --env-file .env.production up -d --force-recreate
+          # Restart Supabase services to pick up function changes
+          docker compose restart functions
           
-          echo "Deploy complete - container restarted"
-          EOF
-
-          rm -f ~/.ssh/deploy_key
+          echo "✓ Edge functions deployed"
