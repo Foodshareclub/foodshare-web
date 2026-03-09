@@ -6,18 +6,30 @@ If you see the error: `{"code": 400,"error_code": "validation_failed","msg": "Un
 
 ## Quick Fix (Recommended)
 
-The app now automatically hides OAuth buttons for unconfigured providers in production. To enable a provider:
+The app now automatically hides OAuth buttons for unconfigured providers. **All OAuth providers are disabled by default** until you explicitly enable them.
 
-1. Configure it in Supabase (see below)
-2. Set the environment variable in GitHub Secrets:
-   - `NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=true`
-   - `NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED=true`
-   - `NEXT_PUBLIC_OAUTH_APPLE_ENABLED=true`
-   - `NEXT_PUBLIC_OAUTH_GITHUB_ENABLED=true`
+### To Enable a Provider:
 
-3. Redeploy the app
+**Step 1: Configure in Supabase Dashboard** (see detailed steps below)
 
-**Note:** In development mode, all OAuth buttons are shown for testing purposes.
+**Step 2: Set Environment Variable**
+
+Add to your `.env.local` (development) or GitHub Secrets (production):
+```bash
+NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=true
+```
+
+**Step 3: Restart/Redeploy**
+- Development: Restart your dev server
+- Production: Push to trigger deployment
+
+**Available Variables:**
+- `NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=true`
+- `NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED=true`
+- `NEXT_PUBLIC_OAUTH_APPLE_ENABLED=true`
+- `NEXT_PUBLIC_OAUTH_GITHUB_ENABLED=true`
+
+**Note:** Providers are disabled by default in both development and production for security.
 
 ## Solution
 

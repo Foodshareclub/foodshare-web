@@ -16,13 +16,10 @@ interface OAuthConfig {
  * Providers are disabled by default and must be explicitly enabled via env vars
  */
 function isProviderEnabled(provider: OAuthProvider): boolean {
-  // In development, allow all providers for testing
-  if (process.env.NODE_ENV === "development") {
-    return true;
-  }
-
-  // In production, check environment variables
   const envKey = `NEXT_PUBLIC_OAUTH_${provider.toUpperCase()}_ENABLED`;
+  
+  // Check environment variable - must be explicitly set to "true"
+  // This applies to both development and production
   return process.env[envKey] === "true";
 }
 
