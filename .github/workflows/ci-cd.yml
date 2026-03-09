@@ -347,7 +347,7 @@ jobs:
   deploy:
     name: Deploy
     runs-on: [self-hosted, Linux, ARM64]
-    needs: docker
+    needs: [lint, type-check, test]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 10
     concurrency:
