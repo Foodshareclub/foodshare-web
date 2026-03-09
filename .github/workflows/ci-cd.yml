@@ -350,78 +350,30 @@ jobs:
     needs: docker
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 10
-    # Process deployments sequentially to prevent race conditions on the VPS
     concurrency:
       group: production_deploy
       cancel-in-progress: false
     environment:
       name: production
-      url: https://foodshare.club
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy
-        env:
-          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          SSH_HOST: ${{ secrets.VPS_HOST }}
-          SSH_USER: ${{ secrets.VPS_USER }}
-          VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
-
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" <<EOF
-          set -e
-          
-          TARGET_DIR="$VPS_DEPLOY_PATH"
-          if [ ! -d "\$TARGET_DIR" ]; then
-            echo "Error: Directory \$TARGET_DIR not found on VPS"
-            exit 1
-          fi
-          
-          cd "\$TARGET_DIR"
-          
-          if [ ! -d ".git" ]; then
-            echo "Error: .git directory not found in \$(pwd)"
-            exit 1
-          fi
-
-          # Use GITHUB_TOKEN for HTTPS fetch to bypass SSH host key issues on VPS
-          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
-          
-          echo "Fetching latest changes using token..."
+      - run: |
+          cd /home/organic/dev/foodshare-backend
           git fetch origin main
-          
-          echo "Resetting to origin/main..."
           git reset --hard origin/main
-
-          # 1. Initialize .env.production with GitHub Actions secrets
-          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" > .env.production
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> .env.production
-          echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env.production
-          echo "SITE_DOMAIN=${{ secrets.SITE_DOMAIN }}" >> .env.production
-          echo "CADDY_ACME_EMAIL=${{ secrets.CADDY_ACME_EMAIL }}" >> .env.production
-
-          # 2. Retrieve edge function secrets from backend
-          if [ -f ../foodshare-backend/.env.functions ]; then
-            grep -E '^[A-Za-z0-9_]+=' ../foodshare-backend/.env.functions >> .env.production || true
-          fi
-
-          # 3. Retrieve vault secrets from backend DB
-          if docker ps | grep -q 'supabase-db'; then
-            docker exec supabase-db psql -U postgres -d postgres -A -t -c "SELECT name || '=' || secret FROM vault.decrypted_secrets;" >> .env.production || echo "Warning: failed to fetch vault secrets"
-          fi
-
-          # Lowercase repo name for GHCR (Docker requirement)
-          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          docker pull "ghcr.io/\$REPO_LOWER:latest"
           
-          docker compose --env-file .env.production up -d --force-recreate
+          # Update .env with OAuth secrets from GitHub Secrets
+          sed -i '/GOTRUE_EXTERNAL_GOOGLE/d' .env 2>/dev/null || true
           
-          echo "Deploy complete - container restarted"
-          EOF
-
-          rm -f ~/.ssh/deploy_key
+          cat >> .env <<EOL
+          
+          # Google OAuth (from GitHub Secrets)
+          GOTRUE_EXTERNAL_GOOGLE_ENABLED=true
+          GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID=${{ secrets.GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID }}
+          GOTRUE_EXTERNAL_GOOGLE_SECRET=${{ secrets.GOTRUE_EXTERNAL_GOOGLE_SECRET }}
+          GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI=https://backend.foodshare.club/auth/v1/callback
+          EOL
+          
+          # Restart services
+          docker compose restart auth || docker compose restart || true
+          
+          echo "✓ Backend deployed with OAuth configured"
