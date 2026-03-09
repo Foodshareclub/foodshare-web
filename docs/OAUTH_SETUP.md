@@ -2,7 +2,22 @@
 
 ## Issue
 
-If you see the error: `{"code": 400,"error_code": "validation_failed","msg": "Unsupported provider: missing OAuth secret"}`, it means an OAuth provider is enabled in your app but not configured in Supabase.
+If you see the error: `{"code": 400,"error_code": "validation_failed","msg": "Unsupported provider: missing OAuth secret"}`, it means an OAuth provider button is shown but not configured in Supabase.
+
+## Quick Fix (Recommended)
+
+The app now automatically hides OAuth buttons for unconfigured providers in production. To enable a provider:
+
+1. Configure it in Supabase (see below)
+2. Set the environment variable in GitHub Secrets:
+   - `NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=true`
+   - `NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED=true`
+   - `NEXT_PUBLIC_OAUTH_APPLE_ENABLED=true`
+   - `NEXT_PUBLIC_OAUTH_GITHUB_ENABLED=true`
+
+3. Redeploy the app
+
+**Note:** In development mode, all OAuth buttons are shown for testing purposes.
 
 ## Solution
 

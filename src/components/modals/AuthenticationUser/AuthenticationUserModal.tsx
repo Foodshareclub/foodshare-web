@@ -17,6 +17,7 @@ import facebook from "@/assets/facebookblue.svg";
 import apple from "@/assets/apple.svg";
 import google from "@/assets/google.svg";
 import { isStorageHealthy } from "@/lib/supabase/client";
+import { getEnabledProviders, isOAuthEnabled, type OAuthProvider } from "@/lib/config/oauth";
 import {
   testStorageAvailability,
   clearSupabaseStorage,
@@ -234,7 +235,7 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
     });
   };
 
-  const handleSocialLogin = async (provider: "google" | "facebook" | "apple") => {
+  const handleSocialLogin = async (provider: OAuthProvider) => {
     if (storageError) {
       logger.error("Cannot authenticate: storage error present");
       return;
@@ -578,47 +579,57 @@ const AuthenticationUserModal: React.FC<ModalType> = ({
                   </div>
                 </form>
 
-                {/* Divider */}
-                <div className="flex items-center my-6">
-                  <div className="flex-1 border-t border-border" />
-                  <span className="px-4 text-xs text-muted-foreground font-medium">
-                    &quot;or&quot;
-                  </span>
-                  <div className="flex-1 border-t border-border" />
-                </div>
+                {/* Divider - Only show if OAuth providers are enabled */}
+                {getEnabledProviders().length > 0 && (
+                  <div className="flex items-center my-6">
+                    <div className="flex-1 border-t border-border" />
+                    <span className="px-4 text-xs text-muted-foreground font-medium">
+                      &quot;or&quot;
+                    </span>
+                    <div className="flex-1 border-t border-border" />
+                  </div>
+                )}
 
-                {/* Social Login Buttons */}
-                <div className="flex flex-col gap-3">
-                  <Button
-                    type="button"
-                    onClick={() => handleSocialLogin("google")}
-                    variant="outline"
-                    className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
-                  >
-                    <Image src={google} alt="Google" width={20} height={20} className="w-5 h-5 mr-3" />
-                    &quot;Continue with Google&quot;
-                  </Button>
+                {/* Social Login Buttons - Only show enabled providers */}
+                {getEnabledProviders().length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    {isOAuthEnabled("google") && (
+                      <Button
+                        type="button"
+                        onClick={() => handleSocialLogin("google")}
+                        variant="outline"
+                        className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
+                      >
+                        <Image src={google} alt="Google" width={20} height={20} className="w-5 h-5 mr-3" />
+                        &quot;Continue with Google&quot;
+                      </Button>
+                    )}
 
-                  <Button
-                    type="button"
-                    onClick={() => handleSocialLogin("facebook")}
-                    variant="outline"
-                    className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
-                  >
-                    <Image src={facebook} alt="Facebook" width={20} height={20} className="w-5 h-5 mr-3" />
-                    &quot;Continue with Facebook&quot;
-                  </Button>
+                    {isOAuthEnabled("facebook") && (
+                      <Button
+                        type="button"
+                        onClick={() => handleSocialLogin("facebook")}
+                        variant="outline"
+                        className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
+                      >
+                        <Image src={facebook} alt="Facebook" width={20} height={20} className="w-5 h-5 mr-3" />
+                        &quot;Continue with Facebook&quot;
+                      </Button>
+                    )}
 
-                  <Button
-                    type="button"
-                    onClick={() => handleSocialLogin("apple")}
-                    variant="outline"
-                    className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
-                  >
-                    <Image src={apple} alt="Apple" width={20} height={20} className="w-5 h-5 mr-3" />
-                    &quot;Continue with Apple&quot;
-                  </Button>
-                </div>
+                    {isOAuthEnabled("apple") && (
+                      <Button
+                        type="button"
+                        onClick={() => handleSocialLogin("apple")}
+                        variant="outline"
+                        className="w-full h-11 border-border rounded-lg font-medium text-sm hover:border-foreground hover:bg-muted transition-all"
+                      >
+                        <Image src={apple} alt="Apple" width={20} height={20} className="w-5 h-5 mr-3" />
+                        &quot;Continue with Apple&quot;
+                      </Button>
+                    )}
+                  </div>
+                )}
 
                 {/* Toggle Mode */}
                 <div className="mt-6 pt-6 border-t border-border">
