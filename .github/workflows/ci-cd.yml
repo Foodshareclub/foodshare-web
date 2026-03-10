@@ -331,43 +331,35 @@ jobs:
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
           REPO_LOWER=$(echo "$GITHUB_REPO" | tr '[:upper:]' '[:lower:]')
+          SSH_CMD="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no"
+          SCP_CMD="scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no"
 
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "$SSH_USER@$SSH_HOST" bash -s <<'EOF'
-          set -e
-          
-          cd "$VPS_DEPLOY_PATH" || exit 1
-          [ -d ".git" ] || { echo "Error: .git not found"; exit 1; }
+          # Build .env.production locally using printf (avoids heredoc indentation issues)
+          printf '%s\n' \
+            "NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}" \
+            "NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}" \
+            "SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}" \
+            "SITE_DOMAIN=${SITE_DOMAIN}" \
+            "CADDY_ACME_EMAIL=${CADDY_EMAIL}" \
+            "NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=${OAUTH_GOOGLE_ENABLED}" \
+            "NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED=${OAUTH_FACEBOOK_ENABLED}" \
+            "NEXT_PUBLIC_OAUTH_APPLE_ENABLED=${OAUTH_APPLE_ENABLED}" \
+            "NEXT_PUBLIC_OAUTH_GITHUB_ENABLED=${OAUTH_GITHUB_ENABLED}" \
+            > /tmp/.env.production
 
-          # Update repo
-          git remote set-url origin "https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_REPO.git"
-          git fetch origin main
-          git reset --hard origin/main
+          # Transfer .env.production to VPS
+          $SCP_CMD /tmp/.env.production "$SSH_USER@$SSH_HOST:$VPS_DEPLOY_PATH/.env.production"
 
-          # Generate .env.production
-          cat > .env.production <<EOL
-NEXT_PUBLIC_SUPABASE_URL=$SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY
-SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY
-SITE_DOMAIN=$SITE_DOMAIN
-CADDY_ACME_EMAIL=$CADDY_EMAIL
-NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=$OAUTH_GOOGLE_ENABLED
-NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED=$OAUTH_FACEBOOK_ENABLED
-NEXT_PUBLIC_OAUTH_APPLE_ENABLED=$OAUTH_APPLE_ENABLED
-NEXT_PUBLIC_OAUTH_GITHUB_ENABLED=$OAUTH_GITHUB_ENABLED
-EOL
+          # Deploy on VPS
+          $SSH_CMD "$SSH_USER@$SSH_HOST" "cd $VPS_DEPLOY_PATH && \
+            git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git && \
+            git fetch origin main && \
+            git reset --hard origin/main && \
+            ([ -f ../foodshare-backend/.env.functions ] && grep -E '^[A-Za-z0-9_]+=' ../foodshare-backend/.env.functions >> .env.production || true) && \
+            (docker ps | grep -q supabase-db && docker exec supabase-db psql -U postgres -d postgres -A -t -c \"SELECT name || '=' || secret FROM vault.decrypted_secrets;\" >> .env.production 2>/dev/null || true) && \
+            echo ${GITHUB_TOKEN} | docker login ghcr.io -u ${GITHUB_ACTOR} --password-stdin && \
+            docker pull ghcr.io/${REPO_LOWER}:latest && \
+            docker compose --env-file .env.production up -d --force-recreate && \
+            echo 'Deploy complete'"
 
-          # Append backend secrets
-          [ -f ../foodshare-backend/.env.functions ] && grep -E '^[A-Za-z0-9_]+=' ../foodshare-backend/.env.functions >> .env.production || true
-          
-          # Append vault secrets
-          docker ps | grep -q 'supabase-db' && docker exec supabase-db psql -U postgres -d postgres -A -t -c "SELECT name || '=' || secret FROM vault.decrypted_secrets;" >> .env.production 2>/dev/null || true
-
-          # Deploy
-          echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
-          docker pull "ghcr.io/$REPO_LOWER:latest"
-          docker compose --env-file .env.production up -d --force-recreate
-          
-          echo "✓ Deploy complete"
-          EOF
-
-          rm -f ~/.ssh/deploy_key
+          rm -f ~/.ssh/deploy_key /tmp/.env.production
