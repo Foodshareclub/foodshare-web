@@ -18,7 +18,7 @@
 set -e
 
 PROVIDER=$1
-VPS_HOST="${VPS_HOST:-organic@vps.foodshare.club}"
+VPS_HOST="${VPS_HOST:-organic@backend.foodshare.club}"
 BACKEND_PATH="${BACKEND_PATH:-/home/organic/dev/foodshare-backend}"
 
 if [ -z "$PROVIDER" ]; then

@@ -72,7 +72,7 @@ The script will:
 SSH to the VPS and edit the backend `.env` file:
 
 ```bash
-ssh organic@vps.foodshare.club
+ssh organic@backend.foodshare.club
 cd /home/organic/dev/foodshare-backend
 
 # Edit .env file
@@ -82,7 +82,7 @@ nano .env
 GOTRUE_EXTERNAL_GOOGLE_ENABLED=true
 GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID=your-google-client-id-here
 GOTRUE_EXTERNAL_GOOGLE_SECRET=your-google-client-secret-here
-GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI=https://api.foodshare.club/auth/v1/callback
+GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI=https://backend.foodshare.club/auth/v1/callback
 
 # Restart auth service
 docker compose restart auth
@@ -121,7 +121,7 @@ git push
 Use this checklist to verify OAuth is properly configured:
 
 ### Backend (Supabase GoTrue)
-- [ ] SSH to VPS: `ssh organic@vps.foodshare.club`
+- [ ] SSH to Backend VPS: `ssh organic@backend.foodshare.club`
 - [ ] Check `.env` file contains:
   ```bash
   cd /home/organic/dev/foodshare-backend
@@ -176,7 +176,7 @@ Use this checklist to verify OAuth is properly configured:
 
 **Solution**:
 ```bash
-ssh organic@vps.foodshare.club
+ssh organic@backend.foodshare.club
 cd /home/organic/dev/foodshare-backend
 docker compose restart auth
 ```
@@ -204,8 +204,8 @@ gh secret set NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED --body "true" --repo Foodshareclu
 ### Test Backend Configuration
 
 ```bash
-# SSH to VPS
-ssh organic@vps.foodshare.club
+# SSH to Backend VPS
+ssh organic@backend.foodshare.club
 
 # Check if GoTrue has the secrets
 cd /home/organic/dev/foodshare-backend
