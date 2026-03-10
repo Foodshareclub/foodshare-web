@@ -14,6 +14,7 @@ import { useAuth } from "@/hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { OAUTH_PROVIDERS, hasEnabledProviders, type OAuthProvider } from "@/lib/config/oauth";
 
 // Inline brand SVGs (avoids react-icons dependency)
 const GoogleIcon = () => (
@@ -293,54 +294,66 @@ export default function LoginPage() {
             </form>
 
             {/* Divider */}
-            <div className="flex items-center my-8">
-              <Separator className="flex-1" />
-              <span className="px-4 text-sm text-muted-foreground font-medium">
-                or continue with
-              </span>
-              <Separator className="flex-1" />
-            </div>
+            {hasEnabledProviders() && (
+              <div className="flex items-center my-8">
+                <Separator className="flex-1" />
+                <span className="px-4 text-sm text-muted-foreground font-medium">
+                  or continue with
+                </span>
+                <Separator className="flex-1" />
+              </div>
+            )}
 
             {/* Social Login Buttons */}
-            <div className="flex flex-col gap-3">
-              <Button
-                type="button"
-                onClick={() => handleSocialLogin("google")}
-                variant="outline"
-                className="w-full h-14 border-border rounded-xl font-medium text-[15px] bg-background hover:border-foreground hover:bg-muted/50 hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-all"
-              >
-                <span className="mr-3">
-                  <GoogleIcon />
-                </span>
-                Google
-              </Button>
+            {hasEnabledProviders() && (
+              <div className="flex flex-col gap-3">
+                {OAUTH_PROVIDERS.google.enabled && (
+                  <Button
+                    type="button"
+                    onClick={() => handleSocialLogin("google")}
+                    variant="outline"
+                    className="w-full h-14 border-border rounded-xl font-medium text-[15px] bg-background hover:border-foreground hover:bg-muted/50 hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-all"
+                  >
+                    <span className="mr-3">
+                      <GoogleIcon />
+                    </span>
+                    Google
+                  </Button>
+                )}
 
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  onClick={() => handleSocialLogin("facebook")}
-                  variant="outline"
-                  className="flex-1 h-14 border-border rounded-xl font-medium text-[15px] bg-background hover:border-foreground hover:bg-muted/50 hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-all"
-                >
-                  <span className="mr-2">
-                    <FacebookIcon />
-                  </span>
-                  Facebook
-                </Button>
+                {(OAUTH_PROVIDERS.facebook.enabled || OAUTH_PROVIDERS.apple.enabled) && (
+                  <div className="flex gap-3">
+                    {OAUTH_PROVIDERS.facebook.enabled && (
+                      <Button
+                        type="button"
+                        onClick={() => handleSocialLogin("facebook")}
+                        variant="outline"
+                        className="flex-1 h-14 border-border rounded-xl font-medium text-[15px] bg-background hover:border-foreground hover:bg-muted/50 hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-all"
+                      >
+                        <span className="mr-2">
+                          <FacebookIcon />
+                        </span>
+                        Facebook
+                      </Button>
+                    )}
 
-                <Button
-                  type="button"
-                  onClick={() => handleSocialLogin("apple")}
-                  variant="outline"
-                  className="flex-1 h-14 border-border rounded-xl font-medium text-[15px] bg-background hover:border-foreground hover:bg-muted/50 hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-all"
-                >
-                  <span className="mr-2">
-                    <AppleIcon />
-                  </span>
-                  Apple
-                </Button>
+                    {OAUTH_PROVIDERS.apple.enabled && (
+                      <Button
+                        type="button"
+                        onClick={() => handleSocialLogin("apple")}
+                        variant="outline"
+                        className="flex-1 h-14 border-border rounded-xl font-medium text-[15px] bg-background hover:border-foreground hover:bg-muted/50 hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-all"
+                      >
+                        <span className="mr-2">
+                          <AppleIcon />
+                        </span>
+                        Apple
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
-            </div>
+            )}
           </div>
 
           {/* Footer */}
