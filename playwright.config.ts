@@ -15,7 +15,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
 
   // Retry failed tests (helps with flaky tests in SSR apps)
-  retries: process.env.CI ? 2 : 1,
+  retries: process.env.CI ? 1 : 0,
 
   // Limit parallel workers on CI (GitHub runners have 2 cores)
   workers: process.env.CI ? 1 : undefined,
