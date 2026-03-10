@@ -79,7 +79,7 @@ export default defineConfig({
   ],
 
   // Run local dev server before starting tests (skip if SKIP_WEBSERVER is set)
-  ...(process.env.SKIP_WEBSERVER
+  ...(process.env.SKIP_WEBSERVER === "true" || process.env.SKIP_WEBSERVER === "1"
     ? {}
     : {
         webServer: {
