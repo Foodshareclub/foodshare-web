@@ -273,11 +273,19 @@ export function useAuth(): UseAuthReturn {
         });
 
         if (oauthError) {
-          // Provide user-friendly error for missing OAuth configuration
-          const errorMessage = oauthError.message.includes("missing OAuth secret") || 
-                               oauthError.message.includes("Unsupported provider")
-            ? `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not configured yet. Please use email/password or magic link.`
-            : oauthError.message;
+          // Provide user-friendly error for missing or invalid OAuth configuration
+          let errorMessage = oauthError.message;
+          const isConfigError = 
+            oauthError.message.includes("missing OAuth secret") || 
+            oauthError.message.includes("Unsupported provider") ||
+            oauthError.message.includes("invalid_client");
+          
+          if (isConfigError) {
+            errorMessage = `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not correctly configured. Please contact support or use a different method.`;
+            if (provider === "apple" && oauthError.message.includes("invalid_client")) {
+              errorMessage = "Apple Sign-In is temporarily unavailable due to an expired security configuration. Please use email or Google for now.";
+            }
+          }
           
           setError(errorMessage);
           return { success: false, error: errorMessage };
