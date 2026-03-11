@@ -84,7 +84,15 @@ commit-msg:
   commands:
     conventional-commits:
       tags: commit-format
-      run: echo "Commit message validation disabled"
+      run: |
+        REPO_ROOT="$(git rev-parse --show-toplevel)"
+        HOOKS_BIN="${FOODSHARE_HOOKS_BIN:-$REPO_ROOT/../foodshare-tools/target/release/lefthook-rs}"
+        if [ ! -f "$HOOKS_BIN" ]; then
+          HOOKS_BIN="${FOODSHARE_HOOKS_BIN:-$REPO_ROOT/../foodshare-tools/target/debug/lefthook-rs}"
+        fi
+        if [ -f "$HOOKS_BIN" ]; then
+          "$HOOKS_BIN" conventional-commit {1}
+        fi
 
 # ============================================================================
 # PRE-PUSH: Comprehensive checks before push
@@ -97,13 +105,34 @@ pre-push:
   commands:
     protected-branch:
       tags: branch critical
-      run: echo "Protected branch check disabled"
       priority: 1
+      run: |
+        REPO_ROOT="$(git rev-parse --show-toplevel)"
+        HOOKS_BIN="${FOODSHARE_HOOKS_BIN:-$REPO_ROOT/../foodshare-tools/target/release/lefthook-rs}"
+        if [ ! -f "$HOOKS_BIN" ]; then
+          HOOKS_BIN="${FOODSHARE_HOOKS_BIN:-$REPO_ROOT/../foodshare-tools/target/debug/lefthook-rs}"
+        fi
+        if [ -f "$HOOKS_BIN" ]; then
+          "$HOOKS_BIN" protected-branch
+        fi
+
+    large-files:
+      tags: quality
+      priority: 2
+      run: |
+        REPO_ROOT="$(git rev-parse --show-toplevel)"
+        HOOKS_BIN="${FOODSHARE_HOOKS_BIN:-$REPO_ROOT/../foodshare-tools/target/release/lefthook-rs}"
+        if [ ! -f "$HOOKS_BIN" ]; then
+          HOOKS_BIN="${FOODSHARE_HOOKS_BIN:-$REPO_ROOT/../foodshare-tools/target/debug/lefthook-rs}"
+        fi
+        if [ -f "$HOOKS_BIN" ]; then
+          "$HOOKS_BIN" large-files --max-size 1024
+        fi
 
     type-check-strict:
       tags: typescript
       run: bunx tsc --noEmit --incremental
-      priority: 2
+      priority: 3
       env:
         NODE_OPTIONS: ""
 
