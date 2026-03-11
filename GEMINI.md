@@ -44,6 +44,7 @@ git pull && docker compose up -d --build
 9. **Use Structured Logger** -- Avoid `console.log`. Use the structured logger for all production-ready code to ensure observability.
 10. **Singular Top-Level Routes** -- All category pages must use singular top-level routes (e.g., `/thing`, `/volunteer`, `/organisation`). Legacy plural query parameters (e.g., `?type=things`) are handled by redirects in `/food/page.tsx`.
 11. **CI/CD Concurrency (Latest-Wins)** -- The pipeline is configured to cancel previous runs on the same branch. Only the latest commit is built and deployed.
+12. **OAuth Provider Secrets** -- OAuth provider configuration must be managed via GitHub Actions Secrets. Frontend feature flags (`NEXT_PUBLIC_OAUTH_*_ENABLED`) are managed in this repo's secrets. Backend credentials (`GOTRUE_EXTERNAL_*_CLIENT_ID` / `_SECRET`) are managed in the `foodshare-backend` repo's secrets.
 
 # Web Build & CI/CD
 # CI/CD: .github/workflows/ci-cd.yml
