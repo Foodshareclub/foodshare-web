@@ -47,7 +47,7 @@ git pull && docker compose up -d --build
 12. **OAuth Provider Secrets** -- OAuth provider configuration must be managed via GitHub Actions Secrets. Frontend feature flags (`NEXT_PUBLIC_OAUTH_*_ENABLED`) are managed in this repo's secrets. Backend credentials (`GOTRUE_EXTERNAL_*_CLIENT_ID` / `_SECRET`) are managed in the `foodshare-backend` repo's secrets.
 
 # Web Build & CI/CD
-# CI/CD: .github/workflows/ci-cd.yml
+# CI/CD: .github/workflows/web.yml
 # Jobs: Setup -> [Lint, TypeCheck, Test, E2E] -> Build -> Docker -> SyncTranslations -> Deploy
 
 # Local Web Dev
