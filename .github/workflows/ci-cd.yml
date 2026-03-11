@@ -103,18 +103,15 @@ jobs:
           NEXT_PUBLIC_OAUTH_APPLE_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_APPLE_ENABLED }}
           NEXT_PUBLIC_OAUTH_GITHUB_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_GITHUB_ENABLED }}
 
+      - name: Tar build output
+        run: tar -cvf build-output.tar .next public messages package.json bun.lock
+
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: build-output
-          path: |
-            .next
-            public
-            messages
-            package.json
-            bun.lock
+          path: build-output.tar
           retention-days: 1
-          include-hidden-files: true
 
       - name: Check Bundle Size Budget
         run: bun scripts/check-bundle-size.ts
@@ -149,6 +146,9 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-output
+
+      - name: Untar build output
+        run: tar -xvf build-output.tar
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
