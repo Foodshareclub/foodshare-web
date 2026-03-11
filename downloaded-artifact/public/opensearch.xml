@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
+  <ShortName>FoodShare</ShortName>
+  <Description>Search for free food and items on FoodShare</Description>
+  <Tags>food sharing free community</Tags>
+  <Contact>hello@foodshare.club</Contact>
+  <Url type="text/html" template="https://foodshare.club/s/all?key_word={searchTerms}"/>
+  <Url type="application/opensearchdescription+xml" rel="self" template="https://foodshare.club/opensearch.xml"/>
+  <Image height="16" width="16" type="image/x-icon">https://foodshare.club/favicon.ico</Image>
+  <Image height="64" width="64" type="image/png">https://foodshare.club/logo192.png</Image>
+  <Query role="example" searchTerms="vegetables"/>
+  <Developer>FoodShare Team</Developer>
+  <Attribution>Search data from FoodShare</Attribution>
+  <SyndicationRight>open</SyndicationRight>
+  <AdultContent>false</AdultContent>
+  <Language>en-nz</Language>
+  <OutputEncoding>UTF-8</OutputEncoding>
+  <InputEncoding>UTF-8</InputEncoding>
+</OpenSearchDescription>
