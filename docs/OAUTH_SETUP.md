@@ -123,18 +123,31 @@ Edit: `foodshare-backend/.env`
 
 #### Apple OAuth
 
-1. **Get Credentials:**
-   - Go to: https://developer.apple.com/account/resources/identifiers/list
-   - Create Services ID
-   - Configure Sign in with Apple
-   - Return URLs: `https://api.foodshare.club/auth/v1/callback`
-   - Generate Client Secret (requires private key)
+1. **Get Credentials from Apple Developer Portal:**
+   - Go to: [Identifiers List](https://developer.apple.com/account/resources/identifiers/list)
+   - **Services ID**: Create or select your Services ID (e.g., `club.foodshare.web`).
+   - **Team ID**: Your 10-character Team ID (found in [Membership](https://developer.apple.com/account/)).
+   - **Key ID**: Create a "Sign in with Apple" key, download the `.p8` file, and note the 10-character Key ID.
+   - **Return URLs**: Add `https://api.foodshare.club/auth/v1/callback`
 
-2. **Configure in Supabase:**
-   - Enable Apple provider
-   - Paste Services ID as Client ID
-   - Paste generated Client Secret
-   - Redirect URL: `https://api.foodshare.club/auth/v1/callback`
+2. **Configure via CI/CD (Recommended):**
+
+   Add these secrets to your GitHub repository. The CI/CD pipeline will automatically inject them into the production environment. This approach uses the private key directly, so Supabase automatically generates and refreshes its own secrets. **No expiration.**
+
+   **GitHub Secrets to Set:**
+   - `GOTRUE_EXTERNAL_APPLE_ENABLED`: `true`
+   - `GOTRUE_EXTERNAL_APPLE_CLIENT_ID`: `club.foodshare.web` (Your Services ID)
+   - `GOTRUE_EXTERNAL_APPLE_TEAM_ID`: your 10-character team ID
+   - `GOTRUE_EXTERNAL_APPLE_KEY_ID`: your 10-character key ID
+   - `GOTRUE_EXTERNAL_APPLE_PRIVATE_KEY`: The contents of your `.p8` file (including headers)
+   - `GOTRUE_EXTERNAL_APPLE_REDIRECT_URI`: `https://api.foodshare.club/auth/v1/callback`
+
+3. **Deploy:**
+   Push your changes or trigger the CI/CD pipeline manually. The deployment script will update the `.env.production` on the VPS and restart the auth service.
+
+4. **Testing:**
+   - Attempt to sign in with Apple on `https://foodshare.club`.
+   - If you see `invalid_client`, verify that the Team ID and Key ID match your Apple Developer portal precisely.
 
 ### 3. Test OAuth Flow
 
