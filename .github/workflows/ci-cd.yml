@@ -114,6 +114,7 @@ jobs:
             package.json
             bun.lock
           retention-days: 1
+          include-hidden-files: true
 
       - name: Check Bundle Size Budget
         run: bun scripts/check-bundle-size.ts
