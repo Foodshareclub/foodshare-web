@@ -35,6 +35,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Additional ignores
     "node_modules/**",
+    "supabase/**",
     "*.d.ts",
   ]),
 ]);
