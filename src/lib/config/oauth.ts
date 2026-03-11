@@ -16,11 +16,18 @@ interface OAuthConfig {
  * Providers are disabled by default and must be explicitly enabled via env vars
  */
 function isProviderEnabled(provider: OAuthProvider): boolean {
-  const envKey = `NEXT_PUBLIC_OAUTH_${provider.toUpperCase()}_ENABLED`;
-  
-  // Check environment variable - must be explicitly set to "true"
-  // This applies to both development and production
-  return process.env[envKey] === "true";
+  switch (provider) {
+    case "google":
+      return process.env.NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED === "true";
+    case "facebook":
+      return process.env.NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED === "true";
+    case "apple":
+      return process.env.NEXT_PUBLIC_OAUTH_APPLE_ENABLED === "true";
+    case "github":
+      return process.env.NEXT_PUBLIC_OAUTH_GITHUB_ENABLED === "true";
+    default:
+      return false;
+  }
 }
 
 /**
