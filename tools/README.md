@@ -37,7 +37,6 @@ cargo build --release
 The unified repo combines tools from:
 
 - `foodshare/tools` (this directory) → Web/Next.js hooks
-- `foodshare-android/tools` → Android hooks
-- `foodshare-ios/tools` → iOS hooks
+- `foodshare-app/tools` → Mobile hooks (iOS + Android)
 
 All share a common core for git operations, secrets scanning, and commit validation.
