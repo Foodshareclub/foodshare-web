@@ -1,5 +1,7 @@
 # FoodShare
 
+[![CI/CD](https://github.com/Foodshareclub/foodshare-web/actions/workflows/web.yml/badge.svg)](https://github.com/Foodshareclub/foodshare-web/actions/workflows/web.yml)
+
 A modern food sharing platform that connects people to reduce food waste by enabling users to share surplus food with their local community.
 
 ## Features
