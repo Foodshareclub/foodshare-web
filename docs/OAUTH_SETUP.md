@@ -10,24 +10,20 @@ The app now automatically hides OAuth buttons for unconfigured providers. **All 
 
 ### To Enable a Provider:
 
-**Step 1: Configure in Self-Hosted Supabase Backend**
+**Step 1: Configure in Self-Hosted Supabase Vault**
 
-Edit `foodshare-backend/.env` and add:
-
-```bash
-# Google OAuth Configuration
-GOTRUE_EXTERNAL_GOOGLE_ENABLED=true
-GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID=your-google-client-id
-GOTRUE_EXTERNAL_GOOGLE_SECRET=your-google-client-secret
-GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI=https://api.foodshare.club/auth/v1/callback
-```
-
-**Step 2: Restart Supabase Services**
+Connect to your VPS and use the deployment script to set the provider secrets. This is the source of truth.
 
 ```bash
-cd foodshare-backend
-docker-compose restart auth
+# Example for Google
+./scripts/deploy.sh set-secret GOTRUE_EXTERNAL_GOOGLE_ENABLED true
+./scripts/deploy.sh set-secret GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID your-client-id
+./scripts/deploy.sh set-secret GOTRUE_EXTERNAL_GOOGLE_SECRET your-client-secret
 ```
+
+**Step 2: Seed via GitHub Secrets (Optional/Initial Only)**
+
+If you want to automate the initial configuration, add the secrets to GitHub Actions. On the next deploy, the script will automatically promote these to the Supabase Vault if they are missing.
 
 **Step 3: Enable in Web App**
 
@@ -37,49 +33,7 @@ NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=true
 ```
 
 **Step 4: Redeploy Web App**
-- Development: Restart your dev server
-- Production: Push to trigger deployment
-
-**Available Variables:**
-- `NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=true`
-- `NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED=true`
-- `NEXT_PUBLIC_OAUTH_APPLE_ENABLED=true`
-- `NEXT_PUBLIC_OAUTH_GITHUB_ENABLED=true`
-
-**Note:** Providers are disabled by default in both development and production for security.
-
-## Solution (Detailed Setup)
-
-### 1. Access Self-Hosted Supabase Configuration
-
-Edit: `foodshare-backend/.env`
-
-### 2. Configure Each Provider
-
-#### Google OAuth
-
-1. **Get Credentials:**
-   - Go to: https://console.cloud.google.com/apis/credentials
-   - Create OAuth 2.0 Client ID (Web application)
-   - Add authorized redirect URI: `https://api.foodshare.club/auth/v1/callback`
-   - Copy Client ID and Client Secret
-
-2. **Configure in Backend .env:**
-   ```bash
-   GOTRUE_EXTERNAL_GOOGLE_ENABLED=true
-   GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID=your-client-id-here
-   GOTRUE_EXTERNAL_GOOGLE_SECRET=your-client-secret-here
-   GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI=https://api.foodshare.club/auth/v1/callback
-   ```
-
-3. **Restart Auth Service:**
-   ```bash
-   cd foodshare-backend
-   docker-compose restart auth
-   ```
-
-4. **Enable in Web App:**
-   Add to GitHub Secrets: `NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=true`
+- Push to trigger deployment. The VPS will automatically pull the new configuration from the Vault and restart the services.
 
 #### GitHub OAuth
 

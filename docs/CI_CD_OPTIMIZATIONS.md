@@ -156,6 +156,13 @@ build
 5. **Environment Variables:** Reduce secret repetition in workflow
 6. **Conditional Steps:** Use `if` conditions instead of bash logic
 
+## Recently Implemented Optimizations
+
+1. **Vault-First Secret Parity**: Eliminated the need to manage runtime secrets across multiple GitHub repositories.
+   - **Benefit**: Centralized source of truth in the Supabase Vault.
+   - **Consistency**: Web and Backend now share the same configuration synchronization logic on the VPS.
+   - **Security**: Reduced exposure of sensitive keys in GitHub Actions logs and environments.
+
 ## Future Optimization Opportunities
 
 1. **Conditional E2E:** Skip E2E tests for docs-only changes

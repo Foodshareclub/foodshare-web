@@ -289,9 +289,37 @@ optionalEnvVars.forEach((key) => {
 
 ---
 
-## Supabase Vault for Secrets
+## Supabase Vault for Secrets (Production)
 
-For sensitive API keys that shouldn't be stored in environment variables (or as a fallback), use Supabase Vault:
+We follow a **Vault-First** parity model with Supabase Cloud. Secrets are managed centrally in the Supabase Vault and synchronized to the application environment during deployment.
+
+### 1. Management via `deploy.sh`
+In production, do **NOT** edit `.env.production` or `.env.functions` manually. Use the management script in the `foodshare-backend` repository on the VPS:
+
+```bash
+# Set a new or existing secret
+./scripts/deploy.sh set-secret STRIPE_KEY sk_live_... "Stripe integration"
+
+# Create a requirement in code (generates a migration)
+./scripts/deploy.sh new-secret-migration STRIPE_KEY
+
+# Audit active secrets
+./scripts/deploy.sh get-secrets
+```
+
+### 2. Synchronization Logic
+When you run `./scripts/deploy.sh sync-vault` (or when a deploy triggers it):
+1. **Pull**: All secrets are dumped from the Vault into `.env` files.
+2. **Promote**: Any secrets present in the temporary deployment environment (from GitHub Actions) but missing in the Vault are automatically promoted/seeded to the Vault.
+
+### 3. When to Use Vault vs Environment Variables
+
+| Use Case                       | Recommendation                       |
+| ------------------------------ | ------------------------------------ |
+| Local development              | Environment variables (`.env.local`) |
+| Self-hosted VPS (Runtime)      | Supabase Vault (Source of Truth)     |
+| Build-time variables           | GitHub Secrets (Injected during build) |
+| Secrets that need rotation     | Supabase Vault                       |
 
 ### Storing Secrets
 

@@ -76,14 +76,22 @@ bun run translations:sync
 
 ## 🔐 Environment Variables
 
-Secrets are managed via **GitHub Actions Secrets** and **Supabase Vault**.
+We follow a **Vault-First** parity model. Secrets are managed centrally and synchronized during deployment.
 
-### Required Production Secrets
+### Production Secret Management
+Runtime secrets (API keys, OAuth credentials, etc.) are stored in the **Supabase Vault** on the VPS.
+
+- **Source of Truth**: Supabase Vault.
+- **Management**: Use `./scripts/deploy.sh set-secret KEY VALUE` in the backend repository on the VPS.
+- **Build-time Secrets**: Still managed via GitHub Actions Secrets (e.g., `SENTRY_AUTH_TOKEN`).
+- **Initial Seeding**: GitHub Secrets can be used for initial setup; the deployment script automatically promotes missing secrets to the Vault.
+
+### Required Production Config (Vault)
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY` (Used for admin checks)
-- `UPSTASH_REDIS_REST_URL/TOKEN` (Rate limiting)
-- `SENTRY_AUTH_TOKEN`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `UPSTASH_REDIS_REST_URL/TOKEN`
+- `GOTRUE_EXTERNAL_*` (OAuth providers)
 
 ---
 
