@@ -46,7 +46,7 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...your-service-role-key
 Get your API key from: https://resend.com/api-keys
 
 ```env
-RESEND_API_KEY=re_your_api_key_here
+RESEND_API_KEY=*****************
 ```
 
 ---
@@ -59,7 +59,7 @@ RESEND_API_KEY=re_your_api_key_here
 Your credentials:
 
 ```env
-BREVO_API_KEY=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
+BREVO_API_KEY=*****************
 ```
 
 SMTP details (for reference):
@@ -294,6 +294,7 @@ optionalEnvVars.forEach((key) => {
 We follow a **Vault-First** parity model with Supabase Cloud. Secrets are managed centrally in the Supabase Vault and synchronized to the application environment during deployment.
 
 ### 1. Management via `deploy.sh`
+
 In production, do **NOT** edit `.env.production` or `.env.functions` manually. Use the management script in the `foodshare-backend` repository on the VPS:
 
 ```bash
@@ -308,93 +309,24 @@ In production, do **NOT** edit `.env.production` or `.env.functions` manually. U
 ```
 
 ### 2. Synchronization Logic
+
 When you run `./scripts/deploy.sh sync-vault` (or when a deploy triggers it):
+
 1. **Pull**: All secrets are dumped from the Vault into `.env` files.
-2. **Promote**: Any secrets present in the temporary deployment environment (from GitHub Actions) but missing in the Vault are automatically promoted/seeded to the Vault.
+2. **Promote**: Any secrets present in the temporary deployment environment (from GitHub Actions) but missing in the Vault are automatically promoted/see### 3. When to Use Vault vs Environment Variables
 
-### 3. When to Use Vault vs Environment Variables
-
-| Use Case                       | Recommendation                       |
-| ------------------------------ | ------------------------------------ |
-| Local development              | Environment variables (`.env.local`) |
-| Self-hosted VPS (Runtime)      | Supabase Vault (Source of Truth)     |
+| Use Case                       | Recommendation                         |
+| ------------------------------ | -------------------------------------- |
+| Local development              | Environment variables (`.env.local`)   |
+| Self-hosted VPS (Production)   | Supabase Vault (Source of Truth)       |
+| Shared secrets across services | Supabase Vault                         |
+| Secrets that need rotation     | Supabase Vault                         |
 | Build-time variables           | GitHub Secrets (Injected during build) |
-| Secrets that need rotation     | Supabase Vault                       |
 
-### Storing Secrets
+**Notes:**
 
-```sql
--- Store a secret in vault
-SELECT vault.create_secret('XAI_API_KEY', 'xai-your-api-key-here');
-
--- Or use AI Gateway key as alternative
-SELECT vault.create_secret('AI_GATEWAY_API_KEY', 'your-gateway-key-here');
-
--- Store R2 credentials
-SELECT vault.create_secret('R2_ACCOUNT_ID', 'your-cloudflare-account-id');
-SELECT vault.create_secret('R2_ACCESS_KEY_ID', 'your-r2-access-key');
-SELECT vault.create_secret('R2_SECRET_ACCESS_KEY', 'your-r2-secret-key');
-SELECT vault.create_secret('R2_BUCKET_NAME', 'foodshare');
-```
-
-### Retrieving Secrets (Server-Side Only)
-
-```typescript
-// Example: Get secret with caching
-const supabase = await createClient();
-const { data, error } = await supabase.rpc("get_secrets", {
-  secret_names: ["XAI_API_KEY", "AI_GATEWAY_API_KEY"],
-});
-
-// Prefer XAI_API_KEY, fallback to AI_GATEWAY_API_KEY
-const apiKey =
-  data?.find((s) => s.name === "XAI_API_KEY")?.value ||
-  data?.find((s) => s.name === "AI_GATEWAY_API_KEY")?.value;
-```
-
-### Vault Services
-
-The codebase includes dedicated vault services for secure credential management:
-
-| Service     | Location                 | Purpose                           |
-| ----------- | ------------------------ | --------------------------------- |
-| Email Vault | `src/lib/email/vault.ts` | Email provider credentials        |
-| R2 Vault    | `src/lib/r2/vault.ts`    | Cloudflare R2 storage credentials |
-
-Both services implement:
-
-- **Environment-aware behavior**: Env vars in development, Vault in production
-- **In-memory caching**: 5-minute TTL to reduce Vault calls
-- **Secure logging**: Masks sensitive values in logs
-- **Graceful fallback**: Returns empty/null values on errors
-
-```typescript
-// R2 Vault usage
-import { getR2Secrets, clearR2SecretsCache } from "@/lib/r2/vault";
-
-const secrets = await getR2Secrets();
-// Returns: { accountId, accessKeyId, secretAccessKey, bucketName, publicUrl }
-
-// Clear cache after credential rotation
-clearR2SecretsCache();
-```
-
-### When to Use Vault vs Environment Variables
-
-| Use Case                       | Recommendation                       |
-| ------------------------------ | ------------------------------------ |
-| Local development              | Environment variables (`.env.local`) |
-| Self-hosted VPS                | Supabase Vault (production)          |
-| Shared secrets across services | Supabase Vault                       |
-| Secrets that need rotation     | Supabase Vault                       |
-| Edge Functions needing secrets | Supabase Vault                       |
-| Email provider credentials     | Supabase Vault (production only)     |
-| R2 storage credentials         | Supabase Vault (production only)     |
-
-**Note:** Vault services use environment-aware behavior:
-
-- **Development:** Uses environment variables directly for fast local iteration
-- **Production:** Always fetches from Supabase Vault for centralized, secure management
+- **Vault Services**: The codebase includes dedicated services (e.g., `src/lib/email/vault.ts`, `src/lib/r2/vault.ts`) that handle environment-aware fetching with 5-minute TTL caching.
+- **Seeding**: Missing production secrets are automatically "promoted" from GitHub CI variables to the Vault during the first deployment.
 
 See [AI Moderation docs](../03-features/admin/AI_MODERATION.md), [Email CRM docs](../03-features/email/README.md), and [Storage docs](../storages/storages.md) for implementation examples.
 

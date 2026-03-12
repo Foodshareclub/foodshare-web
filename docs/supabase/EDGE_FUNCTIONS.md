@@ -114,7 +114,21 @@ supabase functions serve function-name
 
 ## Environment Variables
 
-Edge Functions use secrets stored in Supabase:
+Edge Functions use secrets stored in Supabase. We follow a **Vault-First** parity model where secrets are managed centrally and synchronized.
+
+### Production (VPS)
+Use the `deploy.sh` script in `foodshare-backend` on the VPS to manage production secrets securely:
+
+```bash
+# Set a secret for all functions
+./scripts/deploy.sh set-secret SECRET_NAME value
+
+# Audit current secrets
+./scripts/deploy.sh get-secrets
+```
+
+### Manual Management (CLI)
+While `deploy.sh` is preferred for consistency, you can still use the standard CLI:
 
 ```bash
 # Set a secret
@@ -123,12 +137,6 @@ supabase secrets set SECRET_NAME=value
 # List secrets
 supabase secrets list
 ```
-
-**Common Secrets**:
-- `TELEGRAM_BOT_TOKEN` - Telegram bot API token
-- `TINIFY_API_KEY` - Tinify image compression
-- `OPENAI_API_KEY` - OpenAI API access
-- `BREVO_API_KEY` - Email service
 
 ## Function Structure
 

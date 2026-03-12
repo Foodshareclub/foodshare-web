@@ -55,6 +55,20 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
 SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
 ```
 
+## Secret Management (Supabase Vault)
+
+We use **Supabase Vault** as the single source of truth for all runtime secrets across the ecosystem.
+
+### Management Lifecycle
+Secrets are managed in the `foodshare-backend` repository using the `deploy.sh` script on the VPS:
+
+1. **Set Secret**: `./scripts/deploy.sh set-secret KEY VALUE`
+2. **Audit**: `./scripts/deploy.sh get-secrets`
+3. **Synchronize**: Automatic during CI/CD; manual via `./scripts/deploy.sh sync-vault`
+
+### Parity Mechanism
+Infrastructure secrets (URL, Anon Key, Service Role) are seeded via GitHub Actions. All other secrets are pulled directly from the Vault into `.env` files on the host during deployment.
+
 ## Supabase Clients
 
 The codebase provides multiple Supabase clients for different use cases:

@@ -126,12 +126,13 @@ WHERE id = <post-id>;
 
 ### Test 2: Manual Edge Function Invocation
 
-Test the Edge Function by manually processing the queue.
+Test the Edge Function by manually processing the queue. In production, ensure your `SERVICE_ROLE_KEY` is sourced from the Supabase Vault (synchronized to your `.env` via `deploy.sh`).
 
 ```bash
-# Set your service role key
-export SERVICE_ROLE_KEY="your-service-role-key-here"
-export SUPABASE_URL="https://api.foodshare.club"
+# On the VPS, keys are automatically synchronized to .env
+# Set shell variables if not already exported
+export SERVICE_ROLE_KEY=$(grep SUPABASE_SERVICE_ROLE_KEY .env.production | cut -d '=' -f2)
+export SUPABASE_URL=$(grep NEXT_PUBLIC_SUPABASE_URL .env.production | cut -d '=' -f2)
 
 # Process batch
 curl -X POST "$SUPABASE_URL/functions/v1/update-post-coordinates" \
@@ -429,7 +430,6 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{"operation": "BATCH_UPDATE"}'
 ```
-
 
 ## Rollback Plan
 
