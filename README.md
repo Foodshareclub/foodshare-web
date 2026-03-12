@@ -250,14 +250,14 @@ Detailed documentation is available in the `/docs` directory:
 
 ## Secret Management
 
-We use a tiered approach to secret management:
+We follow a **Vault-First** parity model with Supabase Cloud:
 
-1. **GitHub Actions / Environment Variables**: Used for Next.js build-time and runtime web secrets (e.g., `NEXT_PUBLIC_SUPABASE_URL`, `SENTRY_DSN`).
-2. **Supabase Vault**: Primary encrypted storage for sensitive backend credentials. Accessed via `src/lib/supabase/admin.ts` using the service role key.
-3. **.env.production**: Local fallback for non-sensitive configuration on the VPS.
+1. **Supabase Vault (Single Source of Truth)**: Used for all runtime web secrets (e.g., `GOTRUE_EXTERNAL_*`, `NEXT_PUBLIC_OAUTH_*`, `SITE_DOMAIN`).
+2. **Dynamic Injection:** The CI/CD pipeline pulls configuration directly from the Vault on the VPS during the deploy step, ensuring web secrets match the backend's environment.
+3. **Management:** Secrets are managed via the `foodshare-backend/scripts/deploy.sh` script on the VPS. Use the `set-secret` and `new-secret-migration` commands there.
 
 > [!IMPORTANT]
-> Never store plain-text secrets in the repository. Use Supabase Vault for any sensitive API keys or credentials.
+> Never store plain-text secrets in the repository or manage individual runtime keys in GitHub Actions. Use the Vault-first synchronization logic on the VPS.
 
 ## Contributing
 
