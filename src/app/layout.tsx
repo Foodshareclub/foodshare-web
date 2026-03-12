@@ -32,8 +32,10 @@ export const metadata: Metadata = defaultMetadata;
 
 export default async function RootLayout({
   children,
+  modal,
 }: Readonly<{
   children: React.ReactNode;
+  modal: React.ReactNode;
 }>) {
   // Read locale from cookie to prevent hydration mismatch
   const cookieStore = await cookies();
@@ -87,6 +89,12 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://ko-fi.com" />
         <link rel="dns-prefetch" href="https://api.foodshare.club" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        {/* Apple Sign-In SDK */}
+        <script
+          type="text/javascript"
+          src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/auth/js/appleid.auth.js"
+          async
+        />
         {/* Theme color for dark mode support */}
         <meta name="theme-color" content="#FF2D55" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#1a1a2e" media="(prefers-color-scheme: dark)" />

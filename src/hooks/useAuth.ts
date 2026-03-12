@@ -23,6 +23,41 @@ import {
 } from "@/app/actions/auth";
 
 // ============================================================================
+// Global Types for SDKs
+// ============================================================================
+
+declare global {
+  interface Window {
+    AppleID: {
+      auth: {
+        init: (config: {
+          clientId: string;
+          scope: string;
+          redirectURI: string;
+          state?: string;
+          nonce?: string;
+          usePopup: boolean;
+        }) => void;
+        signIn: () => Promise<{
+          authorization: {
+            code: string;
+            id_token: string;
+            state?: string;
+          };
+          user?: {
+            name?: {
+              firstName?: string;
+              lastName?: string;
+            };
+            email?: string;
+          };
+        }>;
+      };
+    };
+  }
+}
+
+// ============================================================================
 // Types
 // ============================================================================
 
@@ -250,8 +285,86 @@ export function useAuth(): UseAuthReturn {
     [router, clearErrorAction, setLoading, setError]
   );
 
+  const loginWithApple = useCallback(async () => {
+    clearErrorAction();
+    setLoading(true);
+
+    try {
+      // 1. Initialize Apple SDK
+      // The clientId is the Service ID from Apple Developer Portal
+      const clientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || "club.foodshare.web";
+      
+      window.AppleID.auth.init({
+        clientId,
+        scope: "name email",
+        redirectURI: `${window.location.origin}/auth/callback`,
+        usePopup: true,
+      });
+
+      // 2. Perform Sign-In
+      const response = await window.AppleID.auth.signIn();
+      const { id_token: identityToken } = response.authorization;
+      
+      pretty.info("[AppleAuth] Identity token received", { 
+        hasToken: !!identityToken,
+        hasUser: !!response.user 
+      });
+
+      // 3. Call Universal Edge Function
+      const functionUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/api-v1-auth/apple`;
+      const authResponse = await fetch(functionUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-client-info": "@supabase/auth-helpers-nextjs",
+        },
+        body: JSON.stringify({
+          identityToken,
+          firstName: response.user?.name?.firstName,
+          lastName: response.user?.name?.lastName,
+          email: response.user?.email,
+        }),
+      });
+
+      const result = await authResponse.json();
+
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "Apple authentication failed at backend");
+      }
+
+      // 4. Set Supabase Session
+      const { access_token, refresh_token } = result.data;
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token,
+        refresh_token: refresh_token || "",
+      });
+
+      if (sessionError) throw sessionError;
+
+      pretty.success("[AppleAuth] Session established successfully");
+
+      startTransition(() => {
+        router.refresh();
+      });
+
+      return { success: true };
+    } catch (err) {
+      pretty.error("[AppleAuth] Failed", err as Error);
+      const errorMessage = err instanceof Error ? err.message : "Apple Sign-In failed";
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  }, [supabase, router, clearErrorAction, setLoading, setError]);
+
   const loginWithOAuth = useCallback(
     async (provider: "google" | "github" | "facebook" | "apple") => {
+      // Special handling for Apple to use Vault-native Edge Function
+      if (provider === "apple") {
+        return loginWithApple();
+      }
+
       clearErrorAction();
 
       try {
@@ -280,12 +393,9 @@ export function useAuth(): UseAuthReturn {
             oauthError.message.includes("Unsupported provider") ||
             oauthError.message.includes("invalid_client");
           
-          if (isConfigError) {
-            errorMessage = `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not correctly configured. Please contact support or use a different method.`;
-            if (provider === "apple" && oauthError.message.includes("invalid_client")) {
-              errorMessage = "Apple Sign-In is temporarily unavailable due to an expired security configuration. Please use email or Google for now.";
+            if (isConfigError) {
+              errorMessage = `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not correctly configured. Please contact support or use a different method.`;
             }
-          }
           
           setError(errorMessage);
           return { success: false, error: errorMessage };

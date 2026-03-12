@@ -15,8 +15,15 @@ export const metadata: Metadata = generatePageMetadata({
 
 export default function ProductsLayout({
   children,
+  modal,
 }: {
   children: React.ReactNode;
+  modal: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {modal}
+    </>
+  );
 }
