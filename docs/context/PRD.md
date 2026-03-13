@@ -723,7 +723,7 @@ All text translated → Preferences saved
 
 **Hosting:**
 
-- Self-hosted VPS (backend.foodshare.club)
+- Self-hosted VPS (api.foodshare.club)
 - Cloudflare
 
 **CDN:**
