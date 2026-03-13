@@ -337,60 +337,49 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
         env:
-          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-          SSH_HOST: ${{ secrets.VPS_HOST }}
-          SSH_USER: ${{ secrets.VPS_USER }}
-          VPS_DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPO: ${{ github.repository }}
-          # Infrastructure secrets (required to bootstrap or if missing in Vault)
-          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          # These are "initial" secrets that will seed the Vault if missing
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SITE_DOMAIN: ${{ secrets.SITE_DOMAIN }}
           CADDY_EMAIL: ${{ secrets.CADDY_ACME_EMAIL }}
-          OAUTH_APPLE_CLIENT_ID: ${{ secrets.NEXT_PUBLIC_OAUTH_APPLE_ENABLED }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+        with:
+          host: REDACTED_ORIGIN_IP
+          username: organic
+          key: ${{ secrets.VPS_SSH_KEY }}
+          command_timeout: 10m
+          envs: GITHUB_TOKEN,GITHUB_REPO,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,SITE_DOMAIN,CADDY_EMAIL
+          script: |
+            set -eo pipefail
+            cd ${{ secrets.VPS_DEPLOY_PATH }}
 
-          REPO_LOWER=$(echo "$GITHUB_REPO" | tr '[:upper:]' '[:lower:]')
-          SSH_CMD="ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no"
-          SCP_CMD="scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no"
+            REPO_LOWER=$(echo "$GITHUB_REPO" | tr '[:upper:]' '[:lower:]')
 
-          # Create minimal .env.production locally
-          printf '%s\n' \
-            "NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}" \
-            "NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}" \
-            "SUPABASE_SERVICE_ROLE_KEY=${SERVICE_ROLE_KEY}" \
-            > /tmp/.env.production
+            # Update code
+            git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git
+            git fetch origin main
+            git reset --hard origin/main
 
-          # Transfer .env.production to VPS
-          $SCP_CMD /tmp/.env.production "$SSH_USER@$SSH_HOST:$VPS_DEPLOY_PATH/.env.production"
+            # Sync secrets to .env.production
+            printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_ANON_KEY=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\n' \
+              "$NEXT_PUBLIC_SUPABASE_URL" "$NEXT_PUBLIC_SUPABASE_ANON_KEY" "$SUPABASE_SERVICE_ROLE_KEY" > .env.production
 
-          # Deploy on VPS
-          $SSH_CMD "$SSH_USER@$SSH_HOST" "cd $VPS_DEPLOY_PATH && \
-            git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git && \
-            git fetch origin main && \
-            git reset --hard origin/main && \
-            log() { echo \"[$(date +'%Y-%m-%d %H:%M:%S')] \$1\"; } && \
-            log \"Syncing secrets from Vault...\" && \
-            # Pull all secrets from Vault to .env.production
-            docker exec supabase-db psql -U postgres -d postgres -A -t -c \"SELECT name || '=' || secret FROM vault.decrypted_secrets;\" >> .env.production 2>/dev/null || true && \
-            # Also pull from backend .env.functions for cross-repo sharing if needed
-            ([ -f ../foodshare-backend/.env.functions ] && grep -E '^[A-Za-z0-9_]+=' ../foodshare-backend/.env.functions >> .env.production || true) && \
-            # Ensure required public variables exist in .env.production if they were in the Vault
-            log \"Logging into GHCR...\" && \
-            echo ${GITHUB_TOKEN} | docker login ghcr.io -u ${GITHUB_ACTOR} --password-stdin && \
-            log \"Pulling latest image...\" && \
-            docker pull ghcr.io/${REPO_LOWER}:latest && \
-            log \"Restarting containers...\" && \
-            docker compose --env-file .env.production up -d --force-recreate && \
-            log 'Deploy complete'"
+            # Pull supplementary secrets from Vault
+            docker exec supabase-db psql -U postgres -d postgres -A -t -c "SELECT name || '=' || secret FROM vault.decrypted_secrets;" >> .env.production 2>/dev/null || true
 
-          rm -f ~/.ssh/deploy_key /tmp/.env.production
+            # Pull from backend .env.functions for cross-repo sharing
+            if [ -f ../foodshare-backend/.env.functions ]; then
+              grep -E '^[A-Za-z0-9_]+=' ../foodshare-backend/.env.functions >> .env.production || true
+            fi
+
+            # GHCR Login and pull
+            echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            docker pull ghcr.io/${REPO_LOWER}:latest
+
+            # Deploy
+            docker compose --env-file .env.production up -d --force-recreate
+            echo "Deploy complete"
