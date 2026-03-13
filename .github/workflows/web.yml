@@ -355,9 +355,15 @@ jobs:
           envs: GITHUB_TOKEN,GITHUB_REPO,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,SITE_DOMAIN,CADDY_EMAIL
           script: |
             set -eo pipefail
+            mkdir -p ${{ secrets.VPS_DEPLOY_PATH }}
             cd ${{ secrets.VPS_DEPLOY_PATH }}
 
             REPO_LOWER=$(echo "$GITHUB_REPO" | tr '[:upper:]' '[:lower:]')
+
+            # Bootstrap if missing
+            if [ ! -d .git ]; then
+              git clone --depth 1 https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git .
+            fi
 
             # Update code
             git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPO}.git
