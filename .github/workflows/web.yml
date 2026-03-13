@@ -374,8 +374,8 @@ jobs:
             printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_ANON_KEY=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\n' \
               "$NEXT_PUBLIC_SUPABASE_URL" "$NEXT_PUBLIC_SUPABASE_ANON_KEY" "$SUPABASE_SERVICE_ROLE_KEY" > .env.production
 
-            # Pull supplementary secrets from Vault
-            docker exec supabase-db psql -U postgres -d postgres -A -t -c "SELECT name || '=' || secret FROM vault.decrypted_secrets;" >> .env.production 2>/dev/null || true
+            # Pull supplementary secrets from Vault (Quoted for safety, valid char filter)
+            docker exec supabase-db psql -U postgres -d postgres -A -t -c "SELECT name || '=\"' || secret || '\"' FROM vault.decrypted_secrets WHERE name ~ '^[A-Z0-9_]+$';" >> .env.production 2>/dev/null || true
 
             # Pull from backend .env.functions for cross-repo sharing
             if [ -f ../foodshare-backend/.env.functions ]; then
