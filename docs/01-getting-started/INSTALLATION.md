@@ -58,7 +58,7 @@ Edit `.env` with your Supabase credentials:
 
 ```env
 # Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=https://backend.foodshare.club
+NEXT_PUBLIC_SUPABASE_URL=https://api.foodshare.club
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 

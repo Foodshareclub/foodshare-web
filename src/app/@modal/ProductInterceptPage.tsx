@@ -41,6 +41,8 @@ function transformChallengeToProduct(
  * Shared Intercepted Product Detail - Server Component
  */
 export default async function ProductInterceptPage({ params, searchParams }: PageProps) {
+  let product: InitialProductStateType | null = null;
+
   try {
     const [{ id }, search] = await Promise.all([params, searchParams]);
     const productId = parseInt(id, 10);
@@ -50,23 +52,23 @@ export default async function ProductInterceptPage({ params, searchParams }: Pag
       notFound();
     }
 
-    const product = isChallenge
+    product = isChallenge
       ? await getChallengeById(productId).then((c) => (c ? transformChallengeToProduct(c) : null))
       : await getProductById(productId);
 
     if (!product) {
       notFound();
     }
-
-    return (
-      <Suspense fallback={<ModalSkeleton />}>
-        <InterceptingUserActions product={product} />
-      </Suspense>
-    );
   } catch (error) {
     console.error("Failed to fetch intercepted product details:", error);
     notFound();
   }
+
+  return (
+    <Suspense fallback={<ModalSkeleton />}>
+      <InterceptingUserActions product={product} />
+    </Suspense>
+  );
 }
 
 function ModalSkeleton() {

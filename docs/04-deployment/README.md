@@ -46,7 +46,7 @@ Production monitoring and observability.
 
 ### Prerequisites
 
-- [ ] Supabase project configured (backend.foodshare.club)
+- [ ] Supabase project configured (api.foodshare.club)
 - [ ] Environment variables set in `.env`
 - [ ] Build tested locally
 - [ ] Translations compiled

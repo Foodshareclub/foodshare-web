@@ -1,6 +1,7 @@
 # OAuth "Missing OAuth Secret" Error - Deep Investigation
 
 ## Error Message
+
 ```json
 {
   "code": 400,
@@ -12,6 +13,7 @@
 ## Root Cause Analysis
 
 ### The Problem
+
 The error occurs because **OAuth providers are configured in two separate places**, and there's a mismatch:
 
 1. **Frontend (Web App)**: Shows OAuth buttons based on `NEXT_PUBLIC_OAUTH_*_ENABLED` environment variables
@@ -47,6 +49,7 @@ Here's what happens:
 3. **Supabase Vault** → Alternative secure storage for secrets
 
 The OAuth secrets need to be in the **actual Supabase GoTrue service's environment**, which is configured via:
+
 - The `.env` file on the VPS where Supabase is running
 - OR environment variables in the `docker-compose.yml` for the GoTrue service
 
@@ -62,6 +65,7 @@ cd foodshare-backend
 ```
 
 The script will:
+
 1. Prompt for Google Client ID and Secret
 2. SSH to the VPS
 3. Update the `.env` file with OAuth configuration
@@ -72,7 +76,7 @@ The script will:
 SSH to the VPS and edit the backend `.env` file:
 
 ```bash
-ssh organic@backend.foodshare.club
+ssh organic@api.foodshare.club
 cd /home/organic/dev/foodshare-backend
 
 # Edit .env file
@@ -82,7 +86,7 @@ nano .env
 GOTRUE_EXTERNAL_GOOGLE_ENABLED=true
 GOTRUE_EXTERNAL_GOOGLE_CLIENT_ID=your-google-client-id-here
 GOTRUE_EXTERNAL_GOOGLE_SECRET=your-google-client-secret-here
-GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI=https://backend.foodshare.club/auth/v1/callback
+GOTRUE_EXTERNAL_GOOGLE_REDIRECT_URI=https://api.foodshare.club/auth/v1/callback
 
 # Restart auth service
 docker compose restart auth
@@ -121,7 +125,8 @@ git push
 Use this checklist to verify OAuth is properly configured:
 
 ### Backend (Supabase GoTrue)
-- [ ] SSH to Backend VPS: `ssh organic@backend.foodshare.club`
+
+- [ ] SSH to Backend VPS: `ssh organic@api.foodshare.club`
 - [ ] Check `.env` file contains:
   ```bash
   cd /home/organic/dev/foodshare-backend
@@ -140,6 +145,7 @@ Use this checklist to verify OAuth is properly configured:
   ```
 
 ### Frontend (Web App)
+
 - [ ] GitHub Secret is set:
   ```bash
   gh secret list --repo Foodshareclub/foodshare-web | grep OAUTH
@@ -149,11 +155,13 @@ Use this checklist to verify OAuth is properly configured:
 - [ ] Google button appears on login page
 
 ### OAuth Provider (Google Console)
+
 - [ ] Authorized redirect URI includes: `https://api.foodshare.club/auth/v1/callback`
 - [ ] OAuth consent screen is configured
 - [ ] App is published (not in testing mode)
 
 ### Test the Flow
+
 - [ ] Visit https://foodshare.club
 - [ ] Click "Sign in with Google"
 - [ ] Redirects to Google OAuth consent screen (not error page)
@@ -163,37 +171,45 @@ Use this checklist to verify OAuth is properly configured:
 ## Common Issues
 
 ### Issue 1: "Redirect URI mismatch"
+
 **Cause**: The redirect URI in Google Console doesn't match Supabase's callback URL
 
 **Solution**:
+
 1. Go to Google Cloud Console → Credentials
 2. Edit OAuth 2.0 Client ID
 3. Add to "Authorized redirect URIs": `https://api.foodshare.club/auth/v1/callback`
 4. Save and wait 5 minutes for propagation
 
 ### Issue 2: Still getting "missing OAuth secret" after configuration
+
 **Cause**: Auth service wasn't restarted after updating `.env`
 
 **Solution**:
+
 ```bash
-ssh organic@backend.foodshare.club
+ssh organic@api.foodshare.club
 cd /home/organic/dev/foodshare-backend
 docker compose restart auth
 ```
 
 ### Issue 3: Google button doesn't appear
+
 **Cause**: Web app doesn't have `NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=true`
 
 **Solution**:
+
 ```bash
 gh secret set NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED --body "true" --repo Foodshareclub/foodshare-web
 # Then trigger deployment
 ```
 
 ### Issue 4: "Invalid client" error from Google
+
 **Cause**: Client ID or Secret is incorrect
 
 **Solution**:
+
 1. Verify credentials in Google Console
 2. Copy them again carefully (no extra spaces)
 3. Update `.env` on VPS
@@ -205,7 +221,7 @@ gh secret set NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED --body "true" --repo Foodshareclu
 
 ```bash
 # SSH to Backend VPS
-ssh organic@backend.foodshare.club
+ssh organic@api.foodshare.club
 
 # Check if GoTrue has the secrets
 cd /home/organic/dev/foodshare-backend
@@ -265,6 +281,7 @@ gh run view --repo Foodshareclub/foodshare-web --log | grep NEXT_PUBLIC_OAUTH_GO
 The same process applies to other providers:
 
 ### GitHub OAuth
+
 ```bash
 GOTRUE_EXTERNAL_GITHUB_ENABLED=true
 GOTRUE_EXTERNAL_GITHUB_CLIENT_ID=your-github-client-id
@@ -273,6 +290,7 @@ GOTRUE_EXTERNAL_GITHUB_REDIRECT_URI=https://api.foodshare.club/auth/v1/callback
 ```
 
 ### Facebook OAuth
+
 ```bash
 GOTRUE_EXTERNAL_FACEBOOK_ENABLED=true
 GOTRUE_EXTERNAL_FACEBOOK_CLIENT_ID=your-facebook-app-id
@@ -281,6 +299,7 @@ GOTRUE_EXTERNAL_FACEBOOK_REDIRECT_URI=https://api.foodshare.club/auth/v1/callbac
 ```
 
 ### Apple OAuth
+
 ```bash
 GOTRUE_EXTERNAL_APPLE_ENABLED=true
 GOTRUE_EXTERNAL_APPLE_CLIENT_ID=your-apple-services-id
@@ -303,6 +322,7 @@ The "missing OAuth secret" error occurs because:
 2. **Backend doesn't have OAuth secrets** (needs `GOTRUE_EXTERNAL_*` in Supabase's `.env`)
 
 **The fix requires configuring BOTH places:**
+
 - Backend: Add `GOTRUE_EXTERNAL_*` variables to VPS `.env` file
 - Frontend: Set `NEXT_PUBLIC_OAUTH_*_ENABLED=true` in GitHub Secrets
 

@@ -86,18 +86,18 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ## Scripts
 
-| Command                 | Description                             |
-| ----------------------- | --------------------------------------- |
-| `bun run dev`           | Start development server with Turbopack |
-| `bun run build`         | Build for production                    |
-| `bun run build:analyze` | Build with bundle analyzer              |
-| `bun run start`         | Start production server                 |
-| `bun run lint:fix`      | Fix ESLint errors                       |
-| `bun run type-check`    | TypeScript type checking                |
-| `bun run test:ci`       | Run all tests with bun:test (CI)        |
-| `bun run test:build`    | Run type-check + lint + build           |
-| `bun run translations:sync` | Sync translations to Supabase       |
-| `bun run clean`         | Clean build artifacts and cache         |
+| Command                     | Description                             |
+| --------------------------- | --------------------------------------- |
+| `bun run dev`               | Start development server with Turbopack |
+| `bun run build`             | Build for production                    |
+| `bun run build:analyze`     | Build with bundle analyzer              |
+| `bun run start`             | Start production server                 |
+| `bun run lint:fix`          | Fix ESLint errors                       |
+| `bun run type-check`        | TypeScript type checking                |
+| `bun run test:ci`           | Run all tests with bun:test (CI)        |
+| `bun run test:build`        | Run type-check + lint + build           |
+| `bun run translations:sync` | Sync translations to Supabase           |
+| `bun run clean`             | Clean build artifacts and cache         |
 
 ## Project Structure
 
@@ -188,11 +188,11 @@ bunx lingui compile
 
 All Edge Functions are maintained in the `foodshare-backend` repository. Locally, the `supabase/` directory is a symlink.
 
-| Category | Functions |
-| -------- | --------- |
+| Category | Functions                                                             |
+| -------- | --------------------------------------------------------------------- |
 | Core API | `api-v1-admin`, `api-v1-auth`, `api-v1-products`, `api-v1-chat`, etc. |
-| Comms    | `api-v1-notifications`, `api-v1-email` |
-| Bots     | `telegram-bot-foodshare`, `whatsapp-bot-foodshare` |
+| Comms    | `api-v1-notifications`, `api-v1-email`                                |
+| Bots     | `telegram-bot-foodshare`, `whatsapp-bot-foodshare`                    |
 
 **Total: 28 functions.** See `foodshare-backend/README.md` for the full list and deployment guides.
 
@@ -203,6 +203,7 @@ The application is fully self-hosted on a VPS using Docker Compose.
 ### VPS Deployment (CI/CD)
 
 The application is deployed automatically via GitHub Actions. The pipeline:
+
 1.  **Builds** the Docker image locally on the runner.
 2.  **Pushes** the image to **GitHub Container Registry (GHCR)**.
 3.  **Deploys** by pulling the new image on the VPS, ensuring no heavy build processing occurs on production.
@@ -219,7 +220,7 @@ docker compose pull && docker compose up -d
 The Dockerfile uses a multi-stage build to create a small production image. Build-time environment variables (like `NEXT_PUBLIC_SUPABASE_URL`) must be passed as `--build-arg` if they are not in the `.env` file at build time.
 
 ```bash
-docker compose build --build-arg NEXT_PUBLIC_SUPABASE_URL=https://backend.foodshare.club
+docker compose build --build-arg NEXT_PUBLIC_SUPABASE_URL=https://api.foodshare.club
 ```
 
 ### Local Manual Build
