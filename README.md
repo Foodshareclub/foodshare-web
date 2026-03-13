@@ -208,10 +208,13 @@ The application is deployed automatically via GitHub Actions. The pipeline:
 2.  **Pushes** the image to **GitHub Container Registry (GHCR)**.
 3.  **Deploys** by pulling the new image on the VPS, ensuring no heavy build processing occurs on production.
 
-### Manual Deploys
+### Emergency Diagnostics (Manual)
+
+> [!CAUTION]
+> Manual deployment is discouraged. Use only if CI/CD is down. Standard deployment is triggered by pushing to `main`.
 
 ```bash
-# Deploy (latest tags from GHCR)
+# Emergency refresh (latest tags from GHCR)
 docker compose pull && docker compose up -d
 ```
 
@@ -272,7 +275,7 @@ We follow a **Vault-First** parity model with Supabase Cloud:
 
 This project is proprietary software. All rights reserved.
 
-## VPS Access
+## VPS Access (Debugging Only)
 
 To access the self-hosted web VPS:
 

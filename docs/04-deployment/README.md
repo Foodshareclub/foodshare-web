@@ -51,15 +51,21 @@ Production monitoring and observability.
 - [ ] Build tested locally
 - [ ] Translations compiled
 
-### Deploy to VPS
+### Deployment (Standard)
+
+The primary and only supported deployment method is via GitHub Actions.
+
+1. **Push to `main`**: Automatically triggers the production build and deployment.
+2. **Monitor**: Use `gh run list` to track the status.
+
+### Emergency Access (Manual)
+
+> [!CAUTION]
+> Manual deployment bypasses CI/CD validations and is only for emergency failure scenarios.
 
 ```bash
-# SSH into VPS
-autossh -M 0 -o ... organic@web.foodshare.club
-
-# Deploy
-cd /home/organic/dev/work/foodshare/foodshare-web
-git pull && docker compose up -d --build
+# Emergency image refresh (pull and restart)
+docker compose pull && docker compose up -d
 ```
 
 ## 🔐 Environment Variables

@@ -9,14 +9,11 @@ Next.js 16 App Router + React 19 + TypeScript 5 + Tailwind CSS 4 + Self-hosted S
 
 ## Deployment
 
-```bash
-# SSH into VPS
-autossh -M 0 -o ServerAliveInterval=6000 -o ServerAliveCountMax=6000 -o ConnectTimeout=10 -o ConnectionAttempts=6000 -i ~/.ssh/foodshare_id_ed25519 organic@web.foodshare.club
+All deployments are **fully automated** via GitHub Actions. Never SSH to build or deploy manually.
 
-# Deploy
-cd /home/organic/dev/foodshare-web
-git pull && docker compose up -d --build
-```
+1. **Push to `main`**: Triggers the CI/CD pipeline.
+2. **Monitor Build**: Use `gh run list --limit 3` to track progress.
+3. **Automatic Deployment**: Docker images are rebuilt and deployed to the VPS automatically upon successful build.
 
 ## Commands
 
@@ -38,22 +35,25 @@ git pull && docker compose up -d --build
 4. **No Redux** -- State: Server Components (fetch) + Server Actions (mutate) + React Query (client cache) + Zustand (UI only).
 5. **Server Components by default** -- Only add `'use client'` when you need hooks, event handlers, browser APIs, or third-party client libs.
 6. **Testing with Bun ONLY** -- The project extensively uses `bun:test`. Do not use Jest globals or `npm test`. Test scripts are `bun run test` and `bun run test:ci` (for CI/CD runs).
-6. **Never use Chakra UI** -- Legacy, fully removed. All UI is shadcn/ui + Radix + Tailwind.
-7. **Map components need dynamic import** -- Leaflet requires `'use client'` and `dynamic(() => import(...), { ssr: false })`.
-8. **Supabase Vault is Primary** -- Sensitive secrets (API keys, etc.) must be stored in Supabase Vault and accessed via the admin client (`src/lib/supabase/admin.ts`).
-9. **Use Structured Logger** -- Avoid `console.log`. Use the structured logger for all production-ready code to ensure observability.
-10. **Singular Top-Level Routes** -- All category pages must use singular top-level routes (e.g., `/thing`, `/volunteer`, `/organisation`). Legacy plural query parameters (e.g., `?type=things`) are handled by redirects in `/food/page.tsx`.
-11. **CI/CD Concurrency (Latest-Wins)** -- The pipeline is configured to cancel previous runs on the same branch. Only the latest commit is built and deployed.
-12. **OAuth Provider Secrets** -- OAuth provider configuration must be managed via GitHub Actions Secrets. Frontend feature flags (`NEXT_PUBLIC_OAUTH_*_ENABLED`) are managed in this repo's secrets. Backend credentials (`GOTRUE_EXTERNAL_*_CLIENT_ID` / `_SECRET`) are managed in the `foodshare-backend` repo's secrets.
+7. **Never use Chakra UI** -- Legacy, fully removed. All UI is shadcn/ui + Radix + Tailwind.
+8. **Map components need dynamic import** -- Leaflet requires `'use client'` and `dynamic(() => import(...), { ssr: false })`.
+9. **Supabase Vault is Primary** -- Sensitive secrets (API keys, etc.) must be stored in Supabase Vault and accessed via the admin client (`src/lib/supabase/admin.ts`).
+10. **Use Structured Logger** -- Avoid `console.log`. Use the structured logger for all production-ready code to ensure observability.
+11. **Singular Top-Level Routes** -- All category pages must use singular top-level routes (e.g., `/thing`, `/volunteer`, `/organisation`). Legacy plural query parameters (e.g., `?type=things`) are handled by redirects in `/food/page.tsx`.
+12. **CI/CD Concurrency (Latest-Wins)** -- The pipeline is configured to cancel previous runs on the same branch. Only the latest commit is built and deployed.
+13. **OAuth Provider Secrets** -- OAuth provider configuration must be managed via GitHub Actions Secrets. Frontend feature flags (`NEXT_PUBLIC_OAUTH_*_ENABLED`) are managed in this repo's secrets. Backend credentials (`GOTRUE_EXTERNAL_*_CLIENT_ID` / `_SECRET`) are managed in the `foodshare-backend` repo's secrets.
 
 # Web Build & CI/CD
+
 # CI/CD: .github/workflows/web.yml
+
 # Jobs: Setup -> [Lint, TypeCheck, Test, E2E] -> Build -> Docker -> SyncTranslations -> Deploy
 
 # Local Web Dev
-bun run dev                              # Start dev server
-bun run build:check                      # Project audit: build + bundle size check
-bun run translations:sync                # Manual translation sync to Supabase
+
+bun run dev # Start dev server
+bun run build:check # Project audit: build + bundle size check
+bun run translations:sync # Manual translation sync to Supabase
 
 ## Architecture
 

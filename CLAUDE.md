@@ -3,31 +3,29 @@
 Next.js 16 App Router + React 19 + TypeScript 5 + Tailwind CSS 4 + Self-hosted Supabase + shadcn/ui
 
 **Self-hosted Supabase:**
+
 - Studio (dashboard): https://studio.foodshare.club
 - API: https://api.foodshare.club
 
 ## Deployment
 
-```bash
-# SSH into VPS
-autossh -M 0 -o ServerAliveInterval=6000 -o ServerAliveCountMax=6000 -o ConnectTimeout=10 -o ConnectionAttempts=6000 -i ~/.ssh/foodshare_id_ed25519 organic@web.foodshare.club
+All deployments are **fully automated** via GitHub Actions. Never SSH to build or deploy manually.
 
-# Deploy
-cd /home/organic/dev/foodshare-web
-git pull && docker compose up -d --build
-```
+1. **Push to `main`**: Triggers the CI/CD pipeline.
+2. **Monitor Build**: Use `gh run list --limit 3` to track progress.
+3. **Automatic Deployment**: Docker images are rebuilt and deployed to the VPS automatically upon successful build.
 
 ## Commands
 
-| Command              | Purpose                           |
-| -------------------- | --------------------------------- |
-| `bun run dev`        | Dev server (Turbopack, port 3000) |
-| `bun run build`      | Production build                  |
-| `bun run type-check` | TypeScript checking (`bunx tsc`)  |
-| `bun run lint:fix`   | ESLint with auto-fix              |
-| `bun run test:ci`    | Run all tests with bun:test       |
-| `bun run test:build` | Type-check + lint + build         |
-| `bun run translations:sync` | Sync translations to Supabase    |
+| Command                     | Purpose                           |
+| --------------------------- | --------------------------------- |
+| `bun run dev`               | Dev server (Turbopack, port 3000) |
+| `bun run build`             | Production build                  |
+| `bun run type-check`        | TypeScript checking (`bunx tsc`)  |
+| `bun run lint:fix`          | ESLint with auto-fix              |
+| `bun run test:ci`           | Run all tests with bun:test       |
+| `bun run test:build`        | Type-check + lint + build         |
+| `bun run translations:sync` | Sync translations to Supabase     |
 
 ## Critical Rules
 
