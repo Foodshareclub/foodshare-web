@@ -4,7 +4,6 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 const withNextIntl = createNextIntlPlugin();
 
-
 const nextConfig: NextConfig = {
   // React Compiler - automatic memoization for +15-20% render performance
   reactCompiler: true,
@@ -97,7 +96,6 @@ const nextConfig: NextConfig = {
     "duckdb",
     "duckdb-async",
   ],
-
 
   // Enhanced image optimization
   images: {
@@ -358,15 +356,15 @@ const nextConfig: NextConfig = {
               // Both prod and dev need unsafe-inline for Next.js hydration
               // Production omits unsafe-eval for better security
               process.env.NODE_ENV === "production"
-                ? "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com"
-                : "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.googletagmanager.com https://www.google-analytics.com",
+                ? "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://appleid.cdn-apple.com https://static.cloudflareinsights.com"
+                : "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://www.googletagmanager.com https://www.google-analytics.com https://appleid.cdn-apple.com https://static.cloudflareinsights.com",
               "worker-src 'self' blob:",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "img-src 'self' data: blob: https://*.supabase.co https://api.foodshare.club https://cdn.foodshare.club https://*.r2.cloudflarestorage.com https://*.openstreetmap.org https://*.tile.openstreetmap.org https://*.basemaps.cartocdn.com https://firebasestorage.googleapis.com https://www.googletagmanager.com https://www.google-analytics.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.foodshare.club wss://api.foodshare.club https://*.r2.cloudflarestorage.com https://api.openai.com wss://ws-us3.pusher.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com https://app.motherduck.com https://*.motherduck.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.foodshare.club wss://api.foodshare.club https://*.r2.cloudflarestorage.com https://api.openai.com wss://ws-us3.pusher.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com https://app.motherduck.com https://*.motherduck.com https://appleid.apple.com",
               "frame-ancestors 'self'",
-              "frame-src 'self'",
+              "frame-src 'self' https://appleid.apple.com",
               "form-action 'self'",
               "base-uri 'self'",
               "object-src 'none'",
@@ -403,7 +401,4 @@ const sentryWebpackPluginOptions = {
 };
 
 // Chain: nextIntl -> sentry
-export default withSentryConfig(
-  withNextIntl(nextConfig),
-  sentryWebpackPluginOptions
-);
+export default withSentryConfig(withNextIntl(nextConfig), sentryWebpackPluginOptions);
