@@ -32,10 +32,10 @@ export const metadata: Metadata = defaultMetadata;
 
 export default async function RootLayout({
   children,
-  modal,
+  _modal,
 }: Readonly<{
   children: React.ReactNode;
-  modal: React.ReactNode;
+  _modal: React.ReactNode;
 }>) {
   // Read locale from cookie to prevent hydration mismatch
   const cookieStore = await cookies();
@@ -92,7 +92,7 @@ export default async function RootLayout({
         {/* Apple Sign-In SDK */}
         <script
           type="text/javascript"
-          src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/auth/js/appleid.auth.js"
+          src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"
           async
         />
         {/* Theme color for dark mode support */}
