@@ -40,9 +40,37 @@ services:
         max-size: "10m"
         max-file: "3"
     networks:
-      - supabase-network
+      - foodshare-web-network
+
+  caddy:
+    container_name: foodshare-caddy
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      - SITE_DOMAIN=${SITE_DOMAIN:-foodshare.club}
+      - CADDY_ACME_EMAIL=${CADDY_ACME_EMAIL:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      foodshare-web:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - foodshare-web-network
+
+volumes:
+  caddy_data:
+  caddy_config:
 
 networks:
-  supabase-network:
-    external: true
-    name: supabase-network
+  foodshare-web-network:

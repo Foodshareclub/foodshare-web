@@ -371,8 +371,8 @@ jobs:
             git reset --hard origin/main
 
             # Sync secrets to .env.production
-            printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_ANON_KEY=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\n' \
-              "$NEXT_PUBLIC_SUPABASE_URL" "$NEXT_PUBLIC_SUPABASE_ANON_KEY" "$SUPABASE_SERVICE_ROLE_KEY" > .env.production
+            printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_ANON_KEY=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\nSITE_DOMAIN=%s\nCADDY_ACME_EMAIL=%s\n' \
+              "$NEXT_PUBLIC_SUPABASE_URL" "$NEXT_PUBLIC_SUPABASE_ANON_KEY" "$SUPABASE_SERVICE_ROLE_KEY" "$SITE_DOMAIN" "$CADDY_EMAIL" > .env.production
 
             # Pull from backend .env.functions first (as base defaults)
             if [ -f ../foodshare-backend/.env.functions ]; then
@@ -386,6 +386,9 @@ jobs:
             echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker pull ghcr.io/${REPO_LOWER}:latest
 
-            # Deploy
+            # Remove old manually-created Caddy container if it exists outside compose
+            docker rm -f foodshare-caddy 2>/dev/null || true
+
+            # Deploy (Caddy + Web via compose)
             docker compose --env-file .env.production up -d --force-recreate
             echo "Deploy complete"
