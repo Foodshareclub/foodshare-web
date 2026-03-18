@@ -379,8 +379,16 @@ jobs:
               grep -E '^[A-Za-z0-9_]+=' ../foodshare-backend/.env.functions >> .env.production || true
             fi
 
-            # Overwrite with supplementary secrets from Vault (Quoted for safety, valid char filter, strip whitespace)
-            docker exec supabase-db psql -U postgres -d postgres -A -t -c "SELECT name || '=\"' || REGEXP_REPLACE(secret, '\s+', '', 'g') || '\"' FROM vault.decrypted_secrets WHERE name ~ '^[A-Z0-9_]+$';" >> .env.production 2>/dev/null || true
+            # Overwrite with supplementary secrets from Vault (Robust multi-line safety)
+            VAULT_DATA=$(docker exec supabase-db psql -U postgres -d postgres -A -t -c "SELECT name || chr(1) || decrypted_secret || chr(0) FROM vault.decrypted_secrets WHERE name ~ '^[A-Z0-9_]+$';")
+            while IFS=$(printf '\1') read -d '' -r key val; do
+              if [ -n "$key" ]; then
+                # Remove existing key if it exists to avoid duplicates
+                sed -i "/^$key=/d" .env.production || true
+                # Quote the value for .env safety
+                printf '%s="%s"\n' "$key" "$val" >> .env.production
+              fi
+            done <<< "$VAULT_DATA"
 
             # GHCR Login and pull
             echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
