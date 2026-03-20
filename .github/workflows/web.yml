@@ -348,7 +348,7 @@ jobs:
           SITE_DOMAIN: ${{ secrets.SITE_DOMAIN }}
           CADDY_EMAIL: ${{ secrets.CADDY_ACME_EMAIL }}
         with:
-          host: REDACTED_ORIGIN_IP
+          host: ${{ secrets.VPS_HOST }}
           username: organic
           key: ${{ secrets.VPS_SSH_KEY }}
           command_timeout: 10m
