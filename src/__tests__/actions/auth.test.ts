@@ -6,20 +6,7 @@
 import { mock, describe, it, expect, beforeEach } from "bun:test";
 
 // Shared mock state
-const mockState = {
-  user: null as { id: string; email: string } | null,
-  session: null as { access_token: string; user: { id: string } } | null,
-  profile: null as {
-    id: string;
-    first_name: string;
-    second_name: string;
-    avatar_url: string | null;
-    email: string;
-  } | null,
-  userRoles: null as Array<{ roles: { name: string } }> | null, // For user_roles junction table (array)
-  authError: null as { message: string } | null,
-  dbError: null as { message: string; code?: string } | null,
-};
+import { mockState } from "../mock-state";
 
 // Mock next/navigation - redirect throws to simulate Next.js behavior
 mock.module("next/navigation", () => ({

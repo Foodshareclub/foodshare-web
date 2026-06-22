@@ -35,7 +35,7 @@ export default async function RootLayout({
   _modal,
 }: Readonly<{
   children: React.ReactNode;
-  _modal: React.ReactNode;
+  _modal?: React.ReactNode;
 }>) {
   // Read locale from cookie to prevent hydration mismatch
   const cookieStore = await cookies();

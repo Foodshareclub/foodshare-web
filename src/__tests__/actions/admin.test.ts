@@ -6,30 +6,7 @@
 import { mock, describe, it, expect, beforeEach } from "bun:test";
 
 // Shared mock state
-const mockState = {
-  user: null as { id: string; email: string } | null,
-  profile: null as {
-    id: string;
-    first_name: string;
-    second_name: string;
-    email: string;
-    is_active: boolean;
-  } | null,
-  userRoles: null as Array<{ roles: { name: string } }> | null,
-  listing: null as { id: number; post_name: string; profile_id: string } | null,
-  roleData: null as { id: string } | null,
-  authError: null as { message: string } | null,
-  dbError: null as { message: string; code?: string } | null,
-  usersData: [] as Array<{
-    id: string;
-    first_name: string;
-    second_name: string;
-    email: string;
-    created_time: string;
-    is_active: boolean;
-  }>,
-  usersCount: 0,
-};
+import { mockState } from "../mock-state";
 
 // Mock next/cache
 mock.module("next/cache", () => ({
@@ -202,16 +179,8 @@ mock.module("@/lib/supabase/admin", () => ({
   createAdminClient: mock(() => createSupabaseMock()),
 }));
 
-// Mock admin-check directly (overrides any global mock and ensures isolation)
-mock.module("@/lib/data/admin-check", () => ({
-  checkUserIsAdmin: mock((_userId: string) => {
-    const hasAdminRole = mockState.userRoles?.some(
-      (ur: { roles: { name: string } }) =>
-        ur.roles.name === "admin" || ur.roles.name === "superadmin"
-    );
-    return Promise.resolve({ isAdmin: hasAdminRole || false });
-  }),
-}));
+// Removed mock.module for @/lib/data/admin-check to avoid global mock leakage.
+// The tests will use the real admin-check which relies on the mocked createAdminClient.
 
 // Import actions after mocks
 import {

@@ -18,7 +18,7 @@ export default function ProductsLayout({
   modal,
 }: {
   children: React.ReactNode;
-  modal: React.ReactNode;
+  modal?: React.ReactNode;
 }) {
   return (
     <>
