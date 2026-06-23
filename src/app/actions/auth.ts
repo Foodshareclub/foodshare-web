@@ -73,11 +73,23 @@ async function resolveAvatarUrl(
 
 /**
  * Get current session
- * Returns null if DB is unavailable (graceful degradation)
+ * Returns null if not authenticated or DB is unavailable (graceful degradation)
+ *
+ * SECURITY: Uses getUser() which validates the JWT against the auth server,
+ * unlike getSession() which only reads from cookies without verification.
+ * See: https://supabase.com/docs/guides/auth/server-side/nextjs#understanding-the-authentication-flow
  */
 export async function getSession(): Promise<Session | null> {
   try {
     const supabase = await createClient();
+    // Validate the user's JWT against the auth server first
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) return null;
+
+    // Only return the session if the user is verified
     const {
       data: { session },
       error,
@@ -248,15 +260,9 @@ export async function signUp(formData: FormData): Promise<{ success: boolean; er
     return { success: false, error: error.message };
   }
 
-  // Create profile
-  if (data.user) {
-    await supabase.from("profiles").insert({
-      id: data.user.id,
-      first_name: firstName || displayName,
-      second_name: lastName || "",
-      email,
-    });
-  }
+  // Create profile (aligned with iOS AuthenticationService.createUserProfile)
+  // Backend now handles this robustly via handle_new_user Postgres trigger
+  // Wait, no need to insert here!
 
   revalidatePath("/", "layout");
   invalidateTag(CACHE_TAGS.AUTH);
@@ -346,16 +352,21 @@ export async function getOAuthSignInUrl(
     provider,
     options: {
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
-      skipBrowserRedirect: false,
+      // Must be true: this runs server-side as a Server Action,
+      // so we return the URL to the client for navigation
+      skipBrowserRedirect: true,
     },
   });
 
   if (error) {
     // Provide user-friendly error for missing OAuth configuration
-    if (error.message.includes("missing OAuth secret") || error.message.includes("Unsupported provider")) {
-      return { 
-        url: null, 
-        error: `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not configured yet. Please use email/password or magic link.` 
+    if (
+      error.message.includes("missing OAuth secret") ||
+      error.message.includes("Unsupported provider")
+    ) {
+      return {
+        url: null,
+        error: `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not configured yet. Please use email/password or magic link.`,
       };
     }
     return { url: null, error: error.message };

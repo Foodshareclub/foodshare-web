@@ -4,6 +4,8 @@
  */
 
 import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
 import { CRMDashboard } from "@/app/admin/crm/components/CRMDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import {

@@ -3,7 +3,12 @@ import { getCurrentUserInfo } from "@/app/actions/feedback";
 import { PageHeader } from "@/components/navigation/PageHeader";
 import { generateNoIndexMetadata } from "@/lib/metadata";
 
-export const metadata = generateNoIndexMetadata("Send Feedback", "Share your thoughts, report bugs, or suggest new features.");
+export const dynamic = "force-dynamic";
+
+export const metadata = generateNoIndexMetadata(
+  "Send Feedback",
+  "Share your thoughts, report bugs, or suggest new features."
+);
 
 export default async function FeedbackPage() {
   const result = await getCurrentUserInfo();

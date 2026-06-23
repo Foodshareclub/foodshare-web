@@ -31,6 +31,11 @@ function getSupabaseClient(): SupabaseClient {
       supabaseUrl,
       supabaseAnonKey,
       {
+        cookieOptions: {
+          domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+        },
         auth: {
           flowType: "pkce",
           debug: process.env.NODE_ENV === "development",

@@ -16,6 +16,8 @@ import { serverActionError, successVoid, type ServerActionResult } from "@/lib/e
 import type { ErrorCode } from "@/lib/errors";
 import { CACHE_TAGS } from "@/lib/data/cache-keys";
 import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { requireAdmin } from "@/lib/data/admin-check";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // ============================================================================
 // Zod Schemas
@@ -56,49 +58,7 @@ export interface FeedbackRecord extends FeedbackSubmission {
   updated_at: string;
 }
 
-// ============================================================================
-// Helper: Verify Admin Access
-// ============================================================================
-
-type AuthError = { error: string; code: ErrorCode };
-type AuthSuccess = {
-  user: { id: string };
-  supabase: Awaited<ReturnType<typeof createClient>>;
-};
-
-async function verifyAdminAccess(): Promise<AuthError | AuthSuccess> {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    return { error: "You must be logged in", code: "UNAUTHORIZED" };
-  }
-
-  const { data: userRoles } = await supabase
-    .from("user_roles")
-    .select("roles!inner(name)")
-    .eq("profile_id", user.id);
-
-  const roles = (userRoles || [])
-    .map((r) => (r.roles as unknown as { name: string })?.name)
-    .filter(Boolean);
-
-  const isAdmin = roles.includes("admin") || roles.includes("superadmin");
-
-  if (!isAdmin) {
-    return { error: "Admin access required", code: "FORBIDDEN" };
-  }
-
-  return { user: { id: user.id }, supabase };
-}
-
-function isAuthError(result: AuthError | AuthSuccess): result is AuthError {
-  return "error" in result && "code" in result && !("supabase" in result);
-}
+// Removed manual verifyAdminAccess in favor of requireAdmin() from admin-check.ts
 
 // ============================================================================
 // Audit Logging Helper
@@ -230,12 +190,8 @@ export async function getUserFeedback(
  */
 export async function getAllFeedback(): Promise<ServerActionResult<FeedbackRecord[]>> {
   try {
-    const auth = await verifyAdminAccess();
-    if (isAuthError(auth)) {
-      return serverActionError(auth.error, auth.code);
-    }
-
-    const { supabase } = auth;
+    await requireAdmin();
+    const supabase = createAdminClient();
 
     const { data, error } = await supabase
       .from("feedback")
@@ -275,12 +231,8 @@ export async function updateFeedbackStatus(
       return serverActionError("Invalid status", "VALIDATION_ERROR");
     }
 
-    const auth = await verifyAdminAccess();
-    if (isAuthError(auth)) {
-      return serverActionError(auth.error, auth.code);
-    }
-
-    const { supabase, user } = auth;
+    const adminId = await requireAdmin();
+    const supabase = createAdminClient();
 
     const { data, error } = await supabase
       .from("feedback")
@@ -294,7 +246,7 @@ export async function updateFeedbackStatus(
       return serverActionError(error.message, "DATABASE_ERROR");
     }
 
-    await logAuditEvent(supabase, user.id, "UPDATE_STATUS", "feedback", feedbackId, {
+    await logAuditEvent(supabase, adminId, "UPDATE_STATUS", "feedback", feedbackId, {
       newStatus: status,
     });
 
@@ -321,12 +273,8 @@ export async function deleteFeedback(feedbackId: string): Promise<ServerActionRe
       return serverActionError("Invalid feedback ID", "VALIDATION_ERROR");
     }
 
-    const auth = await verifyAdminAccess();
-    if (isAuthError(auth)) {
-      return serverActionError(auth.error, auth.code);
-    }
-
-    const { supabase, user } = auth;
+    const adminId = await requireAdmin();
+    const supabase = createAdminClient();
 
     const { error } = await supabase.from("feedback").delete().eq("id", feedbackId);
 
@@ -335,7 +283,7 @@ export async function deleteFeedback(feedbackId: string): Promise<ServerActionRe
       return serverActionError(error.message, "DATABASE_ERROR");
     }
 
-    await logAuditEvent(supabase, user.id, "DELETE", "feedback", feedbackId);
+    await logAuditEvent(supabase, adminId, "DELETE", "feedback", feedbackId);
 
     revalidatePath("/admin/feedback");
     invalidateTag(CACHE_TAGS.ADMIN);

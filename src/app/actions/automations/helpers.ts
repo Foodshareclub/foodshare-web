@@ -8,12 +8,15 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { invalidateTag } from "@/lib/data/cache-invalidation";
+import { requireAdmin } from "@/lib/data/admin-check";
 
 // ============================================================================
 // Auth Helper with Role Check (uses user_roles table)
 // ============================================================================
 
 export async function requireAuth(supabase: Awaited<ReturnType<typeof createClient>>) {
+  await requireAdmin();
+
   const {
     data: { user },
     error: authError,
@@ -21,22 +24,6 @@ export async function requireAuth(supabase: Awaited<ReturnType<typeof createClie
 
   if (authError || !user) {
     throw new Error("UNAUTHORIZED");
-  }
-
-  // Check if user is admin using user_roles junction table
-  const { data: userRoles } = await supabase
-    .from("user_roles")
-    .select("roles!inner(name)")
-    .eq("profile_id", user.id);
-
-  const roles = (userRoles || [])
-    .map((r) => (r.roles as unknown as { name: string })?.name)
-    .filter(Boolean);
-
-  const isAdmin = roles.includes("admin") || roles.includes("superadmin");
-
-  if (!isAdmin) {
-    throw new Error("FORBIDDEN");
   }
 
   return user;

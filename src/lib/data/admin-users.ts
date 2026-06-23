@@ -5,7 +5,9 @@
 
 import { cacheLife, cacheTag } from "next/cache";
 import { CACHE_TAGS } from "./cache-keys";
-import { createClient, createCachedClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAdmin } from "./admin-check";
 
 // ============================================================================
 // Types
@@ -58,7 +60,8 @@ export interface UserStats {
  * NOTE: Uses createClient() (cookies-dependent) - NOT cached
  */
 export async function getAdminUsers(filters: AdminUsersFilter = {}): Promise<AdminUsersResult> {
-  const supabase = await createClient();
+  await requireAdmin();
+  const supabase = createAdminClient();
 
   const {
     search,
@@ -157,7 +160,8 @@ export const getCachedAdminUsers = getAdminUsers;
  * NOTE: Uses createClient() (cookies-dependent) - NOT cached
  */
 export async function getAdminUserById(id: string): Promise<AdminUserProfile | null> {
-  const supabase = await createClient();
+  await requireAdmin();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("profiles")
@@ -187,10 +191,12 @@ export async function getAdminUserById(id: string): Promise<AdminUserProfile | n
  * Uses createCachedClient() - SAFE to cache
  */
 export async function getUserStats(): Promise<UserStats> {
-  cacheLife('admin-stats');
+  await requireAdmin();
+
+  cacheLife("admin-stats");
   cacheTag(CACHE_TAGS.ADMIN_STATS, CACHE_TAGS.ADMIN);
 
-  const supabase = createCachedClient();
+  const supabase = createAdminClient();
 
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);

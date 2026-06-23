@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS } from "@/lib/data/cache-keys";
 import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { requireAdmin, logAdminAction } from "@/lib/data/admin-check";
+import { createAdminClient } from "@/lib/supabase/admin";
 import {
   updateListingAPI,
   activateListingAPI,
@@ -405,7 +406,7 @@ export async function updateUserRoles(
 
   try {
     const adminId = await requireAdmin();
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     // Prevent self-demotion
     if (userId === adminId && roles.admin === false) {

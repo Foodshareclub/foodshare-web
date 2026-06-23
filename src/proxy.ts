@@ -5,7 +5,12 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
 // ============================================================================
-// Admin Client
+// Admin Client (Service Role — singleton, request-safe)
+//
+// SAFETY: This singleton is intentionally shared across all requests.
+// It uses the service_role key (not user context) and is ONLY used for
+// admin operations like checking user_roles. Never pass user-scoped
+// queries through this client — use the per-request Supabase client instead.
 // ============================================================================
 
 let _adminClient: ReturnType<typeof createClient> | null = null;
@@ -444,13 +449,21 @@ export async function proxy(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: {
+        domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || undefined,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+      },
       cookies: {
         getAll: () => request.cookies.getAll(),
         setAll: (cookiesToSet) => {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+            response.cookies.set(name, value, {
+              ...options,
+              domain: process.env.NEXT_PUBLIC_COOKIE_DOMAIN || options.domain,
+            })
           );
         },
       },

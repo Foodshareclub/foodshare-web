@@ -14,6 +14,9 @@ export async function GET() {
         {
           appID: "DCKVD6LKYV.com.flutterflow.foodshare",
           paths: [
+            // Auth routes
+            "/auth/*",
+            "/login-callback",
             // Content routes
             "/food/*",
             "/profile/*",
