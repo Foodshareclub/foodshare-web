@@ -22,7 +22,7 @@ export function ProductCardWrapper({
 }: ProductCardWrapperProps) {
   return (
     <div
-      className="col-span-1"
+      className="contents"
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={onClick}

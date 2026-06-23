@@ -91,8 +91,10 @@ export function parseLocationParams(
   return { lat, lng, radius: clampedRadius };
 }
 
-export async function generateCategoryMetadata(type: string, searchParams: Promise<any>): Promise<Metadata> {
-  const params = await searchParams;
+export async function generateCategoryMetadata(
+  type: string,
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+): Promise<Metadata> {
   const categoryKey = categoryKeyMap[type] || "food";
   const category = categoryMetadata[categoryKey];
 
@@ -104,7 +106,10 @@ export async function generateCategoryMetadata(type: string, searchParams: Promi
   });
 }
 
-export default async function CategoryPageContent({ type, searchParams }: { type: string } & PageProps) {
+export default async function CategoryPageContent({
+  type,
+  searchParams,
+}: { type: string } & PageProps) {
   const logger = await createRequestLogger({ action: "CategoryPageContent", type });
   const params = await searchParams;
   const productType = type;
@@ -189,10 +194,12 @@ export function ProductsPageSkeleton() {
   return (
     <div className="min-h-screen bg-background">
       <div className="h-[140px] bg-card border-b border-border animate-pulse" />
-      <div className="grid gap-10 px-7 py-7 xl:px-20 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-        {[...Array(10)].map((_, i) => (
-          <SkeletonCard key={i} isLoaded={false} />
-        ))}
+      <div className="@container px-7 py-7 xl:px-20">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] auto-rows-[auto_1fr] gap-x-10 gap-y-0">
+          {[...Array(10)].map((_, i) => (
+            <SkeletonCard key={i} isLoaded={false} />
+          ))}
+        </div>
       </div>
     </div>
   );

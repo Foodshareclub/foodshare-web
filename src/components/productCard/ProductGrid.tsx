@@ -69,16 +69,18 @@ export function ProductGrid({
       className="overflow-y-auto"
       style={{ transform: "translateZ(0)", WebkitOverflowScrolling: "touch" }}
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-10 page-px py-7">
-        {isLoading
-          ? SKELETON_ITEMS.map((i) => <SkeletonCard key={i} isLoaded={false} />)
-          : products.map((product) => <ProductCard product={product} key={product.id} />)}
+      <div className="@container page-px py-7">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] auto-rows-[auto_1fr] gap-x-10 gap-y-0">
+          {isLoading
+            ? SKELETON_ITEMS.map((i) => <SkeletonCard key={i} isLoaded={false} />)
+            : products.map((product) => <ProductCard product={product} key={product.id} />)}
 
-        {/* Loading more skeletons */}
-        {isFetchingMore &&
-          LOADING_MORE_SKELETONS.map((i) => (
-            <SkeletonCard key={`loading-more-${i}`} isLoaded={false} />
-          ))}
+          {/* Loading more skeletons */}
+          {isFetchingMore &&
+            LOADING_MORE_SKELETONS.map((i) => (
+              <SkeletonCard key={`loading-more-${i}`} isLoaded={false} />
+            ))}
+        </div>
       </div>
 
       {/* Infinite scroll trigger */}
