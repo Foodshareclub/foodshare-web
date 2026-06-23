@@ -15,7 +15,7 @@ export default function ForumError({
 }) {
   return (
     <div className="container mx-auto px-4 py-12">
-      <ErrorDisplay error={error} reset={reset} variant="default" />
+      <ErrorDisplay error={error} reset={reset} variant="default" showDetails={true} />
     </div>
   );
 }
