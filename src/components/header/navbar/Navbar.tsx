@@ -24,7 +24,6 @@ function Navbar({
   isAuth,
   isAdmin = false,
   productType,
-  onRouteChange,
   onProductTypeChange,
   imgUrl = "",
   firstName = "",
@@ -67,9 +66,9 @@ function Navbar({
     const routeName = categoryId.toLowerCase();
     onProductTypeChange(categoryId);
 
-    // Forum has its own route
-    if (routeName === "forum") {
-      router.push("/forum");
+    // Forum and Challenge have their own routes without map views
+    if (routeName === "forum" || routeName === "challenge") {
+      router.push(`/${routeName}`);
       return;
     }
 
