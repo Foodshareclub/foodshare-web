@@ -4,8 +4,6 @@
  * Server-side cached data fetching for the challenge leaderboard.
  */
 
-import { cacheLife, cacheTag } from "next/cache";
-import { CACHE_TAGS } from "./cache-keys";
 import { createClient, createCachedClient } from "@/lib/supabase/server";
 import { cacheThrough, getLeaderboardKey, REDIS_TTL } from "@/lib/redis";
 import {
@@ -38,10 +36,9 @@ interface RawLeaderboardRow {
 /**
  * Get challenge leaderboard - top users by completed challenges
  */
-export async function getChallengeLeaderboard(limit: number = LEADERBOARD_LIMIT): Promise<LeaderboardUser[]> {
-  cacheLife('challenge-leaderboard');
-  cacheTag(CACHE_TAGS.CHALLENGE_LEADERBOARD);
-
+export async function getChallengeLeaderboard(
+  limit: number = LEADERBOARD_LIMIT
+): Promise<LeaderboardUser[]> {
   // Try Redis cache first (distributed cache for multi-instance)
   return cacheThrough(
     getLeaderboardKey(limit),
@@ -190,10 +187,9 @@ function transformLeaderboardData(data: RawLeaderboardRow[]): LeaderboardUser[] 
  * Get detailed profile for leaderboard modal
  * Uses optimized RPC function with fallback to manual query
  */
-export async function getLeaderboardUserProfile(userId: string): Promise<LeaderboardUserProfile | null> {
-  cacheLife('challenge-leaderboard');
-  cacheTag(CACHE_TAGS.CHALLENGE_LEADERBOARD);
-
+export async function getLeaderboardUserProfile(
+  userId: string
+): Promise<LeaderboardUserProfile | null> {
   const supabase = createCachedClient();
 
   // Try RPC function first
@@ -205,13 +201,7 @@ export async function getLeaderboardUserProfile(userId: string): Promise<Leaderb
   if (!rpcError && rpcData && rpcData.length > 0) {
     const row = rpcData[0];
     const recentChallenges: RecentChallenge[] = (row.recent_challenges || []).map(
-      (c: {
-        id: number;
-        title: string;
-        difficulty: string;
-        xp: number;
-        completedAt: string;
-      }) => ({
+      (c: { id: number; title: string; difficulty: string; xp: number; completedAt: string }) => ({
         id: c.id,
         title: c.title,
         difficulty: c.difficulty,

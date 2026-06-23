@@ -11,8 +11,6 @@
  * - Bounding box queries for map viewport loading
  */
 
-import { cacheLife, cacheTag } from "next/cache";
-import { CACHE_TAGS } from "./cache-keys";
 import { createClient, createCachedClient } from "@/lib/supabase/server";
 
 // ============================================================================
@@ -179,9 +177,6 @@ export async function getNearbyPostsCounts(options: {
   lng: number;
   radiusMeters?: number;
 }): Promise<PostTypeCount[]> {
-  cacheLife('short');
-  cacheTag(CACHE_TAGS.PRODUCTS);
-
   const { lat, lng, radiusMeters = DEFAULT_RADIUS_METERS } = options;
 
   const supabase = createCachedClient();

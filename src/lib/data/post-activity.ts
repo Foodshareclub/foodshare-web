@@ -1,3 +1,4 @@
+import { logCacheOperation } from "./cache-keys";
 /**
  * Post Activity Data Functions
  *
@@ -6,9 +7,7 @@
  * @module lib/data/post-activity
  */
 
-import { cacheLife, cacheTag } from "next/cache";
 import { createClient, createCachedClient } from "@/lib/supabase/server";
-import { CACHE_TAGS, logCacheOperation } from "@/lib/data/cache-keys";
 import type {
   PostActivityLog,
   PostActivityTimelineItem,
@@ -32,9 +31,6 @@ export async function getPostActivityTimeline(
     activityTypes?: PostActivityType[];
   } = {}
 ): Promise<PostActivityTimelineItem[]> {
-  cacheLife('short');
-  cacheTag(CACHE_TAGS.POST_ACTIVITY, CACHE_TAGS.POST_ACTIVITY_LOGS(postId));
-
   const { limit = 50, offset = 0, activityTypes } = options;
   const cacheKey = `timeline-${postId}-${limit}-${offset}-${activityTypes?.join(",") || "all"}`;
 
@@ -68,9 +64,6 @@ export async function getRecentPostActivities(
   postId: number,
   limit: number = 20
 ): Promise<PostActivityLog[]> {
-  cacheLife('short');
-  cacheTag(CACHE_TAGS.POST_ACTIVITY, CACHE_TAGS.POST_ACTIVITY_LOGS(postId));
-
   const cacheKey = `recent-${postId}-${limit}`;
 
   logCacheOperation("miss", cacheKey);
@@ -103,9 +96,6 @@ export async function getUserActivitySummary(
   userId: string,
   days: number = 30
 ): Promise<UserActivitySummary[]> {
-  cacheLife('short');
-  cacheTag(CACHE_TAGS.POST_ACTIVITY, CACHE_TAGS.USER_ACTIVITY(userId));
-
   const cacheKey = `user-summary-${userId}-${days}`;
 
   logCacheOperation("miss", cacheKey);
@@ -136,9 +126,6 @@ export async function getUserActivitySummary(
 export async function getPostActivityCounts(
   postId: number
 ): Promise<Partial<Record<PostActivityType, number>>> {
-  cacheLife('short');
-  cacheTag(CACHE_TAGS.POST_ACTIVITY, CACHE_TAGS.POST_ACTIVITY_LOGS(postId));
-
   const cacheKey = `counts-${postId}`;
 
   logCacheOperation("miss", cacheKey);
@@ -179,9 +166,6 @@ export async function getDailyActivityStats(
     limit?: number;
   } = {}
 ): Promise<PostActivityDailyStats[]> {
-  cacheLife('short');
-  cacheTag(CACHE_TAGS.POST_ACTIVITY, CACHE_TAGS.POST_ACTIVITY_STATS);
-
   const { startDate, endDate, postType, limit = 30 } = options;
   const cacheKey = `daily-stats-${startDate || "none"}-${endDate || "none"}-${postType || "all"}-${limit}`;
 
@@ -343,9 +327,6 @@ export interface ActivityDashboardStats {
  * Uses optimized RPC for counts + parallel fetch for top types
  */
 export async function getActivityDashboardStats(): Promise<ActivityDashboardStats> {
-  cacheLife('short');
-  cacheTag(CACHE_TAGS.POST_ACTIVITY, CACHE_TAGS.POST_ACTIVITY_STATS);
-
   const cacheKey = "dashboard-stats";
 
   logCacheOperation("miss", cacheKey);

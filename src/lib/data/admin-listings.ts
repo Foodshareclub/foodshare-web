@@ -3,8 +3,6 @@
  * Server-side data fetching for admin CRM listings management
  */
 
-import { cacheLife, cacheTag } from "next/cache";
-import { CACHE_TAGS } from "./cache-keys";
 import { createClient, createCachedClient } from "@/lib/supabase/server";
 import { escapeFilterValue } from "@/lib/utils";
 
@@ -238,9 +236,6 @@ export async function getAdminListingById(id: number): Promise<AdminListing | nu
  * Uses createCachedClient() - SAFE to cache
  */
 export async function getListingStats(): Promise<ListingStats> {
-  cacheLife('admin-stats');
-  cacheTag(CACHE_TAGS.ADMIN_STATS, CACHE_TAGS.ADMIN);
-
   const supabase = createCachedClient();
 
   const [

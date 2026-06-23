@@ -176,6 +176,7 @@ describe("Auth Server Actions", () => {
 
   describe("getSession", () => {
     it("should return session when authenticated", async () => {
+      mockState.user = { id: "user-123", email: "test@example.com" };
       mockState.session = {
         access_token: "test-token",
         user: { id: "user-123" },

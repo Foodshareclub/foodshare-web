@@ -4,10 +4,8 @@
  * Server-side data fetching functions for forum posts, categories, and tags.
  */
 
-import { cacheLife, cacheTag } from 'next/cache';
-import { createCachedClient } from '@/lib/supabase/server';
-import { CACHE_TAGS } from './cache-keys';
-import type { ForumPost, ForumCategory, ForumTag } from '@/api/forumAPI';
+import { createCachedClient } from "@/lib/supabase/server";
+import type { ForumPost, ForumCategory, ForumTag } from "@/api/forumAPI";
 
 // ============================================================================
 // Constants
@@ -31,7 +29,7 @@ export const SCORE_WEIGHTS = {
 // Types
 // ============================================================================
 
-export type SortOption = 'latest' | 'hot' | 'top' | 'unanswered';
+export type SortOption = "latest" | "hot" | "top" | "unanswered";
 
 export interface ForumStats {
   totalPosts: number;
@@ -76,7 +74,10 @@ export function calculateScore(posts: number, likes: number, comments: number): 
 /**
  * Compute leaderboard from posts
  */
-export function computeLeaderboard(posts: ForumPost[], limit = FORUM_LIMITS.LEADERBOARD): LeaderboardUser[] {
+export function computeLeaderboard(
+  posts: ForumPost[],
+  limit = FORUM_LIMITS.LEADERBOARD
+): LeaderboardUser[] {
   const userMap = new Map<string, LeaderboardUser>();
 
   posts.forEach((post) => {
@@ -90,7 +91,11 @@ export function computeLeaderboard(posts: ForumPost[], limit = FORUM_LIMITS.LEAD
       existing.postCount += 1;
       existing.likesReceived += likes;
       existing.commentsCount += comments;
-      existing.score = calculateScore(existing.postCount, existing.likesReceived, existing.commentsCount);
+      existing.score = calculateScore(
+        existing.postCount,
+        existing.likesReceived,
+        existing.commentsCount
+      );
     } else {
       userMap.set(post.profile_id, {
         id: post.profiles.id,
@@ -127,16 +132,22 @@ export function getTrendingPosts(posts: ForumPost[], limit = FORUM_LIMITS.TRENDI
 /**
  * Get recent activity posts
  */
-export function getRecentActivityPosts(posts: ForumPost[], limit = FORUM_LIMITS.RECENT_ACTIVITY): ForumPost[] {
+export function getRecentActivityPosts(
+  posts: ForumPost[],
+  limit = FORUM_LIMITS.RECENT_ACTIVITY
+): ForumPost[] {
   return [...posts]
-    .sort((a, b) => new Date(b.forum_post_created_at).getTime() - new Date(a.forum_post_created_at).getTime())
+    .sort(
+      (a, b) =>
+        new Date(b.forum_post_created_at).getTime() - new Date(a.forum_post_created_at).getTime()
+    )
     .slice(0, limit);
 }
 
 /**
  * Calculate forum stats from posts (for derived stats only)
  */
-export function calculateStatsFromPosts(posts: ForumPost[]): Pick<ForumStats, 'activeUsers'> {
+export function calculateStatsFromPosts(posts: ForumPost[]): Pick<ForumStats, "activeUsers"> {
   const activeUsers = new Set(posts.map((p) => p.profile_id).filter(Boolean)).size;
   return { activeUsers };
 }
@@ -145,22 +156,22 @@ export function calculateStatsFromPosts(posts: ForumPost[]): Pick<ForumStats, 'a
  * Get forum stats from database (accurate totals)
  */
 export async function getForumStats(): Promise<ForumStats> {
-  cacheLife('forum');
-  cacheTag(CACHE_TAGS.FORUM);
-
   const supabase = createCachedClient();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const [postsResult, commentsResult, postsTodayResult, activeUsersResult] = await Promise.all([
-    supabase.from('forum').select('id', { count: 'exact', head: true }).eq('forum_published', true),
-    supabase.from('comments').select('id', { count: 'exact', head: true }).not('forum_id', 'is', null),
+    supabase.from("forum").select("id", { count: "exact", head: true }).eq("forum_published", true),
     supabase
-      .from('forum')
-      .select('id', { count: 'exact', head: true })
-      .eq('forum_published', true)
-      .gte('forum_post_created_at', today.toISOString()),
-    supabase.from('forum').select('profile_id').eq('forum_published', true),
+      .from("comments")
+      .select("id", { count: "exact", head: true })
+      .not("forum_id", "is", null),
+    supabase
+      .from("forum")
+      .select("id", { count: "exact", head: true })
+      .eq("forum_published", true)
+      .gte("forum_post_created_at", today.toISOString()),
+    supabase.from("forum").select("profile_id").eq("forum_published", true),
   ]);
 
   const uniqueUsers = new Set(activeUsersResult.data?.map((p) => p.profile_id).filter(Boolean));
@@ -180,51 +191,52 @@ export async function getForumStats(): Promise<ForumStats> {
 /**
  * Get forum posts with relations
  */
-export async function getForumPosts(options?: { categoryId?: number; sortBy?: SortOption; limit?: number }): Promise<ForumPost[]> {
-  cacheLife('forum');
-  cacheTag(CACHE_TAGS.FORUM);
-
+export async function getForumPosts(options?: {
+  categoryId?: number;
+  sortBy?: SortOption;
+  limit?: number;
+}): Promise<ForumPost[]> {
   const supabase = createCachedClient();
   const limit = options?.limit ?? FORUM_LIMITS.POSTS;
 
   let query = supabase
-    .from('forum')
+    .from("forum")
     .select(
       `*,
       profiles!forum_profile_id_profiles_fkey (id, nickname, first_name, second_name, avatar_url),
       forum_categories!forum_category_id_fkey (*),
       forum_post_tags (forum_tags (*))`
     )
-    .eq('forum_published', true);
+    .eq("forum_published", true);
 
   // Filter by category
   if (options?.categoryId) {
-    query = query.eq('category_id', options.categoryId);
+    query = query.eq("category_id", options.categoryId);
   }
 
   // Sorting
   switch (options?.sortBy) {
-    case 'hot':
-      query = query.order('hot_score', { ascending: false });
+    case "hot":
+      query = query.order("hot_score", { ascending: false });
       break;
-    case 'top':
-      query = query.order('forum_likes_counter', { ascending: false });
+    case "top":
+      query = query.order("forum_likes_counter", { ascending: false });
       break;
-    case 'unanswered':
-      query = query.eq('post_type', 'question').is('best_answer_id', null);
-      query = query.order('forum_post_created_at', { ascending: false });
+    case "unanswered":
+      query = query.eq("post_type", "question").is("best_answer_id", null);
+      query = query.order("forum_post_created_at", { ascending: false });
       break;
     default:
-      query = query.order('last_activity_at', { ascending: false, nullsFirst: false });
+      query = query.order("last_activity_at", { ascending: false, nullsFirst: false });
   }
 
   // Pinned posts first
-  query = query.order('is_pinned', { ascending: false }).limit(limit);
+  query = query.order("is_pinned", { ascending: false }).limit(limit);
 
   const { data, error } = await query;
 
   if (error) {
-    console.error('Failed to fetch forum posts:', error);
+    console.error("Failed to fetch forum posts:", error);
     throw new Error(`Failed to fetch forum posts: ${error.message}`);
   }
 
@@ -235,19 +247,16 @@ export async function getForumPosts(options?: { categoryId?: number; sortBy?: So
  * Get active forum categories
  */
 export async function getForumCategories(): Promise<ForumCategory[]> {
-  cacheLife('long');
-  cacheTag(CACHE_TAGS.FORUM);
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase
-    .from('forum_categories')
-    .select('*')
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true });
+    .from("forum_categories")
+    .select("*")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
 
   if (error) {
-    console.error('Failed to fetch forum categories:', error);
+    console.error("Failed to fetch forum categories:", error);
     throw new Error(`Failed to fetch forum categories: ${error.message}`);
   }
 
@@ -258,19 +267,16 @@ export async function getForumCategories(): Promise<ForumCategory[]> {
  * Get popular forum tags
  */
 export async function getForumTags(limit = FORUM_LIMITS.POPULAR_TAGS): Promise<ForumTag[]> {
-  cacheLife('long');
-  cacheTag(CACHE_TAGS.FORUM);
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase
-    .from('forum_tags')
-    .select('*')
-    .order('usage_count', { ascending: false })
+    .from("forum_tags")
+    .select("*")
+    .order("usage_count", { ascending: false })
     .limit(limit);
 
   if (error) {
-    console.error('Failed to fetch forum tags:', error);
+    console.error("Failed to fetch forum tags:", error);
     throw new Error(`Failed to fetch forum tags: ${error.message}`);
   }
 

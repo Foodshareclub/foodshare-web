@@ -3,9 +3,7 @@
  * Server-side data fetching for admin user management
  */
 
-import { cacheLife, cacheTag } from "next/cache";
-import { CACHE_TAGS } from "./cache-keys";
-import { createClient } from "@/lib/supabase/server";
+import {} from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "./admin-check";
 
@@ -192,9 +190,6 @@ export async function getAdminUserById(id: string): Promise<AdminUserProfile | n
  */
 export async function getUserStats(): Promise<UserStats> {
   await requireAdmin();
-
-  cacheLife("admin-stats");
-  cacheTag(CACHE_TAGS.ADMIN_STATS, CACHE_TAGS.ADMIN);
 
   const supabase = createAdminClient();
 

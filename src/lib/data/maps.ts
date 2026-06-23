@@ -1,3 +1,4 @@
+import { logCacheOperation } from "./cache-keys";
 /**
  * Maps Data Layer
  *
@@ -7,8 +8,6 @@
  * cookies() cannot be called inside cached functions.
  */
 
-import { cacheLife, cacheTag } from "next/cache";
-import { CACHE_TAGS, logCacheOperation } from "./cache-keys";
 import { createCachedClient } from "@/lib/supabase/server";
 import type { LocationType } from "@/types/product.types";
 import { approximateGeoJSON } from "@/utils/postgis";
@@ -41,9 +40,6 @@ function applyLocationPrivacy(locations: LocationType[]): LocationType[] {
  * Optimized query - only fetches fields needed for map markers
  */
 export async function getMapLocations(productType: string): Promise<LocationType[]> {
-  cacheLife('product-locations');
-  cacheTag(CACHE_TAGS.PRODUCT_LOCATIONS, CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(productType.toLowerCase()));
-
   const normalizedType = productType.toLowerCase();
   const cacheKey = `map-locations-${normalizedType}`;
 
@@ -67,9 +63,6 @@ export async function getMapLocations(productType: string): Promise<LocationType
  * Used for the "all" map view
  */
 export async function getAllMapLocations(): Promise<LocationType[]> {
-  cacheLife('product-locations');
-  cacheTag(CACHE_TAGS.PRODUCT_LOCATIONS);
-
   logCacheOperation("miss", "all-map-locations");
   const supabase = createCachedClient();
 
@@ -98,9 +91,6 @@ export async function getNearbyLocations(
   productType?: string,
   limit: number = 500
 ): Promise<LocationType[]> {
-  cacheLife('short');
-  cacheTag(CACHE_TAGS.PRODUCT_LOCATIONS);
-
   // Round bounds to reduce cache fragmentation (precision: ~10m)
   const precision = 4;
   const roundedBounds = {
@@ -186,9 +176,6 @@ async function getNearbyLocationsFallback(
  * Get location counts by type for map statistics
  */
 export async function getLocationCountsByType(): Promise<Record<string, number>> {
-  cacheLife('short');
-  cacheTag(CACHE_TAGS.PRODUCT_LOCATIONS);
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase

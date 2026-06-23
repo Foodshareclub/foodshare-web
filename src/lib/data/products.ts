@@ -7,8 +7,6 @@
  * cookies() cannot be called inside cached functions.
  */
 
-import { cacheLife, cacheTag } from "next/cache";
-import { CACHE_TAGS } from "./cache-keys";
 import { createCachedClient } from "@/lib/supabase/server";
 import { PAGINATION } from "@/lib/constants";
 import type { InitialProductStateType, LocationType } from "@/types/product.types";
@@ -75,9 +73,6 @@ async function getProductsFirstPageCached(
   normalizedType: string,
   limit: number
 ): Promise<InitialProductStateType[]> {
-  cacheLife('products');
-  cacheTag(CACHE_TAGS.PRODUCTS, CACHE_TAGS.PRODUCTS_BY_TYPE(normalizedType));
-
   const supabase = createCachedClient();
 
   // Order by id DESC for stable cursor pagination
@@ -182,9 +177,6 @@ export async function getProductsPaginated(
  * Get all active products with caching
  */
 export async function getAllProducts(): Promise<InitialProductStateType[]> {
-  cacheLife('products');
-  cacheTag(CACHE_TAGS.PRODUCTS);
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase
@@ -203,9 +195,6 @@ export async function getAllProducts(): Promise<InitialProductStateType[]> {
  * Only returns active products
  */
 export async function getProductById(productId: number): Promise<InitialProductStateType | null> {
-  cacheLife('product-detail');
-  cacheTag(CACHE_TAGS.PRODUCTS, CACHE_TAGS.PRODUCT(productId));
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase
@@ -228,9 +217,6 @@ export async function getProductById(productId: number): Promise<InitialProductS
  * Get product locations for map with caching
  */
 export async function getProductLocations(productType: string): Promise<LocationType[]> {
-  cacheLife('product-locations');
-  cacheTag(CACHE_TAGS.PRODUCT_LOCATIONS, CACHE_TAGS.PRODUCT_LOCATIONS_BY_TYPE(productType.toLowerCase()));
-
   const normalizedType = productType.toLowerCase();
   const supabase = createCachedClient();
 
@@ -249,9 +235,6 @@ export async function getProductLocations(productType: string): Promise<Location
  * Get all product locations for map (all types)
  */
 export async function getAllProductLocations(): Promise<LocationType[]> {
-  cacheLife('product-locations');
-  cacheTag(CACHE_TAGS.PRODUCT_LOCATIONS);
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase
@@ -270,9 +253,6 @@ export async function getAllProductLocations(): Promise<LocationType[]> {
  * For users with many listings, consider implementing pagination.
  */
 export async function getUserProducts(userId: string): Promise<InitialProductStateType[]> {
-  cacheLife('products');
-  cacheTag(CACHE_TAGS.PRODUCTS, CACHE_TAGS.USER_PRODUCTS(userId));
-
   const supabase = createCachedClient();
 
   // Fetch up to 10000 listings (Supabase default is 1000)
@@ -291,10 +271,10 @@ export async function getUserProducts(userId: string): Promise<InitialProductSta
 /**
  * Search products with caching (shorter cache due to dynamic nature)
  */
-export async function searchProducts(searchWord: string, productSearchType?: string): Promise<InitialProductStateType[]> {
-  cacheLife('short');
-  cacheTag(CACHE_TAGS.PRODUCT_SEARCH, CACHE_TAGS.PRODUCTS);
-
+export async function searchProducts(
+  searchWord: string,
+  productSearchType?: string
+): Promise<InitialProductStateType[]> {
   const supabase = createCachedClient();
 
   let query = supabase
@@ -321,9 +301,6 @@ export async function searchProducts(searchWord: string, productSearchType?: str
  * Returns most recently created active products
  */
 export async function getPopularProductIds(limit: number = 50): Promise<number[]> {
-  cacheLife('long');
-  cacheTag(CACHE_TAGS.PRODUCTS);
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase

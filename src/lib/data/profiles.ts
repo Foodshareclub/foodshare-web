@@ -6,8 +6,6 @@ import "server-only";
  * Cached data fetching functions for user profiles.
  */
 
-import { cacheLife, cacheTag } from "next/cache";
-import { CACHE_TAGS } from "./cache-keys";
 import { createClient, createCachedClient } from "@/lib/supabase/server";
 import { serverActionError } from "@/lib/errors";
 import type { ServerActionResult } from "@/lib/errors";
@@ -86,9 +84,6 @@ export interface UserAddress {
  * Get profile by user ID with caching
  */
 export async function getProfile(userId: string): Promise<Profile | null> {
-  cacheLife('profiles');
-  cacheTag(CACHE_TAGS.PROFILES, CACHE_TAGS.PROFILE(userId));
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).single();
@@ -105,16 +100,11 @@ export async function getProfile(userId: string): Promise<Profile | null> {
  * Get public profile for viewing with caching
  */
 export async function getPublicProfile(userId: string): Promise<PublicProfile | null> {
-  cacheLife('profiles');
-  cacheTag(CACHE_TAGS.PROFILES, CACHE_TAGS.PROFILE(userId));
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase
     .from("profiles")
-    .select(
-      "id, first_name, second_name, nickname, avatar_url, about_me, location, created_time"
-    )
+    .select("id, first_name, second_name, nickname, avatar_url, about_me, location, created_time")
     .eq("id", userId)
     .single();
 
@@ -130,17 +120,11 @@ export async function getPublicProfile(userId: string): Promise<PublicProfile | 
  * Get user statistics with caching
  */
 export async function getUserStats(userId: string): Promise<ProfileStats> {
-  cacheLife('profile-stats');
-  cacheTag(CACHE_TAGS.PROFILES, CACHE_TAGS.PROFILE_STATS(userId));
-
   const supabase = createCachedClient();
 
   const [{ count: totalProducts }, { count: activeProducts }, { data: reviews }] =
     await Promise.all([
-      supabase
-        .from("posts")
-        .select("*", { count: "exact", head: true })
-        .eq("profile_id", userId),
+      supabase.from("posts").select("*", { count: "exact", head: true }).eq("profile_id", userId),
       supabase
         .from("posts")
         .select("*", { count: "exact", head: true })
@@ -168,9 +152,6 @@ export async function getUserStats(userId: string): Promise<ProfileStats> {
  * Uses user_roles table to find users with volunteer role
  */
 export async function getVolunteers(): Promise<Profile[]> {
-  cacheLife('long');
-  cacheTag(CACHE_TAGS.VOLUNTEERS, CACHE_TAGS.PROFILES);
-
   const supabase = createCachedClient();
 
   // Single JOIN query: profiles with volunteer role
@@ -223,9 +204,6 @@ export async function getUserRoles(userId: string): Promise<string[]> {
  * Get profile reviews with caching
  */
 export async function getProfileReviews(userId: string): Promise<ProfileReview[]> {
-  cacheLife('profiles');
-  cacheTag(CACHE_TAGS.PROFILES, CACHE_TAGS.PROFILE_REVIEWS(userId));
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase

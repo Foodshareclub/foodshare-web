@@ -3,8 +3,6 @@
  * Queue management, campaign tracking, automation flows, audience segmentation
  */
 
-import { cacheLife, cacheTag } from "next/cache";
-import { CACHE_TAGS } from "../cache-keys";
 import { createCachedClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -135,9 +133,6 @@ export async function getQueuedEmails(params: { status?: string }) {
 // ============================================================================
 
 export async function getRecentCampaigns(limit = 10): Promise<RecentCampaign[]> {
-  cacheLife('short');
-  cacheTag(CACHE_TAGS.CAMPAIGNS);
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase
@@ -178,9 +173,6 @@ export async function getRecentCampaigns(limit = 10): Promise<RecentCampaign[]> 
 // ============================================================================
 
 export async function getActiveAutomations(): Promise<ActiveAutomation[]> {
-  cacheLife('short');
-  cacheTag(CACHE_TAGS.AUTOMATIONS);
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase
@@ -217,9 +209,6 @@ export async function getActiveAutomations(): Promise<ActiveAutomation[]> {
 // ============================================================================
 
 export async function getAudienceSegments(): Promise<AudienceSegment[]> {
-  cacheLife('short');
-  cacheTag(CACHE_TAGS.SEGMENTS);
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase.from("audience_segments").select("*").order("name");

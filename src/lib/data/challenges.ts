@@ -5,8 +5,6 @@
  * Fetches from the `challenges` table (not posts).
  */
 
-import { cacheLife, cacheTag } from "next/cache";
-import { CACHE_TAGS } from "./cache-keys";
 import { createCachedClient } from "@/lib/supabase/server";
 import type { InitialProductStateType } from "@/types/product.types";
 
@@ -100,9 +98,6 @@ export interface ChallengeStats {
  * Get challenge community stats with caching
  */
 export async function getChallengeStats(): Promise<ChallengeStats> {
-  cacheLife('challenges');
-  cacheTag(CACHE_TAGS.CHALLENGES);
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase
@@ -134,9 +129,6 @@ export async function getChallengeStats(): Promise<ChallengeStats> {
  * Returns data transformed to InitialProductStateType for component compatibility
  */
 export async function getChallenges(): Promise<InitialProductStateType[]> {
-  cacheLife('challenges');
-  cacheTag(CACHE_TAGS.CHALLENGES);
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase
@@ -156,9 +148,6 @@ export async function getChallenges(): Promise<InitialProductStateType[]> {
 export async function getChallengesPaginated(
   params: ChallengesPaginationParams = {}
 ): Promise<PaginatedChallengesResponse> {
-  cacheLife('challenges');
-  cacheTag(CACHE_TAGS.CHALLENGES);
-
   const { page = 1, limit = 12, difficulty } = params;
   const offset = (page - 1) * limit;
 
@@ -201,9 +190,6 @@ export async function getChallengesPaginated(
  * Get single challenge by ID with caching
  */
 export async function getChallengeById(challengeId: number): Promise<Challenge | null> {
-  cacheLife('challenges');
-  cacheTag(CACHE_TAGS.CHALLENGES, CACHE_TAGS.CHALLENGE(challengeId));
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase
@@ -223,9 +209,6 @@ export async function getChallengeById(challengeId: number): Promise<Challenge |
  * Get challenges by difficulty
  */
 export async function getChallengesByDifficulty(difficulty: string): Promise<Challenge[]> {
-  cacheLife('challenges');
-  cacheTag(CACHE_TAGS.CHALLENGES);
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase
@@ -243,9 +226,6 @@ export async function getChallengesByDifficulty(difficulty: string): Promise<Cha
  * Get challenges by user ID
  */
 export async function getUserChallenges(userId: string): Promise<Challenge[]> {
-  cacheLife('challenges');
-  cacheTag(CACHE_TAGS.CHALLENGES, CACHE_TAGS.USER_CHALLENGES(userId));
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase
@@ -262,9 +242,6 @@ export async function getUserChallenges(userId: string): Promise<Challenge[]> {
  * Get popular challenges (by views or likes)
  */
 export async function getPopularChallenges(limit: number = 10): Promise<Challenge[]> {
-  cacheLife('challenges');
-  cacheTag(CACHE_TAGS.CHALLENGES);
-
   const supabase = createCachedClient();
 
   const { data, error } = await supabase

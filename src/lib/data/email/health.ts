@@ -3,8 +3,6 @@
  * Bounce stats, provider health, circuit breakers, templates
  */
 
-import { cacheLife, cacheTag } from "next/cache";
-import { CACHE_TAGS } from "../cache-keys";
 import { createCachedClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -64,9 +62,6 @@ export interface EmailTemplate {
 // ============================================================================
 
 export async function getBounceStats(): Promise<BounceStats> {
-  cacheLife('short');
-  cacheTag(CACHE_TAGS.EMAIL_STATS);
-
   const supabase = createCachedClient();
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
