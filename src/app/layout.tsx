@@ -32,10 +32,10 @@ export const metadata: Metadata = defaultMetadata;
 
 export default async function RootLayout({
   children,
-  _modal,
+  modal,
 }: Readonly<{
   children: React.ReactNode;
-  _modal?: React.ReactNode;
+  modal?: React.ReactNode;
 }>) {
   // Read locale from cookie to prevent hydration mismatch
   const cookieStore = await cookies();
@@ -115,6 +115,7 @@ export default async function RootLayout({
           <main id="main-content" className="min-h-screen">
             {children}
           </main>
+          {modal}
           <Footer />
           <DevTools />
         </Providers>
