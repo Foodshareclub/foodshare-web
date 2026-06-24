@@ -23,8 +23,8 @@ export default function NavigateButtons({
   useWindowEvent("scroll", () => {
     setScrollTop(window.scrollY);
   });
-  const _pathname = usePathname();
-  const pathType = location.pathname.split("/")[1];
+  const pathname = usePathname();
+  const pathType = pathname ? pathname.split("/")[1] : "food";
   // Default to "food" when on home page or no type specified
   const type = pathType || "food";
   const navigationValue = `/map/${type}`;
