@@ -78,12 +78,21 @@ export function HomeClient({
   const [isFetchingMore, setIsFetchingMore] = useState(false);
 
   // Track location for paginated nearby fetching
-  const locationRef = useRef<{ lat: number; lng: number; radius: number } | null>(null);
+  const locationRef = useRef<{ lat: number; lng: number; radius: number } | null>(
+    isLocationFiltered && searchParams.has("lat") && searchParams.has("lng")
+      ? {
+          lat: parseFloat(searchParams.get("lat") as string),
+          lng: parseFloat(searchParams.get("lng") as string),
+          radius: searchParams.has("radius")
+            ? parseInt(searchParams.get("radius") as string, 10)
+            : radiusMeters,
+        }
+      : null
+  );
 
   // Use server-rendered nearby posts if available, otherwise use client-fetched ones
   const effectiveNearbyPosts = isLocationFiltered ? nearbyPosts : clientNearbyPosts;
   const effectiveIsLocationFiltered = isLocationFiltered || isClientLocationFiltered;
-  const effectiveRadius = isLocationFiltered ? radiusMeters : clientRadius;
 
   const baseProducts =
     effectiveIsLocationFiltered && effectiveNearbyPosts
@@ -115,20 +124,7 @@ export function HomeClient({
     []
   );
 
-  // Helper to determine the next radius tier for progressive expansion
-  const getNextRadius = (currentRadius: number) => {
-    if (currentRadius < 15000) return 15000;
-    if (currentRadius < 30000) return 30000;
-    if (currentRadius < 50000) return 50000;
-    return null; // Stop expanding at 50km
-  };
-
-  const canExpandRadius = Boolean(
-    effectiveIsLocationFiltered &&
-    locationRef.current &&
-    getNextRadius(locationRef.current.radius) !== null
-  );
-  const effectiveHasMore = hasMore || canExpandRadius;
+  const effectiveHasMore = hasMore;
 
   // Load more products (infinite scroll)
   const handleLoadMore = useCallback(async () => {
@@ -175,71 +171,8 @@ export function HomeClient({
       } finally {
         setIsFetchingMore(false);
       }
-      return;
     }
-
-    // Radius expansion case
-    if (!hasMore && canExpandRadius && locationRef.current) {
-      setIsFetchingMore(true);
-      try {
-        const { lat, lng, radius } = locationRef.current;
-        const nextRadius = getNextRadius(radius);
-
-        if (nextRadius !== null) {
-          // Fetch from the beginning of the new radius
-          const result = await fetchNearbyListings({
-            lat,
-            lng,
-            radius: nextRadius,
-            postType: productType,
-            cursor: baseProducts.length + extraProducts.length,
-          });
-          if (result.success) {
-            // Update current location ref to the new radius
-            locationRef.current.radius = nextRadius;
-            setClientRadius(nextRadius);
-
-            setExtraProducts((prev) => {
-              const existingIds = new Set([...baseProducts, ...prev].map((p) => p.id));
-              const newProducts = (result.data as unknown as InitialProductStateType[]).filter(
-                (p) => !existingIds.has(p.id)
-              );
-              return [...prev, ...newProducts];
-            });
-            setHasMore(result.hasMore);
-            setNextCursor(result.nextCursor);
-          }
-        }
-      } finally {
-        setIsFetchingMore(false);
-      }
-    }
-  }, [
-    isFetchingMore,
-    hasMore,
-    nextCursor,
-    effectiveIsLocationFiltered,
-    productType,
-    canExpandRadius,
-    baseProducts,
-    extraProducts.length,
-  ]);
-
-  // Store location ref for server-rendered nearby case
-  useEffect(() => {
-    if (isLocationFiltered) {
-      const lat = searchParams.get("lat");
-      const lng = searchParams.get("lng");
-      const radius = searchParams.get("radius");
-      if (lat && lng) {
-        locationRef.current = {
-          lat: parseFloat(lat),
-          lng: parseFloat(lng),
-          radius: radius ? parseInt(radius, 10) : radiusMeters,
-        };
-      }
-    }
-  }, [isLocationFiltered, searchParams, radiusMeters]);
+  }, [isFetchingMore, hasMore, nextCursor, effectiveIsLocationFiltered, productType, baseProducts]);
 
   // Auto-detect location on mount
   useEffect(() => {
@@ -318,8 +251,8 @@ export function HomeClient({
         effectiveNearbyPosts.length === 0 &&
         !isFetchingNearby && (
           <div className="text-center py-8 text-muted-foreground">
-            Nothing shared within {formatDistance(effectiveRadius, locale)} yet — be the first to
-            post in your area!
+            Nothing shared within {formatDistance(clientRadius, locale)} yet — be the first to post
+            in your area!
           </div>
         )}
     </>

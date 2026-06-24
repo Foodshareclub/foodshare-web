@@ -38,7 +38,7 @@ export interface NearbyListingsResult {
 export async function fetchNearbyListings({
   lat,
   lng,
-  radius = 5000,
+  radius: _radius = 5000,
   postType = "food",
   limit = 20,
   cursor = null,
@@ -54,14 +54,22 @@ export async function fetchNearbyListings({
     lng < -180 ||
     lng > 180
   ) {
-    return { success: false, data: [], hasMore: false, nextCursor: null, error: "Invalid coordinates" };
+    return {
+      success: false,
+      data: [],
+      hasMore: false,
+      nextCursor: null,
+      error: "Invalid coordinates",
+    };
   }
 
   try {
+    // We use a fixed maximum radius of 50km (50000m) for the underlying DB query to naturally
+    // support distance-based infinite scroll auto-expansion without needing multiple requests.
     const result = await getNearbyPosts({
       lat,
       lng,
-      radiusMeters: Math.max(100, Math.min(100000, radius)),
+      radiusMeters: 50000,
       postType,
       limit,
       cursor,
