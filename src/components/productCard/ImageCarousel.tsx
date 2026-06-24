@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { gpu120Image, gpu120Interactive } from "@/utils/gpuStyles";
-import { isValidImageUrl } from "@/lib/image";
+import { isValidImageUrl, normalizeImageUrl } from "@/lib/image";
 
 type ImageCarouselProps = {
   images: string[];
@@ -27,18 +27,18 @@ export function ImageCarousel({
   const [isHovered, setIsHovered] = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
 
-  // Validate images
-  const validImages = images.filter(isValidImageUrl);
+  // Validate and normalize images
+  const validImages = images.filter(isValidImageUrl).map((img) => normalizeImageUrl(img) as string);
   // Fallback for missing images
   if (validImages.length === 0) {
     return (
-      <div className="relative w-full h-full overflow-hidden bg-muted flex items-center justify-center aspect-square">
+      <div className="relative w-full h-full overflow-hidden bg-muted aspect-square">
         <Link
           href={productUrl}
-          className="w-full h-full block relative cursor-pointer flex items-center justify-center bg-gradient-to-br from-muted to-muted/80"
+          className="w-full h-full relative cursor-pointer flex items-center justify-center bg-gradient-to-br from-muted to-muted/80"
           prefetch={true}
         >
-          <span className="text-5xl">📦</span>
+          <span className="text-5xl drop-shadow-sm">📦</span>
         </Link>
       </div>
     );
@@ -94,8 +94,8 @@ export function ImageCarousel({
               onDragStart={(e) => e.preventDefault()}
             >
               {imageErrors[i] ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-muted to-muted/80">
-                  <span className="text-5xl">📦</span>
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-muted to-muted/80 z-10">
+                  <span className="text-5xl drop-shadow-sm">📦</span>
                 </div>
               ) : (
                 <Image

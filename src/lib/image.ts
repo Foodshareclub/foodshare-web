@@ -23,11 +23,20 @@ export function isValidImageUrl(url: string | undefined): boolean {
   if (url.startsWith("/")) return true; // Local images are always valid
 
   try {
-    const urlObj = new URL(url);
+    // Auto-prepend https:// if it looks like a domain without a protocol
+    const urlToTest = url.includes("://") ? url : `https://${url}`;
+    const urlObj = new URL(urlToTest);
     return urlObj.protocol === "http:" || urlObj.protocol === "https:";
   } catch {
     return false;
   }
+}
+
+export function normalizeImageUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith("/")) return url;
+  if (!url.includes("://")) return `https://${url}`;
+  return url;
 }
 
 /**
