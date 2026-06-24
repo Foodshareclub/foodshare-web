@@ -9,7 +9,7 @@ function SkeletonCard({ isLoaded }: PropsSkeletonType) {
   return (
     <div className="contents">
       {!isLoaded ? (
-        <div className="relative col-span-1 row-span-2 grid grid-rows-subgrid gap-0 h-full">
+        <div className="relative col-span-1 row-span-2 grid grid-rows-subgrid gap-0 h-full min-w-0">
           <div className="relative rounded-xl overflow-hidden bg-muted">
             <div style={{ aspectRatio: "20/19" }} className="bg-muted animate-pulse" />
           </div>
@@ -21,7 +21,7 @@ function SkeletonCard({ isLoaded }: PropsSkeletonType) {
           </div>
         </div>
       ) : (
-        <div className="relative col-span-1 row-span-2 grid grid-rows-subgrid gap-0 h-full">
+        <div className="relative col-span-1 row-span-2 grid grid-rows-subgrid gap-0 h-full min-w-0">
           <div className="relative rounded-xl overflow-hidden bg-muted">
             <div
               style={{ aspectRatio: "20/19" }}

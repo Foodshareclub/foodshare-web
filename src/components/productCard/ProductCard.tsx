@@ -23,7 +23,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave, onClick }: Pr
   const productUrl = getProductDetailUrl(product.post_type, product.id);
 
   const cardContent = (
-    <div className="group animate-on-scroll relative col-span-1 row-span-2 grid grid-rows-subgrid gap-0 h-full cursor-pointer">
+    <div className="group animate-on-scroll relative col-span-1 row-span-2 grid grid-rows-subgrid gap-0 h-full cursor-pointer min-w-0">
       {/* Image section - Airbnb uses near-square 20:19 ratio with rounded corners */}
       <div className="relative rounded-xl overflow-hidden bg-muted">
         {/* Client-side action buttons (auth-dependent) */}
@@ -39,7 +39,7 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave, onClick }: Pr
       </div>
 
       {/* Content section - Modern Airbnb-style tight typography (no container padding) */}
-      <div className="mt-3 flex flex-col gap-[2px]">
+      <div className="mt-3 flex flex-col gap-[2px] min-w-0">
         <div className="flex justify-between items-start gap-2">
           <h3 className="text-[15px] font-medium text-[#222222] dark:text-[#E8E8E8] leading-[19px] line-clamp-1">
             {product.post_name}
