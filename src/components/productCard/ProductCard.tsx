@@ -39,21 +39,23 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave, onClick }: Pr
       </div>
 
       {/* Content section - Modern Airbnb-style tight typography (no container padding) */}
-      <div className="mt-3 flex flex-col gap-0.5">
-        <h3 className="text-[15px] font-semibold text-foreground leading-tight line-clamp-1">
-          {product.post_name}
-        </h3>
-        <p className="text-[15px] text-muted-foreground leading-tight line-clamp-1">
+      <div className="mt-3 flex flex-col gap-[2px]">
+        <div className="flex justify-between items-start gap-2">
+          <h3 className="text-[15px] font-medium text-[#222222] dark:text-[#E8E8E8] leading-[19px] line-clamp-1">
+            {product.post_name}
+          </h3>
+        </div>
+        <p className="text-[15px] text-[#717171] dark:text-[#A0A0A0] leading-[19px] line-clamp-1">
           {product.post_stripped_address}
         </p>
-        <p className="text-[15px] text-muted-foreground leading-tight line-clamp-1">
-          Available: <span className="text-foreground">{product.available_hours}</span>
+        <p className="text-[15px] text-[#717171] dark:text-[#A0A0A0] leading-[19px] line-clamp-1">
+          {product.available_hours}
         </p>
         <div className="flex gap-1.5 items-center mt-1">
-          <div className="relative w-4 h-4 opacity-70">
-            <Image src={bus} alt="bus" fill sizes="16px" className="object-contain" />
+          <div className="relative w-[15px] h-[15px] opacity-70">
+            <Image src={bus} alt="bus" fill sizes="15px" className="object-contain dark:invert" />
           </div>
-          <p className="text-[15px] font-semibold text-foreground leading-tight line-clamp-1">
+          <p className="text-[15px] font-medium text-[#222222] dark:text-[#E8E8E8] leading-[19px] line-clamp-1">
             {product.transportation}
           </p>
         </div>

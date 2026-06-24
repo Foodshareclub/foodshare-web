@@ -97,7 +97,7 @@ export function ImageCarousel({
               onDragStart={(e) => e.preventDefault()}
             >
               <Image
-                className="object-cover transition-transform duration-300 group-hover/carousel:scale-105"
+                className="object-cover"
                 style={
                   i === 0
                     ? { ...gpu120Image, viewTransitionName: `product-hero-${productId}` }
