@@ -192,7 +192,7 @@ export function HomeClient({
             lng,
             radius: nextRadius,
             postType: productType,
-            cursor: null,
+            cursor: baseProducts.length + extraProducts.length,
           });
           if (result.success) {
             // Update current location ref to the new radius
@@ -222,6 +222,7 @@ export function HomeClient({
     productType,
     canExpandRadius,
     baseProducts,
+    extraProducts.length,
   ]);
 
   // Store location ref for server-rendered nearby case

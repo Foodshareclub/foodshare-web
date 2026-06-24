@@ -620,7 +620,7 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
               </div>
             </div>
           ) : (
-            <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 auto-rows-[auto_1fr] gap-x-6 gap-y-10">
               {filteredListings.map((listing) => (
                 <div
                   key={listing.id}

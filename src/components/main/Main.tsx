@@ -81,7 +81,7 @@ export const Main: React.FC<MainProps> = ({
         }}
       >
         <div
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-10 page-px py-7"
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 [@media(min-width:1880px)]:grid-cols-7 auto-rows-[auto_1fr] gap-x-6 gap-y-10 page-px py-7"
           style={{
             transform: "translateZ(0)",
             willChange: "contents",
