@@ -57,6 +57,7 @@ import {
   SmartTips,
 } from "./publish-listing/components";
 import { useImageUpload, useListingForm, useUndoRedo } from "./publish-listing/hooks";
+import DeleteCardModal from "@/components/modals/DeleteCardModal";
 import { RequiredStar } from "@/components";
 import { useAuth } from "@/hooks/useAuth";
 import { createProduct, updateProduct } from "@/app/actions/products";
@@ -153,6 +154,7 @@ function PublishListingModal({
   const [showTemplates, setShowTemplates] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   // Fetch user's saved address when modal opens (for pre-filling)
   useEffect(() => {
@@ -1265,6 +1267,18 @@ function PublishListingModal({
             <Terminal className="h-3 w-3" />
             <span>⌘ + Enter</span>
           </div>
+          {product && (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => setIsDeleteOpen(true)}
+              className="w-full sm:w-auto"
+              disabled={isLoading}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Listing
+            </Button>
+          )}
           <Button
             type="button"
             variant="outline"
@@ -1302,6 +1316,14 @@ function PublishListingModal({
             images={imageUpload.images}
             initialIndex={lightboxIndex}
             onClose={() => setLightboxIndex(null)}
+          />
+        )}
+
+        {isDeleteOpen && product && (
+          <DeleteCardModal
+            product={product}
+            onClose={() => setIsDeleteOpen(false)}
+            isOpen={isDeleteOpen}
           />
         )}
       </DialogContent>

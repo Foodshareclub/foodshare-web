@@ -9,9 +9,8 @@ import { useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { Flag, Heart } from "lucide-react";
-import { DeleteIcon, EditIcon } from "@/utils/icons";
+import { EditIcon } from "@/utils/icons";
 import { useAuth } from "@/hooks/useAuth";
-import DeleteCardModal from "@/components/modals/DeleteCardModal";
 import { ReportPostDialog } from "@/components/reports";
 import { togglePostLike } from "@/app/actions/post-engagement";
 import { cn } from "@/lib/utils";
@@ -32,7 +31,6 @@ export function ProductCardActions({ product }: ProductCardActionsProps) {
   const { user, isAdmin } = useAuth();
   const userId = user?.id;
 
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isLiked, setIsLiked] = useState(false); // Default false unless we fetch batch status
   const [isPending, startTransition] = useTransition();
@@ -123,25 +121,6 @@ export function ProductCardActions({ product }: ProductCardActionsProps) {
               isOpen={isEditOpen}
               onClose={() => setIsEditOpen(false)}
               setOpenEdit={setIsEditOpen}
-            />
-          )}
-          <button
-            className="airbnb-action-btn airbnb-action-btn-hover"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsDeleteOpen(true);
-            }}
-            aria-label="delete"
-            style={gpu120Interactive}
-          >
-            <DeleteIcon />
-          </button>
-          {isDeleteOpen && (
-            <DeleteCardModal
-              product={product}
-              onClose={() => setIsDeleteOpen(false)}
-              isOpen={isDeleteOpen}
             />
           )}
         </>
