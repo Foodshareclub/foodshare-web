@@ -105,14 +105,11 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "api.foodshare.club",
-        pathname: "/storage/v1/object/public/**",
+        hostname: "**",
       },
       {
-        // Legacy Firebase Storage images (for data migration period)
-        protocol: "https",
-        hostname: "firebasestorage.googleapis.com",
-        pathname: "/v0/b/**",
+        protocol: "http",
+        hostname: "**",
       },
     ],
     formats: ["image/avif", "image/webp"],

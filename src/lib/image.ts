@@ -24,10 +24,7 @@ export function isValidImageUrl(url: string | undefined): boolean {
 
   try {
     const urlObj = new URL(url);
-    // Check if hostname matches any configured host (including subdomains)
-    return CONFIGURED_IMAGE_HOSTS.some(
-      (host) => urlObj.hostname === host || urlObj.hostname.endsWith("." + host)
-    );
+    return urlObj.protocol === "http:" || urlObj.protocol === "https:";
   } catch {
     return false;
   }
