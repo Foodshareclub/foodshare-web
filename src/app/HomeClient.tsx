@@ -115,34 +115,114 @@ export function HomeClient({
     []
   );
 
+  // Helper to determine the next radius tier for progressive expansion
+  const getNextRadius = (currentRadius: number) => {
+    if (currentRadius < 15000) return 15000;
+    if (currentRadius < 30000) return 30000;
+    if (currentRadius < 50000) return 50000;
+    return null; // Stop expanding at 50km
+  };
+
+  const canExpandRadius = Boolean(
+    effectiveIsLocationFiltered &&
+    locationRef.current &&
+    getNextRadius(locationRef.current.radius) !== null
+  );
+  const effectiveHasMore = hasMore || canExpandRadius;
+
   // Load more products (infinite scroll)
   const handleLoadMore = useCallback(async () => {
-    if (isFetchingMore || !hasMore || nextCursor === null) return;
+    if (isFetchingMore) return;
 
-    setIsFetchingMore(true);
-    try {
-      if (effectiveIsLocationFiltered && locationRef.current) {
-        // Location mode: fetch more nearby posts
-        const { lat, lng, radius } = locationRef.current;
-        const result = await fetchNearbyListings({ lat, lng, radius, postType: productType, cursor: nextCursor });
-        if (result.success) {
-          setExtraProducts((prev) => [...prev, ...(result.data as unknown as InitialProductStateType[])]);
-          setHasMore(result.hasMore);
-          setNextCursor(result.nextCursor);
+    // Normal pagination case
+    if (hasMore && nextCursor !== null) {
+      setIsFetchingMore(true);
+      try {
+        if (effectiveIsLocationFiltered && locationRef.current) {
+          // Location mode: fetch more nearby posts
+          const { lat, lng, radius } = locationRef.current;
+          const result = await fetchNearbyListings({
+            lat,
+            lng,
+            radius,
+            postType: productType,
+            cursor: nextCursor,
+          });
+          if (result.success) {
+            setExtraProducts((prev) => {
+              const existingIds = new Set([...baseProducts, ...prev].map((p) => p.id));
+              const newProducts = (result.data as unknown as InitialProductStateType[]).filter(
+                (p) => !existingIds.has(p.id)
+              );
+              return [...prev, ...newProducts];
+            });
+            setHasMore(result.hasMore);
+            setNextCursor(result.nextCursor);
+          }
+        } else {
+          // Non-location mode: fetch more products
+          const result = await fetchProductsPaginated(productType, nextCursor);
+          if (result.success) {
+            setExtraProducts((prev) => {
+              const existingIds = new Set([...baseProducts, ...prev].map((p) => p.id));
+              const newProducts = result.data.filter((p) => !existingIds.has(p.id));
+              return [...prev, ...newProducts];
+            });
+            setHasMore(result.hasMore);
+            setNextCursor(result.nextCursor);
+          }
         }
-      } else {
-        // Non-location mode: fetch more products
-        const result = await fetchProductsPaginated(productType, nextCursor);
-        if (result.success) {
-          setExtraProducts((prev) => [...prev, ...result.data]);
-          setHasMore(result.hasMore);
-          setNextCursor(result.nextCursor);
-        }
+      } finally {
+        setIsFetchingMore(false);
       }
-    } finally {
-      setIsFetchingMore(false);
+      return;
     }
-  }, [isFetchingMore, hasMore, nextCursor, effectiveIsLocationFiltered, productType]);
+
+    // Radius expansion case
+    if (!hasMore && canExpandRadius && locationRef.current) {
+      setIsFetchingMore(true);
+      try {
+        const { lat, lng, radius } = locationRef.current;
+        const nextRadius = getNextRadius(radius);
+
+        if (nextRadius !== null) {
+          // Fetch from the beginning of the new radius
+          const result = await fetchNearbyListings({
+            lat,
+            lng,
+            radius: nextRadius,
+            postType: productType,
+            cursor: null,
+          });
+          if (result.success) {
+            // Update current location ref to the new radius
+            locationRef.current.radius = nextRadius;
+            setClientRadius(nextRadius);
+
+            setExtraProducts((prev) => {
+              const existingIds = new Set([...baseProducts, ...prev].map((p) => p.id));
+              const newProducts = (result.data as unknown as InitialProductStateType[]).filter(
+                (p) => !existingIds.has(p.id)
+              );
+              return [...prev, ...newProducts];
+            });
+            setHasMore(result.hasMore);
+            setNextCursor(result.nextCursor);
+          }
+        }
+      } finally {
+        setIsFetchingMore(false);
+      }
+    }
+  }, [
+    isFetchingMore,
+    hasMore,
+    nextCursor,
+    effectiveIsLocationFiltered,
+    productType,
+    canExpandRadius,
+    baseProducts,
+  ]);
 
   // Store location ref for server-rendered nearby case
   useEffect(() => {
@@ -158,7 +238,7 @@ export function HomeClient({
         };
       }
     }
-  }, [isLocationFiltered, searchParams]);
+  }, [isLocationFiltered, searchParams, radiusMeters]);
 
   // Auto-detect location on mount
   useEffect(() => {
@@ -212,7 +292,15 @@ export function HomeClient({
         }
       );
     }
-  }, [searchParams, userLocation, setUserLocation, geoDistance, fetchNearby]);
+  }, [
+    searchParams,
+    userLocation,
+    setUserLocation,
+    geoDistance,
+    fetchNearby,
+    productType,
+    radiusMeters,
+  ]);
 
   return (
     <>
@@ -222,14 +310,17 @@ export function HomeClient({
         isLoading={isFetchingNearby}
         onLoadMore={handleLoadMore}
         isFetchingMore={isFetchingMore}
-        hasMore={hasMore}
+        hasMore={effectiveHasMore}
       />
-      {effectiveIsLocationFiltered && effectiveNearbyPosts && effectiveNearbyPosts.length === 0 && !isFetchingNearby && (
-        <div className="text-center py-8 text-muted-foreground">
-          Nothing shared within {formatDistance(effectiveRadius, locale)} yet — be the first to post in
-          your area!
-        </div>
-      )}
+      {effectiveIsLocationFiltered &&
+        effectiveNearbyPosts &&
+        effectiveNearbyPosts.length === 0 &&
+        !isFetchingNearby && (
+          <div className="text-center py-8 text-muted-foreground">
+            Nothing shared within {formatDistance(effectiveRadius, locale)} yet — be the first to
+            post in your area!
+          </div>
+        )}
     </>
   );
 }
