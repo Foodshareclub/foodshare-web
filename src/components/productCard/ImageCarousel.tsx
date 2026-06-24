@@ -28,7 +28,23 @@ export function ImageCarousel({
 
   // Validate images
   const validImages = images.filter(isValidImageUrl);
-  if (validImages.length === 0) return null;
+  // Fallback for missing images
+  if (validImages.length === 0) {
+    return (
+      <div
+        className="relative w-full h-full overflow-hidden bg-muted flex items-center justify-center"
+        style={{ aspectRatio: "20/19" }}
+      >
+        <Link
+          href={productUrl}
+          className="w-full h-full block relative cursor-pointer flex items-center justify-center bg-gradient-to-br from-muted to-muted/80"
+          prefetch={true}
+        >
+          <span className="text-5xl">📦</span>
+        </Link>
+      </div>
+    );
+  }
 
   const handleScroll = () => {
     if (scrollRef.current) {
@@ -94,6 +110,12 @@ export function ImageCarousel({
                 placeholder="blur"
                 blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAgEDBAMBAAAAAAAAAAAAAQIDAAQFBhESMSFBgRP/xAAVAQEBAAAAAAAAAAAAAAAAAAADBP/EABkRAAIDAQAAAAAAAAAAAAAAAAECAAMhMf/aAAwDAQACEQMRAD8AwWOzleZo4kLyOQqqOySdgKta0vYltMMJba0VgFDxvEZRvt1yCCO/VKUoDbYmr0P/2Q=="
               />
+
+              {/* Subtle top gradient for the Heart button contrast */}
+              <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
+
+              {/* Subtle bottom gradient for the pagination dots contrast */}
+              <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
             </Link>
           </div>
         ))}
@@ -137,12 +159,12 @@ export function ImageCarousel({
 
       {/* Dots */}
       {validImages.length > 1 && (
-        <div className="absolute bottom-2 left-0 right-0 airbnb-dots pointer-events-none z-10">
+        <div className="absolute bottom-3 left-0 right-0 airbnb-dots pointer-events-none z-10">
           {validImages.map((_, i) => (
             <div
               key={i}
               className={`airbnb-dot shadow-sm ${
-                i === activeIndex ? "airbnb-dot-active" : "opacity-80"
+                i === activeIndex ? "airbnb-dot-active" : "opacity-60"
               }`}
             />
           ))}
