@@ -318,3 +318,26 @@
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
 }
+
+/* ============================================================================
+   Scroll-Driven Animations (Liquid Glass Pattern)
+   ============================================================================ */
+
+@keyframes reveal-card {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@utility animate-on-scroll {
+  @supports (animation-timeline: view()) {
+    animation: reveal-card linear both;
+    animation-timeline: view();
+    animation-range: entry 5% cover 15%;
+  }
+}

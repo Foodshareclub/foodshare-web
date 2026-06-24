@@ -9,29 +9,32 @@ function SkeletonCard({ isLoaded }: PropsSkeletonType) {
   return (
     <div className="contents">
       {!isLoaded ? (
-        <div className="relative rounded-[20px] overflow-hidden shadow-lg glass-shimmer gpu col-span-1 row-span-2 grid grid-rows-subgrid gap-0 mb-10 h-full">
-          <div style={{ aspectRatio: "4/3" }} className="bg-muted animate-pulse" />
-          <div className="p-4 h-[140px] bg-card/70 backdrop-blur-xl backdrop-saturate-150 border-t border-border/20">
-            <div className="h-6 bg-muted animate-pulse rounded-lg" />
-            <div className="mt-3 h-4 bg-muted animate-pulse rounded-lg" />
-            <div className="mt-2 h-4 bg-muted animate-pulse rounded-lg" />
-            <div className="mt-2 h-4 bg-muted animate-pulse rounded-lg" />
+        <div className="relative col-span-1 row-span-2 grid grid-rows-subgrid gap-0 h-full">
+          <div className="relative rounded-xl overflow-hidden bg-muted">
+            <div style={{ aspectRatio: "20/19" }} className="bg-muted animate-pulse" />
+          </div>
+          <div className="mt-3 flex flex-col gap-0.5">
+            <div className="h-[15px] bg-muted animate-pulse rounded-sm w-3/4 mb-0.5" />
+            <div className="h-[15px] bg-muted animate-pulse rounded-sm w-1/2 mb-0.5" />
+            <div className="h-[15px] bg-muted animate-pulse rounded-sm w-2/3 mb-0.5" />
+            <div className="mt-1 h-[15px] bg-muted animate-pulse rounded-sm w-1/3" />
           </div>
         </div>
       ) : (
-        <div className="relative rounded-[20px] overflow-hidden shadow-lg glass-fade-in gpu col-span-1 row-span-2 grid grid-rows-subgrid gap-0 mb-10 h-full">
-          {/* Placeholder for loaded state - image would be passed as prop */}
-          <div
-            className="w-full bg-muted"
-            style={{ aspectRatio: "4/3" }}
-            role="img"
-            aria-label="Product image placeholder"
-          />
-          <div className="p-4 h-[140px] bg-card/70 backdrop-blur-xl backdrop-saturate-150 border-t border-border/20">
-            <div className="h-6" />
-            <div className="mt-3 h-4" />
-            <div className="mt-2 h-4" />
-            <div className="mt-2 h-4" />
+        <div className="relative col-span-1 row-span-2 grid grid-rows-subgrid gap-0 h-full">
+          <div className="relative rounded-xl overflow-hidden bg-muted">
+            <div
+              style={{ aspectRatio: "20/19" }}
+              className="w-full bg-muted"
+              role="img"
+              aria-label="Product image placeholder"
+            />
+          </div>
+          <div className="mt-3 flex flex-col gap-0.5">
+            <div className="h-[15px] w-3/4 mb-0.5" />
+            <div className="h-[15px] w-1/2 mb-0.5" />
+            <div className="h-[15px] w-2/3 mb-0.5" />
+            <div className="mt-1 h-[15px] w-1/3" />
           </div>
         </div>
       )}

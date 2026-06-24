@@ -61,6 +61,9 @@ const nextConfig: NextConfig = {
   },
 
   experimental: {
+    // Enable native View Transitions API for App Router
+    viewTransition: true,
+
     // Optimize package imports for better tree-shaking
     optimizePackageImports: [
       "@radix-ui/react-avatar",

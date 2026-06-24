@@ -25,9 +25,9 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave, onClick }: Pr
   const productUrl = getProductDetailUrl(product.post_type, product.id);
 
   const cardContent = (
-    <div className="airbnb-card airbnb-card-hover animate-on-scroll relative col-span-1 row-span-2 grid grid-rows-subgrid gap-0 mb-10 h-full">
-      {/* Image section - Airbnb uses near-square 20:19 ratio */}
-      <div className="relative airbnb-card-image">
+    <div className="group animate-on-scroll relative col-span-1 row-span-2 grid grid-rows-subgrid gap-0 h-full cursor-pointer">
+      {/* Image section - Airbnb uses near-square 20:19 ratio with rounded corners */}
+      <div className="relative rounded-xl overflow-hidden bg-muted">
         {/* Client-side action buttons (auth-dependent) */}
         <ProductCardActions product={product} />
 
@@ -59,19 +59,24 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave, onClick }: Pr
         </Link>
       </div>
 
-      {/* Content section - Airbnb-style typography with clean background */}
-      <div className="p-3 pt-3 pb-4">
-        <h3 className="text-card-title text-left font-body line-clamp-1">{product.post_name}</h3>
-        <p className="text-card-body line-clamp-1 mt-1">{product.post_stripped_address}</p>
-        <p className="text-card-small mt-1 line-clamp-1">
-          <span className="text-card-body">Available:</span>{" "}
-          <span className="text-card-body">{product.available_hours}</span>
+      {/* Content section - Modern Airbnb-style tight typography (no container padding) */}
+      <div className="mt-3 flex flex-col gap-0.5">
+        <h3 className="text-[15px] font-semibold text-foreground leading-tight line-clamp-1">
+          {product.post_name}
+        </h3>
+        <p className="text-[15px] text-muted-foreground leading-tight line-clamp-1">
+          {product.post_stripped_address}
         </p>
-        <div className="flex gap-1 items-center mt-2">
+        <p className="text-[15px] text-muted-foreground leading-tight line-clamp-1">
+          Available: <span className="text-foreground">{product.available_hours}</span>
+        </p>
+        <div className="flex gap-1.5 items-center mt-1">
           <div className="relative w-4 h-4 opacity-70">
             <Image src={bus} alt="bus" fill sizes="16px" className="object-contain" />
           </div>
-          <p className="text-card-emphasis line-clamp-1">{product.transportation}</p>
+          <p className="text-[15px] font-semibold text-foreground leading-tight line-clamp-1">
+            {product.transportation}
+          </p>
         </div>
       </div>
     </div>

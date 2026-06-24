@@ -1,21 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  Flag,
-  Heart,
-  Eye,
-  Calendar,
-  Clock,
-  MapPin,
-  Truck,
-  FileText,
-  Sparkles,
-} from "lucide-react";
+import { Flag, Heart, Eye, Calendar, Clock, MapPin, Truck, FileText, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -50,7 +40,6 @@ export function PostDetailContent({
   const userId = user?.id || "";
   const isOwner = userId === post.profile_id;
   const canEdit = isOwner || isAdmin;
-  const postType = post.post_type || "food";
 
   const [rating, setRating] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -97,6 +86,7 @@ export function PostDetailContent({
               src={post.images[0]}
               alt={post.post_name}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              style={{ viewTransitionName: `product-hero-${post.id}` }}
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
               priority
@@ -247,11 +237,7 @@ export function PostDetailContent({
 
             {/* Description */}
             {post.post_description && (
-              <PostDetailSection
-                icon={FileText}
-                title={t("description")}
-                colorScheme="emerald"
-              >
+              <PostDetailSection icon={FileText} title={t("description")} colorScheme="emerald">
                 {post.post_description}
               </PostDetailSection>
             )}
