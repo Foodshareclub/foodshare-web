@@ -48,16 +48,34 @@ export function ProductCard({ product, onMouseEnter, onMouseLeave, onClick }: Pr
         <p className="text-[15px] text-[#717171] dark:text-[#A0A0A0] leading-[19px] line-clamp-1">
           {product.post_stripped_address}
         </p>
-        <p className="text-[15px] text-[#717171] dark:text-[#A0A0A0] leading-[19px] line-clamp-1">
-          {product.available_hours}
-        </p>
-        <div className="flex gap-1.5 items-center mt-1">
-          <div className="relative w-[15px] h-[15px] opacity-70">
-            <Image src={bus} alt="bus" fill sizes="15px" className="object-contain dark:invert" />
-          </div>
-          <p className="text-[15px] font-medium text-[#222222] dark:text-[#E8E8E8] leading-[19px] line-clamp-1">
-            {product.transportation}
+
+        {/* Third line: Available hours + Transportation combined (Airbnb-style inline metadata) */}
+        <div className="flex gap-1.5 items-center mt-[1px] overflow-hidden">
+          <p className="text-[15px] text-[#717171] dark:text-[#A0A0A0] leading-[19px] truncate">
+            {product.available_hours}
           </p>
+
+          {product.transportation && product.transportation !== "-" && (
+            <>
+              <span className="text-[15px] text-[#717171] dark:text-[#A0A0A0] leading-[19px] shrink-0">
+                ·
+              </span>
+              <div className="flex gap-1 items-center shrink-0">
+                <div className="relative w-[13px] h-[13px] opacity-70">
+                  <Image
+                    src={bus}
+                    alt="bus"
+                    fill
+                    sizes="13px"
+                    className="object-contain dark:invert"
+                  />
+                </div>
+                <p className="text-[15px] font-medium text-[#222222] dark:text-[#E8E8E8] leading-[19px] truncate">
+                  {product.transportation}
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

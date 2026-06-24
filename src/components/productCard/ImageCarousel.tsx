@@ -25,6 +25,7 @@ export function ImageCarousel({
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
 
   // Validate images
   const validImages = images.filter(isValidImageUrl);
@@ -91,25 +92,32 @@ export function ImageCarousel({
           <div key={i} className="w-full h-full shrink-0 snap-center relative">
             <Link
               href={productUrl}
-              className="w-full h-full block relative cursor-pointer"
+              className="w-full h-full block relative cursor-pointer bg-muted"
               prefetch={true}
               // Prevent dragging the link to create a ghost image
               onDragStart={(e) => e.preventDefault()}
             >
-              <Image
-                className="object-cover"
-                style={
-                  i === 0
-                    ? { ...gpu120Image, viewTransitionName: `product-hero-${productId}` }
-                    : gpu120Image
-                }
-                src={image}
-                alt={`${postName} - ${postType} listing - Image ${i + 1}`}
-                fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
-                placeholder="blur"
-                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAgEDBAMBAAAAAAAAAAAAAQIDAAQFBhESMSFBgRP/xAAVAQEBAAAAAAAAAAAAAAAAAAADBP/EABkRAAIDAQAAAAAAAAAAAAAAAAECAAMhMf/aAAwDAQACEQMRAD8AwWOzleZo4kLyOQqqOySdgKta0vYltMMJba0VgFDxvEZRvt1yCCO/VKUoDbYmr0P/2Q=="
-              />
+              {imageErrors[i] ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-muted to-muted/80">
+                  <span className="text-5xl">📦</span>
+                </div>
+              ) : (
+                <Image
+                  className="object-cover"
+                  style={
+                    i === 0
+                      ? { ...gpu120Image, viewTransitionName: `product-hero-${productId}` }
+                      : gpu120Image
+                  }
+                  src={image}
+                  alt={`${postName} - ${postType} listing - Image ${i + 1}`}
+                  fill
+                  onError={() => setImageErrors((prev) => ({ ...prev, [i]: true }))}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                  placeholder="blur"
+                  blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAAUH/8QAIhAAAgEDBAMBAAAAAAAAAAAAAQIDAAQFBhESMSFBgRP/xAAVAQEBAAAAAAAAAAAAAAAAAAADBP/EABkRAAIDAQAAAAAAAAAAAAAAAAECAAMhMf/aAAwDAQACEQMRAD8AwWOzleZo4kLyOQqqOySdgKta0vYltMMJba0VgFDxvEZRvt1yCCO/VKUoDbYmr0P/2Q=="
+                />
+              )}
 
               {/* Subtle top gradient for the Heart button contrast */}
               <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-black/20 to-transparent pointer-events-none" />
