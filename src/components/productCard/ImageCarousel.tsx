@@ -32,10 +32,7 @@ export function ImageCarousel({
   // Fallback for missing images
   if (validImages.length === 0) {
     return (
-      <div
-        className="relative w-full h-full overflow-hidden bg-muted flex items-center justify-center"
-        style={{ aspectRatio: "20/19" }}
-      >
+      <div className="relative w-full h-full overflow-hidden bg-muted flex items-center justify-center aspect-square">
         <Link
           href={productUrl}
           className="w-full h-full block relative cursor-pointer flex items-center justify-center bg-gradient-to-br from-muted to-muted/80"
@@ -73,8 +70,7 @@ export function ImageCarousel({
 
   return (
     <div
-      className="relative w-full h-full overflow-hidden group/carousel"
-      style={{ aspectRatio: "20/19" }}
+      className="relative w-full h-full overflow-hidden group/carousel aspect-square"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

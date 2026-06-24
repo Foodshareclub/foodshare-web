@@ -69,14 +69,14 @@ export function ProductCardActions({ product }: ProductCardActionsProps) {
       <button
         onClick={handleLike}
         disabled={isPending}
-        className="airbnb-action-btn airbnb-action-btn-hover"
+        className="p-1 transition-transform duration-200 hover:scale-110 active:scale-95"
         aria-label="Save listing"
         style={gpu120Interactive}
       >
         <Heart
           className={cn(
-            "h-[18px] w-[18px] transition-colors duration-200",
-            isLiked ? "fill-red-500 text-red-500" : "fill-black/30 text-white"
+            "h-[24px] w-[24px] transition-colors duration-200 stroke-2",
+            isLiked ? "fill-[#FF385C] text-[#FF385C]" : "fill-black/50 text-white"
           )}
         />
       </button>
