@@ -147,8 +147,7 @@ export async function getNearbyPosts(options: NearbyPostsOptions): Promise<Nearb
   const items = (data ?? []) as NearbyPost[];
   const hasMore = items.length > limit;
   const resultItems = hasMore ? items.slice(0, limit) : items;
-  const nextCursor =
-    hasMore && resultItems.length > 0 ? resultItems[resultItems.length - 1].id : null;
+  const nextCursor = hasMore ? (cursor || 0) + limit : null;
 
   return {
     data: resultItems,
