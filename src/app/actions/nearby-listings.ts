@@ -38,7 +38,6 @@ export interface NearbyListingsResult {
 export async function fetchNearbyListings({
   lat,
   lng,
-  radius: _radius = 5000,
   postType = "food",
   limit = 20,
   cursor = null,

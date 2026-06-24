@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
+
 import { HomeClient } from "./HomeClient";
 import { getProductsPaginated } from "@/lib/data/products";
 import { getNearbyPosts } from "@/lib/data/nearby-posts";
@@ -75,7 +75,9 @@ async function fetchHomeData(locationParams: { lat: number; lng: number; radius:
       const result = await getNearbyPosts({
         lat: locationParams.lat,
         lng: locationParams.lng,
-        radiusMeters: locationParams.radius,
+        // Always use 50km for the feed query — let distance sorting handle "expansion"
+        // This matches the server action's 50km to ensure consistent pagination across pages
+        radiusMeters: 50000,
         postType: "food",
         limit: 20,
       });

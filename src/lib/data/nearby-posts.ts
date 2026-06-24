@@ -137,7 +137,7 @@ export async function getNearbyPosts(options: NearbyPostsOptions): Promise<Nearb
     radius_meters: radiusMeters,
     post_type_filter: postType,
     page_limit: limit + 1, // Fetch one extra to check hasMore
-    page_cursor: cursor,
+    page_cursor: cursor ?? 0,
   });
 
   if (error) {

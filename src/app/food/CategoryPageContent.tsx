@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { getProducts } from "@/lib/data/products";
+import { getProductsPaginated } from "@/lib/data/products";
 import { getChallenges } from "@/lib/data/challenges";
 import { getNearbyPosts } from "@/lib/data/nearby-posts";
 import { getAuthSession } from "@/lib/data/auth";
@@ -93,7 +93,7 @@ export function parseLocationParams(
 
 export async function generateCategoryMetadata(
   type: string,
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  _searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 ): Promise<Metadata> {
   const categoryKey = categoryKeyMap[type] || "food";
   const category = categoryMetadata[categoryKey];
@@ -124,16 +124,20 @@ export default async function CategoryPageContent({
 
   // If location params provided, fetch nearby posts using PostGIS
   if (isLocationFiltered) {
-    let nearbyPosts: Awaited<ReturnType<typeof getNearbyPosts>>["data"] = [];
+    let nearbyResult: Awaited<ReturnType<typeof getNearbyPosts>> = {
+      data: [],
+      hasMore: false,
+      nextCursor: null,
+    };
     try {
-      const result = await getNearbyPosts({
+      nearbyResult = await getNearbyPosts({
         lat: locationParams.lat,
         lng: locationParams.lng,
-        radiusMeters: locationParams.radius,
+        // Always use 50km for the feed query — let distance sorting handle "expansion"
+        radiusMeters: 50000,
         postType: productType === "challenge" ? null : productType,
-        limit: 100,
+        limit: 20,
       });
-      nearbyPosts = result.data;
     } catch (error) {
       logger.error("Failed to fetch nearby posts", error);
     }
@@ -143,18 +147,29 @@ export default async function CategoryPageContent({
         <HomeClient
           initialProducts={[]}
           productType={productType}
-          nearbyPosts={nearbyPosts}
+          nearbyPosts={nearbyResult.data}
           isLocationFiltered={true}
           radiusMeters={locationParams.radius}
+          initialHasMore={nearbyResult.hasMore}
+          initialNextCursor={nearbyResult.nextCursor}
         />
       </Suspense>
     );
   }
 
-  // No location filter - fetch all products of type
-  let products: Awaited<ReturnType<typeof getProducts>> = [];
+  // No location filter - fetch paginated products of type
+  let paginatedResult: Awaited<ReturnType<typeof getProductsPaginated>> = {
+    data: [],
+    hasMore: false,
+    nextCursor: null,
+  };
   try {
-    products = productType === "challenge" ? await getChallenges() : await getProducts(productType);
+    if (productType === "challenge") {
+      const challengeData = await getChallenges();
+      paginatedResult = { data: challengeData, hasMore: false, nextCursor: null };
+    } else {
+      paginatedResult = await getProductsPaginated(productType, { limit: 20 });
+    }
   } catch (error) {
     logger.error("Failed to fetch products", error);
   }
@@ -165,7 +180,7 @@ export default async function CategoryPageContent({
   const itemListJsonLd = generateItemListJsonLd({
     name: `${category.title} on FoodShare`,
     description: category.description,
-    items: products.slice(0, 10).map((product, index) => ({
+    items: paginatedResult.data.slice(0, 10).map((product, index) => ({
       name: product.post_name || "Item",
       url: `${siteConfig.url}/food/${product.id}`,
       image: product.images?.[0],
@@ -181,9 +196,11 @@ export default async function CategoryPageContent({
       />
       <Suspense fallback={<ProductsPageSkeleton />}>
         <HomeClient
-          initialProducts={products}
+          initialProducts={paginatedResult.data}
           productType={productType}
           radiusMeters={userRadiusMeters}
+          initialHasMore={paginatedResult.hasMore}
+          initialNextCursor={paginatedResult.nextCursor}
         />
       </Suspense>
     </>
