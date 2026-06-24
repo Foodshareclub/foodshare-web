@@ -22,13 +22,14 @@ const LOADING_MORE_SKELETONS = Array.from({ length: 4 }, (_, i) => i);
 
 /**
  * ProductGrid - Displays products in a responsive grid with infinite scroll
- * Uses Tailwind responsive classes for grid columns:
- * - Mobile: 1 column
- * - sm (640px): 2 columns
- * - md (768px): 3 columns
- * - lg (1024px): 4 columns
- * - xl (1280px): 5 columns
- * - 2xl (1536px): 6 columns
+ * Uses auto-fill grid columns to perfectly match Airbnb's density:
+ * - Mobile (< 550px): 1 column
+ * - sm (~640px): 2 columns
+ * - md (~768px): 3 columns
+ * - lg (~1024px): 4 columns
+ * - xl (~1440px): 5 columns
+ * - 2xl (~1600px): 6 columns
+ * - 3xl (~1920px+): 7+ columns
  */
 export function ProductGrid({
   products,
@@ -70,7 +71,7 @@ export function ProductGrid({
       style={{ transform: "translateZ(0)", WebkitOverflowScrolling: "touch" }}
     >
       <div className="@container page-px py-7">
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] auto-rows-[auto_1fr] gap-x-6 gap-y-10">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] auto-rows-[auto_1fr] gap-x-6 gap-y-10">
           {isLoading
             ? SKELETON_ITEMS.map((i) => <SkeletonCard key={i} isLoaded={false} />)
             : products.map((product) => <ProductCard product={product} key={product.id} />)}
