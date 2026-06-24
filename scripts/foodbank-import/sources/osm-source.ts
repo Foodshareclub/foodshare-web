@@ -5,21 +5,11 @@
  * Supports multiple facility types: food_bank, fridge, food_pantry
  */
 
-import {
-  OVERPASS_API_URL,
-  OVERPASS_TIMEOUT,
-  USER_AGENT,
-  COUNTRIES,
-} from '../config';
-import type {
-  RawFoodbankData,
-  CountryConfig,
-  OSMElement,
-  OverpassResponse,
-} from '../types';
+import { OVERPASS_API_URL, OVERPASS_TIMEOUT, USER_AGENT, COUNTRIES } from "../config";
+import type { RawFoodbankData, OSMElement, OverpassResponse } from "../types";
 
 // Facility types for import
-export type FacilityType = 'food_bank' | 'fridge';
+export type FacilityType = "foodbank" | "fridge";
 
 /**
  * Build Overpass QL query for foodbanks and food pantries
@@ -82,41 +72,41 @@ function parseOSMElement(element: OSMElement, countryCode: string): RawFoodbankD
   const lon = element.lon ?? element.center?.lon;
 
   // Name is required
-  const name = tags.name || tags['name:en'] || tags.operator;
+  const name = tags.name || tags["name:en"] || tags.operator;
   if (!name) {
     return null;
   }
 
   // Build address from components
   const addressParts: string[] = [];
-  if (tags['addr:housenumber'] && tags['addr:street']) {
-    addressParts.push(`${tags['addr:housenumber']} ${tags['addr:street']}`);
-  } else if (tags['addr:street']) {
-    addressParts.push(tags['addr:street']);
+  if (tags["addr:housenumber"] && tags["addr:street"]) {
+    addressParts.push(`${tags["addr:housenumber"]} ${tags["addr:street"]}`);
+  } else if (tags["addr:street"]) {
+    addressParts.push(tags["addr:street"]);
   }
 
-  const city = tags['addr:city'] || tags['addr:town'] || tags['addr:village'];
-  const state = tags['addr:state'] || tags['addr:province'];
-  const postcode = tags['addr:postcode'];
-  const country = tags['addr:country'] || COUNTRIES[countryCode]?.name || countryCode;
+  const city = tags["addr:city"] || tags["addr:town"] || tags["addr:village"];
+  const state = tags["addr:state"] || tags["addr:province"];
+  const postcode = tags["addr:postcode"];
+  const country = tags["addr:country"] || COUNTRIES[countryCode]?.name || countryCode;
 
   // Parse opening hours
-  const hours = tags.opening_hours || tags['opening_hours:covid19'] || undefined;
+  const hours = tags.opening_hours || tags["opening_hours:covid19"] || undefined;
 
   // Parse services from description or other tags
   const services: string[] = [];
   if (tags.description) {
     services.push(tags.description);
   }
-  if (tags['social_facility:for']) {
-    services.push(`For: ${tags['social_facility:for']}`);
+  if (tags["social_facility:for"]) {
+    services.push(`For: ${tags["social_facility:for"]}`);
   }
   if (tags.cuisine) {
     services.push(`Food type: ${tags.cuisine}`);
   }
 
   // Build full address string
-  let fullAddress = addressParts.join(', ');
+  let fullAddress = addressParts.join(", ");
   if (city) fullAddress += fullAddress ? `, ${city}` : city;
   if (state) fullAddress += fullAddress ? `, ${state}` : state;
   if (postcode) fullAddress += fullAddress ? ` ${postcode}` : postcode;
@@ -131,18 +121,18 @@ function parseOSMElement(element: OSMElement, countryCode: string): RawFoodbankD
     postcode: postcode || undefined,
     latitude: lat,
     longitude: lon,
-    phone: tags.phone || tags['contact:phone'] || undefined,
-    website: tags.website || tags['contact:website'] || tags.url || undefined,
-    email: tags.email || tags['contact:email'] || undefined,
+    phone: tags.phone || tags["contact:phone"] || undefined,
+    website: tags.website || tags["contact:website"] || tags.url || undefined,
+    email: tags.email || tags["contact:email"] || undefined,
     hours: hours || undefined,
     services: services.length > 0 ? services : undefined,
     eligibility: tags.eligibility || tags.access || undefined,
     social: {
-      facebook: tags['contact:facebook'] || tags.facebook || undefined,
-      twitter: tags['contact:twitter'] || tags.twitter || undefined,
-      instagram: tags['contact:instagram'] || tags.instagram || undefined,
+      facebook: tags["contact:facebook"] || tags.facebook || undefined,
+      twitter: tags["contact:twitter"] || tags.twitter || undefined,
+      instagram: tags["contact:instagram"] || tags.instagram || undefined,
     },
-    source: 'OpenStreetMap',
+    source: "OpenStreetMap",
     sourceId: `${element.type}/${element.id}`,
   };
 }
@@ -160,19 +150,20 @@ async function fetchOSMFacilities(
     throw new Error(`Unknown country code: ${countryCode}`);
   }
 
-  const query = facilityType === 'fridge'
-    ? buildFridgeQuery(countryConfig.bbox)
-    : buildFoodbankQuery(countryConfig.bbox);
+  const query =
+    facilityType === "fridge"
+      ? buildFridgeQuery(countryConfig.bbox)
+      : buildFoodbankQuery(countryConfig.bbox);
 
   if (verbose) {
     console.log(`   Querying Overpass API for ${facilityType}s in ${countryConfig.name}...`);
   }
 
   const response = await fetch(OVERPASS_API_URL, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'User-Agent': USER_AGENT,
+      "Content-Type": "application/x-www-form-urlencoded",
+      "User-Agent": USER_AGENT,
     },
     body: `data=${encodeURIComponent(query)}`,
   });
@@ -214,7 +205,7 @@ export async function fetchOSMFoodbanks(
   countryCode: string,
   verbose = false
 ): Promise<RawFoodbankData[]> {
-  return fetchOSMFacilities(countryCode, 'food_bank', verbose);
+  return fetchOSMFacilities(countryCode, "foodbank", verbose);
 }
 
 /**
@@ -224,7 +215,7 @@ export async function fetchOSMFridges(
   countryCode: string,
   verbose = false
 ): Promise<RawFoodbankData[]> {
-  return fetchOSMFacilities(countryCode, 'fridge', verbose);
+  return fetchOSMFacilities(countryCode, "fridge", verbose);
 }
 
 /**

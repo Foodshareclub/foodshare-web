@@ -12,40 +12,35 @@
  *   bun run import:foodbanks -- --country=all --type=all
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { config } from 'dotenv';
-import { parseArgs } from 'util';
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { config } from "dotenv";
+import { parseArgs } from "util";
 
-import {
-  SYSTEM_USER_ID,
-  SUPPORTED_COUNTRIES,
-  COUNTRIES,
-  DEFAULT_BATCH_SIZE,
-} from './config';
+import { SYSTEM_USER_ID, SUPPORTED_COUNTRIES, COUNTRIES, DEFAULT_BATCH_SIZE } from "./config";
 import type {
   RawFoodbankData,
   FoodbankImportRecord,
   ImportResult,
   ImportOptions,
   Coordinates,
-} from './types';
-import { fetchOSMFoodbanks, fetchOSMFridges, type FacilityType } from './sources/osm-source';
-import { geocodeAddress, isValidCoordinates, getGeocodeStats } from './utils/geocoding';
+} from "./types";
+import { fetchOSMFoodbanks, fetchOSMFridges, type FacilityType } from "./sources/osm-source";
+import { geocodeAddress, isValidCoordinates, getGeocodeStats } from "./utils/geocoding";
 import {
   deduplicateFoodbanks,
   findExistingDuplicate,
   type ExistingFoodbank,
-} from './utils/deduplication';
-import { toImportRecord } from './utils/formatting';
+} from "./utils/deduplication";
+import { toImportRecord } from "./utils/formatting";
 
 // Extended import options with facility type
 interface ExtendedImportOptions extends ImportOptions {
-  facilityType: FacilityType | 'all';
+  facilityType: FacilityType | "all";
 }
 
 // Load environment variables
-config({ path: '.env.local' });
-config({ path: '.env' });
+config({ path: ".env.local" });
+config({ path: ".env" });
 
 /**
  * Parse CLI arguments
@@ -53,41 +48,41 @@ config({ path: '.env' });
 function parseCliArgs(): ExtendedImportOptions {
   const { values } = parseArgs({
     options: {
-      country: { type: 'string', default: 'US' },
-      type: { type: 'string', default: 'food_bank' },
-      'dry-run': { type: 'boolean', default: false },
-      verbose: { type: 'boolean', short: 'v', default: false },
-      'batch-size': { type: 'string', default: String(DEFAULT_BATCH_SIZE) },
+      country: { type: "string", default: "US" },
+      type: { type: "string", default: "foodbank" },
+      "dry-run": { type: "boolean", default: false },
+      verbose: { type: "boolean", short: "v", default: false },
+      "batch-size": { type: "string", default: String(DEFAULT_BATCH_SIZE) },
     },
     strict: true,
   });
 
   // Parse countries
   let countries: string[];
-  if (values.country === 'all') {
+  if (values.country === "all") {
     countries = SUPPORTED_COUNTRIES;
   } else {
-    countries = values.country!.split(',').map((c) => c.trim().toUpperCase());
+    countries = values.country!.split(",").map((c) => c.trim().toUpperCase());
 
     // Validate country codes
     for (const code of countries) {
       if (!SUPPORTED_COUNTRIES.includes(code)) {
         console.error(`Unknown country code: ${code}`);
-        console.error(`Supported: ${SUPPORTED_COUNTRIES.join(', ')}`);
+        console.error(`Supported: ${SUPPORTED_COUNTRIES.join(", ")}`);
         process.exit(1);
       }
     }
   }
 
   // Parse facility type
-  const typeInput = values.type?.toLowerCase() || 'food_bank';
-  let facilityType: FacilityType | 'all';
-  if (typeInput === 'all') {
-    facilityType = 'all';
-  } else if (typeInput === 'fridge' || typeInput === 'fridges') {
-    facilityType = 'fridge';
-  } else if (typeInput === 'food_bank' || typeInput === 'foodbank' || typeInput === 'foodbanks') {
-    facilityType = 'food_bank';
+  const typeInput = values.type?.toLowerCase() || "food_bank";
+  let facilityType: FacilityType | "all";
+  if (typeInput === "all") {
+    facilityType = "all";
+  } else if (typeInput === "fridge" || typeInput === "fridges") {
+    facilityType = "fridge";
+  } else if (typeInput === "food_bank" || typeInput === "foodbank" || typeInput === "foodbanks") {
+    facilityType = "foodbank";
   } else {
     console.error(`Unknown facility type: ${typeInput}`);
     console.error(`Supported: food_bank, fridge, all`);
@@ -97,9 +92,9 @@ function parseCliArgs(): ExtendedImportOptions {
   return {
     countries,
     facilityType,
-    dryRun: values['dry-run'] ?? false,
+    dryRun: values["dry-run"] ?? false,
     verbose: values.verbose ?? false,
-    batchSize: parseInt(values['batch-size']!, 10) || DEFAULT_BATCH_SIZE,
+    batchSize: parseInt(values["batch-size"]!, 10) || DEFAULT_BATCH_SIZE,
   };
 }
 
@@ -111,8 +106,8 @@ function initSupabase(): SupabaseClient {
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
-    console.error('Missing Supabase configuration');
-    console.error('Set VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local');
+    console.error("Missing Supabase configuration");
+    console.error("Set VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local");
     process.exit(1);
   }
 
@@ -124,38 +119,38 @@ function initSupabase(): SupabaseClient {
  */
 async function ensureSystemUser(supabase: SupabaseClient, verbose: boolean): Promise<void> {
   if (verbose) {
-    console.log('Checking system user...');
+    console.log("Checking system user...");
   }
 
   const { data, error } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('id', SYSTEM_USER_ID)
+    .from("profiles")
+    .select("id")
+    .eq("id", SYSTEM_USER_ID)
     .single();
 
-  if (error && error.code !== 'PGRST116') {
-    console.error('Error checking system user:', error.message);
+  if (error && error.code !== "PGRST116") {
+    console.error("Error checking system user:", error.message);
     process.exit(1);
   }
 
   if (!data) {
-    console.log('Creating system user profile...');
+    console.log("Creating system user profile...");
 
-    const { error: insertError } = await supabase.from('profiles').insert({
+    const { error: insertError } = await supabase.from("profiles").insert({
       id: SYSTEM_USER_ID,
-      email: 'foodbanks@foodshare.system',
-      full_name: 'FoodShare Data Import',
+      email: "foodbanks@foodshare.system",
+      full_name: "FoodShare Data Import",
       is_admin: true,
     });
 
     if (insertError) {
-      console.error('Error creating system user:', insertError.message);
+      console.error("Error creating system user:", insertError.message);
       process.exit(1);
     }
 
-    console.log('System user created successfully');
+    console.log("System user created successfully");
   } else if (verbose) {
-    console.log('System user exists');
+    console.log("System user exists");
   }
 }
 
@@ -164,12 +159,12 @@ async function ensureSystemUser(supabase: SupabaseClient, verbose: boolean): Pro
  */
 async function fetchExistingFacilities(
   supabase: SupabaseClient,
-  postType: 'food_bank' | 'fridge'
+  postType: "foodbank" | "fridge"
 ): Promise<ExistingFoodbank[]> {
   const { data, error } = await supabase
-    .from('posts')
-    .select('id, post_name, location')
-    .eq('post_type', postType);
+    .from("posts")
+    .select("id, post_name, location")
+    .eq("post_type", postType);
 
   if (error) {
     console.error(`Error fetching existing ${postType}s:`, error.message);
@@ -183,7 +178,7 @@ async function fetchExistingFacilities(
 
     if (p.location) {
       // Handle GeoJSON format: {"type":"Point","coordinates":[lon,lat]}
-      if (typeof p.location === 'object' && p.location.coordinates) {
+      if (typeof p.location === "object" && p.location.coordinates) {
         longitude = p.location.coordinates[0];
         latitude = p.location.coordinates[1];
       }
@@ -204,7 +199,7 @@ async function fetchExistingFacilities(
 async function processFoodbanks(
   rawData: RawFoodbankData[],
   verbose: boolean,
-  postType: 'food_bank' | 'fridge' = 'food_bank'
+  postType: "foodbank" | "fridge" = "foodbank"
 ): Promise<{ records: FoodbankImportRecord[]; geocoded: number }> {
   const records: FoodbankImportRecord[] = [];
   let geocodedCount = 0;
@@ -262,22 +257,19 @@ async function batchInsert(
     const batch = records.slice(i, i + batchSize);
 
     if (verbose) {
-      console.log(`   Inserting batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(records.length / batchSize)}...`);
+      console.log(
+        `   Inserting batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(records.length / batchSize)}...`
+      );
     }
 
-    const { data, error } = await supabase
-      .from('posts')
-      .insert(batch)
-      .select('id');
+    const { data, error } = await supabase.from("posts").insert(batch).select("id");
 
     if (error) {
       console.error(`   Batch insert error:`, error.message);
 
       // Try inserting one by one to identify failures
       for (const record of batch) {
-        const { error: singleError } = await supabase
-          .from('posts')
-          .insert(record);
+        const { error: singleError } = await supabase.from("posts").insert(record);
 
         if (singleError) {
           errors.push({ name: record.post_name, error: singleError.message });
@@ -304,8 +296,8 @@ async function importCountry(
   facilityType: FacilityType
 ): Promise<ImportResult> {
   const { dryRun, verbose, batchSize } = options;
-  const typeName = facilityType === 'fridge' ? 'community fridges' : 'foodbanks';
-  const postType = facilityType === 'fridge' ? 'fridge' : 'food_bank';
+  const typeName = facilityType === "fridge" ? "community fridges" : "foodbanks";
+  const postType = facilityType === "fridge" ? "fridge" : "foodbank";
 
   const result: ImportResult = {
     country: `${COUNTRIES[countryCode]?.name || countryCode} (${typeName})`,
@@ -322,16 +314,17 @@ async function importCountry(
   // Fetch from OSM
   let rawData: RawFoodbankData[];
   try {
-    rawData = facilityType === 'fridge'
-      ? await fetchOSMFridges(countryCode, verbose)
-      : await fetchOSMFoodbanks(countryCode, verbose);
+    rawData =
+      facilityType === "fridge"
+        ? await fetchOSMFridges(countryCode, verbose)
+        : await fetchOSMFoodbanks(countryCode, verbose);
     result.total = rawData.length;
     console.log(`   Fetched ${rawData.length} ${typeName} from OSM`);
   } catch (error) {
     console.error(`   Error fetching data:`, error);
     result.errors = 1;
     result.errorDetails.push({
-      name: 'FETCH_ERROR',
+      name: "FETCH_ERROR",
       error: error instanceof Error ? error.message : String(error),
     });
     return result;
@@ -362,7 +355,9 @@ async function importCountry(
     }
   }
 
-  console.log(`   ${newFacilities.length} new ${typeName} to import (${result.duplicates} duplicates skipped)`);
+  console.log(
+    `   ${newFacilities.length} new ${typeName} to import (${result.duplicates} duplicates skipped)`
+  );
 
   if (newFacilities.length === 0) {
     return result;
@@ -406,14 +401,14 @@ async function importCountry(
  * Main entry point
  */
 async function main(): Promise<void> {
-  console.log('╔════════════════════════════════════════════════════════════╗');
-  console.log('║       Foodbank & Community Fridge Import Tool              ║');
-  console.log('╚════════════════════════════════════════════════════════════╝\n');
+  console.log("╔════════════════════════════════════════════════════════════╗");
+  console.log("║       Foodbank & Community Fridge Import Tool              ║");
+  console.log("╚════════════════════════════════════════════════════════════╝\n");
 
   // Parse arguments
   const options = parseCliArgs();
 
-  console.log(`Countries: ${options.countries.join(', ')}`);
+  console.log(`Countries: ${options.countries.join(", ")}`);
   console.log(`Facility type: ${options.facilityType}`);
   console.log(`Dry run: ${options.dryRun}`);
   console.log(`Verbose: ${options.verbose}`);
@@ -426,15 +421,14 @@ async function main(): Promise<void> {
   await ensureSystemUser(supabase, options.verbose);
 
   // Determine which types to import
-  const typesToImport: FacilityType[] = options.facilityType === 'all'
-    ? ['food_bank', 'fridge']
-    : [options.facilityType];
+  const typesToImport: FacilityType[] =
+    options.facilityType === "all" ? ["foodbank", "fridge"] : [options.facilityType];
 
   const results: ImportResult[] = [];
 
   for (const facilityType of typesToImport) {
-    const postType = facilityType === 'fridge' ? 'fridge' : 'food_bank';
-    const typeName = facilityType === 'fridge' ? 'community fridges' : 'foodbanks';
+    const postType = facilityType === "fridge" ? "fridge" : "foodbank";
+    const typeName = facilityType === "fridge" ? "community fridges" : "foodbanks";
 
     // Fetch existing facilities for deduplication
     console.log(`\nFetching existing ${typeName} from database...`);
@@ -443,7 +437,13 @@ async function main(): Promise<void> {
 
     // Import each country
     for (const countryCode of options.countries) {
-      const result = await importCountry(supabase, countryCode, existingFacilities, options, facilityType);
+      const result = await importCountry(
+        supabase,
+        countryCode,
+        existingFacilities,
+        options,
+        facilityType
+      );
       results.push(result);
 
       // Small delay between countries to be nice to APIs
@@ -452,9 +452,9 @@ async function main(): Promise<void> {
   }
 
   // Summary
-  console.log('\n' + '═'.repeat(60));
-  console.log('IMPORT SUMMARY');
-  console.log('═'.repeat(60));
+  console.log("\n" + "═".repeat(60));
+  console.log("IMPORT SUMMARY");
+  console.log("═".repeat(60));
 
   let totalTotal = 0;
   let totalInserted = 0;
@@ -487,32 +487,32 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log('\n' + '─'.repeat(60));
-  console.log('TOTALS:');
+  console.log("\n" + "─".repeat(60));
+  console.log("TOTALS:");
   console.log(`   Total fetched:  ${totalTotal}`);
   console.log(`   Inserted:       ${totalInserted}`);
   console.log(`   Duplicates:     ${totalDuplicates}`);
   console.log(`   Geocoded:       ${totalGeocoded}`);
   console.log(`   Errors:         ${totalErrors}`);
-  console.log('─'.repeat(60));
+  console.log("─".repeat(60));
 
   const geocodeStats = getGeocodeStats();
   console.log(`\nGeocode cache size: ${geocodeStats.cacheSize}`);
 
   if (options.dryRun) {
-    console.log('\n[DRY RUN] No changes were made to the database');
+    console.log("\n[DRY RUN] No changes were made to the database");
   }
 
   if (totalErrors > 0) {
-    console.log('\nSome errors occurred during import. Check logs above.');
+    console.log("\nSome errors occurred during import. Check logs above.");
     process.exit(1);
   }
 
-  console.log('\nImport completed successfully!');
+  console.log("\nImport completed successfully!");
 }
 
 // Run
 main().catch((error) => {
-  console.error('\nFatal error:', error);
+  console.error("\nFatal error:", error);
   process.exit(1);
 });

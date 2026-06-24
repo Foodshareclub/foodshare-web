@@ -5,8 +5,8 @@
  * that can be parsed later.
  */
 
-import { SYSTEM_USER_ID } from '../config';
-import type { RawFoodbankData, FoodbankImportRecord, Coordinates } from '../types';
+import { SYSTEM_USER_ID } from "../config";
+import type { RawFoodbankData, FoodbankImportRecord, Coordinates } from "../types";
 
 /**
  * Format the structured description field
@@ -35,7 +35,7 @@ function formatDescription(data: RawFoodbankData): string {
 
   // Services
   if (data.services && data.services.length > 0) {
-    const servicesText = data.services.map((s) => `- ${s}`).join('\n');
+    const servicesText = data.services.map((s) => `- ${s}`).join("\n");
     sections.push(`[SERVICES]\n${servicesText}`);
   }
 
@@ -56,13 +56,13 @@ function formatDescription(data: RawFoodbankData): string {
     socialLinks.push(`Instagram: ${data.social.instagram}`);
   }
   if (socialLinks.length > 0) {
-    sections.push(`[SOCIAL]\n${socialLinks.join('\n')}`);
+    sections.push(`[SOCIAL]\n${socialLinks.join("\n")}`);
   }
 
   // Data source attribution
   sections.push(`[SOURCE]\nImported from ${data.source} (ID: ${data.sourceId})`);
 
-  return sections.join('\n\n');
+  return sections.join("\n\n");
 }
 
 /**
@@ -75,7 +75,7 @@ function formatStrippedAddress(data: RawFoodbankData): string {
   if (data.state) parts.push(data.state);
   if (data.country) parts.push(data.country);
 
-  return parts.join(', ') || data.country;
+  return parts.join(", ") || data.country;
 }
 
 /**
@@ -84,7 +84,7 @@ function formatStrippedAddress(data: RawFoodbankData): string {
 export function toImportRecord(
   data: RawFoodbankData,
   coordinates: Coordinates,
-  postType: 'food_bank' | 'fridge' = 'food_bank'
+  postType: "foodbank" | "fridge" = "foodbank"
 ): FoodbankImportRecord {
   // Format PostGIS location string
   const locationStr = `SRID=4326;POINT(${coordinates.longitude} ${coordinates.latitude})`;
@@ -97,11 +97,11 @@ export function toImportRecord(
     post_stripped_address: formatStrippedAddress(data),
     location: locationStr,
     images: [],
-    available_hours: data.hours || '',
-    transportation: '',
+    available_hours: data.hours || "",
+    transportation: "",
     is_active: true,
     profile_id: SYSTEM_USER_ID,
-    website: data.website || '',
+    website: data.website || "",
   };
 }
 
