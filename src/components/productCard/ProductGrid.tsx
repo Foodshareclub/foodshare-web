@@ -71,7 +71,7 @@ export function ProductGrid({
       style={{ transform: "translateZ(0)", WebkitOverflowScrolling: "touch" }}
     >
       <div className="@container page-px py-7">
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] auto-rows-[auto_1fr] gap-x-6 gap-y-10">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] auto-rows-[auto_1fr] gap-x-6 gap-y-10">
           {isLoading
             ? SKELETON_ITEMS.map((i) => <SkeletonCard key={i} isLoaded={false} />)
             : products.map((product) => <ProductCard product={product} key={product.id} />)}
