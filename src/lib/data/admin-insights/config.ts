@@ -48,7 +48,7 @@ TABLES:
 - user_notifications (id, recipient_id, type, is_read, created_at)
 - post_reports (id, post_id, reporter_id, reason, status, ai_severity_score)
 
-POST_TYPES: food, things, borrow, wanted, fridge, foodbank, business, volunteer, challenge, zerowaste, vegan, community
+POST_TYPES: food, thing, borrow, wanted, foodbank, fridge, zerowaste, vegan, organisation, volunteer, challenge, forum
 
 COMMON JOINS:
 - posts.profile_id → profiles.id

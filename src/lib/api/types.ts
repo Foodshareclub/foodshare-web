@@ -74,6 +74,20 @@ export interface UIHints {
 // Product API Types (matches api-v1-products Edge Function)
 // =============================================================================
 
+export type ListingPostType =
+  | "food"
+  | "thing"
+  | "borrow"
+  | "wanted"
+  | "foodbank"
+  | "fridge"
+  | "zerowaste"
+  | "vegan"
+  | "organisation"
+  | "volunteer"
+  | "challenge"
+  | "forum";
+
 /**
  * Request body for creating a product via Edge Function
  * Note: Uses camelCase to match Edge Function schema
@@ -82,7 +96,7 @@ export interface CreateProductRequest {
   title: string;
   description?: string;
   images: string[];
-  postType: "food" | "non-food" | "request";
+  postType: ListingPostType;
   latitude: number;
   longitude: number;
   pickupAddress?: string;
@@ -115,7 +129,7 @@ export interface ProductResponse {
   title: string;
   description: string | null;
   images: string[];
-  postType: "food" | "non-food" | "request";
+  postType: ListingPostType;
   location: {
     lat: number;
     lng: number;

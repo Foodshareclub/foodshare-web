@@ -11,6 +11,7 @@ import type {
   CreateProductRequest,
   UpdateProductRequest,
   ProductResponse,
+  ListingPostType,
 } from "./types";
 
 // =============================================================================
@@ -56,7 +57,7 @@ function toCreateRequest(input: WebCreateProductInput): CreateProductRequest {
     title: input.post_name,
     description: input.post_description || undefined,
     images: input.images,
-    postType: input.post_type as "food" | "non-food" | "request",
+    postType: input.post_type as ListingPostType,
     latitude: input.latitude ?? 0,
     longitude: input.longitude ?? 0,
     pickupAddress: input.post_address || undefined,
@@ -122,10 +123,7 @@ export async function createProductAPI(
 ): Promise<ActionResult<{ id: number }>> {
   const request = toCreateRequest(input);
 
-  const result = await apiPost<ProductResponse, CreateProductRequest>(
-    "api-v1-products",
-    request
-  );
+  const result = await apiPost<ProductResponse, CreateProductRequest>("api-v1-products", request);
 
   if (!result.success) {
     return result;
@@ -146,11 +144,9 @@ export async function updateProductAPI(
 ): Promise<ActionResult<undefined>> {
   const request = toUpdateRequest(input);
 
-  const result = await apiPut<ProductResponse, UpdateProductRequest>(
-    "api-v1-products",
-    request,
-    { id: productId }
-  );
+  const result = await apiPut<ProductResponse, UpdateProductRequest>("api-v1-products", request, {
+    id: productId,
+  });
 
   if (!result.success) {
     return result;
@@ -165,13 +161,8 @@ export async function updateProductAPI(
 /**
  * Delete a product via Edge Function (soft delete)
  */
-export async function deleteProductAPI(
-  productId: number
-): Promise<ActionResult<undefined>> {
-  const result = await apiDelete(
-    "api-v1-products",
-    { id: productId }
-  );
+export async function deleteProductAPI(productId: number): Promise<ActionResult<undefined>> {
+  const result = await apiDelete("api-v1-products", { id: productId });
 
   if (!result.success) {
     return result;
