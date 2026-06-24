@@ -45,3 +45,4 @@ supabase
 # Build logs and temp files
 *.log
 api-usage-audit.json
+.vercel
