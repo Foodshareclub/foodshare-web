@@ -221,9 +221,9 @@ export function ChallengeDeck({
             animate={!isShuffling && !isHovered ? "idle" : undefined}
             className="relative"
           >
-            {/* Layout placeholder to maintain height */}
+            {/* Layout placeholder to maintain height without fetching images */}
             <div className="invisible pointer-events-none" aria-hidden="true">
-              <HeroDeckCard challenge={topCard} isFaceUp={true} isLarge />
+              <div className="w-64 sm:w-72 md:w-80" style={{ aspectRatio: "3/4" }} />
             </div>
 
             {/* Top face-up card */}
@@ -263,7 +263,7 @@ export function ChallengeDeck({
               <motion.div
                 className="absolute top-0 left-0 w-full h-full"
                 variants={prefersReducedMotion ? undefined : shuffleFlyVariants(0)}
-                initial="stacked"
+                initial="idle"
                 animate="fly"
                 style={{ zIndex: 10 }}
               >
@@ -281,9 +281,10 @@ export function ChallengeDeck({
                   variants={
                     prefersReducedMotion
                       ? undefined
-                      : isShuffling
-                        ? shuffleFlyVariants(index)
-                        : stackCardVariants(index)
+                      : {
+                          ...stackCardVariants(index),
+                          ...shuffleFlyVariants(index),
+                        }
                   }
                   initial="stacked"
                   animate={isShuffling ? "fly" : "stacked"}

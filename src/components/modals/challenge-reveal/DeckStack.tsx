@@ -13,7 +13,7 @@ export function DeckStack({ challenges, isShuffling }: DeckStackProps) {
 
   return (
     <div className="relative">
-      <AnimatePresence mode="popLayout">
+      <AnimatePresence>
         {visibleCards.map((challenge, index) => {
           // Reverse order so first card is on top visually but rendered last
           const stackIndex = visibleCards.length - 1 - index;
