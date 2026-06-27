@@ -1,11 +1,19 @@
 /**
  * Vector Embeddings Service
  *
- * Generates embeddings using OpenAI and stores them in Upstash Vector
- * for semantic search capabilities.
+ * Generates embeddings via the Z.AI OpenAI-compatible endpoint (Vercel AI SDK)
+ * and stores them in Upstash Vector for semantic search.
+ *
+ * Z.AI is preferred (free credits) and is injected by the Vault-first backend
+ * as `ZAI_API_KEY`. Falls back to `OPENAI_API_KEY` if only that is set.
+ * The base URL matches the chat clients in lib/data/admin-insights/api-key.ts.
+ *
+ * Uses 1536 dimensions (text-embedding-3-small) to stay compatible with the
+ * existing Upstash Vector index — no re-embedding or index recreation needed.
  */
 
-import OpenAI from "openai";
+import { createOpenAI } from "@ai-sdk/openai";
+import { embed, embedMany } from "ai";
 import {
   upsertVector,
   upsertVectors,
@@ -13,34 +21,54 @@ import {
   deleteVectors,
   type VectorMetadata,
   type VectorUpsertItem,
-  type VectorQueryResult,
+  type,
 } from "@/lib/storage/vector";
 
 // ============================================================================
 // Configuration
 // ============================================================================
 
-// OpenAI embedding model configuration
+// Z.AI base URL (OpenAI-compatible). Matches the chat clients in api-key.ts.
+const ZAI_BASE_URL = "https://api.z.ai/v1";
+
+// Embedding model + dimensions. 1536-dim to match the existing Upstash index.
 const EMBEDDING_MODEL = "text-embedding-3-small";
 const EMBEDDING_DIMENSIONS = 1536;
 
-// Singleton OpenAI client
-let openaiClient: OpenAI | null = null;
+// Singleton AI SDK provider (OpenAI-compatible, routed at Z.AI)
+let openai: ReturnType<typeof createOpenAI> | null = null;
 
-function getOpenAIClient(): OpenAI {
-  if (!openaiClient) {
-    openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+function getOpenAI(): ReturnType<typeof createOpenAI> {
+  if (!openai) {
+    openai = createOpenAI({
+      // Prefer Z.AI credits; fall back to OpenAI if that's what's configured
+      apiKey: process.env.ZAI_API_KEY || process.env.OPENAI_API_KEY,
+      baseURL: ZAI_BASE_URL,
     });
   }
-  return openaiClient;
+  return openai;
 }
 
 /**
- * Check if embeddings are available (OpenAI API key configured)
+ * Embedding model instance with the configured output dimensions.
+ * `dimensions` is forwarded via providerOptions.openai.
+ */
+function embeddingModel() {
+  return getOpenAI().embedding(EMBEDDING_MODEL);
+}
+
+const EMBEDDING_PROVIDER_OPTIONS = {
+  openai: { dimensions: EMBEDDING_DIMENSIONS },
+} as const;
+
+/**
+ * Check if embeddings are available (Z.AI or OpenAI key + Vector configured)
  */
 export function isEmbeddingsAvailable(): boolean {
-  return !!process.env.OPENAI_API_KEY && !!process.env.UPSTASH_VECTOR_REST_URL;
+  return (
+    !!(process.env.ZAI_API_KEY || process.env.OPENAI_API_KEY) &&
+    !!process.env.UPSTASH_VECTOR_REST_URL
+  );
 }
 
 // ============================================================================
@@ -57,14 +85,13 @@ export async function generateEmbedding(text: string): Promise<number[] | null> 
   }
 
   try {
-    const client = getOpenAIClient();
-    const response = await client.embeddings.create({
-      model: EMBEDDING_MODEL,
-      input: text.slice(0, 8000), // Limit input length
-      dimensions: EMBEDDING_DIMENSIONS,
+    const { embedding } = await embed({
+      model: embeddingModel(),
+      value: text.slice(0, 8000), // Limit input length
+      providerOptions: EMBEDDING_PROVIDER_OPTIONS,
     });
 
-    return response.data[0].embedding;
+    return embedding;
   } catch (error) {
     console.error("[Embeddings] Failed to generate:", error);
     return null;
@@ -73,6 +100,8 @@ export async function generateEmbedding(text: string): Promise<number[] | null> 
 
 /**
  * Generate embeddings for multiple texts (batch)
+ *
+ * Results are returned in input order by the AI SDK.
  */
 export async function generateEmbeddings(texts: string[]): Promise<(number[] | null)[]> {
   if (!isEmbeddingsAvailable() || texts.length === 0) {
@@ -80,22 +109,13 @@ export async function generateEmbeddings(texts: string[]): Promise<(number[] | n
   }
 
   try {
-    const client = getOpenAIClient();
-
-    // OpenAI supports batch embedding
-    const response = await client.embeddings.create({
-      model: EMBEDDING_MODEL,
-      input: texts.map((t) => t.slice(0, 8000)),
-      dimensions: EMBEDDING_DIMENSIONS,
+    const { embeddings } = await embedMany({
+      model: embeddingModel(),
+      values: texts.map((t) => t.slice(0, 8000)),
+      providerOptions: EMBEDDING_PROVIDER_OPTIONS,
     });
 
-    // Map results back to input order
-    const result: (number[] | null)[] = new Array(texts.length).fill(null);
-    for (const item of response.data) {
-      result[item.index] = item.embedding;
-    }
-
-    return result;
+    return embeddings;
   } catch (error) {
     console.error("[Embeddings] Failed to generate batch:", error);
     return texts.map(() => null);

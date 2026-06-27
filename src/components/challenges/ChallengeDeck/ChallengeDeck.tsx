@@ -221,35 +221,55 @@ export function ChallengeDeck({
             animate={!isShuffling && !isHovered ? "idle" : undefined}
             className="relative"
           >
-            {/* Top face-up card - rendered first to establish position */}
+            {/* Layout placeholder to maintain height */}
+            <div className="invisible pointer-events-none" aria-hidden="true">
+              <HeroDeckCard challenge={topCard} isFaceUp={true} isLarge />
+            </div>
+
+            {/* Top face-up card */}
             <motion.div
               variants={prefersReducedMotion ? undefined : hoverFloatVariants}
               animate={isHovered && !isShuffling ? "hover" : "idle"}
-              className="relative z-20 gpu-3d-child"
+              className="absolute top-0 left-0 z-20 gpu-3d-child w-full h-full"
             >
               <AnimatePresence mode="popLayout">
-                <motion.div
-                  key={topCard.id}
-                  variants={prefersReducedMotion ? undefined : cardRevealVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-                  className="relative z-20"
-                >
-                  <HeroDeckCard challenge={topCard} isFaceUp={true} className="group" isLarge />
-                </motion.div>
+                {!isShuffling && (
+                  <motion.div
+                    key={topCard.id}
+                    variants={prefersReducedMotion ? undefined : cardRevealVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+                    className="relative z-20 w-full h-full"
+                  >
+                    <HeroDeckCard challenge={topCard} isFaceUp={true} className="group" isLarge />
+                  </motion.div>
+                )}
               </AnimatePresence>
 
               {/* Hover glow effect - GPU optimized */}
               <motion.div
                 animate={{
-                  opacity: isHovered ? 1 : 0,
-                  scale: isHovered ? 1 : 0.95,
+                  opacity: isHovered && !isShuffling ? 1 : 0,
+                  scale: isHovered && !isShuffling ? 1 : 0.95,
                 }}
                 transition={{ duration: 0.3 }}
                 className="absolute -inset-3 rounded-3xl bg-gradient-to-r from-primary/30 via-teal-500/25 to-orange-500/30 blur-xl -z-10 gpu-glow"
               />
             </motion.div>
+
+            {/* Shuffle dummy top card (face down) */}
+            {isShuffling && (
+              <motion.div
+                className="absolute top-0 left-0 w-full h-full"
+                variants={prefersReducedMotion ? undefined : shuffleFlyVariants(0)}
+                initial="stacked"
+                animate="fly"
+                style={{ zIndex: 10 }}
+              >
+                <HeroDeckCard challenge={topCard} isFaceUp={false} isLarge />
+              </motion.div>
+            )}
 
             {/* Background stacked cards (rendered after, positioned behind with lower z-index) */}
             {visibleCards.slice(1).map((challenge, idx) => {
@@ -257,7 +277,7 @@ export function ChallengeDeck({
               return (
                 <motion.div
                   key={`bg-${challenge.id}`}
-                  className="absolute top-0 left-0 card-stack-item"
+                  className="absolute top-0 left-0 w-full h-full card-stack-item"
                   variants={
                     prefersReducedMotion
                       ? undefined
