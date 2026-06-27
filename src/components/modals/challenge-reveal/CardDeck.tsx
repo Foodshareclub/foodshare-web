@@ -9,7 +9,12 @@ import { DeckStack } from "./DeckStack";
 import { SwipeIndicators } from "./SwipeIndicators";
 import { ActionButtons, KeyboardHints } from "./ActionButtons";
 import { CardBack } from "./CardFace";
-import { shuffleVariants, emptyStateVariants, nextCardVariants } from "./animations";
+import {
+  shuffleVariants,
+  emptyStateVariants,
+  nextCardVariants,
+  swipeExitVariants,
+} from "./animations";
 import { DECK_CONFIG, ANIMATION_DURATIONS } from "./constants";
 import type { CardDeckProps, ChallengeItem } from "./types";
 import { cn } from "@/lib/utils";
@@ -64,7 +69,6 @@ export function CardDeck({
     // Brief delay to show animation, then advance
     setTimeout(() => {
       setCurrentIndex((prev) => prev + 1);
-      setExitDirection(null);
     }, 50);
   }, [isEmpty, isShuffling]);
 
@@ -81,7 +85,6 @@ export function CardDeck({
     // Brief delay to show animation, then advance
     setTimeout(() => {
       setCurrentIndex((prev) => prev + 1);
-      setExitDirection(null);
     }, 50);
   }, [isEmpty, isShuffling, onAccept, currentChallenge]);
 
@@ -204,10 +207,16 @@ export function CardDeck({
           {currentChallenge && !isShuffling && (
             <motion.div
               key={currentChallenge.id}
-              variants={nextCardVariants}
+              variants={{ ...nextCardVariants, ...swipeExitVariants }}
               initial="hidden"
               animate="visible"
-              exit={exitDirection === "left" ? "exitLeft" : "exitRight"}
+              exit={
+                exitDirection === "left"
+                  ? "exitLeft"
+                  : exitDirection === "right"
+                    ? "exitRight"
+                    : "hidden"
+              }
             >
               <SwipeableCard
                 challenge={currentChallenge}
