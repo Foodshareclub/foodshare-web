@@ -239,7 +239,12 @@ export function ChallengeDeck({
                     variants={prefersReducedMotion ? undefined : cardRevealVariants}
                     initial="hidden"
                     animate="visible"
-                    exit={{ opacity: 0, transition: { duration: 0 } }}
+                    exit={{ 
+                      opacity: 0, 
+                      rotateY: 90, 
+                      scale: 0.85, 
+                      transition: { duration: 0.3 } 
+                    }}
                     className="relative z-20 w-full h-full"
                   >
                     <HeroDeckCard challenge={topCard} isFaceUp={true} className="group" isLarge />
@@ -258,7 +263,7 @@ export function ChallengeDeck({
               />
             </motion.div>
 
-            {/* Shuffle dummy top card (flies face up) */}
+            {/* Shuffle dummy top card (flies face down) */}
             {isShuffling && (
               <motion.div
                 className="absolute top-0 left-0 w-full h-full"
@@ -267,7 +272,7 @@ export function ChallengeDeck({
                 animate="fly"
                 style={{ zIndex: 10 }}
               >
-                <HeroDeckCard challenge={topCard} isFaceUp={true} isLarge />
+                <HeroDeckCard challenge={topCard} isFaceUp={false} isLarge />
               </motion.div>
             )}
 

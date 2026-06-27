@@ -5,6 +5,7 @@ import {
   motion,
   useMotionValue,
   useTransform,
+  useMotionValueEvent,
   useAnimation,
   PanInfo,
   useReducedMotion,
@@ -21,10 +22,15 @@ export function SwipeableCard({ challenge, onSwipeLeft, onSwipeRight, dragX }: S
   const controls = useAnimation();
 
   // Motion values for drag tracking
-  const internalX = useMotionValue(0);
-  const x = dragX || internalX;
+  const x = useMotionValue(0);
   const y = useMotionValue(0);
 
+  // Sync with parent dragX for side indicators
+  useMotionValueEvent(x, "change", (latest) => {
+    if (dragX) {
+      dragX.set(latest);
+    }
+  });
   // Transform drag position to rotation
   const rotate = useTransform(
     x,
