@@ -246,7 +246,7 @@ export function ChallengeDeck({
               const index = idx + 1;
               return (
                 <motion.div
-                  key={`bg-${challenge.id}`}
+                  key={`bg-${idx}`}
                   className="absolute top-0 left-0 w-full h-full card-stack-item"
                   variants={
                     prefersReducedMotion

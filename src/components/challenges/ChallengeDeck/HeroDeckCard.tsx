@@ -60,7 +60,7 @@ export function HeroDeckCard({
             "border border-border/50",
             "shadow-2xl shadow-black/30",
             "gpu-composite contain-card render-smooth",
-            "[mask-image:radial-gradient(white,black)] [-webkit-mask-image:-webkit-radial-gradient(white,black)]"
+            "[transform:translateZ(0)]"
           )}
         >
           {/* Shimmer overlay effect - GPU gradient */}
@@ -283,7 +283,7 @@ function CardBack({ className, isLarge = false }: { className?: string; isLarge?
         "border border-border/50",
         "shadow-xl shadow-black/20",
         "gpu-composite contain-card render-smooth",
-        "[mask-image:radial-gradient(white,black)] [-webkit-mask-image:-webkit-radial-gradient(white,black)]",
+        "[transform:translateZ(0)]",
         className
       )}
     >
