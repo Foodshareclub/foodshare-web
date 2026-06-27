@@ -39,7 +39,7 @@ export function SwipeableCard({ challenge, onSwipeLeft, onSwipeRight }: Swipeabl
   );
 
   const handleDragEnd = useCallback(
-    async (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
       const { offset, velocity } = info;
       const swipeDistance = offset.x;
       const swipeVelocity = velocity.x;
@@ -51,24 +51,10 @@ export function SwipeableCard({ challenge, onSwipeLeft, onSwipeRight }: Swipeabl
         swipeDistance < -SWIPE_CONFIG.THRESHOLD || swipeVelocity < -SWIPE_CONFIG.VELOCITY_THRESHOLD;
 
       if (isSwipeRight) {
-        // Animate card flying off to the right
-        await controls.start({
-          x: SWIPE_CONFIG.EXIT_DISTANCE,
-          y: -100,
-          rotate: SWIPE_CONFIG.EXIT_ROTATION,
-          opacity: 0,
-          transition: { duration: 0.3, ease: [0.4, 0, 1, 1] },
-        });
+        // Notify parent immediately — AnimatePresence handles the exit animation
         onSwipeRight();
       } else if (isSwipeLeft) {
-        // Animate card flying off to the left
-        await controls.start({
-          x: -SWIPE_CONFIG.EXIT_DISTANCE,
-          y: -100,
-          rotate: -SWIPE_CONFIG.EXIT_ROTATION,
-          opacity: 0,
-          transition: { duration: 0.3, ease: [0.4, 0, 1, 1] },
-        });
+        // Notify parent immediately — AnimatePresence handles the exit animation
         onSwipeLeft();
       } else {
         // Snap back to center

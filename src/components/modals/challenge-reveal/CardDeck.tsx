@@ -49,6 +49,7 @@ export function CardDeck({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isShuffling, setIsShuffling] = useState(false);
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // For swipe indicators when using buttons
   const dragX = useMotionValue(0);
@@ -63,18 +64,16 @@ export function CardDeck({
 
   // Handle skip (swipe left)
   const handleSkip = useCallback(() => {
-    if (isEmpty || isShuffling) return;
+    if (isEmpty || isShuffling || isAnimating) return;
+    setIsAnimating(true);
     setExitDirection("left");
-
-    // Brief delay to show animation, then advance
-    setTimeout(() => {
-      setCurrentIndex((prev) => prev + 1);
-    }, 50);
-  }, [isEmpty, isShuffling]);
+    setCurrentIndex((prev) => prev + 1);
+  }, [isEmpty, isShuffling, isAnimating]);
 
   // Handle accept (swipe right)
   const handleAccept = useCallback(() => {
-    if (isEmpty || isShuffling) return;
+    if (isEmpty || isShuffling || isAnimating) return;
+    setIsAnimating(true);
     setExitDirection("right");
 
     // Call the accept callback
@@ -82,11 +81,14 @@ export function CardDeck({
       onAccept(currentChallenge.id);
     }
 
-    // Brief delay to show animation, then advance
-    setTimeout(() => {
-      setCurrentIndex((prev) => prev + 1);
-    }, 50);
-  }, [isEmpty, isShuffling, onAccept, currentChallenge]);
+    setCurrentIndex((prev) => prev + 1);
+  }, [isEmpty, isShuffling, isAnimating, onAccept, currentChallenge]);
+
+  // Reset animation lock when exit animation completes
+  const handleExitComplete = useCallback(() => {
+    setExitDirection(null);
+    setIsAnimating(false);
+  }, []);
 
   // Handle shuffle
   const handleShuffle = useCallback(() => {
@@ -203,7 +205,7 @@ export function CardDeck({
         <SwipeIndicators dragX={dragX} />
 
         {/* Current card */}
-        <AnimatePresence mode="wait">
+        <AnimatePresence onExitComplete={handleExitComplete}>
           {currentChallenge && !isShuffling && (
             <motion.div
               key={currentChallenge.id}

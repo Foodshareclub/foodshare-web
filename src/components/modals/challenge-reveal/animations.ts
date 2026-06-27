@@ -112,6 +112,7 @@ export const swipeExitVariants: Variants = {
     y: -100,
     rotate: -SWIPE_CONFIG.EXIT_ROTATION,
     opacity: 0,
+    zIndex: 50,
     transition: {
       duration: ANIMATION_DURATIONS.SWIPE_EXIT / 1000,
       ease: [0.4, 0, 1, 1],
@@ -122,6 +123,7 @@ export const swipeExitVariants: Variants = {
     y: -100,
     rotate: SWIPE_CONFIG.EXIT_ROTATION,
     opacity: 0,
+    zIndex: 50,
     transition: {
       duration: ANIMATION_DURATIONS.SWIPE_EXIT / 1000,
       ease: [0.4, 0, 1, 1],
@@ -136,12 +138,14 @@ export const nextCardVariants: Variants = {
     y: DECK_CONFIG.OFFSET_Y,
     x: DECK_CONFIG.OFFSET_X,
     opacity: 0.8,
+    zIndex: 40,
   },
   visible: {
     scale: 1,
     y: 0,
     x: 0,
     opacity: 1,
+    zIndex: 40,
     transition: {
       type: "spring",
       stiffness: 400,
