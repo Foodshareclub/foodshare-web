@@ -171,9 +171,7 @@ export const shuffleButtonVariants: Variants = {
 // Gentle floating idle animation
 export const idleWobbleVariants: Variants = {
   idle: {
-    rotateZ: [0, -1, 1, -0.5, 0.5, 0],
-    y: [0, -4, 0, -2, 0],
-    rotateX: [0, 1, 0, -1, 0],
+    y: [0, -6, 0],
     transition: {
       duration: ANIMATION_DURATIONS.FLOAT / 1000,
       repeat: Infinity,

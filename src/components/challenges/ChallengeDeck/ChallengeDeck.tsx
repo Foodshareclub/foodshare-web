@@ -63,7 +63,7 @@ const SPARKLE_POSITIONS = [
 export function ChallengeDeck({
   challenges: initialChallenges,
   onCardClick,
-  autoShuffle = true,
+  autoShuffle = false,
   className,
 }: ChallengeDeckProps) {
   const prefersReducedMotion = useReducedMotion();
@@ -95,14 +95,14 @@ export function ChallengeDeck({
     }, ANIMATION_DURATIONS.SHUFFLE);
   }, [isShuffling, challenges.length]);
 
-  // Auto-shuffle on mount (subtle entrance effect)
+  // Auto-shuffle on mount (disabled by default as it's too aggressive on refresh)
   useEffect(() => {
     if (!autoShuffle || prefersReducedMotion || hasAutoShuffled) return;
 
     const timer = setTimeout(() => {
       handleShuffle();
       setHasAutoShuffled(true);
-    }, 1800);
+    }, 2500); // Delayed to ensure entrance animation is fully complete
 
     return () => clearTimeout(timer);
   }, [autoShuffle, prefersReducedMotion, hasAutoShuffled, handleShuffle]);
@@ -226,13 +226,12 @@ export function ChallengeDeck({
               <div className="w-64 sm:w-72 md:w-80" style={{ aspectRatio: "3/4" }} />
             </div>
 
-            {/* Top face-up card */}
             <motion.div
               variants={prefersReducedMotion ? undefined : hoverFloatVariants}
               animate={isHovered && !isShuffling ? "hover" : "idle"}
               className="absolute top-0 left-0 z-20 gpu-3d-child w-full h-full"
             >
-              <AnimatePresence>
+              <AnimatePresence initial={false}>
                 {!isShuffling && (
                   <motion.div
                     key={topCard.id}
