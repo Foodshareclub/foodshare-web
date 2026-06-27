@@ -49,16 +49,7 @@ function generateParticles(count: number) {
   }));
 }
 
-// Sparkle positions for magical effect - more positions
-const SPARKLE_POSITIONS = [
-  { top: "-8px", right: "-8px", size: "w-6 h-6", color: "text-yellow-400", delay: 0 },
-  { top: "-12px", left: "-28px", size: "w-5 h-5", color: "text-primary", delay: 0.1 },
-  { bottom: "35%", right: "-36px", size: "w-4 h-4", color: "text-teal-400", delay: 0.2 },
-  { bottom: "55%", left: "-32px", size: "w-5 h-5", color: "text-orange-400", delay: 0.15 },
-  { top: "15%", right: "-24px", size: "w-4 h-4", color: "text-pink-400", delay: 0.25 },
-  { top: "40%", left: "-20px", size: "w-3 h-3", color: "text-yellow-300", delay: 0.3 },
-  { bottom: "20%", right: "-16px", size: "w-3 h-3", color: "text-cyan-400", delay: 0.35 },
-];
+
 
 export function ChallengeDeck({
   challenges: initialChallenges,
@@ -178,9 +169,9 @@ export function ChallengeDeck({
         className="relative deck-container gpu-3d-container"
       >
         {/* Particle burst on shuffle */}
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {showParticles && !prefersReducedMotion && (
-            <>
+            <motion.div key="particles" className="absolute inset-0 pointer-events-none">
               {particles.map((particle) => (
                 <motion.div
                   key={particle.id}
@@ -198,7 +189,7 @@ export function ChallengeDeck({
                   }}
                 />
               ))}
-            </>
+            </motion.div>
           )}
         </AnimatePresence>
 
@@ -296,7 +287,7 @@ export function ChallengeDeck({
                     zIndex: 10 - index,
                   }}
                 >
-                  <HeroDeckCard challenge={challenge} isFaceUp={false} />
+                  <HeroDeckCard challenge={challenge} isFaceUp={false} isLarge />
                 </motion.div>
               );
             })}
@@ -364,41 +355,7 @@ export function ChallengeDeck({
           </div>
         </motion.div>
 
-        {/* Multiple decorative sparkles on hover */}
-        <AnimatePresence>
-          {isHovered && !prefersReducedMotion && (
-            <>
-              {SPARKLE_POSITIONS.map((pos, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, scale: 0, rotate: -30 }}
-                  animate={{
-                    opacity: [0.6, 1, 0.6],
-                    scale: [0.8, 1.3, 0.8],
-                    rotate: [0, 20, -20, 0],
-                  }}
-                  exit={{ opacity: 0, scale: 0, rotate: 30 }}
-                  transition={{
-                    delay: pos.delay,
-                    duration: 2.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                  className={cn("absolute pointer-events-none", pos.color)}
-                  style={{
-                    top: pos.top,
-                    right: pos.right,
-                    bottom: pos.bottom,
-                    left: pos.left,
-                    filter: "drop-shadow(0 0 4px currentColor)",
-                  }}
-                >
-                  <Sparkles className={pos.size} />
-                </motion.div>
-              ))}
-            </>
-          )}
-        </AnimatePresence>
+
 
         {/* Idle pulsing glow effect - GPU optimized */}
         {!isHovered && !prefersReducedMotion && (
