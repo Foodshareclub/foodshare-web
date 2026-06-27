@@ -137,55 +137,58 @@ export function CardDeck({
     }
   }, [isEmpty, onComplete]);
 
-  // Empty state
-  if (isEmpty) {
-    return (
-      <motion.div
-        variants={emptyStateVariants}
-        initial="hidden"
-        animate="visible"
-        className="flex flex-col items-center justify-center py-12 px-6 text-center"
-      >
-        <div className="relative mb-6">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-teal-500/20 flex items-center justify-center">
-            <Sparkles className="w-10 h-10 text-primary" />
-          </div>
-          <motion.div
-            className="absolute inset-0 rounded-full bg-primary/20"
-            animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          />
-        </div>
-
-        <h3 className="text-xl font-semibold text-foreground mb-2">All Caught Up!</h3>
-        <p className="text-muted-foreground mb-6 max-w-xs">
-          You&apos;ve seen all the challenges. Shuffle the deck to go through them again!
-        </p>
-
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={handleShuffle}
-          disabled={isShuffling}
-          className={cn(
-            "flex items-center gap-2 px-6 py-3 rounded-full",
-            "bg-gradient-to-r from-primary to-teal-500",
-            "text-white font-semibold",
-            "shadow-lg shadow-primary/30",
-            "hover:shadow-xl hover:shadow-primary/40",
-            "transition-shadow duration-200",
-            isShuffling && "opacity-70 cursor-not-allowed"
-          )}
-        >
-          <RefreshCw className={cn("w-5 h-5", isShuffling && "animate-spin")} />
-          Shuffle Again
-        </motion.button>
-      </motion.div>
-    );
-  }
+  // Empty state is rendered as an overlay so the last card can animate out
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="relative flex flex-col items-center w-full min-h-[550px] justify-center">
+      <AnimatePresence>
+        {isEmpty && (
+          <motion.div
+            key="empty-state-overlay"
+            variants={emptyStateVariants}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center p-6 text-center bg-background/95 backdrop-blur-md rounded-3xl"
+          >
+            <div className="relative mb-6">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-teal-500/20 flex items-center justify-center">
+                <Sparkles className="w-10 h-10 text-primary" />
+              </div>
+              <motion.div
+                className="absolute inset-0 rounded-full bg-primary/20"
+                animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+            </div>
+
+            <h3 className="text-xl font-semibold text-foreground mb-2">All Caught Up!</h3>
+            <p className="text-muted-foreground mb-6 max-w-xs">
+              You&apos;ve seen all the challenges. Shuffle the deck to go through them again!
+            </p>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleShuffle}
+              disabled={isShuffling}
+              className={cn(
+                "flex items-center gap-2 px-6 py-3 rounded-full",
+                "bg-gradient-to-r from-primary to-teal-500",
+                "text-white font-semibold",
+                "shadow-lg shadow-primary/30",
+                "hover:shadow-xl hover:shadow-primary/40",
+                "transition-shadow duration-200",
+                isShuffling && "opacity-70 cursor-not-allowed"
+              )}
+            >
+              <RefreshCw className={cn("w-5 h-5", isShuffling && "animate-spin")} />
+              Shuffle Again
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Remaining count */}
       <div className="mb-4 text-sm text-muted-foreground">
         <span className="font-semibold text-foreground">{remainingCount}</span> challenges remaining
@@ -193,7 +196,7 @@ export function CardDeck({
 
       {/* Card stack area */}
       <motion.div
-        className="relative"
+        className="relative w-72 h-96"
         variants={shuffleVariants}
         initial="initial"
         animate={isShuffling ? "shuffle" : "initial"}
@@ -219,6 +222,7 @@ export function CardDeck({
                     ? "exitRight"
                     : "hidden"
               }
+              className="absolute inset-0"
             >
               <SwipeableCard
                 challenge={currentChallenge}
@@ -232,7 +236,12 @@ export function CardDeck({
 
         {/* Show card back during shuffle */}
         {isShuffling && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            className="absolute inset-0"
+          >
             <CardBack />
           </motion.div>
         )}
