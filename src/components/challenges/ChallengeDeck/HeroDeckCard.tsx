@@ -40,7 +40,10 @@ export function HeroDeckCard({
       transition={{ type: "spring", stiffness: 260, damping: 20 }}
     >
       {/* Front Face */}
-      <div className="absolute inset-0 w-full h-full" style={{ backfaceVisibility: "hidden" }}>
+      <div
+        className="absolute inset-0 w-full h-full"
+        style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
+      >
         {/* Holographic border effect - GPU gradient animation */}
         <div
           className="absolute -inset-[2px] rounded-[20px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 gpu-gradient"
@@ -60,7 +63,7 @@ export function HeroDeckCard({
             "border border-border/50",
             "shadow-2xl shadow-black/30",
             "gpu-composite contain-card render-smooth",
-            "[transform:translateZ(0)]"
+            "[mask-image:linear-gradient(white,white)] [-webkit-mask-image:-webkit-linear-gradient(white,white)]"
           )}
         >
           {/* Shimmer overlay effect - GPU gradient */}
@@ -265,7 +268,11 @@ export function HeroDeckCard({
       {/* Back Face */}
       <div
         className="absolute inset-0 w-full h-full"
-        style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+        style={{
+          backfaceVisibility: "hidden",
+          WebkitBackfaceVisibility: "hidden",
+          transform: "rotateY(180deg)",
+        }}
       >
         <CardBack isLarge={isLarge} className="w-full h-full" />
       </div>
@@ -283,7 +290,7 @@ function CardBack({ className, isLarge = false }: { className?: string; isLarge?
         "border border-border/50",
         "shadow-xl shadow-black/20",
         "gpu-composite contain-card render-smooth",
-        "[transform:translateZ(0)]",
+        "[mask-image:linear-gradient(white,white)] [-webkit-mask-image:-webkit-linear-gradient(white,white)]",
         className
       )}
     >
