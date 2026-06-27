@@ -1,5 +1,6 @@
 import type { Challenge } from "@/lib/data/challenges";
 import type { InitialProductStateType } from "@/types/product.types";
+import { MotionValue } from "framer-motion";
 
 export type SwipeDirection = "left" | "right" | null;
 
@@ -36,6 +37,7 @@ export interface SwipeableCardProps {
   challenge: ChallengeItem;
   onSwipeLeft: () => void;
   onSwipeRight: () => void;
+  dragX?: MotionValue<number>;
 }
 
 export interface DeckStackProps {

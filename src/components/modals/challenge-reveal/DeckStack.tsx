@@ -25,7 +25,7 @@ export function DeckStack({ challenges, isShuffling }: DeckStackProps) {
                 "absolute top-0 left-0",
                 "pointer-events-none" // Stack cards are not interactive
               )}
-              variants={isShuffling ? shuffleFlyVariants(stackIndex) : stackCardVariants(stackIndex)}
+              variants={{ ...stackCardVariants(stackIndex), ...shuffleFlyVariants(stackIndex) }}
               initial="stacked"
               animate={isShuffling ? "fly" : "stacked"}
               exit="exit"

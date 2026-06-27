@@ -224,6 +224,7 @@ export function CardDeck({
                 challenge={currentChallenge}
                 onSwipeLeft={handleSkip}
                 onSwipeRight={handleAccept}
+                dragX={dragX}
               />
             </motion.div>
           )}

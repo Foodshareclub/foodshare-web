@@ -16,12 +16,13 @@ import { snapBackSpring } from "./animations";
 import { SWIPE_CONFIG } from "./constants";
 import type { SwipeableCardProps } from "./types";
 
-export function SwipeableCard({ challenge, onSwipeLeft, onSwipeRight }: SwipeableCardProps) {
+export function SwipeableCard({ challenge, onSwipeLeft, onSwipeRight, dragX }: SwipeableCardProps) {
   const prefersReducedMotion = useReducedMotion();
   const controls = useAnimation();
 
   // Motion values for drag tracking
-  const x = useMotionValue(0);
+  const internalX = useMotionValue(0);
+  const x = dragX || internalX;
   const y = useMotionValue(0);
 
   // Transform drag position to rotation
