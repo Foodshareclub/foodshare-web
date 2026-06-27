@@ -14,7 +14,6 @@ import {
   idleWobbleVariants,
   particleBurstVariants,
   glowPulseVariants,
-  cardRevealVariants,
   hintBounceVariants,
 } from "./animations";
 import { HERO_DECK_CONFIG, ANIMATION_DURATIONS } from "./constants";
@@ -48,8 +47,6 @@ function generateParticles(count: number) {
     color: ["bg-primary", "bg-teal-400", "bg-orange-400", "bg-yellow-400", "bg-pink-400"][i % 5],
   }));
 }
-
-
 
 export function ChallengeDeck({
   challenges: initialChallenges,
@@ -218,29 +215,20 @@ export function ChallengeDeck({
             </div>
 
             <motion.div
-              variants={prefersReducedMotion ? undefined : hoverFloatVariants}
-              animate={isHovered && !isShuffling ? "hover" : "idle"}
+              variants={
+                prefersReducedMotion
+                  ? undefined
+                  : {
+                      idle: hoverFloatVariants.idle,
+                      hover: hoverFloatVariants.hover,
+                      fly: shuffleFlyVariants(0).fly,
+                    }
+              }
+              initial="idle"
+              animate={isShuffling ? "fly" : isHovered ? "hover" : "idle"}
               className="absolute top-0 left-0 z-20 gpu-3d-child w-full h-full"
             >
-              <AnimatePresence initial={false}>
-                {!isShuffling && (
-                  <motion.div
-                    key={topCard.id}
-                    variants={prefersReducedMotion ? undefined : cardRevealVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit={{ 
-                      opacity: 0, 
-                      rotateY: 90, 
-                      scale: 0.85, 
-                      transition: { duration: 0.3 } 
-                    }}
-                    className="relative z-20 w-full h-full"
-                  >
-                    <HeroDeckCard challenge={topCard} isFaceUp={true} className="group" isLarge />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <HeroDeckCard challenge={topCard} isFaceUp={!isShuffling} className="group" isLarge />
 
               {/* Hover glow effect - GPU optimized */}
               <motion.div
@@ -252,19 +240,6 @@ export function ChallengeDeck({
                 className="absolute -inset-3 rounded-3xl bg-gradient-to-r from-primary/30 via-teal-500/25 to-orange-500/30 blur-xl -z-10 gpu-glow"
               />
             </motion.div>
-
-            {/* Shuffle dummy top card (flies face down) */}
-            {isShuffling && (
-              <motion.div
-                className="absolute top-0 left-0 w-full h-full"
-                variants={prefersReducedMotion ? undefined : shuffleFlyVariants(0)}
-                initial="idle"
-                animate="fly"
-                style={{ zIndex: 10 }}
-              >
-                <HeroDeckCard challenge={topCard} isFaceUp={false} isLarge />
-              </motion.div>
-            )}
 
             {/* Background stacked cards (rendered after, positioned behind with lower z-index) */}
             {visibleCards.slice(1).map((challenge, idx) => {
@@ -354,8 +329,6 @@ export function ChallengeDeck({
             </div>
           </div>
         </motion.div>
-
-
 
         {/* Idle pulsing glow effect - GPU optimized */}
         {!isHovered && !prefersReducedMotion && (

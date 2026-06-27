@@ -21,7 +21,6 @@ import {
   deleteVectors,
   type VectorMetadata,
   type VectorUpsertItem,
-  type,
 } from "@/lib/storage/vector";
 
 // ============================================================================

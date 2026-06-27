@@ -1,0 +1,85 @@
+--- /Users/organic/dev/work/foodshare/foodshare-web/src/components/challenges/ChallengeDeck/HeroDeckCard.tsx
++++ /Users/organic/dev/work/foodshare/foodshare-web/src/components/challenges/ChallengeDeck/HeroDeckCard.tsx
+@@ -4,6 +4,7 @@
+ import { Zap, Star, Flame, Users, Sparkles, Trophy } from "lucide-react";
+ import { DIFFICULTY_CONFIG, type DifficultyLevel } from "./constants";
+ import { cn } from "@/lib/utils";
++import { motion } from "framer-motion";
+ import type { InitialProductStateType } from "@/types/product.types";
+ 
+ interface HeroDeckCardProps {
+@@ -30,12 +31,18 @@
+   const DifficultyIcon = DifficultyIcons[difficulty] || Star;
+   const imageUrl = challenge.images?.[0] || "/placeholder-challenge.webp";
+ 
+-  if (!isFaceUp) {
+-    return <CardBack className={className} isLarge={isLarge} />;
+-  }
+-
+   return (
+-    <div className={cn("relative", className)}>
++    <motion.div 
++      className={cn("relative w-full h-full", className)}
++      initial={false}
++      animate={{ rotateY: isFaceUp ? 0 : 180 }}
++      transition={{ type: "spring", stiffness: 260, damping: 20 }}
++      style={{ transformStyle: "preserve-3d" }}
++    >
++      {/* Front of card */}
++      <div 
++        className="absolute inset-0 w-full h-full"
++        style={{ backfaceVisibility: "hidden" }}
++      >
+       {/* Holographic border effect - GPU gradient animation */}
+       <div
+@@ -51,7 +58,7 @@
+       <div
+         className={cn(
+           "relative overflow-hidden rounded-2xl",
+           "bg-card/95 backdrop-blur-xl",
+           "border border-border/50",
+           "shadow-2xl shadow-black/30",
+-          "gpu-composite contain-card render-smooth",
++          "gpu-composite contain-card render-smooth w-full h-full",
++          "[mask-image:radial-gradient(white,black)] -webkit-mask-image:-webkit-radial-gradient(white,black)",
+           isLarge ? "w-64 sm:w-72 md:w-80" : "w-56 sm:w-64"
+         )}
+-        style={{ aspectRatio: "3/4" }}
+       >
+         {/* Shimmer overlay effect - GPU gradient */}
+         <div
+@@ -254,7 +261,16 @@
+           }}
+         />
+       </div>
+-    </div>
++      </div>
++
++      {/* Back of card */}
++      <div 
++        className="absolute inset-0 w-full h-full"
++        style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
++      >
++        <CardBack isLarge={isLarge} className="w-full h-full" />
++      </div>
++    </motion.div>
+   );
+ }
+ 
+@@ -263,12 +279,12 @@
+   return (
+     <div
+       className={cn(
+-        "relative overflow-hidden rounded-2xl",
++        "relative overflow-hidden rounded-2xl w-full h-full",
++        "[mask-image:radial-gradient(white,black)] -webkit-mask-image:-webkit-radial-gradient(white,black)",
+         "bg-gradient-to-br from-primary/25 via-card to-teal-500/25",
+         "border border-border/50",
+         "shadow-xl shadow-black/20",
+         "gpu-composite contain-card render-smooth",
+-        isLarge ? "w-64 sm:w-72 md:w-80" : "w-56 sm:w-64",
+         className
+       )}
+-      style={{ aspectRatio: "3/4" }}
+     >
+       {/* Animated diagonal stripe pattern */}
