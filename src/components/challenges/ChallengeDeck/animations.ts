@@ -12,38 +12,32 @@ import { HERO_DECK_CONFIG, ANIMATION_DURATIONS } from "./constants";
  * on the compositor thread, avoiding layout/paint triggers.
  */
 
-// Hero deck entrance animation - GPU accelerated 3D transforms
+// Hero deck entrance animation - GPU accelerated but smooth, no 3D rotation to prevent border-radius clipping bugs
 export const heroEntryVariants: Variants = {
   hidden: {
     opacity: 0,
-    y: 80,
-    scale: 0.8,
-    rotateX: 25,
-    rotateY: -10,
+    y: 30,
+    scale: 0.95,
   },
   visible: {
     opacity: 1,
     y: 0,
     scale: 1,
-    rotateX: 0,
-    rotateY: 0,
     transition: {
-      type: "spring",
-      stiffness: 150,
-      damping: 18,
-      delay: 0.3,
+      duration: 0.7,
+      ease: [0.23, 1, 0.32, 1], // easeOutQuint
+      delay: 0.2,
     },
   },
 };
 
-// Stacked card positioning with enhanced 3D depth
+// Stacked card positioning with enhanced 2D depth (3D removed to preserve border-radius)
 export const stackCardVariants = (index: number): Variants => ({
   stacked: {
     y: index * HERO_DECK_CONFIG.OFFSET_Y,
     x: index * HERO_DECK_CONFIG.OFFSET_X,
     scale: 1 - index * HERO_DECK_CONFIG.SCALE_REDUCTION,
     rotateZ: index * HERO_DECK_CONFIG.ROTATION_VARIANCE,
-    rotateX: index * 1.5, // Subtle 3D tilt
     opacity: 1 - index * HERO_DECK_CONFIG.OPACITY_REDUCTION,
     zIndex: 10 - index,
     transition: {
@@ -115,15 +109,11 @@ export const hoverFloatVariants: Variants = {
   idle: {
     y: 0,
     rotateZ: 0,
-    rotateX: 0,
-    rotateY: 0,
     scale: 1,
   },
   hover: {
     y: -16,
     rotateZ: 2,
-    rotateX: -5,
-    rotateY: 5,
     scale: 1.04,
     transition: {
       type: "spring",
