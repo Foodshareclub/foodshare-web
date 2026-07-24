@@ -83,6 +83,7 @@ export interface Database {
           address: string | null;
           bio: string | null;
           is_admin: boolean;
+          onboarding_completed: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -95,6 +96,7 @@ export interface Database {
           address?: string | null;
           bio?: string | null;
           is_admin?: boolean;
+          onboarding_completed?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -107,6 +109,7 @@ export interface Database {
           address?: string | null;
           bio?: string | null;
           is_admin?: boolean;
+          onboarding_completed?: boolean;
           created_at?: string;
           updated_at?: string;
         };
