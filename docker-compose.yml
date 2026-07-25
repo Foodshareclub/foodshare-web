@@ -46,21 +46,13 @@ services:
     networks:
       - foodshare-web-network
 
-  caddy:
-    container_name: foodshare-caddy
-    image: caddy:2-alpine
+  cloudflared:
+    container_name: supabase-cloudflared
+    image: cloudflare/cloudflared:latest
     restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
+    command: tunnel run
     environment:
-      - SITE_DOMAIN=${SITE_DOMAIN:-foodshare.club}
-      - CADDY_ACME_EMAIL=${CADDY_ACME_EMAIL:-}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
     depends_on:
       foodshare-web:
         condition: service_healthy
@@ -71,10 +63,6 @@ services:
         max-file: "3"
     networks:
       - foodshare-web-network
-
-volumes:
-  caddy_data:
-  caddy_config:
 
 networks:
   foodshare-web-network:
