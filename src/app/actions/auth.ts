@@ -178,10 +178,7 @@ export async function checkUserIsAdmin(): Promise<boolean> {
  * Sign in with email and password
  */
 export type AuthActionResult = ServerActionResult<void> & { error?: any };
-export type OAuthUrlResult = ServerActionResult<{ url: string }> & {
-  error?: any;
-  url?: string | null;
-};
+export type OAuthUrlResult = { success?: boolean; data?: { url: string }; error?: string | null; url?: string | null };
 
 /**
  * Sign in with email and password
@@ -382,8 +379,8 @@ export async function getOAuthSignInUrl(
         ? `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not configured yet. Please use email/password or magic link.`
         : error.message;
 
-    return { success: false, url: null, error: errMsg } as any;
+    return { url: null, error: errMsg };
   }
 
-  return { success: true, data: { url: data.url }, url: data.url } as any;
+  return { url: data.url };
 }

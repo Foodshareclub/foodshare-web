@@ -65,6 +65,7 @@
     "@supabase/supabase-js": "2.110.8",
     "@tanstack/react-query": "5.101.4",
     "@tanstack/react-query-devtools": "5.101.4",
+    "@tinybirdco/sdk": "0.0.82",
     "@tiptap/extension-image": "3.29.0",
     "@tiptap/extension-link": "3.29.0",
     "@tiptap/extension-placeholder": "3.29.0",

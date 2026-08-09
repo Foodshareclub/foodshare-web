@@ -79,7 +79,6 @@ export const usePosition = (
       userSettings.fallbackToApproximate,
     ]
   );
-   
 
   const [position, setPosition] = useState<PositionData>({});
   const [error, setError] = useState<PositionError | null>(null);
