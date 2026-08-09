@@ -36,7 +36,7 @@ mock.module("next/navigation", () => ({
 // Helper to create query chain for Supabase mocks
 const createQueryChain = (tableName?: string) => {
   const isUserRoles = tableName === "user_roles";
-  const mockResult = Promise.resolve({
+  const getResult = () => Promise.resolve({
     data: isUserRoles ? mockState.userRoles : mockState.profile,
     error: mockState.dbError,
   });
@@ -44,12 +44,11 @@ const createQueryChain = (tableName?: string) => {
   const chain: any = {
     eq: mock(() => chain),
     in: mock(() => chain),
-    single: mock(() => mockResult),
-    maybeSingle: mock(() => mockResult),
+    single: mock(getResult),
+    maybeSingle: mock(getResult),
     // eslint-disable-next-line unicorn/no-thenable
-    then: (onfulfilled?: any, onrejected?: any) => mockResult.then(onfulfilled, onrejected),
-    catch: (onrejected?: any) => mockResult.catch(onrejected),
-    finally: (onfinally?: any) => mockResult.finally(onfinally),
+    then: (onfulfilled?: any, onrejected?: any) => getResult().then(onfulfilled, onrejected),
+    catch: (onrejected?: any) => getResult().catch(onrejected),
   };
   return chain;
 };
