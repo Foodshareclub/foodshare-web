@@ -153,38 +153,30 @@ mock.module("@/lib/supabase/admin", () => ({
   createAdminClient: mock(() => ({
     from: mock((tableName: string) => ({
       select: mock(() => ({
-        eq: mock(() => ({
-          // eslint-disable-next-line unicorn/no-thenable
-          then: (resolve: (value: unknown) => void) =>
-            resolve({
-              data: tableName === "user_roles" ? (mockState.userRoles ?? []) : mockState.profile,
-              error: mockState.dbError,
-            }),
-        })),
-        in: mock(() => ({
-          // eslint-disable-next-line unicorn/no-thenable
-          then: (resolve: (value: unknown) => void) =>
-            resolve({
-              data: tableName === "user_roles" ? (mockState.userRoles ?? []) : mockState.profile,
-              error: mockState.dbError,
-            }),
-        })),
-        single: mock(() => ({
-          // eslint-disable-next-line unicorn/no-thenable
-          then: (resolve: (value: unknown) => void) =>
-            resolve({
-              data: mockState.profile,
-              error: mockState.dbError,
-            }),
-        })),
-        maybeSingle: mock(() => ({
-          // eslint-disable-next-line unicorn/no-thenable
-          then: (resolve: (value: unknown) => void) =>
-            resolve({
-              data: mockState.profile,
-              error: mockState.dbError,
-            }),
-        })),
+        eq: mock(() =>
+          Promise.resolve({
+            data: tableName === "user_roles" ? mockState.userRoles : mockState.profile,
+            error: mockState.dbError,
+          })
+        ),
+        in: mock(() =>
+          Promise.resolve({
+            data: tableName === "user_roles" ? mockState.userRoles : mockState.profile,
+            error: mockState.dbError,
+          })
+        ),
+        single: mock(() =>
+          Promise.resolve({
+            data: mockState.profile,
+            error: mockState.dbError,
+          })
+        ),
+        maybeSingle: mock(() =>
+          Promise.resolve({
+            data: mockState.profile,
+            error: mockState.dbError,
+          })
+        ),
       })),
     })),
   })),
