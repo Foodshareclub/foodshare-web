@@ -3,7 +3,7 @@
  * Unit tests for authentication server actions
  */
 
-import { mock, describe, it, expect, beforeEach } from "bun:test";
+import { mock, describe, it, expect, beforeEach, afterEach } from "bun:test";
 
 // Isolated local mock state to prevent race conditions with other test files
 const mockState = {
@@ -171,14 +171,17 @@ import {
 } from "@/app/actions/auth";
 
 describe("Auth Server Actions", () => {
-  beforeEach(() => {
+  const resetState = () => {
     mockState.user = null;
     mockState.session = null;
     mockState.profile = null;
     mockState.userRoles = [];
     mockState.authError = null;
     mockState.dbError = null;
-  });
+  };
+
+  beforeEach(resetState);
+  afterEach(resetState);
 
   // ==========================================================================
   // getSession Tests

@@ -3,7 +3,7 @@
  * Unit tests for admin management server actions
  */
 
-import { mock, describe, it, expect, beforeEach } from "bun:test";
+import { mock, describe, it, expect, beforeEach, afterEach } from "bun:test";
 
 // Isolated local mock state to prevent race conditions with other test files
 const mockState = {
@@ -229,7 +229,7 @@ function isFailedResult(result: { success: boolean }): result is FailedResult {
 }
 
 describe("Admin Server Actions", () => {
-  beforeEach(() => {
+  const resetState = () => {
     mockState.user = null;
     mockState.profile = null;
     mockState.userRoles = null;
@@ -239,7 +239,10 @@ describe("Admin Server Actions", () => {
     mockState.dbError = null;
     mockState.usersData = [];
     mockState.usersCount = 0;
-  });
+  };
+
+  beforeEach(resetState);
+  afterEach(resetState);
 
   // ==========================================================================
   // verifyAdminAccess Tests (via action calls)
