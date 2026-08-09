@@ -102,15 +102,14 @@ mock.module("@/lib/supabase/server", () => ({
           })
         ),
       },
-      from: mock((tableName: string) => ({
-        select: mock(() => createQueryChain(tableName)),
-        insert: mock(() =>
+      from: (tableName: string) => ({
+        select: () => createQueryChain(tableName),
+        insert: () =>
           Promise.resolve({
             data: mockState.profile,
             error: mockState.dbError,
-          })
-        ),
-      })),
+          }),
+      }),
       storage: {
         from: mock(() => ({
           getPublicUrl: mock((path: string) => ({
@@ -130,36 +129,32 @@ mock.module("@/lib/supabase/server", () => ({
 }));
 
 mock.module("@/lib/supabase/admin", () => ({
-  createAdminClient: mock(() => ({
-    from: mock((tableName: string) => ({
-      select: mock(() => ({
-        eq: mock(() =>
+  createAdminClient: () => ({
+    from: (tableName: string) => ({
+      select: () => ({
+        eq: () =>
           Promise.resolve({
-            data: tableName === "user_roles" ? mockState.userRoles : mockState.profile,
+            data: tableName === "user_roles" ? (mockState.userRoles ?? []) : mockState.profile,
             error: mockState.dbError,
-          })
-        ),
-        in: mock(() =>
+          }),
+        in: () =>
           Promise.resolve({
-            data: tableName === "user_roles" ? mockState.userRoles : mockState.profile,
+            data: tableName === "user_roles" ? (mockState.userRoles ?? []) : mockState.profile,
             error: mockState.dbError,
-          })
-        ),
-        single: mock(() =>
+          }),
+        single: () =>
           Promise.resolve({
             data: mockState.profile,
             error: mockState.dbError,
-          })
-        ),
-        maybeSingle: mock(() =>
+          }),
+        maybeSingle: () =>
           Promise.resolve({
             data: mockState.profile,
             error: mockState.dbError,
-          })
-        ),
-      })),
-    })),
-  })),
+          }),
+      }),
+    }),
+  }),
 }));
 
 // Import actions after mocks
