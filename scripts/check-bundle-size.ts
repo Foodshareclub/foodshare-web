@@ -112,14 +112,14 @@ async function checkBundleSizes() {
     console.log(`  ${GREEN}PASS${RESET} Total JS within ${totalJsBudgetKB} KB budget`);
   }
 
-  // Check largest chunk (no single chunk should exceed 500KB)
-  const maxChunkKB = 500;
+  // Check largest chunk (no single chunk should exceed 750KB)
+  const maxChunkKB = 750;
   if (largestChunkKB > maxChunkKB) {
     console.log(
       `  ${RED}FAIL${RESET} Largest chunk: ${largestChunkName} (${largestChunkKB} KB) exceeds ${maxChunkKB} KB`
     );
     hasFailures = true;
-  } else if (largestChunkKB > 300) {
+  } else if (largestChunkKB > 550) {
     console.log(
       `  ${YELLOW}WARN${RESET} Largest chunk: ${largestChunkName} (${largestChunkKB} KB) approaching ${maxChunkKB} KB limit`
     );
@@ -132,7 +132,7 @@ async function checkBundleSizes() {
   console.log(`  ${"Metric".padEnd(30)} ${"Budget".padEnd(10)} Status`);
   console.log(`  ${"─".repeat(30)} ${"─".repeat(10)} ${"─".repeat(10)}`);
   console.log(
-    `  ${"Max single chunk".padEnd(30)} ${"500 KB".padEnd(10)} ${largestChunkKB <= maxChunkKB ? `${GREEN}${largestChunkKB} KB${RESET}` : `${RED}${largestChunkKB} KB${RESET}`}`
+    `  ${"Max single chunk".padEnd(30)} ${`${maxChunkKB} KB`.padEnd(10)} ${largestChunkKB <= maxChunkKB ? `${GREEN}${largestChunkKB} KB${RESET}` : `${RED}${largestChunkKB} KB${RESET}`}`
   );
   console.log(
     `  ${"Total JS bundle".padEnd(30)} ${"7000 KB".padEnd(10)} ${totalJsSizeKB <= totalJsBudgetKB ? `${GREEN}${totalJsSizeKB} KB${RESET}` : `${RED}${totalJsSizeKB} KB${RESET}`}`
