@@ -42,31 +42,21 @@ interface MockChain {
   then: (resolve: (value: unknown) => void) => void;
 }
 
-// Global Eq Chain for mocks
-const createEqChain = (tableName?: string): MockChain => {
-  const chain: MockChain = {
-    eq: mock((): MockChain => createEqChain(tableName)),
-    in: mock((): MockChain => createEqChain(tableName)),
-    single: mock(() =>
-      Promise.resolve({
-        data: mockState.profile,
-        error: mockState.dbError,
-      })
-    ),
-    maybeSingle: mock(() =>
-      Promise.resolve({
-        data: mockState.profile,
-        error: mockState.dbError,
-      })
-    ),
-    // For user_roles table, the chain resolves to an array (not single)
-    // eslint-disable-next-line unicorn/no-thenable
-    then: (resolve: (value: unknown) => void) =>
-      resolve({
-        // user_roles returns array of roles, profiles returns single profile
-        data: tableName === "user_roles" ? (mockState.userRoles ?? []) : mockState.profile,
-        error: mockState.dbError,
-      }),
+// Helper to create query chain for Supabase mocks
+const createQueryChain = (tableName?: string) => {
+  const isUserRoles = tableName === "user_roles";
+  const getResult = () => Promise.resolve({
+    data: isUserRoles ? mockState.userRoles : mockState.profile,
+    error: mockState.dbError,
+  });
+
+  const chain: any = {
+    eq: mock(() => chain),
+    in: mock(() => chain),
+    single: mock(getResult),
+    maybeSingle: mock(getResult),
+    then: (onfulfilled?: (value: any) => any, onrejected?: (reason: any) => any) =>
+      getResult().then(onfulfilled, onrejected),
   };
   return chain;
 };
@@ -121,9 +111,7 @@ mock.module("@/lib/supabase/server", () => ({
         ),
       },
       from: mock((tableName: string) => ({
-        select: mock(() => ({
-          eq: mock(() => createEqChain(tableName)),
-        })),
+        select: mock(() => createQueryChain(tableName)),
         insert: mock(() =>
           Promise.resolve({
             data: mockState.profile,
