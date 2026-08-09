@@ -5,8 +5,24 @@
 
 import { mock, describe, it, expect, beforeEach } from "bun:test";
 
-// Shared mock state
-import { mockState } from "../mock-state";
+// Isolated local mock state to prevent race conditions with other test files
+const mockState = {
+  user: null as { id: string; email: string } | null,
+  session: null as { access_token: string; user: { id: string } } | null,
+  profile: null as {
+    id: string;
+    first_name: string;
+    second_name: string;
+    avatar_url?: string | null;
+    email: string;
+    is_active?: boolean;
+    onboarding_completed?: boolean;
+  } | null,
+  userRoles: [] as Array<{ roles: { name: string } }>,
+  listing: null as { id: number; post_name: string; profile_id: string } | null,
+  authError: null as { message: string } | null,
+  dbError: null as { message: string; code?: string } | null,
+};
 
 // Mock next/navigation - redirect throws to simulate Next.js behavior
 mock.module("next/navigation", () => ({
