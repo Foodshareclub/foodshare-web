@@ -125,6 +125,27 @@ mock.module("@/lib/supabase/server", () => {
   };
 });
 
+// Mock Supabase admin (fallback — per-test mocks override this)
+mock.module("@/lib/supabase/admin", () => {
+  const mockAdminClient = {
+    auth: {
+      getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+    },
+    from: () => ({
+      select: () => ({
+        eq: () => Promise.resolve({ data: [], error: null }),
+        in: () => Promise.resolve({ data: [], error: null }),
+        single: () => Promise.resolve({ data: null, error: null }),
+        maybeSingle: () => Promise.resolve({ data: null, error: null }),
+      }),
+    }),
+    rpc: () => Promise.resolve({ data: null, error: null }),
+  };
+  return {
+    createAdminClient: () => mockAdminClient,
+  };
+});
+
 // Mock next/headers
 mock.module("next/headers", () => ({
   headers: () => new Map(),

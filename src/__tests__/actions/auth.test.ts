@@ -192,7 +192,7 @@ describe("Auth Server Actions", () => {
     mockState.user = null;
     mockState.session = null;
     mockState.profile = null;
-    mockState.userRoles = null;
+    mockState.userRoles = [];
     mockState.authError = null;
     mockState.dbError = null;
   });
