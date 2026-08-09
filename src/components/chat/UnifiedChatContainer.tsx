@@ -147,9 +147,10 @@ export function UnifiedChatContainer({
     },
   });
 
-  // Sync messages when initialMessages changes
   useEffect(() => {
-    setMessages(initialMessages);
+    setTimeout(() => {
+      setMessages(initialMessages);
+    }, 0);
   }, [initialMessages]);
 
   useEffect(() => {

@@ -107,7 +107,7 @@ export const GrokAssistant: React.FC = () => {
     }
   }, [isResetting]);
 
-  const handleSendMessage = async (query?: string) => {
+  async function handleSendMessage(query?: string) {
     const messageText = query || input.trim();
     if (!messageText || isLoading) return;
 
@@ -166,7 +166,7 @@ export const GrokAssistant: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {

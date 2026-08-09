@@ -11,7 +11,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
-import { readFileSync, readdirSync, existsSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import { config } from "dotenv";
 
@@ -77,9 +77,7 @@ function loadMessages(locale: string): Record<string, string> | null {
       return null;
     }
 
-    // Use eval to parse the object (safe since we control the source)
-     
-    const messages = eval(`(${match[1]})`);
+    const messages = JSON.parse(match[1].replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2": '));
 
     return messages;
   } catch (error) {
@@ -130,7 +128,7 @@ async function syncTranslations() {
       console.log(`   📝 Found ${messageCount} messages`);
 
       // Upsert to database
-      const { error } = await supabase.from("translations").upsert(
+      const { data: _data, error } = await supabase.from("translations").upsert(
         {
           locale,
           messages,
@@ -182,7 +180,7 @@ async function verifySchema() {
 
   try {
     // Check if translations table exists
-    const { data, error } = await supabase.from("translations").select("id").limit(1);
+    const { data: _data, error } = await supabase.from("translations").select("id").limit(1);
 
     if (error) {
       console.error("❌ Database schema verification failed:");

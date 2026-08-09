@@ -3,7 +3,7 @@
  * Provides consistent section animations and styling
  */
 
-import React, { CSSProperties } from "react";
+import React from "react";
 import { MotionBox } from "../MotionComponents";
 import { fadeInUp } from "../animations";
 

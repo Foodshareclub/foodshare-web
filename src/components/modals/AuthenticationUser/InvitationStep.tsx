@@ -1,5 +1,5 @@
 import React, { useState, useTransition } from "react";
-import { Users, Mail, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Users, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmailInput } from "@/components/ui/email-input";
 import { sendInvitations } from "@/app/actions/invitation";

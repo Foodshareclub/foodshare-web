@@ -71,13 +71,13 @@ function generateJsonLdScripts(): React.ReactNode {
 async function fetchHomeData(locationParams: { lat: number; lng: number; radius: number } | null) {
   try {
     if (locationParams) {
-      // Location-based: fetch nearby posts using PostGIS
+      // Location-based: fetch nearby posts using PostGIS.
+      // Use the user's configured radius (NOT a hardcoded 50km) so the first
+      // page is genuinely local. Expansion on scroll is handled client-side.
       const result = await getNearbyPosts({
         lat: locationParams.lat,
         lng: locationParams.lng,
-        // Always use 50km for the feed query — let distance sorting handle "expansion"
-        // This matches the server action's 50km to ensure consistent pagination across pages
-        radiusMeters: 50000,
+        radiusMeters: locationParams.radius,
         postType: "food",
         limit: 20,
       });

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Navbar from "@/components/header/navbar/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import type { AuthUser } from "@/lib/data/auth";
 import type { CustomRoomType } from "@/api/chatAPI";
-import { CATEGORIES, type CategoryId } from "@/constants/categories";
+import { CATEGORIES } from "@/constants/categories";
 
 interface NavbarWrapperProps {
   defaultProductType?: string;
@@ -37,24 +37,24 @@ export function NavbarWrapper({
   initialProfile,
   unreadRooms = [],
 }: NavbarWrapperProps) {
-  const router = useRouter();
+  // const router = useRouter();
   const pathname = usePathname();
-  
+
   // Initialize productType from pathname if possible
   const getInitialProductType = () => {
     if (!pathname) return defaultProductType;
-    const path = pathname.split('/')[1] || "food";
+    const path = pathname.split("/")[1] || "food";
     // Check if the path matches a valid category ID
-    const validCategory = CATEGORIES.find(cat => cat.id === path);
+    const validCategory = CATEGORIES.find((cat) => cat.id === path);
     return (validCategory?.id as string) || defaultProductType;
   };
 
   const [productType, setProductType] = useState(getInitialProductType());
 
   // Update productType when pathname changes (direct navigation or back/forward)
-  const path = pathname?.split('/')[1] || "food";
-  const validCategory = CATEGORIES.find(cat => cat.id === path);
-  
+  const path = pathname?.split("/")[1] || "food";
+  const validCategory = CATEGORIES.find((cat) => cat.id === path);
+
   if (validCategory && validCategory.id !== productType) {
     setProductType(validCategory.id);
   }

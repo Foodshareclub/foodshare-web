@@ -66,7 +66,7 @@ export const chatAPI = {
       .subscribe();
   },
   removeChannel(channel: RealtimeChannel): Promise<"error" | "ok" | "timed out"> {
-    return supabase.removeChannel(channel);
+    return supabase.removeChannel(channel) as unknown as Promise<"error" | "ok" | "timed out">;
   },
   writeReview(feedBack: Partial<ReviewsType>) {
     return supabase.from("reviews").insert(feedBack);
@@ -80,15 +80,18 @@ export const chatAPI = {
   createRoom(room: Partial<RoomType>): PromiseLike<PostgrestSingleResponse<Array<RoomType>>> {
     return supabase.from("rooms").insert(room).select().single();
   },
-  getRoom({ sharerId, requesterId, postId }: PayloadForGEtRoom): PromiseLike<PostgrestSingleResponse<Array<RoomType & { profiles: AllValuesType }>>> {
-    return supabase
-      .from("rooms")
-      .select(`*,profiles!rooms_requester_fkey(*)`)
-      .match({
-        sharer: sharerId,
-        requester: requesterId,
-        post_id: postId,
-      });
+  getRoom({
+    sharerId,
+    requesterId,
+    postId,
+  }: PayloadForGEtRoom): PromiseLike<
+    PostgrestSingleResponse<Array<RoomType & { profiles: AllValuesType }>>
+  > {
+    return supabase.from("rooms").select(`*,profiles!rooms_requester_fkey(*)`).match({
+      sharer: sharerId,
+      requester: requesterId,
+      post_id: postId,
+    });
   },
   getAllMessagesInRoomParticipantsFromOneRoom(
     roomId: string
@@ -100,7 +103,9 @@ export const chatAPI = {
       .order("timestamp", { ascending: false })
       .range(0, 9);
   },
-  getAllRoomsForCurrentUser(userID: string): PromiseLike<PostgrestSingleResponse<Array<CustomRoomType>>> {
+  getAllRoomsForCurrentUser(
+    userID: string
+  ): PromiseLike<PostgrestSingleResponse<Array<CustomRoomType>>> {
     return supabase
       .from("rooms")
       .select(`*, posts(*), room_participants(*), profiles!rooms_sharer_fkey(*)`)

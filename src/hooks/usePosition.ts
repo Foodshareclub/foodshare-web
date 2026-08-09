@@ -67,7 +67,6 @@ export const usePosition = (
   watch = false,
   userSettings: UsePositionSettings = {}
 ): UsePositionReturn => {
-  /* eslint-disable react-hooks/exhaustive-deps */
   const settings = useMemo(
     () => ({
       ...defaultSettings,
@@ -80,7 +79,7 @@ export const usePosition = (
       userSettings.fallbackToApproximate,
     ]
   );
-  /* eslint-enable react-hooks/exhaustive-deps */
+   
 
   const [position, setPosition] = useState<PositionData>({});
   const [error, setError] = useState<PositionError | null>(null);
@@ -176,7 +175,9 @@ export const usePosition = (
   }, [watch, settings, onChange, onError]);
 
   useEffect(() => {
-    requestPosition();
+    setTimeout(() => {
+      requestPosition();
+    }, 0);
 
     // Cleanup function
     return () => {

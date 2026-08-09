@@ -46,7 +46,9 @@ const UserLocationMarker: FC<LocationMarkerType> = ({ icon }) => {
 
   // Request location on mount
   useEffect(() => {
-    requestLocation();
+    setTimeout(() => {
+      requestLocation();
+    }, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally run once on mount
   }, []);
 

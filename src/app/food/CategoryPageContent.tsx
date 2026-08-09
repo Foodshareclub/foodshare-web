@@ -133,8 +133,9 @@ export default async function CategoryPageContent({
       nearbyResult = await getNearbyPosts({
         lat: locationParams.lat,
         lng: locationParams.lng,
-        // Always use 50km for the feed query — let distance sorting handle "expansion"
-        radiusMeters: 50000,
+        // Use the user's configured radius (NOT a hardcoded 50km) so the first
+        // page is genuinely local. Expansion on scroll is handled client-side.
+        radiusMeters: locationParams.radius,
         postType: productType === "challenge" ? null : productType,
         limit: 20,
       });

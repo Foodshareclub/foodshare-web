@@ -4,11 +4,8 @@
  * Demonstrates testing the circuit breaker with enterprise test utilities.
  */
 
-import { describe, it, expect, beforeEach } from "bun:test";
-import {
-  createTestCircuitBreaker,
-  createFailingThenSucceedingFn,
-} from "../enterprise-test-utils";
+import { describe, it, expect } from "bun:test";
+import { createTestCircuitBreaker, createFailingThenSucceedingFn } from "../enterprise-test-utils";
 import { CircuitOpenError } from "../../api/circuit-breaker";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -40,14 +37,14 @@ describe("CircuitBreaker", () => {
       const breaker = createTestCircuitBreaker({ failureThreshold: 1 });
 
       // Open the circuit
-      await expect(
-        breaker.execute(() => Promise.reject(new Error("fail")))
-      ).rejects.toThrow("fail");
+      await expect(breaker.execute(() => Promise.reject(new Error("fail")))).rejects.toThrow(
+        "fail"
+      );
 
       // Should reject with CircuitOpenError
-      await expect(
-        breaker.execute(() => Promise.resolve("success"))
-      ).rejects.toThrow(CircuitOpenError);
+      await expect(breaker.execute(() => Promise.resolve("success"))).rejects.toThrow(
+        CircuitOpenError
+      );
     });
 
     it("should transition to HALF_OPEN after reset timeout", async () => {
@@ -57,9 +54,7 @@ describe("CircuitBreaker", () => {
       });
 
       // Open the circuit
-      await expect(
-        breaker.execute(() => Promise.reject(new Error("fail")))
-      ).rejects.toThrow();
+      await expect(breaker.execute(() => Promise.reject(new Error("fail")))).rejects.toThrow();
 
       expect(breaker.getMetrics().state).toBe("OPEN");
 
@@ -82,9 +77,7 @@ describe("CircuitBreaker", () => {
       });
 
       // Open circuit
-      await expect(
-        breaker.execute(() => Promise.reject(new Error("fail")))
-      ).rejects.toThrow();
+      await expect(breaker.execute(() => Promise.reject(new Error("fail")))).rejects.toThrow();
 
       // Wait for HALF_OPEN
       await sleep(80);
@@ -103,9 +96,7 @@ describe("CircuitBreaker", () => {
       });
 
       // Open circuit
-      await expect(
-        breaker.execute(() => Promise.reject(new Error("fail")))
-      ).rejects.toThrow();
+      await expect(breaker.execute(() => Promise.reject(new Error("fail")))).rejects.toThrow();
 
       // Wait for HALF_OPEN
       await sleep(80);
@@ -147,12 +138,8 @@ describe("CircuitBreaker", () => {
       await breaker.execute(() => Promise.resolve(3));
 
       // 2 failures
-      await expect(
-        breaker.execute(() => Promise.reject(new Error("fail")))
-      ).rejects.toThrow();
-      await expect(
-        breaker.execute(() => Promise.reject(new Error("fail")))
-      ).rejects.toThrow();
+      await expect(breaker.execute(() => Promise.reject(new Error("fail")))).rejects.toThrow();
+      await expect(breaker.execute(() => Promise.reject(new Error("fail")))).rejects.toThrow();
 
       const metrics = breaker.getMetrics();
       expect(metrics.totalSuccesses).toBe(3);

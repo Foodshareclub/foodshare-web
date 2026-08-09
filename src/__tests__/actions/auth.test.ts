@@ -44,6 +44,7 @@ const createEqChain = (tableName?: string): MockChain => {
       })
     ),
     // For user_roles table, the chain resolves to an array (not single)
+    // eslint-disable-next-line unicorn/no-thenable
     then: (resolve: (value: unknown) => void) =>
       resolve({
         // user_roles returns array of roles, profiles returns single profile

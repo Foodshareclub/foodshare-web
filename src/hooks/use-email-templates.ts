@@ -118,14 +118,19 @@ async function invokeEdgeFunction<T>(
   // Build the full URL for the edge function
   const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/${EDGE_FUNCTION_NAME}${path}`;
 
-  const response = await fetch(url, {
+  const options: RequestInit = {
     method,
     headers: {
       "Content-Type": "application/json",
       apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
     },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  };
+
+  if (method !== "GET" && body) {
+    options.body = JSON.stringify(body);
+  }
+
+  const response = await fetch(url, options);
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: "Unknown error" }));

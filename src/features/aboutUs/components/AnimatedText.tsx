@@ -3,7 +3,7 @@
  * Provides sophisticated text animations
  */
 
-import React, { CSSProperties } from "react";
+import React from "react";
 import { MotionBox } from "../MotionComponents";
 
 interface AnimatedTextProps {

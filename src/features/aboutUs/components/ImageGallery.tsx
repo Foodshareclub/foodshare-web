@@ -26,7 +26,7 @@ export const ImageGallery: React.FC<ImageGalleryProps> = ({
   columns = { base: "repeat(3, 1fr)", lg: "repeat(5, 1fr)" },
   gap = 6,
 }) => {
-  const gridClasses = "grid gap-6";
+  const gridClasses = `grid gap-${gap}`;
   const gridStyle = {
     gridTemplateColumns: columns.base,
   };

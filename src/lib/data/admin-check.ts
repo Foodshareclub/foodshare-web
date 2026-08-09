@@ -30,8 +30,8 @@ export async function checkUserIsAdmin(userId: string): Promise<AdminCheckResult
     }
 
     const roles = (userRoles || [])
-      .map((r: any) => r.roles?.name)
-      .filter(Boolean);
+      .map((r: any) => (Array.isArray(r.roles) ? r.roles[0]?.name : r.roles?.name))
+      .filter((name): name is string => typeof name === "string");
 
     const isSuperAdmin = roles.includes("superadmin");
     const isAdmin = roles.includes("admin") || isSuperAdmin;
@@ -48,7 +48,9 @@ export async function checkUserIsAdmin(userId: string): Promise<AdminCheckResult
  */
 export async function getAdminAuth(): Promise<AdminCheckResult> {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     return { isAdmin: false, isSuperAdmin: false, roles: [], userId: null };

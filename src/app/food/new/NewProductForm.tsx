@@ -139,10 +139,12 @@ export function NewProductForm({
   // Sync form state when initialType prop changes (e.g., URL navigation)
   // This replaces the key={initialType} prop that was removed to fix auth issues
   useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      post_type: initialType,
-    }));
+    setTimeout(() => {
+      setFormData((prev) => ({
+        ...prev,
+        post_type: initialType,
+      }));
+    }, 0);
   }, [initialType]);
 
   const isVolunteerForm = formData.post_type === "volunteer";

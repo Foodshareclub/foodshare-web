@@ -104,8 +104,6 @@ export async function sendTemplateEmail<T extends EmailTemplateName>({
   subject,
   replyTo,
 }: SendTemplateEmailOptions<T>): Promise<SendEmailResponse> {
-  // Render template
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { html, text } = await renderEmail(template, props as any);
 
   // Get subject if not provided
@@ -202,7 +200,6 @@ export async function previewEmail<T extends EmailTemplateName>(
   template: T,
   props: Extract<EmailTemplateProps, { template: T }>["props"]
 ): Promise<{ html: string; text: string; subject: string }> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { html, text } = await renderEmail(template, props as any);
   const subject = getEmailSubject(template, props as unknown as Record<string, string>);
 

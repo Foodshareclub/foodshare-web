@@ -9,6 +9,7 @@ import "server-only";
 import { createClient, createCachedClient } from "@/lib/supabase/server";
 import { serverActionError } from "@/lib/errors";
 import type { ServerActionResult } from "@/lib/errors";
+import type { PostGISGeography } from "@/types";
 
 // ============================================================================
 // Types
@@ -18,12 +19,16 @@ export interface Profile {
   id: string;
   first_name: string | null;
   second_name: string | null;
+  nickname: string | null;
   email: string | null;
   avatar_url: string | null;
   bio: string | null;
   phone: string | null;
-  location: unknown | null;
+  search_radius_km: number | null;
+  location: PostGISGeography;
   is_active: boolean;
+  is_verified: boolean;
+  onboarding_completed: boolean;
   created_time: string | null;
   updated_at: string | null;
 }
@@ -36,7 +41,7 @@ export interface PublicProfile {
   avatar_url: string | null;
   about_me: string | null;
   // PostGIS geography type - can be object with coordinates or string representation
-  location: Record<string, unknown> | string | null;
+  location: PostGISGeography;
   created_time: string | null;
   // Roles fetched from user_roles junction table
   roles?: string[];

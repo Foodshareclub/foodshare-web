@@ -58,9 +58,7 @@ export function ForumPostCard({
   const isHot = (post.views_count || 0) > 100 || (post.forum_likes_counter || 0) > 10;
   const isNew = MODULE_LOAD_TIME - new Date(post.forum_post_created_at).getTime() < 86400000;
   // React Compiler handles memoization automatically
-  const lastActivityTime = new Date(
-    post.last_activity_at || post.forum_post_created_at
-  ).getTime();
+  const lastActivityTime = new Date(post.last_activity_at || post.forum_post_created_at).getTime();
   const hasActivity = lastActivityTime > MODULE_LOAD_TIME - 3600000;
 
   const postTypeStyles = {
@@ -246,7 +244,6 @@ export function ForumPostCard({
               <div className="flex items-center gap-3">
                 <div className="relative">
                   {post.profiles?.avatar_url ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                       src={post.profiles.avatar_url}
                       alt={post.profiles.nickname || "User"}

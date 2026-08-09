@@ -77,7 +77,9 @@ export function UserListingsClient({ listings, user }: UserListingsClientProps) 
 
   // Trigger entrance animation
   useEffect(() => {
-    setIsLoaded(true);
+    setTimeout(() => {
+      setIsLoaded(true);
+    }, 0);
   }, []);
 
   const postTypes = [...new Set(listings.map((l) => l.post_type))];

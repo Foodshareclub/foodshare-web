@@ -103,6 +103,7 @@ mock.module("@/lib/supabase/server", () => ({
       // For user_roles table (array result)
       if (tableName === "user_roles") {
         Object.assign(chain, {
+          // eslint-disable-next-line unicorn/no-thenable
           then: (resolve: (value: unknown) => void) =>
             resolve({
               data: mockState.userRoles,

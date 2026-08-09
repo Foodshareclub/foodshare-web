@@ -16,7 +16,7 @@ export const AUTH_ERRORS = {
 
   // Registration errors
   EMAIL_ALREADY_EXISTS: "An account with this email already exists. Try logging in instead.",
-  WEAK_PASSWORD: "Password must be at least 6 characters long.",
+  WEAK_PASSWORD: "Password does not meet minimum length requirement.",
   INVALID_EMAIL: "Please enter a valid email address.",
 
   // Rate limiting
@@ -83,9 +83,7 @@ export function getAuthErrorMessage(error: AuthError | Error | unknown): string 
   if (!error) return AUTH_ERRORS.UNKNOWN_ERROR;
 
   const errorMessage =
-    typeof error === "string"
-      ? error
-      : (error as AuthError).message || (error as Error).message || "Unknown error";
+    typeof error === "string" ? error : (error as Error).message || "Unknown error";
 
   // Check for OAuth-specific errors
   if (errorMessage.includes("pkce") || errorMessage.includes("code_verifier")) {

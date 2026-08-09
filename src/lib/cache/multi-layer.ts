@@ -451,7 +451,7 @@ export class MultiLayerCache {
     fetcher: () => Promise<T>,
     options: CacheOptions = {}
   ): Promise<T> {
-    const { ttl = DEFAULT_TTL, staleWhileRevalidate = false } = options;
+    const { ttl: _ttl = DEFAULT_TTL, staleWhileRevalidate = false } = options;
 
     // Check cache
     const cached = await this.get<T>(key);
@@ -471,14 +471,16 @@ export class MultiLayerCache {
     }
 
     // Fetch and cache
-    const fetchPromise = fetcher().then(async (data) => {
-      await this.set(key, data, options);
-      this.pendingRequests.delete(key);
-      return data;
-    }).catch((error) => {
-      this.pendingRequests.delete(key);
-      throw error;
-    });
+    const fetchPromise = fetcher()
+      .then(async (data) => {
+        await this.set(key, data, options);
+        this.pendingRequests.delete(key);
+        return data;
+      })
+      .catch((error) => {
+        this.pendingRequests.delete(key);
+        throw error;
+      });
 
     this.pendingRequests.set(key, fetchPromise);
     return fetchPromise;
@@ -504,13 +506,7 @@ export class MultiLayerCache {
    * Set data in cache (writes to L1 and L2)
    */
   async set<T>(key: string, data: T, options: CacheOptions = {}): Promise<void> {
-    const {
-      ttl = DEFAULT_TTL,
-      tags,
-      skipMemory = false,
-      skipIndexedDB = false,
-      etag,
-    } = options;
+    const { ttl = DEFAULT_TTL, tags, skipMemory = false, skipIndexedDB = false, etag } = options;
 
     const entry: CacheEntry<T> = {
       data,
@@ -653,11 +649,7 @@ export async function cacheGetOrFetch<T>(
 /**
  * Set data in cache
  */
-export async function cacheSet<T>(
-  key: string,
-  data: T,
-  options?: CacheOptions
-): Promise<void> {
+export async function cacheSet<T>(key: string, data: T, options?: CacheOptions): Promise<void> {
   return getCache().set(key, data, options);
 }
 

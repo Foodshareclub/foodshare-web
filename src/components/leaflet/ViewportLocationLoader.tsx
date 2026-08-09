@@ -45,7 +45,7 @@ export function ViewportLocationLoader({
   });
 
   // Fetch locations for current viewport
-  const { locations, isLoading, isFetching, prefetchAdjacent } = useViewportLocations(bounds, {
+  const { locations, isLoading, prefetchAdjacent } = useViewportLocations(bounds, {
     postType,
     enabled: enabled && zoom >= minZoom,
     staleTime: 5 * 60 * 1000, // 5 min

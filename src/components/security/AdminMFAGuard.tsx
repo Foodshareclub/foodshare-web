@@ -66,7 +66,7 @@ export const AdminMFAGuard: React.FC<AdminMFAGuardProps> = ({ children }) => {
     }
   }, [requiresMFA, user?.id]);
 
-  const checkMFARequirement = async () => {
+  async function checkMFARequirement() {
     if (!isAuthenticated || !user) {
       setIsChecking(false);
       return;
@@ -86,7 +86,7 @@ export const AdminMFAGuard: React.FC<AdminMFAGuardProps> = ({ children }) => {
     } finally {
       setIsChecking(false);
     }
-  };
+  }
 
   const handleMFAVerified = () => {
     setRequiresMFA(false);

@@ -2,7 +2,7 @@
  * Upstash Vector Client
  * Used for semantic search and embeddings
  */
-import { Index } from '@upstash/vector';
+import { Index } from "@upstash/vector";
 
 // Singleton instance
 let vectorIndex: Index | null = null;
@@ -20,7 +20,7 @@ export function getVectorIndex(): Index {
   return vectorIndex;
 }
 
-export type VectorContentType = 'product' | 'user' | 'message' | 'location';
+export type VectorContentType = "product" | "user" | "message" | "location";
 
 export interface VectorMetadata {
   id: string;
@@ -194,9 +194,9 @@ export async function deleteVectorsByType(type: VectorContentType): Promise<bool
       topK: 1000,
       filter: `type = "${type}"`,
       includeMetadata: false,
-      vector: new Array(1536).fill(0), // Dummy vector for filter-only query
+      vector: Array.from({ length: 1536 }).fill(0) as number[], // Dummy vector for filter-only query
     });
-    
+
     if (results.length > 0) {
       const ids = results.map((r) => String(r.id));
       await index.delete(ids);
@@ -234,10 +234,10 @@ export async function getIndexStats(): Promise<{
 
 // Vector namespaces for different content types
 export const VECTOR_NAMESPACES = {
-  PRODUCTS: 'products',
-  USERS: 'users',
-  MESSAGES: 'messages',
-  LOCATIONS: 'locations',
+  PRODUCTS: "products",
+  USERS: "users",
+  MESSAGES: "messages",
+  LOCATIONS: "locations",
 } as const;
 
 export type VectorNamespace = (typeof VECTOR_NAMESPACES)[keyof typeof VECTOR_NAMESPACES];

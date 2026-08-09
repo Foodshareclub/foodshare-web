@@ -687,7 +687,9 @@ export function useTranslations(
   }, [locale, options]);
 
   useEffect(() => {
-    fetchTranslations();
+    setTimeout(() => {
+      fetchTranslations();
+    }, 0);
 
     // Subscribe to real-time updates
     if (clientRef.current) {
@@ -715,10 +717,10 @@ export function useBatchTranslations(locales: Locale[]) {
 
   useEffect(() => {
     if (!globalClient) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Guard clause for missing client
-      setError(new Error("Translation client not initialized"));
-
-      setLoading(false);
+      setTimeout(() => {
+        setError(new Error("Translation client not initialized"));
+        setLoading(false);
+      }, 0);
       return;
     }
 
@@ -744,10 +746,10 @@ export function useTranslationStream(locales: Locale[]) {
 
   useEffect(() => {
     if (!globalClient) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Guard clause for missing client
-      setError(new Error("Translation client not initialized"));
-
-      setLoading(false);
+      setTimeout(() => {
+        setError(new Error("Translation client not initialized"));
+        setLoading(false);
+      }, 0);
       return;
     }
 

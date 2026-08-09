@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "nextjs", "jsx-a11y"],
+  "rules": {
+    "no-unused-vars": "warn",
+    "no-console": "warn",
+    "react/jsx-key": "error"
+  },
+  "ignorePatterns": [".next", "out", "node_modules", "coverage", "public"]
+}

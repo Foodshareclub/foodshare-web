@@ -18,7 +18,6 @@ const UniversalDrawer: FC<UniversalDrawerType> = ({
   headerValue,
   onClose,
   isOpen,
-  size,
   children,
 }) => {
   // Map Chakra placement to shadcn position

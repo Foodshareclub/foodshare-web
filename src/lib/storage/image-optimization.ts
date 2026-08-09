@@ -90,7 +90,6 @@ export async function optimizeImage(
   // Get original image metadata
   const metadata = await sharp(inputBuffer).metadata();
   const originalWidth = metadata.width || 1920;
-  const originalHeight = metadata.height || 1080;
 
   // Process original (constrained to maxWidth)
   const original = await resizeAndConvert(inputBuffer, {

@@ -121,9 +121,9 @@ export function ListingDetailModal({
 
   // Update admin notes when listing changes
   useEffect(() => {
-    if (listing?.admin_notes) {
-      setAdminNotes(listing.admin_notes || "");
-    }
+    setTimeout(() => {
+      setAdminNotes(listing?.admin_notes || "");
+    }, 0);
   }, [listing?.admin_notes]);
 
   const handleClose = () => {

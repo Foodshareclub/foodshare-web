@@ -27,19 +27,31 @@ export interface NearbyPostsOptions {
   lat: number;
   /** User's longitude */
   lng: number;
-  /** Search radius in meters (default: 50000 = 50km) */
+  /** Search radius in meters (default: 5000 = 5km). Honored exactly — the feed
+   * is genuinely scoped to this radius; expansion on scroll is the caller's job. */
   radiusMeters?: number;
-  /** Filter by post type (e.g., 'food', 'fridge') */
+  /** Filter by post type (e.g., 'food', 'fridge'). Validated against an allow-list. */
   postType?: string | null;
   /** Number of results per page */
   limit?: number;
-  /** Cursor for pagination (last seen post ID) */
-  cursor?: number | null;
+  /** Keyset cursor: the (distance, id) of the last post returned on the previous
+   * page. null on the first page. Replaces the old OFFSET integer cursor, which
+   * was unstable under concurrent writes (skips/dupes). */
+  cursor?: NearbyCursor | null;
+}
+
+/** Keyset position resuming after a (distance_meters, id) pair. */
+export interface NearbyCursor {
+  /** distance_meters of the last row on the previous page */
+  distance: number;
+  /** id of the last row on the previous page */
+  id: number;
 }
 
 /**
  * Post returned from get_nearby_posts RPC
- * Contains a subset of InitialProductStateType fields plus distance
+ * Structurally compatible with InitialProductStateType (a subset) so it can be
+ * rendered by ProductGrid without an adapter.
  */
 export interface NearbyPost {
   id: number;
@@ -52,20 +64,22 @@ export interface NearbyPost {
   location_json: { type: string; coordinates: [number, number] } | null;
   images: string[] | null;
   available_hours: string;
-  transportation: string;
-  condition: string;
   is_active: boolean;
   is_arranged: boolean;
   post_views: number;
   post_like_counter: number;
+  condition: string;
+  transportation: string;
   created_at: string;
+  updated_at: string;
   /** Distance from user in meters */
   distance_meters: number;
 }
 
 export interface NearbyPostsResult {
   data: NearbyPost[];
-  nextCursor: number | null;
+  /** Keyset cursor for the next page, or null when the source is exhausted. */
+  nextCursor: NearbyCursor | null;
   hasMore: boolean;
 }
 
@@ -94,8 +108,40 @@ export interface MapPost {
 // Default Values
 // ============================================================================
 
-const DEFAULT_RADIUS_METERS = 50000; // 50km
+const DEFAULT_RADIUS_METERS = 5000; // 5km — genuinely local first page
 const DEFAULT_LIMIT = 20;
+
+/**
+ * Canonical post types permitted as a post_type_filter. Keeps unknown/typo'd
+ * types from silently returning an empty feed (which masks bugs). 'challenge'
+ * is intentionally excluded — challenges have no location and are fetched via
+ * a separate path; passing 'challenge' here is treated as "no filter".
+ */
+const VALID_POST_TYPES = new Set([
+  "food",
+  "thing",
+  "borrow",
+  "wanted",
+  "fridge",
+  "foodbank",
+  "business",
+  "volunteer",
+  "zerowaste",
+  "vegan",
+  "forum",
+]);
+
+/** Normalize and validate a post type. Returns null to mean "no filter"
+ *  (incl. for 'challenge', which has no location). Throws on unknown types. */
+export function normalizePostType(postType: string | null | undefined): string | null {
+  if (!postType) return null;
+  const normalized = postType.toLowerCase().trim();
+  if (normalized === "challenge") return null;
+  if (!VALID_POST_TYPES.has(normalized)) {
+    throw new Error(`Invalid post type: ${postType}`);
+  }
+  return normalized;
+}
 
 // ============================================================================
 // Nearby Posts Functions
@@ -113,10 +159,11 @@ const DEFAULT_LIMIT = 20;
  * const { data, hasMore, nextCursor } = await getNearbyPosts({
  *   lat: 51.5074,
  *   lng: -0.1278,
- *   radiusMeters: 10000, // 10km
+ *   radiusMeters: 5000, // 5km — first page is genuinely local
  *   postType: 'food',
  *   limit: 20
  * });
+ * // To fetch the next page, pass nextCursor back as `cursor`.
  * ```
  */
 export async function getNearbyPosts(options: NearbyPostsOptions): Promise<NearbyPostsResult> {
@@ -129,15 +176,21 @@ export async function getNearbyPosts(options: NearbyPostsOptions): Promise<Nearb
     cursor = null,
   } = options;
 
+  // Validate post type up front so an unknown type fails loudly, not silently.
+  const validatedType = normalizePostType(postType);
+
   const supabase = await createClient();
 
+  // page_limit is limit+1 so we can detect hasMore without a second round-trip;
+  // the RPC's keyset predicate handles resume via cursor_distance/cursor_id.
   const { data, error } = await supabase.rpc("get_nearby_posts", {
     user_lat: lat,
     user_lng: lng,
     radius_meters: radiusMeters,
-    post_type_filter: postType,
-    page_limit: limit + 1, // Fetch one extra to check hasMore
-    page_cursor: cursor ?? 0,
+    post_type_filter: validatedType,
+    cursor_distance: cursor?.distance ?? null,
+    cursor_id: cursor?.id ?? null,
+    page_limit: limit + 1,
   });
 
   if (error) {
@@ -147,7 +200,13 @@ export async function getNearbyPosts(options: NearbyPostsOptions): Promise<Nearb
   const items = (data ?? []) as NearbyPost[];
   const hasMore = items.length > limit;
   const resultItems = hasMore ? items.slice(0, limit) : items;
-  const nextCursor = hasMore ? (cursor || 0) + limit : null;
+
+  // Keyset cursor = the (distance, id) of the last returned row. Combined with
+  // ORDER BY distance ASC, id DESC, the next page's resume predicate is:
+  //   distance > cursor.distance OR (distance = cursor.distance AND id < cursor.id)
+  const last = resultItems[resultItems.length - 1];
+  const nextCursor: NearbyCursor | null =
+    hasMore && last ? { distance: last.distance_meters, id: last.id } : null;
 
   return {
     data: resultItems,

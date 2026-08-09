@@ -17,6 +17,7 @@ import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 
 // Budget definitions (in KB)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const BUDGETS = {
   // Total first-load JS for key pages
   "First Load JS (shared)": { limit: 300, unit: "KB" as const },
@@ -31,6 +32,7 @@ const CYAN = "\x1b[36m";
 const RESET = "\x1b[0m";
 const BOLD = "\x1b[1m";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function getDirectorySize(dirPath: string): Promise<number> {
   let totalSize = 0;
 
@@ -122,9 +124,7 @@ async function checkBundleSizes() {
       `  ${YELLOW}WARN${RESET} Largest chunk: ${largestChunkName} (${largestChunkKB} KB) approaching ${maxChunkKB} KB limit`
     );
   } else if (largestChunkName) {
-    console.log(
-      `  ${GREEN}PASS${RESET} Largest chunk: ${largestChunkName} (${largestChunkKB} KB)`
-    );
+    console.log(`  ${GREEN}PASS${RESET} Largest chunk: ${largestChunkName} (${largestChunkKB} KB)`);
   }
 
   // Print performance budget table

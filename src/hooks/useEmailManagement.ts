@@ -110,7 +110,9 @@ export function useProviderQuotas(autoRefresh = true) {
   }, []);
 
   useEffect(() => {
-    fetchQuotas();
+    setTimeout(() => {
+      fetchQuotas();
+    }, 0);
 
     if (!autoRefresh) return;
 
@@ -160,7 +162,9 @@ export function useEmailStats(autoRefresh = true) {
   }, []);
 
   useEffect(() => {
-    fetchStats();
+    setTimeout(() => {
+      fetchStats();
+    }, 0);
 
     if (!autoRefresh) return;
 
@@ -212,7 +216,9 @@ export function useEmailLogs(params: {
   }, [params.provider, params.emailType, params.status, params.hours]);
 
   useEffect(() => {
-    fetchLogs();
+    setTimeout(() => {
+      fetchLogs();
+    }, 0);
 
     return () => {
       if (abortControllerRef.current) {
@@ -253,7 +259,9 @@ export function useQueuedEmails(status?: string) {
   }, [status]);
 
   useEffect(() => {
-    fetchQueue();
+    setTimeout(() => {
+      fetchQueue();
+    }, 0);
 
     return () => {
       if (abortControllerRef.current) {

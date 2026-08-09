@@ -1,39 +1,34 @@
-'use client';
+"use client";
 
-import React, { useState, useTransition } from 'react';
-import Image from 'next/image';
-import { useSearchParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import React, { useState, useTransition } from "react";
+import Image from "next/image";
+import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 
-import stars from '@/assets/starsForPopup.webp';
-import calendar from '@/assets/image 22.png';
-import likeUp from '@/assets/likeUp.svg';
-import strawberry from '@/assets/clubnika-min.webp';
+import stars from "@/assets/starsForPopup.webp";
+import calendar from "@/assets/image 22.png";
+import likeUp from "@/assets/likeUp.svg";
+import strawberry from "@/assets/clubnika-min.webp";
 
-import { StarIcon } from '@/utils/icons';
-import { useAuth } from '@/hooks/useAuth';
-import { writeReview } from '@/app/actions/chat';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { StarIcon } from "@/utils/icons";
+import { useAuth } from "@/hooks/useAuth";
+import { writeReview } from "@/app/actions/chat";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 // ============================================================================
 // Types & Constants
 // ============================================================================
 
-type ModalStep = 'first' | 'second' | 'third' | 'fourth';
+type ModalStep = "first" | "second" | "third" | "fourth";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface FeedbackData {
+interface _FeedbackData {
   id?: number;
   reviewed_rating: number;
   profile_id: string;
@@ -46,8 +41,8 @@ interface FeedbackData {
 const STAR_COUNT = 5;
 const STAR_SIZE = 40;
 const STAR_COLORS = {
-  active: '#319795',
-  inactive: '#D1D5DB',
+  active: "#319795",
+  inactive: "#D1D5DB",
 } as const;
 
 // ============================================================================
@@ -63,12 +58,12 @@ function StarRating({ value, onChange }: StarRatingProps) {
   const t = useTranslations();
 
   return (
-    <div className="flex justify-center" role="group" aria-label={t('rate_your_experience')}>
+    <div className="flex justify-center" role="group" aria-label={t("rate_your_experience")}>
       {Array.from({ length: STAR_COUNT }, (_, i) => (
         <button
           key={i}
           type="button"
-          aria-label={t('rate_count_of_total_stars', { count: i + 1, total: STAR_COUNT })}
+          aria-label={t("rate_count_of_total_stars", { count: i + 1, total: STAR_COUNT })}
           aria-pressed={i < value}
           onClick={() => onChange(i + 1)}
           className="p-1 focus:outline-none focus:ring-2 focus:ring-primary rounded"
@@ -100,35 +95,35 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
   const { user } = useAuth();
   const userID = user?.id;
 
-  const sharerId = searchParams?.get('s') as string;
-  const postId = searchParams?.get('p') as string;
-  const requesterId = searchParams?.get('r') as string;
+  const sharerId = searchParams?.get("s") as string;
+  const postId = searchParams?.get("p") as string;
+  const requesterId = searchParams?.get("r") as string;
 
-  const [step, setStep] = useState<ModalStep>('second');
+  const [step, setStep] = useState<ModalStep>("second");
   const [rating, setRating] = useState(0);
-  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackText, setFeedbackText] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const handleSubmit = () => {
-    if (step === 'second') {
-      setStep('third');
+    if (step === "second") {
+      setStep("third");
       return;
     }
 
-    if (step === 'third') {
+    if (step === "third") {
       startTransition(async () => {
         try {
           const formData = new FormData();
-          formData.set('reviewed_rating', String(rating));
-          formData.set('profile_id', sharerId === userID ? requesterId : sharerId);
-          formData.set('post_id', postId);
-          formData.set('feedback', feedbackText);
+          formData.set("reviewed_rating", String(rating));
+          formData.set("profile_id", sharerId === userID ? requesterId : sharerId);
+          formData.set("post_id", postId);
+          formData.set("feedback", feedbackText);
 
           const result = await writeReview(formData);
           if (!result.success) {
-            throw new Error(result.error?.message || 'Failed to submit review');
+            throw new Error(result.error?.message || "Failed to submit review");
           }
-          setStep('fourth');
+          setStep("fourth");
         } catch {
           // Error handling - could add toast notification here
         }
@@ -138,19 +133,19 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
 
   const handleClose = () => {
     onClose();
-    setStep('second');
+    setStep("second");
     setRating(0);
-    setFeedbackText('');
+    setFeedbackText("");
   };
 
   const getTitle = (): string | null => {
     switch (step) {
-      case 'first':
-        return t('say_a_day_time');
-      case 'second':
-        return t('congratulations_you_guys_made_it');
-      case 'fourth':
-        return t('thank_you_for_your_feedback_its_very_important_for_us');
+      case "first":
+        return t("say_a_day_time");
+      case "second":
+        return t("congratulations_you_guys_made_it");
+      case "fourth":
+        return t("thank_you_for_your_feedback_its_very_important_for_us");
       default:
         return null;
     }
@@ -167,24 +162,14 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
     >
       <DialogContent variant="glass">
         <DialogHeader>
-          {title && (
-            <DialogTitle className="pt-4 text-base text-center">
-              {title}
-            </DialogTitle>
-          )}
+          {title && <DialogTitle className="pt-4 text-base text-center">{title}</DialogTitle>}
         </DialogHeader>
 
         <div className="pb-6 pt-0">
           {/* Step 1: Calendar prompt */}
-          {step === 'first' && (
+          {step === "first" && (
             <>
-              <Image
-                src={calendar}
-                alt=""
-                width={200}
-                height={200}
-                className="m-auto"
-              />
+              <Image src={calendar} alt="" width={200} height={200} className="m-auto" />
               <div className="mt-4 space-y-4">
                 <div className="flex">
                   <Image
@@ -194,7 +179,7 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
                     height={16}
                     className="pt-2 self-start mr-2"
                   />
-                  <p>{t('pickup_time_tip')}</p>
+                  <p>{t("pickup_time_tip")}</p>
                 </div>
                 <div className="flex">
                   <Image
@@ -204,14 +189,14 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
                     height={16}
                     className="pb-2 mr-2 rotate-180"
                   />
-                  <p>{t('no_delivery_allowed')}</p>
+                  <p>{t("no_delivery_allowed")}</p>
                 </div>
               </div>
             </>
           )}
 
           {/* Step 2: Congratulations */}
-          {step === 'second' && (
+          {step === "second" && (
             <>
               <Image
                 src={stars}
@@ -220,50 +205,40 @@ const PopupNotificationModal: React.FC<ModalProps> = ({ isOpen, onClose }) => {
                 height={80}
                 className="object-cover m-auto mb-2.5"
               />
-              <p className="font-medium text-center">{t('would_you_like_to_leave_feedback')}</p>
+              <p className="font-medium text-center">{t("would_you_like_to_leave_feedback")}</p>
             </>
           )}
 
           {/* Step 3: Rating form */}
-          {step === 'third' && (
+          {step === "third" && (
             <>
               <StarRating value={rating} onChange={setRating} />
               <Textarea
                 value={feedbackText}
                 onChange={(e) => setFeedbackText(e.target.value)}
                 className="mt-5"
-                placeholder={t('please_write_your_feedback')}
-                aria-label={t('feedback_text')}
+                placeholder={t("please_write_your_feedback")}
+                aria-label={t("feedback_text")}
               />
             </>
           )}
 
           {/* Step 4: Thank you */}
-          {step === 'fourth' && (
-            <Image
-              src={strawberry}
-              alt=""
-              width={200}
-              height={200}
-              className="m-auto"
-            />
+          {step === "fourth" && (
+            <Image src={strawberry} alt="" width={200} height={200} className="m-auto" />
           )}
 
           {/* Action button for steps 2 & 3 */}
-          {(step === 'second' || step === 'third') && (
+          {(step === "second" || step === "third") && (
             <Button
               variant="glass"
               className={`block mx-auto mt-5 uppercase glass-accent-orange ${
-                step === 'second' ? 'h-[55px] rounded-full' : 'h-10 rounded-lg'
+                step === "second" ? "h-[55px] rounded-full" : "h-10 rounded-lg"
               }`}
               onClick={handleSubmit}
               disabled={isPending}
             >
-              {isPending
-                ? t('sending')
-                : step === 'second'
-                  ? t('yes')
-                  : t('send')}
+              {isPending ? t("sending") : step === "second" ? t("yes") : t("send")}
             </Button>
           )}
         </div>

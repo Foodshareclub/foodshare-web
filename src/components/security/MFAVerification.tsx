@@ -50,12 +50,14 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
       const timer = setTimeout(() => setResendCountdown(resendCountdown - 1), 1000);
       return () => clearTimeout(timer);
     } else {
-      setCanResend(true);
+      setTimeout(() => {
+        setCanResend(true);
+      }, 0);
     }
   }, [resendCountdown]);
 
   // Start MFA challenge
-  const startChallenge = () => {
+  function startChallenge() {
     setError("");
 
     startTransition(async () => {
@@ -78,7 +80,7 @@ export const MFAVerification: React.FC<MFAVerificationProps> = ({
         setError("Failed to send verification code. Please try again.");
       }
     });
-  };
+  }
 
   // Handle code verification
   const handleVerify = () => {

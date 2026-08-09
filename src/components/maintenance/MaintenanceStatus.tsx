@@ -108,7 +108,9 @@ export function MaintenanceStatus(): React.ReactElement {
   };
 
   useEffect(() => {
-    checkHealth();
+    setTimeout(() => {
+      checkHealth();
+    }, 0);
 
     // Poll every 30 seconds (less aggressive to avoid redirect loop)
     const interval = setInterval(checkHealth, 30000);
@@ -203,10 +205,17 @@ export function MaintenanceStatus(): React.ReactElement {
               : t("redirecting", { fallback: "Redirecting you back..." })}
           </p>
           <Link
-            href={typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("from") || "/" : "/"}
+            href={
+              typeof window !== "undefined"
+                ? new URLSearchParams(window.location.search).get("from") || "/"
+                : "/"
+            }
             className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
           >
-            {typeof window !== "undefined" && new URLSearchParams(window.location.search).get("from") ? "Go Back →" : "Go to Home →"}
+            {typeof window !== "undefined" &&
+            new URLSearchParams(window.location.search).get("from")
+              ? "Go Back →"
+              : "Go to Home →"}
           </Link>
         </div>
       )}

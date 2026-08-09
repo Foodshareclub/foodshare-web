@@ -12,6 +12,9 @@
 // Database types (auto-generated from Supabase)
 export * from "./database.types";
 
+// Auth types
+export * from "./auth.types";
+
 // Enums and constants
 export * from "./enums";
 

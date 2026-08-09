@@ -7,7 +7,7 @@ const CACHE_NAME = "translations-v4";
 const API_CACHE_NAME = "translations-api-v4";
 
 // Install event
-self.addEventListener("install", (event) => {
+self.addEventListener("install", (_event) => {
   console.log("[SW] Installing...");
   self.skipWaiting();
 });

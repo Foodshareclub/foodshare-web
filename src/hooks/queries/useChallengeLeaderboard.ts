@@ -15,7 +15,6 @@ import {
 } from "@/app/actions/challenges";
 import type {
   LeaderboardUser,
-  LeaderboardUserProfile,
   UserRankInfo,
 } from "@/components/challenges/ChallengeLeaderboard/types";
 

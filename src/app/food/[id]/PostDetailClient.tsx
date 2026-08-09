@@ -4,8 +4,6 @@ import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
-import Link from "next/link";
-import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 import Navbar from "@/components/header/navbar/Navbar";
 import { Button } from "@/components/ui/button";
@@ -43,7 +41,7 @@ export function PostDetailClient({ post, user, isAdmin = false }: PostDetailClie
   const userId = user?.id || "";
   const profile = user?.profile;
   const isOwner = userId === post?.profile_id;
-  const canEdit = isOwner || isAdmin; // Admins can edit any post
+  const _canEdit = isOwner || isAdmin; // Admins can edit any post
   const postType = post?.post_type || "food";
 
   // Avatar URL: Avatar component handles default fallback

@@ -606,8 +606,6 @@ export async function previewEmailTemplate<T extends EmailTemplateName>(
       return serverActionError(auth.error, auth.code);
     }
 
-    // Cast props to any to avoid complex union type mismatch in TS
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await previewEmail(template, props as any);
 
     return {

@@ -68,10 +68,7 @@ const ProductPopup = dynamic(
   { ssr: false }
 );
 
-const ViewportLoader = dynamic(
-  () => import("@/components/leaflet/ViewportLoader"),
-  { ssr: false }
-);
+const ViewportLoader = dynamic(() => import("@/components/leaflet/ViewportLoader"), { ssr: false });
 
 interface MapClientProps {
   type: string;
@@ -137,12 +134,16 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
 
   // Update locations when initialLocations changes (route change)
   useEffect(() => {
-    setLocations(initialLocations);
+    setTimeout(() => {
+      setLocations(initialLocations);
+    }, 0);
   }, [initialLocations]);
 
   // Set mounted state for SSR safety
   useEffect(() => {
-    setMounted(true);
+    setTimeout(() => {
+      setMounted(true);
+    }, 0);
   }, []);
 
   // Map center priority: Saved position > User's ACTUAL location > Nearby products > Timezone/Locale fallback
@@ -262,10 +263,7 @@ export function MapClient({ type, initialLocations, user }: MapClientProps) {
             <SearchMenu />
 
             {/* Viewport-based location loading - fetches markers as user pans/zooms */}
-            <ViewportLoader
-              productType={type}
-              onLocationsLoaded={handleLocationsLoaded}
-            />
+            <ViewportLoader productType={type} onLocationsLoaded={handleLocationsLoaded} />
 
             {/* Beautiful CartoDB Voyager tiles with GPU acceleration */}
             <TileLayer

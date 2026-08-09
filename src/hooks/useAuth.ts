@@ -57,14 +57,11 @@ declare global {
   }
 }
 
+import type { AuthUser } from "@/types";
+
 // ============================================================================
 // Types
 // ============================================================================
-
-export interface AuthUser {
-  id: string;
-  email: string | undefined;
-}
 
 export interface UseAuthReturn {
   // State
@@ -293,7 +290,7 @@ export function useAuth(): UseAuthReturn {
       // 1. Initialize Apple SDK
       // The clientId is the Service ID from Apple Developer Portal
       const clientId = process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || "club.foodshare.web";
-      
+
       window.AppleID.auth.init({
         clientId,
         scope: "name email",
@@ -304,10 +301,10 @@ export function useAuth(): UseAuthReturn {
       // 2. Perform Sign-In
       const response = await window.AppleID.auth.signIn();
       const { id_token: identityToken } = response.authorization;
-      
-      pretty.info("[AppleAuth] Identity token received", { 
+
+      pretty.info("[AppleAuth] Identity token received", {
         hasToken: !!identityToken,
-        hasUser: !!response.user 
+        hasUser: !!response.user,
       });
 
       // 3. Call Universal Edge Function
@@ -388,15 +385,15 @@ export function useAuth(): UseAuthReturn {
         if (oauthError) {
           // Provide user-friendly error for missing or invalid OAuth configuration
           let errorMessage = oauthError.message;
-          const isConfigError = 
-            oauthError.message.includes("missing OAuth secret") || 
+          const isConfigError =
+            oauthError.message.includes("missing OAuth secret") ||
             oauthError.message.includes("Unsupported provider") ||
             oauthError.message.includes("invalid_client");
-          
-            if (isConfigError) {
-              errorMessage = `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not correctly configured. Please contact support or use a different method.`;
-            }
-          
+
+          if (isConfigError) {
+            errorMessage = `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not correctly configured. Please contact support or use a different method.`;
+          }
+
           setError(errorMessage);
           return { success: false, error: errorMessage };
         }

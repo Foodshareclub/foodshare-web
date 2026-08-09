@@ -40,7 +40,9 @@ export const StorageErrorBanner: React.FC = () => {
       const timer = setTimeout(() => setIsVisible(true), 100);
       return () => clearTimeout(timer);
     } else {
-      setIsVisible(false);
+      setTimeout(() => {
+        setIsVisible(false);
+      }, 0);
     }
   }, [showBanner]);
 

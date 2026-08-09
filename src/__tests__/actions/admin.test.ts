@@ -130,6 +130,7 @@ const createSupabaseMock = () => {
     // For user_roles table (array result)
     if (tableName === "user_roles") {
       Object.assign(chain, {
+        // eslint-disable-next-line unicorn/no-thenable
         then: (resolve: (value: unknown) => void) =>
           resolve({
             data: mockState.userRoles,
@@ -141,6 +142,7 @@ const createSupabaseMock = () => {
     // For profiles list query
     if (tableName === "profiles" && mockState.usersData.length > 0) {
       Object.assign(chain, {
+        // eslint-disable-next-line unicorn/no-thenable
         then: (resolve: (value: unknown) => void) =>
           resolve({
             data: mockState.usersData,

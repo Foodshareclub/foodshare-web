@@ -27,8 +27,6 @@ import type {
 type ResolvedTheme = "light" | "dark";
 type TransitionType = "instant" | "smooth" | "radial";
 
-
-
 interface UseThemeReturn {
   // Core theme
   theme: Theme;
@@ -138,16 +136,20 @@ export const useTheme = (): UseThemeReturn => {
   // Get auth state from Supabase client
   useEffect(() => {
     const supabase = createClient();
-    
+
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       setUserId(session?.user?.id);
       setIsAuthenticated(!!session?.user);
     };
 
     getSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUserId(session?.user?.id);
       setIsAuthenticated(!!session?.user);
     });
@@ -155,13 +157,16 @@ export const useTheme = (): UseThemeReturn => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Local state for haptic and font scale (stored in localStorage)
-  const hapticEnabledRef = useRef(
+  const [hapticEnabled, setHapticEnabledState] = useState(
     typeof window !== "undefined" ? localStorage.getItem(HAPTIC_ENABLED_KEY) !== "false" : true
   );
-  const fontScaleRef = useRef<FontScale>(
+  const hapticEnabledRef = useRef(hapticEnabled);
+  useEffect(() => {
+    hapticEnabledRef.current = hapticEnabled;
+  }, [hapticEnabled]);
+  const [fontScale, setFontScaleState] = useState<FontScale>(
     (typeof window !== "undefined" ? (localStorage.getItem(FONT_SCALE_KEY) as FontScale) : null) ||
-    "base"
+      "base"
   );
 
   // Resolve the actual theme (accounting for system preference and schedule)
@@ -242,7 +247,16 @@ export const useTheme = (): UseThemeReturn => {
     };
 
     syncFromSupabase();
-  }, [isAuthenticated, userId, theme, schedule, transition, setStoreTheme, setStoreSchedule, setStoreTransition]);
+  }, [
+    isAuthenticated,
+    userId,
+    theme,
+    schedule,
+    transition,
+    setStoreTheme,
+    setStoreSchedule,
+    setStoreTransition,
+  ]);
 
   // Reset sync flag on logout
   useEffect(() => {
@@ -260,7 +274,7 @@ export const useTheme = (): UseThemeReturn => {
       setStoreTheme(newTheme);
       // Sync to Supabase if logged in
       if (isAuthenticated && userId) {
-        themeAPI.setTheme(userId, newTheme).catch(() => { });
+        themeAPI.setTheme(userId, newTheme).catch(() => {});
       }
     },
     [setStoreTheme, isAuthenticated, userId]
@@ -285,7 +299,7 @@ export const useTheme = (): UseThemeReturn => {
             theme: newTheme,
             schedule: { ...schedule, enabled: false },
           })
-          .catch(() => { });
+          .catch(() => {});
       }
     },
     [setStoreTheme, setStoreSchedule, resolvedTheme, schedule, isAuthenticated, userId]
@@ -297,7 +311,7 @@ export const useTheme = (): UseThemeReturn => {
       setStoreSchedule(newSchedule);
       // Sync to Supabase if logged in
       if (isAuthenticated && userId) {
-        themeAPI.setSchedule(userId, newSchedule).catch(() => { });
+        themeAPI.setSchedule(userId, newSchedule).catch(() => {});
       }
     },
     [setStoreSchedule, isAuthenticated, userId]
@@ -309,7 +323,7 @@ export const useTheme = (): UseThemeReturn => {
       setStoreTransition(newTransition);
       // Sync to Supabase if logged in
       if (isAuthenticated && userId) {
-        themeAPI.setTransition(userId, newTransition).catch(() => { });
+        themeAPI.setTransition(userId, newTransition).catch(() => {});
       }
     },
     [setStoreTransition, isAuthenticated, userId]
@@ -356,14 +370,14 @@ export const useTheme = (): UseThemeReturn => {
 
   // Set font scale
   const handleSetFontScale = useCallback((scale: FontScale) => {
-    fontScaleRef.current = scale;
+    setFontScaleState(scale);
     localStorage.setItem(FONT_SCALE_KEY, scale);
     applyFontScale(scale);
   }, []);
 
   // Set haptic enabled
   const handleSetHapticEnabled = useCallback((enabled: boolean) => {
-    hapticEnabledRef.current = enabled;
+    setHapticEnabledState(enabled);
     localStorage.setItem(HAPTIC_ENABLED_KEY, String(enabled));
     if (enabled) {
       triggerHaptic("light"); // Confirm haptic is enabled
@@ -380,10 +394,10 @@ export const useTheme = (): UseThemeReturn => {
 
   // Apply font scale on mount
   useEffect(() => {
-    if (fontScaleRef.current !== "base") {
-      applyFontScale(fontScaleRef.current);
+    if (fontScale !== "base") {
+      applyFontScale(fontScale);
     }
-  }, []);
+  }, [fontScale]);
 
   // Apply reduced motion on mount
   useEffect(() => {
@@ -415,10 +429,10 @@ export const useTheme = (): UseThemeReturn => {
     setContrastMode: handleSetContrastMode,
     reducedMotion: reducedMotion || false,
     setReducedMotion: handleSetReducedMotion,
-    fontScale: fontScaleRef.current,
+    fontScale,
     setFontScale: handleSetFontScale,
     // Haptic feedback
-    hapticEnabled: hapticEnabledRef.current,
+    hapticEnabled,
     setHapticEnabled: handleSetHapticEnabled,
   };
 };

@@ -18,7 +18,7 @@ function VolunteerInfoModal() {
   const onClose = () => setIsOpen(false);
 
   const initialRef = React.useRef(null);
-  const finalRef = React.useRef(null);
+  const _finalRef = React.useRef(null);
 
   const [value, setValue] = useState("");
 

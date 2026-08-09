@@ -3,10 +3,10 @@
  * Intercepts and beautifies all console output globally
  */
 
-import { COLORS, EMOJI, STYLES, ANSI } from './styles';
+import { COLORS, ANSI } from "./styles";
 
-const IS_BROWSER = typeof window !== 'undefined';
-const IS_DEV = process.env.NODE_ENV !== 'production';
+const IS_BROWSER = typeof window !== "undefined";
+const IS_DEV = process.env.NODE_ENV !== "production";
 
 // Store original console methods
 const originalConsole = {
@@ -30,14 +30,14 @@ let logBuffer: Array<{ level: string; args: unknown[]; timestamp: Date }> = [];
 const MAX_BUFFER = 500;
 
 function timestamp(): string {
-  return new Date().toISOString().split('T')[1].slice(0, 12);
+  return new Date().toISOString().split("T")[1].slice(0, 12);
 }
 
 /**
  * Format arguments for pretty output
  */
 function formatArgs(args: unknown[]): unknown[] {
-  return args.map(arg => {
+  return args.map((arg) => {
     if (arg instanceof Error) {
       return `${arg.name}: ${arg.message}`;
     }
@@ -53,7 +53,7 @@ function interceptBrowser(): void {
   isIntercepting = true;
 
   console.log = (...args: unknown[]) => {
-    bufferLog('log', args);
+    bufferLog("log", args);
     const time = timestamp();
     originalConsole.log(
       `%c${time}`,
@@ -63,7 +63,7 @@ function interceptBrowser(): void {
   };
 
   console.info = (...args: unknown[]) => {
-    bufferLog('info', args);
+    bufferLog("info", args);
     const time = timestamp();
     originalConsole.log(
       `%cℹ️ ${time}`,
@@ -73,7 +73,7 @@ function interceptBrowser(): void {
   };
 
   console.warn = (...args: unknown[]) => {
-    bufferLog('warn', args);
+    bufferLog("warn", args);
     const time = timestamp();
     originalConsole.warn(
       `%c⚠️ ${time}`,
@@ -83,7 +83,7 @@ function interceptBrowser(): void {
   };
 
   console.error = (...args: unknown[]) => {
-    bufferLog('error', args);
+    bufferLog("error", args);
     const time = timestamp();
     originalConsole.error(
       `%c❌ ${time}`,
@@ -94,13 +94,9 @@ function interceptBrowser(): void {
 
   console.debug = (...args: unknown[]) => {
     if (!IS_DEV) return;
-    bufferLog('debug', args);
+    bufferLog("debug", args);
     const time = timestamp();
-    originalConsole.log(
-      `%c🔍 ${time}`,
-      `color: ${COLORS.debug};`,
-      ...formatArgs(args)
-    );
+    originalConsole.log(`%c🔍 ${time}`, `color: ${COLORS.debug};`, ...formatArgs(args));
   };
 }
 
@@ -112,32 +108,32 @@ function interceptServer(): void {
   isIntercepting = true;
 
   console.log = (...args: unknown[]) => {
-    bufferLog('log', args);
+    bufferLog("log", args);
     const time = timestamp();
     originalConsole.log(`${ANSI.gray}${time}${ANSI.reset}`, ...formatArgs(args));
   };
 
   console.info = (...args: unknown[]) => {
-    bufferLog('info', args);
+    bufferLog("info", args);
     const time = timestamp();
     originalConsole.log(`${ANSI.blue}ℹ️ ${time}${ANSI.reset}`, ...formatArgs(args));
   };
 
   console.warn = (...args: unknown[]) => {
-    bufferLog('warn', args);
+    bufferLog("warn", args);
     const time = timestamp();
     originalConsole.warn(`${ANSI.yellow}⚠️ ${time}${ANSI.reset}`, ...formatArgs(args));
   };
 
   console.error = (...args: unknown[]) => {
-    bufferLog('error', args);
+    bufferLog("error", args);
     const time = timestamp();
     originalConsole.error(`${ANSI.red}❌ ${time}${ANSI.reset}`, ...formatArgs(args));
   };
 
   console.debug = (...args: unknown[]) => {
     if (!IS_DEV) return;
-    bufferLog('debug', args);
+    bufferLog("debug", args);
     const time = timestamp();
     originalConsole.log(`${ANSI.gray}🔍 ${time}${ANSI.reset}`, ...formatArgs(args));
   };
@@ -158,13 +154,13 @@ function bufferLog(level: string, args: unknown[]): void {
  */
 function restore(): void {
   if (!isIntercepting) return;
-  
+
   console.log = originalConsole.log;
   console.info = originalConsole.info;
   console.warn = originalConsole.warn;
   console.error = originalConsole.error;
   console.debug = originalConsole.debug;
-  
+
   isIntercepting = false;
 }
 
@@ -186,22 +182,26 @@ function clearBuffer(): void {
  * Export buffer as JSON
  */
 function exportBuffer(): string {
-  return JSON.stringify(logBuffer.map(entry => ({
-    ...entry,
-    timestamp: entry.timestamp.toISOString(),
-    args: entry.args.map(arg => {
-      try {
-        return JSON.parse(JSON.stringify(arg));
-      } catch {
-        return String(arg);
-      }
-    }),
-  })), null, 2);
+  return JSON.stringify(
+    logBuffer.map((entry) => ({
+      ...entry,
+      timestamp: entry.timestamp.toISOString(),
+      args: entry.args.map((arg) => {
+        try {
+          return JSON.parse(JSON.stringify(arg));
+        } catch {
+          return String(arg);
+        }
+      }),
+    })),
+    null,
+    2
+  );
 }
 
 export const interceptor = {
   /** Start intercepting console output */
-  start: () => IS_BROWSER ? interceptBrowser() : interceptServer(),
+  start: () => (IS_BROWSER ? interceptBrowser() : interceptServer()),
   /** Stop intercepting and restore original console */
   stop: restore,
   /** Check if currently intercepting */

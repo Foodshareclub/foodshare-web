@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState } from "react";
 
 interface UseImageBlobUrlOptions {
   /** Function to fetch the blob data */
@@ -53,7 +53,7 @@ export function useImageBlobUrl({
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  
+
   // Track the current blob URL for cleanup
   const blobUrlRef = useRef<string | null>(null);
 
@@ -68,10 +68,10 @@ export function useImageBlobUrl({
   // Fetch function
   const fetchBlob = useCallback(async () => {
     if (!enabled) return;
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
       // Clean up previous URL before creating new one
       cleanup();
@@ -85,7 +85,7 @@ export function useImageBlobUrl({
         setBlobUrl(null);
       }
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch blob'));
+      setError(err instanceof Error ? err : new Error("Failed to fetch blob"));
       setBlobUrl(null);
     } finally {
       setIsLoading(false);
@@ -94,7 +94,9 @@ export function useImageBlobUrl({
 
   // Fetch on mount and when deps change
   useEffect(() => {
-    fetchBlob();
+    setTimeout(() => {
+      fetchBlob();
+    }, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, ...deps]);
 

@@ -1,4 +1,4 @@
-import { getMotherDuckToken } from "@/lib/email/vault";
+// import { getMotherDuckToken } from "@/lib/email/vault";
 
 // TODO: Re-enable when DuckDB supports ARM64 or we move to x86 runners
 // Dynamic import to avoid Turbopack parsing native module at build time
@@ -8,7 +8,7 @@ import { getMotherDuckToken } from "@/lib/email/vault";
 // let dbInstance: DatabaseInstance | null = null;
 
 type DatabaseInstance = any;
-const dbInstance: DatabaseInstance | null = null;
+// const dbInstance: DatabaseInstance | null = null;
 
 export class MotherDuckService {
   private static async matchToken(token: string): Promise<string> {
@@ -45,7 +45,10 @@ export class MotherDuckService {
     // }
   }
 
-  static async runQuery<T = Record<string, unknown>>(query: string, params: unknown[] = []): Promise<T[]> {
+  static async runQuery<T = Record<string, unknown>>(
+    _query: string,
+    _params: unknown[] = []
+  ): Promise<T[]> {
     throw new Error("MotherDuck is temporarily disabled due to ARM64 compatibility");
     // const db = await this.getConnection();
     // // duckdb-async 'all' returns a promise

@@ -143,9 +143,10 @@ export function useSearchSuggestions(
   const debouncedSearchTerm = useDebounce(searchTerm, debounceMs);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Load recent searches on mount
   useEffect(() => {
-    setRecentSearches(getSearchHistory());
+    setTimeout(() => {
+      setRecentSearches(getSearchHistory());
+    }, 0);
   }, []);
 
   // Cleanup abort controller on unmount

@@ -5,7 +5,7 @@
  * Used for likes, bookmarks, and shares.
  */
 
-import { apiCall, apiGet, apiPost } from "./client";
+import { apiCall, apiGet } from "./client";
 import type { ActionResult } from "@/lib/errors";
 
 // =============================================================================
@@ -52,9 +52,7 @@ const ENDPOINT = "api-v1-engagement";
 /**
  * Get engagement status for a single post
  */
-export async function getEngagementAPI(
-  postId: number
-): Promise<ActionResult<EngagementStatus>> {
+export async function getEngagementAPI(postId: number): Promise<ActionResult<EngagementStatus>> {
   return apiGet<EngagementStatus>(ENDPOINT, {
     postId: postId.toString(),
   });
@@ -74,9 +72,7 @@ export async function getBatchEngagementAPI(
 /**
  * Toggle like on a post
  */
-export async function toggleLikeAPI(
-  postId: number
-): Promise<ActionResult<ToggleLikeResponse>> {
+export async function toggleLikeAPI(postId: number): Promise<ActionResult<ToggleLikeResponse>> {
   return apiCall<ToggleLikeResponse, { postId: number }>(ENDPOINT, {
     method: "POST",
     body: { postId },

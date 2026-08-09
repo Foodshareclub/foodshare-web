@@ -1,0 +1,1499 @@
+
+  ! eslint(no-unused-vars): Parameter 'event' is declared but never used. Unused parameters should start with a '_'.
+    ,-[downloaded-artifact/public/sw-translations.js:10:35]
+  9 | // Install event
+ 10 | self.addEventListener("install", (event) => {
+    :                                   ^^|^^
+    :                                     `-- 'event' is declared here
+ 11 |   console.log("[SW] Installing...");
+    `----
+  help: Consider removing this parameter.
+
+  ! eslint(no-unused-vars): Type 'OAuthProvider' is imported but never used.
+    ,-[src/app/auth/login/page.tsx:17:53]
+ 16 | import { Separator } from "@/components/ui/separator";
+ 17 | import { OAUTH_PROVIDERS, hasEnabledProviders, type OAuthProvider } from "@/lib/config/oauth";
+    :                                                     ^^^^^^|^^^^^^
+    :                                                           `-- 'OAuthProvider' is imported here
+ 18 | 
+    `----
+  help: Consider removing this import.
+
+  ! eslint(no-unused-vars): Variable 'BRAND_COLOR' is declared but never used. Unused variables should start with a '_'.
+    ,-[scripts/setup-welcome-automation.mjs:29:7]
+ 28 |   "https://api.foodshare.club/storage/v1/object/public/assets/logo-512.png";
+ 29 | const BRAND_COLOR = "#ff2d55";
+    :       ^^^^^|^^^^^
+    :            `-- 'BRAND_COLOR' is declared here
+ 30 | const BRAND_GRADIENT = "linear-gradient(135deg, #ff2d55 0%, #ff5177 100%)";
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Identifier 'readdirSync' is imported but never used.
+    ,-[scripts/database/sync-translations-to-db.ts:14:24]
+ 13 | import { createClient } from "@supabase/supabase-js";
+ 14 | import { readFileSync, readdirSync, existsSync } from "fs";
+    :                        ^^^^^|^^^^^
+    :                             `-- 'readdirSync' is imported here
+ 15 | import { join } from "path";
+    `----
+  help: Consider removing this import.
+
+  ! eslint(no-unused-vars): Variable 'data' is declared but never used. Unused variables should start with a '_'.
+     ,-[scripts/database/sync-translations-to-db.ts:185:13]
+ 184 |     // Check if translations table exists
+ 185 |     const { data, error } = await supabase.from("translations").select("id").limit(1);
+     :             ^^|^
+     :               `-- 'data' is declared here
+ 186 | 
+     `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-eval): eval can be harmful.
+    ,-[scripts/database/sync-translations-to-db.ts:82:22]
+ 81 |      
+ 82 |     const messages = eval(`(${match[1]})`);
+    :                      ^^^^
+ 83 | 
+    `----
+  help: Avoid eval(). For JSON parsing use JSON.parse(); for dynamic property access use bracket notation (obj[key]); for other cases refactor to avoid evaluating strings as code.
+
+  ! eslint(no-unused-vars): Variable 'data' is declared but never used. Unused variables should start with a '_'.
+     ,-[src/app/actions/auth.ts:246:11]
+ 245 | 
+ 246 |   const { data, error } = await supabase.auth.signUp({
+     :           ^^|^
+     :             `-- 'data' is declared here
+ 247 |     email,
+     `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'finalRef' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/components/modals/VolunteerInfoModal.tsx:21:9]
+ 20 |   const initialRef = React.useRef(null);
+ 21 |   const finalRef = React.useRef(null);
+    :         ^^^^|^^^
+    :             `-- 'finalRef' is declared here
+ 22 | 
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 't' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/components/modals/SearchModal.tsx:18:9]
+ 17 | export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
+ 18 |   const t = useTranslations();
+    :         |
+    :         `-- 't' is declared here
+ 19 |   const router = useRouter();
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Type 'ErrorCode' is imported but never used.
+    ,-[src/app/actions/feedback.ts:16:15]
+ 15 | import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
+ 16 | import type { ErrorCode } from "@/lib/errors";
+    :               ^^^^|^^^^
+    :                   `-- 'ErrorCode' is imported here
+ 17 | import { CACHE_TAGS } from "@/lib/data/cache-keys";
+    `----
+  help: Consider removing this import.
+
+  ! eslint(no-unused-vars): Identifier 'getMotherDuckToken' is imported but never used.
+   ,-[src/lib/analytics/motherduck.ts:1:10]
+ 1 | import { getMotherDuckToken } from "@/lib/email/vault";
+   :          ^^^^^^^^^|^^^^^^^^
+   :                   `-- 'getMotherDuckToken' is imported here
+ 2 | 
+   `----
+  help: Consider removing this import.
+
+  ! eslint(no-unused-vars): Variable 'dbInstance' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/lib/analytics/motherduck.ts:11:7]
+ 10 | type DatabaseInstance = any;
+ 11 | const dbInstance: DatabaseInstance | null = null;
+    :       ^^^^^|^^^^
+    :            `-- 'dbInstance' is declared here
+ 12 | 
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Parameter 'query' is declared but never used. Unused parameters should start with a '_'.
+    ,-[src/lib/analytics/motherduck.ts:48:54]
+ 47 | 
+ 48 |   static async runQuery<T = Record<string, unknown>>(query: string, params: unknown[] = []): Promise<T[]> {
+    :                                                      ^^|^^
+    :                                                        `-- 'query' is declared here
+ 49 |     throw new Error("MotherDuck is temporarily disabled due to ARM64 compatibility");
+    `----
+  help: Consider removing this parameter.
+
+  ! eslint(no-unused-vars): Parameter 'params' is declared but never used. Unused parameters should start with a '_'.
+    ,-[src/lib/analytics/motherduck.ts:48:69]
+ 47 | 
+ 48 |   static async runQuery<T = Record<string, unknown>>(query: string, params: unknown[] = []): Promise<T[]> {
+    :                                                                     ^^^|^^
+    :                                                                        `-- 'params' is declared here
+ 49 |     throw new Error("MotherDuck is temporarily disabled due to ARM64 compatibility");
+    `----
+  help: Consider removing this parameter.
+
+  ! eslint(no-unused-vars): Parameter 'size' is declared but never used. Unused parameters should start with a '_'.
+    ,-[src/components/universalDrawer/UniversalDrawer.tsx:21:3]
+ 20 |   isOpen,
+ 21 |   size,
+    :   ^^|^
+    :     `-- 'size' is declared here
+ 22 |   children,
+    `----
+  help: Consider removing this parameter.
+
+  ! eslint(no-unused-vars): Variable 'displayRadius' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/app/HomeClient.tsx:85:10]
+ 84 |   // the genuine local radius, not the grown expansion radius.
+ 85 |   const [displayRadius, setDisplayRadius] = useState(radiusMeters);
+    :          ^^^^^^|^^^^^^
+    :                `-- 'displayRadius' is declared here
+ 86 |   const [isFetchingNearby, setIsFetchingNearby] = useState(false);
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'hasAttemptedLoadMore' is declared but never used. Unused variables should start with a '_'.
+     ,-[src/app/HomeClient.tsx:104:10]
+ 103 |   // message to initial load only, so it never reflects the expansion radius.
+ 104 |   const [hasAttemptedLoadMore, setHasAttemptedLoadMore] = useState(false);
+     :          ^^^^^^^^^^|^^^^^^^^^
+     :                    `-- 'hasAttemptedLoadMore' is declared here
+ 105 | 
+     `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Identifier 'CATEGORY_PATHS' is imported but never used.
+   ,-[src/app/food/page.tsx:5:3]
+ 4 |   generateCategoryMetadata, 
+ 5 |   CATEGORY_PATHS, 
+   :   ^^^^^^^|^^^^^^
+   :          `-- 'CATEGORY_PATHS' is imported here
+ 6 |   PageProps 
+   `----
+  help: Consider removing this import.
+
+  ! eslint(no-unused-vars): Identifier 'redirect' is imported but never used.
+   ,-[src/app/food/[id]/page.tsx:2:20]
+ 1 | import { Suspense } from "react";
+ 2 | import { notFound, redirect } from "next/navigation";
+   :                    ^^^^|^^^
+   :                        `-- 'redirect' is imported here
+ 3 | import { UserActions } from "./UserActions";
+   `----
+  help: Consider removing this import.
+
+  ! eslint(no-unused-vars): Identifier 'Link' is imported but never used.
+   ,-[src/app/food/[id]/PostDetailClient.tsx:7:8]
+ 6 | import dynamic from "next/dynamic";
+ 7 | import Link from "next/link";
+   :        ^^|^
+   :          `-- 'Link' is imported here
+ 8 | import Image from "next/image";
+   `----
+  help: Consider removing this import.
+
+  ! eslint(no-unused-vars): Identifier 'Image' is imported but never used.
+   ,-[src/app/food/[id]/PostDetailClient.tsx:8:8]
+ 7 | import Link from "next/link";
+ 8 | import Image from "next/image";
+   :        ^^|^^
+   :          `-- 'Image' is imported here
+ 9 | import { ArrowLeft } from "lucide-react";
+   `----
+  help: Consider removing this import.
+
+  ! eslint(no-unused-vars): Variable 'canEdit' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/app/food/[id]/PostDetailClient.tsx:46:9]
+ 45 |   const isOwner = userId === post?.profile_id;
+ 46 |   const canEdit = isOwner || isAdmin; // Admins can edit any post
+    :         ^^^|^^^
+    :            `-- 'canEdit' is declared here
+ 47 |   const postType = post?.post_type || "food";
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Identifier 'beforeEach' is imported but never used.
+   ,-[src/lib/testing/__tests__/circuit-breaker.test.ts:7:32]
+ 6 | 
+ 7 | import { describe, it, expect, beforeEach } from "bun:test";
+   :                                ^^^^^|^^^^
+   :                                     `-- 'beforeEach' is imported here
+ 8 | import {
+   `----
+  help: Consider removing this import.
+
+  ! unicorn(no-invalid-fetch-options): "body" is not allowed when method is "GET"
+     ,-[src/hooks/use-email-templates.ts:127:5]
+ 126 |     },
+ 127 |     body: body ? JSON.stringify(body) : undefined,
+     :     ^^^^
+ 128 |   });
+     `----
+
+  ! unicorn(no-thenable): Do not add `then` to an object.
+    ,-[src/__tests__/utils.tsx:92:5]
+ 91 |     single: jest.fn().mockResolvedValue({ data: null, error: null }),
+ 92 |     then: jest.fn().mockResolvedValue({ data: [], error: null }),
+    :     ^^^^
+ 93 |   });
+    `----
+  help: If an object is defined as 'thenable', once it's accidentally used in an await expression, it may cause problems
+
+  ! eslint(no-unused-vars): Type 'AuthError' is imported but never used.
+   ,-[src/lib/auth/types.ts:6:30]
+ 5 | 
+ 6 | import type { User, Session, AuthError } from "@supabase/supabase-js";
+   :                              ^^^^|^^^^
+   :                                  `-- 'AuthError' is imported here
+ 7 | 
+   `----
+  help: Consider removing this import.
+
+  ! eslint(no-unused-vars): Variable 'originalHeight' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/lib/storage/image-optimization.ts:93:9]
+ 92 |   const originalWidth = metadata.width || 1920;
+ 93 |   const originalHeight = metadata.height || 1080;
+    :         ^^^^^^^|^^^^^^
+    :                `-- 'originalHeight' is declared here
+ 94 | 
+    `----
+  help: Consider removing this declaration.
+
+  ! unicorn(no-new-array): Do not use `new Array(singleArgument)`.
+     ,-[src/lib/storage/vector.ts:197:15]
+ 196 |       includeMetadata: false,
+ 197 |       vector: new Array(1536).fill(0), // Dummy vector for filter-only query
+     :               ^^^^^^^^^^^^^^^
+ 198 |     });
+     `----
+  help: It's not clear whether the argument is meant to be the length of the array or the only element. If the argument is the array's length, consider using `Array.from({ length: n })`. If the argument is the only element, use `[element]`.
+
+  ! unicorn(no-thenable): Do not add `then` to a class.
+    ,-[src/__tests__/lib/data/chat.test.ts:38:5]
+ 37 |     );
+ 38 |     chain.then = (resolve: (value: unknown) => void) =>
+    :     ^^^^^^^^^^
+ 39 |       resolve({
+    `----
+  help: If an object is defined as 'thenable', once it's accidentally used in an await expression, it may cause problems
+
+  ! eslint(no-unused-vars): Type 'LeaderboardUserProfile' is imported but never used.
+    ,-[src/hooks/queries/useChallengeLeaderboard.ts:18:3]
+ 17 |   LeaderboardUser,
+ 18 |   LeaderboardUserProfile,
+    :   ^^^^^^^^^^^|^^^^^^^^^^
+    :              `-- 'LeaderboardUserProfile' is imported here
+ 19 |   UserRankInfo,
+    `----
+  help: Consider removing this import.
+
+  ! unicorn(no-thenable): Do not add `then` to an object.
+     ,-[src/__tests__/actions/email.test.ts:106:11]
+ 105 |         Object.assign(chain, {
+ 106 |           then: (resolve: (value: unknown) => void) =>
+     :           ^^^^
+ 107 |             resolve({
+     `----
+  help: If an object is defined as 'thenable', once it's accidentally used in an await expression, it may cause problems
+
+  ! unicorn(no-thenable): Do not add `then` to an object.
+    ,-[src/__tests__/actions/auth.test.ts:47:5]
+ 46 |     // For user_roles table, the chain resolves to an array (not single)
+ 47 |     then: (resolve: (value: unknown) => void) =>
+    :     ^^^^
+ 48 |       resolve({
+    `----
+  help: If an object is defined as 'thenable', once it's accidentally used in an await expression, it may cause problems
+
+  ! unicorn(no-thenable): Do not add `then` to an object.
+     ,-[src/__tests__/actions/chat.test.ts:194:11]
+ 193 |         Object.assign(chain, {
+ 194 |           then: (resolve: (value: unknown) => void) =>
+     :           ^^^^
+ 195 |             resolve({
+     `----
+  help: If an object is defined as 'thenable', once it's accidentally used in an await expression, it may cause problems
+
+  ! eslint(no-unused-vars): Interface 'FeedbackData' is declared but never used.
+    ,-[src/components/modals/PopupNotificationModal.tsx:36:11]
+ 35 | 
+ 36 | interface FeedbackData {
+    :           ^^^^^^|^^^^^
+    :                 `-- 'FeedbackData' is declared here
+ 37 |   id?: number;
+    `----
+  help: Consider removing this declaration.
+
+  ! unicorn(no-thenable): Do not add `then` to an object.
+     ,-[src/__tests__/actions/admin.test.ts:133:9]
+ 132 |       Object.assign(chain, {
+ 133 |         then: (resolve: (value: unknown) => void) =>
+     :         ^^^^
+ 134 |           resolve({
+     `----
+  help: If an object is defined as 'thenable', once it's accidentally used in an await expression, it may cause problems
+
+  ! unicorn(no-thenable): Do not add `then` to an object.
+     ,-[src/__tests__/actions/admin.test.ts:144:9]
+ 143 |       Object.assign(chain, {
+ 144 |         then: (resolve: (value: unknown) => void) =>
+     :         ^^^^
+ 145 |           resolve({
+     `----
+  help: If an object is defined as 'thenable', once it's accidentally used in an await expression, it may cause problems
+
+  ! eslint(no-unused-vars): Identifier 'Mail' is imported but never used.
+   ,-[src/components/modals/AuthenticationUser/InvitationStep.tsx:2:17]
+ 1 | import React, { useState, useTransition } from "react";
+ 2 | import { Users, Mail, ArrowRight, CheckCircle2 } from "lucide-react";
+   :                 ^^|^
+   :                   `-- 'Mail' is imported here
+ 3 | import { Button } from "@/components/ui/button";
+   `----
+  help: Consider removing this import.
+
+  ! eslint(no-unused-vars): Identifier 'STYLES' is imported but never used.
+   ,-[src/lib/logger/table.ts:6:18]
+ 5 | 
+ 6 | import { COLORS, STYLES, ANSI } from './styles';
+   :                  ^^^|^^
+   :                     `-- 'STYLES' is imported here
+ 7 | 
+   `----
+  help: Consider removing this import.
+
+  ! unicorn(no-thenable): Do not add `then` to an object.
+    ,-[src/__tests__/actions/products.test.ts:90:7]
+ 89 |       // Make thenable for direct await
+ 90 |       then: (resolve: (value: unknown) => void) =>
+    :       ^^^^
+ 91 |         resolve({
+    `----
+  help: If an object is defined as 'thenable', once it's accidentally used in an await expression, it may cause problems
+
+  ! eslint(no-unused-vars): Identifier 'STYLES' is imported but never used.
+   ,-[src/lib/logger/profiler.ts:6:18]
+ 5 | 
+ 6 | import { COLORS, STYLES, ANSI } from './styles';
+   :                  ^^^|^^
+   :                     `-- 'STYLES' is imported here
+ 7 | 
+   `----
+  help: Consider removing this import.
+
+  ! eslint(no-unused-vars): Identifier 'apiPost' is imported but never used.
+   ,-[src/lib/api/engagement.ts:8:27]
+ 7 | 
+ 8 | import { apiCall, apiGet, apiPost } from "./client";
+   :                           ^^^|^^^
+   :                              `-- 'apiPost' is imported here
+ 9 | import type { ActionResult } from "@/lib/errors";
+   `----
+  help: Consider removing this import.
+
+  ! unicorn(no-thenable): Do not add `then` to an object.
+     ,-[src/__tests__/integration/email-campaign.test.tsx:99:11]
+  98 |         Object.assign(chain, {
+  99 |           then: (resolve: (value: unknown) => void) =>
+     :           ^^^^
+ 100 |             resolve({
+     `----
+  help: If an object is defined as 'thenable', once it's accidentally used in an await expression, it may cause problems
+
+  ! eslint(no-unused-vars): Variable 'ttl' is declared but never used. Unused variables should start with a '_'.
+     ,-[src/lib/cache/multi-layer.ts:454:13]
+ 453 |   ): Promise<T> {
+ 454 |     const { ttl = DEFAULT_TTL, staleWhileRevalidate = false } = options;
+     :             ^|^
+     :              `-- 'ttl' is declared here
+ 455 | 
+     `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'data' is declared but never used. Unused variables should start with a '_'.
+    ,-[test-forum-queries.ts:11:11]
+ 10 |   console.log("Testing getForumPosts query...");
+ 11 |   const { data, error } = await supabase
+    :           ^^|^
+    :             `-- 'data' is declared here
+ 12 |     .from("forum")
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'style' is declared but never used. Unused variables should start with a '_'.
+    ,-[src/lib/logger/pretty.ts:88:20]
+ 87 |   api(method: string, url: string, status?: number, duration?: number, size?: number) {
+ 88 |     const { emoji, style } = status ? getStatusStyle(status) : { emoji: EMOJI.loading, style: STYLES.info };
+    :                    ^^|^^
+    :                      `-- 'style' is declared here
+ 89 |     const time = timestamp();
+    `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Variable 'color' is declared but never used. Unused variables should start with a '_'.
+     ,-[src/lib/logger/pretty.ts:151:27]
+ 150 |   perf(name: string, duration: number, metadata?: Record<string, unknown>) {
+ 151 |     const { emoji, style, color } = getTimingStyle(duration);
+     :                           ^^|^^
+     :                             `-- 'color' is declared here
+ 152 |     const time = timestamp();
+     `----
+  help: Consider removing this declaration.
+
+  ! eslint(no-unused-vars): Parameter 'metadata' is declared but never used. Unused parameters should start with a '_'.
+     ,-[src/lib/logger/pretty.ts:222:72]
+ 221 |    */
+ 222 |   cache(operation: 'hit' | 'miss' | 'set' | 'invalidate', key: string, metadata?: Record<string, unknown>) {
+     :                                                                        ^^^^|^^^
+     :                                                                            `-- 'metadata' is declared here
+ 223 |     const emoji = operation === 'hit' ? '✅' : operation === 'miss' ? '❌' : operation === 'set' ? '💾' : '🗑️';
+     `----
+  help: Consider removing this parameter.
+
+  ! eslint(no-unused-vars): Identifier 'EMOJI' is imported but never used.
+   ,-[src/lib/logger/interceptor.ts:6:18]
+ 5 | 
+ 6 | import { COLORS, EMOJI, STYLES, ANSI } from './styles';
+   :                  ^^|^^
+   :                    `-- 'EMOJI' is imported here
+ 7 | 
+   `----
+  help: Consider removing this import.
+
+  ! eslint(no-unused-vars): Identifier 'STYLES' is imported but never used.
+   ,-[src/lib/logger/interceptor.ts:6:25]
+ 5 | 
+ 6 | import { COLORS, EMOJI, STYLES, ANSI } from './styles';
+   :                         ^^^|^^
+   :                            `-- 'STYLES' is imported here
+ 7 | 
+   `----
+  help: Consider removing this import.
+
+Found 49 warnings and 0 errors.
+Finished in 60ms on 1052 files with 95 rules using 12 threads.
+
+/Users/organic/dev/work/foodshare/foodshare-web/downloaded-artifact/public/sw-translations.js
+  10:35  warning  'event' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/scripts/database/sync-translations-to-db.ts
+   14:24  warning  'readdirSync' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+  185:13  warning  'data' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/scripts/setup-welcome-automation.mjs
+  29:7  warning  'BRAND_COLOR' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/__tests__/lib/data/products.test.ts
+  7:1  error  Definition for rule 'unicorn/no-thenable' was not found  unicorn/no-thenable
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/__tests__/lib/data/profiles.test.ts
+  7:1  error  Definition for rule 'unicorn/no-thenable' was not found  unicorn/no-thenable
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/HomeClient.tsx
+   85:10  warning  'displayRadius' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  104:10  warning  'hasAttemptedLoadMore' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  260:6   warning  React Hook useCallback has a missing dependency: 'baseProducts'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/exhaustive-deps
+  288:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/HomeClient.tsx:288:7
+  286 |       window.history.replaceState({}, "", `?${newParams.toString()}`);
+  287 |
+> 288 |       fetchNearby(userLocation.latitude, userLocation.longitude, radius, productType);
+      |       ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  289 |       return;
+  290 |     }
+  291 |  react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/actions/auth.ts
+  246:11  warning  'data' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/actions/feedback.ts
+  16:15  warning  'ErrorCode' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/admin/ai-insights/GrokAssistant.tsx
+  80:13  error  Error: Cannot access variable before it is declared
+
+`handleSendMessage` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/admin/ai-insights/GrokAssistant.tsx:80:13
+  78 |       if (isLoading || retryCountdown !== null) return;
+  79 |
+> 80 |       await handleSendMessage(originalQuery);
+     |             ^^^^^^^^^^^^^^^^^ `handleSendMessage` accessed before it is declared
+  81 |     },
+  82 |     // eslint-disable-next-line react-hooks/exhaustive-deps
+  83 |     [isLoading, retryCountdown]
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/admin/ai-insights/GrokAssistant.tsx:110:3
+  108 |   }, [isResetting]);
+  109 |
+> 110 |   const handleSendMessage = async (query?: string) => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 111 |     const messageText = query || input.trim();
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 112 |     if (!messageText || isLoading) return;
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 168 |     }
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 169 |   };
+      | ^^^^^ `handleSendMessage` is declared here
+  170 |
+  171 |   const handleKeyPress = (e: React.KeyboardEvent) => {
+  172 |     if (e.key === "Enter" && !e.shiftKey) {  react-hooks/immutability
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/admin/analytics/components/AnalyticsDashboard.tsx
+  233:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/admin/analytics/components/AnalyticsDashboard.tsx:233:5
+  231 |
+  232 |   useEffect(() => {
+> 233 |     fetchData();
+      |     ^^^^^^^^^ Avoid calling setState() directly within an effect
+  234 |   }, [fetchData]);
+  235 |
+  236 |   const foodSavedKg = summary?.foodSavedKg || 0;  react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/admin/listings/ListingDetailModal.tsx
+  125:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/admin/listings/ListingDetailModal.tsx:125:7
+  123 |   useEffect(() => {
+  124 |     if (listing?.admin_notes) {
+> 125 |       setAdminNotes(listing.admin_notes || "");
+      |       ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  126 |     }
+  127 |   }, [listing?.admin_notes]);
+  128 |  react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/auth/login/page.tsx
+  17:53  warning  'OAuthProvider' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/food/[id]/PostDetailClient.tsx
+   7:8  warning  'Link' is defined but never used. Allowed unused vars must match /^_/u              @typescript-eslint/no-unused-vars
+   8:8  warning  'Image' is defined but never used. Allowed unused vars must match /^_/u             @typescript-eslint/no-unused-vars
+  46:9  warning  'canEdit' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/food/[id]/page.tsx
+    2:20  warning  'redirect' is defined but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+   91:7   error    Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/food/[id]/page.tsx:91:7
+   89 |     // so the page shell paints before auth resolves.
+   90 |     return (
+>  91 |       <>
+      |       ^^
+>  92 |         <script
+      | ^^^^^^^^^^^^^^^
+>  93 |           type="application/ld+json"
+      …
+      | ^^^^^^^^^^^^^^^
+> 102 |         </Suspense>
+      | ^^^^^^^^^^^^^^^
+> 103 |       </>
+      | ^^^^^^^^^^ Avoid constructing JSX within try/catch
+  104 |     );
+  105 |   } catch (error) {
+  106 |     console.error("Failed to fetch product details:", error);                                                                                                                      react-hooks/error-boundaries
+   92:9   error    Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/food/[id]/page.tsx:92:9
+  90 |     return (
+  91 |       <>
+> 92 |         <script
+     |         ^^^^^^^
+> 93 |           type="application/ld+json"
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 94 |           dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(jsonLd) }}
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 95 |         />
+     | ^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  96 |         <script
+  97 |           type="application/ld+json"
+  98 |           dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}                                                                    react-hooks/error-boundaries
+   96:9   error    Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/food/[id]/page.tsx:96:9
+   94 |           dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(jsonLd) }}
+   95 |         />
+>  96 |         <script
+      |         ^^^^^^^
+>  97 |           type="application/ld+json"
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  98 |           dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>  99 |         />
+      | ^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  100 |         <Suspense fallback={<PostDetailSkeleton />}>
+  101 |           <UserActions product={product} />
+  102 |         </Suspense>  react-hooks/error-boundaries
+  100:9   error    Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/food/[id]/page.tsx:100:9
+   98 |           dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
+   99 |         />
+> 100 |         <Suspense fallback={<PostDetailSkeleton />}>
+      |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 101 |           <UserActions product={product} />
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 102 |         </Suspense>
+      | ^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  103 |       </>
+  104 |     );
+  105 |   } catch (error) {                                                                                                        react-hooks/error-boundaries
+  100:29  error    Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/food/[id]/page.tsx:100:29
+   98 |           dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
+   99 |         />
+> 100 |         <Suspense fallback={<PostDetailSkeleton />}>
+      |                             ^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  101 |           <UserActions product={product} />
+  102 |         </Suspense>
+  103 |       </>                                                                                                                                                                                                                                     react-hooks/error-boundaries
+  101:11  error    Error: Avoid constructing JSX within try/catch
+
+React does not immediately render components when JSX is rendered, so any errors from this component will not be caught by the try/catch. To catch errors in rendering a given component, wrap that component in an error boundary. (https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/food/[id]/page.tsx:101:11
+   99 |         />
+  100 |         <Suspense fallback={<PostDetailSkeleton />}>
+> 101 |           <UserActions product={product} />
+      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Avoid constructing JSX within try/catch
+  102 |         </Suspense>
+  103 |       </>
+  104 |     );                                                                                                                                                                                                                                                                                                                           react-hooks/error-boundaries
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/food/new/NewProductForm.tsx
+  142:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/food/new/NewProductForm.tsx:142:5
+  140 |   // This replaces the key={initialType} prop that was removed to fix auth issues
+  141 |   useEffect(() => {
+> 142 |     setFormData((prev) => ({
+      |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  143 |       ...prev,
+  144 |       post_type: initialType,
+  145 |     }));  react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/food/page.tsx
+  5:3  warning  'CATEGORY_PATHS' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/map/[type]/MapClient.tsx
+  140:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/map/[type]/MapClient.tsx:140:5
+  138 |   // Update locations when initialLocations changes (route change)
+  139 |   useEffect(() => {
+> 140 |     setLocations(initialLocations);
+      |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  141 |   }, [initialLocations]);
+  142 |
+  143 |   // Set mounted state for SSR safety              react-hooks/set-state-in-effect
+  145:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/map/[type]/MapClient.tsx:145:5
+  143 |   // Set mounted state for SSR safety
+  144 |   useEffect(() => {
+> 145 |     setMounted(true);
+      |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  146 |   }, []);
+  147 |
+  148 |   // Map center priority: Saved position > User's ACTUAL location > Nearby products > Timezone/Locale fallback  react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/settings/personal-info/PersonalInfoClient.tsx
+  179:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/settings/personal-info/PersonalInfoClient.tsx:179:7
+  177 |   useEffect(() => {
+  178 |     if (currentProfile) {
+> 179 |       setFirstName(currentProfile.first_name || "");
+      |       ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  180 |       setLastName(currentProfile.second_name || "");
+  181 |       setPhone(currentProfile.phone || "");
+  182 |     }                             react-hooks/set-state-in-effect
+  187:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/settings/personal-info/PersonalInfoClient.tsx:187:7
+  185 |   useEffect(() => {
+  186 |     if (address) {
+> 187 |       setStreetAddress(address.address_line_1 || "");
+      |       ^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  188 |       setCity(address.city || "");
+  189 |       setPostalCode(address.postal_code || "");
+  190 |       setCountry(String(address.country || ""));  react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/user-listings/UserListingsClient.tsx
+   80:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/user-listings/UserListingsClient.tsx:80:5
+  78 |   // Trigger entrance animation
+  79 |   useEffect(() => {
+> 80 |     setIsLoaded(true);
+     |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  81 |   }, []);
+  82 |
+  83 |   const postTypes = [...new Set(listings.map((l) => l.post_type))];                                                                                                                                              react-hooks/set-state-in-effect
+  418:20  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/user-listings/UserListingsClient.tsx:418:20
+  416 |                     </SheetTitle>
+  417 |                   </SheetHeader>
+> 418 |                   <FilterContent />
+      |                    ^^^^^^^^^^^^^ This component is created during render
+  419 |                 </SheetContent>
+  420 |               </Sheet>
+  421 |
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/app/user-listings/UserListingsClient.tsx:134:25
+  132 |
+  133 |   // Mobile filter content (reusable)
+> 134 |   const FilterContent = () => (
+      |                         ^^^^^^^
+> 135 |     <div className="space-y-4">
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 136 |       {/* Type Filter */}
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 237 |     </div>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 238 |   );
+      | ^^^^ The component is created during render here
+  239 |
+  240 |   return (
+  241 |     <div className="min-h-screen bg-gradient-to-b from-muted/30 to-background">  react-hooks/static-components
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/StorageErrorBanner.tsx
+  43:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/StorageErrorBanner.tsx:43:7
+  41 |       return () => clearTimeout(timer);
+  42 |     } else {
+> 43 |       setIsVisible(false);
+     |       ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  44 |     }
+  45 |   }, [showBanner]);
+  46 |  react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/chat/UnifiedChatContainer.tsx
+  152:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/chat/UnifiedChatContainer.tsx:152:5
+  150 |   // Sync messages when initialMessages changes
+  151 |   useEffect(() => {
+> 152 |     setMessages(initialMessages);
+      |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  153 |   }, [initialMessages]);
+  154 |
+  155 |   useEffect(() => {  react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/leaflet/UserLocationMarker.tsx
+  49:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/leaflet/UserLocationMarker.tsx:49:5
+  47 |   // Request location on mount
+  48 |   useEffect(() => {
+> 49 |     requestLocation();
+     |     ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  50 |     // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally run once on mount
+  51 |   }, []);
+  52 |  react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/maintenance/MaintenanceStatus.tsx
+  111:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/maintenance/MaintenanceStatus.tsx:111:5
+  109 |
+  110 |   useEffect(() => {
+> 111 |     checkHealth();
+      |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  112 |
+  113 |     // Poll every 30 seconds (less aggressive to avoid redirect loop)
+  114 |     const interval = setInterval(checkHealth, 30000);  react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/AuthenticationUser/AuthenticationUserModal.tsx
+   93:7  error  Error: Cannot access variable before it is declared
+
+`checkStorageAvailability` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/AuthenticationUser/AuthenticationUserModal.tsx:93:7
+  91 |     if (isOpen) {
+  92 |       clearError();
+> 93 |       checkStorageAvailability();
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^ `checkStorageAvailability` accessed before it is declared
+  94 |       // Clean up any OAuth hash fragments in URL to prevent display issues
+  95 |       if (window.location.hash.includes("access_token") || window.location.hash.includes("error")) {
+  96 |         window.history.replaceState(
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/AuthenticationUser/AuthenticationUserModal.tsx:112:3
+  110 |   }, [isAuth]);
+  111 |
+> 112 |   const checkStorageAvailability = async () => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 113 |     setIsCheckingStorage(true);
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 114 |     try {
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 132 |     }
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 133 |   };
+      | ^^^^^ `checkStorageAvailability` is declared here
+  134 |
+  135 |   const handleClearStorage = async () => {
+  136 |     setIsRecoveringStorage(true);  react-hooks/immutability
+  107:7  error  Error: Cannot access variable before it is declared
+
+`handleClose` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/AuthenticationUser/AuthenticationUserModal.tsx:107:7
+  105 |   useEffect(() => {
+  106 |     if (isAuth) {
+> 107 |       handleClose();
+      |       ^^^^^^^^^^^ `handleClose` accessed before it is declared
+  108 |     }
+  109 |     // eslint-disable-next-line react-hooks/exhaustive-deps
+  110 |   }, [isAuth]);
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/AuthenticationUser/AuthenticationUserModal.tsx:264:3
+  262 |   };
+  263 |
+> 264 |   const handleClose = () => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 265 |     logger.debug("Closing modal");
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 266 |     onCloseHandler();
+      …
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 275 |     clearError();
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 276 |   };
+      | ^^^^^ `handleClose` is declared here
+  277 |
+  278 |   return (
+  279 |     <>                                                                                                                                                                                                                                                                       react-hooks/immutability
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/AuthenticationUser/InvitationStep.tsx
+  2:17  warning  'Mail' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/PopupNotificationModal.tsx
+  36:11  warning  'FeedbackData' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/PublishListingModal.tsx
+   181:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/PublishListingModal.tsx:181:7
+  179 |         form.resetForm(value || "");
+  180 |       }
+> 181 |       setShowPreview(false);
+      |       ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  182 |       setPublishState("idle");
+  183 |       setShakeError(false);
+  184 |       setShowQualityScore(false);                                                                                                                                                                                                                                                                                                                                                                                                                                     react-hooks/set-state-in-effect
+   200:9   error  Error: Cannot access variable before it is declared
+
+`publishHandler` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/PublishListingModal.tsx:200:9
+  198 |       if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && isOpen && !isLoading) {
+  199 |         e.preventDefault();
+> 200 |         publishHandler();
+      |         ^^^^^^^^^^^^^^ `publishHandler` accessed before it is declared
+  201 |       }
+  202 |     };
+  203 |
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/PublishListingModal.tsx:261:3
+  259 |
+  260 |   // Publish handler
+> 261 |   const publishHandler = async () => {
+      |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 262 |     form.touchAll();
+      | ^^^^^^^^^^^^^^^^^^^^
+> 263 |
+      …
+      | ^^^^^^^^^^^^^^^^^^^^
+> 388 |     }
+      | ^^^^^^^^^^^^^^^^^^^^
+> 389 |   };
+      | ^^^^^ `publishHandler` is declared here
+  390 |
+  391 |   const onDialogOpenChange = (open: boolean) => {
+  392 |     if (!open) {                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/immutability
+   738:24  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/PublishListingModal.tsx:738:24
+  736 |                   className="hidden"
+  737 |                   accept={ALLOWED_MIME_TYPES.POSTS.join(",")}
+> 738 |                   ref={imageUpload.inputFileRef}
+      |                        ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  739 |                   type="file"
+  740 |                   multiple
+  741 |                   onChange={imageUpload.handleChangeFile}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    react-hooks/refs
+   741:29  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/PublishListingModal.tsx:741:29
+  739 |                   type="file"
+  740 |                   multiple
+> 741 |                   onChange={imageUpload.handleChangeFile}
+      |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  742 |                 />
+  743 |
+  744 |                 {imageUpload.imageError && (                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               react-hooks/refs
+   744:18  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/PublishListingModal.tsx:744:18
+  742 |                 />
+  743 |
+> 744 |                 {imageUpload.imageError && (
+      |                  ^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  745 |                   <p className="text-xs text-destructive flex items-center gap-1">
+  746 |                     <AlertCircle className="h-3 w-3" />
+  747 |                     {imageUpload.imageError}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           react-hooks/refs
+   744:18  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/PublishListingModal.tsx:744:18
+  742 |                 />
+  743 |
+> 744 |                 {imageUpload.imageError && (
+      |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 745 |                   <p className="text-xs text-destructive flex items-center gap-1">
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 746 |                     <AlertCircle className="h-3 w-3" />
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 747 |                     {imageUpload.imageError}
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 748 |                   </p>
+      | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 749 |                 )}
+      | ^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  750 |                 {showImageError && !imageUpload.imageError && (
+  751 |                   <p className="text-xs text-destructive flex items-center gap-1">
+  752 |                     <AlertCircle className="h-3 w-3" />  react-hooks/refs
+   747:22  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/PublishListingModal.tsx:747:22
+  745 |                   <p className="text-xs text-destructive flex items-center gap-1">
+  746 |                     <AlertCircle className="h-3 w-3" />
+> 747 |                     {imageUpload.imageError}
+      |                      ^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  748 |                   </p>
+  749 |                 )}
+  750 |                 {showImageError && !imageUpload.imageError && (                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-hooks/refs
+   750:37  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/PublishListingModal.tsx:750:37
+  748 |                   </p>
+  749 |                 )}
+> 750 |                 {showImageError && !imageUpload.imageError && (
+      |                                     ^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  751 |                   <p className="text-xs text-destructive flex items-center gap-1">
+  752 |                     <AlertCircle className="h-3 w-3" />
+  753 |                     Please add at least one photo                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/refs
+  1146:22  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/PublishListingModal.tsx:1146:22
+  1144 |                       className="w-full h-full object-cover"
+  1145 |                     />
+> 1146 |                     {imageUpload.images.length > 1 && (
+       |                      ^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  1147 |                       <span className="absolute bottom-2 right-2 px-2 py-1 bg-black/60 text-white text-xs rounded-full">
+  1148 |                         +{imageUpload.images.length - 1} more
+  1149 |                       </span>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   react-hooks/refs
+  1148:27  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/PublishListingModal.tsx:1148:27
+  1146 |                     {imageUpload.images.length > 1 && (
+  1147 |                       <span className="absolute bottom-2 right-2 px-2 py-1 bg-black/60 text-white text-xs rounded-full">
+> 1148 |                         +{imageUpload.images.length - 1} more
+       |                           ^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  1149 |                       </span>
+  1150 |                     )}
+  1151 |                     {form.formData.scheduledDate && (                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     react-hooks/refs
+  1294:23  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/PublishListingModal.tsx:1294:23
+  1292 |             className="w-full sm:w-auto bg-primary hover:bg-primary/90 min-w-[140px]"
+  1293 |             onClick={publishHandler}
+> 1294 |             disabled={isLoading || imageUpload.isCompressing}
+       |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  1295 |           >
+  1296 |             {isLoading ? (
+  1297 |               <>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     react-hooks/refs
+  1316:21  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/PublishListingModal.tsx:1316:21
+  1314 |         {lightboxIndex !== null && (
+  1315 |           <ImageLightbox
+> 1316 |             images={imageUpload.images}
+       |                     ^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  1317 |             initialIndex={lightboxIndex}
+  1318 |             onClose={() => setLightboxIndex(null)}
+  1319 |           />                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-hooks/refs
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/SearchModal.tsx
+  18:9  warning  't' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/modals/VolunteerInfoModal.tsx
+  21:9  warning  'finalRef' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/security/AdminMFAGuard.tsx
+  47:5  error  Error: Cannot access variable before it is declared
+
+`checkMFARequirement` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/security/AdminMFAGuard.tsx:47:5
+  45 |   // Check MFA requirement on mount and when auth changes
+  46 |   useEffect(() => {
+> 47 |     checkMFARequirement();
+     |     ^^^^^^^^^^^^^^^^^^^ `checkMFARequirement` accessed before it is declared
+  48 |     // eslint-disable-next-line react-hooks/exhaustive-deps
+  49 |   }, [isAuthenticated, isAdmin, user]);
+  50 |
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/security/AdminMFAGuard.tsx:69:3
+  67 |   }, [requiresMFA, user?.id]);
+  68 |
+> 69 |   const checkMFARequirement = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 70 |     if (!isAuthenticated || !user) {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 71 |       setIsChecking(false);
+     …
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 88 |     }
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 89 |   };
+     | ^^^^^ `checkMFARequirement` is declared here
+  90 |
+  91 |   const handleMFAVerified = () => {
+  92 |     setRequiresMFA(false);  react-hooks/immutability
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/security/MFAVerification.tsx
+  43:5  error  Error: Cannot access variable before it is declared
+
+`startChallenge` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/security/MFAVerification.tsx:43:5
+  41 |   // Start challenge on mount
+  42 |   useEffect(() => {
+> 43 |     startChallenge();
+     |     ^^^^^^^^^^^^^^ `startChallenge` accessed before it is declared
+  44 |     // eslint-disable-next-line react-hooks/exhaustive-deps
+  45 |   }, []);
+  46 |
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/security/MFAVerification.tsx:58:3
+  56 |
+  57 |   // Start MFA challenge
+> 58 |   const startChallenge = () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 59 |     setError("");
+     | ^^^^^^^^^^^^^^^^^
+> 60 |
+     …
+     | ^^^^^^^^^^^^^^^^^
+> 80 |     });
+     | ^^^^^^^^^^^^^^^^^
+> 81 |   };
+     | ^^^^^ `startChallenge` is declared here
+  82 |
+  83 |   // Handle code verification
+  84 |   const handleVerify = () => {  react-hooks/immutability
+  53:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/security/MFAVerification.tsx:53:7
+  51 |       return () => clearTimeout(timer);
+  52 |     } else {
+> 53 |       setCanResend(true);
+     |       ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  54 |     }
+  55 |   }, [resendCountdown]);
+  56 |                react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/components/universalDrawer/UniversalDrawer.tsx
+  21:3  warning  'size' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/getAllCountries.ts
+  27:5  warning  'pageCount' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/queries/useChallengeLeaderboard.ts
+  18:3  warning  'LeaderboardUserProfile' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/useAuth.ts
+  411:5  warning  React Hook useCallback has a missing dependency: 'loginWithApple'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/useEmailManagement.ts
+  113:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/useEmailManagement.ts:113:5
+  111 |
+  112 |   useEffect(() => {
+> 113 |     fetchQuotas();
+      |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  114 |
+  115 |     if (!autoRefresh) return;
+  116 |                             react-hooks/set-state-in-effect
+  163:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/useEmailManagement.ts:163:5
+  161 |
+  162 |   useEffect(() => {
+> 163 |     fetchStats();
+      |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  164 |
+  165 |     if (!autoRefresh) return;
+  166 |                               react-hooks/set-state-in-effect
+  215:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/useEmailManagement.ts:215:5
+  213 |
+  214 |   useEffect(() => {
+> 215 |     fetchLogs();
+      |     ^^^^^^^^^ Avoid calling setState() directly within an effect
+  216 |
+  217 |     return () => {
+  218 |       if (abortControllerRef.current) {    react-hooks/set-state-in-effect
+  256:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/useEmailManagement.ts:256:5
+  254 |
+  255 |   useEffect(() => {
+> 256 |     fetchQueue();
+      |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  257 |
+  258 |     return () => {
+  259 |       if (abortControllerRef.current) {  react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/useImageBlobUrl.ts
+  97:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/useImageBlobUrl.ts:97:5
+   95 |   // Fetch on mount and when deps change
+   96 |   useEffect(() => {
+>  97 |     fetchBlob();
+      |     ^^^^^^^^^ Avoid calling setState() directly within an effect
+   98 |     // eslint-disable-next-line react-hooks/exhaustive-deps
+   99 |   }, [enabled, ...deps]);
+  100 |  react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/useMediaQuery.ts
+  24:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/useMediaQuery.ts:24:5
+  22 |
+  23 |     // Triggered at the first client-side load and if query changes
+> 24 |     handleChange();
+     |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  25 |
+  26 |     // Listen matchMedia
+  27 |     if (matchMedia.addListener) {  react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/usePosition.ts
+  179:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/usePosition.ts:179:5
+  177 |
+  178 |   useEffect(() => {
+> 179 |     requestPosition();
+      |     ^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  180 |
+  181 |     // Cleanup function
+  182 |     return () => {  react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/useSearchSuggestions.ts
+  148:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/useSearchSuggestions.ts:148:5
+  146 |   // Load recent searches on mount
+  147 |   useEffect(() => {
+> 148 |     setRecentSearches(getSearchHistory());
+      |     ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  149 |   }, []);
+  150 |
+  151 |   // Cleanup abort controller on unmount  react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/useTheme.ts
+  395:10  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/useTheme.ts:395:10
+  393 |   }, [reducedMotion]);
+  394 |
+> 395 |   return {
+      |          ^
+> 396 |     // Core theme
+      | ^^^^^^^^^^^^^^^^^
+> 397 |     theme: theme as Theme,
+      …
+      | ^^^^^^^^^^^^^^^^^
+> 422 |     setHapticEnabled: handleSetHapticEnabled,
+      | ^^^^^^^^^^^^^^^^^
+> 423 |   };
+      | ^^^^ Cannot access ref value during render
+  424 | };
+  425 |
+  426 | /**  react-hooks/refs
+  418:16  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/useTheme.ts:418:16
+  416 |     reducedMotion: reducedMotion || false,
+  417 |     setReducedMotion: handleSetReducedMotion,
+> 418 |     fontScale: fontScaleRef.current,
+      |                ^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  419 |     setFontScale: handleSetFontScale,
+  420 |     // Haptic feedback
+  421 |     hapticEnabled: hapticEnabledRef.current,             react-hooks/refs
+  421:20  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/hooks/useTheme.ts:421:20
+  419 |     setFontScale: handleSetFontScale,
+  420 |     // Haptic feedback
+> 421 |     hapticEnabled: hapticEnabledRef.current,
+      |                    ^^^^^^^^^^^^^^^^^^^^^^^^ Cannot access ref value during render
+  422 |     setHapticEnabled: handleSetHapticEnabled,
+  423 |   };
+  424 | };                                                                             react-hooks/refs
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/lib/analytics/motherduck.ts
+   1:10  warning  'getMotherDuckToken' is defined but never used. Allowed unused vars must match /^_/u   @typescript-eslint/no-unused-vars
+  10:25  warning  Unexpected any. Specify a different type                                               @typescript-eslint/no-explicit-any
+  11:7   warning  'dbInstance' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  48:69  warning  'params' is assigned a value but never used. Allowed unused args must match /^_/u      @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/lib/api/engagement.ts
+  8:27  warning  'apiPost' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/lib/auth/types.ts
+  6:30  warning  'AuthError' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/lib/cache/multi-layer.ts
+  454:13  warning  'ttl' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/lib/data/admin-check.ts
+  33:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/lib/logger/interceptor.ts
+  6:18  warning  'EMOJI' is defined but never used. Allowed unused vars must match /^_/u   @typescript-eslint/no-unused-vars
+  6:25  warning  'STYLES' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/lib/logger/pretty.ts
+   88:20  warning  'style' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  151:27  warning  'color' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  222:72  warning  'metadata' is defined but never used. Allowed unused args must match /^_/u        @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/lib/logger/profiler.ts
+  6:18  warning  'STYLES' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/lib/logger/table.ts
+  6:18  warning  'STYLES' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/lib/storage/image-optimization.ts
+  93:9  warning  'originalHeight' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/lib/testing/__tests__/circuit-breaker.test.ts
+  7:32  warning  'beforeEach' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/utils/translationClient.ts
+  690:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/organic/dev/work/foodshare/foodshare-web/src/utils/translationClient.ts:690:5
+  688 |
+  689 |   useEffect(() => {
+> 690 |     fetchTranslations();
+      |     ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  691 |
+  692 |     // Subscribe to real-time updates
+  693 |     if (clientRef.current) {  react-hooks/set-state-in-effect
+
+/Users/organic/dev/work/foodshare/foodshare-web/test-forum-queries.ts
+  11:11  warning  'data' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+✖ 93 problems (52 errors, 41 warnings)
+

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { UserActions } from "./UserActions";
 import { getProductById } from "@/lib/data/products";
 import { getChallengeById } from "@/lib/data/challenges";
@@ -47,6 +47,10 @@ function transformChallengeToProduct(
  * Gracefully handles DB unavailability
  */
 export default async function ProductDetailPage({ params, searchParams }: PageProps) {
+  let product;
+  let jsonLd;
+  let breadcrumbJsonLd;
+
   try {
     const [{ id }, search] = await Promise.all([params, searchParams]);
     const productId = parseInt(id, 10);
@@ -57,7 +61,7 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
     }
 
     // Fetch product — if this throws, the outer catch redirects to /maintenance
-    const product = isChallenge
+    product = isChallenge
       ? await getChallengeById(productId).then((c) => (c ? transformChallengeToProduct(c) : null))
       : await getProductById(productId);
 
@@ -67,7 +71,7 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
 
     // Generate JSON-LD structured data for SEO (no auth needed)
     const aggregateRating = calculateAggregateRating(product.five_star, product.four_star);
-    const jsonLd = generateProductJsonLd({
+    jsonLd = generateProductJsonLd({
       id: product.id,
       name: product.post_name || "Food Item",
       description: product.post_description || "Available for sharing",
@@ -78,34 +82,34 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
       aggregateRating: aggregateRating || undefined,
     });
 
-    const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    breadcrumbJsonLd = generateBreadcrumbJsonLd([
       { name: "Home", url: "https://foodshare.club" },
       { name: "Food", url: "https://foodshare.club/food" },
       { name: product.post_name || "Item", url: `https://foodshare.club/food/${product.id}` },
     ]);
-
-    // JSON-LD renders immediately. UserActions streams independently -
-    // it fetches user/admin auth data in its own Suspense boundary,
-    // so the page shell paints before auth resolves.
-    return (
-      <>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(jsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
-        />
-        <Suspense fallback={<PostDetailSkeleton />}>
-          <UserActions product={product} />
-        </Suspense>
-      </>
-    );
   } catch (error) {
     console.error("Failed to fetch product details:", error);
     notFound();
   }
+
+  // JSON-LD renders immediately. UserActions streams independently -
+  // it fetches user/admin auth data in its own Suspense boundary,
+  // so the page shell paints before auth resolves.
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLdStringify(breadcrumbJsonLd) }}
+      />
+      <Suspense fallback={<PostDetailSkeleton />}>
+        <UserActions product={product} />
+      </Suspense>
+    </>
+  );
 }
 
 export async function generateMetadata({ params, searchParams }: PageProps) {

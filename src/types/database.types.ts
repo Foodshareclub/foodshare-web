@@ -76,42 +76,118 @@ export interface Database {
       profiles: {
         Row: {
           id: string;
-          email: string;
-          full_name: string | null;
+          email: string | null;
+          first_name: string | null;
+          second_name: string | null;
+          nickname: string | null;
           avatar_url: string | null;
           phone: string | null;
-          address: string | null;
           bio: string | null;
-          is_admin: boolean;
+          search_radius_km: number | null;
+          location: unknown | null;
+          is_active: boolean;
+          is_verified: boolean;
           onboarding_completed: boolean;
-          created_at: string;
-          updated_at: string;
+          created_time: string | null;
+          updated_at: string | null;
         };
         Insert: {
           id: string;
-          email: string;
-          full_name?: string | null;
+          email?: string | null;
+          first_name?: string | null;
+          second_name?: string | null;
+          nickname?: string | null;
           avatar_url?: string | null;
           phone?: string | null;
-          address?: string | null;
           bio?: string | null;
-          is_admin?: boolean;
+          search_radius_km?: number | null;
+          location?: unknown | null;
+          is_active?: boolean;
+          is_verified?: boolean;
           onboarding_completed?: boolean;
-          created_at?: string;
-          updated_at?: string;
+          created_time?: string | null;
+          updated_at?: string | null;
         };
         Update: {
           id?: string;
-          email?: string;
-          full_name?: string | null;
+          email?: string | null;
+          first_name?: string | null;
+          second_name?: string | null;
+          nickname?: string | null;
           avatar_url?: string | null;
           phone?: string | null;
-          address?: string | null;
           bio?: string | null;
-          is_admin?: boolean;
+          search_radius_km?: number | null;
+          location?: unknown | null;
+          is_active?: boolean;
+          is_verified?: boolean;
           onboarding_completed?: boolean;
+          created_time?: string | null;
+          updated_at?: string | null;
+        };
+      };
+      address: {
+        Row: {
+          profile_id: string;
+          address_line_1: string;
+          address_line_2: string | null;
+          address_line_3: string | null;
+          city: string;
+          state_province: string | null;
+          postal_code: string;
+          county: string | null;
+          country: string;
+          lat: number | null;
+          long: number | null;
+          generated_full_address: string | null;
+          radius_meters: number | null;
+        };
+        Insert: {
+          profile_id: string;
+          address_line_1: string;
+          address_line_2?: string | null;
+          address_line_3?: string | null;
+          city: string;
+          state_province?: string | null;
+          postal_code: string;
+          county?: string | null;
+          country: string;
+          lat?: number | null;
+          long?: number | null;
+          generated_full_address?: string | null;
+          radius_meters?: number | null;
+        };
+        Update: {
+          profile_id?: string;
+          address_line_1?: string;
+          address_line_2?: string | null;
+          address_line_3?: string | null;
+          city?: string;
+          state_province?: string | null;
+          postal_code?: string;
+          county?: string | null;
+          country?: string;
+          lat?: number | null;
+          long?: number | null;
+          generated_full_address?: string | null;
+          radius_meters?: number | null;
+        };
+      };
+      user_roles: {
+        Row: {
+          user_id: string;
+          role_id: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          role_id: string;
           created_at?: string;
-          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          role_id?: string;
+          created_at?: string;
         };
       };
       reviews: {

@@ -3,10 +3,10 @@
  * Shared utilities for testing React components and hooks
  */
 
-import React, { ReactElement } from 'react';
-import { render, RenderOptions } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import * as fc from 'fast-check';
+import React, { ReactElement } from "react";
+import { render, RenderOptions } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import * as fc from "fast-check";
 
 // ============================================================================
 // Query Client Factory
@@ -39,35 +39,24 @@ interface AllProvidersProps {
 function AllProviders({ children, queryClient }: AllProvidersProps) {
   const testQueryClient = queryClient || createTestQueryClient();
 
-  return (
-    <QueryClientProvider client={testQueryClient}>
-      {children}
-    </QueryClientProvider>
-  );
+  return <QueryClientProvider client={testQueryClient}>{children}</QueryClientProvider>;
 }
 
 // ============================================================================
 // Custom Render Function
 // ============================================================================
 
-interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
+interface CustomRenderOptions extends Omit<RenderOptions, "wrapper"> {
   queryClient?: QueryClient;
 }
 
-export function renderWithProviders(
-  ui: ReactElement,
-  options: CustomRenderOptions = {}
-) {
+export function renderWithProviders(ui: ReactElement, options: CustomRenderOptions = {}) {
   const { queryClient, ...renderOptions } = options;
 
   const testQueryClient = queryClient || createTestQueryClient();
 
   function Wrapper({ children }: { children: React.ReactNode }) {
-    return (
-      <AllProviders queryClient={testQueryClient}>
-        {children}
-      </AllProviders>
-    );
+    return <AllProviders queryClient={testQueryClient}>{children}</AllProviders>;
   }
 
   return {
@@ -89,6 +78,7 @@ export function createMockSupabaseClient() {
     eq: jest.fn().mockReturnThis(),
     order: jest.fn().mockReturnThis(),
     single: jest.fn().mockResolvedValue({ data: null, error: null }),
+    // eslint-disable-next-line unicorn/no-thenable
     then: jest.fn().mockResolvedValue({ data: [], error: null }),
   });
 
@@ -99,13 +89,17 @@ export function createMockSupabaseClient() {
       getUser: jest.fn().mockResolvedValue({ data: { user: null }, error: null }),
       signInWithPassword: jest.fn().mockResolvedValue({ data: null, error: null }),
       signOut: jest.fn().mockResolvedValue({ error: null }),
-      onAuthStateChange: jest.fn().mockReturnValue({ data: { subscription: { unsubscribe: jest.fn() } } }),
+      onAuthStateChange: jest
+        .fn()
+        .mockReturnValue({ data: { subscription: { unsubscribe: jest.fn() } } }),
     },
     storage: {
       from: jest.fn().mockReturnValue({
         upload: jest.fn().mockResolvedValue({ data: null, error: null }),
         download: jest.fn().mockResolvedValue({ data: null, error: null }),
-        getPublicUrl: jest.fn().mockReturnValue({ data: { publicUrl: 'https://example.com/image.jpg' } }),
+        getPublicUrl: jest
+          .fn()
+          .mockReturnValue({ data: { publicUrl: "https://example.com/image.jpg" } }),
       }),
     },
     channel: jest.fn().mockReturnValue({
@@ -127,18 +121,18 @@ export const coordinateArbitrary = fc.record({
 
 // Product type arbitrary
 export const productTypeArbitrary = fc.constantFrom(
-  'food',
-  'thing',
-  'borrow',
-  'wanted',
-  'fridge',
-  'foodbank',
-  'business',
-  'volunteer',
-  'challenge',
-  'zerowaste',
-  'vegan',
-  'forum'
+  "food",
+  "thing",
+  "borrow",
+  "wanted",
+  "fridge",
+  "foodbank",
+  "business",
+  "volunteer",
+  "challenge",
+  "zerowaste",
+  "vegan",
+  "forum"
 );
 
 // Product arbitrary
@@ -157,7 +151,7 @@ export const productArbitrary = fc.record({
   post_views: fc.integer({ min: 0 }),
   post_like_counter: fc.integer({ min: 0 }),
   profile_id: fc.uuid(),
-  created_at: fc.date().map(d => d.toISOString()),
+  created_at: fc.date().map((d) => d.toISOString()),
 });
 
 // User arbitrary
@@ -172,5 +166,5 @@ export const userArbitrary = fc.record({
 // Re-export testing library utilities
 // ============================================================================
 
-export * from '@testing-library/react';
-export { default as userEvent } from '@testing-library/user-event';
+export * from "@testing-library/react";
+export { default as userEvent } from "@testing-library/user-event";

@@ -100,7 +100,7 @@ export const processCampaignTask = task({
           templateId: campaign.template_id || "campaign",
           htmlContent: campaign.html_content || "",
           textContent: campaign.text_content || "",
-          ...(campaign.template_data || {}),
+          ...campaign.template_data,
         },
       })
     );

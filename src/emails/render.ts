@@ -84,9 +84,7 @@ export async function renderEmail<T extends EmailTemplateName>(
   props: Extract<EmailTemplateProps, { template: T }>["props"]
 ): Promise<{ html: string; text: string }> {
   const [html, text] = await Promise.all([
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     renderEmailToHtml(templateName, props as any),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     renderEmailToText(templateName, props as any),
   ]);
 

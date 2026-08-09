@@ -14,7 +14,7 @@ import { useAuth } from "@/hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { OAUTH_PROVIDERS, hasEnabledProviders, type OAuthProvider } from "@/lib/config/oauth";
+import { OAUTH_PROVIDERS, hasEnabledProviders } from "@/lib/config/oauth";
 
 // Inline brand SVGs (avoids react-icons dependency)
 const GoogleIcon = () => (

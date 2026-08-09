@@ -230,7 +230,9 @@ export function AnalyticsDashboard() {
   }, []);
 
   useEffect(() => {
-    fetchData();
+    setTimeout(() => {
+      fetchData();
+    }, 0);
   }, [fetchData]);
 
   const foodSavedKg = summary?.foodSavedKg || 0;
@@ -244,421 +246,126 @@ export function AnalyticsDashboard() {
 
   return (
     <FeatureErrorBoundary featureName="Analytics Dashboard">
-    <div className="space-y-8 animate-in fade-in duration-500">
-      {/* Header with Sync Status */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">Real-time insights from your community</p>
-        <SyncStatusBadge lastSyncAt={lastSyncAt} onSyncComplete={fetchData} />
-      </div>
+      <div className="space-y-8 animate-in fade-in duration-500">
+        {/* Header with Sync Status */}
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">Real-time insights from your community</p>
+          <SyncStatusBadge lastSyncAt={lastSyncAt} onSyncComplete={fetchData} />
+        </div>
 
-      {/* Impact Banner */}
-      <ImpactBanner
-        foodSavedKg={foodSavedKg}
-        co2Prevented={co2Prevented}
-        mealsShared={mealsShared}
-        successfulShares={arrangedCount}
-      />
+        {/* Impact Banner */}
+        <ImpactBanner
+          foodSavedKg={foodSavedKg}
+          co2Prevented={co2Prevented}
+          mealsShared={mealsShared}
+          successfulShares={arrangedCount}
+        />
 
-      {/* Key Metrics - Row 1 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <InsightCard
-          title="Total Users"
-          value={summary?.totalUsers || 0}
-          change={summary?.usersChange}
-          icon={Users}
-          iconColor="text-primary"
-          iconBgColor="bg-primary/10"
-          subtitle={`${summary?.newUsersThisMonth || 0} new this month`}
-          delay={0}
-        />
-        <InsightCard
-          title="Active Users"
-          value={summary?.activeUsers || 0}
-          change={summary?.activeUsersChange}
-          icon={Activity}
-          iconColor="text-blue-500"
-          iconBgColor="bg-blue-500/10"
-          subtitle={`${summary?.activeUsers7d || 0} in last 7 days`}
-          delay={1}
-        />
-        <InsightCard
-          title="Total Listings"
-          value={summary?.totalListings || 0}
-          change={summary?.listingsChange}
-          icon={ShoppingBag}
-          iconColor="text-orange-500"
-          iconBgColor="bg-orange-500/10"
-          subtitle={`${summary?.activeListings || 0} active`}
-          delay={2}
-        />
-        <InsightCard
-          title="Food Saved"
-          value={`${summary?.arrangedListings || 0} items`}
-          change={summary?.arrangedChange}
-          icon={Heart}
-          iconColor="text-emerald-500"
-          iconBgColor="bg-emerald-500/10"
-          subtitle="Successfully arranged"
-          delay={3}
-        />
-      </div>
+        {/* Key Metrics - Row 1 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <InsightCard
+            title="Total Users"
+            value={summary?.totalUsers || 0}
+            change={summary?.usersChange}
+            icon={Users}
+            iconColor="text-primary"
+            iconBgColor="bg-primary/10"
+            subtitle={`${summary?.newUsersThisMonth || 0} new this month`}
+            delay={0}
+          />
+          <InsightCard
+            title="Active Users"
+            value={summary?.activeUsers || 0}
+            change={summary?.activeUsersChange}
+            icon={Activity}
+            iconColor="text-blue-500"
+            iconBgColor="bg-blue-500/10"
+            subtitle={`${summary?.activeUsers7d || 0} in last 7 days`}
+            delay={1}
+          />
+          <InsightCard
+            title="Total Listings"
+            value={summary?.totalListings || 0}
+            change={summary?.listingsChange}
+            icon={ShoppingBag}
+            iconColor="text-orange-500"
+            iconBgColor="bg-orange-500/10"
+            subtitle={`${summary?.activeListings || 0} active`}
+            delay={2}
+          />
+          <InsightCard
+            title="Food Saved"
+            value={`${summary?.arrangedListings || 0} items`}
+            change={summary?.arrangedChange}
+            icon={Heart}
+            iconColor="text-emerald-500"
+            iconBgColor="bg-emerald-500/10"
+            subtitle="Successfully arranged"
+            delay={3}
+          />
+        </div>
 
-      {/* Engagement Metrics - Row 2 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <InsightCard
-          title="Conversations"
-          value={summary?.totalConversations || 0}
-          icon={Users}
-          iconColor="text-purple-500"
-          iconBgColor="bg-purple-500/10"
-          subtitle="Total chat rooms"
-          delay={4}
-        />
-        <InsightCard
-          title="Total Views"
-          value={summary?.totalViews || 0}
-          icon={Activity}
-          iconColor="text-cyan-500"
-          iconBgColor="bg-cyan-500/10"
-          subtitle="Listing impressions"
-          delay={5}
-        />
-        <InsightCard
-          title="Total Likes"
-          value={summary?.totalLikes || 0}
-          icon={Heart}
-          iconColor="text-pink-500"
-          iconBgColor="bg-pink-500/10"
-          subtitle="Community engagement"
-          delay={6}
-        />
-        <InsightCard
-          title="Active Sharers"
-          value={summary?.usersWithPosts || 0}
-          icon={Award}
-          iconColor="text-amber-500"
-          iconBgColor="bg-amber-500/10"
-          subtitle="Users with listings"
-          delay={7}
-        />
-      </div>
+        {/* Engagement Metrics - Row 2 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <InsightCard
+            title="Conversations"
+            value={summary?.totalConversations || 0}
+            icon={Users}
+            iconColor="text-purple-500"
+            iconBgColor="bg-purple-500/10"
+            subtitle="Total chat rooms"
+            delay={4}
+          />
+          <InsightCard
+            title="Total Views"
+            value={summary?.totalViews || 0}
+            icon={Activity}
+            iconColor="text-cyan-500"
+            iconBgColor="bg-cyan-500/10"
+            subtitle="Listing impressions"
+            delay={5}
+          />
+          <InsightCard
+            title="Total Likes"
+            value={summary?.totalLikes || 0}
+            icon={Heart}
+            iconColor="text-pink-500"
+            iconBgColor="bg-pink-500/10"
+            subtitle="Community engagement"
+            delay={6}
+          />
+          <InsightCard
+            title="Active Sharers"
+            value={summary?.usersWithPosts || 0}
+            icon={Award}
+            iconColor="text-amber-500"
+            iconBgColor="bg-amber-500/10"
+            subtitle="Users with listings"
+            delay={7}
+          />
+        </div>
 
-      {/* Conversion Funnel */}
-      <ChartCard
-        title="Value Loop Funnel"
-        subtitle="Track the journey from listing to successful share"
-        delay={8}
-        minHeight="350px"
-      >
-        {funnelData.length === 0 ? (
-          <EmptyState message="No funnel data yet" />
-        ) : (
-          <div className="h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={funnelData} layout="vertical" margin={{ left: 60, right: 30 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal stroke="hsl(var(--border))" />
-                <XAxis type="number" hide />
-                <YAxis
-                  dataKey="step"
-                  type="category"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "hsl(var(--foreground))", fontSize: 14, fontWeight: 500 }}
-                />
-                <Tooltip
-                  cursor={{ fill: "hsl(var(--muted)/0.2)" }}
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    borderColor: "hsl(var(--border))",
-                    borderRadius: "var(--radius)",
-                  }}
-                  formatter={(value, name) => {
-                    if (name === "dropoff" && typeof value === "number")
-                      return [(value * 100).toFixed(1) + "%", "Drop-off"];
-                    return [value ?? 0, "Count"];
-                  }}
-                />
-                <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={36}>
-                  {funnelData.map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={
-                        [CHART_COLORS.primary, CHART_COLORS.secondary, CHART_COLORS.tertiary][
-                          index % 3
-                        ]
-                      }
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </ChartCard>
-
-      {/* Geographic Heat Map */}
-      <ChartCard
-        title="Geographic Activity"
-        subtitle="Where food sharing is happening"
-        delay={9}
-        minHeight="450px"
-      >
-        <GeoHeatMap />
-      </ChartCard>
-
-      {/* Growth Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Monthly Growth" subtitle="Users and listings over time" delay={10}>
-          {growthData.length === 0 ? (
-            <EmptyState message="No growth data yet" />
-          ) : (
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={growthData}>
-                  <defs>
-                    <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.3} />
-                      <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="colorListings" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={CHART_COLORS.secondary} stopOpacity={0.3} />
-                      <stop offset="95%" stopColor={CHART_COLORS.secondary} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="hsl(var(--border))"
-                  />
-                  <XAxis
-                    dataKey="month"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--popover))",
-                      borderColor: "hsl(var(--border))",
-                      borderRadius: "var(--radius)",
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="users"
-                    stroke={CHART_COLORS.primary}
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorUsers)"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="listings"
-                    stroke={CHART_COLORS.secondary}
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorListings)"
-                  />
-                  <Legend />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </ChartCard>
-
-        <ChartCard title="Daily Active Users" subtitle="Last 30 days" delay={11}>
-          {dauData.length === 0 ? (
-            <EmptyState message="No activity data yet" />
-          ) : (
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dauData}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="hsl(var(--border))"
-                  />
-                  <XAxis
-                    dataKey="date"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
-                    tickFormatter={(v) => v.split("-").slice(1).join("/")}
-                    dy={10}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "hsl(var(--muted)/0.2)" }}
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--popover))",
-                      borderColor: "hsl(var(--border))",
-                      borderRadius: "var(--radius)",
-                    }}
-                  />
-                  <Bar dataKey="count" fill={CHART_COLORS.secondary} radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </ChartCard>
-      </div>
-
-      {/* Listings & Distribution Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Conversion Funnel */}
         <ChartCard
-          title="Listing Activity"
-          subtitle="Monthly new listings"
-          delay={12}
-          className="lg:col-span-2"
+          title="Value Loop Funnel"
+          subtitle="Track the journey from listing to successful share"
+          delay={8}
+          minHeight="350px"
         >
-          {growthData.length === 0 ? (
-            <EmptyState message="No listing data yet" />
+          {funnelData.length === 0 ? (
+            <EmptyState message="No funnel data yet" />
           ) : (
             <div className="h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={growthData}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    vertical={false}
-                    stroke="hsl(var(--border))"
-                  />
-                  <XAxis
-                    dataKey="month"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--popover))",
-                      borderColor: "hsl(var(--border))",
-                      borderRadius: "var(--radius)",
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="listings"
-                    stroke={CHART_COLORS.tertiary}
-                    strokeWidth={2}
-                    dot={{ fill: CHART_COLORS.tertiary, strokeWidth: 0, r: 4 }}
-                    activeDot={{ r: 6, strokeWidth: 0 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </ChartCard>
-
-        <ChartCard title="Listing Types" subtitle="Distribution by category" delay={13}>
-          {typeDistribution.length === 0 ? (
-            <EmptyState message="No type data yet" />
-          ) : (
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={typeDistribution.map((d) => ({
-                      name: TYPE_LABELS[d.type] || d.type,
-                      value: d.count,
-                      percentage: d.percentage,
-                    }))}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={2}
-                    dataKey="value"
-                    nameKey="name"
-                  >
-                    {typeDistribution.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--popover))",
-                      borderColor: "hsl(var(--border))",
-                      borderRadius: "var(--radius)",
-                    }}
-                  />
-                  <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </ChartCard>
-      </div>
-
-      {/* Top Sharers & Inventory Age */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Top Food Heroes" subtitle="Most active community members" delay={14}>
-          {topSharers.length === 0 ? (
-            <EmptyState message="No sharer data yet" />
-          ) : (
-            <div className="space-y-4">
-              {topSharers.map((sharer, index) => (
-                <div key={sharer.userId} className="flex items-center gap-4">
-                  <div
-                    className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold",
-                      index === 0 && "bg-yellow-500/20 text-yellow-600",
-                      index === 1 && "bg-gray-400/20 text-gray-600",
-                      index === 2 && "bg-orange-500/20 text-orange-600",
-                      index > 2 && "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    {index + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{sharer.nickname || "Anonymous"}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {sharer.arrangedCount} successful shares
-                    </p>
-                  </div>
-                  <Award
-                    className={cn(
-                      "w-5 h-5",
-                      index === 0 && "text-yellow-500",
-                      index === 1 && "text-gray-400",
-                      index === 2 && "text-orange-500",
-                      index > 2 && "text-muted-foreground/50"
-                    )}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </ChartCard>
-
-        <ChartCard title="Inventory Aging" subtitle="How long listings stay active" delay={15}>
-          {ageData.length === 0 ? (
-            <EmptyState message="No inventory data yet" />
-          ) : (
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={ageData} layout="vertical" margin={{ left: 80 }}>
+                <BarChart data={funnelData} layout="vertical" margin={{ left: 60, right: 30 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal stroke="hsl(var(--border))" />
                   <XAxis type="number" hide />
                   <YAxis
-                    dataKey="bucket"
+                    dataKey="step"
                     type="category"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                    tick={{ fill: "hsl(var(--foreground))", fontSize: 14, fontWeight: 500 }}
                   />
                   <Tooltip
                     cursor={{ fill: "hsl(var(--muted)/0.2)" }}
@@ -667,12 +374,21 @@ export function AnalyticsDashboard() {
                       borderColor: "hsl(var(--border))",
                       borderRadius: "var(--radius)",
                     }}
+                    formatter={(value, name) => {
+                      if (name === "dropoff" && typeof value === "number")
+                        return [(value * 100).toFixed(1) + "%", "Drop-off"];
+                      return [value ?? 0, "Count"];
+                    }}
                   />
-                  <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={24}>
-                    {ageData.map((_, index) => (
+                  <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={36}>
+                    {funnelData.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={["#10B981", "#F59E0B", "#EF4444"][index % 3]}
+                        fill={
+                          [CHART_COLORS.primary, CHART_COLORS.secondary, CHART_COLORS.tertiary][
+                            index % 3
+                          ]
+                        }
                       />
                     ))}
                   </Bar>
@@ -681,64 +397,354 @@ export function AnalyticsDashboard() {
             </div>
           )}
         </ChartCard>
-      </div>
 
-      {/* Retention Cohorts */}
-      <ChartCard title="User Retention" subtitle="Monthly cohort analysis" delay={16}>
-        {cohortData.length === 0 ? (
-          <EmptyState message="No retention data yet" />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium">Cohort</th>
-                  <th className="text-center py-3 px-4 font-medium">Users</th>
-                  <th className="text-center py-3 px-4 font-medium">Month 1</th>
-                  <th className="text-center py-3 px-4 font-medium">Month 2</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cohortData.slice(0, 6).map((cohort) => {
-                  const month1Pct = cohort.size > 0 ? (cohort.month1 / cohort.size) * 100 : 0;
-                  const month2Pct = cohort.size > 0 ? (cohort.month2 / cohort.size) * 100 : 0;
-                  return (
-                    <tr key={cohort.cohort} className="border-b border-border/50">
-                      <td className="py-3 px-4 font-medium">{cohort.cohort}</td>
-                      <td className="text-center py-3 px-4">{cohort.size}</td>
-                      <td className="text-center py-3 px-4">
-                        <span
-                          className={cn(
-                            "inline-block px-2 py-1 rounded text-xs font-medium",
-                            month1Pct >= 50 && "bg-emerald-500/20 text-emerald-600",
-                            month1Pct >= 25 && month1Pct < 50 && "bg-yellow-500/20 text-yellow-600",
-                            month1Pct < 25 && "bg-muted text-muted-foreground"
-                          )}
-                        >
-                          {month1Pct.toFixed(0)}%
-                        </span>
-                      </td>
-                      <td className="text-center py-3 px-4">
-                        <span
-                          className={cn(
-                            "inline-block px-2 py-1 rounded text-xs font-medium",
-                            month2Pct >= 50 && "bg-emerald-500/20 text-emerald-600",
-                            month2Pct >= 25 && month2Pct < 50 && "bg-yellow-500/20 text-yellow-600",
-                            month2Pct < 25 && "bg-muted text-muted-foreground"
-                          )}
-                        >
-                          {month2Pct.toFixed(0)}%
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </ChartCard>
-    </div>
+        {/* Geographic Heat Map */}
+        <ChartCard
+          title="Geographic Activity"
+          subtitle="Where food sharing is happening"
+          delay={9}
+          minHeight="450px"
+        >
+          <GeoHeatMap />
+        </ChartCard>
+
+        {/* Growth Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ChartCard title="Monthly Growth" subtitle="Users and listings over time" delay={10}>
+            {growthData.length === 0 ? (
+              <EmptyState message="No growth data yet" />
+            ) : (
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={growthData}>
+                    <defs>
+                      <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.3} />
+                        <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="colorListings" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor={CHART_COLORS.secondary} stopOpacity={0.3} />
+                        <stop offset="95%" stopColor={CHART_COLORS.secondary} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="hsl(var(--border))"
+                    />
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--popover))",
+                        borderColor: "hsl(var(--border))",
+                        borderRadius: "var(--radius)",
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="users"
+                      stroke={CHART_COLORS.primary}
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorUsers)"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="listings"
+                      stroke={CHART_COLORS.secondary}
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorListings)"
+                    />
+                    <Legend />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </ChartCard>
+
+          <ChartCard title="Daily Active Users" subtitle="Last 30 days" delay={11}>
+            {dauData.length === 0 ? (
+              <EmptyState message="No activity data yet" />
+            ) : (
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={dauData}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="hsl(var(--border))"
+                    />
+                    <XAxis
+                      dataKey="date"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                      tickFormatter={(v) => v.split("-").slice(1).join("/")}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "hsl(var(--muted)/0.2)" }}
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--popover))",
+                        borderColor: "hsl(var(--border))",
+                        borderRadius: "var(--radius)",
+                      }}
+                    />
+                    <Bar dataKey="count" fill={CHART_COLORS.secondary} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </ChartCard>
+        </div>
+
+        {/* Listings & Distribution Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <ChartCard
+            title="Listing Activity"
+            subtitle="Monthly new listings"
+            delay={12}
+            className="lg:col-span-2"
+          >
+            {growthData.length === 0 ? (
+              <EmptyState message="No listing data yet" />
+            ) : (
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={growthData}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="hsl(var(--border))"
+                    />
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--popover))",
+                        borderColor: "hsl(var(--border))",
+                        borderRadius: "var(--radius)",
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="listings"
+                      stroke={CHART_COLORS.tertiary}
+                      strokeWidth={2}
+                      dot={{ fill: CHART_COLORS.tertiary, strokeWidth: 0, r: 4 }}
+                      activeDot={{ r: 6, strokeWidth: 0 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </ChartCard>
+
+          <ChartCard title="Listing Types" subtitle="Distribution by category" delay={13}>
+            {typeDistribution.length === 0 ? (
+              <EmptyState message="No type data yet" />
+            ) : (
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={typeDistribution.map((d) => ({
+                        name: TYPE_LABELS[d.type] || d.type,
+                        value: d.count,
+                        percentage: d.percentage,
+                      }))}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={2}
+                      dataKey="value"
+                      nameKey="name"
+                    >
+                      {typeDistribution.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--popover))",
+                        borderColor: "hsl(var(--border))",
+                        borderRadius: "var(--radius)",
+                      }}
+                    />
+                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </ChartCard>
+        </div>
+
+        {/* Top Sharers & Inventory Age */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <ChartCard title="Top Food Heroes" subtitle="Most active community members" delay={14}>
+            {topSharers.length === 0 ? (
+              <EmptyState message="No sharer data yet" />
+            ) : (
+              <div className="space-y-4">
+                {topSharers.map((sharer, index) => (
+                  <div key={sharer.userId} className="flex items-center gap-4">
+                    <div
+                      className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold",
+                        index === 0 && "bg-yellow-500/20 text-yellow-600",
+                        index === 1 && "bg-gray-400/20 text-gray-600",
+                        index === 2 && "bg-orange-500/20 text-orange-600",
+                        index > 2 && "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{sharer.nickname || "Anonymous"}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {sharer.arrangedCount} successful shares
+                      </p>
+                    </div>
+                    <Award
+                      className={cn(
+                        "w-5 h-5",
+                        index === 0 && "text-yellow-500",
+                        index === 1 && "text-gray-400",
+                        index === 2 && "text-orange-500",
+                        index > 2 && "text-muted-foreground/50"
+                      )}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </ChartCard>
+
+          <ChartCard title="Inventory Aging" subtitle="How long listings stay active" delay={15}>
+            {ageData.length === 0 ? (
+              <EmptyState message="No inventory data yet" />
+            ) : (
+              <div className="h-[280px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={ageData} layout="vertical" margin={{ left: 80 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal stroke="hsl(var(--border))" />
+                    <XAxis type="number" hide />
+                    <YAxis
+                      dataKey="bucket"
+                      type="category"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+                    />
+                    <Tooltip
+                      cursor={{ fill: "hsl(var(--muted)/0.2)" }}
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--popover))",
+                        borderColor: "hsl(var(--border))",
+                        borderRadius: "var(--radius)",
+                      }}
+                    />
+                    <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={24}>
+                      {ageData.map((_, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={["#10B981", "#F59E0B", "#EF4444"][index % 3]}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </ChartCard>
+        </div>
+
+        {/* Retention Cohorts */}
+        <ChartCard title="User Retention" subtitle="Monthly cohort analysis" delay={16}>
+          {cohortData.length === 0 ? (
+            <EmptyState message="No retention data yet" />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 font-medium">Cohort</th>
+                    <th className="text-center py-3 px-4 font-medium">Users</th>
+                    <th className="text-center py-3 px-4 font-medium">Month 1</th>
+                    <th className="text-center py-3 px-4 font-medium">Month 2</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cohortData.slice(0, 6).map((cohort) => {
+                    const month1Pct = cohort.size > 0 ? (cohort.month1 / cohort.size) * 100 : 0;
+                    const month2Pct = cohort.size > 0 ? (cohort.month2 / cohort.size) * 100 : 0;
+                    return (
+                      <tr key={cohort.cohort} className="border-b border-border/50">
+                        <td className="py-3 px-4 font-medium">{cohort.cohort}</td>
+                        <td className="text-center py-3 px-4">{cohort.size}</td>
+                        <td className="text-center py-3 px-4">
+                          <span
+                            className={cn(
+                              "inline-block px-2 py-1 rounded text-xs font-medium",
+                              month1Pct >= 50 && "bg-emerald-500/20 text-emerald-600",
+                              month1Pct >= 25 &&
+                                month1Pct < 50 &&
+                                "bg-yellow-500/20 text-yellow-600",
+                              month1Pct < 25 && "bg-muted text-muted-foreground"
+                            )}
+                          >
+                            {month1Pct.toFixed(0)}%
+                          </span>
+                        </td>
+                        <td className="text-center py-3 px-4">
+                          <span
+                            className={cn(
+                              "inline-block px-2 py-1 rounded text-xs font-medium",
+                              month2Pct >= 50 && "bg-emerald-500/20 text-emerald-600",
+                              month2Pct >= 25 &&
+                                month2Pct < 50 &&
+                                "bg-yellow-500/20 text-yellow-600",
+                              month2Pct < 25 && "bg-muted text-muted-foreground"
+                            )}
+                          >
+                            {month2Pct.toFixed(0)}%
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </ChartCard>
+      </div>
     </FeatureErrorBoundary>
   );
 }

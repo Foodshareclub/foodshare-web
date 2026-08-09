@@ -9,6 +9,7 @@ import { CACHE_TAGS } from "@/lib/data/cache-keys";
 import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { trackEvent } from "@/app/actions/analytics";
 import { createActionLogger } from "@/lib/structured-logger";
+import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 
 // Import AuthUser for internal use (don't re-export from server action files)
 import type { AuthUser } from "@/lib/data/auth";
@@ -123,7 +124,9 @@ export async function getUser(): Promise<AuthUser | null> {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id,first_name,second_name,nickname,avatar_url,email,search_radius_km")
+        .select(
+          "id,first_name,second_name,nickname,avatar_url,email,search_radius_km,onboarding_completed"
+        )
         .eq("id", user.id)
         .single();
 
@@ -174,9 +177,16 @@ export async function checkUserIsAdmin(): Promise<boolean> {
 /**
  * Sign in with email and password
  */
-export async function signInWithPassword(
-  formData: FormData
-): Promise<{ success: boolean; error?: string }> {
+export type AuthActionResult = ServerActionResult<void> & { error?: any };
+export type OAuthUrlResult = ServerActionResult<{ url: string }> & {
+  error?: any;
+  url?: string | null;
+};
+
+/**
+ * Sign in with email and password
+ */
+export async function signInWithPassword(formData: FormData): Promise<AuthActionResult> {
   const logger = await createActionLogger("signInWithPassword");
 
   // Validate input
@@ -188,8 +198,10 @@ export async function signInWithPassword(
   const validation = signInSchema.safeParse(rawData);
   if (!validation.success) {
     const firstError = validation.error.issues[0];
-    logger.warn("Validation failed", { error: firstError?.message });
-    return { success: false, error: firstError?.message || "Invalid input" };
+    const errMsg = firstError?.message || "Invalid input";
+    logger.warn("Validation failed", { error: errMsg });
+    const errObj = serverActionError(errMsg, "VALIDATION_ERROR");
+    return { ...errObj, error: errMsg };
   }
 
   const { email, password } = validation.data;
@@ -202,7 +214,8 @@ export async function signInWithPassword(
 
   if (error) {
     logger.warn("Sign in failed", { error: error.message });
-    return { success: false, error: error.message };
+    const errObj = serverActionError(error.message, "AUTH_ERROR");
+    return { ...errObj, error: error.message };
   }
 
   revalidatePath("/", "layout");
@@ -212,13 +225,13 @@ export async function signInWithPassword(
   await trackEvent("User Login", { method: "password" });
 
   logger.info("User signed in successfully");
-  return { success: true };
+  return successVoid();
 }
 
 /**
  * Sign up with email and password
  */
-export async function signUp(formData: FormData): Promise<{ success: boolean; error?: string }> {
+export async function signUp(formData: FormData): Promise<AuthActionResult> {
   const logger = await createActionLogger("signUp");
 
   // Validate input
@@ -233,8 +246,10 @@ export async function signUp(formData: FormData): Promise<{ success: boolean; er
   const validation = signUpSchema.safeParse(rawData);
   if (!validation.success) {
     const firstError = validation.error.issues[0];
-    logger.warn("Validation failed", { error: firstError?.message });
-    return { success: false, error: firstError?.message || "Invalid input" };
+    const errMsg = firstError?.message || "Invalid input";
+    logger.warn("Validation failed", { error: errMsg });
+    const errObj = serverActionError(errMsg, "VALIDATION_ERROR");
+    return { ...errObj, error: errMsg };
   }
 
   const { email, password, firstName, lastName, name } = validation.data;
@@ -243,7 +258,7 @@ export async function signUp(formData: FormData): Promise<{ success: boolean; er
   // Build display name from firstName/lastName or use name directly
   const displayName = firstName && lastName ? `${firstName} ${lastName}` : firstName || name || "";
 
-  const { data, error } = await supabase.auth.signUp({
+  const { data: _data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -257,12 +272,9 @@ export async function signUp(formData: FormData): Promise<{ success: boolean; er
 
   if (error) {
     logger.warn("Sign up failed", { error: error.message });
-    return { success: false, error: error.message };
+    const errObj = serverActionError(error.message, "AUTH_ERROR");
+    return { ...errObj, error: error.message };
   }
-
-  // Create profile (aligned with iOS AuthenticationService.createUserProfile)
-  // Backend now handles this robustly via handle_new_user Postgres trigger
-  // Wait, no need to insert here!
 
   revalidatePath("/", "layout");
   invalidateTag(CACHE_TAGS.AUTH);
@@ -272,7 +284,7 @@ export async function signUp(formData: FormData): Promise<{ success: boolean; er
   await trackEvent("User Signup", { method: "password" });
 
   logger.info("User signed up successfully");
-  return { success: true };
+  return successVoid();
 }
 
 /**
@@ -289,12 +301,14 @@ export async function signOut(): Promise<void> {
 /**
  * Request password reset
  */
-export async function resetPassword(email: string): Promise<{ success: boolean; error?: string }> {
+export async function resetPassword(email: string): Promise<AuthActionResult> {
   // Validate email
   const validation = emailSchema.safeParse(email);
   if (!validation.success) {
     const firstError = validation.error.issues[0];
-    return { success: false, error: firstError?.message || "Invalid email" };
+    const errMsg = firstError?.message || "Invalid email";
+    const errObj = serverActionError(errMsg, "VALIDATION_ERROR");
+    return { ...errObj, error: errMsg };
   }
 
   const supabase = await createClient();
@@ -304,18 +318,17 @@ export async function resetPassword(email: string): Promise<{ success: boolean; 
   });
 
   if (error) {
-    return { success: false, error: error.message };
+    const errObj = serverActionError(error.message, "AUTH_ERROR");
+    return { ...errObj, error: error.message };
   }
 
-  return { success: true };
+  return successVoid();
 }
 
 /**
  * Update password (for authenticated users)
  */
-export async function updatePassword(
-  formData: FormData
-): Promise<{ success: boolean; error?: string }> {
+export async function updatePassword(formData: FormData): Promise<AuthActionResult> {
   // Validate input
   const rawData = {
     password: formData.get("password"),
@@ -324,7 +337,9 @@ export async function updatePassword(
   const validation = updatePasswordSchema.safeParse(rawData);
   if (!validation.success) {
     const firstError = validation.error.issues[0];
-    return { success: false, error: firstError?.message || "Invalid password" };
+    const errMsg = firstError?.message || "Invalid password";
+    const errObj = serverActionError(errMsg, "VALIDATION_ERROR");
+    return { ...errObj, error: errMsg };
   }
 
   const supabase = await createClient();
@@ -334,10 +349,11 @@ export async function updatePassword(
   });
 
   if (error) {
-    return { success: false, error: error.message };
+    const errObj = serverActionError(error.message, "AUTH_ERROR");
+    return { ...errObj, error: error.message };
   }
 
-  return { success: true };
+  return successVoid();
 }
 
 /**
@@ -345,7 +361,7 @@ export async function updatePassword(
  */
 export async function getOAuthSignInUrl(
   provider: "google" | "github" | "facebook" | "apple"
-): Promise<{ url: string | null; error?: string }> {
+): Promise<OAuthUrlResult> {
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -360,17 +376,14 @@ export async function getOAuthSignInUrl(
 
   if (error) {
     // Provide user-friendly error for missing OAuth configuration
-    if (
+    const errMsg =
       error.message.includes("missing OAuth secret") ||
       error.message.includes("Unsupported provider")
-    ) {
-      return {
-        url: null,
-        error: `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not configured yet. Please use email/password or magic link.`,
-      };
-    }
-    return { url: null, error: error.message };
+        ? `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign-in is not configured yet. Please use email/password or magic link.`
+        : error.message;
+
+    return { success: false, url: null, error: errMsg } as any;
   }
 
-  return { url: data.url };
+  return { success: true, data: { url: data.url }, url: data.url } as any;
 }

@@ -176,18 +176,22 @@ export function PersonalInfoClient({
 
   useEffect(() => {
     if (currentProfile) {
-      setFirstName(currentProfile.first_name || "");
-      setLastName(currentProfile.second_name || "");
-      setPhone(currentProfile.phone || "");
+      setTimeout(() => {
+        setFirstName(currentProfile.first_name || "");
+        setLastName(currentProfile.second_name || "");
+        setPhone(currentProfile.phone || "");
+      }, 0);
     }
   }, [currentProfile]);
 
   useEffect(() => {
     if (address) {
-      setStreetAddress(address.address_line_1 || "");
-      setCity(address.city || "");
-      setPostalCode(address.postal_code || "");
-      setCountry(String(address.country || ""));
+      setTimeout(() => {
+        setStreetAddress(address.address_line_1 || "");
+        setCity(address.city || "");
+        setPostalCode(address.postal_code || "");
+        setCountry(String(address.country || ""));
+      }, 0);
     }
   }, [address]);
 

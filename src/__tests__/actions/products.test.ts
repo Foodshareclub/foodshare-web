@@ -87,6 +87,7 @@ const createMockSupabaseClient = () => {
         })
       ),
       // Make thenable for direct await
+      // eslint-disable-next-line unicorn/no-thenable
       then: (resolve: (value: unknown) => void) =>
         resolve({
           data: mockState.products,

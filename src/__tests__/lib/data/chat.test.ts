@@ -35,6 +35,7 @@ const createMockSupabaseClient = () => {
         error: mockState.error,
       })
     );
+    // eslint-disable-next-line unicorn/no-thenable
     chain.then = (resolve: (value: unknown) => void) =>
       resolve({
         data: mockState.unreadRooms,

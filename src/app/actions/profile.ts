@@ -18,6 +18,7 @@ import { type UserAddress } from "@/lib/data/profiles";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import { createActionLogger } from "@/lib/structured-logger";
 import { trackEvent } from "@/app/actions/analytics";
+import type { ProfileUpdate } from "@/types";
 
 // Edge Function API imports
 import {
@@ -615,5 +616,52 @@ export async function updateAddressDirect(address: {
   } catch (error) {
     console.error("[updateAddressDirect] Error:", error);
     return serverActionError("Failed to update address", "INTERNAL_ERROR");
+  }
+}
+
+/**
+ * Complete user onboarding
+ * Sets onboarding_completed = true in public.profiles and updates optional profile attributes
+ */
+export async function completeOnboardingAction(data?: {
+  nickname?: string;
+  search_radius_km?: number;
+}): Promise<ServerActionResult<void>> {
+  const logger = await createActionLogger("completeOnboardingAction");
+  try {
+    const { supabase, user, error: authError } = await verifyAuth();
+    if (authError || !supabase || !user) {
+      return serverActionError(authError || "Not authenticated", "UNAUTHORIZED");
+    }
+
+    const updates: ProfileUpdate = {
+      onboarding_completed: true,
+    };
+
+    if (data?.nickname) {
+      updates.nickname = data.nickname.trim();
+    }
+    if (typeof data?.search_radius_km === "number") {
+      updates.search_radius_km = data.search_radius_km;
+    }
+
+    const { error } = await supabase.from("profiles").update(updates).eq("id", user.id);
+
+    if (error) {
+      logger.error("Failed to set onboarding_completed", error as Error);
+      return serverActionError(error.message, "DATABASE_ERROR");
+    }
+
+    revalidatePath("/", "layout");
+    invalidateTag(CACHE_TAGS.PROFILES);
+    invalidateTag(CACHE_TAGS.AUTH);
+
+    await trackEvent("User Onboarding Completed", { userId: user.id });
+
+    logger.info("User onboarding completed successfully");
+    return successVoid();
+  } catch (error) {
+    logger.error("Error in completeOnboardingAction", error as Error);
+    return serverActionError("Failed to complete onboarding", "INTERNAL_ERROR");
   }
 }

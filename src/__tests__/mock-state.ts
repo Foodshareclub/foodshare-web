@@ -8,6 +8,7 @@ export const mockState = {
     avatar_url?: string | null;
     email: string;
     is_active?: boolean;
+    onboarding_completed?: boolean;
   } | null,
   userRoles: null as Array<{ roles: { name: string } }> | null,
   listing: null as { id: number; post_name: string; profile_id: string } | null,

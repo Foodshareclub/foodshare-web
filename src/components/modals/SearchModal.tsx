@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
 import type { ChangeEvent } from "react";
 import React, { useState } from "react";
 import { SearchIcon } from "@/utils/icons";
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ type SearchModalProps = {
 };
 
 export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
-  const t = useTranslations();
+  const _t = useTranslations();
   const router = useRouter();
   const [searchValue, setSearchValue] = useState("");
   const [productType, setProductType] = useState("all");
@@ -51,9 +51,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     <Dialog open={isOpen} onOpenChange={(open: boolean) => !open && onClose()}>
       <DialogContent variant="glass" className="w-full md:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="text-lg font-bold">
-            {"Search FoodShare"}
-          </DialogTitle>
+          <DialogTitle className="text-lg font-bold">{"Search FoodShare"}</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">

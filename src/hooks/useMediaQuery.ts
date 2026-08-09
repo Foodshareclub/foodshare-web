@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 
@@ -21,7 +21,9 @@ function useMediaQuery(query: string): boolean {
     const matchMedia = window.matchMedia(query);
 
     // Triggered at the first client-side load and if query changes
-    handleChange();
+    setTimeout(() => {
+      handleChange();
+    }, 0);
 
     // Listen matchMedia
     if (matchMedia.addListener) {

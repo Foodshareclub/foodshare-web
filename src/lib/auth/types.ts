@@ -3,7 +3,7 @@
  * Centralized type definitions for authentication
  */
 
-import type { User, Session, AuthError } from "@supabase/supabase-js";
+import type { User, Session } from "@supabase/supabase-js";
 
 export type AuthProvider = "google" | "apple" | "github" | "facebook";
 export type OtpType = "sms" | "email" | "phone_change";

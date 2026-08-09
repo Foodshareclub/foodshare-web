@@ -3,9 +3,9 @@
  * Track and visualize performance metrics
  */
 
-import { COLORS, STYLES, ANSI } from './styles';
+import { COLORS, ANSI } from "./styles";
 
-const IS_BROWSER = typeof window !== 'undefined';
+const IS_BROWSER = typeof window !== "undefined";
 
 interface ProfileEntry {
   name: string;
@@ -90,7 +90,7 @@ class Profiler {
     entry.duration = entry.endTime - entry.startTime;
 
     // Capture memory if available
-    if (IS_BROWSER && 'memory' in performance) {
+    if (IS_BROWSER && "memory" in performance) {
       const memory = (performance as Performance & { memory: { usedJSHeapSize: number } }).memory;
       entry.memory = memory.usedJSHeapSize;
     }
@@ -132,17 +132,18 @@ class Profiler {
    * Generate profile report
    */
   getReport(): ProfileReport {
-    const aggregated = new Map<string, {
-      durations: number[];
-      calls: number;
-    }>();
+    const aggregated = new Map<
+      string,
+      {
+        durations: number[];
+        calls: number;
+      }
+    >();
 
     // Aggregate entries
     this.entries.forEach((entries, name) => {
-      const durations = entries
-        .filter(e => e.duration !== undefined)
-        .map(e => e.duration!);
-      
+      const durations = entries.filter((e) => e.duration !== undefined).map((e) => e.duration!);
+
       aggregated.set(name, {
         durations,
         calls: durations.length,
@@ -151,22 +152,24 @@ class Profiler {
 
     // Calculate total duration from root entries
     const totalDuration = this.rootEntries
-      .filter(e => e.duration !== undefined)
+      .filter((e) => e.duration !== undefined)
       .reduce((sum, e) => sum + e.duration!, 0);
 
     // Build report entries
-    const reportEntries = Array.from(aggregated.entries()).map(([name, data]) => {
-      const total = data.durations.reduce((a, b) => a + b, 0);
-      return {
-        name,
-        duration: total,
-        percentage: totalDuration > 0 ? (total / totalDuration) * 100 : 0,
-        calls: data.calls,
-        avgDuration: data.calls > 0 ? total / data.calls : 0,
-        minDuration: Math.min(...data.durations),
-        maxDuration: Math.max(...data.durations),
-      };
-    }).sort((a, b) => b.duration - a.duration);
+    const reportEntries = Array.from(aggregated.entries())
+      .map(([name, data]) => {
+        const total = data.durations.reduce((a, b) => a + b, 0);
+        return {
+          name,
+          duration: total,
+          percentage: totalDuration > 0 ? (total / totalDuration) * 100 : 0,
+          calls: data.calls,
+          avgDuration: data.calls > 0 ? total / data.calls : 0,
+          minDuration: Math.min(...data.durations),
+          maxDuration: Math.max(...data.durations),
+        };
+      })
+      .sort((a, b) => b.duration - a.duration);
 
     return {
       totalDuration,
@@ -182,55 +185,64 @@ class Profiler {
     const report = this.getReport();
 
     if (IS_BROWSER) {
-      console.group('%c📊 Performance Profile', `color: ${COLORS.purple}; font-weight: bold; font-size: 14px;`);
-      
-      console.log(`%cTotal Duration: ${report.totalDuration.toFixed(2)}ms`, `color: ${COLORS.cyan}; font-weight: bold;`);
-      console.log('');
+      console.group(
+        "%c📊 Performance Profile",
+        `color: ${COLORS.purple}; font-weight: bold; font-size: 14px;`
+      );
+
+      console.log(
+        `%cTotal Duration: ${report.totalDuration.toFixed(2)}ms`,
+        `color: ${COLORS.cyan}; font-weight: bold;`
+      );
+      console.log("");
 
       // Print table
-      const tableData = report.entries.map(e => ({
+      const tableData = report.entries.map((e) => ({
         Name: e.name,
-        'Total (ms)': e.duration.toFixed(2),
-        '%': e.percentage.toFixed(1),
+        "Total (ms)": e.duration.toFixed(2),
+        "%": e.percentage.toFixed(1),
         Calls: e.calls,
-        'Avg (ms)': e.avgDuration.toFixed(2),
-        'Min (ms)': e.minDuration.toFixed(2),
-        'Max (ms)': e.maxDuration.toFixed(2),
+        "Avg (ms)": e.avgDuration.toFixed(2),
+        "Min (ms)": e.minDuration.toFixed(2),
+        "Max (ms)": e.maxDuration.toFixed(2),
       }));
       console.table(tableData);
 
       // Print flame graph visualization
-      console.log('');
-      console.log('%c🔥 Flame Graph', `color: ${COLORS.orange}; font-weight: bold;`);
+      console.log("");
+      console.log("%c🔥 Flame Graph", `color: ${COLORS.orange}; font-weight: bold;`);
       this.printFlameGraph(report.entries, report.totalDuration);
 
       console.groupEnd();
     } else {
       console.log(`\n${ANSI.magenta}${ANSI.bold}📊 Performance Profile${ANSI.reset}`);
-      console.log(`${ANSI.cyan}Total Duration: ${report.totalDuration.toFixed(2)}ms${ANSI.reset}\n`);
+      console.log(
+        `${ANSI.cyan}Total Duration: ${report.totalDuration.toFixed(2)}ms${ANSI.reset}\n`
+      );
 
       // Print entries
-      report.entries.forEach(e => {
-        const bar = '█'.repeat(Math.round(e.percentage / 5));
+      report.entries.forEach((e) => {
+        const bar = "█".repeat(Math.round(e.percentage / 5));
         const color = e.percentage > 50 ? ANSI.red : e.percentage > 20 ? ANSI.yellow : ANSI.green;
         console.log(
           `${color}${bar.padEnd(20)}${ANSI.reset} ${e.name.padEnd(30)} ${e.duration.toFixed(2).padStart(10)}ms (${e.percentage.toFixed(1)}%) x${e.calls}`
         );
       });
-      console.log('');
+      console.log("");
     }
   }
 
   /**
    * Print flame graph visualization
    */
-  private printFlameGraph(entries: ProfileReport['entries'], total: number): void {
+  private printFlameGraph(entries: ProfileReport["entries"], total: number): void {
     const barWidth = 50;
 
-    entries.slice(0, 10).forEach(entry => {
+    entries.slice(0, 10).forEach((entry) => {
       const width = Math.round((entry.duration / total) * barWidth);
-      const bar = '█'.repeat(width);
-      const color = entry.percentage > 50 ? COLORS.error : entry.percentage > 20 ? COLORS.warn : COLORS.success;
+      const bar = "█".repeat(width);
+      const color =
+        entry.percentage > 50 ? COLORS.error : entry.percentage > 20 ? COLORS.warn : COLORS.success;
 
       console.log(
         `%c${bar.padEnd(barWidth)} %c${entry.name} %c${entry.duration.toFixed(1)}ms`,
@@ -246,24 +258,29 @@ class Profiler {
    */
   printTimeline(): void {
     if (IS_BROWSER) {
-      console.group('%c⏱️ Profile Timeline', `color: ${COLORS.purple}; font-weight: bold;`);
+      console.group("%c⏱️ Profile Timeline", `color: ${COLORS.purple}; font-weight: bold;`);
       this.printTimelineNode(this.rootEntries, 0);
       console.groupEnd();
     } else {
       console.log(`\n${ANSI.magenta}${ANSI.bold}⏱️ Profile Timeline${ANSI.reset}`);
       this.printTimelineNode(this.rootEntries, 0);
-      console.log('');
+      console.log("");
     }
   }
 
   private printTimelineNode(entries: ProfileEntry[], depth: number): void {
-    const indent = '  '.repeat(depth);
+    const indent = "  ".repeat(depth);
 
     entries.forEach((entry, index) => {
       const isLast = index === entries.length - 1;
-      const prefix = isLast ? '└─' : '├─';
-      const duration = entry.duration?.toFixed(2) || '?';
-      const color = (entry.duration || 0) > 100 ? COLORS.error : (entry.duration || 0) > 50 ? COLORS.warn : COLORS.success;
+      const prefix = isLast ? "└─" : "├─";
+      const duration = entry.duration?.toFixed(2) || "?";
+      const color =
+        (entry.duration || 0) > 100
+          ? COLORS.error
+          : (entry.duration || 0) > 50
+            ? COLORS.warn
+            : COLORS.success;
 
       if (IS_BROWSER) {
         console.log(
@@ -273,8 +290,15 @@ class Profiler {
           `color: ${color};`
         );
       } else {
-        const ansiColor = (entry.duration || 0) > 100 ? ANSI.red : (entry.duration || 0) > 50 ? ANSI.yellow : ANSI.green;
-        console.log(`${ANSI.gray}${indent}${prefix}${ANSI.reset} ${ANSI.magenta}${entry.name}${ANSI.reset} ${ansiColor}${duration}ms${ANSI.reset}`);
+        const ansiColor =
+          (entry.duration || 0) > 100
+            ? ANSI.red
+            : (entry.duration || 0) > 50
+              ? ANSI.yellow
+              : ANSI.green;
+        console.log(
+          `${ANSI.gray}${indent}${prefix}${ANSI.reset} ${ANSI.magenta}${entry.name}${ANSI.reset} ${ansiColor}${duration}ms${ANSI.reset}`
+        );
       }
 
       if (entry.children.length > 0) {

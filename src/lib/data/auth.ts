@@ -24,6 +24,7 @@ export interface AuthUser {
     avatar_url: string | null;
     email: string | null;
     search_radius_km: number | null;
+    onboarding_completed?: boolean;
   } | null;
 }
 
@@ -79,7 +80,9 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id,first_name,second_name,nickname,avatar_url,email,search_radius_km")
+        .select(
+          "id,first_name,second_name,nickname,avatar_url,email,search_radius_km,onboarding_completed"
+        )
         .eq("id", user.id)
         .single();
 

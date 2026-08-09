@@ -1,7 +1,6 @@
-/* eslint-disable */
 import { describe, it, expect, mock, beforeAll, afterEach } from "bun:test";
 import React from "react";
-import { render, screen, cleanup, act } from "@testing-library/react";
+import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { CardDeck } from "@/components/modals/challenge-reveal/CardDeck";
@@ -32,21 +31,21 @@ mock.module("framer-motion", () => {
       (
         {
           children,
-          animate,
-          initial,
-          exit,
-          variants,
-          style,
-          onMouseEnter,
-          onMouseLeave,
-          onClick,
-          onKeyDown,
-          whileHover,
-          whileTap,
-          drag,
-          dragConstraints,
-          dragElastic,
-          onDragEnd,
+          _animate,
+          _initial,
+          _exit,
+          _variants,
+          _style,
+          _onMouseEnter,
+          _onMouseLeave,
+          _onClick,
+          _onKeyDown,
+          _whileHover,
+          _whileTap,
+          _drag,
+          _dragConstraints,
+          _dragElastic,
+          _onDragEnd,
           ...props
         }: any,
         ref: any
@@ -58,7 +57,7 @@ mock.module("framer-motion", () => {
     ),
     button: React.forwardRef(
       (
-        { children, animate, initial, exit, variants, whileHover, whileTap, ...props }: any,
+        { children, _animate, _initial, _exit, _variants, _whileHover, _whileTap, ...props }: any,
         ref: any
       ) => (
         <button ref={ref} {...props}>
@@ -66,7 +65,7 @@ mock.module("framer-motion", () => {
         </button>
       )
     ),
-    img: React.forwardRef(({ children, ...props }: any, ref: any) => <img ref={ref} {...props} />),
+    img: React.forwardRef(({ _children, ...props }: any, ref: any) => <img ref={ref} {...props} />),
   };
   return {
     AnimatePresence,

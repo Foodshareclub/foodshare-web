@@ -1,10 +1,6 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
-import CategoryPageContent, { 
-  generateCategoryMetadata, 
-  CATEGORY_PATHS, 
-  PageProps 
-} from "./CategoryPageContent";
+import CategoryPageContent, { generateCategoryMetadata, PageProps } from "./CategoryPageContent";
 
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
   const searchParams = await props.searchParams;
@@ -14,7 +10,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 
 /**
  * Food/Products Listings Page - Server Component
- * 
+ *
  * Supports legacy ?type=thing redirection to /thing
  */
 export default async function ProductsPage(props: PageProps) {
@@ -24,7 +20,7 @@ export default async function ProductsPage(props: PageProps) {
   // If type is specified and it's not "food", redirect to the dedicated route
   if (productType && productType !== "food") {
     const normalizedType = LEGACY_TYPE_MAP[productType] || productType;
-    
+
     // Check if this type belongs in a dedicated route
     if (REDIRECT_TARGETS.includes(normalizedType)) {
       const params = new URLSearchParams();
@@ -33,7 +29,7 @@ export default async function ProductsPage(props: PageProps) {
           params.set(key, value as string);
         }
       });
-      
+
       const queryString = params.toString();
       const targetPath = `/${normalizedType}${queryString ? `?${queryString}` : ""}`;
       redirect(targetPath);
@@ -54,16 +50,16 @@ const REDIRECT_TARGETS = [
   "challenge",
   "zerowaste",
   "vegan",
-  "forum"
+  "forum",
 ];
 
 const LEGACY_TYPE_MAP: Record<string, string> = {
-  "things": "thing",
-  "foodbanks": "foodbank",
-  "fridges": "fridge",
-  "organisations": "organisation",
-  "business": "organisation",
-  "volunteers": "volunteer",
-  "challenges": "challenge",
-  "organisation": "organisation"
+  things: "thing",
+  foodbanks: "foodbank",
+  fridges: "fridge",
+  organisations: "organisation",
+  business: "organisation",
+  volunteers: "volunteer",
+  challenges: "challenge",
+  organisation: "organisation",
 };

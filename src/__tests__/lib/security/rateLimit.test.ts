@@ -3,8 +3,6 @@
  * Unit tests for rate limiting service
  */
 
-/* eslint-disable @typescript-eslint/no-require-imports */
-
 import { mock, describe, it, expect, beforeEach, afterAll } from "bun:test";
 
 // Mock state

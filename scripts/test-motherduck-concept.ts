@@ -1,5 +1,6 @@
 import { Database } from "duckdb-async";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function testMotherDuck() {
   console.log("Testing MotherDuck connection...");
   try {

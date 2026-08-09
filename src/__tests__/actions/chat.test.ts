@@ -191,6 +191,7 @@ mock.module("@/lib/supabase/server", () => ({
       // For message count query
       if (tableName === "room_participants") {
         Object.assign(chain, {
+          // eslint-disable-next-line unicorn/no-thenable
           then: (resolve: (value: unknown) => void) =>
             resolve({
               count: mockState.messageCount,
