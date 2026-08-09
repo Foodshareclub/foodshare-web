@@ -22,7 +22,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
-  # Combined validation job - runs lint, type-check, test in parallel
+  # Combined validation job - runs lint, oxlint, biome, type-check, test in parallel
   validate:
     name: Validate (${{ matrix.job }})
     runs-on: self-hosted
@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        job: [lint, type-check, test]
+        job: [lint, "lint:oxlint", "lint:biome", type-check, test]
     steps:
       - uses: actions/checkout@v4
 
@@ -56,7 +56,7 @@ jobs:
         run: bun audit || true
 
       - name: Run ${{ matrix.job }}
-        run: bun run ${{ matrix.job == 'lint' && 'lint' || matrix.job == 'type-check' && 'type-check' || 'test:ci' }}
+        run: bun run ${{ matrix.job == 'test' && 'test:ci' || matrix.job }}
 
       - name: Upload coverage
         if: matrix.job == 'test'
