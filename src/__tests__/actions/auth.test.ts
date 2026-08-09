@@ -48,7 +48,7 @@ const createEqChain = (tableName?: string): MockChain => {
     then: (resolve: (value: unknown) => void) =>
       resolve({
         // user_roles returns array of roles, profiles returns single profile
-        data: tableName === "user_roles" ? mockState.userRoles : mockState.profile,
+        data: tableName === "user_roles" ? (mockState.userRoles ?? []) : mockState.profile,
         error: mockState.dbError,
       }),
   };
