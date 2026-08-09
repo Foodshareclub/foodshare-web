@@ -127,9 +127,6 @@ mock.module("@/lib/supabase/server", () => ({
   createCachedClient: mock(() => {
     return Promise.resolve({
       from: mock(() => ({
-        select: mock(() => ({
-          eq: mock(() => ({ single: mock(() => Promise.resolve({ data: null, error: null })) })),
-        })),
       })),
     });
   }),
@@ -140,15 +137,30 @@ mock.module("@/lib/supabase/admin", () => ({
   createAdminClient: mock(() => ({
     from: mock((tableName: string) => ({
       select: mock(() => ({
-        eq: mock(() => Promise.resolve({
-          data: tableName === "user_roles" ? (mockState.userRoles ?? []) : mockState.profile,
-          error: mockState.dbError,
-        })),
-        then: (resolve: (value: unknown) => void) =>
-          resolve({
+        eq: mock(() =>
+          Promise.resolve({
             data: tableName === "user_roles" ? (mockState.userRoles ?? []) : mockState.profile,
             error: mockState.dbError,
-          }),
+          })
+        ),
+        in: mock(() =>
+          Promise.resolve({
+            data: tableName === "user_roles" ? (mockState.userRoles ?? []) : mockState.profile,
+            error: mockState.dbError,
+          })
+        ),
+        single: mock(() =>
+          Promise.resolve({
+            data: mockState.profile,
+            error: mockState.dbError,
+          })
+        ),
+        maybeSingle: mock(() =>
+          Promise.resolve({
+            data: mockState.profile,
+            error: mockState.dbError,
+          })
+        ),
       })),
     })),
   })),
