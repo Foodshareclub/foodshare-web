@@ -33,19 +33,10 @@ mock.module("next/navigation", () => ({
   }),
 }));
 
-// Define chain type for Supabase mock
-interface MockChain {
-  eq: ReturnType<typeof mock>;
-  in: ReturnType<typeof mock>;
-  single: ReturnType<typeof mock>;
-  maybeSingle: ReturnType<typeof mock>;
-  then: (resolve: (value: unknown) => void) => void;
-}
-
 // Helper to create query chain for Supabase mocks
 const createQueryChain = (tableName?: string) => {
   const isUserRoles = tableName === "user_roles";
-  const getResult = () => Promise.resolve({
+  const mockResult = Promise.resolve({
     data: isUserRoles ? mockState.userRoles : mockState.profile,
     error: mockState.dbError,
   });
@@ -53,10 +44,12 @@ const createQueryChain = (tableName?: string) => {
   const chain: any = {
     eq: mock(() => chain),
     in: mock(() => chain),
-    single: mock(getResult),
-    maybeSingle: mock(getResult),
-    then: (onfulfilled?: (value: any) => any, onrejected?: (reason: any) => any) =>
-      getResult().then(onfulfilled, onrejected),
+    single: mock(() => mockResult),
+    maybeSingle: mock(() => mockResult),
+    // eslint-disable-next-line unicorn/no-thenable
+    then: (onfulfilled?: any, onrejected?: any) => mockResult.then(onfulfilled, onrejected),
+    catch: (onrejected?: any) => mockResult.catch(onrejected),
+    finally: (onfinally?: any) => mockResult.finally(onfinally),
   };
   return chain;
 };
