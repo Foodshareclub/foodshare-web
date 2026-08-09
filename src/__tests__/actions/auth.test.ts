@@ -137,15 +137,21 @@ mock.module("@/lib/supabase/server", () => ({
 }));
 
 mock.module("@/lib/supabase/admin", () => ({
-  createAdminClient: mock(() => {
-    return {
-      from: mock((tableName: string) => ({
-        select: mock(() => ({
-          eq: mock(() => createEqChain(tableName)),
+  createAdminClient: mock(() => ({
+    from: mock((tableName: string) => ({
+      select: mock(() => ({
+        eq: mock(() => Promise.resolve({
+          data: tableName === "user_roles" ? (mockState.userRoles ?? []) : mockState.profile,
+          error: mockState.dbError,
         })),
+        then: (resolve: (value: unknown) => void) =>
+          resolve({
+            data: tableName === "user_roles" ? (mockState.userRoles ?? []) : mockState.profile,
+            error: mockState.dbError,
+          }),
       })),
-    };
-  }),
+    })),
+  })),
 }));
 
 // Import actions after mocks
