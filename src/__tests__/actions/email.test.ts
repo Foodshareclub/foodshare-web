@@ -61,16 +61,18 @@ mock.module("@/lib/notifications", () => ({
   ),
 }));
 
-// Mock admin check
-mock.module("@/lib/data/admin-check", () => ({
-  checkUserIsAdmin: mock((_userId: string) => {
-    // Check if the user has admin role in mockState
-    const hasAdminRole = mockState.userRoles?.some(
-      (ur) => ur.roles.name === "admin" || ur.roles.name === "superadmin"
-    );
-    return Promise.resolve({
-      isAdmin: hasAdminRole || false,
-    });
+// Mock Supabase admin
+mock.module("@/lib/supabase/admin", () => ({
+  createAdminClient: () => ({
+    from: (tableName: string) => ({
+      select: () => ({
+        eq: () =>
+          Promise.resolve({
+            data: tableName === "user_roles" ? (mockState.userRoles ?? []) : null,
+            error: mockState.dbError,
+          }),
+      }),
+    }),
   }),
 }));
 
