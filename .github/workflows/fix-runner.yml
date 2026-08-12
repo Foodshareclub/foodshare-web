@@ -13,18 +13,14 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -x
-            echo "Checking docker containers..."
-            docker ps -a
+            echo "Removing conflicting container..."
+            docker rm -f supabase-cloudflared || true
 
-            echo "Attempting to restart backend runner container..."
-            # Try starting any container with runner in the name
+            echo "Starting runner..."
             RUNNER=$(docker ps -a --format '{{.Names}}' | grep runner || true)
             if [ -n "$RUNNER" ]; then
               docker start $RUNNER
             fi
-
-            echo "Checking if cloudflared is down..."
-            docker ps -a | grep cloudflared || true
 
             echo "Restarting backend..."
             cd /home/organic/dev/foodshare-backend
