@@ -2,15 +2,12 @@ name: CI/CD
 
 on:
   push:
-    branches: [main, develop, organic]
+    branches:
+      - main
   pull_request:
-    branches: [main, develop, organic]
+    branches:
+      - main
   workflow_dispatch:
-
-# Cancel in-progress runs when a new commit is pushed to the same branch.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -331,9 +328,6 @@ jobs:
     needs: docker
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 10
-    concurrency:
-      group: production_deploy
-      cancel-in-progress: false
     environment:
       name: production
     steps:
