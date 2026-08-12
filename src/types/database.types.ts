@@ -271,15 +271,74 @@ export interface Database {
         Row: {
           id: number;
           post_name: string;
+          post_description: string | null;
           post_type: string;
-          images: string[];
-          location_json: Json | null;
+          post_address: string | null;
+          post_stripped_address: string | null;
+          quantity: string | null;
+          pickup_time: string | null;
           is_active: boolean;
+          is_arranged: boolean;
+          created_at: string;
+          updated_at: string;
+          profile_id: string;
+          images: string[];
+          post_views: number;
+          location: unknown;
+          location_json: Json | null;
+          latitude: number | null;
+          longitude: number | null;
+          category_id: number | null;
+          tags: string[] | null;
+          metadata: Json | null;
+          fridge_id: string | null;
+          has_pantry: boolean | null;
+          available_hours: string | null;
+          location_type: string | null;
+          condition: string | null;
         };
       };
     };
     Functions: {
-      [_ in never]: never;
+      get_nearby_posts: {
+        Args: {
+          p_latitude: number;
+          p_longitude: number;
+          p_radius_meters: number;
+          p_user_id?: string | null;
+          p_post_type?: string | null;
+          p_limit?: number;
+          p_offset?: number;
+        };
+        Returns: {
+          id: number;
+          profile_id: string;
+          post_name: string;
+          post_description: string;
+          post_type: string;
+          pickup_time: string;
+          post_address: string;
+          post_stripped_address: string;
+          latitude: number;
+          longitude: number;
+          images: string[];
+          is_active: boolean;
+          is_arranged: boolean;
+          post_views: number;
+          category_id: number;
+          tags: string[];
+          quantity: string;
+          created_at: string;
+          updated_at: string;
+          distance_meters: number;
+          metadata: Json;
+          fridge_id: string;
+          has_pantry: boolean;
+          available_hours: string;
+          location_type: string;
+          condition: string;
+        }[];
+      };
     };
     Enums: {
       [_ in never]: never;
