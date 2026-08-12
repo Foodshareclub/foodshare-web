@@ -15,6 +15,11 @@ on:
         type: boolean
         required: false
         default: false
+      debug_services:
+        description: "Dump docker logs for unhealthy services"
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   maintenance:
@@ -27,6 +32,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: organic
           key: ${{ secrets.VPS_SSH_KEY }}
+          command_timeout: 5m
           script: |
             set -x
 
@@ -35,6 +41,21 @@ jobs:
             df -h
             free -m
             uptime
+
+            # Debug Services
+            if [ "${{ github.event.inputs.debug_services }}" == "true" ]; then
+              echo "=== Docker Container Status ==="
+              cd /home/organic/dev/foodshare-backend
+              docker compose ps
+              echo "=== Auth (GoTrue) Logs (last 100 lines) ==="
+              docker compose logs --tail=100 auth 2>&1 || true
+              echo "=== Kong Logs (last 50 lines) ==="
+              docker compose logs --tail=50 kong 2>&1 || true
+              echo "=== Auth Health Check ==="
+              curl -v http://localhost:54321/auth/v1/health 2>&1 || true
+              echo "=== Direct GoTrue Health ==="
+              docker compose exec -T auth wget -qO- http://localhost:9999/health 2>&1 || true
+            fi
 
             # Package Upgrades
             if [ "${{ github.event.inputs.upgrade_packages }}" == "true" ] || [ "${{ github.event_name }}" == "schedule" ]; then
