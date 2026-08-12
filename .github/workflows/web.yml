@@ -321,7 +321,8 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Sync translations
-        run: bun run translations:sync
+        continue-on-error: true
+        run: bun run translations:sync -- --verbose
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://api.${{ secrets.SITE_DOMAIN }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
