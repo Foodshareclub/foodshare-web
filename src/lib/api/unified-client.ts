@@ -33,53 +33,36 @@ async function listProducts(params?: {
   limit?: number;
   userId?: string;
 }): Promise<{ data: InitialProductStateType[]; nextCursor: number | null; hasMore: boolean }> {
-  const useSupabase = isInRollout();
   const start = Date.now();
 
-  if (useSupabase) {
-    try {
-      const url = new URL(`${SUPABASE_URL}/functions/v1/api-v1-products`);
-      if (params?.postType) url.searchParams.set("postType", params.postType);
-      if (params?.cursor) url.searchParams.set("cursor", String(params.cursor));
-      if (params?.limit) url.searchParams.set("limit", String(params.limit));
-      if (params?.userId) url.searchParams.set("userId", params.userId);
+  try {
+    const url = new URL(`${SUPABASE_URL}/functions/v1/api-v1-products`);
+    if (params?.postType) url.searchParams.set("postType", params.postType);
+    if (params?.cursor) url.searchParams.set("cursor", String(params.cursor));
+    if (params?.limit) url.searchParams.set("limit", String(params.limit));
+    if (params?.userId) url.searchParams.set("userId", params.userId);
 
-      const res = await fetch(url.toString(), {
-        headers: {
-          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-          "Content-Type": "application/json",
-        },
+    const res = await fetch(url.toString(), {
+      headers: {
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!res.ok) throw new Error(`Supabase: ${res.status}`);
+    const result = await res.json();
+
+    if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_API_MONITORING === "true") {
+      logger.debug(`[API] products via supabase: ${Date.now() - start}ms ✓`, {
+        component: "UnifiedClient",
       });
-
-      if (!res.ok) throw new Error(`Supabase: ${res.status}`);
-      const result = await res.json();
-
-      if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_API_MONITORING === "true") {
-        logger.debug(`[API] products via supabase: ${Date.now() - start}ms ✓`, { component: "UnifiedClient" });
-      }
-
-      return result;
-    } catch (error) {
-      console.error("[API] Supabase failed, falling back:", error);
     }
+
+    return result;
+  } catch (error) {
+    console.error("[API] Supabase fetch failed:", error);
+    throw error;
   }
-
-  // Fallback to local API
-  const url = new URL("/api/products", window.location.origin);
-  if (params?.postType) url.searchParams.set("post_type", params.postType);
-  if (params?.cursor) url.searchParams.set("cursor", String(params.cursor));
-  if (params?.limit) url.searchParams.set("limit", String(params.limit));
-  if (params?.userId) url.searchParams.set("user_id", params.userId);
-
-  const res = await fetch(url.toString());
-  if (!res.ok) throw new Error(`API: ${res.status}`);
-  const result = await res.json();
-
-  if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_API_MONITORING === "true") {
-    logger.debug(`[API] products via local: ${Date.now() - start}ms ✓`, { component: "UnifiedClient" });
-  }
-
-  return result;
 }
 
 export const api = {
