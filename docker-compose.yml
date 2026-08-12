@@ -44,7 +44,7 @@ services:
       - foodshare-web-network
 
   cloudflared:
-    container_name: supabase-cloudflared
+    container_name: foodshare-cloudflared-web
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
     command: tunnel run

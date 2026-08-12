@@ -187,7 +187,7 @@ jobs:
           ls .next/server/ 2>/dev/null | head -10 || echo "No server directory"
 
       - name: Run Playwright tests
-        run: bun run e2e --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: npx playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
         env:
           SKIP_ENV_VALIDATION: "true"
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -390,7 +390,7 @@ jobs:
 
             # Remove old manually-created containers if they exist outside compose
             docker rm -f foodshare-caddy 2>/dev/null || true
-            docker rm -f supabase-cloudflared 2>/dev/null || true
+            docker rm -f foodshare-cloudflared-web 2>/dev/null || true
             # Deploy (Cloudflare Tunnel + Web via compose)
             docker compose --env-file .env.production up -d --force-recreate
             echo "Deploy complete"
