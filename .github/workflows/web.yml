@@ -25,7 +25,7 @@ jobs:
   # Combined validation job - runs lint, oxlint, biome, type-check, test in parallel
   validate:
     name: Validate (${{ matrix.job }})
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -68,7 +68,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: validate
     timeout-minutes: 15
     outputs:
@@ -128,7 +128,7 @@ jobs:
 
   e2e:
     name: E2E (${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: build
     timeout-minutes: 45
     strategy:
@@ -205,7 +205,7 @@ jobs:
 
   merge-e2e-reports:
     name: Merge E2E Reports
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: e2e
     if: always()
     steps:
@@ -244,7 +244,7 @@ jobs:
 
   docker:
     name: Docker Build & Push
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 30
@@ -296,7 +296,7 @@ jobs:
 
   sync-translations:
     name: Sync Translations
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
@@ -327,7 +327,7 @@ jobs:
 
   deploy:
     name: Deploy
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: docker
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     timeout-minutes: 10
