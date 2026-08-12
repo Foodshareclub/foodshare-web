@@ -8,24 +8,7 @@ import { logger } from "@/lib/logger";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const USE_SUPABASE = process.env.NEXT_PUBLIC_USE_SUPABASE === "true";
-const ROLLOUT_PCT = parseInt(process.env.NEXT_PUBLIC_SUPABASE_ROLLOUT || "0", 10);
-
-function isInRollout(): boolean {
-  if (!USE_SUPABASE || ROLLOUT_PCT === 0) return false;
-  if (ROLLOUT_PCT >= 100) return true;
-
-  const sessionId =
-    sessionStorage.getItem("rollout_id") ||
-    (() => {
-      const id = Math.random().toString(36).slice(2);
-      sessionStorage.setItem("rollout_id", id);
-      return id;
-    })();
-
-  const hash = sessionId.split("").reduce((a, b) => ((a << 5) - a + b.charCodeAt(0)) | 0, 0);
-  return Math.abs(hash) % 100 < ROLLOUT_PCT;
-}
+// Removed unused variables and functions
 
 async function listProducts(params?: {
   postType?: string;
