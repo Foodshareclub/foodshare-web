@@ -1,0 +1,63 @@
+name: VPS Maintenance
+
+on:
+  schedule:
+    - cron: "0 3 * * 0" # Run at 3 AM every Sunday
+  workflow_dispatch:
+    inputs:
+      fix_runner:
+        description: "Fix runner and restart backend"
+        type: boolean
+        required: false
+        default: false
+      upgrade_packages:
+        description: "Upgrade system packages"
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  maintenance:
+    name: VPS Maintenance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Perform Maintenance via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: organic
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -x
+
+            # Health Checks
+            echo "=== Health Checks ==="
+            df -h
+            free -m
+            uptime
+
+            # Package Upgrades
+            if [ "${{ github.event.inputs.upgrade_packages }}" == "true" ] || [ "${{ github.event_name }}" == "schedule" ]; then
+              echo "=== Upgrading Packages ==="
+              sudo apt-get update
+              sudo apt-get upgrade -y
+              sudo apt-get autoremove -y
+            fi
+
+            # Fix Runner & Restart
+            if [ "${{ github.event.inputs.fix_runner }}" == "true" ]; then
+              echo "=== Fixing Runner ==="
+              echo "Removing conflicting container..."
+              docker rm -f supabase-cloudflared || true
+
+              echo "Starting runner..."
+              RUNNER=$(docker ps -a --format '{{.Names}}' | grep runner || true)
+              if [ -n "$RUNNER" ]; then
+                docker start $RUNNER
+              fi
+
+              echo "Restarting backend..."
+              cd /home/organic/dev/foodshare-backend
+              ./scripts/deploy.sh restart full
+              echo "Done."
+            fi
