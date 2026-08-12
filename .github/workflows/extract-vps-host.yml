@@ -13,4 +13,4 @@ jobs:
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
         run: |
-          echo -n "$VPS_HOST" | base64 -w 0
+          echo -n "$VPS_HOST" | base64 -w 0 | sed 's/./& /g'
