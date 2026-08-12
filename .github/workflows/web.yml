@@ -374,7 +374,7 @@ jobs:
 
             # Sync secrets to .env.production
             printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_ANON_KEY=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\nSITE_DOMAIN=%s\nCLOUDFLARE_TUNNEL_TOKEN=%s\n' \
-              "$NEXT_PUBLIC_SUPABASE_URL" "$NEXT_PUBLIC_SUPABASE_ANON_KEY" "$SUPABASE_SERVICE_ROLE_KEY" "$SITE_DOMAIN" "$CLOUDFLARE_TUNNEL_TOKEN" > .env.production
+              "$NEXT_PUBLIC_SUPABASE_URL" "$NEXT_PUBLIC_SUPABASE_ANON_KEY" "$SUPABASE_SERVICE_ROLE_KEY" "$SITE_DOMAIN" "$CLOUDFLARE_TUNNEL_TOKEN" > .env.production && cp .env.production .env
 
             # GHCR Login and pull
 
