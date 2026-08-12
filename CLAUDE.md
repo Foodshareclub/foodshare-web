@@ -9,11 +9,12 @@ Next.js 16 App Router + React 19 + TypeScript 5 + Tailwind CSS 4 + Self-hosted S
 
 ## Deployment
 
-All deployments are **fully automated** via GitHub Actions. Never SSH to build or deploy manually.
+All deployments are **fully automated** via GitHub Actions in full scale. **Never SSH to run `docker build` or `docker compose` manually.**
 
-1. **Push to `main`**: Triggers the CI/CD pipeline.
-2. **Monitor Build**: Use `gh run list --limit 3` to track progress.
-3. **Automatic Deployment**: Docker images are rebuilt and deployed to the VPS automatically upon successful build.
+1. **GitHub Secrets:** All build arguments (e.g., OAuth keys, `SITE_DOMAIN`) and environment variables are managed securely via GitHub Secrets. Manual builds omit these critical variables.
+2. **Push to `main`**: Triggers the CI/CD pipeline which strictly injects these full scale secrets and automatically handles the `.env.production` file on the VPS.
+3. **Monitor Build**: Use `gh run list --limit 3` to track progress.
+4. **Automatic Deployment**: Docker images are rebuilt and deployed to the VPS automatically upon successful build.
 
 ## Commands
 
