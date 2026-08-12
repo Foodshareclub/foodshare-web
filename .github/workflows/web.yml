@@ -105,6 +105,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
           NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED }}
           NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED }}
           NEXT_PUBLIC_OAUTH_APPLE_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_APPLE_ENABLED }}
@@ -191,6 +193,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
 
       - name: Upload Blob report
         uses: actions/upload-artifact@v4
@@ -320,7 +324,10 @@ jobs:
         run: bun run translations:sync
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
 
   deploy:
     name: Deploy
@@ -343,12 +350,18 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SITE_DOMAIN: ${{ secrets.SITE_DOMAIN }}
           CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED }}
+          NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED }}
+          NEXT_PUBLIC_OAUTH_APPLE_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_APPLE_ENABLED }}
+          NEXT_PUBLIC_OAUTH_GITHUB_ENABLED: ${{ secrets.NEXT_PUBLIC_OAUTH_GITHUB_ENABLED }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: organic
           key: ${{ secrets.VPS_SSH_KEY }}
           command_timeout: 10m
-          envs: GITHUB_TOKEN,GITHUB_REPO,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,SITE_DOMAIN,CLOUDFLARE_TUNNEL_TOKEN
+          envs: GITHUB_TOKEN,GITHUB_REPO,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,SUPABASE_SERVICE_ROLE_KEY,SITE_DOMAIN,CLOUDFLARE_TUNNEL_TOKEN,NEXT_PUBLIC_APP_URL,NEXT_PUBLIC_SITE_URL,NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED,NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED,NEXT_PUBLIC_OAUTH_APPLE_ENABLED,NEXT_PUBLIC_OAUTH_GITHUB_ENABLED
           script: |
             set -eo pipefail
             mkdir -p ${{ secrets.VPS_DEPLOY_PATH }}
@@ -367,17 +380,17 @@ jobs:
             git reset --hard origin/main
 
             # Sync secrets to .env.production
-            printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_ANON_KEY=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\nSITE_DOMAIN=%s\nCLOUDFLARE_TUNNEL_TOKEN=%s\n' \
-              "$NEXT_PUBLIC_SUPABASE_URL" "$NEXT_PUBLIC_SUPABASE_ANON_KEY" "$SUPABASE_SERVICE_ROLE_KEY" "$SITE_DOMAIN" "$CLOUDFLARE_TUNNEL_TOKEN" > .env.production && cp .env.production .env
+            printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_ANON_KEY=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\nSITE_DOMAIN=%s\nCLOUDFLARE_TUNNEL_TOKEN=%s\nNEXT_PUBLIC_APP_URL=%s\nNEXT_PUBLIC_SITE_URL=%s\nNEXT_PUBLIC_OAUTH_GOOGLE_ENABLED=%s\nNEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED=%s\nNEXT_PUBLIC_OAUTH_APPLE_ENABLED=%s\nNEXT_PUBLIC_OAUTH_GITHUB_ENABLED=%s\n' \
+              "$NEXT_PUBLIC_SUPABASE_URL" "$NEXT_PUBLIC_SUPABASE_ANON_KEY" "$SUPABASE_SERVICE_ROLE_KEY" "$SITE_DOMAIN" "$CLOUDFLARE_TUNNEL_TOKEN" "$NEXT_PUBLIC_APP_URL" "$NEXT_PUBLIC_SITE_URL" "$NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED" "$NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED" "$NEXT_PUBLIC_OAUTH_APPLE_ENABLED" "$NEXT_PUBLIC_OAUTH_GITHUB_ENABLED" > .env.production && cp .env.production .env
 
             # GHCR Login and pull
 
             echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker pull ghcr.io/${REPO_LOWER}:latest
 
-            # Remove old manually-created Caddy container if it exists outside compose
+            # Remove old manually-created containers if they exist outside compose
             docker rm -f foodshare-caddy 2>/dev/null || true
-
+            docker rm -f supabase-cloudflared 2>/dev/null || true
             # Deploy (Cloudflare Tunnel + Web via compose)
             docker compose --env-file .env.production up -d --force-recreate
             echo "Deploy complete"
