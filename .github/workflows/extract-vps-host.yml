@@ -1,0 +1,16 @@
+name: Extract VPS HOST
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract VPS HOST
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          echo -n "$VPS_HOST" | base64 -w 0
