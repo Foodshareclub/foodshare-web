@@ -376,29 +376,14 @@ jobs:
             printf 'NEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_ANON_KEY=%s\nSUPABASE_SERVICE_ROLE_KEY=%s\nSITE_DOMAIN=%s\nCLOUDFLARE_TUNNEL_TOKEN=%s\n' \
               "$NEXT_PUBLIC_SUPABASE_URL" "$NEXT_PUBLIC_SUPABASE_ANON_KEY" "$SUPABASE_SERVICE_ROLE_KEY" "$SITE_DOMAIN" "$CLOUDFLARE_TUNNEL_TOKEN" > .env.production
 
-            # Pull from backend .env.functions first (as base defaults)
-            if [ -f ../foodshare-backend/.env.functions ]; then
-              grep -E '^[A-Za-z0-9_]+=' ../foodshare-backend/.env.functions >> .env.production || true
-            fi
-
-            # Overwrite with supplementary secrets from Vault (Robust multi-line safety)
-            VAULT_DATA=$(docker exec supabase-db psql -U postgres -d postgres -A -t -c "SELECT name || chr(1) || decrypted_secret || chr(0) FROM vault.decrypted_secrets WHERE name ~ '^[A-Z0-9_]+$';" 2>/dev/null || echo "")
-            while IFS=$(printf '\1') read -d '' -r key val; do
-              if [ -n "$key" ]; then
-                # Remove existing key if it exists to avoid duplicates
-                sed -i "/^$key=/d" .env.production || true
-                # Quote the value for .env safety
-                printf '%s="%s"\n' "$key" "$val" >> .env.production
-              fi
-            done <<< "$VAULT_DATA"
-
             # GHCR Login and pull
+
             echo "$GITHUB_TOKEN" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker pull ghcr.io/${REPO_LOWER}:latest
 
             # Remove old manually-created Caddy container if it exists outside compose
             docker rm -f foodshare-caddy 2>/dev/null || true
 
-            # Deploy (Caddy + Web via compose)
+            # Deploy (Cloudflare Tunnel + Web via compose)
             docker compose --env-file .env.production up -d --force-recreate
             echo "Deploy complete"
