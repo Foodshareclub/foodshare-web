@@ -1,0 +1,32 @@
+name: Fix Runner
+on: workflow_dispatch
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: organic
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -x
+            echo "Checking docker containers..."
+            docker ps -a
+
+            echo "Attempting to restart backend runner container..."
+            # Try starting any container with runner in the name
+            RUNNER=$(docker ps -a --format '{{.Names}}' | grep runner || true)
+            if [ -n "$RUNNER" ]; then
+              docker start $RUNNER
+            fi
+
+            echo "Checking if cloudflared is down..."
+            docker ps -a | grep cloudflared || true
+
+            echo "Restarting backend..."
+            cd /home/organic/dev/foodshare-backend
+            ./scripts/deploy.sh restart full
+            echo "Done."
