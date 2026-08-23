@@ -101,8 +101,8 @@ function Navbar({
   return (
     <>
       {/* SINGLE MERGED NAVBAR - Always Visible */}
-      <div
-        className={cn("bg-background w-full fixed top-0 z-[100]", "border-b border-border")}
+      <header
+        className={cn("navbar bg-background w-full fixed top-0 z-[100]", "border-b border-border")}
         style={{
           boxShadow: navbarShadow,
           backfaceVisibility: "hidden" as const,
@@ -170,7 +170,7 @@ function Navbar({
             />
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Spacer - adjusted for new single navbar height */}
       <div
