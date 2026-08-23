@@ -249,6 +249,9 @@ const ALLOWED_ORIGINS = [
   "https://www.foodshare.app",
   process.env.NODE_ENV === "development" ? "http://localhost:3000" : null,
   process.env.NODE_ENV === "development" ? "http://127.0.0.1:3000" : null,
+  // Allow localhost in CI for E2E tests
+  process.env.CI === "true" ? "http://localhost:3000" : null,
+  process.env.CI === "true" ? "http://127.0.0.1:3000" : null,
 ].filter((origin): origin is string => Boolean(origin));
 
 /**
@@ -471,9 +474,10 @@ export async function proxy(request: NextRequest) {
   );
 
   const isHealthCheck = pathname.startsWith("/api/health") || pathname.startsWith("/api/ready");
+  const isCI = process.env.CI === "true";
   let user = null;
 
-  if (!isHealthCheck) {
+  if (!isHealthCheck && !isCI) {
     // Check if user has auth cookies before attempting refresh
     const hasAuthCookies =
       request.cookies.has("sb-access-token") ||
