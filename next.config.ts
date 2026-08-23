@@ -8,40 +8,6 @@ const nextConfig: NextConfig = {
   // React Compiler - automatic memoization for +15-20% render performance
   reactCompiler: true,
 
-  // Use Rust-based React Compiler via Turbopack (experimental, faster builds)
-  // Enable native View Transitions API for App Router
-  // Inline small prefetches into single request (stable in 16.3)
-  // Network resilience - retry failed navigations/data fetches when offline
-  // Optimize package imports for better tree-shaking
-  // Enable Web Vitals attribution for debugging
-  experimental: {
-    turbopackRustReactCompiler: true,
-    prefetchInlining: true,
-    useOffline: true,
-    optimizePackageImports: [
-      "@radix-ui/react-avatar",
-      "@radix-ui/react-checkbox",
-      "@radix-ui/react-dialog",
-      "@radix-ui/react-dropdown-menu",
-      "@radix-ui/react-popover",
-      "@radix-ui/react-progress",
-      "@radix-ui/react-radio-group",
-      "@radix-ui/react-scroll-area",
-      "@radix-ui/react-select",
-      "@radix-ui/react-separator",
-      "@radix-ui/react-slider",
-      "@radix-ui/react-slot",
-      "@radix-ui/react-switch",
-      "@radix-ui/react-tabs",
-      "@radix-ui/react-tooltip",
-      "react-icons",
-      "framer-motion",
-      "leaflet",
-      "lucide-react",
-    ],
-    webVitalsAttribution: ["CLS", "FCP", "FID", "INP", "LCP", "TTFB"],
-  },
-
   // Skip TypeScript checks during build (already checked in CI)
   typescript: {
     ignoreBuildErrors: true,
@@ -54,15 +20,8 @@ const nextConfig: NextConfig = {
   htmlLimitedBots:
     /Googlebot|Bingbot|Yandex|YandexBot|DuckDuckBot|Slurp|Baiduspider|facebookexternalhit|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Applebot|PinterestBot|Discordbot|GPTBot|ChatGPT-User|PerplexityBot|Google-Extended|anthropic-ai|CCBot/,
 
-  // Cache Components - enables Instant Navigations (opt-in for 16.3, default in future)
-  // Requires partialPrefetching for full Instant Navigations experience
-  // DISABLED: Breaks build with static rendering conflicts on dynamic routes
+  // cacheComponents disabled — requires further React 19 compatibility testing
   // cacheComponents: true,
-
-  // Partial Prefetching - fine-grained control over link prefetching
-  // Bundles smaller payloads, reduces prefetch requests
-  // DISABLED: Requires cacheComponents
-  // partialPrefetching: true,
 
   // Custom cache life profiles for "use cache" / cacheLife() in data layer
   cacheLife: {
@@ -97,11 +56,39 @@ const nextConfig: NextConfig = {
   },
 
   // Set Turbopack root to silence monorepo lockfile warning
-  // Enable FileSystem Cache for faster repeat builds (enabled by default in 16.3)
   turbopack: {
     root: __dirname,
-    // FileSystem cache is enabled by default in 16.3, but can be configured:
-    // fileSystemCache: true,
+  },
+
+  experimental: {
+    // Enable native View Transitions API for App Router
+    viewTransition: true,
+
+    // Optimize package imports for better tree-shaking
+    optimizePackageImports: [
+      "@radix-ui/react-avatar",
+      "@radix-ui/react-checkbox",
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-dropdown-menu",
+      "@radix-ui/react-popover",
+      "@radix-ui/react-progress",
+      "@radix-ui/react-radio-group",
+      "@radix-ui/react-scroll-area",
+      "@radix-ui/react-select",
+      "@radix-ui/react-separator",
+      "@radix-ui/react-slider",
+      "@radix-ui/react-slot",
+      "@radix-ui/react-switch",
+      "@radix-ui/react-tabs",
+      "@radix-ui/react-tooltip",
+      "react-icons",
+      "framer-motion",
+      "leaflet",
+      "lucide-react",
+    ],
+
+    // Enable Web Vitals attribution for debugging
+    webVitalsAttribution: ["CLS", "FCP", "FID", "INP", "LCP", "TTFB"],
   },
 
   // Server-only packages (top-level in Next.js 15)
