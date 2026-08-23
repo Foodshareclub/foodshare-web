@@ -67,13 +67,21 @@ mock.module("framer-motion", () => {
     ),
     img: React.forwardRef(({ _children, ...props }: any, ref: any) => <img ref={ref} {...props} />),
   };
+  const createMotionValue = () => ({
+    get: () => 0,
+    set: () => {},
+    onChange: () => () => {},
+    on: () => () => {},
+  });
   return {
     AnimatePresence,
     motion,
     useReducedMotion: () => true,
     useAnimation: () => ({ start: mock(() => Promise.resolve()) }),
-    useMotionValue: () => ({ get: () => 0, set: () => {}, onChange: () => {} }),
-    useTransform: () => ({ get: () => 0, set: () => {}, onChange: () => {} }),
+    useMotionValue: createMotionValue,
+    useTransform: createMotionValue,
+    useMotionValueEvent: () => {},
+    animate: () => Promise.resolve(),
   };
 });
 

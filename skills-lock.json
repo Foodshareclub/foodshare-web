@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "skills": {
+    "ai-elements": {
+      "source": "vercel/ai-elements",
+      "sourceType": "github",
+      "skillPath": "skills/ai-elements/SKILL.md",
+      "computedHash": "c5faf42a5aa6bf02f7310dfcf0b6c45d956c98afa520cb16ec048df7ee263af5"
+    },
+    "ai-sdk": {
+      "source": "vercel/ai",
+      "sourceType": "github",
+      "skillPath": "skills/use-ai-sdk/SKILL.md",
+      "computedHash": "da25c27a274ef2b71017c255f95a26350d2519765a75cb54ee1a37872b121dab"
+    },
+    "build-agents": {
+      "source": "vercel/vercel-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/build-agents/SKILL.md",
+      "computedHash": "c49c488f609929fdef2ad914ca9a001d41e06ef1366a3badb0dd4cc9b2f80d8d"
+    },
+    "building-components": {
+      "source": "vercel/components.build",
+      "sourceType": "github",
+      "skillPath": "skills/building-components/SKILL.md",
+      "computedHash": "ca96444b70257eb3f4f4c76dfdd4a32312c835fe3c8755d2e3d75ac78d384bfd"
+    },
+    "chat-sdk": {
+      "source": "vercel/chat",
+      "sourceType": "github",
+      "skillPath": "skills/chat/SKILL.md",
+      "computedHash": "51605c7f5c25d58457046f37f0d2ba2153dd981ccc3a6d58393bf79ce5584319"
+    },
+    "create-a-backend": {
+      "source": "vercel/vercel-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/create-a-backend/SKILL.md",
+      "computedHash": "55181f3bdcfb8c9883d3853ce4aac51fb7c9a06b884b942d5bb2c9afe2cd1f88"
+    },
+    "flags-sdk": {
+      "source": "vercel/flags",
+      "sourceType": "github",
+      "skillPath": "skills/flags-sdk/SKILL.md",
+      "computedHash": "2dcef1fa2e439353f8b15fab852fc04d3ad9d2347cfc965e5ff5ea2dd73e92f9"
+    },
+    "migrate-ai-sdk-v6-to-v7": {
+      "source": "vercel/ai",
+      "sourceType": "github",
+      "skillPath": "skills/migrate-ai-sdk-v6-to-v7/SKILL.md",
+      "computedHash": "4a15e387756ee32d76805fe5f3fbd368a216dda4e6e9cc24b803efaa8c3381e4"
+    },
+    "next-cache-components-adoption": {
+      "source": "vercel/next.js",
+      "sourceType": "github",
+      "skillPath": "skills/next-cache-components-adoption/SKILL.md",
+      "computedHash": "41bc0b6a4cccf16ce53e59124ff9e0cbbfcc73c21cab663128405f3029dd298f"
+    },
+    "next-cache-components-optimizer": {
+      "source": "vercel/next.js",
+      "sourceType": "github",
+      "skillPath": "skills/next-cache-components-optimizer/SKILL.md",
+      "computedHash": "a45e680bcb933982e8d71e3b3f45b500ab1edc1aa94b1fbd95d8601776e19bed"
+    },
+    "next-dev-loop": {
+      "source": "vercel/next.js",
+      "sourceType": "github",
+      "skillPath": "skills/next-dev-loop/SKILL.md",
+      "computedHash": "d2a697a0a0429cad0bb7264644115457f588d4ed1007eeb0bb7f965b1185fa6e"
+    },
+    "next-partial-prefetching-adoption": {
+      "source": "vercel/next.js",
+      "sourceType": "github",
+      "skillPath": "skills/next-partial-prefetching-adoption/SKILL.md",
+      "computedHash": "65793d7a4cf56b8599dc3735dba2ef334ac54b7c29e831d0c9f4d9d25c71f206"
+    },
+    "streamdown": {
+      "source": "vercel/streamdown",
+      "sourceType": "github",
+      "skillPath": "skills/streamdown/SKILL.md",
+      "computedHash": "fb49b9edaf9d645d5fe56af9105050d7ae4765179d4996cb89efc049a7ecb000"
+    },
+    "turborepo": {
+      "source": "vercel/turborepo",
+      "sourceType": "github",
+      "skillPath": "skills/turborepo/SKILL.md",
+      "computedHash": "0f24f8046d44714ab39effe60e1f7114d7d3c8cbd05ebbef612b4c707a465a69"
+    },
+    "vercel-cli": {
+      "source": "vercel/vercel-plugin",
+      "sourceType": "github",
+      "skillPath": "skills/vercel-cli/SKILL.md",
+      "computedHash": "fa7c8f0406037f7984bb8456f8c2f9a04a3a0318d2ea3fe41fd1613fbbcaf1b8"
+    }
+  }
+}

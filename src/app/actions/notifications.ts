@@ -14,7 +14,9 @@ import { createClient } from "@/lib/supabase/server";
 import { CACHE_TAGS, getNotificationTags } from "@/lib/data/cache-keys";
 import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
-import type { NotificationType } from "@/types/notifications.types";
+import type { FullNotificationPreferencesData, NotificationType } from "@/types";
+
+export type { FullNotificationPreferencesData };
 
 // ============================================================================
 // Zod Schemas
@@ -350,5 +352,106 @@ export async function getUnreadNotificationCount(): Promise<ServerActionResult<n
   } catch (error) {
     console.error("Failed to get notification count:", error);
     return serverActionError("Failed to get notification count", "UNKNOWN_ERROR");
+  }
+}
+
+/**
+ * Fetch full authoritative notification preferences from backend
+ */
+export async function getFullNotificationPreferences(): Promise<
+  ServerActionResult<FullNotificationPreferencesData>
+> {
+  try {
+    const { supabase, user, error: authError } = await verifyAuth();
+    if (authError || !supabase || !user) {
+      return serverActionError(authError || "Not authenticated", "UNAUTHORIZED");
+    }
+
+    const { data, error } = await supabase.rpc("get_notification_preferences", {
+      p_user_id: user.id,
+    });
+
+    if (error) {
+      console.error("Failed to get notification preferences from backend:", error);
+      return serverActionError(error.message, "DATABASE_ERROR");
+    }
+
+    return {
+      success: true,
+      data: data as FullNotificationPreferencesData,
+    };
+  } catch (error) {
+    console.error("Error getting notification preferences:", error);
+    return serverActionError((error as Error).message, "UNKNOWN_ERROR");
+  }
+}
+
+/**
+ * Update global notification settings in backend
+ */
+export async function updateNotificationSettingsAction(
+  settings: Record<string, unknown>
+): Promise<ServerActionResult<void>> {
+  try {
+    const { supabase, user, error: authError } = await verifyAuth();
+    if (authError || !supabase || !user) {
+      return serverActionError(authError || "Not authenticated", "UNAUTHORIZED");
+    }
+
+    const { error } = await supabase.rpc("update_notification_settings", {
+      p_user_id: user.id,
+      p_settings: settings,
+    });
+
+    if (error) {
+      console.error("Failed to update notification settings:", error);
+      return serverActionError(error.message, "DATABASE_ERROR");
+    }
+
+    invalidateTag(CACHE_TAGS.PROFILE(user.id));
+    revalidatePath("/settings/notifications");
+
+    return successVoid();
+  } catch (error) {
+    console.error("Error updating notification settings:", error);
+    return serverActionError((error as Error).message, "UNKNOWN_ERROR");
+  }
+}
+
+/**
+ * Update category channel preference in backend
+ */
+export async function updateCategoryChannelAction(
+  category: string,
+  channel: string,
+  enabled: boolean,
+  frequency = "instant"
+): Promise<ServerActionResult<void>> {
+  try {
+    const { supabase, user, error: authError } = await verifyAuth();
+    if (authError || !supabase || !user) {
+      return serverActionError(authError || "Not authenticated", "UNAUTHORIZED");
+    }
+
+    const { error } = await supabase.rpc("update_notification_preference_channel", {
+      p_user_id: user.id,
+      p_category: category,
+      p_channel: channel,
+      p_enabled: enabled,
+      p_frequency: frequency,
+    });
+
+    if (error) {
+      console.error("Failed to update category channel preference:", error);
+      return serverActionError(error.message, "DATABASE_ERROR");
+    }
+
+    invalidateTag(CACHE_TAGS.PROFILE(user.id));
+    revalidatePath("/settings/notifications");
+
+    return successVoid();
+  } catch (error) {
+    console.error("Error updating category channel preference:", error);
+    return serverActionError((error as Error).message, "UNKNOWN_ERROR");
   }
 }

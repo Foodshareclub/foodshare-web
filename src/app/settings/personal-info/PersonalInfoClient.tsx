@@ -11,7 +11,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { User, Mail, Phone, MapPin, ChevronLeft, Check, X, Camera, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { uploadProfileAvatar } from "@/app/actions/profile";
+import { uploadProfileAvatar, updateProfile, updateUserAddress } from "@/app/actions/profile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -234,10 +234,17 @@ export function PersonalInfoClient({
     if (!currentProfile?.id) return;
     setIsSaving(true);
     try {
-      // TODO: Use updateProfile Server Action
-      // For now, just close the edit mode
-      setEditingName(false);
-      router.refresh();
+      const formData = new FormData();
+      formData.append("first_name", firstName);
+      formData.append("second_name", lastName);
+
+      const result = await updateProfile(formData);
+      if (result.success) {
+        setEditingName(false);
+        router.refresh();
+      } else {
+        console.error("Failed to update name:", result.error);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -247,9 +254,16 @@ export function PersonalInfoClient({
     if (!currentProfile?.id) return;
     setIsSaving(true);
     try {
-      // TODO: Use updateProfile Server Action
-      setEditingPhone(false);
-      router.refresh();
+      const formData = new FormData();
+      formData.append("phone", phone);
+
+      const result = await updateProfile(formData);
+      if (result.success) {
+        setEditingPhone(false);
+        router.refresh();
+      } else {
+        console.error("Failed to update phone:", result.error);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -259,9 +273,19 @@ export function PersonalInfoClient({
     if (!address) return;
     setIsSaving(true);
     try {
-      // TODO: Use updateAddress Server Action
-      setEditingAddress(false);
-      router.refresh();
+      const formData = new FormData();
+      formData.append("address_line_1", address.address_line_1 || "");
+      formData.append("city", address.city || "");
+      formData.append("postal_code", address.postal_code || "");
+      formData.append("country", address.country ? address.country.toString() : "");
+
+      const result = await updateUserAddress(formData);
+      if (result.success) {
+        setEditingAddress(false);
+        router.refresh();
+      } else {
+        console.error("Failed to update address:", result.error);
+      }
     } finally {
       setIsSaving(false);
     }

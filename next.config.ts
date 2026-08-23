@@ -8,6 +8,40 @@ const nextConfig: NextConfig = {
   // React Compiler - automatic memoization for +15-20% render performance
   reactCompiler: true,
 
+  // Use Rust-based React Compiler via Turbopack (experimental, faster builds)
+  // Enable native View Transitions API for App Router
+  // Inline small prefetches into single request (stable in 16.3)
+  // Network resilience - retry failed navigations/data fetches when offline
+  // Optimize package imports for better tree-shaking
+  // Enable Web Vitals attribution for debugging
+  experimental: {
+    turbopackRustReactCompiler: true,
+    prefetchInlining: true,
+    useOffline: true,
+    optimizePackageImports: [
+      "@radix-ui/react-avatar",
+      "@radix-ui/react-checkbox",
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-dropdown-menu",
+      "@radix-ui/react-popover",
+      "@radix-ui/react-progress",
+      "@radix-ui/react-radio-group",
+      "@radix-ui/react-scroll-area",
+      "@radix-ui/react-select",
+      "@radix-ui/react-separator",
+      "@radix-ui/react-slider",
+      "@radix-ui/react-slot",
+      "@radix-ui/react-switch",
+      "@radix-ui/react-tabs",
+      "@radix-ui/react-tooltip",
+      "react-icons",
+      "framer-motion",
+      "leaflet",
+      "lucide-react",
+    ],
+    webVitalsAttribution: ["CLS", "FCP", "FID", "INP", "LCP", "TTFB"],
+  },
+
   // Skip TypeScript checks during build (already checked in CI)
   typescript: {
     ignoreBuildErrors: true,
@@ -20,8 +54,15 @@ const nextConfig: NextConfig = {
   htmlLimitedBots:
     /Googlebot|Bingbot|Yandex|YandexBot|DuckDuckBot|Slurp|Baiduspider|facebookexternalhit|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Applebot|PinterestBot|Discordbot|GPTBot|ChatGPT-User|PerplexityBot|Google-Extended|anthropic-ai|CCBot/,
 
-  // cacheComponents disabled — requires further React 19 compatibility testing
+  // Cache Components - enables Instant Navigations (opt-in for 16.3, default in future)
+  // Requires partialPrefetching for full Instant Navigations experience
+  // DISABLED: Breaks build with static rendering conflicts on dynamic routes
   // cacheComponents: true,
+
+  // Partial Prefetching - fine-grained control over link prefetching
+  // Bundles smaller payloads, reduces prefetch requests
+  // DISABLED: Requires cacheComponents
+  // partialPrefetching: true,
 
   // Custom cache life profiles for "use cache" / cacheLife() in data layer
   cacheLife: {
@@ -56,39 +97,11 @@ const nextConfig: NextConfig = {
   },
 
   // Set Turbopack root to silence monorepo lockfile warning
+  // Enable FileSystem Cache for faster repeat builds (enabled by default in 16.3)
   turbopack: {
     root: __dirname,
-  },
-
-  experimental: {
-    // Enable native View Transitions API for App Router
-    viewTransition: true,
-
-    // Optimize package imports for better tree-shaking
-    optimizePackageImports: [
-      "@radix-ui/react-avatar",
-      "@radix-ui/react-checkbox",
-      "@radix-ui/react-dialog",
-      "@radix-ui/react-dropdown-menu",
-      "@radix-ui/react-popover",
-      "@radix-ui/react-progress",
-      "@radix-ui/react-radio-group",
-      "@radix-ui/react-scroll-area",
-      "@radix-ui/react-select",
-      "@radix-ui/react-separator",
-      "@radix-ui/react-slider",
-      "@radix-ui/react-slot",
-      "@radix-ui/react-switch",
-      "@radix-ui/react-tabs",
-      "@radix-ui/react-tooltip",
-      "react-icons",
-      "framer-motion",
-      "leaflet",
-      "lucide-react",
-    ],
-
-    // Enable Web Vitals attribution for debugging
-    webVitalsAttribution: ["CLS", "FCP", "FID", "INP", "LCP", "TTFB"],
+    // FileSystem cache is enabled by default in 16.3, but can be configured:
+    // fileSystemCache: true,
   },
 
   // Server-only packages (top-level in Next.js 15)
@@ -120,7 +133,6 @@ const nextConfig: NextConfig = {
     contentDispositionType: "attachment",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-
   // Build insights and logging
   logging: {
     fetches: {
@@ -382,8 +394,8 @@ const sentryWebpackPluginOptions = {
   // Suppresses source map uploading logs during build
   silent: true,
   // Organization and project from Sentry dashboard
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
+  org: process.env.SENTRY_ORG || "organicnz",
+  project: process.env.SENTRY_PROJECT || "foodshare-web",
   // Auth token for uploading source maps
   authToken: process.env.SENTRY_AUTH_TOKEN,
   // Disable Sentry in development
@@ -391,6 +403,8 @@ const sentryWebpackPluginOptions = {
   disableClientWebpackPlugin: process.env.NODE_ENV !== "production",
   // Hide source maps from generated client bundles
   hideSourceMaps: true,
+  // Tunnel route to bypass ad blockers for telemetry
+  tunnelRoute: "/monitoring",
   // Webpack tree-shaking options (Note: not supported with Turbopack)
   webpack: {
     treeshake: {

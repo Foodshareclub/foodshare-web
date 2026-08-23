@@ -31,10 +31,8 @@ export const preferenceItems: NavItem[] = [
   {
     icon: Bell,
     label: "Notifications",
-    description: "Email, push alerts",
+    description: "Email, push & Telegram",
     href: "/settings/notifications",
-    badge: "Soon",
-    disabled: true,
     gradient: "from-amber-500 to-orange-500",
   },
   {

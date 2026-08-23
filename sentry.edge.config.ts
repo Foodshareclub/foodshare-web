@@ -1,24 +1,9 @@
-/**
- * Sentry Edge Runtime Configuration
- * Handles edge function error tracking
- */
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-
-  // Reduced sample rate for edge (high volume)
-  tracesSampleRate: process.env.NODE_ENV === "production" ? 0.05 : 1.0,
-
-  // Environment
-  environment: process.env.NODE_ENV,
-
-  // Release tracking
-  release: process.env.NEXT_PUBLIC_GIT_COMMIT_SHA,
-
-  // Only enable in production
-  enabled: process.env.NODE_ENV === "production",
-
-  // Filter middleware noise
-  ignoreErrors: ["NEXT_REDIRECT", "NEXT_NOT_FOUND"],
+  dsn:
+    process.env.NEXT_PUBLIC_SENTRY_DSN ||
+    "https://3467e48f7cb71ccbe4b0e96b0136da1b@o4509901022691328.ingest.de.sentry.io/4511957598797904",
+  tracesSampleRate: 1,
+  debug: false,
 });

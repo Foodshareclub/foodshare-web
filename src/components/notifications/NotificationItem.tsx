@@ -6,7 +6,17 @@
  */
 
 import { useState } from "react";
-import { MessageSquare, ShoppingBag, Star, Clock, MapPin, Bell, Trash2, Check } from "lucide-react";
+import {
+  MessageSquare,
+  ShoppingBag,
+  Star,
+  Clock,
+  MapPin,
+  Bell,
+  Trash2,
+  Check,
+  ShieldCheck,
+} from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { MoreHorizontal } from "lucide-react";
@@ -36,6 +46,8 @@ const notificationIcons: Record<NotificationType, typeof Bell> = {
   post_expiring: Clock,
   nearby_post: MapPin,
   welcome: Bell,
+  verification: ShieldCheck,
+  security_alert: ShieldCheck,
   system: Bell,
 };
 
@@ -48,6 +60,8 @@ const notificationColors: Record<NotificationType, string> = {
   post_expiring: "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400",
   nearby_post: "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
   welcome: "bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400",
+  verification: "bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400",
+  security_alert: "bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400",
   system: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
 };
 

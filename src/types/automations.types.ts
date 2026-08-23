@@ -58,7 +58,7 @@ export interface AutomationEnrollment {
   };
 }
 
-export interface EmailTemplate {
+export interface AutomationEmailTemplate {
   id: string;
   name: string;
   slug: string;
@@ -70,6 +70,8 @@ export interface EmailTemplate {
   is_active: boolean;
   created_at: string;
 }
+
+export type EmailTemplate = AutomationEmailTemplate;
 
 export interface AutomationQueueItem {
   id: string;

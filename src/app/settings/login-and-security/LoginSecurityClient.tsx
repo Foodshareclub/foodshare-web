@@ -26,6 +26,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Glass } from "@/components/ui/glass";
 import { MFAEnrollment } from "@/components/security/MFAEnrollment";
+import { TelegramIntegrationCard } from "@/components/settings/TelegramIntegrationCard";
 import { cn as _cn } from "@/lib/utils";
 import type { AuthUser } from "@/lib/data/auth";
 
@@ -271,6 +272,13 @@ export function LoginSecurityClient({ user, isAdmin }: LoginSecurityClientProps)
                 </div>
               </div>
             </Glass>
+          </motion.div>
+
+          {/* Connected Accounts / Telegram Section */}
+          <Separator className="my-6 bg-border/50" />
+
+          <motion.div variants={itemVariants}>
+            <TelegramIntegrationCard userId={user.id} />
           </motion.div>
 
           {/* Admin MFA Section */}

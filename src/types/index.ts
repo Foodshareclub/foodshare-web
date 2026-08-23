@@ -66,3 +66,25 @@ export * from "./campaign.types";
 
 // Post Activity types
 export * from "./post-activity.types";
+
+// Product and review types
+export * from "./product.types";
+
+// Email automation and queue types
+export type {
+  AutomationFlow,
+  AutomationStep,
+  AutomationEnrollment,
+  AutomationQueueItem,
+  AutomationEmailTemplate,
+} from "./automations.types";
+export { TRIGGER_TYPES } from "./automations.types";
+
+// Email management types
+export * from "./email-management.types";
+
+// Web API extension types
+export * from "./web-apis.types";
+
+// Notification domain types
+export * from "./notifications.types";

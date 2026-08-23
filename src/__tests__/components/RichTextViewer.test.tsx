@@ -3,26 +3,20 @@
  * Verify DOMPurify sanitization prevents XSS attacks
  */
 
-import { describe, it, expect, mock, beforeAll } from "bun:test";
+import { describe, it, expect, mock } from "bun:test";
+import { JSDOM } from "jsdom";
+import createDOMPurify from "dompurify";
 
 // Mock next-intl
 mock.module("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }));
 
-// We need a DOM for DOMPurify
-import { GlobalRegistrator } from "@happy-dom/global-registrator";
-
-beforeAll(() => {
-  if (typeof window === "undefined") {
-    GlobalRegistrator.register();
-  }
-});
+const jsdomWindow = new JSDOM("").window;
+const DOMPurify = createDOMPurify(jsdomWindow as any);
 
 describe("RichTextViewer XSS Protection", () => {
-  it("sanitizes script tags from HTML content", async () => {
-    const DOMPurify = (await import("dompurify")).default;
-
+  it("sanitizes script tags from HTML content", () => {
     const malicious = '<p>Hello</p><script>alert("xss")</script>';
     const clean = DOMPurify.sanitize(malicious, {
       ALLOWED_TAGS: ["p", "br", "strong", "b", "em", "i", "a", "span"],
@@ -33,9 +27,7 @@ describe("RichTextViewer XSS Protection", () => {
     expect(clean).toContain("<p>Hello</p>");
   });
 
-  it("sanitizes onclick handlers", async () => {
-    const DOMPurify = (await import("dompurify")).default;
-
+  it("sanitizes onclick handlers", () => {
     const malicious = '<a href="#" onclick="alert(1)">click</a>';
     const clean = DOMPurify.sanitize(malicious, {
       ALLOWED_TAGS: ["a"],
@@ -43,11 +35,10 @@ describe("RichTextViewer XSS Protection", () => {
     });
 
     expect(clean).not.toContain("onclick");
+    expect(clean).toContain('href="#"');
   });
 
-  it("sanitizes javascript: URLs", async () => {
-    const DOMPurify = (await import("dompurify")).default;
-
+  it("sanitizes javascript: URLs", () => {
     const malicious = '<a href="javascript:alert(1)">click</a>';
     const clean = DOMPurify.sanitize(malicious, {
       ALLOWED_TAGS: ["a"],
@@ -57,21 +48,18 @@ describe("RichTextViewer XSS Protection", () => {
     expect(clean).not.toContain("javascript:");
   });
 
-  it("sanitizes img onerror XSS", async () => {
-    const DOMPurify = (await import("dompurify")).default;
-
-    const malicious = '<img src=x onerror="alert(1)">';
+  it("sanitizes img onerror XSS", () => {
+    const malicious = '<img src="x" onerror="alert(1)">';
     const clean = DOMPurify.sanitize(malicious, {
-      ALLOWED_TAGS: ["img"],
-      ALLOWED_ATTR: ["src", "alt"],
+      ALLOWED_TAGS: ["p", "br", "strong", "a"],
+      ALLOWED_ATTR: ["href"],
     });
 
     expect(clean).not.toContain("onerror");
+    expect(clean).not.toContain("<img");
   });
 
-  it("adds target and rel to links via hook (not post-sanitization)", async () => {
-    const DOMPurify = (await import("dompurify")).default;
-
+  it("adds target and rel to links via hook (not post-sanitization)", () => {
     DOMPurify.addHook("afterSanitizeAttributes", (node) => {
       if (node.tagName === "A") {
         node.setAttribute("target", "_blank");
@@ -92,9 +80,7 @@ describe("RichTextViewer XSS Protection", () => {
     expect(clean).toContain('rel="noopener noreferrer"');
   });
 
-  it("prevents SVG-based XSS", async () => {
-    const DOMPurify = (await import("dompurify")).default;
-
+  it("prevents SVG-based XSS", () => {
     const malicious = '<svg onload="alert(1)"><circle r="50"></circle></svg>';
     const clean = DOMPurify.sanitize(malicious, {
       ALLOWED_TAGS: ["p", "br", "strong", "a"],
