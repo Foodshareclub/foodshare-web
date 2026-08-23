@@ -16,8 +16,6 @@ import { invalidateTag } from "@/lib/data/cache-invalidation";
 import { serverActionError, successVoid, type ServerActionResult } from "@/lib/errors";
 import type { FullNotificationPreferencesData, NotificationType } from "@/types";
 
-export type { FullNotificationPreferencesData };
-
 // ============================================================================
 // Zod Schemas
 // ============================================================================

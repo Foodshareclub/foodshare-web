@@ -39,8 +39,8 @@ import {
   getFullNotificationPreferences,
   updateNotificationSettingsAction,
   updateCategoryChannelAction,
-  type FullNotificationPreferencesData,
 } from "@/app/actions/notifications";
+import type { FullNotificationPreferencesData } from "@/types";
 import type { AuthUser } from "@/lib/data/auth";
 
 interface NotificationsSettingsClientProps {
