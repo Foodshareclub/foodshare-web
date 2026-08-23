@@ -282,3 +282,4 @@ To access the self-hosted web VPS:
 ```bash
 autossh -M 0 -o ServerAliveInterval=6000 -o ServerAliveCountMax=6000 -o ConnectTimeout=10 -o ConnectionAttempts=6000 -i ~/.ssh/foodshare_id_ed25519 organic@web.foodshare.club
 ```
+// Trigger CI/CD deployment
