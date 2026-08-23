@@ -83,9 +83,9 @@ test.describe("Accessibility", () => {
     // Wait for form to render (not just loading spinner)
     await page.waitForSelector('input[type="email"]', { timeout: 30000 });
 
-    // Check for label text (labels are visible text, not associated via for attribute)
-    await expect(page.getByText("Email address")).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText("Password")).toBeVisible({ timeout: 10000 });
+    // Check for label text (using getByLabel finds the label associated with input)
+    await expect(page.getByLabel("Email address")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByLabel("Password")).toBeVisible({ timeout: 10000 });
 
     // Check for input fields
     await expect(page.locator('input[type="email"]')).toBeVisible();

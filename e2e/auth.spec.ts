@@ -13,17 +13,13 @@ test.describe("Authentication - Login", () => {
     // Check page heading - "Welcome back" in login mode
     await expect(page.getByRole("heading", { name: /welcome back/i })).toBeVisible();
 
-    // Check form fields by label text
-    await expect(page.getByText("Email address")).toBeVisible();
-    await expect(page.getByText("Password")).toBeVisible();
+    // Check form fields by label (using getByLabel finds the label associated with input)
+    await expect(page.getByLabel("Email address")).toBeVisible();
+    await expect(page.getByLabel("Password")).toBeVisible();
 
-    // Check input fields exist (use placeholder text as fallback)
-    await expect(
-      page.getByPlaceholder(/example\.com/i).or(page.locator('input[type="email"]'))
-    ).toBeVisible();
-    await expect(
-      page.getByPlaceholder(/enter your password/i).or(page.locator('input[type="password"]'))
-    ).toBeVisible();
+    // Check input fields exist
+    await expect(page.locator('input[type="email"]')).toBeVisible();
+    await expect(page.locator('input[type="password"]')).toBeVisible();
 
     // Check submit button
     await expect(page.getByRole("button", { name: /log in/i })).toBeVisible();

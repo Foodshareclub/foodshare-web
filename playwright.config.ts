@@ -87,6 +87,23 @@ export default defineConfig({
           url: "http://localhost:3000",
           reuseExistingServer: !process.env.CI,
           timeout: 120 * 1000,
+          env: {
+            SKIP_ENV_VALIDATION: "true",
+            NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+            NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+            SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || "",
+            NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || "",
+            NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || "",
+            NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN || "",
+            SENTRY_ORG: process.env.SENTRY_ORG || "",
+            SENTRY_PROJECT: process.env.SENTRY_PROJECT || "",
+            SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN || "",
+            NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED: process.env.NEXT_PUBLIC_OAUTH_GOOGLE_ENABLED || "",
+            NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED:
+              process.env.NEXT_PUBLIC_OAUTH_FACEBOOK_ENABLED || "",
+            NEXT_PUBLIC_OAUTH_APPLE_ENABLED: process.env.NEXT_PUBLIC_OAUTH_APPLE_ENABLED || "",
+            NEXT_PUBLIC_OAUTH_GITHUB_ENABLED: process.env.NEXT_PUBLIC_OAUTH_GITHUB_ENABLED || "",
+          },
         },
       }),
 });
