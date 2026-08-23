@@ -141,23 +141,24 @@ test.describe("Map Page", () => {
     const mapContainer = page.locator(".leaflet-container");
     await expect(mapContainer).toBeVisible({ timeout: 20000 });
 
-    await page.waitForTimeout(3000);
+    // Wait for initial map view animation to complete (flyTo/setView)
+    // The MapViewController uses flyTo with duration up to 1.5s, so wait a bit more
+    await page.waitForTimeout(2000);
 
-    // Find a marker and click it
+    // Wait for viewport locations to load and markers to stabilize
+    // Use a small delay after the initial animation
+    await page.waitForTimeout(1000);
+
+    // Find a marker and click it - now that animations have settled
     const marker = page.locator(".leaflet-marker-icon").first();
     const hasMarker = await marker.isVisible().catch(() => false);
 
     if (hasMarker) {
       await marker.click();
-      await page.waitForTimeout(500);
 
-      // Check for popup
+      // Wait for popup to appear (popup animation is instant in Leaflet)
       const popup = page.locator(".leaflet-popup");
-      const hasPopup = await popup.isVisible().catch(() => false);
-
-      if (hasPopup) {
-        await expect(popup).toBeVisible();
-      }
+      await expect(popup).toBeVisible({ timeout: 5000 });
     }
   });
 

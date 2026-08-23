@@ -113,7 +113,7 @@ export async function getNearbyLocations(
   });
 
   if (error) {
-    // Fallback to JS filtering if RPC not available (migration not applied)
+    // Fallback to JS filtering if RPC not available (migration/schema issue)
     console.warn("[getNearbyLocations] RPC failed, falling back to JS filter:", error.message);
     return getNearbyLocationsFallback(bounds, productType);
   }
