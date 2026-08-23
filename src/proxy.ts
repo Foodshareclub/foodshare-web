@@ -470,7 +470,7 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  const isHealthCheck = pathname.startsWith("/api/health");
+  const isHealthCheck = pathname.startsWith("/api/health") || pathname.startsWith("/api/ready");
   let user = null;
 
   if (!isHealthCheck) {
