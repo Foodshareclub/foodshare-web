@@ -1,17 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect } from "react";
-import {
-  Sparkles,
-  ChevronRight,
-  RotateCcw,
-  Send,
-  AlertCircle,
-  Info,
-  Bot,
-  User,
-  HelpCircle,
-} from "lucide-react";
+import { ChevronRight, RotateCcw, Send, AlertCircle, Info, Bot, HelpCircle } from "lucide-react";
 import { FoodCategory, ChatMessage, CATEGORY_METRIC_MAP } from "@/lib/foodlytics/types";
 import { Card, CardContent } from "@/components/foodlytics/ui/card";
 import { Button } from "@/components/foodlytics/ui/button";

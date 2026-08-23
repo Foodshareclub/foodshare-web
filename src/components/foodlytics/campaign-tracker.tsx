@@ -1,16 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  TrendingDown,
-  ShieldAlert,
-  Award,
-  Calendar,
-  CheckCircle2,
-  ChevronRight,
-  Activity,
-  Percent,
-} from "lucide-react";
+import { TrendingDown, ShieldAlert, Award, Calendar, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
 interface Intervention {
@@ -125,8 +116,6 @@ export function CampaignTracker() {
     interventions
       .filter((i) => i.status === "committed" || i.status === "live")
       .reduce((sum, i) => sum + Number(i.projected_reduction_tonnes), 0) - totalAchieved;
-
-  const targetReduction = totalBaseline * 0.5; // 50% target
 
   const achievedPct = Number(((totalAchieved / totalBaseline) * 100).toFixed(1));
   const committedPct = Number(((totalCommitted / totalBaseline) * 100).toFixed(1));

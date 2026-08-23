@@ -7,7 +7,6 @@ import {
   Sparkles,
   CookingPot,
   ChevronRight,
-  Database,
   RotateCw,
   Award,
   Zap,
@@ -17,7 +16,6 @@ import {
   DollarSign,
   Flame,
   Droplet,
-  TrendingDown,
   Info,
   BarChart2,
 } from "lucide-react";

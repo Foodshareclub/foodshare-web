@@ -1,16 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  Camera,
-  Sparkles,
-  AlertTriangle,
-  ShieldCheck,
-  Heart,
-  Leaf,
-  HelpCircle,
-  Activity,
-} from "lucide-react";
+import { Activity, Camera, Leaf } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
 interface ScannedItem {
