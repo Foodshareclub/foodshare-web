@@ -13,9 +13,10 @@ test.describe("Authentication - Login", () => {
     // Check page heading - "Welcome back" in login mode
     await expect(page.getByRole("heading", { name: /welcome back/i })).toBeVisible();
 
-    // Check form fields by label (using getByLabel finds the label associated with input)
+    // Check form fields by label (exact match avoids colliding with the
+    // "Show password" toggle button's aria-label)
     await expect(page.getByLabel("Email address")).toBeVisible();
-    await expect(page.getByLabel("Password")).toBeVisible();
+    await expect(page.getByLabel("Password", { exact: true })).toBeVisible();
 
     // Check input fields exist
     await expect(page.locator('input[type="email"]')).toBeVisible();
@@ -29,14 +30,15 @@ test.describe("Authentication - Login", () => {
   });
 
   test("should have social login buttons", async ({ page }) => {
-    // Check for Google login - button contains "Google" text
-    await expect(page.getByRole("button", { name: /google/i })).toBeVisible();
+    // Check for Google login - exact name avoids clashing with footer social
+    // icon buttons (e.g. footer has aria-label="facebook" round icons)
+    await expect(page.getByRole("button", { name: "Google", exact: true })).toBeVisible();
 
     // Check for Facebook login
-    await expect(page.getByRole("button", { name: /facebook/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Facebook", exact: true })).toBeVisible();
 
     // Check for Apple login
-    await expect(page.getByRole("button", { name: /apple/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Apple", exact: true })).toBeVisible();
   });
 
   test("should toggle password visibility", async ({ page }) => {
@@ -191,8 +193,9 @@ test.describe("Authentication - Forgot Password", () => {
       page.getByPlaceholder(/example\.com/i).or(page.locator('input[type="email"]'))
     ).toBeVisible();
 
-    // Should show submit button
-    await expect(page.getByRole("button")).toBeVisible();
+    // Should show submit button (page also renders header/footer buttons,
+    // so target the form's submit button by name)
+    await expect(page.getByRole("button", { name: /send reset link/i })).toBeVisible();
   });
 
   test("should navigate back to login", async ({ page }) => {

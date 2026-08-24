@@ -1,5 +1,10 @@
 import { test, expect } from "@playwright/test";
 
+// 1x1 transparent PNG used to fulfill tile requests deterministically
+// (external tile CDN availability from CI runners is flaky)
+const TILE_PNG =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+
 test.describe("Map Page", () => {
   // Map tests need longer timeouts due to tile loading
   test.setTimeout(60000);
@@ -72,6 +77,14 @@ test.describe("Map Page", () => {
   });
 
   test("should display map tiles", async ({ page }) => {
+    // Serve tiles locally so the test doesn't depend on the external tile CDN
+    await page.route("**/*.basemaps.cartocdn.com/**", async (route) => {
+      await route.fulfill({
+        contentType: "image/png",
+        body: Buffer.from(TILE_PNG, "base64"),
+      });
+    });
+
     await page.goto("/map/food");
     // Wait for Leaflet to initialize (not just loading spinner)
     await page.waitForSelector(".leaflet-container", { timeout: 30000 });
@@ -79,13 +92,11 @@ test.describe("Map Page", () => {
     const mapContainer = page.locator(".leaflet-container");
     await expect(mapContainer).toBeVisible({ timeout: 20000 });
 
-    // Check for tile layer
-    const tilePane = page.locator(".leaflet-tile-pane");
-    await expect(tilePane).toBeVisible({ timeout: 15000 });
-
-    // Check for actual tiles (may take time to load)
+    // Check for actual rendered tiles (fulfilled from the mocked route).
+    // Note: .leaflet-tile-pane is absolutely positioned with auto size, so it
+    // always computes a zero-height box - never assert visibility on it.
     const tiles = page.locator(".leaflet-tile");
-    await expect(tiles.first()).toBeVisible({ timeout: 15000 });
+    await expect(tiles.first()).toBeVisible({ timeout: 20000 });
   });
 
   test("should support different map types via URL", async ({ page }) => {
@@ -104,13 +115,12 @@ test.describe("Map Page", () => {
 
   test('should display "Show posts" navigation button', async ({ page }) => {
     await page.goto("/map/food");
-    await page.waitForLoadState("domcontentloaded");
 
-    // NavigateButtons shows "Show posts" button on map pages
+    // NavigateButtons shows "Show posts" button on map pages.
+    // The page streams in via Suspense, so wait for it instead of
+    // checking instantly after domcontentloaded.
     const postsButton = page.locator("button").filter({ hasText: /show posts/i });
-    const hasButton = await postsButton.isVisible().catch(() => false);
-
-    expect(hasButton).toBeTruthy();
+    await expect(postsButton).toBeVisible({ timeout: 30000 });
   });
 
   test("should display markers when data is available", async ({ page }) => {
@@ -136,25 +146,23 @@ test.describe("Map Page", () => {
 
   test("should open popup when clicking a marker", async ({ page }) => {
     await page.goto("/map/food");
-    await page.waitForLoadState("domcontentloaded");
 
     const mapContainer = page.locator(".leaflet-container");
     await expect(mapContainer).toBeVisible({ timeout: 20000 });
 
-    // Wait for initial map view animation to complete (flyTo/setView)
-    // The MapViewController uses flyTo with duration up to 1.5s, so wait a bit more
-    await page.waitForTimeout(2000);
+    // Wait for flyTo/setView animations (up to ~2s) to settle so markers
+    // stop moving before we interact with them
+    await page.waitForTimeout(3000);
 
-    // Wait for viewport locations to load and markers to stabilize
-    // Use a small delay after the initial animation
-    await page.waitForTimeout(1000);
-
-    // Find a marker and click it - now that animations have settled
-    const marker = page.locator(".leaflet-marker-icon").first();
+    // Target actual post markers (custom-map-marker), NOT the user-location
+    // marker which has a perpetual pulse animation and never settles
+    const marker = page.locator(".leaflet-marker-icon.custom-map-marker").first();
     const hasMarker = await marker.isVisible().catch(() => false);
 
     if (hasMarker) {
-      await marker.click();
+      // Dispatch click directly on the element: pulse/cluster animations keep
+      // markers in motion, so positional clicks would land on the wrong spot
+      await marker.dispatchEvent("click");
 
       // Wait for popup to appear (popup animation is instant in Leaflet)
       const popup = page.locator(".leaflet-popup");

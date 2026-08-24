@@ -201,10 +201,14 @@ export default function LoginPage() {
                 {mode === "signup" && (
                   <div className="flex gap-4">
                     <div className="flex-1">
-                      <label className="block text-sm font-semibold mb-2 text-foreground/80">
+                      <label
+                        htmlFor="first-name"
+                        className="block text-sm font-semibold mb-2 text-foreground/80"
+                      >
                         First name
                       </label>
                       <Input
+                        id="first-name"
                         placeholder="John"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
@@ -213,10 +217,14 @@ export default function LoginPage() {
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-sm font-semibold mb-2 text-foreground/80">
+                      <label
+                        htmlFor="last-name"
+                        className="block text-sm font-semibold mb-2 text-foreground/80"
+                      >
                         Last name
                       </label>
                       <Input
+                        id="last-name"
                         placeholder="Doe"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
@@ -229,10 +237,14 @@ export default function LoginPage() {
 
                 {/* Email */}
                 <div>
-                  <label className="block text-sm font-semibold mb-2 text-foreground/80">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-semibold mb-2 text-foreground/80"
+                  >
                     Email address
                   </label>
                   <Input
+                    id="email"
                     type="email"
                     placeholder="you@example.com"
                     value={email}
@@ -245,7 +257,9 @@ export default function LoginPage() {
                 {/* Password */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm font-semibold text-foreground/80">Password</label>
+                    <label htmlFor="password" className="text-sm font-semibold text-foreground/80">
+                      Password
+                    </label>
                     {mode === "login" && (
                       <Link
                         href="/auth/forgot-password"
@@ -257,6 +271,7 @@ export default function LoginPage() {
                   </div>
                   <div className="relative">
                     <Input
+                      id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
                       value={password}

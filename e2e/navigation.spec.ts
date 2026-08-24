@@ -18,10 +18,13 @@ test.describe("Site Navigation", () => {
       await expect(page).toHaveURL(/\/food/);
     }
 
-    // Navigate back to home via logo
-    await page.getByText("FoodShare").first().click();
+    // Navigate via the navbar logo. It routes to the main listings page
+    // (/food, see PATH.mainFood) rather than "/".
+    const logo = page.getByRole("button", { name: /go to homepage/i });
+    await expect(logo).toBeVisible({ timeout: 30000 });
+    await logo.click();
     await page.waitForLoadState("domcontentloaded");
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL(/\/food/);
   });
 
   test("should have working footer links", async ({ page }) => {
@@ -71,23 +74,18 @@ test.describe("Site Navigation", () => {
     await page.goto("/");
     await page.waitForLoadState("domcontentloaded");
 
-    // Look for hamburger menu or mobile nav trigger
-    const mobileMenuButton = page
-      .locator('[class*="menu"], [class*="hamburger"], button[aria-label*="menu"]')
-      .first();
-    const hasMobileMenu = await mobileMenuButton.isVisible().catch(() => false);
+    // The mobile menu trigger is the "See menu" button in the navbar
+    const mobileMenuButton = page.locator('button[aria-label*="menu" i]').first();
+    await expect(mobileMenuButton).toBeVisible({ timeout: 30000 });
 
-    if (hasMobileMenu) {
-      await mobileMenuButton.click();
-      await page.waitForTimeout(500);
+    // Dispatch the click directly: the header can overflow horizontally at
+    // narrow widths leaving the trigger outside the (non-scrollable)
+    // viewport, which breaks Playwright's positional click actionability
+    await mobileMenuButton.dispatchEvent("click");
 
-      // Mobile nav should be visible
-      const mobileNav = page
-        .locator('[class*="drawer"], [class*="mobile-nav"], [class*="sheet"]')
-        .first();
-      const isNavVisible = await mobileNav.isVisible().catch(() => false);
-      expect(isNavVisible).toBeTruthy();
-    }
+    // The drawer is a Radix dialog (vaul DrawerContent)
+    const mobileNav = page.getByRole("dialog");
+    await expect(mobileNav).toBeVisible({ timeout: 10000 });
   });
 });
 

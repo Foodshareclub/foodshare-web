@@ -68,8 +68,18 @@ test.describe("Home Page", () => {
     await page.goto("/?lat=51.5074&lng=-0.1278&radius=5000");
     await page.waitForLoadState("domcontentloaded");
 
-    // Page should load with location filter active
-    await expect(page.locator('[class*="grid"]').first()).toBeVisible({ timeout: 15000 });
+    // Page should load with location filter active: either the product grid
+    // has content, or the "Nothing shared within..." empty state shows when
+    // no posts exist near the searched location. An empty grid collapses to
+    // zero height (Playwright: hidden), so don't require it unconditionally.
+    const emptyState = page.getByText(/nothing shared within/i);
+    const hasEmptyState = await emptyState.isVisible().catch(() => false);
+
+    if (!hasEmptyState) {
+      await expect(page.locator('[class*="grid"] > *').first()).toBeVisible({
+        timeout: 15000,
+      });
+    }
 
     // URL should contain location params
     expect(page.url()).toContain("lat=");
@@ -132,9 +142,7 @@ test.describe("Home Page - Navigation", () => {
 
       // Should navigate to category page
       const url = page.url();
-      expect(
-        url.includes("/thing") || url.includes("/things")
-      ).toBeTruthy();
+      expect(url.includes("/thing") || url.includes("/things")).toBeTruthy();
     } else {
       // No category buttons visible - pass test (may be mobile view)
       expect(true).toBeTruthy();
