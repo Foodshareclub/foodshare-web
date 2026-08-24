@@ -77,7 +77,7 @@ export default function Home() {
     const startTime = performance.now();
     try {
       const { data, error } = await supabase
-        .from("household_waste_logs")
+        .from("waste_logs")
         .select("*")
         .order("discard_date", { ascending: false });
 
@@ -150,7 +150,7 @@ export default function Home() {
       const co2Val = Number((logData.weight * metrics.co2PerLb).toFixed(1));
       const waterVal = Math.round(logData.weight * metrics.waterPerLb);
 
-      const { error } = await supabase.from("household_waste_logs").insert({
+      const { error } = await supabase.from("waste_logs").insert({
         food_name: String(logData.foodName),
         category: String(logData.category),
         weight_lbs: logData.weight,
@@ -176,7 +176,7 @@ export default function Home() {
   const handleDeleteLog = async (id: string) => {
     setDbStatus("syncing");
     try {
-      const { error } = await supabase.from("household_waste_logs").delete().eq("id", id);
+      const { error } = await supabase.from("waste_logs").delete().eq("id", id);
 
       if (error) {
         throw new Error(error.message);
@@ -381,7 +381,7 @@ export default function Home() {
               <Camera
                 className={`h-3.5 w-3.5 transition-colors ${activeTab === "scan" ? "text-emerald-400" : "text-stone-500"}`}
               />
-              Fridge Scan
+              <span className="hidden">Fridge Scan</span>
             </button>
             <button
               id="tab-btn-advisor"
@@ -760,7 +760,7 @@ export default function Home() {
               exit={{ opacity: 0, y: -15 }}
               transition={{ duration: 0.25 }}
             >
-              <FridgeScan />
+              {/* Fridge Scan removed — analytics feature only */}
             </motion.div>
           )}
 
