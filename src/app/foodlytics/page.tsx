@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase/client";
 import {
   Leaf,
   BarChart3,
@@ -27,7 +28,6 @@ import {
   WasteEntry,
   ChatMessage,
 } from "@/lib/foodlytics/types";
-import { supabase } from "@/lib/supabase/client";
 import { BentoStats } from "@/components/foodlytics/bento-stats";
 import { WasteForm } from "@/components/foodlytics/waste-form";
 import { CategoryInsights } from "@/components/foodlytics/category-insights";
@@ -76,10 +76,19 @@ export default function Home() {
     setDbStatus("syncing");
     const startTime = performance.now();
     try {
-      const { data, error } = await supabase
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const householdId = session?.user?.user_metadata?.household_id;
+
+      const query = supabase
         .from("waste_logs")
         .select("*")
         .order("discard_date", { ascending: false });
+
+      const filteredQuery = householdId ? query.eq("household_id", householdId) : query;
+
+      const { data, error } = await filteredQuery;
 
       if (error) {
         throw new Error(error.message);
@@ -150,6 +159,11 @@ export default function Home() {
       const co2Val = Number((logData.weight * metrics.co2PerLb).toFixed(1));
       const waterVal = Math.round(logData.weight * metrics.waterPerLb);
 
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const householdId = session?.user?.user_metadata?.household_id;
+
       const { error } = await supabase.from("waste_logs").insert({
         food_name: String(logData.foodName),
         category: String(logData.category),
@@ -159,6 +173,7 @@ export default function Home() {
         reason: String(logData.reason),
         co2_impact_lbs: co2Val,
         water_impact_gal: waterVal,
+        household_id: householdId,
       });
 
       if (error) {
