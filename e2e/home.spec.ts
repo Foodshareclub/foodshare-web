@@ -69,17 +69,18 @@ test.describe("Home Page", () => {
     await page.waitForLoadState("domcontentloaded");
 
     // Page should load with location filter active: either the product grid
-    // has content, or the "Nothing shared within..." empty state shows when
-    // no posts exist near the searched location. An empty grid collapses to
-    // zero height (Playwright: hidden), so don't require it unconditionally.
-    const emptyState = page.getByText(/nothing shared within/i);
-    const hasEmptyState = await emptyState.isVisible().catch(() => false);
-
-    if (!hasEmptyState) {
-      await expect(page.locator('[class*="grid"] > *').first()).toBeVisible({
-        timeout: 15000,
-      });
-    }
+    // has content, or the "Nothing shared within..." empty state shows once
+    // nearby fetching settles. An empty grid collapses to zero height
+    // (Playwright: hidden), so accept whichever of the two states materializes.
+    await expect(async () => {
+      const hasEmptyState = await page
+        .getByText(/nothing shared within/i)
+        .isVisible()
+        .catch(() => false);
+      if (hasEmptyState) return;
+      const items = await page.locator('[class*="grid"] > *').count();
+      expect(items).toBeGreaterThan(0);
+    }).toPass({ timeout: 15000 });
 
     // URL should contain location params
     expect(page.url()).toContain("lat=");

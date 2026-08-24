@@ -16,9 +16,19 @@ test.describe("Food Listings Page", () => {
     // Wait for content to load
     await page.waitForTimeout(2000);
 
-    // Check for product grid (uses grid layout)
-    const productGrid = page.locator('[class*="grid"]').first();
-    await expect(productGrid).toBeVisible();
+    // Either the product grid has content, or the "Nothing shared within..."
+    // empty state shows once nearby fetching settles. An empty grid collapses
+    // to zero height (Playwright: hidden), so accept whichever of the two
+    // states materializes.
+    await expect(async () => {
+      const hasEmptyState = await page
+        .getByText(/nothing shared within/i)
+        .isVisible()
+        .catch(() => false);
+      if (hasEmptyState) return;
+      const items = await page.locator('[class*="grid"] > *').count();
+      expect(items).toBeGreaterThan(0);
+    }).toPass({ timeout: 15000 });
   });
 
   test("should display category navigation in navbar", async ({ page }) => {
@@ -43,7 +53,7 @@ test.describe("Food Listings Page", () => {
 
       // Page should load without errors and exhibit the correct URL
       await expect(page).toHaveURL(new RegExp(`/${type}`));
-      
+
       const content = page.locator('[class*="grid"], [class*="empty"], main').first();
       await expect(content).toBeVisible({ timeout: 10000 });
     }
@@ -54,8 +64,19 @@ test.describe("Food Listings Page", () => {
     await page.goto("/food?lat=51.5074&lng=-0.1278&radius=10000");
     await page.waitForLoadState("domcontentloaded");
 
-    // Page should load with location filter active
-    await expect(page.locator('[class*="grid"]').first()).toBeVisible({ timeout: 10000 });
+    // Page should load with location filter active: either the product grid
+    // has content, or the "Nothing shared within..." empty state shows once
+    // nearby fetching settles. An empty grid collapses to zero height
+    // (Playwright: hidden), so accept whichever of the two states materializes.
+    await expect(async () => {
+      const hasEmptyState = await page
+        .getByText(/nothing shared within/i)
+        .isVisible()
+        .catch(() => false);
+      if (hasEmptyState) return;
+      const items = await page.locator('[class*="grid"] > *').count();
+      expect(items).toBeGreaterThan(0);
+    }).toPass({ timeout: 15000 });
 
     // URL should contain location params
     expect(page.url()).toContain("lat=");
