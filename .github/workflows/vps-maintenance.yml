@@ -24,7 +24,7 @@ on:
 jobs:
   maintenance:
     name: VPS Maintenance
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Perform Maintenance via SSH
         uses: appleboy/ssh-action@v1.0.3
