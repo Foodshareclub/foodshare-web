@@ -1,15 +1,13 @@
 /**
- * Database Health Check API Route (Edge Function)
- * Checks:
- * 1. Direct DB connectivity
- * 2. Supabase project health via Management API
- * 3. Supabase upgrade status (if upgrade is in progress)
- * 4. Supabase platform status
+ * Database Health Check API Route
+ * Self-hosted Supabase probes (no Supabase Cloud Management API):
+ * 1. Direct DB connectivity via PostgREST
+ * 2. Auth (GoTrue) health endpoint
+ * 3. Storage (storage-api) status endpoint
+ * 4. Redis (Upstash) connectivity when configured
  */
 
 import { NextResponse } from "next/server";
-
-const API_TIMEOUT_MS = 30000; // 30s for Management API
 
 interface HealthStatus {
   status: "healthy" | "degraded" | "maintenance";
@@ -23,13 +21,10 @@ interface HealthStatus {
     storage: "up" | "down" | "unknown";
     redis?: "up" | "down" | "unknown";
   };
-  upgradeStatus?: {
-    status: string;
-    progress?: string;
-    targetVersion?: string;
-  };
   latency?: {
     database?: number;
+    auth?: number;
+    storage?: number;
     redis?: number;
   };
 }
@@ -68,121 +63,39 @@ async function checkRedisHealth(): Promise<{ ok: boolean; latency: number }> {
 }
 
 /**
- * Check Supabase project health via Management API
- * Requires SUPABASE_ACCESS_TOKEN (Personal Access Token from Supabase dashboard)
- * NOT the service role key - that's for database access only
+ * Probe a self-hosted Supabase service endpoint.
+ * Returns service availability and response latency.
  */
-async function checkProjectHealth(): Promise<{
-  healthy: boolean;
-  services?: Record<string, string>;
-} | null> {
-  const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.match(
-    /https:\/\/([^.]+)\.supabase\.co/
-  )?.[1];
-  // Use SUPABASE_ACCESS_TOKEN (PAT) for Management API, not service role key
-  const accessToken = process.env.SUPABASE_ACCESS_TOKEN;
-
-  if (!projectRef || !accessToken) return null;
-
+async function probeService(
+  endpoint: string,
+  supabaseKey: string,
+  timeoutMs = 5000
+): Promise<{ ok: boolean; latency: number }> {
+  const start = Date.now();
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-    const response = await fetch(
-      `https://api.supabase.com/v1/projects/${projectRef}/health?services=db,auth,storage`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        signal: controller.signal,
-        cache: "no-store",
-      }
-    );
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+        Accept: "application/json",
+      },
+      signal: controller.signal,
+      cache: "no-store",
+    });
 
     clearTimeout(timeoutId);
-
-    if (!response.ok) return null;
-
-    const data = await response.json();
-
-    // Check if all services are healthy
-    const services: Record<string, string> = {};
-    let allHealthy = true;
-
-    if (Array.isArray(data)) {
-      for (const service of data) {
-        services[service.name] = service.status;
-        if (service.status !== "HEALTHY" && service.status !== "ACTIVE_HEALTHY") {
-          allHealthy = false;
-        }
-      }
-    }
-
-    return { healthy: allHealthy, services };
+    return { ok: response.status < 500, latency: Date.now() - start };
   } catch {
-    return null;
+    return { ok: false, latency: Date.now() - start };
   }
 }
 
 /**
- * Check if there's an ongoing Postgres upgrade
- * Uses SUPABASE_ACCESS_TOKEN for Management API authentication
- */
-async function checkUpgradeStatus(): Promise<{
-  upgrading: boolean;
-  status?: string;
-  progress?: string;
-  targetVersion?: string;
-} | null> {
-  const projectRef = process.env.NEXT_PUBLIC_SUPABASE_URL?.match(
-    /https:\/\/([^.]+)\.supabase\.co/
-  )?.[1];
-  // Use SUPABASE_ACCESS_TOKEN (PAT) for Management API
-  const accessToken = process.env.SUPABASE_ACCESS_TOKEN;
-
-  if (!projectRef || !accessToken) return null;
-
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
-
-    const response = await fetch(
-      `https://api.supabase.com/v1/projects/${projectRef}/upgrade/status`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        signal: controller.signal,
-        cache: "no-store",
-      }
-    );
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) return { upgrading: false };
-
-    const data = await response.json();
-
-    // Check if upgrade is in progress
-    const isUpgrading =
-      data.status && !["COMPLETED", "FAILED", "CANCELLED"].includes(data.status.toUpperCase());
-
-    return {
-      upgrading: isUpgrading,
-      status: data.status,
-      progress: data.progress,
-      targetVersion: data.target_version,
-    };
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Check direct database connectivity with retry logic
- * Retries up to 2 times with exponential backoff to handle cold starts
+ * Check direct database connectivity via PostgREST with retry logic
  */
 async function checkDatabaseConnectivity(
   supabaseUrl: string,
@@ -239,7 +152,7 @@ function createResponse(
   database: boolean,
   services: HealthStatus["services"],
   message?: string,
-  upgradeStatus?: HealthStatus["upgradeStatus"]
+  latency?: HealthStatus["latency"]
 ): NextResponse<HealthStatus> {
   const response: HealthStatus = {
     status,
@@ -248,7 +161,7 @@ function createResponse(
     services,
     ...(message && { message }),
     ...(status !== "healthy" && { retryAfter: 30 }),
-    ...(upgradeStatus && { upgradeStatus }),
+    ...(latency && { latency }),
   };
 
   const httpStatus = status === "maintenance" ? 503 : 200;
@@ -278,59 +191,12 @@ export async function GET(): Promise<NextResponse<HealthStatus>> {
     }
 
     // Check all sources in parallel
-    const [dbResult, projectHealth, upgradeInfo, redisResult] = await Promise.all([
+    const [dbResult, authResult, storageResult, redisResult] = await Promise.all([
       checkDatabaseConnectivity(supabaseUrl, supabaseKey),
-      checkProjectHealth(),
-      checkUpgradeStatus(),
+      probeService(`${supabaseUrl}/auth/v1/health`, supabaseKey),
+      probeService(`${supabaseUrl}/storage/v1/status`, supabaseKey),
       checkRedisHealth(),
     ]);
-
-    // Check if upgrade is in progress
-    if (upgradeInfo?.upgrading) {
-      const upgradeMessage = upgradeInfo.targetVersion
-        ? `Database upgrade to v${upgradeInfo.targetVersion} in progress...`
-        : `Database upgrade in progress: ${upgradeInfo.status}`;
-
-      return createResponse(
-        "maintenance",
-        false,
-        { database: "down", auth: "unknown", storage: "unknown" },
-        upgradeMessage,
-        {
-          status: upgradeInfo.status || "upgrading",
-          progress: upgradeInfo.progress,
-          targetVersion: upgradeInfo.targetVersion,
-        }
-      );
-    }
-
-    // Check project health from Management API
-    if (projectHealth && !projectHealth.healthy) {
-      const unhealthyServices = Object.entries(projectHealth.services || {})
-        .filter(([_, status]) => status !== "HEALTHY" && status !== "ACTIVE_HEALTHY")
-        .map(([name]) => name);
-
-      return createResponse(
-        "maintenance",
-        false,
-        {
-          database: projectHealth.services?.db === "HEALTHY" ? "up" : "down",
-          auth: projectHealth.services?.auth === "HEALTHY" ? "up" : "down",
-          storage: projectHealth.services?.storage === "HEALTHY" ? "up" : "down",
-        },
-        `Services under maintenance: ${unhealthyServices.join(", ")}`
-      );
-    }
-
-    // Database is down (direct check)
-    if (!dbResult.ok) {
-      return createResponse(
-        "maintenance",
-        false,
-        { database: "down", auth: "unknown", storage: "unknown" },
-        MAINTENANCE_MESSAGE
-      );
-    }
 
     // Determine Redis status
     const redisConfigured = !!(
@@ -342,14 +208,64 @@ export async function GET(): Promise<NextResponse<HealthStatus>> {
         : "down"
       : "unknown";
 
-    // All good (or degraded if Redis is down but DB is up)
+    // Database is critical -> maintenance mode
+    if (!dbResult.ok) {
+      return createResponse(
+        "maintenance",
+        false,
+        {
+          database: "down",
+          auth: authResult.ok ? "up" : "down",
+          storage: storageResult.ok ? "up" : "down",
+          ...(redisConfigured && { redis: redisStatus }),
+        },
+        MAINTENANCE_MESSAGE,
+        {
+          auth: authResult.latency,
+          storage: storageResult.latency,
+          ...(redisConfigured && { redis: redisResult.latency }),
+        }
+      );
+    }
+
+    // Auth or Storage down -> degraded but serving
+    if (!authResult.ok || !storageResult.ok) {
+      return createResponse(
+        "degraded",
+        true,
+        {
+          database: "up",
+          auth: authResult.ok ? "up" : "down",
+          storage: storageResult.ok ? "up" : "down",
+          ...(redisConfigured && { redis: redisStatus }),
+        },
+        `Degraded services: ${[!authResult.ok && "auth", !storageResult.ok && "storage"].filter(Boolean).join(", ")}`,
+        {
+          auth: authResult.latency,
+          storage: storageResult.latency,
+          ...(redisConfigured && { redis: redisResult.latency }),
+        }
+      );
+    }
+
+    // All good (or degraded if Redis is down but core services are up)
     const overallStatus = !redisConfigured || redisResult.ok ? "healthy" : "degraded";
-    return createResponse(overallStatus, true, {
-      database: "up",
-      auth: "up",
-      storage: "up",
-      ...(redisConfigured && { redis: redisStatus }),
-    });
+    return createResponse(
+      overallStatus,
+      true,
+      {
+        database: "up",
+        auth: "up",
+        storage: "up",
+        ...(redisConfigured && { redis: redisStatus }),
+      },
+      undefined,
+      {
+        auth: authResult.latency,
+        storage: storageResult.latency,
+        ...(redisConfigured && { redis: redisResult.latency }),
+      }
+    );
   } catch {
     return createResponse(
       "maintenance",
