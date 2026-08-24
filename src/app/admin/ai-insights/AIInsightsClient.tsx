@@ -1,56 +1,128 @@
 "use client";
 
-/**
- * AIInsightsClient - AI-powered insights dashboard
- */
-
-import { Users, Package, MessageSquare, AlertTriangle, Sparkles } from "lucide-react";
+import { Users, Package, MessageSquare, AlertTriangle, Sparkles, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GrokAssistant } from "@/app/admin/ai-insights/GrokAssistant";
-import type { AIInsightsData } from "@/lib/data/admin-ai-insights";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from "react";
+import { AIInsightsData } from "@/lib/data/admin-ai-insights";
 
 interface Props {
   initialData: AIInsightsData;
 }
 
+interface ReviewStats {
+  totalReviews: number;
+  totalIssues: number;
+  criticalIssues: number;
+  activeRepos: number;
+}
+
 export function AIInsightsClient({ initialData }: Props) {
   const data = initialData;
+  const [reviewStats, setReviewStats] = useState<ReviewStats>({
+    totalReviews: 0,
+    totalIssues: 0,
+    criticalIssues: 0,
+    activeRepos: 0,
+  });
 
   const activeUserPercent =
     data.totalUsers > 0 ? ((data.activeUsers7d / data.totalUsers) * 100).toFixed(1) : "0";
 
+  useEffect(() => {
+    fetch("/api/admin/reviews?limit=100")
+      .then((r) => r.json())
+      .then((result) => {
+        const reviews = result.reviews || [];
+        const allIssues = reviews.reduce(
+          (acc: number, r: { result: { line_comments?: Array<{ severity?: string }> } }) =>
+            acc + (r.result?.line_comments?.length || 0),
+          0
+        );
+        const critical = reviews.reduce(
+          (acc: number, r: { result: { line_comments?: Array<{ severity?: string }> } }) =>
+            acc +
+            (r.result?.line_comments?.filter(
+              (c: { severity?: string }) => c.severity === "critical" || c.severity === "high"
+            ).length || 0),
+          0
+        );
+        const activeRepos = new Set(
+          reviews.map((r: { repo_full_name: string }) => r.repo_full_name)
+        ).size;
+        setReviewStats({
+          totalReviews: reviews.length,
+          totalIssues: allIssues,
+          criticalIssues: critical,
+          activeRepos,
+        });
+      })
+      .catch(() =>
+        setReviewStats({ totalReviews: 0, totalIssues: 0, criticalIssues: 0, activeRepos: 0 })
+      );
+  }, []);
+
+  const colorForCritical = (critical: number) =>
+    critical > 5 ? "red" : critical > 0 ? "orange" : "emerald";
+
   return (
     <div className="space-y-6">
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Active Users (7d)"
-          value={data.activeUsers7d}
-          subtitle={`${activeUserPercent}% of total`}
-          icon={Users}
-          color="blue"
-        />
-        <StatCard
-          label="Churn Risk"
-          value={`${data.churnRate.toFixed(1)}%`}
-          subtitle={`${data.atRiskUsers} users inactive`}
-          icon={AlertTriangle}
-          color={data.churnRate > 20 ? "red" : "green"}
-        />
-        <StatCard
-          label="Active Listings"
-          value={data.activeListings}
-          subtitle={`${data.newListings7d} new this week`}
-          icon={Package}
-          color="purple"
-        />
-        <StatCard
-          label="Total Chats"
-          value={data.totalChats}
-          subtitle={`${data.newChats7d} new this week`}
-          icon={MessageSquare}
-          color="green"
-        />
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <Card className="bg-zinc-900 border-zinc-800 p-4 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-blue-400" />
+            <div>
+              <div className="text-lg font-bold text-white">Active Users (7d)</div>
+              <div className="text-sm text-zinc-500">{activeUserPercent}% of total</div>
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-zinc-900 border-zinc-800 p-4 rounded-lg">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-green-400" />
+            <div>
+              <div className="text-lg font-bold text-white">Churn Risk</div>
+              <div className="text-sm text-zinc-500">${data.churnRate.toFixed(1)}%</div>
+              <div className="text-xs mt-1">({data.atRiskUsers} users inactive)</div>
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-zinc-900 border-zinc-800 p-4 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Package className="h-5 w-5 text-purple-400" />
+            <div>
+              <div className="text-lg font-bold text-white">Active Listings</div>
+              <div className="text-sm text-zinc-500">{data.activeListings}</div>
+              <div className="text-xs mt-1">{data.newListings7d} new this week</div>
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-zinc-900 border-zinc-800 p-4 rounded-lg">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-emerald-400" />
+            <div>
+              <div className="text-lg font-bold text-white">Total Chats</div>
+              <div className="text-sm text-zinc-500">{data.totalChats}</div>
+              <div className="text-xs mt-1">{data.newChats7d} new this week</div>
+            </div>
+          </div>
+        </Card>
+        <Card className="bg-zinc-900 border-zinc-800 p-4 rounded-lg">
+          <div className="flex items-center gap-2">
+            <Zap className="h-5 w-5 text-emerald-400" />
+            <div>
+              <div className="text-lg font-bold text-white">AI Reviews</div>
+              <div className="text-sm text-zinc-500">{reviewStats.totalReviews} reviews</div>
+              <div className="text-xs mt-1">
+                {reviewStats.totalIssues} issues ({reviewStats.criticalIssues} critical)
+              </div>
+              <div className="text-xs mt-1">({reviewStats.activeRepos} repos)</div>
+            </div>
+          </div>
+        </Card>
       </div>
 
       {/* Main Content */}
@@ -89,58 +161,21 @@ export function AIInsightsClient({ initialData }: Props) {
             <h3 className="font-semibold text-foreground mb-3">Example Questions</h3>
             <ul className="space-y-2 text-sm">
               <li className="p-2 bg-muted rounded hover:bg-muted/80 cursor-pointer text-muted-foreground">
-                &quot;What time should I send emails for best engagement?&quot;
+                "What time should I send emails for best engagement?"
               </li>
               <li className="p-2 bg-muted rounded hover:bg-muted/80 cursor-pointer text-muted-foreground">
-                &quot;Which food categories are trending?&quot;
+                "Which food categories are trending?"
               </li>
               <li className="p-2 bg-muted rounded hover:bg-muted/80 cursor-pointer text-muted-foreground">
-                &quot;How can I reduce user churn?&quot;
+                "How can I reduce user churn?"
               </li>
               <li className="p-2 bg-muted rounded hover:bg-muted/80 cursor-pointer text-muted-foreground">
-                &quot;Predict next week&apos;s listing volume&quot;
+                "Predict next week&apos;s listing volume"
               </li>
             </ul>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-// Stat Card Component
-function StatCard({
-  label,
-  value,
-  subtitle,
-  icon: Icon,
-  color,
-}: {
-  label: string;
-  value: number | string;
-  subtitle: string;
-  icon: React.ElementType;
-  color: "blue" | "green" | "purple" | "red";
-}) {
-  const colorClasses = {
-    blue: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800",
-    green:
-      "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-200 dark:border-green-800",
-    purple:
-      "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800",
-    red: "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800",
-  };
-
-  return (
-    <div className={cn("rounded-lg border p-4", colorClasses[color])}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium opacity-80">{label}</span>
-        <Icon className="h-5 w-5" />
-      </div>
-      <div className="text-2xl font-bold">
-        {typeof value === "number" ? value.toLocaleString() : value}
-      </div>
-      <div className="text-sm opacity-70">{subtitle}</div>
     </div>
   );
 }

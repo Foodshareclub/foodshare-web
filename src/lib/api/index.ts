@@ -293,3 +293,20 @@ export type {
   RecentSearch,
   SearchPagination,
 } from "./bff-client";
+
+export function ok<T>(data: T, init?: ResponseInit) {
+  return new Response(JSON.stringify({ success: true, data }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+    ...init,
+  });
+}
+
+export function handleError(error: unknown, init: ResponseInit = {}) {
+  const message = error instanceof Error ? error.message : String(error);
+  return new Response(JSON.stringify({ success: false, error: message }), {
+    status: 500,
+    headers: { "Content-Type": "application/json" },
+    ...init,
+  });
+}

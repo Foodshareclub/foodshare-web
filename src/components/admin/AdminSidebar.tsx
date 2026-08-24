@@ -25,19 +25,15 @@ import {
   Menu,
   TrendingUp,
   Gauge,
+  Zap,
+  Folder,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 interface NavGroup {
   label: string;
@@ -57,6 +53,8 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/admin", label: "dashboard", icon: LayoutDashboard },
       { href: "/admin/ai-insights", label: "ai_insights", icon: Sparkles },
+      { href: "/admin/ai-insights/reviews", label: "reviews", icon: Zap, badge: "new" },
+      { href: "/admin/ai-insights/repos", label: "repos", icon: Folder, badge: "" },
       { href: "/admin/analytics", label: "analytics", icon: TrendingUp },
       { href: "/admin/performance", label: "performance", icon: Gauge },
     ],
@@ -232,12 +230,7 @@ export function AdminMobileHeader() {
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9"
-            aria-label="Open navigation menu"
-          >
+          <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Open navigation menu">
             <Menu className="h-5 w-5" />
           </Button>
         </SheetTrigger>
