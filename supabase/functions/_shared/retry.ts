@@ -87,7 +87,14 @@ export const RETRY_PRESETS = {
  * Error classification helpers
  */
 export const RETRYABLE_ERROR_PATTERNS = {
-  network: ["ECONNRESET", "ECONNREFUSED", "ETIMEDOUT", "ENETUNREACH", "ENOTFOUND", "fetch failed"],
+  network: [
+    "ECONNRESET",
+    "ECONNREFUSED",
+    "ETIMEDOUT",
+    "ENETUNREACH",
+    "ENOTFOUND",
+    "fetch failed",
+  ],
   timeout: ["timeout", "timed out", "deadline exceeded"],
   serverError: ["500", "502", "503", "504"],
   rateLimit: ["429", "rate limit", "too many requests"],
@@ -102,7 +109,10 @@ export function isRetryableError(error: Error): boolean {
 
   // Check network errors
   for (const pattern of RETRYABLE_ERROR_PATTERNS.network) {
-    if (message.includes(pattern.toLowerCase()) || name.includes(pattern.toLowerCase())) {
+    if (
+      message.includes(pattern.toLowerCase()) ||
+      name.includes(pattern.toLowerCase())
+    ) {
       return true;
     }
   }
@@ -128,7 +138,8 @@ export function isRetryableError(error: Error): boolean {
  * Calculate delay with exponential backoff and jitter
  */
 function calculateDelay(attempt: number, config: RetryConfig): number {
-  const exponentialDelay = config.initialDelayMs * Math.pow(config.backoffMultiplier, attempt - 1);
+  const exponentialDelay = config.initialDelayMs *
+    Math.pow(config.backoffMultiplier, attempt - 1);
   const cappedDelay = Math.min(exponentialDelay, config.maxDelayMs);
 
   // Add jitter: random value between -jitter and +jitter of the delay

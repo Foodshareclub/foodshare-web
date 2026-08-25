@@ -63,12 +63,9 @@ export class HealthService {
   /**
    * Quick health check - just database status
    */
-  async checkQuickHealth(): Promise<{
-    status: string;
-    timestamp: string;
-    version: string;
-    database: string;
-  }> {
+  async checkQuickHealth(): Promise<
+    { status: string; timestamp: string; version: string; database: string }
+  > {
     const supabase = getSupabaseClient();
     const dbHealth = await checkDatabase(supabase);
 
@@ -107,7 +104,9 @@ export class HealthService {
 
     // Get circuit breaker statuses
     const circuitStatuses = getAllCircuitStatuses();
-    const circuitBreakers = Object.entries(circuitStatuses).map(([name, status]) => ({
+    const circuitBreakers = Object.entries(circuitStatuses).map((
+      [name, status],
+    ) => ({
       name,
       state: status.state,
       failureCount: status.failures,
@@ -166,7 +165,9 @@ export class HealthService {
     });
 
     // Check all functions
-    const results = await this.functionChecker.checkAllFunctions(functionsToCheck);
+    const results = await this.functionChecker.checkAllFunctions(
+      functionsToCheck,
+    );
 
     // Categorize results
     const healthy = results.filter((r) => r.status === "healthy");
@@ -238,7 +239,9 @@ export class HealthService {
    */
   async checkSingleFunction(
     functionName: string,
-  ): Promise<FunctionHealthResult | { error: string; availableFunctions?: string[] }> {
+  ): Promise<
+    FunctionHealthResult | { error: string; availableFunctions?: string[] }
+  > {
     const config = getFunctionConfig(functionName);
 
     if (!config) {
@@ -270,7 +273,11 @@ export class HealthService {
       );
 
       if (shouldAlert) {
-        const alertMessage = this.alerter.formatAlertMessage(summary, allUnhealthy, false);
+        const alertMessage = this.alerter.formatAlertMessage(
+          summary,
+          allUnhealthy,
+          false,
+        );
         const alertSent = await this.alerter.sendAlert(alertMessage);
         summary.alertSent = alertSent;
         summary.alertMessage = alertSent ? "Alert sent to Telegram" : "Alert failed to send";

@@ -46,7 +46,13 @@ const shareSchema = z.object({
 
 const batchOperationSchema = z.object({
   correlationId: uuidSchema,
-  type: z.enum(["toggle_favorite", "toggle_like", "toggle_bookmark", "mark_read", "archive_room"]),
+  type: z.enum([
+    "toggle_favorite",
+    "toggle_like",
+    "toggle_bookmark",
+    "mark_read",
+    "archive_room",
+  ]),
   entityId: z.string(),
   payload: z.record(z.unknown()).optional(),
 });
@@ -58,7 +64,8 @@ const batchOperationsSchema = z.object({
 const querySchema = z.object({
   postId: z.string().optional(),
   postIds: z.string().optional(), // Comma-separated for batch
-  action: z.enum(["like", "bookmark", "favorite", "share", "bookmarks"]).optional(),
+  action: z.enum(["like", "bookmark", "favorite", "share", "bookmarks"])
+    .optional(),
   mode: z.enum(["toggle", "add", "remove"]).optional(), // For favorite action
   limit: z.string().optional(),
 });
@@ -76,14 +83,14 @@ type QueryParams = z.infer<typeof querySchema>;
 /**
  * Get engagement status for a post or batch of posts
  */
-async function getEngagement(ctx: HandlerContext<unknown, QueryParams>): Promise<Response> {
+async function getEngagement(
+  ctx: HandlerContext<unknown, QueryParams>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
 
   // Batch request
   if (query.postIds) {
-    const postIds = query.postIds
-      .split(",")
-      .map((id) => parseInt(id.trim()))
+    const postIds = query.postIds.split(",").map((id) => parseInt(id.trim()))
       .filter((id) => !isNaN(id));
 
     if (postIds.length === 0 || postIds.length > 100) {
@@ -93,27 +100,34 @@ async function getEngagement(ctx: HandlerContext<unknown, QueryParams>): Promise
     // Check cache first
     const cacheKey = CACHE_KEYS.engagement(postIds, userId);
     const cached = cache.get<
-      Record<number, { isLiked: boolean; isBookmarked: boolean; likeCount: number }>
-    >(
-      cacheKey,
-    );
+      Record<
+        number,
+        { isLiked: boolean; isBookmarked: boolean; likeCount: number }
+      >
+    >(cacheKey);
     if (cached) {
       return ok(cached, ctx);
     }
 
     // Single RPC call replaces 3 separate queries
-    const { data: rpcResult, error: rpcError } = await supabase.rpc("get_batch_engagement", {
-      p_post_ids: postIds,
-      p_user_id: userId || null,
-    });
+    const { data: rpcResult, error: rpcError } = await supabase.rpc(
+      "get_batch_engagement",
+      {
+        p_post_ids: postIds,
+        p_user_id: userId || null,
+      },
+    );
 
     if (!rpcError && rpcResult) {
       // RPC returns JSONB with string keys — normalize to number keys
-      const result: Record<number, { isLiked: boolean; isBookmarked: boolean; likeCount: number }> =
-        {};
+      const result: Record<
+        number,
+        { isLiked: boolean; isBookmarked: boolean; likeCount: number }
+      > = {};
       for (const postId of postIds) {
         const entry = rpcResult[String(postId)];
-        result[postId] = entry || { isLiked: false, isBookmarked: false, likeCount: 0 };
+        result[postId] = entry ||
+          { isLiked: false, isBookmarked: false, likeCount: 0 };
       }
       cache.set(cacheKey, result, CACHE_TTLS.engagement);
       return ok(result, ctx);
@@ -155,8 +169,10 @@ async function getEngagement(ctx: HandlerContext<unknown, QueryParams>): Promise
       userBookmarks = (bookmarksResult.data || []).map((b) => b.post_id);
     }
 
-    const result: Record<number, { isLiked: boolean; isBookmarked: boolean; likeCount: number }> =
-      {};
+    const result: Record<
+      number,
+      { isLiked: boolean; isBookmarked: boolean; likeCount: number }
+    > = {};
     for (const postId of postIds) {
       result[postId] = {
         isLiked: userLikes.includes(postId),
@@ -204,15 +220,12 @@ async function getEngagement(ctx: HandlerContext<unknown, QueryParams>): Promise
       isBookmarked = !!bookmarkResult.data;
     }
 
-    return ok(
-      {
-        postId,
-        isLiked,
-        isBookmarked,
-        likeCount: likeCount || 0,
-      },
-      ctx,
-    );
+    return ok({
+      postId,
+      isLiked,
+      isBookmarked,
+      likeCount: likeCount || 0,
+    }, ctx);
   }
 
   throw new ValidationError("postId or postIds required");
@@ -221,7 +234,9 @@ async function getEngagement(ctx: HandlerContext<unknown, QueryParams>): Promise
 /**
  * Get user's bookmarked posts
  */
-async function getUserBookmarks(ctx: HandlerContext<unknown, QueryParams>): Promise<Response> {
+async function getUserBookmarks(
+  ctx: HandlerContext<unknown, QueryParams>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
 
   if (!userId) {
@@ -242,13 +257,10 @@ async function getUserBookmarks(ctx: HandlerContext<unknown, QueryParams>): Prom
     throw error;
   }
 
-  return ok(
-    {
-      postIds: (data || []).map((b) => b.post_id),
-      count: data?.length || 0,
-    },
-    ctx,
-  );
+  return ok({
+    postIds: (data || []).map((b) => b.post_id),
+    count: data?.length || 0,
+  }, ctx);
 }
 
 /**
@@ -273,7 +285,12 @@ async function toggleLike(ctx: HandlerContext<ToggleBody>): Promise<Response> {
   );
 
   const isLiked = result.active;
-  await logActivity(supabase, body.postId, userId, isLiked ? "liked" : "unliked");
+  await logActivity(
+    supabase,
+    body.postId,
+    userId,
+    isLiked ? "liked" : "unliked",
+  );
 
   // Get updated count
   const { count } = await supabase
@@ -283,20 +300,19 @@ async function toggleLike(ctx: HandlerContext<ToggleBody>): Promise<Response> {
 
   logger.info("Like toggled", { postId: body.postId, userId, isLiked });
 
-  return ok(
-    {
-      postId: body.postId,
-      isLiked,
-      likeCount: count || 0,
-    },
-    ctx,
-  );
+  return ok({
+    postId: body.postId,
+    isLiked,
+    likeCount: count || 0,
+  }, ctx);
 }
 
 /**
  * Toggle bookmark on a post
  */
-async function toggleBookmark(ctx: HandlerContext<ToggleBody>): Promise<Response> {
+async function toggleBookmark(
+  ctx: HandlerContext<ToggleBody>,
+): Promise<Response> {
   const { supabase, userId, body } = ctx;
 
   if (!userId) {
@@ -315,7 +331,12 @@ async function toggleBookmark(ctx: HandlerContext<ToggleBody>): Promise<Response
   );
 
   const isBookmarked = result.active;
-  await logActivity(supabase, body.postId, userId, isBookmarked ? "bookmarked" : "unbookmarked");
+  await logActivity(
+    supabase,
+    body.postId,
+    userId,
+    isBookmarked ? "bookmarked" : "unbookmarked",
+  );
 
   logger.info("Bookmark toggled", {
     postId: body.postId,
@@ -323,13 +344,10 @@ async function toggleBookmark(ctx: HandlerContext<ToggleBody>): Promise<Response
     isBookmarked,
   });
 
-  return ok(
-    {
-      postId: body.postId,
-      isBookmarked,
-    },
-    ctx,
-  );
+  return ok({
+    postId: body.postId,
+    isBookmarked,
+  }, ctx);
 }
 
 /**
@@ -351,7 +369,9 @@ async function recordShare(ctx: HandlerContext<ShareBody>): Promise<Response> {
 /**
  * Toggle favorite (atomic operation)
  */
-async function toggleFavorite(ctx: HandlerContext<ToggleBody, QueryParams>): Promise<Response> {
+async function toggleFavorite(
+  ctx: HandlerContext<ToggleBody, QueryParams>,
+): Promise<Response> {
   const { supabase, userId, body, query } = ctx;
 
   if (!userId) {
@@ -438,15 +458,12 @@ async function toggleFavorite(ctx: HandlerContext<ToggleBody, QueryParams>): Pro
     isFavorited,
   });
 
-  return ok(
-    {
-      postId: body.postId,
-      isFavorited,
-      likeCount: post?.post_like_counter ?? 0,
-      action,
-    },
-    ctx,
-  );
+  return ok({
+    postId: body.postId,
+    isFavorited,
+    likeCount: post?.post_like_counter ?? 0,
+    action,
+  }, ctx);
 }
 
 // =============================================================================
@@ -481,7 +498,9 @@ async function logActivity(
 // Route Handlers
 // =============================================================================
 
-function handleGet(ctx: HandlerContext<unknown, QueryParams>): Promise<Response> {
+function handleGet(
+  ctx: HandlerContext<unknown, QueryParams>,
+): Promise<Response> {
   // Health check
   const url = new URL(ctx.request.url);
   if (url.pathname.endsWith("/health")) {
@@ -495,12 +514,17 @@ function handleGet(ctx: HandlerContext<unknown, QueryParams>): Promise<Response>
 }
 
 function handlePost(
-  ctx: HandlerContext<ToggleBody | ShareBody | BatchOperationsBody, QueryParams>,
+  ctx: HandlerContext<
+    ToggleBody | ShareBody | BatchOperationsBody,
+    QueryParams
+  >,
 ): Promise<Response> {
   const url = new URL(ctx.request.url);
 
   if (url.pathname.endsWith("/batch")) {
-    return handleBatchOperations(ctx as HandlerContext<BatchOperationsBody, QueryParams>);
+    return handleBatchOperations(
+      ctx as HandlerContext<BatchOperationsBody, QueryParams>,
+    );
   }
 
   const action = ctx.query.action;
@@ -515,7 +539,9 @@ function handlePost(
     case "share":
       return recordShare(ctx as HandlerContext<ShareBody, QueryParams>);
     default:
-      throw new ValidationError("action query param required (like, bookmark, favorite, share)");
+      throw new ValidationError(
+        "action query param required (like, bookmark, favorite, share)",
+      );
   }
 }
 
@@ -543,10 +569,13 @@ async function handleBatchOperations(
 
         switch (operation.type) {
           case "toggle_favorite": {
-            const { data: result, error } = await supabase.rpc("toggle_post_favorite_atomic", {
-              p_user_id: userId,
-              p_post_id: entityId,
-            });
+            const { data: result, error } = await supabase.rpc(
+              "toggle_post_favorite_atomic",
+              {
+                p_user_id: userId,
+                p_post_id: entityId,
+              },
+            );
             if (error) throw new ServerError(error.message);
             data = {
               isFavorited: result.is_favorited,
@@ -617,43 +646,38 @@ async function handleBatchOperations(
   const successful = results.filter((r) => r.success).length;
   const failed = results.filter((r) => !r.success).length;
 
-  return ok(
-    {
-      totalOperations: operations.length,
-      successful,
-      failed,
-      results,
-    },
-    ctx,
-  );
+  return ok({
+    totalOperations: operations.length,
+    successful,
+    failed,
+    results,
+  }, ctx);
 }
 
 // =============================================================================
 // Export Handler
 // =============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: "api-v1-engagement",
-    version: "1.0.0",
-    requireAuth: false, // GET is public, POST requires auth for most actions
-    csrf: true,
-    rateLimit: {
-      limit: 120,
-      windowMs: 60000,
-      keyBy: "ip",
+Deno.serve(createAPIHandler({
+  service: "api-v1-engagement",
+  version: "1.0.0",
+  requireAuth: false, // GET is public, POST requires auth for most actions
+  csrf: true,
+  rateLimit: {
+    limit: 120,
+    windowMs: 60000,
+    keyBy: "ip",
+  },
+  routes: {
+    GET: {
+      querySchema,
+      handler: handleGet,
+      requireAuth: false,
     },
-    routes: {
-      GET: {
-        querySchema,
-        handler: handleGet,
-        requireAuth: false,
-      },
-      POST: {
-        querySchema,
-        handler: handlePost,
-        requireAuth: true,
-      },
+    POST: {
+      querySchema,
+      handler: handlePost,
+      requireAuth: true,
     },
-  }),
-);
+  },
+}));

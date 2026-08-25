@@ -63,7 +63,8 @@ export class AWSSESProvider implements EmailProvider {
 
   constructor(config: Partial<AWSSESConfig> = {}) {
     this.config = {
-      region: config.region || getSecretSync("AWS_REGION") || getSecretSync("AWS_SES_REGION") || "",
+      region: config.region || getSecretSync("AWS_REGION") ||
+        getSecretSync("AWS_SES_REGION") || "",
       accessKeyId: config.accessKeyId ||
         getSecretSync("AWS_ACCESS_KEY_ID") ||
         getSecretSync("AWS_SES_ACCESS_KEY_ID") ||
@@ -75,8 +76,7 @@ export class AWSSESProvider implements EmailProvider {
       fromEmail: config.fromEmail ||
         getSecretSync("AWS_SES_FROM_EMAIL") ||
         getSecretSync("EMAIL_FROM") ||
-        Deno.env.get("EMAIL_FROM") ||
-        "contact@foodshare.club",
+        Deno.env.get("EMAIL_FROM") || "contact@foodshare.club",
       fromName: config.fromName ||
         getSecretSync("AWS_SES_FROM_NAME") ||
         getSecretSync("EMAIL_FROM_NAME") ||
@@ -99,7 +99,8 @@ export class AWSSESProvider implements EmailProvider {
    * Check if provider is configured
    */
   isConfigured(): boolean {
-    return !!(this.config.region && this.config.accessKeyId && this.config.secretAccessKey);
+    return !!(this.config.region && this.config.accessKeyId &&
+      this.config.secretAccessKey);
   }
 
   /**
@@ -131,7 +132,8 @@ export class AWSSESProvider implements EmailProvider {
             Subject: { Data: params.subject, Charset: "UTF-8" },
             Body: {
               Html: { Data: params.html, Charset: "UTF-8" },
-              ...(params.text && { Text: { Data: params.text, Charset: "UTF-8" } }),
+              ...(params.text &&
+                { Text: { Data: params.text, Charset: "UTF-8" } }),
             },
           },
         },
@@ -150,11 +152,14 @@ export class AWSSESProvider implements EmailProvider {
         payload,
       );
 
-      const response = await fetchWithTimeout(`${this.endpoint}/v2/email/outbound-emails`, {
-        method: "POST",
-        headers: signedHeaders,
-        body: payload,
-      });
+      const response = await fetchWithTimeout(
+        `${this.endpoint}/v2/email/outbound-emails`,
+        {
+          method: "POST",
+          headers: signedHeaders,
+          body: payload,
+        },
+      );
 
       const latencyMs = Math.round(performance.now() - startTime);
       const responseText = await response.text();
@@ -229,7 +234,12 @@ export class AWSSESProvider implements EmailProvider {
       // Use SES v1 Query API for quota check
       const url = `${this.endpoint}/?Action=GetSendQuota&Version=2010-12-01`;
       const headers = { "Content-Type": "application/x-www-form-urlencoded" };
-      const signedHeaders = await this.signer.signRequest("GET", url, headers, "");
+      const signedHeaders = await this.signer.signRequest(
+        "GET",
+        url,
+        headers,
+        "",
+      );
 
       const response = await fetchWithTimeout(url, {
         method: "GET",
@@ -255,8 +265,12 @@ export class AWSSESProvider implements EmailProvider {
       }
 
       // Parse XML response
-      const max24HourSendMatch = responseText.match(/<Max24HourSend>([^<]+)<\/Max24HourSend>/);
-      const maxSendRateMatch = responseText.match(/<MaxSendRate>([^<]+)<\/MaxSendRate>/);
+      const max24HourSendMatch = responseText.match(
+        /<Max24HourSend>([^<]+)<\/Max24HourSend>/,
+      );
+      const maxSendRateMatch = responseText.match(
+        /<MaxSendRate>([^<]+)<\/MaxSendRate>/,
+      );
       const sentLast24HoursMatch = responseText.match(
         /<SentLast24Hours>([^<]+)<\/SentLast24Hours>/,
       );
@@ -295,9 +309,7 @@ export class AWSSESProvider implements EmailProvider {
         healthScore,
         latencyMs,
         message: `Connected. Region: ${this.config.region}. Quota: ${sentLast24Hours.toFixed(0)}/${
-          max24HourSend.toFixed(
-            0,
-          )
+          max24HourSend.toFixed(0)
         } (24h), Rate: ${maxSendRate}/sec`,
         configured: true,
         lastChecked: Date.now(),
@@ -341,7 +353,12 @@ export class AWSSESProvider implements EmailProvider {
     try {
       const url = `${this.endpoint}/?Action=GetSendQuota&Version=2010-12-01`;
       const headers = { "Content-Type": "application/x-www-form-urlencoded" };
-      const signedHeaders = await this.signer.signRequest("GET", url, headers, "");
+      const signedHeaders = await this.signer.signRequest(
+        "GET",
+        url,
+        headers,
+        "",
+      );
 
       const response = await fetchWithTimeout(url, {
         method: "GET",
@@ -353,7 +370,9 @@ export class AWSSESProvider implements EmailProvider {
       }
 
       const responseText = await response.text();
-      const max24HourSendMatch = responseText.match(/<Max24HourSend>([^<]+)<\/Max24HourSend>/);
+      const max24HourSendMatch = responseText.match(
+        /<Max24HourSend>([^<]+)<\/Max24HourSend>/,
+      );
       const sentLast24HoursMatch = responseText.match(
         /<SentLast24Hours>([^<]+)<\/SentLast24Hours>/,
       );

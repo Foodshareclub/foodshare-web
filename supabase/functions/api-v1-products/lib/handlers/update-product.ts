@@ -49,9 +49,10 @@ export async function updateProduct(
   if (body.images !== undefined) {
     const imageCheck = await validateProductImageUrls(body.images);
     if (!imageCheck.valid) {
-      throw new ValidationError("All image URLs must be uploaded through our image API", {
-        invalidUrls: imageCheck.invalidUrls,
-      });
+      throw new ValidationError(
+        "All image URLs must be uploaded through our image API",
+        { invalidUrls: imageCheck.invalidUrls },
+      );
     }
   }
 

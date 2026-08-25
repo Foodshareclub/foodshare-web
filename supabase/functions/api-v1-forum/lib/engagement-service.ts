@@ -22,7 +22,10 @@ export class EngagementService {
       .maybeSingle();
 
     if (existing) {
-      await this.supabase.from("forum_likes").delete().eq("id", existing.id);
+      await this.supabase
+        .from("forum_likes")
+        .delete()
+        .eq("id", existing.id);
 
       logger.info("Like removed", { forumId });
       return { liked: false };
@@ -45,7 +48,10 @@ export class EngagementService {
       .maybeSingle();
 
     if (existing) {
-      await this.supabase.from("forum_bookmarks").delete().eq("id", existing.id);
+      await this.supabase
+        .from("forum_bookmarks")
+        .delete()
+        .eq("id", existing.id);
 
       logger.info("Bookmark removed", { forumId });
       return { bookmarked: false };
@@ -69,7 +75,10 @@ export class EngagementService {
 
     if (existing) {
       if (existing.reaction_type === reactionType) {
-        await this.supabase.from("forum_reactions").delete().eq("id", existing.id);
+        await this.supabase
+          .from("forum_reactions")
+          .delete()
+          .eq("id", existing.id);
 
         logger.info("Reaction removed", { forumId, reactionType });
         return { reacted: false, reactionType: null };
@@ -83,11 +92,13 @@ export class EngagementService {
         return { reacted: true, reactionType };
       }
     } else {
-      await this.supabase.from("forum_reactions").insert({
-        forum_id: forumId,
-        profile_id: this.userId,
-        reaction_type: reactionType,
-      });
+      await this.supabase
+        .from("forum_reactions")
+        .insert({
+          forum_id: forumId,
+          profile_id: this.userId,
+          reaction_type: reactionType,
+        });
 
       logger.info("Reaction added", { forumId, reactionType });
       return { reacted: true, reactionType };
@@ -103,7 +114,10 @@ export class EngagementService {
       .maybeSingle();
 
     if (existing) {
-      await this.supabase.from("forum_subscriptions").delete().eq("id", existing.id);
+      await this.supabase
+        .from("forum_subscriptions")
+        .delete()
+        .eq("id", existing.id);
 
       logger.info("Subscription removed", { forumId });
       return { subscribed: false };
@@ -120,13 +134,11 @@ export class EngagementService {
   async getBookmarks(limit: number, offset: number) {
     const { data, error } = await this.supabase
       .from("forum_bookmarks")
-      .select(
-        `
+      .select(`
         forum_id,
         created_at,
         forum:forum(*)
-      `,
-      )
+      `)
       .eq("profile_id", this.userId)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
@@ -147,7 +159,9 @@ export class EngagementService {
     return data;
   }
 
-  async saveDraft(input: { title: string; content: string; categoryId?: number }) {
+  async saveDraft(
+    input: { title: string; content: string; categoryId?: number },
+  ) {
     const { data, error } = await this.supabase
       .from("forum_drafts")
       .upsert({
@@ -178,12 +192,14 @@ export class EngagementService {
     logger.info("Draft deleted", { draftId });
   }
 
-  async submitReport(input: {
-    forumId?: number;
-    commentId?: number;
-    reason: string;
-    details?: string;
-  }) {
+  async submitReport(
+    input: {
+      forumId?: number;
+      commentId?: number;
+      reason: string;
+      details?: string;
+    },
+  ) {
     const { data, error } = await this.supabase
       .from("forum_reports")
       .insert({

@@ -159,7 +159,9 @@ export function validateListing(
 
   // Description validation
   if (trimmedDescription.length > LISTING.description.maxLength) {
-    errors.push(ERROR_MESSAGES.descriptionTooLong(LISTING.description.maxLength));
+    errors.push(
+      ERROR_MESSAGES.descriptionTooLong(LISTING.description.maxLength),
+    );
   }
 
   // Quantity validation
@@ -174,9 +176,13 @@ export function validateListing(
       errors.push(ERROR_MESSAGES.expirationInPast);
     } else {
       const maxExpiration = new Date(now);
-      maxExpiration.setDate(maxExpiration.getDate() + LISTING.expiration.maxDays);
+      maxExpiration.setDate(
+        maxExpiration.getDate() + LISTING.expiration.maxDays,
+      );
       if (expiresAt > maxExpiration) {
-        errors.push(ERROR_MESSAGES.expirationTooFarFuture(LISTING.expiration.maxDays));
+        errors.push(
+          ERROR_MESSAGES.expirationTooFarFuture(LISTING.expiration.maxDays),
+        );
       }
     }
   }
@@ -198,9 +204,13 @@ export function validateProfile(
     const trimmed = nickname.trim();
     if (trimmed) {
       if (trimmed.length < PROFILE.nickname.minLength) {
-        errors.push(ERROR_MESSAGES.displayNameTooShort(PROFILE.nickname.minLength));
+        errors.push(
+          ERROR_MESSAGES.displayNameTooShort(PROFILE.nickname.minLength),
+        );
       } else if (trimmed.length > PROFILE.nickname.maxLength) {
-        errors.push(ERROR_MESSAGES.displayNameTooLong(PROFILE.nickname.maxLength));
+        errors.push(
+          ERROR_MESSAGES.displayNameTooLong(PROFILE.nickname.maxLength),
+        );
       }
     }
   }
@@ -228,7 +238,9 @@ export function validateReview(
 
   // Rating validation
   if (rating < REVIEW.rating.min || rating > REVIEW.rating.max) {
-    errors.push(ERROR_MESSAGES.invalidRating(REVIEW.rating.min, REVIEW.rating.max));
+    errors.push(
+      ERROR_MESSAGES.invalidRating(REVIEW.rating.min, REVIEW.rating.max),
+    );
   }
 
   // Comment validation
@@ -296,7 +308,8 @@ export function evaluatePasswordStrength(password: string): PasswordStrength {
   const hasNumber = /[0-9]/.test(password);
   const hasSpecial = /[^A-Za-z0-9]/.test(password);
 
-  const strengthScore = [hasUppercase, hasLowercase, hasNumber, hasSpecial].filter(Boolean).length;
+  const strengthScore = [hasUppercase, hasLowercase, hasNumber, hasSpecial]
+    .filter(Boolean).length;
 
   switch (strengthScore) {
     case 0:
@@ -355,7 +368,9 @@ export function sanitizeHtml(input: string | null | undefined): string {
  * Remove dangerous HTML/JS patterns from a string
  * More aggressive than sanitizeHtml - actually strips dangerous content
  */
-export function stripDangerousContent(input: string | null | undefined): string {
+export function stripDangerousContent(
+  input: string | null | undefined,
+): string {
   if (!input) return "";
 
   let result = input;

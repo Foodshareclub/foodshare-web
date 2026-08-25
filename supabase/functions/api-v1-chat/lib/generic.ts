@@ -31,17 +31,12 @@ export const sendMessageSchema = z.object({
   roomId: uuidSchema,
   content: z.string().min(1).max(5000),
   replyToId: uuidSchema.optional(),
-  attachments: z
-    .array(
-      z.object({
-        type: z.enum(["image", "file", "voice"]),
-        url: z.string().url(),
-        name: z.string().optional(),
-        size: z.number().optional(),
-      }),
-    )
-    .max(5)
-    .optional(),
+  attachments: z.array(z.object({
+    type: z.enum(["image", "file", "voice"]),
+    url: z.string().url(),
+    name: z.string().optional(),
+    size: z.number().optional(),
+  })).max(5).optional(),
 });
 
 export const updateRoomSchema = z.object({
@@ -71,7 +66,9 @@ export type ListQuery = {
 /**
  * List user's chat rooms
  */
-export async function listRooms(ctx: HandlerContext<unknown, ListQuery>): Promise<Response> {
+export async function listRooms(
+  ctx: HandlerContext<unknown, ListQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
 
   if (!userId) {
@@ -97,17 +94,23 @@ export async function listRooms(ctx: HandlerContext<unknown, ListQuery>): Promis
   const hasMore = rooms.length > limit;
   const resultRooms = hasMore ? rooms.slice(0, -1) : rooms;
 
-  return paginated(resultRooms.map(transformRoom), ctx, {
-    offset: 0,
-    limit,
-    total: resultRooms.length,
-  });
+  return paginated(
+    resultRooms.map(transformRoom),
+    ctx,
+    {
+      offset: 0,
+      limit,
+      total: resultRooms.length,
+    },
+  );
 }
 
 /**
  * Get room with messages
  */
-export async function getRoom(ctx: HandlerContext<unknown, ListQuery>): Promise<Response> {
+export async function getRoom(
+  ctx: HandlerContext<unknown, ListQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
   const roomId = query.roomId;
 
@@ -134,14 +137,12 @@ export async function getRoom(ctx: HandlerContext<unknown, ListQuery>): Promise<
   // Get room details
   const { data: room, error: roomError } = await supabase
     .from("chat_rooms")
-    .select(
-      `
+    .select(`
       *,
       members:room_members(
         profile:profiles(id, display_name, avatar_url)
       )
-    `,
-    )
+    `)
     .eq("id", roomId)
     .single();
 
@@ -155,13 +156,11 @@ export async function getRoom(ctx: HandlerContext<unknown, ListQuery>): Promise<
 
   let messagesQuery = supabase
     .from("messages")
-    .select(
-      `
+    .select(`
       *,
       sender:profiles!messages_profile_id_fkey(id, display_name, avatar_url),
       reply_to:messages!messages_reply_to_id_fkey(id, content, profile_id)
-    `,
-    )
+    `)
     .eq("room_id", roomId)
     .order("created_at", { ascending: false })
     .limit(messageLimit + 1);
@@ -187,23 +186,22 @@ export async function getRoom(ctx: HandlerContext<unknown, ListQuery>): Promise<
     .eq("room_id", roomId)
     .eq("profile_id", userId);
 
-  return ok(
-    {
-      room: transformRoomDetail(room),
-      messages: (resultMessages || []).map(transformMessage).reverse(),
-      hasMoreMessages,
-      oldestMessageDate: resultMessages?.length
-        ? resultMessages[resultMessages.length - 1].created_at
-        : null,
-    },
-    ctx,
-  );
+  return ok({
+    room: transformRoomDetail(room),
+    messages: (resultMessages || []).map(transformMessage).reverse(),
+    hasMoreMessages,
+    oldestMessageDate: resultMessages?.length
+      ? resultMessages[resultMessages.length - 1].created_at
+      : null,
+  }, ctx);
 }
 
 /**
  * Create room using transactional RPC
  */
-export async function createRoom(ctx: HandlerContext<CreateRoomBody>): Promise<Response> {
+export async function createRoom(
+  ctx: HandlerContext<CreateRoomBody>,
+): Promise<Response> {
   const { supabase, userId, body } = ctx;
 
   if (!userId) {
@@ -233,41 +231,35 @@ export async function createRoom(ctx: HandlerContext<CreateRoomBody>): Promise<R
   // Fetch full room details
   const { data: room, error: fetchError } = await supabase
     .from("chat_rooms")
-    .select(
-      `
+    .select(`
       *,
       members:room_members(
         profile:profiles(id, display_name, avatar_url)
       )
-    `,
-    )
+    `)
     .eq("id", result.room_id)
     .single();
 
   if (fetchError) {
     // Room was created but fetch failed - return basic info
-    return created(
-      {
-        roomId: result.room_id,
-        created: result.created,
-      },
-      ctx,
-    );
+    return created({
+      roomId: result.room_id,
+      created: result.created,
+    }, ctx);
   }
 
-  return created(
-    {
-      ...transformRoomDetail(room),
-      created: result.created,
-    },
-    ctx,
-  );
+  return created({
+    ...transformRoomDetail(room),
+    created: result.created,
+  }, ctx);
 }
 
 /**
  * Send message
  */
-export async function sendMessage(ctx: HandlerContext<SendMessageBody>): Promise<Response> {
+export async function sendMessage(
+  ctx: HandlerContext<SendMessageBody>,
+): Promise<Response> {
   const { supabase, userId, body } = ctx;
 
   if (!userId) {
@@ -296,12 +288,10 @@ export async function sendMessage(ctx: HandlerContext<SendMessageBody>): Promise
       reply_to_id: body.replyToId,
       attachments: body.attachments,
     })
-    .select(
-      `
+    .select(`
       *,
       sender:profiles!messages_profile_id_fkey(id, display_name, avatar_url)
-    `,
-    )
+    `)
     .single();
 
   if (error) {
@@ -363,7 +353,10 @@ export async function updateRoom(
       .single();
 
     if (room?.created_by === userId) {
-      await supabase.from("chat_rooms").update({ name: body.name }).eq("id", roomId);
+      await supabase
+        .from("chat_rooms")
+        .update({ name: body.name })
+        .eq("id", roomId);
     }
   }
 
@@ -386,7 +379,9 @@ export async function updateRoom(
 /**
  * Leave room
  */
-export async function leaveRoom(ctx: HandlerContext<unknown, ListQuery>): Promise<Response> {
+export async function leaveRoom(
+  ctx: HandlerContext<unknown, ListQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
   const roomId = query.roomId;
 
@@ -411,11 +406,13 @@ export async function leaveRoom(ctx: HandlerContext<unknown, ListQuery>): Promis
   }
 
   // Log activity
-  await supabase.from("room_activities").insert({
-    room_id: roomId,
-    profile_id: userId,
-    activity_type: "left",
-  });
+  await supabase
+    .from("room_activities")
+    .insert({
+      room_id: roomId,
+      profile_id: userId,
+      activity_type: "left",
+    });
 
   logger.info("User left room", { roomId, userId });
 

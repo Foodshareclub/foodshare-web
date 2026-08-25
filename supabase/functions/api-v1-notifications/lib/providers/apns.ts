@@ -29,7 +29,10 @@ async function getApnsToken(): Promise<string> {
     throw new Error("APNs not configured");
   }
 
-  const privateKey = await jose.importPKCS8(env.apnsPrivateKey.replace(/\\n/g, "\n"), "ES256");
+  const privateKey = await jose.importPKCS8(
+    env.apnsPrivateKey.replace(/\\n/g, "\n"),
+    "ES256",
+  );
 
   const token = await new jose.SignJWT({})
     .setProtectedHeader({ alg: "ES256", kid: env.apnsKeyId })
@@ -41,7 +44,10 @@ async function getApnsToken(): Promise<string> {
   return token;
 }
 
-export async function sendApns(device: DeviceToken, payload: PushPayload): Promise<SendResult> {
+export async function sendApns(
+  device: DeviceToken,
+  payload: PushPayload,
+): Promise<SendResult> {
   try {
     return await withCircuitBreaker(
       "push-ios",
@@ -66,12 +72,12 @@ export async function sendApns(device: DeviceToken, payload: PushPayload): Promi
             },
             sound: iosOptions.interruptionLevel === "passive"
               ? undefined
-              : payload.sound || "default",
+              : (payload.sound || "default"),
             badge: typeof payload.badge === "number" ? payload.badge : undefined,
             "mutable-content": 1,
             "content-available": 1,
             "thread-id": iosOptions.threadId || payload.collapseKey,
-            category: iosOptions.category,
+            "category": iosOptions.category,
             "interruption-level": iosOptions.interruptionLevel || "active",
             "relevance-score": iosOptions.relevanceScore,
             "target-content-id": iosOptions.targetContentId,
@@ -92,10 +98,10 @@ export async function sendApns(device: DeviceToken, payload: PushPayload): Promi
           "apns-push-type": "alert",
           "apns-priority": iosOptions.interruptionLevel === "passive"
             ? "5"
-            : payload.priority === "normal"
-            ? "5"
-            : "10",
-          "apns-expiration": String(Math.floor(Date.now() / 1000) + (payload.ttl || 86400)),
+            : (payload.priority === "normal" ? "5" : "10"),
+          "apns-expiration": String(
+            Math.floor(Date.now() / 1000) + (payload.ttl || 86400),
+          ),
           "Content-Type": "application/json",
         };
 
@@ -124,8 +130,13 @@ export async function sendApns(device: DeviceToken, payload: PushPayload): Promi
         const errorBody = await response.json().catch(() => ({}));
         const reason = errorBody.reason || `HTTP ${response.status}`;
 
-        const invalidTokenReasons = ["BadDeviceToken", "Unregistered", "DeviceTokenNotForTopic"];
-        const isInvalidToken = invalidTokenReasons.includes(reason) || response.status === 410;
+        const invalidTokenReasons = [
+          "BadDeviceToken",
+          "Unregistered",
+          "DeviceTokenNotForTopic",
+        ];
+        const isInvalidToken = invalidTokenReasons.includes(reason) ||
+          response.status === 410;
 
         if (isInvalidToken) {
           return {

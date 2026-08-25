@@ -96,10 +96,17 @@ export default async function getTranslationsHandler(
 
   try {
     const body: GetTranslationsRequest = await req.json();
-    const { contentType, contentIds, locale, fields = ["title", "description"] } = body;
+    const {
+      contentType,
+      contentIds,
+      locale,
+      fields = ["title", "description"],
+    } = body;
 
     // Validate content type
-    if (!contentType || !["post", "challenge", "forum_post"].includes(contentType)) {
+    if (
+      !contentType || !["post", "challenge", "forum_post"].includes(contentType)
+    ) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -187,10 +194,7 @@ export default async function getTranslationsHandler(
     const { data: sourceContent, error: sourceError } = await supabase
       .from(tableName)
       .select(selectColumns)
-      .in(
-        "id",
-        limitedIds.map((id) => parseInt(id, 10)),
-      );
+      .in("id", limitedIds.map((id) => parseInt(id, 10)));
 
     if (sourceError) {
       logger.error("Failed to fetch source content", sourceError);
@@ -254,8 +258,8 @@ export default async function getTranslationsHandler(
       }
     }
 
-    const notFound = Object.values(translations).filter((t) =>
-      Object.values(t).every((v) => v === null)
+    const notFound = Object.values(translations).filter(
+      (t) => Object.values(t).every((v) => v === null),
     ).length;
 
     logger.debug("Get translations completed", {

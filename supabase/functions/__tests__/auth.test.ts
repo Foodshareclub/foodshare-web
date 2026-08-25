@@ -27,13 +27,10 @@ interface MockProfile {
   verification_code_expires_at?: string;
 }
 
-function createMockAuthContext(
-  profile: MockProfile | null,
-  options: {
-    updateError?: boolean;
-    lookupError?: boolean;
-  } = {},
-) {
+function createMockAuthContext(profile: MockProfile | null, options: {
+  updateError?: boolean;
+  lookupError?: boolean;
+} = {}) {
   let lastUpdate: Record<string, unknown> | null = null;
 
   const mockQueryBuilder = {
@@ -107,7 +104,10 @@ Deno.test({
 
     // Dynamically import to avoid module-level side effects
     const { handleVerifySend } = await import("../api-v1-auth/lib/verify.ts");
-    const response = await handleVerifySend({ email: "nobody@example.com" }, ctx as any);
+    const response = await handleVerifySend(
+      { email: "nobody@example.com" },
+      ctx as any,
+    );
 
     assertEquals(response.status, 404);
     const body = await response.json();
@@ -126,7 +126,10 @@ Deno.test("handleVerifySend: already verified returns 409", async () => {
   const { ctx } = createMockAuthContext(profile);
 
   const { handleVerifySend } = await import("../api-v1-auth/lib/verify.ts");
-  const response = await handleVerifySend({ email: "verified@example.com" }, ctx as any);
+  const response = await handleVerifySend(
+    { email: "verified@example.com" },
+    ctx as any,
+  );
 
   assertEquals(response.status, 409);
   const body = await response.json();
@@ -144,7 +147,10 @@ Deno.test("handleVerifySend: locked out returns 429", async () => {
   const { ctx } = createMockAuthContext(profile);
 
   const { handleVerifySend } = await import("../api-v1-auth/lib/verify.ts");
-  const response = await handleVerifySend({ email: "locked@example.com" }, ctx as any);
+  const response = await handleVerifySend(
+    { email: "locked@example.com" },
+    ctx as any,
+  );
 
   assertEquals(response.status, 429);
   const body = await response.json();
@@ -234,7 +240,10 @@ Deno.test("handleVerifyResend: profile not found returns 404", async () => {
   const { ctx } = createMockAuthContext(null);
 
   const { handleVerifyResend } = await import("../api-v1-auth/lib/verify.ts");
-  const response = await handleVerifyResend({ email: "nobody-resend@example.com" }, ctx as any);
+  const response = await handleVerifyResend(
+    { email: "nobody-resend@example.com" },
+    ctx as any,
+  );
 
   assertEquals(response.status, 404);
 });

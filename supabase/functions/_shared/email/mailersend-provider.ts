@@ -61,11 +61,10 @@ export class MailerSendProvider implements EmailProvider {
   constructor(config: Partial<MailerSendConfig> = {}) {
     this.config = {
       apiKey: config.apiKey || getSecretSync("MAILERSEND_API_KEY") || "",
-      fromEmail: config.fromEmail ||
-        getSecretSync("MAILERSEND_SENDER_EMAIL") ||
-        Deno.env.get("EMAIL_FROM") ||
-        "contact@foodshare.club",
-      fromName: config.fromName || getSecretSync("MAILERSEND_SENDER_NAME") || "FoodShare",
+      fromEmail: config.fromEmail || getSecretSync("MAILERSEND_SENDER_EMAIL") ||
+        Deno.env.get("EMAIL_FROM") || "contact@foodshare.club",
+      fromName: config.fromName || getSecretSync("MAILERSEND_SENDER_NAME") ||
+        "FoodShare",
     };
   }
 

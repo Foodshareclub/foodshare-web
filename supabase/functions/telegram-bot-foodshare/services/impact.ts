@@ -43,7 +43,10 @@ export async function getUserImpactStats(userId: number): Promise<ImpactStats> {
       .eq("sender_id", profile.id),
 
     // Get activity stats
-    supabase.from("telegram_user_activity").select("active_days").eq("user_id", userId).single(),
+    supabase.from("telegram_user_activity").select("active_days").eq(
+      "user_id",
+      userId,
+    ).single(),
   ]);
 
   const sharedCount = sharedResult.count || 0;

@@ -28,7 +28,10 @@ const channelUsername = "@foodshare_club";
 const getChannelThreadId = () => Deno.env.get("CHANNEL_THREAD_ID");
 const getAppUrl = () =>
   Deno.env.get("APP_URL") ||
-  `https://${Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"}`;
+  `https://${
+    Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+    "foodshare.club"
+  }`;
 
 // =============================================================================
 // Emoji Mappings
@@ -75,7 +78,10 @@ const reportReasonEmoji: Record<string, string> = {
 
 function escapeHtml(text: string | null | undefined): string {
   if (!text) return "";
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(
+    />/g,
+    "&gt;",
+  );
 }
 
 function truncate(text: string | null | undefined, max: number): string {
@@ -85,21 +91,21 @@ function truncate(text: string | null | undefined, max: number): string {
 
 function stripHtml(html: string | null | undefined): string {
   if (!html) return "";
-  return html
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .trim();
+  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim();
 }
 
 function getProfileName(
-  profile: {
-    first_name?: string | null;
-    second_name?: string | null;
-    nickname?: string | null;
-  } | null,
+  profile:
+    | {
+      first_name?: string | null;
+      second_name?: string | null;
+      nickname?: string | null;
+    }
+    | null,
 ): string {
   if (!profile) return "Unknown";
-  const fullName = [profile.first_name, profile.second_name].filter(Boolean).join(" ");
+  const fullName = [profile.first_name, profile.second_name].filter(Boolean)
+    .join(" ");
   return fullName || profile.nickname || "Unknown";
 }
 
@@ -118,7 +124,8 @@ export async function handleTriggerNewPost(
     return { success: false, error: "Missing record or post_name" };
   }
 
-  const emoji = postTypeEmoji[(record.post_type as string) || "default"] || postTypeEmoji.default;
+  const emoji = postTypeEmoji[(record.post_type as string) || "default"] ||
+    postTypeEmoji.default;
   const postUrl = `${getAppUrl()}/food/${record.id}`;
   const isVolunteer = record.post_type === "volunteer";
 
@@ -168,7 +175,9 @@ export async function handleTriggerNewPost(
 // Trigger: New User (Database Webhook)
 // =============================================================================
 
-export function renderNewUserTelegramMessage(record: NewUserWebhookRecord): string {
+export function renderNewUserTelegramMessage(
+  record: NewUserWebhookRecord,
+): string {
   const name = [record.first_name, record.second_name].filter(Boolean).join(" ") ||
     record.nickname ||
     "New User";
@@ -176,16 +185,16 @@ export function renderNewUserTelegramMessage(record: NewUserWebhookRecord): stri
   const telegramId = record.telegram_id ? String(record.telegram_id) : null;
   const username = record.username
     ? `@${record.username}`
-    : record.nickname
-    ? `@${record.nickname}`
-    : null;
+    : (record.nickname ? `@${record.nickname}` : null);
   const source = telegramId
     ? `🤖 <b>Telegram Bot</b> ${username ? `(${username})` : `[ID: ${telegramId}]`}`
     : `🌐 <b>Web / App</b>`;
 
-  const isVerified = record.email_verified === true || record.is_verified === true;
+  const isVerified = record.email_verified === true ||
+    record.is_verified === true;
   const statusBadge = isVerified ? "✅ Verified" : "⏳ Pending Email Verification";
-  const createdDate = record.created_time || record.created_at || new Date().toISOString();
+  const createdDate = record.created_time || record.created_at ||
+    new Date().toISOString();
 
   let message = `🎉 <b>New Registration on FoodShare!</b>\n━━━━━━━━━━━━━━━━━━━━\n\n`;
   message += `👤 <b>Name:</b> ${escapeHtml(String(name))}\n`;
@@ -206,9 +215,15 @@ export async function handleTriggerNewUser(
   let record: NewUserWebhookRecord | undefined;
 
   if (payload && typeof payload === "object") {
-    if ("record" in payload && payload.record && typeof payload.record === "object") {
+    if (
+      "record" in payload && payload.record &&
+      typeof payload.record === "object"
+    ) {
       const innerRecord = payload.record as Record<string, unknown>;
-      if ("record" in innerRecord && innerRecord.record && typeof innerRecord.record === "object") {
+      if (
+        "record" in innerRecord && innerRecord.record &&
+        typeof innerRecord.record === "object"
+      ) {
         record = innerRecord.record as NewUserWebhookRecord;
       } else {
         record = innerRecord as NewUserWebhookRecord;
@@ -218,7 +233,10 @@ export async function handleTriggerNewUser(
     }
   }
 
-  if (!record || (!record.id && !record.email && !record.first_name && !record.nickname)) {
+  if (
+    !record ||
+    (!record.id && !record.email && !record.first_name && !record.nickname)
+  ) {
     return { success: false, error: "Missing record data" };
   }
 
@@ -245,11 +263,9 @@ export async function handleTriggerNewUser(
 // Trigger: Forum Post (Database Webhook)
 // =============================================================================
 
-export function renderForumPostTelegramMessage(record: ForumPostWebhookRecord): {
-  adminMessage: string;
-  channelMessage: string;
-  postUrl: string;
-} {
+export function renderForumPostTelegramMessage(
+  record: ForumPostWebhookRecord,
+): { adminMessage: string; channelMessage: string; postUrl: string } {
   const postUrl = `${getAppUrl()}/forum/${record.slug || record.id}`;
   const description = stripHtml(record.forum_post_description || "");
   const shortDesc = truncate(description, 150);
@@ -271,12 +287,14 @@ export function renderForumPostTelegramMessage(record: ForumPostWebhookRecord): 
 export async function handleTriggerForumPost(
   body: unknown,
   context: NotificationContext,
-): Promise<{
-  success: boolean;
-  adminSent?: boolean;
-  channelSent?: boolean;
-  error?: string;
-}> {
+): Promise<
+  {
+    success: boolean;
+    adminSent?: boolean;
+    channelSent?: boolean;
+    error?: string;
+  }
+> {
   const payload = body as { record?: ForumPostWebhookRecord };
   const record = payload.record;
 
@@ -289,7 +307,9 @@ export async function handleTriggerForumPost(
     return { success: true, adminSent: false, channelSent: false };
   }
 
-  const { adminMessage, channelMessage } = renderForumPostTelegramMessage(record);
+  const { adminMessage, channelMessage } = renderForumPostTelegramMessage(
+    record,
+  );
 
   const adminSentId = await sendMessage(getAdminChatId(), adminMessage, {
     disable_web_page_preview: false,
@@ -337,7 +357,9 @@ export async function handleTriggerForumPost(
 export async function handleTriggerNewReport(
   body: unknown,
   context: NotificationContext,
-): Promise<{ success: boolean; message?: string; hasImage?: boolean; error?: string }> {
+): Promise<
+  { success: boolean; message?: string; hasImage?: boolean; error?: string }
+> {
   const payload = body as { record?: Record<string, unknown>; table?: string };
   const record = payload.record;
   const tableName = payload.table || "unknown";
@@ -375,7 +397,9 @@ export async function handleTriggerNewReport(
     if (record.post_id && context.supabase) {
       const { data } = await context.supabase
         .from("posts")
-        .select("id,post_name,post_type,post_address,post_description,is_active,images")
+        .select(
+          "id,post_name,post_type,post_address,post_description,is_active,images",
+        )
         .eq("id", record.post_id)
         .single();
       post = data;
@@ -389,14 +413,18 @@ export async function handleTriggerNewReport(
       message += `• Description: ${escapeHtml(truncate(record.description as string, 150))}\n`;
     }
 
-    if (record.ai_severity_score !== null && record.ai_severity_score !== undefined) {
+    if (
+      record.ai_severity_score !== null &&
+      record.ai_severity_score !== undefined
+    ) {
       const score = record.ai_severity_score as number;
       const severityIcon = score >= 70 ? "🔴" : score >= 40 ? "🟡" : "🟢";
       message += `• AI Severity: ${severityIcon} ${score}/100\n`;
     }
 
     if (post) {
-      const postEmoji = postTypeEmoji[(post.post_type as string) || ""] || postTypeEmoji.default;
+      const postEmoji = postTypeEmoji[(post.post_type as string) || ""] ||
+        postTypeEmoji.default;
       message += `\n<b>${postEmoji} Reported Post</b>\n`;
       message += `• Title: <b>${escapeHtml(post.post_name as string)}</b>\n`;
       message += `• Type: ${post.post_type || "Unknown"}\n`;
@@ -431,9 +459,7 @@ export async function handleTriggerNewReport(
     message = `📢 <b>GENERAL REPORT</b>\n━━━━━━━━━━━━━━━━━━━━\n\n`;
     if (record.description && record.description !== "-") {
       message += `<b>Description:</b>\n${
-        escapeHtml(
-          truncate(record.description as string, 400),
-        )
+        escapeHtml(truncate(record.description as string, 400))
       }\n`;
     }
     message += `\n<b>👤 Reported by:</b> ${getProfileName(reporter)}`;
@@ -494,7 +520,10 @@ export async function handleTriggerNewListing(
     bypassQuietHours?: boolean;
   };
 
-  if (!request.foodItemId || !request.title || !request.latitude || !request.longitude) {
+  if (
+    !request.foodItemId || !request.title || !request.latitude ||
+    !request.longitude
+  ) {
     return {
       success: false,
       error: "Missing required fields: foodItemId, title, latitude, longitude",
@@ -589,9 +618,15 @@ export async function handleTriggerUserVerified(
   let record: Record<string, unknown> | undefined;
 
   if (payload && typeof payload === "object") {
-    if ("record" in payload && payload.record && typeof payload.record === "object") {
+    if (
+      "record" in payload && payload.record &&
+      typeof payload.record === "object"
+    ) {
       const innerRecord = payload.record as Record<string, unknown>;
-      if ("record" in innerRecord && innerRecord.record && typeof innerRecord.record === "object") {
+      if (
+        "record" in innerRecord && innerRecord.record &&
+        typeof innerRecord.record === "object"
+      ) {
         record = innerRecord.record as Record<string, unknown>;
       } else {
         record = innerRecord;
@@ -601,7 +636,10 @@ export async function handleTriggerUserVerified(
     }
   }
 
-  if (!record || (!record.id && !record.email && !record.first_name && !record.nickname)) {
+  if (
+    !record ||
+    (!record.id && !record.email && !record.first_name && !record.nickname)
+  ) {
     return { success: false, error: "Missing record data" };
   }
 
@@ -612,9 +650,7 @@ export async function handleTriggerUserVerified(
   const telegramId = record.telegram_id ? String(record.telegram_id) : null;
   const username = record.username
     ? `@${record.username}`
-    : record.nickname
-    ? `@${record.nickname}`
-    : null;
+    : (record.nickname ? `@${record.nickname}` : null);
   const source = telegramId
     ? `🤖 <b>Telegram Bot</b> ${username ? `(${username})` : `[ID: ${telegramId}]`}`
     : `🌐 <b>Web / App</b>`;

@@ -38,7 +38,10 @@ export async function handleProxy(ctx: HandlerContext): Promise<Response> {
   const imageData = new Uint8Array(await response.arrayBuffer());
 
   if (imageData.length > 10 * 1024 * 1024) {
-    throw new PayloadTooLargeError("Image too large (max 10MB)", 10 * 1024 * 1024);
+    throw new PayloadTooLargeError(
+      "Image too large (max 10MB)",
+      10 * 1024 * 1024,
+    );
   }
 
   const compressed = await compressImage(imageData, 800);
@@ -53,30 +56,29 @@ export async function handleProxy(ctx: HandlerContext): Promise<Response> {
     `image/${format}`,
   );
 
-  return ok(
-    {
-      data: {
-        url: publicUrl,
-        path: filename,
-        originalUrl: imageUrl,
-      },
-      metadata: {
-        originalSize: imageData.length,
-        compressedSize: compressed.compressedSize,
-        savedBytes: imageData.length - compressed.compressedSize,
-        savedPercent: compressed.savedPercent,
-        format,
-        storage,
-      },
+  return ok({
+    data: {
+      url: publicUrl,
+      path: filename,
+      originalUrl: imageUrl,
     },
-    ctx,
-  );
+    metadata: {
+      originalSize: imageData.length,
+      compressedSize: compressed.compressedSize,
+      savedBytes: imageData.length - compressed.compressedSize,
+      savedPercent: compressed.savedPercent,
+      format,
+      storage,
+    },
+  }, ctx);
 }
 
 /**
  * Download an external image by URL and upload to storage.
  */
-export async function handleUploadFromUrl(ctx: HandlerContext): Promise<Response> {
+export async function handleUploadFromUrl(
+  ctx: HandlerContext,
+): Promise<Response> {
   const startTime = Date.now();
 
   const body = await ctx.request.json();
@@ -94,7 +96,10 @@ export async function handleUploadFromUrl(ctx: HandlerContext): Promise<Response
   const imageData = await downloadImage(imageUrl);
 
   if (imageData.length > 10 * 1024 * 1024) {
-    throw new PayloadTooLargeError("Image too large (max 10MB)", 10 * 1024 * 1024);
+    throw new PayloadTooLargeError(
+      "Image too large (max 10MB)",
+      10 * 1024 * 1024,
+    );
   }
 
   const originalSize = imageData.length;
@@ -111,7 +116,10 @@ export async function handleUploadFromUrl(ctx: HandlerContext): Promise<Response
   );
 
   if (challengeId) {
-    await supabase.from("challenges").update({ challenge_image: publicUrl }).eq("id", challengeId);
+    await supabase
+      .from("challenges")
+      .update({ challenge_image: publicUrl })
+      .eq("id", challengeId);
   }
 
   const processingTime = Date.now() - startTime;
@@ -128,18 +136,15 @@ export async function handleUploadFromUrl(ctx: HandlerContext): Promise<Response
     storage,
   });
 
-  return ok(
-    {
-      challengeId,
-      publicUrl,
-      filePath: filename,
-      metadata: {
-        originalSize,
-        compressedSize: compressed.compressedSize,
-        savedBytes: originalSize - compressed.compressedSize,
-        storage,
-      },
+  return ok({
+    challengeId,
+    publicUrl,
+    filePath: filename,
+    metadata: {
+      originalSize,
+      compressedSize: compressed.compressedSize,
+      savedBytes: originalSize - compressed.compressedSize,
+      storage,
     },
-    ctx,
-  );
+  }, ctx);
 }

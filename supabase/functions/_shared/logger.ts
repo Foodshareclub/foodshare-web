@@ -121,7 +121,9 @@ function redactSensitive(obj: unknown, depth = 0): unknown {
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
       const lowerKey = key.toLowerCase();
-      if (config.redactFields.some((field) => lowerKey.includes(field.toLowerCase()))) {
+      if (
+        config.redactFields.some((field) => lowerKey.includes(field.toLowerCase()))
+      ) {
         result[key] = "[REDACTED]";
       } else {
         result[key] = redactSensitive(value, depth + 1);
@@ -279,14 +281,21 @@ export function error(
 /**
  * Log a request start
  */
-export function logRequest(method: string, path: string, data?: Record<string, unknown>): void {
+export function logRequest(
+  method: string,
+  path: string,
+  data?: Record<string, unknown>,
+): void {
   info("Request received", { method, path, ...data });
 }
 
 /**
  * Log a request completion
  */
-export function logResponse(statusCode: number, data?: Record<string, unknown>): void {
+export function logResponse(
+  statusCode: number,
+  data?: Record<string, unknown>,
+): void {
   const level = statusCode >= 500 ? "error" : statusCode >= 400 ? "warn" : "info";
   const message = statusCode >= 400 ? "Request failed" : "Request completed";
 
@@ -319,7 +328,9 @@ export function logExternalCall(
  * done({ rowCount: 42 });
  * ```
  */
-export function time(operation: string): (data?: Record<string, unknown>) => void {
+export function time(
+  operation: string,
+): (data?: Record<string, unknown>) => void {
   const start = performance.now();
 
   return (data?: Record<string, unknown>) => {

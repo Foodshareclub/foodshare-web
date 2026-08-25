@@ -92,11 +92,9 @@ interface AlertThresholds {
 // Request Schema
 // =============================================================================
 
-const checkAlertsSchema = z
-  .object({
-    force: z.boolean().optional(),
-  })
-  .optional();
+const checkAlertsSchema = z.object({
+  force: z.boolean().optional(),
+}).optional();
 
 type CheckAlertsRequest = z.infer<typeof checkAlertsSchema>;
 
@@ -105,7 +103,9 @@ type CheckAlertsRequest = z.infer<typeof checkAlertsSchema>;
 // =============================================================================
 
 async function checkErrorRate(
-  supabase: ReturnType<typeof import("../_shared/supabase.ts").getSupabaseClient>,
+  supabase: ReturnType<
+    typeof import("../_shared/supabase.ts").getSupabaseClient
+  >,
   thresholds: AlertThresholds,
 ): Promise<AlertCondition | null> {
   try {
@@ -124,9 +124,7 @@ async function checkErrorRate(
         type: "error_rate_high",
         severity: errorRate > thresholds.errorRatePercent * 2 ? "critical" : "warning",
         message: `Error rate ${
-          errorRate.toFixed(
-            1,
-          )
+          errorRate.toFixed(1)
         }% exceeds threshold ${thresholds.errorRatePercent}%`,
         value: errorRate,
         threshold: thresholds.errorRatePercent,
@@ -145,7 +143,9 @@ async function checkErrorRate(
 }
 
 async function checkLatency(
-  supabase: ReturnType<typeof import("../_shared/supabase.ts").getSupabaseClient>,
+  supabase: ReturnType<
+    typeof import("../_shared/supabase.ts").getSupabaseClient
+  >,
   thresholds: AlertThresholds,
 ): Promise<AlertCondition | null> {
   try {
@@ -174,7 +174,9 @@ async function checkLatency(
 }
 
 async function checkCircuitBreakers(
-  supabase: ReturnType<typeof import("../_shared/supabase.ts").getSupabaseClient>,
+  supabase: ReturnType<
+    typeof import("../_shared/supabase.ts").getSupabaseClient
+  >,
 ): Promise<AlertCondition[]> {
   try {
     const { data, error } = await supabase
@@ -203,7 +205,9 @@ async function checkCircuitBreakers(
 }
 
 async function checkLoginSpike(
-  supabase: ReturnType<typeof import("../_shared/supabase.ts").getSupabaseClient>,
+  supabase: ReturnType<
+    typeof import("../_shared/supabase.ts").getSupabaseClient
+  >,
   thresholds: AlertThresholds,
 ): Promise<AlertCondition | null> {
   try {
@@ -241,7 +245,9 @@ async function checkLoginSpike(
 }
 
 async function checkVaultFailures(
-  supabase: ReturnType<typeof import("../_shared/supabase.ts").getSupabaseClient>,
+  supabase: ReturnType<
+    typeof import("../_shared/supabase.ts").getSupabaseClient
+  >,
   thresholds: AlertThresholds,
 ): Promise<AlertCondition | null> {
   try {
@@ -270,7 +276,9 @@ async function checkVaultFailures(
 }
 
 async function checkConnectionPool(
-  supabase: ReturnType<typeof import("../_shared/supabase.ts").getSupabaseClient>,
+  supabase: ReturnType<
+    typeof import("../_shared/supabase.ts").getSupabaseClient
+  >,
   thresholds: AlertThresholds,
 ): Promise<AlertCondition | null> {
   try {
@@ -306,7 +314,10 @@ async function checkConnectionPool(
 // Notification Functions
 // =============================================================================
 
-async function sendSlackAlert(webhookUrl: string, alerts: AlertCondition[]): Promise<boolean> {
+async function sendSlackAlert(
+  webhookUrl: string,
+  alerts: AlertCondition[],
+): Promise<boolean> {
   try {
     const criticalCount = alerts.filter((a) => a.severity === "critical").length;
     const warningCount = alerts.filter((a) => a.severity === "warning").length;
@@ -334,12 +345,10 @@ async function sendSlackAlert(webhookUrl: string, alerts: AlertCondition[]): Pro
       })),
       {
         type: "context",
-        elements: [
-          {
-            type: "mrkdwn",
-            text: `Timestamp: ${new Date().toISOString()}`,
-          },
-        ],
+        elements: [{
+          type: "mrkdwn",
+          text: `Timestamp: ${new Date().toISOString()}`,
+        }],
       },
     ];
 
@@ -373,7 +382,9 @@ async function sendSlackAlert(webhookUrl: string, alerts: AlertCondition[]): Pro
 }
 
 async function logAlerts(
-  supabase: ReturnType<typeof import("../_shared/supabase.ts").getSupabaseClient>,
+  supabase: ReturnType<
+    typeof import("../_shared/supabase.ts").getSupabaseClient
+  >,
   alerts: AlertCondition[],
 ): Promise<void> {
   try {
@@ -397,7 +408,9 @@ async function logAlerts(
 }
 
 async function filterByAlertCooldowns(
-  supabase: ReturnType<typeof import("../_shared/supabase.ts").getSupabaseClient>,
+  supabase: ReturnType<
+    typeof import("../_shared/supabase.ts").getSupabaseClient
+  >,
   alerts: AlertCondition[],
 ): Promise<AlertCondition[]> {
   try {
@@ -423,7 +436,9 @@ async function filterByAlertCooldowns(
 }
 
 async function getSecretSafe(
-  supabase: ReturnType<typeof import("../_shared/supabase.ts").getSupabaseClient>,
+  supabase: ReturnType<
+    typeof import("../_shared/supabase.ts").getSupabaseClient
+  >,
   secretName: string,
 ): Promise<string | null> {
   try {
@@ -470,7 +485,10 @@ interface SentryEvent {
 }
 
 function escapeTelegramHtml(text: string): string {
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(
+    />/g,
+    "&gt;",
+  );
 }
 
 function formatSentryMessage(event: SentryEvent): string {
@@ -482,13 +500,18 @@ function formatSentryMessage(event: SentryEvent): string {
   else if (action === "assigned") emoji = "👤";
   else if (action === "ignored") emoji = "🔇";
 
-  const lines: string[] = [`${emoji} <b>Sentry: ${action.toUpperCase()}</b>`, ""];
+  const lines: string[] = [
+    `${emoji} <b>Sentry: ${action.toUpperCase()}</b>`,
+    "",
+  ];
 
   if (issue) {
     lines.push(`<b>${issue.shortId}</b>: ${escapeTelegramHtml(issue.title)}`);
     if (issue.culprit) lines.push(`📍 ${escapeTelegramHtml(issue.culprit)}`);
     if (issue.metadata?.value) {
-      lines.push(`💬 ${escapeTelegramHtml(issue.metadata.value.substring(0, 200))}`);
+      lines.push(
+        `💬 ${escapeTelegramHtml(issue.metadata.value.substring(0, 200))}`,
+      );
     }
     if (issue.count && issue.count > 1) {
       lines.push(`📊 ${issue.count} events, ${issue.userCount || 0} users`);
@@ -516,16 +539,19 @@ async function sendSentryToTelegram(text: string): Promise<boolean> {
   }
 
   try {
-    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        parse_mode: "HTML",
-        disable_web_page_preview: true,
-      }),
-    });
+    const response = await fetch(
+      `https://api.telegram.org/bot${botToken}/sendMessage`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          parse_mode: "HTML",
+          disable_web_page_preview: true,
+        }),
+      },
+    );
     return response.ok;
   } catch (error) {
     logger.error("Failed to send Sentry alert to Telegram", error as Error);
@@ -551,7 +577,9 @@ async function handleSentryWebhook(ctx: HandlerContext): Promise<Response> {
 // Handler Implementation
 // =============================================================================
 
-async function handleCheckAlerts(ctx: HandlerContext<CheckAlertsRequest>): Promise<Response> {
+async function handleCheckAlerts(
+  ctx: HandlerContext<CheckAlertsRequest>,
+): Promise<Response> {
   const { supabase, body, ctx: requestCtx } = ctx;
   const startTime = performance.now();
   const forceCheck = body?.force === true;
@@ -564,10 +592,12 @@ async function handleCheckAlerts(ctx: HandlerContext<CheckAlertsRequest>): Promi
   // Load thresholds from environment or use defaults
   const thresholds: AlertThresholds = {
     errorRatePercent: parseFloat(
-      Deno.env.get("ALERT_ERROR_RATE_PERCENT") || String(CONFIG.defaultThresholds.errorRatePercent),
+      Deno.env.get("ALERT_ERROR_RATE_PERCENT") ||
+        String(CONFIG.defaultThresholds.errorRatePercent),
     ),
     p95LatencyMs: parseInt(
-      Deno.env.get("ALERT_P95_LATENCY_MS") || String(CONFIG.defaultThresholds.p95LatencyMs),
+      Deno.env.get("ALERT_P95_LATENCY_MS") ||
+        String(CONFIG.defaultThresholds.p95LatencyMs),
     ),
     failedLoginMultiplier: parseFloat(
       Deno.env.get("ALERT_LOGIN_SPIKE_MULTIPLIER") ||
@@ -680,24 +710,22 @@ function handlePost(ctx: HandlerContext): Promise<Response> {
   return handleCheckAlerts(ctx as HandlerContext<CheckAlertsRequest>);
 }
 
-Deno.serve(
-  createAPIHandler({
-    service: "api-v1-alerts",
-    version: CONFIG.version,
-    requireAuth: false, // Cron job + webhooks - service-level
-    csrf: false, // Sentry webhook posts from external
-    rateLimit: {
-      limit: 30,
-      windowMs: 60_000,
-      keyBy: "ip",
+Deno.serve(createAPIHandler({
+  service: "api-v1-alerts",
+  version: CONFIG.version,
+  requireAuth: false, // Cron job + webhooks - service-level
+  csrf: false, // Sentry webhook posts from external
+  rateLimit: {
+    limit: 30,
+    windowMs: 60_000,
+    keyBy: "ip",
+  },
+  routes: {
+    POST: {
+      handler: handlePost,
     },
-    routes: {
-      POST: {
-        handler: handlePost,
-      },
-      GET: {
-        handler: handleGet,
-      },
+    GET: {
+      handler: handleGet,
     },
-  }),
-);
+  },
+}));

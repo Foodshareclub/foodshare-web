@@ -14,14 +14,18 @@ import {
 /**
  * Geocode location (alias for shared function)
  */
-export async function geocodeLocation(address: string): Promise<Coordinates | null> {
+export async function geocodeLocation(
+  address: string,
+): Promise<Coordinates | null> {
   return geocodeAddress(address);
 }
 
 /**
  * Extract coordinates with fallback strategies
  */
-export async function extractCoordinates(location: string): Promise<Coordinates | null> {
+export async function extractCoordinates(
+  location: string,
+): Promise<Coordinates | null> {
   return geocodeWithCountryFallback(location);
 }
 

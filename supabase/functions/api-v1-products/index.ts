@@ -14,40 +14,38 @@ import { createProduct } from "./lib/handlers/create-product.ts";
 import { updateProduct } from "./lib/handlers/update-product.ts";
 import { deleteProduct } from "./lib/handlers/delete-product.ts";
 
-Deno.serve(
-  createAPIHandler({
-    service: "api-v1-products",
-    version: "2.0.0",
-    requireAuth: false,
-    csrf: true,
-    rateLimit: {
-      limit: 100,
-      windowMs: 60000,
-      keyBy: "ip",
-      skip: (ctx) => ctx.request.method === "GET",
+Deno.serve(createAPIHandler({
+  service: "api-v1-products",
+  version: "2.0.0",
+  requireAuth: false,
+  csrf: true,
+  rateLimit: {
+    limit: 100,
+    windowMs: 60000,
+    keyBy: "ip",
+    skip: (ctx) => ctx.request.method === "GET",
+  },
+  routes: {
+    GET: {
+      querySchema: listQuerySchema,
+      handler: handleGet,
+      requireAuth: false,
     },
-    routes: {
-      GET: {
-        querySchema: listQuerySchema,
-        handler: handleGet,
-        requireAuth: false,
-      },
-      POST: {
-        schema: createProductSchema,
-        handler: createProduct,
-        requireAuth: true,
-        idempotent: true,
-      },
-      PUT: {
-        schema: updateProductSchema,
-        handler: updateProduct,
-        requireAuth: true,
-        idempotent: true,
-      },
-      DELETE: {
-        handler: deleteProduct,
-        requireAuth: true,
-      },
+    POST: {
+      schema: createProductSchema,
+      handler: createProduct,
+      requireAuth: true,
+      idempotent: true,
     },
-  }),
-);
+    PUT: {
+      schema: updateProductSchema,
+      handler: updateProduct,
+      requireAuth: true,
+      idempotent: true,
+    },
+    DELETE: {
+      handler: deleteProduct,
+      requireAuth: true,
+    },
+  },
+}));

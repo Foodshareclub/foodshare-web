@@ -19,7 +19,9 @@ export enum DatabaseErrorType {
 /**
  * Classify database errors for proper handling
  */
-function classifyError(error: { code?: string; message?: string }): DatabaseErrorType {
+function classifyError(
+  error: { code?: string; message?: string },
+): DatabaseErrorType {
   const code = error.code || "";
   const message = (error.message || "").toLowerCase();
 
@@ -71,7 +73,9 @@ function logDatabaseError(
 /**
  * Get profile by WhatsApp phone number
  */
-export async function getProfileByWhatsAppPhone(phone: string): Promise<Profile | null> {
+export async function getProfileByWhatsAppPhone(
+  phone: string,
+): Promise<Profile | null> {
   const supabase = getSupabaseClient();
 
   const { data, error } = await supabase
@@ -96,10 +100,15 @@ export async function getProfileByWhatsAppPhone(phone: string): Promise<Profile 
 /**
  * Get profile by email
  */
-export async function getProfileByEmail(email: string): Promise<Profile | null> {
+export async function getProfileByEmail(
+  email: string,
+): Promise<Profile | null> {
   const supabase = getSupabaseClient();
 
-  const { data, error } = await supabase.from("profiles").select("*").eq("email", email).single();
+  const { data, error } = await supabase.from("profiles").select("*").eq(
+    "email",
+    email,
+  ).single();
 
   if (error) {
     const errorType = classifyError(error);
@@ -174,7 +183,10 @@ export async function updateProfile(
 ): Promise<boolean> {
   const supabase = getSupabaseClient();
 
-  const { error } = await supabase.from("profiles").update(updates).eq("id", profileId);
+  const { error } = await supabase.from("profiles").update(updates).eq(
+    "id",
+    profileId,
+  );
 
   if (error) {
     logDatabaseError("updateProfile", error, { profileId });
@@ -191,16 +203,24 @@ export async function linkWhatsAppToProfile(
   profileId: string,
   whatsappPhone: string,
 ): Promise<boolean> {
-  return updateProfile(profileId, { whatsapp_phone: whatsappPhone } as Partial<Profile>);
+  return updateProfile(
+    profileId,
+    { whatsapp_phone: whatsappPhone } as Partial<Profile>,
+  );
 }
 
 /**
  * Get profile by ID
  */
-export async function getProfileById(profileId: string): Promise<Profile | null> {
+export async function getProfileById(
+  profileId: string,
+): Promise<Profile | null> {
   const supabase = getSupabaseClient();
 
-  const { data, error } = await supabase.from("profiles").select("*").eq("id", profileId).single();
+  const { data, error } = await supabase.from("profiles").select("*").eq(
+    "id",
+    profileId,
+  ).single();
 
   if (error) {
     const errorType = classifyError(error);

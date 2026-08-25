@@ -59,9 +59,18 @@ export class CircuitBreakerError extends Error {
   public readonly state: CircuitBreakerState;
   public readonly retryAfterMs: number;
 
-  constructor(service: string, state: CircuitBreakerState, config: CircuitBreakerConfig) {
-    const retryAfterMs = Math.max(0, config.resetTimeoutMs - (Date.now() - state.lastFailureTime));
-    super(`Circuit breaker is OPEN for ${service}. Retry after ${Math.ceil(retryAfterMs / 1000)}s`);
+  constructor(
+    service: string,
+    state: CircuitBreakerState,
+    config: CircuitBreakerConfig,
+  ) {
+    const retryAfterMs = Math.max(
+      0,
+      config.resetTimeoutMs - (Date.now() - state.lastFailureTime),
+    );
+    super(
+      `Circuit breaker is OPEN for ${service}. Retry after ${Math.ceil(retryAfterMs / 1000)}s`,
+    );
     this.name = "CircuitBreakerError";
     this.service = service;
     this.state = state;
@@ -178,7 +187,9 @@ function recordFailure(serviceName: string): void {
   if (circuit.state === "half-open") {
     // Any failure in half-open immediately opens circuit
     transitionState(serviceName, circuit, "open", config);
-  } else if (circuit.state === "closed" && circuit.failures >= config.failureThreshold) {
+  } else if (
+    circuit.state === "closed" && circuit.failures >= config.failureThreshold
+  ) {
     transitionState(serviceName, circuit, "open", config);
   }
 }
@@ -228,7 +239,9 @@ export async function withCircuitBreaker<T>(
 /**
  * Get circuit breaker status for monitoring
  */
-export function getCircuitStatus(serviceName: string): CircuitBreakerState | null {
+export function getCircuitStatus(
+  serviceName: string,
+): CircuitBreakerState | null {
   return circuits.get(serviceName) || null;
 }
 

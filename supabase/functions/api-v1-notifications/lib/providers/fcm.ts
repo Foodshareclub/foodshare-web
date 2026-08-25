@@ -27,7 +27,10 @@ async function getFcmAccessToken(): Promise<string> {
     throw new Error("FCM not configured");
   }
 
-  const privateKey = await jose.importPKCS8(env.fcmPrivateKey.replace(/\\n/g, "\n"), "RS256");
+  const privateKey = await jose.importPKCS8(
+    env.fcmPrivateKey.replace(/\\n/g, "\n"),
+    "RS256",
+  );
 
   const now = Math.floor(Date.now() / 1000);
   const jwt = await new jose.SignJWT({
@@ -60,7 +63,10 @@ async function getFcmAccessToken(): Promise<string> {
   return data.access_token;
 }
 
-const ANDROID_CHANNEL_CONFIG: Record<string, { importance: string; sound: string }> = {
+const ANDROID_CHANNEL_CONFIG: Record<
+  string,
+  { importance: string; sound: string }
+> = {
   default: { importance: "DEFAULT", sound: "default" },
   messages: { importance: "HIGH", sound: "message.mp3" },
   listings: { importance: "DEFAULT", sound: "listing.mp3" },
@@ -69,7 +75,10 @@ const ANDROID_CHANNEL_CONFIG: Record<string, { importance: string; sound: string
   social: { importance: "DEFAULT", sound: "social.mp3" },
 };
 
-export async function sendFcm(device: DeviceToken, payload: PushPayload): Promise<SendResult> {
+export async function sendFcm(
+  device: DeviceToken,
+  payload: PushPayload,
+): Promise<SendResult> {
   try {
     return await withCircuitBreaker(
       "push-android",
@@ -78,7 +87,8 @@ export async function sendFcm(device: DeviceToken, payload: PushPayload): Promis
 
         const androidOptions = payload.android || {};
         const channelId = androidOptions.channelId || "default";
-        const channelConfig = ANDROID_CHANNEL_CONFIG[channelId] || ANDROID_CHANNEL_CONFIG.default;
+        const channelConfig = ANDROID_CHANNEL_CONFIG[channelId] ||
+          ANDROID_CHANNEL_CONFIG.default;
 
         const deepLinkUrl = payload.deepLink
           ? generateDeepLink("android", payload.deepLink)
@@ -104,7 +114,8 @@ export async function sendFcm(device: DeviceToken, payload: PushPayload): Promis
               collapse_key: payload.collapseKey,
               restricted_package_name: "com.flutterflow.foodshare",
               notification: {
-                icon: androidOptions.smallIcon || payload.icon || "ic_notification",
+                icon: androidOptions.smallIcon || payload.icon ||
+                  "ic_notification",
                 color: "#FF2D55",
                 sound: channelConfig.sound,
                 tag: payload.tag,
@@ -138,33 +149,37 @@ export async function sendFcm(device: DeviceToken, payload: PushPayload): Promis
         };
 
         if (androidOptions.largeIcon) {
-          (fcmPayload.message.android.notification as Record<string, unknown>).image =
-            androidOptions.largeIcon;
+          (fcmPayload.message.android.notification as Record<string, unknown>)
+            .image = androidOptions.largeIcon;
         }
 
         if (androidOptions.vibrationPattern) {
-          (fcmPayload.message.android.notification as Record<string, unknown>).vibrate_timings =
-            androidOptions.vibrationPattern.map((ms) => `${ms / 1000}s`);
+          (fcmPayload.message.android.notification as Record<string, unknown>)
+            .vibrate_timings = androidOptions.vibrationPattern.map((ms) => `${ms / 1000}s`);
         }
 
         if (androidOptions.lightColor) {
-          (fcmPayload.message.android.notification as Record<string, unknown>).light_settings = {
-            color: { red: 1, green: 0, blue: 0.33 },
-            light_on_duration: "0.5s",
-            light_off_duration: "1s",
-          };
+          (fcmPayload.message.android.notification as Record<string, unknown>)
+            .light_settings = {
+              color: { red: 1, green: 0, blue: 0.33 },
+              light_on_duration: "0.5s",
+              light_off_duration: "1s",
+            };
         }
 
         const env = getEnv();
         const response = await withOperationTimeout(
-          fetch(`https://fcm.googleapis.com/v1/projects/${env.fcmProjectId}/messages:send`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "Content-Type": "application/json",
+          fetch(
+            `https://fcm.googleapis.com/v1/projects/${env.fcmProjectId}/messages:send`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(fcmPayload),
             },
-            body: JSON.stringify(fcmPayload),
-          }),
+          ),
           "push",
         );
 
@@ -178,7 +193,8 @@ export async function sendFcm(device: DeviceToken, payload: PushPayload): Promis
         }
 
         const errorBody = await response.json().catch(() => ({}));
-        const errorCode = errorBody.error?.details?.[0]?.errorCode || errorBody.error?.code;
+        const errorCode = errorBody.error?.details?.[0]?.errorCode ||
+          errorBody.error?.code;
 
         const invalidTokenCodes = ["UNREGISTERED", "INVALID_ARGUMENT"];
         const isInvalidToken = invalidTokenCodes.includes(errorCode);

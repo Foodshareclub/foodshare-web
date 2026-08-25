@@ -5,7 +5,10 @@
 import { logger } from "../../_shared/logger.ts";
 import { getSupabaseServiceRoleKey, getSupabaseUrl } from "../config/index.ts";
 
-export async function sendVerificationEmail(email: string, code: string): Promise<boolean> {
+export async function sendVerificationEmail(
+  email: string,
+  code: string,
+): Promise<boolean> {
   try {
     const supabaseUrl = getSupabaseUrl();
     const supabaseKey = getSupabaseServiceRoleKey();

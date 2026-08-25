@@ -29,7 +29,9 @@ const VALID_BUCKETS = new Set<string>(Object.values(STORAGE_BUCKETS));
  * Supabase pattern: {SUPABASE_URL}/storage/v1/object/public/{bucket}/{path}
  * R2 pattern:       {R2_PUBLIC_URL}/{bucket}/{path}
  */
-export async function parseStorageUrl(url: string): Promise<ParsedStorageUrl | null> {
+export async function parseStorageUrl(
+  url: string,
+): Promise<ParsedStorageUrl | null> {
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -44,7 +46,9 @@ export async function parseStorageUrl(url: string): Promise<ParsedStorageUrl | n
       const supabaseHost = new URL(supabaseUrl).hostname;
       if (parsed.hostname === supabaseHost) {
         // Pattern: /storage/v1/object/public/{bucket}/{...path}
-        const match = parsed.pathname.match(/^\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
+        const match = parsed.pathname.match(
+          /^\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/,
+        );
         if (match) {
           const [, bucket, path] = match;
           if (VALID_BUCKETS.has(bucket)) {

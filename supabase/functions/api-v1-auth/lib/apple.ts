@@ -15,7 +15,10 @@ import * as jose from "jose";
 /**
  * Handle Apple Sign-In
  */
-export async function handleAppleSignIn(body: unknown, ctx: AuthContext): Promise<Response> {
+export async function handleAppleSignIn(
+  body: unknown,
+  ctx: AuthContext,
+): Promise<Response> {
   const { corsHeaders, supabase } = ctx;
 
   // 1. Validate body
@@ -27,12 +30,18 @@ export async function handleAppleSignIn(body: unknown, ctx: AuthContext): Promis
     const appleClientId = await getSecret("GOTRUE_EXTERNAL_APPLE_CLIENT_ID");
 
     if (!appleClientId) {
-      throw new AppError("Apple auth is not configured", "AUTH_NOT_CONFIGURED", 500);
+      throw new AppError(
+        "Apple auth is not configured",
+        "AUTH_NOT_CONFIGURED",
+        500,
+      );
     }
 
     // 3. Verify Apple Token
     // We fetch Apple's public keys
-    const JWKS = jose.createRemoteJWKSet(new URL("https://appleid.apple.com/auth/keys"));
+    const JWKS = jose.createRemoteJWKSet(
+      new URL("https://appleid.apple.com/auth/keys"),
+    );
 
     const { payload } = await jose.jwtVerify(identityToken, JWKS, {
       issuer: "https://appleid.apple.com",
@@ -43,7 +52,11 @@ export async function handleAppleSignIn(body: unknown, ctx: AuthContext): Promis
     const appleEmail = (payload.email as string) || providedEmail;
 
     if (!appleSub) {
-      throw new AppError("Invalid Apple token: missing sub", "INVALID_TOKEN", 400);
+      throw new AppError(
+        "Invalid Apple token: missing sub",
+        "INVALID_TOKEN",
+        400,
+      );
     }
 
     logger.info("Apple token verified", { sub: appleSub, email: appleEmail });
@@ -52,28 +65,30 @@ export async function handleAppleSignIn(body: unknown, ctx: AuthContext): Promis
     // We use the admin client (which is already in ctx.supabase as it's the Service Role client)
 
     // Check if user already exists by apple sub (stored in raw_user_meta_data)
-    const { data: user, error: _userError } = await supabase.auth.admin.listUsers();
+    const { data: user, error: _userError } = await supabase.auth.admin
+      .listUsers();
 
     // Optimization: In a real production DB with many users, we should use a custom SQL query
     // to search raw_user_meta_data or use a mapping table.
     // For now, we search existing users.
 
-    let existingUser = (user?.users || []).find(
-      (u) => u.user_metadata?.sub === appleSub || u.email === appleEmail,
+    let existingUser = (user?.users || []).find((u) =>
+      u.user_metadata?.sub === appleSub || u.email === appleEmail
     );
 
     if (!existingUser) {
       logger.info("Creating new user for Apple Sign-In", { email: appleEmail });
-      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-        email: appleEmail,
-        email_confirm: true,
-        user_metadata: {
-          sub: appleSub,
-          full_name: firstName && lastName ? `${firstName} ${lastName}` : firstName || "",
-          provider: "apple",
-          providers: ["apple"],
-        },
-      });
+      const { data: newUser, error: createError } = await supabase.auth.admin
+        .createUser({
+          email: appleEmail,
+          email_confirm: true,
+          user_metadata: {
+            sub: appleSub,
+            full_name: firstName && lastName ? `${firstName} ${lastName}` : firstName || "",
+            provider: "apple",
+            providers: ["apple"],
+          },
+        });
 
       if (createError) {
         throw new AppError(
@@ -116,7 +131,8 @@ export async function handleAppleSignIn(body: unknown, ctx: AuthContext): Promis
       sub: existingUser.id,
       email: existingUser.email,
       phone: existingUser.phone,
-      app_metadata: existingUser.app_metadata || { provider: "email", providers: ["email"] },
+      app_metadata: existingUser.app_metadata ||
+        { provider: "email", providers: ["email"] },
       user_metadata: existingUser.user_metadata || {},
       role: "authenticated",
       session_id: crypto.randomUUID(),
@@ -148,18 +164,27 @@ export async function handleAppleSignIn(body: unknown, ctx: AuthContext): Promis
       },
     );
   } catch (error) {
-    logger.error("Apple Sign-In failed", error instanceof Error ? error : new Error(String(error)));
+    logger.error(
+      "Apple Sign-In failed",
+      error instanceof Error ? error : new Error(String(error)),
+    );
 
     if (error instanceof AppError) {
-      return new Response(JSON.stringify({ success: false, error: error.message }), {
-        status: error.statusCode,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ success: false, error: error.message }),
+        {
+          status: error.statusCode,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
-    return new Response(JSON.stringify({ success: false, error: "Authentication failed" }), {
-      status: 401,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ success: false, error: "Authentication failed" }),
+      {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
   }
 }

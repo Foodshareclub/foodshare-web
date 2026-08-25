@@ -93,7 +93,9 @@ async function translateWithLLM(
 /**
  * Convert flat dot-notation keys to nested object for update
  */
-function unflattenObject(flat: Record<string, string>): Record<string, unknown> {
+function unflattenObject(
+  flat: Record<string, string>,
+): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
   for (const [flatKey, value] of Object.entries(flat)) {
@@ -170,12 +172,20 @@ async function fetchUntranslatedKeys(
   }
 
   // Flatten both
-  const flattenObject = (obj: Record<string, unknown>, prefix = ""): Record<string, string> => {
+  const flattenObject = (
+    obj: Record<string, unknown>,
+    prefix = "",
+  ): Record<string, string> => {
     const result: Record<string, string> = {};
     for (const [key, value] of Object.entries(obj)) {
       const path = prefix ? `${prefix}.${key}` : key;
-      if (value !== null && typeof value === "object" && !Array.isArray(value)) {
-        Object.assign(result, flattenObject(value as Record<string, unknown>, path));
+      if (
+        value !== null && typeof value === "object" && !Array.isArray(value)
+      ) {
+        Object.assign(
+          result,
+          flattenObject(value as Record<string, unknown>, path),
+        );
       } else if (typeof value === "string") {
         result[path] = value;
       }
@@ -184,9 +194,13 @@ async function fetchUntranslatedKeys(
   };
 
   // deno-lint-ignore no-explicit-any
-  const englishFlat = flattenObject((englishData as any).messages as Record<string, unknown>);
+  const englishFlat = flattenObject(
+    (englishData as any).messages as Record<string, unknown>,
+  );
   // deno-lint-ignore no-explicit-any
-  const localeFlat = flattenObject((localeData as any).messages as Record<string, unknown>);
+  const localeFlat = flattenObject(
+    (localeData as any).messages as Record<string, unknown>,
+  );
 
   // Find untranslated keys
   const untranslated: Record<string, string> = {};
@@ -345,10 +359,10 @@ export default async function uiBatchTranslateHandler(
         (current as any).messages as Record<string, unknown>,
         nestedTranslations,
       );
-      const version = new Date()
-        .toISOString()
-        .replace(/[-:T.Z]/g, "")
-        .slice(0, 14);
+      const version = new Date().toISOString().replace(/[-:T.Z]/g, "").slice(
+        0,
+        14,
+      );
 
       // Update database
       const { error: updateError } = await supabase

@@ -219,7 +219,9 @@ export class ForumService {
       tag_id: tagId,
     }));
 
-    const { error } = await this.supabase.from("forum_post_tags").insert(tagRows);
+    const { error } = await this.supabase
+      .from("forum_post_tags")
+      .insert(tagRows);
 
     if (error) {
       logger.warn("Failed to insert tags", {
@@ -231,7 +233,10 @@ export class ForumService {
 
   private async replaceTags(postId: number, tagIds: number[]) {
     // Delete existing tags
-    await this.supabase.from("forum_post_tags").delete().eq("forum_id", postId);
+    await this.supabase
+      .from("forum_post_tags")
+      .delete()
+      .eq("forum_id", postId);
 
     // Insert new tags
     if (tagIds.length > 0) {
@@ -240,15 +245,12 @@ export class ForumService {
   }
 
   private generateSlug(title: string): string {
-    return (
-      title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, "")
-        .replace(/\s+/g, "-")
-        .replace(/-+/g, "-")
-        .substring(0, 100) +
-      "-" +
-      Date.now().toString(36)
-    );
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .substring(0, 100) +
+      "-" + Date.now().toString(36);
   }
 }

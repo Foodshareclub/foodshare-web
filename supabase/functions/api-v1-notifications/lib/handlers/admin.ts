@@ -87,7 +87,9 @@ async function fetchBrevoStats(): Promise<Record<string, unknown>> {
 
   try {
     const endDate = new Date().toISOString().split("T")[0];
-    const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split(
+      "T",
+    )[0];
 
     const [statsRes, accountRes] = await Promise.all([
       fetchWithTimeout(
@@ -203,9 +205,9 @@ async function syncProvider(providerName: string): Promise<ProviderStats> {
 
   const [health, quota] = await Promise.all([
     provider.checkHealth(),
-    provider.getQuota
-      ? provider.getQuota()
-      : Promise.resolve({ daily: { sent: 0, limit: 0, remaining: 0, percentUsed: 0 } } as any),
+    provider.getQuota ? provider.getQuota() : Promise.resolve(
+      { daily: { sent: 0, limit: 0, remaining: 0, percentUsed: 0 } } as any,
+    ),
   ]);
 
   let externalStats: Record<string, unknown> = {};
@@ -248,7 +250,8 @@ async function syncProvider(providerName: string): Promise<ProviderStats> {
       bounced: ((externalStats.hardBounces as number) ?? 0) +
           ((externalStats.softBounces as number) ?? 0) +
           ((externalStats.bounces as number) ?? 0) || undefined,
-      complained: (externalStats.complaints as number) ?? (externalStats.complained as number) ??
+      complained: (externalStats.complaints as number) ??
+        (externalStats.complained as number) ??
         undefined,
     },
     syncedAt: new Date().toISOString(),
@@ -297,7 +300,9 @@ async function storeProviderStats(
   try {
     const { data: existing } = await context.supabase
       .from("email_provider_health_metrics")
-      .select("daily_quota_used,monthly_quota_used,total_requests,successful_requests")
+      .select(
+        "daily_quota_used,monthly_quota_used,total_requests,successful_requests",
+      )
       .eq("provider", stats.provider)
       .single();
 
@@ -306,7 +311,10 @@ async function storeProviderStats(
         provider: stats.provider,
         health_score: stats.health.healthScore,
         // Preserve internal tracking if higher than provider stats
-        total_requests: Math.max(existing?.total_requests ?? 0, stats.stats?.delivered ?? 0),
+        total_requests: Math.max(
+          existing?.total_requests ?? 0,
+          stats.stats?.delivered ?? 0,
+        ),
         successful_requests: Math.max(
           existing?.successful_requests ?? 0,
           stats.stats?.delivered ?? 0,
@@ -314,7 +322,10 @@ async function storeProviderStats(
         failed_requests: stats.stats?.bounced ?? 0,
         average_latency_ms: stats.health.latencyMs,
         // Use MAX of internal tracking and provider API
-        daily_quota_used: Math.max(existing?.daily_quota_used ?? 0, stats.quota.daily.sent),
+        daily_quota_used: Math.max(
+          existing?.daily_quota_used ?? 0,
+          stats.quota.daily.sent,
+        ),
         daily_quota_limit: stats.quota.daily.limit,
         monthly_quota_used: Math.max(
           existing?.monthly_quota_used ?? 0,
@@ -505,7 +516,9 @@ export async function handleAdminStats(
 ): Promise<{ success: boolean; data?: unknown; error?: string }> {
   try {
     // Try the enhanced stats function first
-    const { data, error } = await context.supabase.rpc("get_email_dashboard_stats_v2");
+    const { data, error } = await context.supabase.rpc(
+      "get_email_dashboard_stats_v2",
+    );
 
     if (error) {
       // Fallback to basic stats
@@ -598,19 +611,27 @@ export async function handleAdminRoute(
   method: string,
   body: unknown,
   context: NotificationContext,
-): Promise<{ success: boolean; data?: unknown; error?: string; status?: number }> {
+): Promise<
+  { success: boolean; data?: unknown; error?: string; status?: number }
+> {
   // /admin/providers/status - GET
-  if (segments[1] === "providers" && segments[2] === "status" && method === "GET") {
+  if (
+    segments[1] === "providers" && segments[2] === "status" && method === "GET"
+  ) {
     return handleAdminProviderStatus(context);
   }
 
   // /admin/providers/sync - POST
-  if (segments[1] === "providers" && segments[2] === "sync" && method === "POST") {
+  if (
+    segments[1] === "providers" && segments[2] === "sync" && method === "POST"
+  ) {
     return handleAdminProviderSync(body, context);
   }
 
   // /admin/providers/health - GET
-  if (segments[1] === "providers" && segments[2] === "health" && method === "GET") {
+  if (
+    segments[1] === "providers" && segments[2] === "health" && method === "GET"
+  ) {
     return handleAdminProviderHealth(context);
   }
 

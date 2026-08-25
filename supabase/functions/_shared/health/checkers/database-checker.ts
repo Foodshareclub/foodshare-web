@@ -12,11 +12,17 @@ import { DATABASE_DEGRADED_THRESHOLD_MS, HealthStatus, ServiceHealth } from "../
  * @param supabase - Supabase client instance
  * @returns Service health result
  */
-export async function checkDatabase(supabase: SupabaseClient): Promise<ServiceHealth> {
+export async function checkDatabase(
+  supabase: SupabaseClient,
+): Promise<ServiceHealth> {
   const start = performance.now();
 
   try {
-    const { error } = await supabase.from("profiles").select("id").limit(1).maybeSingle();
+    const { error } = await supabase
+      .from("profiles")
+      .select("id")
+      .limit(1)
+      .maybeSingle();
 
     const responseTimeMs = Math.round(performance.now() - start);
 

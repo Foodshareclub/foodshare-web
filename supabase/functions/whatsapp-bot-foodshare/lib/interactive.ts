@@ -10,7 +10,9 @@ import { type Language, t } from "./i18n.ts";
 /**
  * Build main menu buttons
  */
-export function getMainMenuButtons(lang: Language): Array<{ id: string; title: string }> {
+export function getMainMenuButtons(
+  lang: Language,
+): Array<{ id: string; title: string }> {
   return [
     { id: "action_share", title: t(lang, "menu.shareFood") },
     { id: "action_find", title: t(lang, "menu.findFood") },
@@ -21,7 +23,9 @@ export function getMainMenuButtons(lang: Language): Array<{ id: string; title: s
 /**
  * Build extended menu list sections
  */
-export function getExtendedMenuSections(lang: Language): InteractiveListSection[] {
+export function getExtendedMenuSections(
+  lang: Language,
+): InteractiveListSection[] {
   return [
     {
       title: "Food",
@@ -100,7 +104,9 @@ export function getLanguageButtons(): Array<{ id: string; title: string }> {
 /**
  * Build share method buttons
  */
-export function getShareMethodButtons(_lang: Language): Array<{ id: string; title: string }> {
+export function getShareMethodButtons(
+  _lang: Language,
+): Array<{ id: string; title: string }> {
   return [
     { id: "share_web", title: `${emoji.LINK} Open Form` },
     { id: "share_chat", title: `${emoji.CHAT} Use Chat` },
@@ -110,7 +116,9 @@ export function getShareMethodButtons(_lang: Language): Array<{ id: string; titl
 /**
  * Build confirmation buttons
  */
-export function getConfirmButtons(_lang: Language): Array<{ id: string; title: string }> {
+export function getConfirmButtons(
+  _lang: Language,
+): Array<{ id: string; title: string }> {
   return [
     { id: "confirm_yes", title: `${emoji.SUCCESS} Confirm` },
     { id: "confirm_no", title: `${emoji.ERROR} Cancel` },
@@ -120,7 +128,9 @@ export function getConfirmButtons(_lang: Language): Array<{ id: string; title: s
 /**
  * Build location options buttons
  */
-export function getLocationButtons(_lang: Language): Array<{ id: string; title: string }> {
+export function getLocationButtons(
+  _lang: Language,
+): Array<{ id: string; title: string }> {
   return [
     { id: "location_gps", title: `${emoji.LOCATION} Share GPS` },
     { id: "location_skip", title: "Skip" },
@@ -143,7 +153,9 @@ export function getFoodActionButtons(
 /**
  * Build auth flow buttons
  */
-export function getAuthButtons(_lang: Language): Array<{ id: string; title: string }> {
+export function getAuthButtons(
+  _lang: Language,
+): Array<{ id: string; title: string }> {
   return [
     { id: "auth_resend", title: `${emoji.REFRESH} Resend Code` },
     { id: "auth_cancel", title: `${emoji.ERROR} Cancel` },
@@ -153,7 +165,10 @@ export function getAuthButtons(_lang: Language): Array<{ id: string; title: stri
 /**
  * Build welcome message text
  */
-export function getWelcomeMessage(name: string | undefined, _lang: Language): string {
+export function getWelcomeMessage(
+  name: string | undefined,
+  _lang: Language,
+): string {
   const greeting = name ? `Welcome, ${name}!` : "Welcome to FoodShare!";
 
   return `${emoji.WAVE} *${greeting}*

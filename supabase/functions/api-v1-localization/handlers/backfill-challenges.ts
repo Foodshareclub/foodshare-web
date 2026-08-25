@@ -166,21 +166,26 @@ export default async function backfillChallengesHandler(
 
     // Fetch challenges based on mode
     let challenges:
-      | Array<{
-        id: number;
-        challenge_title: string;
-        challenge_description: string | null;
-      }>
+      | Array<
+        {
+          id: number;
+          challenge_title: string;
+          challenge_description: string | null;
+        }
+      >
       | null = null;
     let count: number | null = null;
     let error: Error | null = null;
 
     if (onlyUntranslated) {
       // Only untranslated mode: use RPC to find challenges without translations
-      const { data, error: rpcError } = await supabase.rpc("get_untranslated_challenges", {
-        p_limit: limit,
-        p_offset: offset,
-      });
+      const { data, error: rpcError } = await supabase.rpc(
+        "get_untranslated_challenges",
+        {
+          p_limit: limit,
+          p_offset: offset,
+        },
+      );
 
       if (rpcError) {
         error = new Error(rpcError.message);
@@ -200,7 +205,8 @@ export default async function backfillChallengesHandler(
 
       if (mode === "incremental") {
         // Incremental mode: fetch recent challenges (created in last N hours)
-        const cutoffTime = new Date(Date.now() - hoursBack * 60 * 60 * 1000).toISOString();
+        const cutoffTime = new Date(Date.now() - hoursBack * 60 * 60 * 1000)
+          .toISOString();
         query = query
           .gte("challenge_created_at", cutoffTime)
           .order("challenge_created_at", { ascending: false })
@@ -257,8 +263,11 @@ export default async function backfillChallengesHandler(
 
     // If dry run, just return counts
     if (dryRun) {
-      const totalTranslations = challenges.length * FIELDS_PER_CHALLENGE * TARGET_LOCALES_COUNT;
-      const estimatedTimeMinutes = Math.ceil((totalTranslations * SECONDS_PER_TRANSLATION) / 60);
+      const totalTranslations = challenges.length * FIELDS_PER_CHALLENGE *
+        TARGET_LOCALES_COUNT;
+      const estimatedTimeMinutes = Math.ceil(
+        (totalTranslations * SECONDS_PER_TRANSLATION) / 60,
+      );
 
       return new Response(
         JSON.stringify({
@@ -280,11 +289,16 @@ export default async function backfillChallengesHandler(
     const translationPromises = challenges.map(async (challenge) => {
       const fields = [];
 
-      if (challenge.challenge_title && challenge.challenge_title.trim().length > 0) {
+      if (
+        challenge.challenge_title && challenge.challenge_title.trim().length > 0
+      ) {
         fields.push({ name: "title", text: challenge.challenge_title });
       }
 
-      if (challenge.challenge_description && challenge.challenge_description.trim().length > 0) {
+      if (
+        challenge.challenge_description &&
+        challenge.challenge_description.trim().length > 0
+      ) {
         fields.push({
           name: "description",
           text: challenge.challenge_description,
@@ -296,13 +310,16 @@ export default async function backfillChallengesHandler(
       }
 
       try {
-        const response = await supabase.functions.invoke("localization/translate-batch", {
-          body: {
-            content_type: "challenge",
-            content_id: challenge.id.toString(),
-            fields,
+        const response = await supabase.functions.invoke(
+          "localization/translate-batch",
+          {
+            body: {
+              content_type: "challenge",
+              content_id: challenge.id.toString(),
+              fields,
+            },
           },
-        });
+        );
 
         if (response.error) {
           logger.warn("Failed to trigger translation for challenge", {
@@ -329,8 +346,11 @@ export default async function backfillChallengesHandler(
       });
     });
 
-    const totalTranslations = challenges.length * FIELDS_PER_CHALLENGE * TARGET_LOCALES_COUNT;
-    const estimatedTimeMinutes = Math.ceil((totalTranslations * SECONDS_PER_TRANSLATION) / 60);
+    const totalTranslations = challenges.length * FIELDS_PER_CHALLENGE *
+      TARGET_LOCALES_COUNT;
+    const estimatedTimeMinutes = Math.ceil(
+      (totalTranslations * SECONDS_PER_TRANSLATION) / 60,
+    );
 
     const response: BackfillResponse = {
       success: true,

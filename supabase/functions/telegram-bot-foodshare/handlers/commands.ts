@@ -149,7 +149,10 @@ export async function handleStartCommand(
   await setUserState(userId, { action: "awaiting_email", data: {} });
 }
 
-export async function handleHelpCommand(chatId: number, lang: Language = "en"): Promise<void> {
+export async function handleHelpCommand(
+  chatId: number,
+  lang: Language = "en",
+): Promise<void> {
   const helpMsg = msg.boxedHeader(`${emoji.PLATE} FoodShare Bot Help`) +
     "\n\n" +
     `${emoji.FOOD} <b>Food Sharing:</b>\n` +
@@ -225,12 +228,10 @@ export async function handleShareCommand(
           web_app: { url: webAppUrl },
         },
       ],
-      [
-        {
-          text: t(lang, "share.useChatButton"),
-          callback_data: "share_via_chat",
-        },
-      ],
+      [{
+        text: t(lang, "share.useChatButton"),
+        callback_data: "share_via_chat",
+      }],
     ],
   };
 
@@ -322,14 +323,18 @@ export async function handleFindCommand(
     return;
   }
 
-  await sendMessage(chatId, `${emoji.SEARCH} <b>Found ${foods.length} food items:</b>\n`);
+  await sendMessage(
+    chatId,
+    `${emoji.SEARCH} <b>Found ${foods.length} food items:</b>\n`,
+  );
 
   for (const food of foods) {
     const foodMsg = msg.foodCard({
       name: food.post_name,
       description: food.post_description || undefined,
       address: food.post_address || undefined,
-    }) + `\n${emoji.LINK} <a href="${getAppUrl()}/product/${food.id}">View Details</a>`;
+    }) +
+      `\n${emoji.LINK} <a href="${getAppUrl()}/product/${food.id}">View Details</a>`;
 
     if (food.images?.[0]) {
       await sendPhoto(chatId, food.images[0], foodMsg);
@@ -341,14 +346,25 @@ export async function handleFindCommand(
       const coords = await extractCoordinates(food.location);
       if (coords) {
         // SECURITY: Apply 200m approximation for privacy
-        const approxCoords = approximateLocation(coords.latitude, coords.longitude, food.id);
-        await sendLocation(chatId, approxCoords.latitude, approxCoords.longitude);
+        const approxCoords = approximateLocation(
+          coords.latitude,
+          coords.longitude,
+          food.id,
+        );
+        await sendLocation(
+          chatId,
+          approxCoords.latitude,
+          approxCoords.longitude,
+        );
       }
     }
   }
 }
 
-export async function handleNearbyCommand(chatId: number, userId: number): Promise<void> {
+export async function handleNearbyCommand(
+  chatId: number,
+  userId: number,
+): Promise<void> {
   const supabase = getSupabaseClient();
 
   const { data: profile } = await supabase
@@ -376,11 +392,14 @@ export async function handleNearbyCommand(chatId: number, userId: number): Promi
 
   const radius = profile.search_radius_km || 5;
 
-  const { data: nearbyFoods, error } = await supabase.rpc("find_nearby_posts_geography", {
-    user_location: profile.location,
-    radius_km: radius,
-    post_type: "food",
-  });
+  const { data: nearbyFoods, error } = await supabase.rpc(
+    "find_nearby_posts_geography",
+    {
+      user_location: profile.location,
+      radius_km: radius,
+      post_type: "food",
+    },
+  );
 
   if (error || !nearbyFoods || nearbyFoods.length === 0) {
     await sendMessage(
@@ -413,7 +432,10 @@ export async function handleNearbyCommand(chatId: number, userId: number): Promi
   }
 }
 
-export async function handleProfileCommand(chatId: number, userId: number): Promise<void> {
+export async function handleProfileCommand(
+  chatId: number,
+  userId: number,
+): Promise<void> {
   const supabase = getSupabaseClient();
 
   const { data: profile } = await supabase
@@ -461,19 +483,20 @@ export async function handleProfileCommand(chatId: number, userId: number): Prom
           callback_data: "profile_radius",
         },
       ],
-      [
-        {
-          text: `${emoji.LINK} Open Profile`,
-          url: `${getAppUrl()}/profile/${profile.id}`,
-        },
-      ],
+      [{
+        text: `${emoji.LINK} Open Profile`,
+        url: `${getAppUrl()}/profile/${profile.id}`,
+      }],
     ],
   };
 
   await sendMessage(chatId, profileCard, { reply_markup: keyboard });
 }
 
-export async function handleImpactCommand(chatId: number, userId: number): Promise<void> {
+export async function handleImpactCommand(
+  chatId: number,
+  userId: number,
+): Promise<void> {
   const stats = await getUserImpactStats(userId);
 
   const impactMsg = msg.boxedHeader(`${emoji.EARTH} Your Environmental Impact`) +
@@ -568,7 +591,10 @@ export async function handleLeaderboardCommand(
   await sendMessage(chatId, leaderboard);
 }
 
-export async function handleLanguageCommand(chatId: number, userId: number): Promise<void> {
+export async function handleLanguageCommand(
+  chatId: number,
+  userId: number,
+): Promise<void> {
   const lang = await getUserLanguage(userId);
 
   const keyboard = {

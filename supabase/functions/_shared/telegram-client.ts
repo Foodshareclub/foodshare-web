@@ -40,10 +40,13 @@ export function setTelegramBotToken(token: string): void {
  * but throw when actually used.
  */
 function getTelegramApiUrl(): string {
-  let token = _telegramBotToken || Deno.env.get("TELEGRAM_BOT_TOKEN") || Deno.env.get("BOT_TOKEN");
+  let token = _telegramBotToken || Deno.env.get("TELEGRAM_BOT_TOKEN") ||
+    Deno.env.get("BOT_TOKEN");
   token = token?.trim();
   if (!token) {
-    throw new Error("Missing TELEGRAM_BOT_TOKEN or BOT_TOKEN environment variable");
+    throw new Error(
+      "Missing TELEGRAM_BOT_TOKEN or BOT_TOKEN environment variable",
+    );
   }
   if (token.toLowerCase().startsWith("bot")) {
     token = token.substring(3);
@@ -93,16 +96,19 @@ export async function sendMessage(
     return await withCircuitBreaker(
       "telegram-api",
       async () => {
-        const response = await fetchWithTimeout(`${getTelegramApiUrl()}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text,
-            parse_mode: options.parse_mode || "HTML",
-            ...options,
-          }),
-        });
+        const response = await fetchWithTimeout(
+          `${getTelegramApiUrl()}/sendMessage`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text,
+              parse_mode: options.parse_mode || "HTML",
+              ...options,
+            }),
+          },
+        );
 
         const result = await response.json();
 
@@ -146,19 +152,22 @@ export async function sendPhoto(
     return await withCircuitBreaker(
       "telegram-api",
       async () => {
-        const response = await fetchWithTimeout(`${getTelegramApiUrl()}/sendPhoto`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: chatId,
-            photo,
-            caption: caption && caption.length > 1024
-              ? caption.substring(0, 1021) + "..."
-              : caption,
-            parse_mode: "HTML",
-            ...options,
-          }),
-        });
+        const response = await fetchWithTimeout(
+          `${getTelegramApiUrl()}/sendPhoto`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: chatId,
+              photo,
+              caption: caption && caption.length > 1024
+                ? caption.substring(0, 1021) + "..."
+                : caption,
+              parse_mode: "HTML",
+              ...options,
+            }),
+          },
+        );
 
         const result = await response.json();
 
@@ -189,15 +198,18 @@ export async function sendLocation(
     return await withCircuitBreaker(
       "telegram-api",
       async () => {
-        const response = await fetchWithTimeout(`${getTelegramApiUrl()}/sendLocation`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: chatId,
-            latitude,
-            longitude,
-          }),
-        });
+        const response = await fetchWithTimeout(
+          `${getTelegramApiUrl()}/sendLocation`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: chatId,
+              latitude,
+              longitude,
+            }),
+          },
+        );
 
         const result = await response.json();
 
@@ -259,19 +271,25 @@ export async function setWebhook(
   }
 }
 
-export async function deleteMessage(chatId: number | string, messageId: number): Promise<boolean> {
+export async function deleteMessage(
+  chatId: number | string,
+  messageId: number,
+): Promise<boolean> {
   try {
     return await withCircuitBreaker(
       "telegram-api",
       async () => {
-        const response = await fetchWithTimeout(`${getTelegramApiUrl()}/deleteMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: chatId,
-            message_id: messageId,
-          }),
-        });
+        const response = await fetchWithTimeout(
+          `${getTelegramApiUrl()}/deleteMessage`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: chatId,
+              message_id: messageId,
+            }),
+          },
+        );
 
         const result = await response.json();
 
@@ -305,7 +323,10 @@ export async function deleteMessage(chatId: number | string, messageId: number):
  * This needs to be moved to a database table (e.g., `group_message_deletions`)
  * and processed via a pg_cron job that calls a webhook or `pg_net`.
  */
-export function scheduleGroupMessageDeletion(chatId: number, messageId: number): void {
+export function scheduleGroupMessageDeletion(
+  chatId: number,
+  messageId: number,
+): void {
   const supabase = getAdminClient();
   // Delete in 5 minutes
   const deleteAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
@@ -332,14 +353,17 @@ export async function answerCallbackQuery(
     return await withCircuitBreaker(
       "telegram-api",
       async () => {
-        const response = await fetchWithTimeout(`${getTelegramApiUrl()}/answerCallbackQuery`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            callback_query_id: callbackQueryId,
-            text,
-          }),
-        });
+        const response = await fetchWithTimeout(
+          `${getTelegramApiUrl()}/answerCallbackQuery`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              callback_query_id: callbackQueryId,
+              text,
+            }),
+          },
+        );
 
         const result = await response.json();
 

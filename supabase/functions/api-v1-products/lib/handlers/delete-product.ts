@@ -8,7 +8,9 @@ import { NotFoundError, ValidationError } from "../../../_shared/errors.ts";
 import { logger } from "../../../_shared/logger.ts";
 import type { ListQuery } from "../schemas.ts";
 
-export async function deleteProduct(ctx: HandlerContext<unknown, ListQuery>): Promise<Response> {
+export async function deleteProduct(
+  ctx: HandlerContext<unknown, ListQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
   const productId = query.id;
 

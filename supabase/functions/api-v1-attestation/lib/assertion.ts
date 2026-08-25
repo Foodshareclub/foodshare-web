@@ -20,7 +20,9 @@ export async function verifyAssertion(
   clientDataHash: string,
   storedCounter: number,
   storedPublicKey: string,
-): Promise<{ verified: boolean; newCounter: number; message?: string; riskScore: number }> {
+): Promise<
+  { verified: boolean; newCounter: number; message?: string; riskScore: number }
+> {
   try {
     let assertionData: Uint8Array;
     try {
@@ -73,7 +75,10 @@ export async function verifyAssertion(
     }
 
     if (storedPublicKey && cbor.attStmt?.signature) {
-      const clientDataHashBytes = Uint8Array.from(atob(clientDataHash), (c) => c.charCodeAt(0));
+      const clientDataHashBytes = Uint8Array.from(
+        atob(clientDataHash),
+        (c) => c.charCodeAt(0),
+      );
 
       const signatureValid = await verifySignature(
         cbor.authData,

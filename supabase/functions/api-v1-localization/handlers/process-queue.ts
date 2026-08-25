@@ -100,7 +100,8 @@ export default async function processQueueHandler(
     // First, reset any stuck "processing" items older than timeout
     const timeoutCutoff = new Date(
       Date.now() - PROCESSING_TIMEOUT_MINUTES * 60 * 1000,
-    ).toISOString();
+    )
+      .toISOString();
     await supabase
       .from("translation_queue")
       .update({ status: "pending" })
@@ -161,7 +162,10 @@ export default async function processQueueHandler(
 
     // Mark items as processing
     const itemIds = pendingItems.map((item: QueueItem) => item.id);
-    await supabase.from("translation_queue").update({ status: "processing" }).in("id", itemIds);
+    await supabase
+      .from("translation_queue")
+      .update({ status: "processing" })
+      .in("id", itemIds);
 
     logger.info("Processing translation tasks", {
       count: pendingItems.length,
@@ -205,19 +209,23 @@ export default async function processQueueHandler(
         );
 
         // Check translation quality with more specific criteria
-        const isHighQuality = result.quality >= 0.5 && result.text !== item.source_text;
+        const isHighQuality = result.quality >= 0.5 &&
+          result.text !== item.source_text;
         const isLowQuality = result.quality > 0 && result.quality < 0.5;
         // const _isCompleteFailure = result.quality === 0 || result.text === item.source_text;
 
         if (isHighQuality) {
           // Success: Store in PostgreSQL (only high-quality translations)
-          const { error: storeError } = await supabase.rpc("store_translation", {
-            p_source_text: item.source_text,
-            p_translated_text: result.text,
-            p_target_locale: item.target_locale,
-            p_content_type: item.content_type,
-            p_quality_score: result.quality,
-          });
+          const { error: storeError } = await supabase.rpc(
+            "store_translation",
+            {
+              p_source_text: item.source_text,
+              p_translated_text: result.text,
+              p_target_locale: item.target_locale,
+              p_content_type: item.content_type,
+              p_quality_score: result.quality,
+            },
+          );
 
           if (storeError) {
             logger.warn("Failed to store translation", {

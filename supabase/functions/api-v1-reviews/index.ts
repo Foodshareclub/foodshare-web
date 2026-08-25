@@ -60,7 +60,9 @@ type QueryParams = z.infer<typeof querySchema>;
 /**
  * Get reviews for a user or post
  */
-async function getReviews(ctx: HandlerContext<unknown, QueryParams>): Promise<Response> {
+async function getReviews(
+  ctx: HandlerContext<unknown, QueryParams>,
+): Promise<Response> {
   const { supabase, query } = ctx;
 
   const limit = Math.min(parseInt(query.limit || "20"), 50);
@@ -117,27 +119,29 @@ async function getReviews(ctx: HandlerContext<unknown, QueryParams>): Promise<Re
   // Cache user review results (first page only, no cursor)
   if (query.userId && !cursor) {
     const cacheKey = CACHE_KEYS.reviews(query.userId, limit);
-    cache.set(
-      cacheKey,
-      {
-        items: resultItems.map(transformReview),
-        total: count || resultItems.length,
-      },
-      CACHE_TTLS.reviews,
-    );
+    cache.set(cacheKey, {
+      items: resultItems.map(transformReview),
+      total: count || resultItems.length,
+    }, CACHE_TTLS.reviews);
   }
 
-  return paginated(resultItems.map(transformReview), ctx, {
-    offset: 0,
-    limit,
-    total: count || resultItems.length,
-  });
+  return paginated(
+    resultItems.map(transformReview),
+    ctx,
+    {
+      offset: 0,
+      limit,
+      total: count || resultItems.length,
+    },
+  );
 }
 
 /**
  * Submit a review
  */
-async function submitReview(ctx: HandlerContext<SubmitReviewBody>): Promise<Response> {
+async function submitReview(
+  ctx: HandlerContext<SubmitReviewBody>,
+): Promise<Response> {
   const { supabase, userId, body } = ctx;
 
   if (!userId) {
@@ -190,7 +194,8 @@ async function submitReview(ctx: HandlerContext<SubmitReviewBody>): Promise<Resp
 
   if (stats && stats.length > 0) {
     const totalRatings = stats.length;
-    const avgRating = stats.reduce((sum, r) => sum + r.reviewed_rating, 0) / totalRatings;
+    const avgRating = stats.reduce((sum, r) => sum + r.reviewed_rating, 0) /
+      totalRatings;
 
     await supabase
       .from("profiles")
@@ -236,7 +241,9 @@ function transformReview(data: Record<string, unknown>) {
 // Route Handlers
 // =============================================================================
 
-function handleGet(ctx: HandlerContext<unknown, QueryParams>): Promise<Response> {
+function handleGet(
+  ctx: HandlerContext<unknown, QueryParams>,
+): Promise<Response> {
   // Health check
   const url = new URL(ctx.request.url);
   if (url.pathname.endsWith("/health")) {
@@ -250,30 +257,28 @@ function handleGet(ctx: HandlerContext<unknown, QueryParams>): Promise<Response>
 // Export Handler
 // =============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: "api-v1-reviews",
-    version: "1.0.0",
-    requireAuth: false, // GET is public, POST requires auth
-    csrf: true,
-    rateLimit: {
-      limit: 30,
-      windowMs: 60000,
-      keyBy: "user",
-      skip: (ctx) => ctx.request.method === "GET",
+Deno.serve(createAPIHandler({
+  service: "api-v1-reviews",
+  version: "1.0.0",
+  requireAuth: false, // GET is public, POST requires auth
+  csrf: true,
+  rateLimit: {
+    limit: 30,
+    windowMs: 60000,
+    keyBy: "user",
+    skip: (ctx) => ctx.request.method === "GET",
+  },
+  routes: {
+    GET: {
+      querySchema,
+      handler: handleGet,
+      requireAuth: false,
     },
-    routes: {
-      GET: {
-        querySchema,
-        handler: handleGet,
-        requireAuth: false,
-      },
-      POST: {
-        schema: submitReviewSchema,
-        handler: submitReview,
-        requireAuth: true,
-        idempotent: true,
-      },
+    POST: {
+      schema: submitReviewSchema,
+      handler: submitReview,
+      requireAuth: true,
+      idempotent: true,
     },
-  }),
-);
+  },
+}));

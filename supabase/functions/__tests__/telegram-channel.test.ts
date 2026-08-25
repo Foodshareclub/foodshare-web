@@ -68,51 +68,48 @@ Deno.test("TelegramChannelAdapter: fails gracefully when no linked telegram_id",
   assertEquals(result.error, "No linked Telegram account found for user");
 });
 
-Deno.test(
-  "TelegramChannelAdapter: sends formatted message when telegram_id is present",
-  async () => {
-    const adapter = new TelegramChannelAdapter();
-    const context = createMockContext(987654321);
+Deno.test("TelegramChannelAdapter: sends formatted message when telegram_id is present", async () => {
+  const adapter = new TelegramChannelAdapter();
+  const context = createMockContext(987654321);
 
-    // Set mock bot token
-    Deno.env.set("TELEGRAM_BOT_TOKEN", "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11");
+  // Set mock bot token
+  Deno.env.set("TELEGRAM_BOT_TOKEN", "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11");
 
-    const originalFetch = globalThis.fetch;
-    try {
-      globalThis.fetch = async (input, init) => {
-        const url = String(input);
-        if (url.includes("/sendMessage")) {
-          const body = JSON.parse(String((init as { body?: unknown })?.body || "{}"));
-          assertEquals(body.chat_id, 987654321);
-          assertEquals(body.parse_mode, "HTML");
-          return new Response(JSON.stringify({ ok: true, result: { message_id: 42 } }), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-        return new Response(JSON.stringify({ ok: false }), { status: 404 });
-      };
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async (input, init) => {
+      const url = String(input);
+      if (url.includes("/sendMessage")) {
+        const body = JSON.parse(String((init as { body?: unknown })?.body || "{}"));
+        assertEquals(body.chat_id, 987654321);
+        assertEquals(body.parse_mode, "HTML");
+        return new Response(JSON.stringify({ ok: true, result: { message_id: 42 } }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ ok: false }), { status: 404 });
+    };
 
-      const result = await adapter.send(
-        {
-          userId: "user-123",
-          title: "Apple Box Claimed",
-          body: "Someone requested your organic apples!",
-          actionUrl: "https://foodshare.club/food/123",
-          actionText: "View Request",
-          category: "posts",
-        },
-        context,
-      );
+    const result = await adapter.send(
+      {
+        userId: "user-123",
+        title: "Apple Box Claimed",
+        body: "Someone requested your organic apples!",
+        actionUrl: "https://foodshare.club/food/123",
+        actionText: "View Request",
+        category: "posts",
+      },
+      context,
+    );
 
-      assertEquals(result.success, true);
-      assertEquals(result.channel, "telegram");
-      assertEquals(result.deliveredTo, ["987654321"]);
-    } finally {
-      globalThis.fetch = originalFetch;
-    }
-  },
-);
+    assertEquals(result.success, true);
+    assertEquals(result.channel, "telegram");
+    assertEquals(result.deliveredTo, ["987654321"]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
 
 Deno.test("handleDeepLinkToken: rejects empty token", async () => {
   const result = await handleDeepLinkToken(

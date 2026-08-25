@@ -15,7 +15,8 @@ import { logger } from "../../_shared/logger.ts";
  */
 
 const getTranslateApi = () =>
-  Deno.env.get("LLM_TRANSLATION_ENDPOINT") || "https://translate.foodshare.club";
+  Deno.env.get("LLM_TRANSLATION_ENDPOINT") ||
+  "https://translate.foodshare.club";
 const getTranslateApiKey = () => Deno.env.get("LLM_TRANSLATION_API_KEY") || "";
 const getCfAccessClientId = () => Deno.env.get("CF_ACCESS_CLIENT_ID") || "";
 const getCfAccessClientSecret = () => Deno.env.get("CF_ACCESS_CLIENT_SECRET") || "";

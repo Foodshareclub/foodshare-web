@@ -27,7 +27,10 @@ export class PushChannelAdapter implements ChannelAdapter {
   name = "push";
   channel = "push" as const;
 
-  async send(payload: PushPayload, context: NotificationContext): Promise<ChannelDeliveryResult> {
+  async send(
+    payload: PushPayload,
+    context: NotificationContext,
+  ): Promise<ChannelDeliveryResult> {
     const startTime = performance.now();
 
     try {
@@ -76,7 +79,9 @@ export class PushChannelAdapter implements ChannelAdapter {
 
       await this.cleanupInvalidTokens(context, results);
 
-      const deliveredTo = results.filter((r) => r.success).map((r) => r.platform);
+      const deliveredTo = results
+        .filter((r) => r.success)
+        .map((r) => r.platform);
 
       return {
         channel: "push",
@@ -116,7 +121,9 @@ export class PushChannelAdapter implements ChannelAdapter {
 
     for (let i = 0; i < payloads.length; i += BATCH_SIZE) {
       const batch = payloads.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.all(batch.map((payload) => this.send(payload, context)));
+      const batchResults = await Promise.all(
+        batch.map((payload) => this.send(payload, context)),
+      );
       results.push(...batchResults);
     }
 
@@ -164,7 +171,9 @@ export class PushChannelAdapter implements ChannelAdapter {
     }
   }
 
-  private async getUserDevices(context: NotificationContext): Promise<DeviceToken[]> {
+  private async getUserDevices(
+    context: NotificationContext,
+  ): Promise<DeviceToken[]> {
     const { data, error } = await context.supabase
       .from("device_tokens")
       .select("profile_id,token,platform,endpoint,p256dh,auth")
@@ -250,7 +259,10 @@ export class PushChannelAdapter implements ChannelAdapter {
     for (const result of invalidTokens) {
       try {
         if (result.platform === "web" && result.token?.startsWith("http")) {
-          await context.supabase.from("device_tokens").delete().eq("endpoint", result.token);
+          await context.supabase.from("device_tokens").delete().eq(
+            "endpoint",
+            result.token,
+          );
         } else if (result.token) {
           await context.supabase
             .from("device_tokens")

@@ -143,7 +143,10 @@ export interface SliderConfig {
  * // Returns ~5570.22 km
  * ```
  */
-export function haversineDistance(point1: Coordinates, point2: Coordinates): number {
+export function haversineDistance(
+  point1: Coordinates,
+  point2: Coordinates,
+): number {
   const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;
 
   const lat1Rad = toRadians(point1.lat);
@@ -152,7 +155,8 @@ export function haversineDistance(point1: Coordinates, point2: Coordinates): num
   const deltaLng = toRadians(point2.lng - point1.lng);
 
   const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-    Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
+    Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(deltaLng / 2) *
+      Math.sin(deltaLng / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -186,7 +190,11 @@ export function calculateDistanceKm(
  * @param radiusKm - Radius in kilometers
  * @returns true if point is within radius
  */
-export function isWithinRadius(point: Coordinates, center: Coordinates, radiusKm: number): boolean {
+export function isWithinRadius(
+  point: Coordinates,
+  center: Coordinates,
+  radiusKm: number,
+): boolean {
   return haversineDistance(point, center) <= radiusKm;
 }
 
@@ -197,7 +205,10 @@ export function isWithinRadius(point: Coordinates, center: Coordinates, radiusKm
  * @param point2 - Destination point
  * @returns Bearing in degrees (0-360, where 0 is North)
  */
-export function calculateBearing(point1: Coordinates, point2: Coordinates): number {
+export function calculateBearing(
+  point1: Coordinates,
+  point2: Coordinates,
+): number {
   const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;
   const toDegrees = (radians: number): number => (radians * 180) / Math.PI;
 
@@ -206,7 +217,8 @@ export function calculateBearing(point1: Coordinates, point2: Coordinates): numb
   const deltaLng = toRadians(point2.lng - point1.lng);
 
   const y = Math.sin(deltaLng) * Math.cos(lat2);
-  const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLng);
+  const x = Math.cos(lat1) * Math.sin(lat2) -
+    Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLng);
 
   const bearing = toDegrees(Math.atan2(y, x));
 
@@ -298,7 +310,11 @@ export function milesToKm(miles: number): number {
  * @param to - Target unit
  * @returns Converted distance
  */
-export function convertDistance(value: number, from: DistanceUnit, to: DistanceUnit): number {
+export function convertDistance(
+  value: number,
+  from: DistanceUnit,
+  to: DistanceUnit,
+): number {
   if (from === to) return value;
   return from === "kilometers" ? kmToMiles(value) : milesToKm(value);
 }
@@ -348,7 +364,9 @@ export function radiusFromKm(km: number, userUnit: DistanceUnit): number {
  * @param countryCode - ISO 3166-1 alpha-2 country code (e.g., "US", "DE")
  * @returns Preferred distance unit for that country
  */
-export function detectUnitFromCountry(countryCode: string | null | undefined): DistanceUnit {
+export function detectUnitFromCountry(
+  countryCode: string | null | undefined,
+): DistanceUnit {
   if (!countryCode) return "kilometers";
   return MILES_COUNTRIES.has(countryCode.toUpperCase()) ? "miles" : "kilometers";
 }
@@ -472,7 +490,9 @@ export function formatDistance(
 
   // Use feet for very short distances
   if (useSmallUnits && miles < 0.1) {
-    const feet = Math.round(km * CONVERSION.KM_TO_METERS * CONVERSION.METERS_TO_FEET);
+    const feet = Math.round(
+      km * CONVERSION.KM_TO_METERS * CONVERSION.METERS_TO_FEET,
+    );
     return {
       value: feet,
       unit: "ft",
@@ -495,7 +515,10 @@ export function formatDistance(
  * @param unit - Display unit preference
  * @returns Formatted string (e.g., "5.2 km")
  */
-export function formatDistanceString(km: number, unit: DistanceUnit = "kilometers"): string {
+export function formatDistanceString(
+  km: number,
+  unit: DistanceUnit = "kilometers",
+): string {
   return formatDistance(km, unit).formatted;
 }
 
@@ -591,19 +614,34 @@ export function transformDistancesInResponse<T extends Record<string, unknown>>(
     else if (Array.isArray(value)) {
       (result as Record<string, unknown>)[key] = value.map((item) =>
         item && typeof item === "object"
-          ? transformDistancesInResponse(item as Record<string, unknown>, includeAlternateUnit)
+          ? transformDistancesInResponse(
+            item as Record<string, unknown>,
+            includeAlternateUnit,
+          )
           : item
       );
     } // Transform *_km fields
-    else if (key.endsWith("_km") && typeof value === "number" && includeAlternateUnit) {
+    else if (
+      key.endsWith("_km") && typeof value === "number" && includeAlternateUnit
+    ) {
       const milesKey = key.replace(/_km$/, "_miles");
-      (result as Record<string, unknown>)[milesKey] = roundDistance(kmToMiles(value));
+      (result as Record<string, unknown>)[milesKey] = roundDistance(
+        kmToMiles(value),
+      );
     } // Transform distanceKm camelCase
-    else if (key === "distanceKm" && typeof value === "number" && includeAlternateUnit) {
-      (result as Record<string, unknown>)["distanceMiles"] = roundDistance(kmToMiles(value));
+    else if (
+      key === "distanceKm" && typeof value === "number" && includeAlternateUnit
+    ) {
+      (result as Record<string, unknown>)["distanceMiles"] = roundDistance(
+        kmToMiles(value),
+      );
     } // Transform radiusKm camelCase
-    else if (key === "radiusKm" && typeof value === "number" && includeAlternateUnit) {
-      (result as Record<string, unknown>)["radiusMiles"] = roundDistance(kmToMiles(value));
+    else if (
+      key === "radiusKm" && typeof value === "number" && includeAlternateUnit
+    ) {
+      (result as Record<string, unknown>)["radiusMiles"] = roundDistance(
+        kmToMiles(value),
+      );
     }
   }
 
@@ -665,7 +703,10 @@ export function isValidCoordinates(lat: number, lng: number): boolean {
  * @param unit - Unit of the radius value
  * @returns true if valid (positive and within reasonable bounds)
  */
-export function isValidRadius(radius: number, unit: DistanceUnit = "kilometers"): boolean {
+export function isValidRadius(
+  radius: number,
+  unit: DistanceUnit = "kilometers",
+): boolean {
   if (typeof radius !== "number" || isNaN(radius) || radius <= 0) {
     return false;
   }

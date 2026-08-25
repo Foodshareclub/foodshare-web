@@ -16,14 +16,17 @@ export async function analyzeImage(imageUrl: string): Promise<AIData | null> {
   }
 
   try {
-    const response = await fetch("https://api-inference.huggingface.co/models/nateraw/food", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${HF_TOKEN}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/nateraw/food",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${HF_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ inputs: imageUrl }),
       },
-      body: JSON.stringify({ inputs: imageUrl }),
-    });
+    );
 
     if (!response.ok) {
       logger.warn("AI analysis failed", {

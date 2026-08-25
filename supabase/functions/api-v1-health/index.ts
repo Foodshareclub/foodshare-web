@@ -75,7 +75,10 @@ async function handleMetrics(ctx: HandlerContext): Promise<Response> {
   let status: "healthy" | "degraded" | "unhealthy";
   if (!databaseHealthy || criticalErrors > 10 || openCircuits > 3) {
     status = "unhealthy";
-  } else if (criticalErrors > 0 || openCircuits > 0 || healthMetrics.memory.heapUsed > 512) {
+  } else if (
+    criticalErrors > 0 || openCircuits > 0 ||
+    healthMetrics.memory.heapUsed > 512
+  ) {
     status = "degraded";
   } else {
     status = "healthy";
@@ -135,7 +138,8 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
   }
 
   // GET /full or GET /?full=true -- full health + observability merged
-  const isFull = route.resource === "full" || url.searchParams.get("full") === "true";
+  const isFull = route.resource === "full" ||
+    url.searchParams.get("full") === "true";
 
   if (isFull) {
     const [fullHealth, metricsResponse] = await Promise.all([
@@ -166,15 +170,16 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
           bySeverity: metricsResponse.errorStats.bySeverity,
           topErrors: metricsResponse.errorStats.topErrors.slice(0, 5),
         },
-        circuitBreakersDetailed: Object.entries(metricsResponse.circuitBreakers).map(
-          ([name, cb]) => ({
+        circuitBreakersDetailed: Object.entries(metricsResponse.circuitBreakers)
+          .map((
+            [name, cb],
+          ) => ({
             name,
             state: cb.state,
             failures: cb.failures,
             totalRequests: cb.totalRequests,
             totalFailures: cb.totalFailures,
-          }),
-        ),
+          })),
       },
       ctx,
       { status: httpStatus },
@@ -244,20 +249,18 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
 // API Handler
 // =============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: SERVICE,
-    version: "1",
-    requireAuth: false,
-    csrf: false,
-    rateLimit: {
-      limit: 200,
-      windowMs: 60_000,
-      keyBy: "ip",
-    },
-    routes: {
-      GET: { handler: handleGet },
-      POST: { handler: handlePost },
-    },
-  }),
-);
+Deno.serve(createAPIHandler({
+  service: SERVICE,
+  version: "1",
+  requireAuth: false,
+  csrf: false,
+  rateLimit: {
+    limit: 200,
+    windowMs: 60_000,
+    keyBy: "ip",
+  },
+  routes: {
+    GET: { handler: handleGet },
+    POST: { handler: handlePost },
+  },
+}));

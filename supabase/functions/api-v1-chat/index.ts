@@ -76,7 +76,11 @@ const listQuerySchema = z.object({
 type ListQuery = z.infer<typeof listQuerySchema>;
 
 /** Union of all POST body types for the chat endpoint */
-type PostBody = CreateRoomBody | SendMessageBody | FoodCreateRoomBody | FoodSendMessageBody;
+type PostBody =
+  | CreateRoomBody
+  | SendMessageBody
+  | FoodCreateRoomBody
+  | FoodSendMessageBody;
 
 /** Union of all PUT body types for the chat endpoint */
 type PutBody = UpdateRoomBody | FoodUpdateRoomBody;
@@ -101,10 +105,14 @@ function handleGet(ctx: HandlerContext<unknown, ListQuery>): Promise<Response> {
   return listRooms(ctx);
 }
 
-function handlePost(ctx: HandlerContext<PostBody, ListQuery>): Promise<Response> {
+function handlePost(
+  ctx: HandlerContext<PostBody, ListQuery>,
+): Promise<Response> {
   if (ctx.query.mode === "food") {
     if (ctx.query.action === "message") {
-      return foodSendMessage(ctx as HandlerContext<FoodSendMessageBody, ListQuery>);
+      return foodSendMessage(
+        ctx as HandlerContext<FoodSendMessageBody, ListQuery>,
+      );
     }
     return foodCreateRoom(ctx as HandlerContext<FoodCreateRoomBody, ListQuery>);
   }
@@ -121,7 +129,9 @@ function handlePut(ctx: HandlerContext<PutBody, ListQuery>): Promise<Response> {
   return updateRoom(ctx as HandlerContext<UpdateRoomBody, ListQuery>);
 }
 
-function handleDelete(ctx: HandlerContext<unknown, ListQuery>): Promise<Response> {
+function handleDelete(
+  ctx: HandlerContext<unknown, ListQuery>,
+): Promise<Response> {
   if (ctx.query.mode === "food") {
     return foodArchiveRoom(ctx);
   }
@@ -132,34 +142,32 @@ function handleDelete(ctx: HandlerContext<unknown, ListQuery>): Promise<Response
 // Export Handler
 // =============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: "api-v1-chat",
-    version: "2.0.0",
-    requireAuth: true,
-    csrf: true,
-    rateLimit: {
-      limit: 60,
-      windowMs: 60000,
-      keyBy: "user",
+Deno.serve(createAPIHandler({
+  service: "api-v1-chat",
+  version: "2.0.0",
+  requireAuth: true,
+  csrf: true,
+  rateLimit: {
+    limit: 60,
+    windowMs: 60000,
+    keyBy: "user",
+  },
+  routes: {
+    GET: {
+      querySchema: listQuerySchema,
+      handler: handleGet,
     },
-    routes: {
-      GET: {
-        querySchema: listQuerySchema,
-        handler: handleGet,
-      },
-      POST: {
-        handler: handlePost,
-        idempotent: true,
-      },
-      PUT: {
-        querySchema: listQuerySchema,
-        handler: handlePut,
-      },
-      DELETE: {
-        querySchema: listQuerySchema,
-        handler: handleDelete,
-      },
+    POST: {
+      handler: handlePost,
+      idempotent: true,
     },
-  }),
-);
+    PUT: {
+      querySchema: listQuerySchema,
+      handler: handlePut,
+    },
+    DELETE: {
+      querySchema: listQuerySchema,
+      handler: handleDelete,
+    },
+  },
+}));

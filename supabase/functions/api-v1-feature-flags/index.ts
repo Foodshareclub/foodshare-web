@@ -62,11 +62,15 @@ function getSubPath(url: URL): string {
 // Feature Flags Handler
 // =============================================================================
 
-async function handleGetFeatureFlags(ctx: HandlerContext<unknown, FlagsQuery>): Promise<Response> {
+async function handleGetFeatureFlags(
+  ctx: HandlerContext<unknown, FlagsQuery>,
+): Promise<Response> {
   const { supabase, userId, query, request, ctx: requestCtx } = ctx;
 
-  const platform = request.headers.get("X-Platform") || query.platform || "unknown";
-  const appVersion = request.headers.get("X-App-Version") || query.version || null;
+  const platform = request.headers.get("X-Platform") || query.platform ||
+    "unknown";
+  const appVersion = request.headers.get("X-App-Version") || query.version ||
+    null;
 
   logger.info("Getting feature flags", {
     userId: userId?.substring(0, 8),
@@ -78,17 +82,24 @@ async function handleGetFeatureFlags(ctx: HandlerContext<unknown, FlagsQuery>): 
   const cacheKey = userId ? CACHE_KEYS.userFeatureFlags(userId) : CACHE_KEYS.featureFlags();
 
   const cached = cache.get<{
-    flags: Record<string, { enabled: boolean; config: Record<string, unknown> }>;
+    flags: Record<
+      string,
+      { enabled: boolean; config: Record<string, unknown> }
+    >;
     context: { platform: string; appVersion: string; userHash: number };
     meta: { timestamp: string; refreshAfter: number; cacheTTL: number };
   }>(cacheKey);
 
   if (cached) {
     logger.debug("Feature flags cache hit", { cacheKey });
-    return ok({ flags: cached.flags, context: cached.context }, ctx, {
-      cacheTTL: cached.meta?.cacheTTL || 60,
-      uiHints: { refreshAfter: cached.meta?.refreshAfter || 300 },
-    });
+    return ok(
+      { flags: cached.flags, context: cached.context },
+      ctx,
+      {
+        cacheTTL: cached.meta?.cacheTTL || 60,
+        uiHints: { refreshAfter: cached.meta?.refreshAfter || 300 },
+      },
+    );
   }
 
   const { data, error } = await supabase.rpc("get_user_feature_flags", {
@@ -107,7 +118,10 @@ async function handleGetFeatureFlags(ctx: HandlerContext<unknown, FlagsQuery>): 
 
   const dbResponse = data as {
     success: boolean;
-    flags: Record<string, { enabled: boolean; config: Record<string, unknown> }>;
+    flags: Record<
+      string,
+      { enabled: boolean; config: Record<string, unknown> }
+    >;
     context: { platform: string; appVersion: string; userHash: number };
     meta: { timestamp: string; refreshAfter: number; cacheTTL: number };
   };
@@ -198,8 +212,10 @@ async function handleCompatibilityCheck(
 ): Promise<Response> {
   const { supabase, query, request, ctx: requestCtx } = ctx;
 
-  const platform = request.headers.get("X-Platform") || query.platform || "unknown";
-  const version = request.headers.get("X-App-Version") || query.version || "1.0.0";
+  const platform = request.headers.get("X-Platform") || query.platform ||
+    "unknown";
+  const version = request.headers.get("X-App-Version") || query.version ||
+    "1.0.0";
 
   logger.info("Checking client compatibility", {
     platform,
@@ -256,7 +272,9 @@ async function handleCompatibilityCheck(
 // Main Router Handler
 // =============================================================================
 
-async function handleGet(ctx: HandlerContext<unknown, FlagsQuery>): Promise<Response> {
+async function handleGet(
+  ctx: HandlerContext<unknown, FlagsQuery>,
+): Promise<Response> {
   const { request, query } = ctx;
   const url = new URL(request.url);
   const subPath = getSubPath(url);
@@ -268,8 +286,7 @@ async function handleGet(ctx: HandlerContext<unknown, FlagsQuery>): Promise<Resp
 
   // GET /compatibility
   if (
-    subPath === "compatibility" ||
-    subPath === "compatibility/" ||
+    subPath === "compatibility" || subPath === "compatibility/" ||
     query.action === "compatibility"
   ) {
     return handleCompatibilityCheck(ctx);
@@ -291,21 +308,19 @@ async function handleGet(ctx: HandlerContext<unknown, FlagsQuery>): Promise<Resp
 // Export Handler
 // =============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: "api-v1-feature-flags",
-    version: VERSION,
-    requireAuth: false, // Auth is optional — flags work for anonymous users too
-    rateLimit: {
-      limit: 60,
-      windowMs: 60000,
-      keyBy: "ip",
+Deno.serve(createAPIHandler({
+  service: "api-v1-feature-flags",
+  version: VERSION,
+  requireAuth: false, // Auth is optional — flags work for anonymous users too
+  rateLimit: {
+    limit: 60,
+    windowMs: 60000,
+    keyBy: "ip",
+  },
+  routes: {
+    GET: {
+      querySchema: flagsQuerySchema,
+      handler: handleGet,
     },
-    routes: {
-      GET: {
-        querySchema: flagsQuerySchema,
-        handler: handleGet,
-      },
-    },
-  }),
-);
+  },
+}));

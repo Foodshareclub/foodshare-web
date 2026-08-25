@@ -43,18 +43,19 @@ const SERVICE = "api-v1-auth";
 // =============================================================================
 
 async function handleGet(ctx: HandlerContext): Promise<Response> {
-  const route = parseRoute(new URL(ctx.request.url), ctx.request.method, SERVICE);
+  const route = parseRoute(
+    new URL(ctx.request.url),
+    ctx.request.method,
+    SERVICE,
+  );
 
   if (route.resource === "health" || route.resource === "") {
-    return ok(
-      {
-        status: "healthy",
-        version: VERSION,
-        service: SERVICE,
-        timestamp: new Date().toISOString(),
-      },
-      ctx,
-    );
+    return ok({
+      status: "healthy",
+      version: VERSION,
+      service: SERVICE,
+      timestamp: new Date().toISOString(),
+    }, ctx);
   }
 
   throw new AppError("Not found", "NOT_FOUND", 404);
@@ -159,20 +160,18 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
 // API Handler
 // =============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: SERVICE,
-    version: VERSION,
-    requireAuth: false,
-    csrf: false,
-    rateLimit: {
-      limit: 100,
-      windowMs: 60_000,
-      keyBy: "ip",
-    },
-    routes: {
-      GET: { handler: handleGet },
-      POST: { handler: handlePost },
-    },
-  }),
-);
+Deno.serve(createAPIHandler({
+  service: SERVICE,
+  version: VERSION,
+  requireAuth: false,
+  csrf: false,
+  rateLimit: {
+    limit: 100,
+    windowMs: 60_000,
+    keyBy: "ip",
+  },
+  routes: {
+    GET: { handler: handleGet },
+    POST: { handler: handlePost },
+  },
+}));

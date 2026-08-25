@@ -25,7 +25,7 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
  */
 export async function getSecret(name: string): Promise<string | undefined> {
   // Check cache first
-  if (cache.has(name) && Date.now() - lastFetch < CACHE_TTL) {
+  if (cache.has(name) && (Date.now() - lastFetch < CACHE_TTL)) {
     return cache.get(name);
   }
 

@@ -57,7 +57,9 @@ export async function textSearch(
   }
 
   if (filters?.maxAgeHours) {
-    const cutoffDate = new Date(Date.now() - filters.maxAgeHours * 60 * 60 * 1000);
+    const cutoffDate = new Date(
+      Date.now() - filters.maxAgeHours * 60 * 60 * 1000,
+    );
     queryBuilder = queryBuilder.gte("created_at", cutoffDate.toISOString());
   }
 
@@ -89,11 +91,7 @@ export async function textSearch(
 
   // Fallback to ILIKE with properly escaped query
   const escapedQuery = escapePostgresLike(normalizedQuery);
-  const {
-    data: fallbackData,
-    error: fallbackError,
-    count,
-  } = await supabase
+  const { data: fallbackData, error: fallbackError, count } = await supabase
     .from("posts_with_location")
     .select(
       `id, post_name, post_description, post_address, post_type, category_id, images, latitude, longitude, categories(name), profile_id, created_at`,
@@ -101,7 +99,9 @@ export async function textSearch(
     )
     .eq("is_active", true)
     .eq("is_arranged", false)
-    .or(`post_name.ilike.%${escapedQuery}%,post_description.ilike.%${escapedQuery}%`)
+    .or(
+      `post_name.ilike.%${escapedQuery}%,post_description.ilike.%${escapedQuery}%`,
+    )
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -135,7 +135,9 @@ export async function fuzzySearch(
       `id, post_name, post_description, post_address, post_type, category_id, images, latitude, longitude, categories(name), profile_id, created_at`,
       { count: "exact" },
     )
-    .or(`post_name.ilike.%${escapedQuery}%,post_description.ilike.%${escapedQuery}%`)
+    .or(
+      `post_name.ilike.%${escapedQuery}%,post_description.ilike.%${escapedQuery}%`,
+    )
     .eq("is_active", true)
     .eq("is_arranged", false)
     .order("created_at", { ascending: false })

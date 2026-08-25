@@ -11,7 +11,12 @@
 /**
  * Possible health statuses for functions and services
  */
-export type HealthStatus = "healthy" | "degraded" | "unhealthy" | "timeout" | "unknown";
+export type HealthStatus =
+  | "healthy"
+  | "degraded"
+  | "unhealthy"
+  | "timeout"
+  | "unknown";
 
 // =============================================================================
 // Function Configuration

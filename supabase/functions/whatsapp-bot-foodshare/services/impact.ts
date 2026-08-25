@@ -8,7 +8,9 @@ import { getSupabaseClient } from "../../_shared/supabase.ts";
 /**
  * Get user impact stats by profile ID
  */
-export async function getUserImpactStats(profileId: string): Promise<ImpactStats> {
+export async function getUserImpactStats(
+  profileId: string,
+): Promise<ImpactStats> {
   const supabase = getSupabaseClient();
 
   // Get the profile

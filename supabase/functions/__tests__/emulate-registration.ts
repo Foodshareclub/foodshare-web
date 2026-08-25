@@ -28,9 +28,12 @@ globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
       console.log("\n--- MESSAGE CONTENT BEGIN ---");
       console.log(payload.text);
       console.log("--- MESSAGE CONTENT END ---\n");
-      return new Response(JSON.stringify({ ok: true, result: { message_id: 999 } }), {
-        status: 200,
-      });
+      return new Response(
+        JSON.stringify({ ok: true, result: { message_id: 999 } }),
+        {
+          status: 200,
+        },
+      );
     } catch {
       // Fallback if body parsing fails
     }
@@ -43,9 +46,15 @@ const mockContext: NotificationContext = {
   supabase: {} as any,
 };
 
-console.log("===============================================================================");
-console.log("             EMULATING FOODSHARE USER REGISTRATION & VERIFICATION             ");
-console.log("===============================================================================\n");
+console.log(
+  "===============================================================================",
+);
+console.log(
+  "             EMULATING FOODSHARE USER REGISTRATION & VERIFICATION             ",
+);
+console.log(
+  "===============================================================================\n",
+);
 
 // Scenario 1: New Registration from Web / Mobile App
 console.log("👉 SCENARIO 1: User Registration via Web / Mobile App");
@@ -62,7 +71,9 @@ const webUserPayload = {
 };
 await handleTriggerNewUser(webUserPayload, mockContext);
 
-console.log("-------------------------------------------------------------------------------");
+console.log(
+  "-------------------------------------------------------------------------------",
+);
 
 // Scenario 2: New Registration from Telegram Bot
 console.log("👉 SCENARIO 2: User Registration via Telegram Bot");
@@ -80,7 +91,9 @@ const tgUserPayload = {
 };
 await handleTriggerNewUser(tgUserPayload, mockContext);
 
-console.log("-------------------------------------------------------------------------------");
+console.log(
+  "-------------------------------------------------------------------------------",
+);
 
 // Scenario 3: Email Verification Completed
 console.log("👉 SCENARIO 3: User Email Verification Confirmed");
@@ -96,6 +109,12 @@ const verifiedUserPayload = {
 };
 await handleTriggerUserVerified(verifiedUserPayload, mockContext);
 
-console.log("===============================================================================");
-console.log("                          EMULATION COMPLETE                                   ");
-console.log("===============================================================================");
+console.log(
+  "===============================================================================",
+);
+console.log(
+  "                          EMULATION COMPLETE                                   ",
+);
+console.log(
+  "===============================================================================",
+);

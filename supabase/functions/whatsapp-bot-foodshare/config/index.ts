@@ -7,7 +7,8 @@
  * @throws Error if the variable is missing or empty
  */
 function requireEnv(name: string, fallbackName?: string): string {
-  const value = Deno.env.get(name) || (fallbackName ? Deno.env.get(fallbackName) : undefined);
+  const value = Deno.env.get(name) ||
+    (fallbackName ? Deno.env.get(fallbackName) : undefined);
   if (!value || value.trim() === "") {
     const varNames = fallbackName ? `${name} or ${fallbackName}` : name;
     throw new Error(`Missing required environment variable: ${varNames}`);
@@ -51,7 +52,10 @@ export const getAppUrl = () =>
   validateUrl(
     optionalEnv(
       "APP_URL",
-      `https://${Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"}`,
+      `https://${
+        Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+        "foodshare.club"
+      }`,
     ),
     "APP_URL",
   );

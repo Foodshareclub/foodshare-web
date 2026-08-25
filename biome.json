@@ -28,6 +28,6 @@
     }
   },
   "files": {
-    "ignore": [".next/**", "out/**", "node_modules/**", "coverage/**", "public/**"]
+    "ignore": [".next/**", "out/**", "node_modules/**", "coverage/**", "public/**", "/supabase/**"]
   }
 }

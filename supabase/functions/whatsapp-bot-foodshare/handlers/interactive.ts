@@ -27,7 +27,10 @@ type Language = "en" | "ru" | "de";
 /**
  * Handle button reply
  */
-export async function handleButtonReply(phoneNumber: string, buttonId: string): Promise<void> {
+export async function handleButtonReply(
+  phoneNumber: string,
+  buttonId: string,
+): Promise<void> {
   const lang = await getUserLanguage(phoneNumber);
 
   switch (buttonId) {
@@ -80,7 +83,10 @@ export async function handleButtonReply(phoneNumber: string, buttonId: string): 
       break;
 
     case "location_skip":
-      await sendTextMessage(phoneNumber, "Type an address or 'skip' to use your profile location.");
+      await sendTextMessage(
+        phoneNumber,
+        "Type an address or 'skip' to use your profile location.",
+      );
       break;
 
     case "auth_resend":
@@ -89,7 +95,10 @@ export async function handleButtonReply(phoneNumber: string, buttonId: string): 
 
     case "auth_cancel":
       await setUserState(phoneNumber, null);
-      await sendTextMessage(phoneNumber, `${emoji.SUCCESS} ${t(lang, "common.cancel")}`);
+      await sendTextMessage(
+        phoneNumber,
+        `${emoji.SUCCESS} ${t(lang, "common.cancel")}`,
+      );
       await handleStart(phoneNumber);
       break;
 
@@ -127,7 +136,10 @@ export async function handleButtonReply(phoneNumber: string, buttonId: string): 
 /**
  * Handle list reply
  */
-export async function handleListReply(phoneNumber: string, listId: string): Promise<void> {
+export async function handleListReply(
+  phoneNumber: string,
+  listId: string,
+): Promise<void> {
   // List replies use same IDs as buttons
   await handleButtonReply(phoneNumber, listId);
 }
@@ -161,7 +173,11 @@ async function handleShareWeb(phoneNumber: string): Promise<void> {
     `${emoji.LINK} Open this link to share food:\n\n${shareUrl}\n\n${emoji.LIGHT_BULB} The web form is faster and easier!`,
   );
 
-  await sendButtonMessage(phoneNumber, "What else would you like to do?", getMainMenuButtons(lang));
+  await sendButtonMessage(
+    phoneNumber,
+    "What else would you like to do?",
+    getMainMenuButtons(lang),
+  );
 }
 
 /**
@@ -198,7 +214,11 @@ async function handleFind(phoneNumber: string): Promise<void> {
 
   if (error || !posts || posts.length === 0) {
     await sendTextMessage(phoneNumber, t(lang, "find.noFood"));
-    await sendButtonMessage(phoneNumber, "What would you like to do?", getMainMenuButtons(lang));
+    await sendButtonMessage(
+      phoneNumber,
+      "What would you like to do?",
+      getMainMenuButtons(lang),
+    );
     return;
   }
 
@@ -217,7 +237,11 @@ async function handleFind(phoneNumber: string): Promise<void> {
     await sendTextMessage(phoneNumber, card);
   }
 
-  await sendButtonMessage(phoneNumber, "What would you like to do?", getMainMenuButtons(lang));
+  await sendButtonMessage(
+    phoneNumber,
+    "What would you like to do?",
+    getMainMenuButtons(lang),
+  );
 }
 
 /**
@@ -260,19 +284,17 @@ async function handleProfile(phoneNumber: string): Promise<void> {
   await sendTextMessage(
     phoneNumber,
     `${emoji.USER} *${
-      t(
-        lang,
-        "profile.title",
-      )
+      t(lang, "profile.title")
     }*\n\n${emoji.EMAIL} ${profile.email}\n${emoji.VERIFIED} Verified\n\n${emoji.LINK} ${
-      t(
-        lang,
-        "profile.manageOnWebsite",
-      )
+      t(lang, "profile.manageOnWebsite")
     }\n${profileUrl}`,
   );
 
-  await sendButtonMessage(phoneNumber, "What else would you like to do?", getMainMenuButtons(lang));
+  await sendButtonMessage(
+    phoneNumber,
+    "What else would you like to do?",
+    getMainMenuButtons(lang),
+  );
 }
 
 /**
@@ -296,7 +318,11 @@ async function handleImpact(phoneNumber: string): Promise<void> {
 
   await sendTextMessage(phoneNumber, message);
 
-  await sendButtonMessage(phoneNumber, "What else would you like to do?", getMainMenuButtons(lang));
+  await sendButtonMessage(
+    phoneNumber,
+    "What else would you like to do?",
+    getMainMenuButtons(lang),
+  );
 }
 
 /**
@@ -312,7 +338,11 @@ async function handleStats(phoneNumber: string): Promise<void> {
     `${emoji.STATS} *${t(lang, "stats.title")}*\n\n${t(lang, "stats.noStatsYet")}`,
   );
 
-  await sendButtonMessage(phoneNumber, "What else would you like to do?", getMainMenuButtons(lang));
+  await sendButtonMessage(
+    phoneNumber,
+    "What else would you like to do?",
+    getMainMenuButtons(lang),
+  );
 }
 
 /**
@@ -345,7 +375,11 @@ async function handleLeaderboard(phoneNumber: string): Promise<void> {
 
   await sendTextMessage(phoneNumber, message);
 
-  await sendButtonMessage(phoneNumber, "What else would you like to do?", getMainMenuButtons(lang));
+  await sendButtonMessage(
+    phoneNumber,
+    "What else would you like to do?",
+    getMainMenuButtons(lang),
+  );
 }
 
 /**
@@ -364,7 +398,10 @@ async function handleLanguageSelect(phoneNumber: string): Promise<void> {
 /**
  * Set user language
  */
-async function setLanguage(phoneNumber: string, newLang: Language): Promise<void> {
+async function setLanguage(
+  phoneNumber: string,
+  newLang: Language,
+): Promise<void> {
   await saveUserLanguage(phoneNumber, newLang);
 
   const langNames: Record<Language, string> = {
@@ -376,14 +413,15 @@ async function setLanguage(phoneNumber: string, newLang: Language): Promise<void
   await sendTextMessage(
     phoneNumber,
     `${emoji.SUCCESS} *${t(newLang, "language.changed")}*\n\n${
-      t(
-        newLang,
-        "language.selectedLanguage",
-      )
+      t(newLang, "language.selectedLanguage")
     }: ${langNames[newLang]}`,
   );
 
-  await sendButtonMessage(phoneNumber, "What would you like to do?", getMainMenuButtons(newLang));
+  await sendButtonMessage(
+    phoneNumber,
+    "What would you like to do?",
+    getMainMenuButtons(newLang),
+  );
 }
 
 /**
@@ -405,7 +443,10 @@ async function handleHelp(phoneNumber: string): Promise<void> {
 /**
  * Handle view post
  */
-async function handleViewPost(phoneNumber: string, postId: string): Promise<void> {
+async function handleViewPost(
+  phoneNumber: string,
+  postId: string,
+): Promise<void> {
   const postUrl = `${getAppUrl()}/food/${postId}`;
   await sendTextMessage(phoneNumber, `${emoji.LINK} View post:\n${postUrl}`);
 }
@@ -413,7 +454,10 @@ async function handleViewPost(phoneNumber: string, postId: string): Promise<void
 /**
  * Handle claim post
  */
-async function handleClaimPost(phoneNumber: string, postId: string): Promise<void> {
+async function handleClaimPost(
+  phoneNumber: string,
+  postId: string,
+): Promise<void> {
   const postUrl = `${getAppUrl()}/food/${postId}`;
 
   await sendTextMessage(

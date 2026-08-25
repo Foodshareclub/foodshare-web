@@ -34,8 +34,14 @@ Deno.test("interpolateTemplate: handles missing variable - keeps placeholder", (
 
 Deno.test("interpolateTemplate: handles null/undefined values - keeps placeholder", () => {
   const template = "Value is {{val}}";
-  assertEquals(interpolateTemplate(template, { val: null }), "Value is {{val}}");
-  assertEquals(interpolateTemplate(template, { val: undefined }), "Value is {{val}}");
+  assertEquals(
+    interpolateTemplate(template, { val: null }),
+    "Value is {{val}}",
+  );
+  assertEquals(
+    interpolateTemplate(template, { val: undefined }),
+    "Value is {{val}}",
+  );
 });
 
 Deno.test("interpolateTemplate: handles numeric values", () => {
@@ -46,8 +52,14 @@ Deno.test("interpolateTemplate: handles numeric values", () => {
 
 Deno.test("interpolateTemplate: handles boolean values", () => {
   const template = "Active: {{isActive}}";
-  assertEquals(interpolateTemplate(template, { isActive: true }), "Active: true");
-  assertEquals(interpolateTemplate(template, { isActive: false }), "Active: false");
+  assertEquals(
+    interpolateTemplate(template, { isActive: true }),
+    "Active: true",
+  );
+  assertEquals(
+    interpolateTemplate(template, { isActive: false }),
+    "Active: false",
+  );
 });
 
 Deno.test("interpolateTemplate: handles whitespace in variable names", () => {
@@ -85,7 +97,10 @@ Deno.test("loadTemplate: returns null when template not found", async () => {
     from: () => mockQueryBuilder,
   };
 
-  const result = await loadTemplate(mockSupabase as any, "nonexistent_template");
+  const result = await loadTemplate(
+    mockSupabase as any,
+    "nonexistent_template",
+  );
   assertEquals(result, null);
 });
 
@@ -196,5 +211,8 @@ Deno.test("template + interpolation: end-to-end flow", () => {
   const body = interpolateTemplate(template.body_template, variables);
 
   assertEquals(title, "New message from Alice");
-  assertEquals(body, 'Alice sent you a message: "Hey, is the pasta still available?"');
+  assertEquals(
+    body,
+    'Alice sent you a message: "Hey, is the pasta still available?"',
+  );
 });

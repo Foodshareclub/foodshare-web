@@ -51,7 +51,11 @@ Deno.test("shouldUpdateSubscription - returns true for status-changing events", 
 });
 
 Deno.test("shouldUpdateSubscription - returns false for non-status events", () => {
-  const nonStatusEvents: SubscriptionEventType[] = ["price_change", "test", "unknown"];
+  const nonStatusEvents: SubscriptionEventType[] = [
+    "price_change",
+    "test",
+    "unknown",
+  ];
 
   for (const event of nonStatusEvents) {
     assertEquals(
@@ -298,11 +302,14 @@ Deno.test("Base64 decoding - handles URL-safe base64", () => {
   // URL-safe base64 uses - and _ instead of + and /
   const original = '{"packageName": "com.example.app"}';
   const standard = btoa(original);
-  const urlSafe = standard.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  const urlSafe = standard.replace(/\+/g, "-").replace(/\//g, "_").replace(
+    /=/g,
+    "",
+  );
 
   // Decode URL-safe base64
   const padded = urlSafe.replace(/-/g, "+").replace(/_/g, "/");
-  const paddedLength = padded.length + ((4 - (padded.length % 4)) % 4);
+  const paddedLength = padded.length + (4 - (padded.length % 4)) % 4;
   const decoded = atob(padded.padEnd(paddedLength, "="));
 
   assertEquals(decoded, original);
@@ -374,7 +381,11 @@ Deno.test("All SubscriptionStatus values are handled by hasPremiumAccess", () =>
 
   for (const status of allStatuses) {
     const result = hasPremiumAccess(status);
-    assertEquals(typeof result, "boolean", `hasPremiumAccess should return boolean for ${status}`);
+    assertEquals(
+      typeof result,
+      "boolean",
+      `hasPremiumAccess should return boolean for ${status}`,
+    );
   }
 });
 

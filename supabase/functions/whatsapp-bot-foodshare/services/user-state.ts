@@ -17,7 +17,10 @@ export function getUserState(phoneNumber: string): Promise<UserState | null> {
   return stateService.get(phoneNumber);
 }
 
-export function setUserState(phoneNumber: string, state: UserState | null): Promise<void> {
+export function setUserState(
+  phoneNumber: string,
+  state: UserState | null,
+): Promise<void> {
   return stateService.set(phoneNumber, state);
 }
 

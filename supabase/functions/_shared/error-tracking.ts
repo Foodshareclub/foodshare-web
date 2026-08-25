@@ -118,7 +118,10 @@ function classifyErrorSeverity(error: Error | AppError): ErrorSeverity {
 /**
  * Track an error with automatic aggregation and alerting
  */
-export function trackError(error: Error | AppError, context: Record<string, unknown> = {}): void {
+export function trackError(
+  error: Error | AppError,
+  context: Record<string, unknown> = {},
+): void {
   const fingerprint = generateErrorFingerprint(error);
   const severity = classifyErrorSeverity(error);
   const ctx = getContext();
@@ -156,9 +159,8 @@ export function trackError(error: Error | AppError, context: Record<string, unkn
 
     // Maintain buffer size
     if (errorBuffer.size > ERROR_BUFFER_SIZE) {
-      const oldest = Array.from(errorBuffer.entries()).sort(
-        (a, b) => new Date(a[1].lastSeen).getTime() - new Date(b[1].lastSeen).getTime(),
-      )[0];
+      const oldest = Array.from(errorBuffer.entries())
+        .sort((a, b) => new Date(a[1].lastSeen).getTime() - new Date(b[1].lastSeen).getTime())[0];
       errorBuffer.delete(oldest[0]);
     }
   }
@@ -236,8 +238,8 @@ async function sendAlert(alert: ErrorAlert): Promise<void> {
  * Send alert to Slack webhook
  */
 async function sendSlackAlert(alert: ErrorAlert): Promise<void> {
-  const webhookUrl = (await getSecret("SLACK_ALERT_WEBHOOK_URL")) ||
-    (await getSecret("ERROR_ALERT_WEBHOOK_URL"));
+  const webhookUrl = await getSecret("SLACK_ALERT_WEBHOOK_URL") ||
+    await getSecret("ERROR_ALERT_WEBHOOK_URL");
   if (!webhookUrl) return;
 
   const severityEmoji: Record<ErrorSeverity, string> = {
@@ -254,7 +256,8 @@ async function sendSlackAlert(alert: ErrorAlert): Promise<void> {
     critical: "#8b0000",
   };
 
-  const environment = Deno.env.get("ENVIRONMENT") || Deno.env.get("DENO_ENV") || "production";
+  const environment = Deno.env.get("ENVIRONMENT") || Deno.env.get("DENO_ENV") ||
+    "production";
 
   try {
     await fetch(webhookUrl, {
@@ -300,10 +303,7 @@ async function sendSlackAlert(alert: ErrorAlert): Promise<void> {
                   {
                     type: "mrkdwn",
                     text: `Error ID: \`${
-                      alert.errorId.substring(
-                        0,
-                        50,
-                      )
+                      alert.errorId.substring(0, 50)
                     }\` | Time: ${alert.timestamp}`,
                   },
                 ],
@@ -327,7 +327,8 @@ async function sendPagerDutyAlert(alert: ErrorAlert): Promise<void> {
   const routingKey = await getSecret("PAGERDUTY_ROUTING_KEY");
   if (!routingKey) return;
 
-  const environment = Deno.env.get("ENVIRONMENT") || Deno.env.get("DENO_ENV") || "production";
+  const environment = Deno.env.get("ENVIRONMENT") || Deno.env.get("DENO_ENV") ||
+    "production";
 
   try {
     await fetch("https://events.pagerduty.com/v2/enqueue", {
@@ -358,7 +359,8 @@ async function sendPagerDutyAlert(alert: ErrorAlert): Promise<void> {
             href: `${
               Deno.env.get("SUPABASE_URL") ||
               `https://${
-                Deno.env.get("API_DOMAIN") || Deno.env.get("API_DOMAIN") || "api.foodshare.club"
+                Deno.env.get("API_DOMAIN") || Deno.env.get("API_DOMAIN") ||
+                "api.foodshare.club"
               }`
             }/`,
             text: "View Supabase Dashboard",
@@ -380,13 +382,11 @@ async function sendPagerDutyAlert(alert: ErrorAlert): Promise<void> {
 /**
  * Get all tracked errors
  */
-export function getTrackedErrors(
-  options: {
-    severity?: ErrorSeverity;
-    limit?: number;
-    sortBy?: "count" | "lastSeen" | "severity";
-  } = {},
-): TrackedError[] {
+export function getTrackedErrors(options: {
+  severity?: ErrorSeverity;
+  limit?: number;
+  sortBy?: "count" | "lastSeen" | "severity";
+} = {}): TrackedError[] {
   const { severity, limit = 50, sortBy = "count" } = options;
 
   let errors = Array.from(errorBuffer.values());

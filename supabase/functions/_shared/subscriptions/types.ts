@@ -225,7 +225,9 @@ export function hasPremiumAccess(status: SubscriptionStatus): boolean {
 /**
  * Check if an event type should trigger a subscription status update
  */
-export function shouldUpdateSubscription(eventType: SubscriptionEventType): boolean {
+export function shouldUpdateSubscription(
+  eventType: SubscriptionEventType,
+): boolean {
   switch (eventType) {
     case "subscription_created":
     case "subscription_renewed":
@@ -270,7 +272,9 @@ export function normalizeEnvironment(env: string): SubscriptionEnvironment {
 /**
  * Get severity level for a subscription event (for alerting/logging)
  */
-export function getEventSeverity(eventType: SubscriptionEventType): "info" | "warn" | "error" {
+export function getEventSeverity(
+  eventType: SubscriptionEventType,
+): "info" | "warn" | "error" {
   switch (eventType) {
     case "subscription_expired":
     case "revoked":
@@ -351,7 +355,9 @@ export function getEventDescription(eventType: SubscriptionEventType): string {
 /**
  * Validate subscription event has required fields
  */
-export function validateEvent(event: SubscriptionEvent): { valid: boolean; errors: string[] } {
+export function validateEvent(
+  event: SubscriptionEvent,
+): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
   if (!event.eventId) {

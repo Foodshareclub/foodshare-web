@@ -63,7 +63,9 @@ export async function processInParallel<T, R>(
 
   for (let i = 0; i < items.length; i += concurrency) {
     const batch = items.slice(i, i + concurrency);
-    const batchResults = await Promise.allSettled(batch.map((item) => processor(item)));
+    const batchResults = await Promise.allSettled(
+      batch.map((item) => processor(item)),
+    );
 
     results.push(
       ...(batchResults
@@ -80,7 +82,10 @@ export async function processInParallel<T, R>(
  */
 const pendingRequests = new Map<string, Promise<any>>();
 
-export async function deduplicate<T>(key: string, fn: () => Promise<T>): Promise<T> {
+export async function deduplicate<T>(
+  key: string,
+  fn: () => Promise<T>,
+): Promise<T> {
   if (pendingRequests.has(key)) {
     return await pendingRequests.get(key);
   }

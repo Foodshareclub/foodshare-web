@@ -152,7 +152,8 @@ async function generateZepEmbedding(
     }
 
     const data = await response.json();
-    return data.embeddings || data.data?.map((d: { embedding: number[] }) => d.embedding);
+    return data.embeddings ||
+      data.data?.map((d: { embedding: number[] }) => d.embedding);
   } catch (error) {
     clearTimeout(timeout);
 
@@ -183,17 +184,20 @@ async function generateHuggingFaceEmbedding(
     // Use BAAI/bge-small-en-v1.5 - a dedicated embedding model (384 dimensions)
     const modelId = "BAAI/bge-small-en-v1.5";
     // Use the new HuggingFace Router endpoint for Inference API
-    const response = await fetch(`https://router.huggingface.co/hf-inference/models/${modelId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+    const response = await fetch(
+      `https://router.huggingface.co/hf-inference/models/${modelId}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          inputs: texts,
+        }),
+        signal: controller.signal,
       },
-      body: JSON.stringify({
-        inputs: texts,
-      }),
-      signal: controller.signal,
-    });
+    );
 
     clearTimeout(timeout);
 
@@ -203,7 +207,8 @@ async function generateHuggingFaceEmbedding(
         `HuggingFace API error: ${response.status} - ${errorText}`,
         "huggingface",
         `HTTP_${response.status}`,
-        response.status >= 500 || response.status === 429 || response.status === 503,
+        response.status >= 500 || response.status === 429 ||
+          response.status === 503,
       );
     }
 
@@ -222,7 +227,12 @@ async function generateHuggingFaceEmbedding(
     if (error instanceof EmbeddingError) throw error;
 
     if (error instanceof Error && error.name === "AbortError") {
-      throw new EmbeddingError("HuggingFace request timeout", "huggingface", "TIMEOUT", true);
+      throw new EmbeddingError(
+        "HuggingFace request timeout",
+        "huggingface",
+        "TIMEOUT",
+        true,
+      );
     }
 
     throw new EmbeddingError(
@@ -260,7 +270,10 @@ function meanPool(tokenEmbeddings: number[][]): number[] {
 /**
  * Pad or truncate embedding to target dimensions
  */
-function normalizeEmbeddingDimensions(embedding: number[], targetDim: number): number[] {
+function normalizeEmbeddingDimensions(
+  embedding: number[],
+  targetDim: number,
+): number[] {
   if (embedding.length === targetDim) {
     return embedding;
   }
@@ -406,11 +419,15 @@ export async function generateEmbeddings(
 
   // All providers failed
   const latencyMs = Math.round(performance.now() - startTime);
-  logger.error("All embedding providers failed", new Error("Embedding generation failed"), {
-    latencyMs,
-    textCount: texts.length,
-    errors: errors.map((e) => e.message),
-  });
+  logger.error(
+    "All embedding providers failed",
+    new Error("Embedding generation failed"),
+    {
+      latencyMs,
+      textCount: texts.length,
+      errors: errors.map((e) => e.message),
+    },
+  );
 
   throw new EmbeddingError(
     `All embedding providers failed: ${errors.map((e) => e.message).join("; ")}`,

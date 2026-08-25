@@ -30,7 +30,10 @@ export function checkRateLimit(
   return rateLimiter.checkSync(phoneNumber, maxRequests, windowMs);
 }
 
-export function getRemainingRequests(phoneNumber: string, maxRequests?: number): number {
+export function getRemainingRequests(
+  phoneNumber: string,
+  maxRequests?: number,
+): number {
   return rateLimiter.getRemaining(phoneNumber, maxRequests);
 }
 

@@ -44,13 +44,13 @@ endpoint
 // Old
 POST / send - digest - notifications;
 {
-  (frequency, limit, dryRun);
+  frequency, limit, dryRun;
 }
 
 // New
 POST / api - v1 - notifications / digest / process;
 {
-  (frequency, limit, dryRun);
+  frequency, limit, dryRun;
 }
 ```
 
@@ -141,27 +141,34 @@ export async function sendNotification(params: {
   channels?: string[];
   priority?: string;
 }) {
-  const { data, error } = await supabase.functions.invoke("api-v1-notifications/send", {
-    body: params,
-  });
+  const { data, error } = await supabase.functions.invoke(
+    "api-v1-notifications/send",
+    {
+      body: params,
+    },
+  );
 
   if (error) throw error;
   return data;
 }
 
 export async function getPreferences() {
-  const { data, error } = await supabase.functions.invoke("api-v1-notifications/preferences", {
-    method: "GET",
-  });
+  const { data, error } = await supabase.functions.invoke(
+    "api-v1-notifications/preferences",
+    { method: "GET" },
+  );
 
   if (error) throw error;
   return data;
 }
 
 export async function updatePreferences(settings: any) {
-  const { data, error } = await supabase.functions.invoke("api-v1-notifications/preferences", {
-    body: settings,
-  });
+  const { data, error } = await supabase.functions.invoke(
+    "api-v1-notifications/preferences",
+    {
+      body: settings,
+    },
+  );
 
   if (error) throw error;
   return data;

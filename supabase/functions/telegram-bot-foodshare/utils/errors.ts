@@ -58,7 +58,10 @@ export class ExternalServiceError extends BotError {
 /**
  * Safe error logging that doesn't expose sensitive data
  */
-export function logError(error: unknown, context: Record<string, unknown> = {}) {
+export function logError(
+  error: unknown,
+  context: Record<string, unknown> = {},
+) {
   const sanitizedContext = { ...context };
 
   // Remove sensitive fields
@@ -149,7 +152,10 @@ export async function withRetry<T>(
       }
 
       // Exponential backoff with jitter
-      const delay = Math.min(baseDelayMs * Math.pow(2, attempt) + Math.random() * 100, maxDelayMs);
+      const delay = Math.min(
+        baseDelayMs * Math.pow(2, attempt) + Math.random() * 100,
+        maxDelayMs,
+      );
 
       logger.warn("Retry attempt", {
         attempt: attempt + 1,

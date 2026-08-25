@@ -33,7 +33,8 @@ export const createProductSchema = z.object({
 });
 
 export const updateProductSchema = z.object({
-  title: z.string().min(LISTING.title.minLength).max(LISTING.title.maxLength).optional(),
+  title: z.string().min(LISTING.title.minLength).max(LISTING.title.maxLength)
+    .optional(),
   description: z.string().max(LISTING.description.maxLength).optional(),
   images: z.array(z.string().url()).min(1).max(5).optional(),
   pickupAddress: z.string().max(500).optional(),
@@ -48,22 +49,20 @@ export const listQuerySchema = z.object({
   mode: z.enum(["feed"]).optional(),
   id: z.string().optional(),
   include: z.string().optional(), // e.g., "owner,related"
-  postType: z
-    .enum([
-      "food",
-      "thing",
-      "borrow",
-      "wanted",
-      "foodbank",
-      "fridge",
-      "zerowaste",
-      "vegan",
-      "organisation",
-      "volunteer",
-      "challenge",
-      "forum",
-    ])
-    .optional(),
+  postType: z.enum([
+    "food",
+    "thing",
+    "borrow",
+    "wanted",
+    "foodbank",
+    "fridge",
+    "zerowaste",
+    "vegan",
+    "organisation",
+    "volunteer",
+    "challenge",
+    "forum",
+  ]).optional(),
   categoryId: z.string().optional(),
   lat: z.string().optional(),
   lng: z.string().optional(),

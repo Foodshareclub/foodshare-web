@@ -46,7 +46,10 @@ function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
   return current;
 }
 
-function renderTemplateString(template: string, variables: Record<string, unknown>): string {
+function renderTemplateString(
+  template: string,
+  variables: Record<string, unknown>,
+): string {
   if (!template) return "";
 
   let result = template;
@@ -142,7 +145,9 @@ export async function sendNotification(
     }
 
     // 4. Handle digest batching
-    const firstDigest = preferenceResults.find((r) => r.frequency && r.frequency !== "instant");
+    const firstDigest = preferenceResults.find(
+      (r) => r.frequency && r.frequency !== "instant",
+    );
     if (firstDigest && !bypassPreferences) {
       await queueForDigest(request, firstDigest.frequency!, context);
 
@@ -182,7 +187,12 @@ export async function sendNotification(
     }
 
     // 6. Send to each channel with fallback
-    const channelResults = await sendToChannels(request, allowedChannels, context, notificationId);
+    const channelResults = await sendToChannels(
+      request,
+      allowedChannels,
+      context,
+      notificationId,
+    );
 
     // 7. Track delivery
     await trackDelivery(notificationId, request, channelResults, context);
@@ -247,9 +257,12 @@ async function determineChannels(
   const category = mapTypeToCategory(request.type);
 
   try {
-    const { data, error } = await context.supabase.rpc("get_notification_preferences", {
-      p_user_id: request.userId,
-    });
+    const { data, error } = await context.supabase.rpc(
+      "get_notification_preferences",
+      {
+        p_user_id: request.userId,
+      },
+    );
 
     if (error || !data) {
       logger.warn("Failed to get notification preferences, using defaults", {
@@ -266,13 +279,17 @@ async function determineChannels(
     if (data.settings?.push_enabled && categoryPrefs?.push?.enabled !== false) {
       channels.push("push");
     }
-    if (data.settings?.email_enabled && categoryPrefs?.email?.enabled !== false) {
+    if (
+      data.settings?.email_enabled && categoryPrefs?.email?.enabled !== false
+    ) {
       channels.push("email");
     }
     if (data.settings?.sms_enabled && categoryPrefs?.sms?.enabled !== false) {
       channels.push("sms");
     }
-    if (data.settings?.telegram_enabled !== false && categoryPrefs?.telegram?.enabled !== false) {
+    if (
+      data.settings?.telegram_enabled !== false && categoryPrefs?.telegram?.enabled !== false
+    ) {
       channels.push("telegram");
     }
 
@@ -367,15 +384,18 @@ export async function sendToChannel(
   request: SendRequest,
   context: NotificationContext,
 ): Promise<ChannelDeliveryResult> {
-  const results = await sendToChannels(request, [channel], context, crypto.randomUUID());
-  return (
-    results[0] || {
-      channel,
-      success: false,
-      error: "Failed to send to channel",
-      attemptedAt: new Date().toISOString(),
-    }
+  const results = await sendToChannels(
+    request,
+    [channel],
+    context,
+    crypto.randomUUID(),
   );
+  return results[0] || {
+    channel,
+    success: false,
+    error: "Failed to send to channel",
+    attemptedAt: new Date().toISOString(),
+  };
 }
 
 async function buildChannelPayload(
@@ -407,7 +427,8 @@ async function buildChannelPayload(
       const renderedBody = renderTemplateString(request.body, variables);
 
       // Check for custom HTML content from admin email compose
-      const useCustomHtml = request.data?.useHtml === "true" && request.data?.rawMessage;
+      const useCustomHtml = request.data?.useHtml === "true" &&
+        request.data?.rawMessage;
       const htmlContent = useCustomHtml
         ? renderTemplateString(request.data?.rawMessage as string, variables)
         : formatEmailHtml(request);
@@ -646,7 +667,10 @@ async function handleFallbacks(
   const emailResult = results.find((r) => r.channel === "email");
 
   // If push failed and email not attempted, try email
-  if (pushResult && !pushResult.success && !emailResult && request.priority !== "low") {
+  if (
+    pushResult && !pushResult.success && !emailResult &&
+    request.priority !== "low"
+  ) {
     logger.info("Push failed, attempting email fallback", {
       userId: request.userId,
       type: request.type,
@@ -664,7 +688,10 @@ async function handleFallbacks(
             body: request.body,
           };
 
-          const renderedSubject = renderTemplateString(request.title, variables);
+          const renderedSubject = renderTemplateString(
+            request.title,
+            variables,
+          );
           const renderedBody = renderTemplateString(request.body, variables);
 
           const payload = {

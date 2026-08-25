@@ -20,7 +20,8 @@ export function isValidEmail(email: string): boolean {
  */
 export function isValidDescription(description: string): boolean {
   const trimmed = description.trim();
-  return trimmed.length >= MIN_DESCRIPTION_LENGTH && trimmed.length <= MAX_DESCRIPTION_LENGTH;
+  return trimmed.length >= MIN_DESCRIPTION_LENGTH &&
+    trimmed.length <= MAX_DESCRIPTION_LENGTH;
 }
 
 /**
@@ -61,7 +62,10 @@ export function normalizePhoneNumber(phone: string): string {
  * Latitude: -90 to 90
  * Longitude: -180 to 180
  */
-export function isValidCoordinates(latitude: number, longitude: number): boolean {
+export function isValidCoordinates(
+  latitude: number,
+  longitude: number,
+): boolean {
   if (typeof latitude !== "number" || typeof longitude !== "number") {
     return false;
   }
@@ -80,7 +84,10 @@ export function isValidCoordinates(latitude: number, longitude: number): boolean
 /**
  * Create safe PostGIS POINT string from validated coordinates
  */
-export function createPostGISPoint(latitude: number, longitude: number): string | null {
+export function createPostGISPoint(
+  latitude: number,
+  longitude: number,
+): string | null {
   if (!isValidCoordinates(latitude, longitude)) {
     return null;
   }

@@ -50,30 +50,31 @@ const CACHE_TTL_MS = 30000; // 30 seconds
 
 const EVENT_TYPE_MAP: Record<
   NotificationType,
-  SubscriptionEventType | ((subtype?: NotificationSubtype) => SubscriptionEventType)
+  | SubscriptionEventType
+  | ((subtype?: NotificationSubtype) => SubscriptionEventType)
 > = {
-  SUBSCRIBED: (subtype) =>
+  "SUBSCRIBED": (subtype) =>
     subtype === "RESUBSCRIBE" ? "subscription_reactivated" : "subscription_created",
-  DID_RENEW: (subtype) =>
+  "DID_RENEW": (subtype) =>
     subtype === "BILLING_RECOVERY" ? "billing_recovered" : "subscription_renewed",
-  DID_FAIL_TO_RENEW: () => "billing_issue",
-  GRACE_PERIOD_EXPIRED: () => "grace_period_expired",
-  EXPIRED: () => "subscription_expired",
-  REFUND: () => "refunded",
-  REVOKE: () => "revoked",
-  DID_CHANGE_RENEWAL_STATUS: (subtype) =>
+  "DID_FAIL_TO_RENEW": () => "billing_issue",
+  "GRACE_PERIOD_EXPIRED": () => "grace_period_expired",
+  "EXPIRED": () => "subscription_expired",
+  "REFUND": () => "refunded",
+  "REVOKE": () => "revoked",
+  "DID_CHANGE_RENEWAL_STATUS": (subtype) =>
     subtype === "AUTO_RENEW_DISABLED" ? "subscription_canceled" : "subscription_reactivated",
-  DID_CHANGE_RENEWAL_PREF: () => "plan_changed",
-  OFFER_REDEEMED: () => "subscription_created",
-  RENEWAL_EXTENDED: () => "subscription_renewed",
-  RENEWAL_EXTENSION: () => "subscription_renewed",
-  PRICE_INCREASE: () => "price_change",
-  REFUND_DECLINED: () => "subscription_reactivated",
-  REFUND_REVERSED: () => "subscription_reactivated",
-  TEST: () => "test",
-  CONSUMPTION_REQUEST: () => "unknown",
+  "DID_CHANGE_RENEWAL_PREF": () => "plan_changed",
+  "OFFER_REDEEMED": () => "subscription_created",
+  "RENEWAL_EXTENDED": () => "subscription_renewed",
+  "RENEWAL_EXTENSION": () => "subscription_renewed",
+  "PRICE_INCREASE": () => "price_change",
+  "REFUND_DECLINED": () => "subscription_reactivated",
+  "REFUND_REVERSED": () => "subscription_reactivated",
+  "TEST": () => "test",
+  "CONSUMPTION_REQUEST": () => "unknown",
   // "ONE_TIME_CHARGE": () => "unknown",
-  EXTERNAL_PURCHASE_TOKEN: () => "unknown",
+  "EXTERNAL_PURCHASE_TOKEN": () => "unknown",
 };
 
 function mapAppleEventType(
@@ -109,7 +110,9 @@ function mapAppleStatus(
 // Cache Management
 // =============================================================================
 
-function getCachedPayload(signedPayload: string): ResponseBodyV2DecodedPayload | null {
+function getCachedPayload(
+  signedPayload: string,
+): ResponseBodyV2DecodedPayload | null {
   const cached = verifiedPayloadCache.get(signedPayload);
   if (cached) {
     return cached;
@@ -117,7 +120,10 @@ function getCachedPayload(signedPayload: string): ResponseBodyV2DecodedPayload |
   return null;
 }
 
-function cachePayload(signedPayload: string, payload: ResponseBodyV2DecodedPayload): void {
+function cachePayload(
+  signedPayload: string,
+  payload: ResponseBodyV2DecodedPayload,
+): void {
   verifiedPayloadCache.set(signedPayload, payload);
 
   // Clean old entries
@@ -145,7 +151,9 @@ async function verifyAndDecodePayload(
   return await measureAsync(
     "apple.verify_jws",
     async () => {
-      const result = await verifyAppleJWS<ResponseBodyV2DecodedPayload>(signedPayload);
+      const result = await verifyAppleJWS<ResponseBodyV2DecodedPayload>(
+        signedPayload,
+      );
       return result;
     },
     context,
@@ -240,7 +248,10 @@ export const appleHandler: PlatformHandler = {
     }
   },
 
-  async parseEvent(_request: Request, body: string): Promise<SubscriptionEvent> {
+  async parseEvent(
+    _request: Request,
+    body: string,
+  ): Promise<SubscriptionEvent> {
     const timer = new PerformanceTimer("apple.parse_event");
 
     const payload = JSON.parse(body);
@@ -266,21 +277,21 @@ export const appleHandler: PlatformHandler = {
     // Decode transaction info
     let transactionInfo: JWSTransactionDecodedPayload | undefined;
     if (decodedPayload.data.signedTransactionInfo) {
-      transactionInfo = (await verifyNestedJWS<JWSTransactionDecodedPayload>(
+      transactionInfo = await verifyNestedJWS<JWSTransactionDecodedPayload>(
         decodedPayload.data.signedTransactionInfo,
         "transaction_info",
         context,
-      )) ?? undefined;
+      ) ?? undefined;
     }
 
     // Decode renewal info
     let renewalInfo: JWSRenewalInfoDecodedPayload | undefined;
     if (decodedPayload.data.signedRenewalInfo) {
-      renewalInfo = (await verifyNestedJWS<JWSRenewalInfoDecodedPayload>(
+      renewalInfo = await verifyNestedJWS<JWSRenewalInfoDecodedPayload>(
         decodedPayload.data.signedRenewalInfo,
         "renewal_info",
         context,
-      )) ?? undefined;
+      ) ?? undefined;
     }
 
     // Build normalized subscription data
@@ -299,7 +310,8 @@ export const appleHandler: PlatformHandler = {
       expiresDate: transactionInfo?.expiresDate ? new Date(transactionInfo.expiresDate) : undefined,
       autoRenewEnabled: renewalInfo?.autoRenewStatus === 1,
       autoRenewProductId: renewalInfo?.autoRenewProductId,
-      appUserId: parseAppAccountToken(transactionInfo?.appAccountToken) || undefined,
+      appUserId: parseAppAccountToken(transactionInfo?.appAccountToken) ||
+        undefined,
       gracePeriodExpiresDate: renewalInfo?.gracePeriodExpiresDate
         ? new Date(renewalInfo.gracePeriodExpiresDate)
         : undefined,

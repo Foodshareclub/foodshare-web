@@ -18,14 +18,11 @@ import { logger } from "../../_shared/logger.ts";
 import { llmTranslationService } from "../services/llm-translation.ts";
 
 // In-memory cache (L1)
-const memoryCache = new Map<
-  string,
-  {
-    text: string;
-    quality: number;
-    timestamp: number;
-  }
->();
+const memoryCache = new Map<string, {
+  text: string;
+  quality: number;
+  timestamp: number;
+}>();
 const MEMORY_TTL = 3600000; // 1 hour
 const MAX_MEMORY_SIZE = 10000;
 
@@ -100,7 +97,11 @@ export default async function translateContentHandler(
 
     // Handle batch translation
     if (batch?.texts && batch.texts.length > 0) {
-      const translations = await translateBatch(batch.texts, targetLocale, contentType);
+      const translations = await translateBatch(
+        batch.texts,
+        targetLocale,
+        contentType,
+      );
       return new Response(
         JSON.stringify({
           success: true,
@@ -152,11 +153,14 @@ export default async function translateContentHandler(
     // L2: Check database cache
     const supabase = getSupabaseClient();
 
-    const { data: dbResult, error: dbError } = await supabase.rpc("get_or_translate", {
-      p_source_text: text,
-      p_target_locale: targetLocale,
-      p_content_type: contentType,
-    });
+    const { data: dbResult, error: dbError } = await supabase.rpc(
+      "get_or_translate",
+      {
+        p_source_text: text,
+        p_target_locale: targetLocale,
+        p_content_type: contentType,
+      },
+    );
 
     if (dbError) {
       logger.warn("Database cache lookup error", dbError);
@@ -193,7 +197,12 @@ export default async function translateContentHandler(
       locale: targetLocale,
       contentType,
     });
-    const llmResult = await llmTranslationService.translate(text, "en", targetLocale, contentType);
+    const llmResult = await llmTranslationService.translate(
+      text,
+      "en",
+      targetLocale,
+      contentType,
+    );
 
     // Determine cache layer from service used
     const cacheLayer = llmResult.service === "llm"
@@ -261,7 +270,8 @@ export default async function translateContentHandler(
         quality: llmResult.quality,
         service: llmResult.service,
         responseTimeMs: Math.round(performance.now() - startTime),
-        ...(llmResult.error && { error: llmResult.error.message || "Translation failed" }),
+        ...(llmResult.error &&
+          { error: llmResult.error.message || "Translation failed" }),
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -289,7 +299,7 @@ function hashText(text: string): string {
   let hash = 0;
   for (let i = 0; i < text.length; i++) {
     const char = text.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
+    hash = ((hash << 5) - hash) + char;
     hash = hash & hash;
   }
   return Math.abs(hash).toString(36);
@@ -314,5 +324,10 @@ async function translateBatch(
   targetLocale: string,
   contentType: string,
 ): Promise<string[]> {
-  return llmTranslationService.batchTranslate(texts, "en", targetLocale, contentType) as any;
+  return llmTranslationService.batchTranslate(
+    texts,
+    "en",
+    targetLocale,
+    contentType,
+  ) as any;
 }

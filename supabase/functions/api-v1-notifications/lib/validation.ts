@@ -46,9 +46,20 @@ export const notificationCategoryEnum = z.enum([
   "marketing",
 ]);
 
-export const notificationChannelEnum = z.enum(["push", "email", "sms", "in_app"]);
+export const notificationChannelEnum = z.enum([
+  "push",
+  "email",
+  "sms",
+  "in_app",
+]);
 
-export const notificationFrequencyEnum = z.enum(["instant", "hourly", "daily", "weekly", "never"]);
+export const notificationFrequencyEnum = z.enum([
+  "instant",
+  "hourly",
+  "daily",
+  "weekly",
+  "never",
+]);
 
 export const priorityLevelEnum = z.enum(["critical", "high", "normal", "low"]);
 
@@ -109,23 +120,14 @@ export const digestRequestSchema = z.object({
 
 export const quietHoursSchema = z.object({
   enabled: z.boolean().optional(),
-  start: z
-    .string()
-    .regex(/^\d{2}:\d{2}$/)
-    .optional(),
-  end: z
-    .string()
-    .regex(/^\d{2}:\d{2}$/)
-    .optional(),
+  start: z.string().regex(/^\d{2}:\d{2}$/).optional(),
+  end: z.string().regex(/^\d{2}:\d{2}$/).optional(),
   timezone: z.string().max(50).optional(),
 });
 
 export const digestSettingsSchema = z.object({
   daily_enabled: z.boolean().optional(),
-  daily_time: z
-    .string()
-    .regex(/^\d{2}:\d{2}$/)
-    .optional(),
+  daily_time: z.string().regex(/^\d{2}:\d{2}$/).optional(),
   weekly_enabled: z.boolean().optional(),
   weekly_day: z.number().int().min(0).max(6).optional(),
 });

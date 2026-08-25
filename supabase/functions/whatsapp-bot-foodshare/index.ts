@@ -40,14 +40,15 @@ async function ensureInitialized(ctx: HandlerContext): Promise<boolean> {
   if (isInitialized) return true;
 
   try {
-    const accessToken = (await ctx.getSecret("WHATSAPP_ACCESS_TOKEN")) ||
+    const accessToken = await ctx.getSecret("WHATSAPP_ACCESS_TOKEN") ||
       Deno.env.get("WHATSAPP_ACCESS_TOKEN");
-    const phoneNumberId = (await ctx.getSecret("WHATSAPP_PHONE_NUMBER_ID")) ||
+    const phoneNumberId = await ctx.getSecret("WHATSAPP_PHONE_NUMBER_ID") ||
       Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
-    const verifyToken = (await ctx.getSecret("WHATSAPP_VERIFY_TOKEN")) ||
+    const verifyToken = await ctx.getSecret("WHATSAPP_VERIFY_TOKEN") ||
       Deno.env.get("WHATSAPP_VERIFY_TOKEN");
-    const supabaseUrl = (await ctx.getSecret("SUPABASE_URL")) || Deno.env.get("SUPABASE_URL");
-    const supabaseKey = (await ctx.getSecret("SUPABASE_SERVICE_ROLE_KEY")) ||
+    const supabaseUrl = await ctx.getSecret("SUPABASE_URL") ||
+      Deno.env.get("SUPABASE_URL");
+    const supabaseKey = await ctx.getSecret("SUPABASE_SERVICE_ROLE_KEY") ||
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!accessToken) {
@@ -85,7 +86,8 @@ async function verifyWebhookSignature(
   headers: Headers,
   ctx: HandlerContext,
 ): Promise<boolean> {
-  const appSecret = (await ctx.getSecret("WHATSAPP_APP_SECRET")) || getWhatsappAppSecret();
+  const appSecret = await ctx.getSecret("WHATSAPP_APP_SECRET") ||
+    getWhatsappAppSecret();
   if (!appSecret) {
     if (isDevelopment()) {
       logger.warn(
@@ -93,7 +95,9 @@ async function verifyWebhookSignature(
       );
       return true;
     }
-    logger.error("WHATSAPP_APP_SECRET not configured - rejecting request in production");
+    logger.error(
+      "WHATSAPP_APP_SECRET not configured - rejecting request in production",
+    );
     return false;
   }
 
@@ -139,7 +143,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
   const challenge = url.searchParams.get("hub.challenge");
 
   if (mode === "subscribe" && token && challenge) {
-    const expectedToken = (await ctx.getSecret("WHATSAPP_VERIFY_TOKEN")) ||
+    const expectedToken = await ctx.getSecret("WHATSAPP_VERIFY_TOKEN") ||
       getWhatsappVerifyToken();
     if (token === expectedToken) {
       logger.info("Webhook verified successfully");
@@ -205,7 +209,11 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
     const rawBody = await ctx.request.text();
 
     // Verify webhook signature
-    const isValidSignature = await verifyWebhookSignature(rawBody, ctx.request.headers, ctx);
+    const isValidSignature = await verifyWebhookSignature(
+      rawBody,
+      ctx.request.headers,
+      ctx,
+    );
 
     if (!isValidSignature) {
       logger.warn("Invalid webhook signature", { requestId });
@@ -310,15 +318,24 @@ async function routeMessage(
         break;
 
       case "interactive":
-        if (message.interactive?.type === "button_reply" && message.interactive.button_reply) {
-          await handleButtonReply(phoneNumber, message.interactive.button_reply.id);
+        if (
+          message.interactive?.type === "button_reply" &&
+          message.interactive.button_reply
+        ) {
+          await handleButtonReply(
+            phoneNumber,
+            message.interactive.button_reply.id,
+          );
           logger.info("Button reply handled", {
             requestId,
             phoneNumber: phoneNumber.substring(0, 4) + "***",
             buttonId: message.interactive.button_reply.id,
             durationMs: Date.now() - startTime,
           });
-        } else if (message.interactive?.type === "list_reply" && message.interactive.list_reply) {
+        } else if (
+          message.interactive?.type === "list_reply" &&
+          message.interactive.list_reply
+        ) {
           await handleListReply(phoneNumber, message.interactive.list_reply.id);
           logger.info("List reply handled", {
             requestId,
@@ -364,15 +381,13 @@ async function routeMessage(
 // API Handler
 // ============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: SERVICE,
-    version: VERSION,
-    requireAuth: false,
-    csrf: false,
-    routes: {
-      GET: { handler: handleGet },
-      POST: { handler: handlePost },
-    },
-  }),
-);
+Deno.serve(createAPIHandler({
+  service: SERVICE,
+  version: VERSION,
+  requireAuth: false,
+  csrf: false,
+  routes: {
+    GET: { handler: handleGet },
+    POST: { handler: handlePost },
+  },
+}));

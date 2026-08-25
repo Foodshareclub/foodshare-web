@@ -44,7 +44,15 @@ export interface WhatsAppMessage {
   from: string;
   id: string;
   timestamp: string;
-  type: "text" | "image" | "location" | "interactive" | "button" | "document" | "audio" | "video";
+  type:
+    | "text"
+    | "image"
+    | "location"
+    | "interactive"
+    | "button"
+    | "document"
+    | "audio"
+    | "video";
   text?: { body: string };
   image?: WhatsAppMedia;
   document?: WhatsAppMedia;

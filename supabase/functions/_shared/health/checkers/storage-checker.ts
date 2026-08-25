@@ -12,7 +12,9 @@ import { HealthStatus, ServiceHealth, STORAGE_DEGRADED_THRESHOLD_MS } from "../t
  * @param supabase - Supabase client instance
  * @returns Service health result
  */
-export async function checkStorage(supabase: SupabaseClient): Promise<ServiceHealth> {
+export async function checkStorage(
+  supabase: SupabaseClient,
+): Promise<ServiceHealth> {
   const start = performance.now();
 
   try {

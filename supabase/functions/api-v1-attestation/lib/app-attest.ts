@@ -29,7 +29,9 @@ const CBOR_MAJOR_ARRAY = 4;
 
 export function decodeCBOR(
   data: Uint8Array,
-): { fmt: string; attStmt: Record<string, Uint8Array>; authData: Uint8Array } | null {
+):
+  | { fmt: string; attStmt: Record<string, Uint8Array>; authData: Uint8Array }
+  | null {
   try {
     let offset = 0;
 
@@ -48,7 +50,8 @@ export function decodeCBOR(
       } else if (additionalInfo === 25) {
         value = (data[offset++] << 8) | data[offset++];
       } else if (additionalInfo === 26) {
-        value = (data[offset++] << 24) | (data[offset++] << 16) | (data[offset++] << 8) |
+        value = (data[offset++] << 24) | (data[offset++] << 16) |
+          (data[offset++] << 8) |
           data[offset++];
       } else {
         return null;
@@ -119,10 +122,8 @@ export function parseAuthData(authData: Uint8Array): {
     offset += 32;
 
     const flags = authData[offset++];
-    const signCount = (authData[offset++] << 24) |
-      (authData[offset++] << 16) |
-      (authData[offset++] << 8) |
-      authData[offset++];
+    const signCount = (authData[offset++] << 24) | (authData[offset++] << 16) |
+      (authData[offset++] << 8) | authData[offset++];
 
     if (!(flags & 0x40)) return null;
 
@@ -145,7 +146,10 @@ export function parseAuthData(authData: Uint8Array): {
 // App ID Hash Verification
 // =============================================================================
 
-export async function verifyAppIdHash(rpIdHash: Uint8Array, bundleId: string): Promise<boolean> {
+export async function verifyAppIdHash(
+  rpIdHash: Uint8Array,
+  bundleId: string,
+): Promise<boolean> {
   const teamId = getAppleTeamId();
   const appId = `${teamId}.${bundleId}`;
   const encoder = new TextEncoder();
@@ -218,7 +222,10 @@ export async function verifySignature(
   publicKeyBase64: string,
 ): Promise<boolean> {
   try {
-    const publicKeyRaw = Uint8Array.from(atob(publicKeyBase64), (c) => c.charCodeAt(0));
+    const publicKeyRaw = Uint8Array.from(
+      atob(publicKeyBase64),
+      (c) => c.charCodeAt(0),
+    );
 
     const publicKey = await crypto.subtle.importKey(
       "raw",
@@ -254,11 +261,16 @@ export async function verifyAppAttest(
   attestation: string,
   _challenge: string,
   bundleId: string,
-): Promise<{ verified: boolean; publicKey?: string; message?: string; riskScore: number }> {
+): Promise<
+  { verified: boolean; publicKey?: string; message?: string; riskScore: number }
+> {
   try {
     let attestationData: Uint8Array;
     try {
-      attestationData = Uint8Array.from(atob(attestation), (c) => c.charCodeAt(0));
+      attestationData = Uint8Array.from(
+        atob(attestation),
+        (c) => c.charCodeAt(0),
+      );
     } catch {
       return {
         verified: false,

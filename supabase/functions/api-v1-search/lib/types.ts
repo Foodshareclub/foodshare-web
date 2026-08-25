@@ -126,11 +126,15 @@ export interface SearchQuery {
 }
 
 export function parseSearchQuery(params: Record<string, string>): SearchQuery {
-  const mode = (
-    ["semantic", "text", "hybrid", "fuzzy"].includes(params.mode) ? params.mode : "hybrid"
-  ) as SearchMode;
+  const mode =
+    (["semantic", "text", "hybrid", "fuzzy"].includes(params.mode)
+      ? params.mode
+      : "hybrid") as SearchMode;
 
-  const limit = Math.min(Math.max(1, parseInt(params.limit, 10) || DEFAULT_LIMIT), MAX_LIMIT);
+  const limit = Math.min(
+    Math.max(1, parseInt(params.limit, 10) || DEFAULT_LIMIT),
+    MAX_LIMIT,
+  );
   const offset = Math.max(0, parseInt(params.offset, 10) || 0);
 
   const q = params.q?.slice(0, 500) || undefined;
@@ -143,10 +147,7 @@ export function parseSearchQuery(params: Record<string, string>): SearchQuery {
   const lng = params.lng ? Number(params.lng) : undefined;
   const radiusKm = params.radiusKm ? Number(params.radiusKm) : undefined;
   const categoryIds = params.categoryIds
-    ? params.categoryIds
-      .split(",")
-      .map(Number)
-      .filter((n) => !isNaN(n))
+    ? params.categoryIds.split(",").map(Number).filter((n) => !isNaN(n))
     : undefined;
 
   return { q, mode, route, lat, lng, radiusKm, categoryIds, limit, offset };
@@ -156,7 +157,9 @@ export interface PostRouteQuery {
   route?: "index" | "batch";
 }
 
-export function parsePostRouteQuery(params: Record<string, string>): PostRouteQuery {
+export function parsePostRouteQuery(
+  params: Record<string, string>,
+): PostRouteQuery {
   const route = (["index", "batch"].includes(params.route) ? params.route : undefined) as
     | "index"
     | "batch"
@@ -196,7 +199,11 @@ export const stats = {
   provider_usage: {} as Record<string, number>,
 };
 
-export function updateStats(latencyMs: number, cached: boolean, provider?: string): void {
+export function updateStats(
+  latencyMs: number,
+  cached: boolean,
+  provider?: string,
+): void {
   stats.total_searches++;
   if (cached) stats.cache_hits++;
   else stats.cache_misses++;
@@ -236,7 +243,10 @@ export function escapePostgresLike(value: string): string {
 }
 
 export function validateUUID(id: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    .test(
+      id,
+    );
 }
 
 // =============================================================================
@@ -304,7 +314,9 @@ export function transformVectorResult(r: VectorQueryResult): SearchResultItem {
   };
 }
 
-export function transformPostsToResults(posts: Record<string, unknown>[]): SearchResultItem[] {
+export function transformPostsToResults(
+  posts: Record<string, unknown>[],
+): SearchResultItem[] {
   return posts.map((row, idx) => ({
     id: String(row.id),
     score: 1 - idx * 0.01,
@@ -350,7 +362,10 @@ export function applyRRF(
   semanticResults: SearchResultItem[],
   textResults: SearchResultItem[],
 ): SearchResultItem[] {
-  const scoreMap = new Map<string, { score: number; item: SearchResultItem }>();
+  const scoreMap = new Map<
+    string,
+    { score: number; item: SearchResultItem }
+  >();
 
   semanticResults.forEach((item, rank) => {
     const rrfScore = SEMANTIC_WEIGHT / (RRF_K + rank + 1);

@@ -74,7 +74,9 @@ const TEMPLATE_DEFINITIONS: Omit<TemplateDefinition, "html_content">[] = [
     category: "transactional",
     subject: "Confirm your email to join FoodShare! ✉️",
     text_content: null,
-    variables: [{ name: "verifyUrl", type: "url", required: true }],
+    variables: [
+      { name: "verifyUrl", type: "url", required: true },
+    ],
     metadata: { preheader: "One click to confirm your FoodShare account" },
   },
   {
@@ -128,7 +130,9 @@ const TEMPLATE_DEFINITIONS: Omit<TemplateDefinition, "html_content">[] = [
     category: "transactional",
     subject: "Welcome to the FoodShare Volunteer Team! 🌟",
     text_content: null,
-    variables: [{ name: "name", type: "string", required: true }],
+    variables: [
+      { name: "name", type: "string", required: true },
+    ],
     metadata: { preheader: "You're joining an amazing team" },
   },
   {
@@ -154,7 +158,9 @@ const TEMPLATE_DEFINITIONS: Omit<TemplateDefinition, "html_content">[] = [
     category: "marketing",
     subject: "Tips for your first FoodShare 🍎",
     text_content: null,
-    variables: [{ name: "name", type: "string", required: true }],
+    variables: [
+      { name: "name", type: "string", required: true },
+    ],
     metadata: { preheader: "Tips for a successful first share" },
   },
   {
@@ -234,13 +240,15 @@ const SAMPLE_DATA: Record<string, Record<string, unknown>> = {
   welcome: { name: "John", nearbyMembers: 127, mealsSharedMonthly: 52000 },
   "email-verification": {
     verifyUrl: `https://${
-      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+      "foodshare.club"
     }/verify?token=abc123`,
   },
   "password-reset": {
     name: "John",
     resetUrl: `https://${
-      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+      "foodshare.club"
     }/reset?token=xyz789`,
     expiresIn: "1 hour",
   },
@@ -249,7 +257,8 @@ const SAMPLE_DATA: Record<string, Record<string, unknown>> = {
     senderName: "Sarah",
     messagePreview: "Hey! Is the pasta still available?",
     chatUrl: `https://${
-      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+      "foodshare.club"
     }/chat/123`,
   },
   "new-listing-nearby": {
@@ -259,7 +268,8 @@ const SAMPLE_DATA: Record<string, Record<string, unknown>> = {
     listingAddress: "123 Main St",
     posterName: "Sarah",
     listingUrl: `https://${
-      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+      "foodshare.club"
     }/food/456`,
     listingType: "food",
     listingEmoji: "🍎",
@@ -282,7 +292,8 @@ const SAMPLE_DATA: Record<string, Record<string, unknown>> = {
     mealsSavedCommunity: 234,
     newMembersNearby: 12,
     unsubscribeUrl: `https://${
-      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+      "foodshare.club"
     }/unsubscribe?token=abc`,
   },
   "feedback-alert": {
@@ -395,7 +406,9 @@ function generateSQL(): string {
     const renderFn = TEMPLATE_FUNCTIONS[def.slug];
 
     if (!renderFn || !sampleData) {
-      console.warn(`Skipping ${def.slug}: missing render function or sample data`);
+      console.warn(
+        `Skipping ${def.slug}: missing render function or sample data`,
+      );
       continue;
     }
 
@@ -412,7 +425,9 @@ function generateSQL(): string {
     lines.push(`  '${escapeSQL(def.category)}',`);
     lines.push(`  '${escapeSQL(def.subject)}',`);
     lines.push(`  '${escapeSQL(htmlContent)}',`);
-    lines.push(`  ${def.text_content ? `'${escapeSQL(def.text_content)}'` : "NULL"},`);
+    lines.push(
+      `  ${def.text_content ? `'${escapeSQL(def.text_content)}'` : "NULL"},`,
+    );
     lines.push(`  '${escapeSQL(JSON.stringify(def.variables))}'::jsonb,`);
     lines.push(`  '${escapeSQL(JSON.stringify(def.metadata))}'::jsonb,`);
     lines.push(`  true,`);
@@ -431,9 +446,13 @@ function generateSQL(): string {
     lines.push("");
   }
 
-  lines.push("-- ============================================================================");
+  lines.push(
+    "-- ============================================================================",
+  );
   lines.push(`-- Generated ${TEMPLATE_DEFINITIONS.length} templates`);
-  lines.push("-- ============================================================================");
+  lines.push(
+    "-- ============================================================================",
+  );
 
   return lines.join("\n");
 }

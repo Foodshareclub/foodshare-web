@@ -184,7 +184,17 @@ const GENERIC_USERNAMES = new Set([
 /**
  * Common name prefixes/titles to strip.
  */
-const NAME_PREFIXES = new Set(["mr", "mrs", "ms", "miss", "dr", "prof", "sir", "madam", "mx"]);
+const NAME_PREFIXES = new Set([
+  "mr",
+  "mrs",
+  "ms",
+  "miss",
+  "dr",
+  "prof",
+  "sir",
+  "madam",
+  "mx",
+]);
 
 /**
  * Characters that commonly separate name parts in email usernames.
@@ -240,7 +250,9 @@ function toTitleCase(str: string): string {
       if (word.includes("'")) {
         const parts = word.split("'");
         return parts
-          .map((part) => (part.length > 0 ? part.charAt(0).toUpperCase() + part.slice(1) : ""))
+          .map((
+            part,
+          ) => (part.length > 0 ? part.charAt(0).toUpperCase() + part.slice(1) : ""))
           .join("'");
       }
       return word.charAt(0).toUpperCase() + word.slice(1);
@@ -261,7 +273,10 @@ function splitCamelCase(str: string): string {
  * Validates and cleans a potential name string.
  * Returns null if the name is invalid.
  */
-function validateName(name: string | null | undefined, minLength: number): string | null {
+function validateName(
+  name: string | null | undefined,
+  minLength: number,
+): string | null {
   if (!name || typeof name !== "string") {
     return null;
   }
@@ -301,7 +316,8 @@ function validateName(name: string | null | undefined, minLength: number): strin
  * Checks if a username is generic/service-related.
  */
 function isGenericUsername(username: string): boolean {
-  const normalized = username.toLowerCase().replace(TRAILING_NUMBERS, "").trim();
+  const normalized = username.toLowerCase().replace(TRAILING_NUMBERS, "")
+    .trim();
   return GENERIC_USERNAMES.has(normalized);
 }
 
@@ -404,7 +420,10 @@ function extractNameFromEmail(email: string, minLength: number): string | null {
  * extractDisplayName({ email: "xk7@test.com" }, { fallback: "friend" }) // → "friend"
  * ```
  */
-export function extractDisplayName(profile: ProfileNameData, options: ExtractOptions = {}): string {
+export function extractDisplayName(
+  profile: ProfileNameData,
+  options: ExtractOptions = {},
+): string {
   const {
     preferFirstNameOnly = true,
     minNameLength = 2,
@@ -511,7 +530,10 @@ export function formatGreeting(
  * @param options - Extraction options
  * @returns true if the fallback would be used
  */
-export function isNameFallback(profile: ProfileNameData, options: ExtractOptions = {}): boolean {
+export function isNameFallback(
+  profile: ProfileNameData,
+  options: ExtractOptions = {},
+): boolean {
   const { fallback = "there" } = options;
   return extractDisplayName(profile, options) === fallback;
 }
@@ -534,9 +556,13 @@ export function isNameFallback(profile: ProfileNameData, options: ExtractOptions
  * const name = extractDisplayName(profile); // → "John"
  * ```
  */
-export function mapDatabaseProfile(row: Record<string, unknown>): ProfileNameData {
+export function mapDatabaseProfile(
+  row: Record<string, unknown>,
+): ProfileNameData {
   return {
-    displayName: (row.display_name ?? row.displayName ?? row.name) as string | null,
+    displayName: (row.display_name ?? row.displayName ?? row.name) as
+      | string
+      | null,
     firstName: (row.first_name ?? row.firstName) as string | null,
     secondName: (row.second_name ?? row.secondName ?? row.last_name ?? row.lastName) as
       | string

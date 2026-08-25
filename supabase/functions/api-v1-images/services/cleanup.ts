@@ -39,7 +39,9 @@ async function deleteOrphanImage(
       const result = await deleteFromR2(r2Path);
       if (!result.success) return { success: false, error: result.error };
     } else {
-      const { error } = await supabase.storage.from(orphan.bucket).remove([orphan.path]);
+      const { error } = await supabase.storage
+        .from(orphan.bucket)
+        .remove([orphan.path]);
       if (error) return { success: false, error: error.message };
     }
 
@@ -83,10 +85,13 @@ export async function cleanupOrphanImages(
     dryRun,
   });
 
-  const { data: orphans, error: rpcError } = await supabase.rpc("find_orphan_images", {
-    grace_period_hours: gracePeriodHours,
-    batch_limit: batchSize,
-  });
+  const { data: orphans, error: rpcError } = await supabase.rpc(
+    "find_orphan_images",
+    {
+      grace_period_hours: gracePeriodHours,
+      batch_limit: batchSize,
+    },
+  );
 
   if (rpcError) {
     logger.error("find_orphan_images RPC failed", new Error(rpcError.message));

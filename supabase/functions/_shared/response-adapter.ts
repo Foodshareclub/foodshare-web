@@ -130,14 +130,11 @@ export function buildSuccessResponse<T>(
  * clients need field-level error info.
  */
 export function buildErrorResponse(
-  error:
-    | AppError
-    | Error
-    | {
-      code: string;
-      message: string;
-      details?: unknown;
-    },
+  error: AppError | Error | {
+    code: string;
+    message: string;
+    details?: unknown;
+  },
   corsHeaders: Record<string, string>,
   options?: {
     status?: number;
@@ -198,10 +195,14 @@ export function buildErrorResponse(
   }
 
   // Log the error
-  logger.error("Request failed", error instanceof Error ? error : new Error(String(error)), {
-    statusCode,
-    errorCode: "code" in error ? error.code : "INTERNAL_ERROR",
-  });
+  logger.error(
+    "Request failed",
+    error instanceof Error ? error : new Error(String(error)),
+    {
+      statusCode,
+      errorCode: "code" in error ? error.code : "INTERNAL_ERROR",
+    },
+  );
 
   return new Response(JSON.stringify(response), {
     status: statusCode,
@@ -246,8 +247,12 @@ export const PLATFORM_UI_HINTS: Record<Platform, Partial<UIHints>> = {
  */
 export function detectPlatform(request: Request): Platform {
   // Check explicit header first
-  const platformHeader = request.headers.get("X-Client-Platform")?.toLowerCase();
-  if (platformHeader === "ios" || platformHeader === "android" || platformHeader === "web") {
+  const platformHeader = request.headers.get("X-Client-Platform")
+    ?.toLowerCase();
+  if (
+    platformHeader === "ios" || platformHeader === "android" ||
+    platformHeader === "web"
+  ) {
     return platformHeader;
   }
 
@@ -255,7 +260,10 @@ export function detectPlatform(request: Request): Platform {
   const ua = request.headers.get("User-Agent") || "";
 
   // iOS detection (check specific iOS markers)
-  if (ua.includes("iPhone") || ua.includes("iPad") || ua.includes("iOS") || ua.includes("Darwin")) {
+  if (
+    ua.includes("iPhone") || ua.includes("iPad") || ua.includes("iOS") ||
+    ua.includes("Darwin")
+  ) {
     return "ios";
   }
 
@@ -281,7 +289,10 @@ export function detectPlatform(request: Request): Platform {
 /**
  * Get platform-aware UI hints
  */
-export function getPlatformUIHints(platform: Platform, customHints?: Partial<UIHints>): UIHints {
+export function getPlatformUIHints(
+  platform: Platform,
+  customHints?: Partial<UIHints>,
+): UIHints {
   const baseHints = PLATFORM_UI_HINTS[platform] || PLATFORM_UI_HINTS.unknown;
   return {
     ...baseHints,

@@ -165,17 +165,23 @@ export default async function backfillPostsHandler(
     // ========== End Job Locking ==========
 
     // Fetch posts based on mode
-    let posts: Array<{ id: number; post_name: string; post_description: string | null }> | null =
-      null;
+    let posts:
+      | Array<
+        { id: number; post_name: string; post_description: string | null }
+      >
+      | null = null;
     let count: number | null = null;
     let error: Error | null = null;
 
     if (onlyUntranslated) {
       // Only untranslated mode: use RPC to find posts without translations
-      const { data, error: rpcError } = await supabase.rpc("get_untranslated_posts", {
-        p_limit: limit,
-        p_offset: offset,
-      });
+      const { data, error: rpcError } = await supabase.rpc(
+        "get_untranslated_posts",
+        {
+          p_limit: limit,
+          p_offset: offset,
+        },
+      );
 
       if (rpcError) {
         error = new Error(rpcError.message);
@@ -194,7 +200,8 @@ export default async function backfillPostsHandler(
 
       if (mode === "incremental") {
         // Incremental mode: fetch recent posts (created in last N hours)
-        const cutoffTime = new Date(Date.now() - hoursBack * 60 * 60 * 1000).toISOString();
+        const cutoffTime = new Date(Date.now() - hoursBack * 60 * 60 * 1000)
+          .toISOString();
         query = query
           .gte("created_at", cutoffTime)
           .order("created_at", { ascending: false })
@@ -251,8 +258,11 @@ export default async function backfillPostsHandler(
 
     // If dry run, just return counts
     if (dryRun) {
-      const totalTranslations = posts.length * FIELDS_PER_POST * TARGET_LOCALES_COUNT;
-      const estimatedTimeMinutes = Math.ceil((totalTranslations * SECONDS_PER_TRANSLATION) / 60);
+      const totalTranslations = posts.length * FIELDS_PER_POST *
+        TARGET_LOCALES_COUNT;
+      const estimatedTimeMinutes = Math.ceil(
+        (totalTranslations * SECONDS_PER_TRANSLATION) / 60,
+      );
 
       return new Response(
         JSON.stringify({
@@ -287,13 +297,16 @@ export default async function backfillPostsHandler(
       }
 
       try {
-        const response = await supabase.functions.invoke("localization/translate-batch", {
-          body: {
-            content_type: "post",
-            content_id: post.id.toString(),
-            fields,
+        const response = await supabase.functions.invoke(
+          "localization/translate-batch",
+          {
+            body: {
+              content_type: "post",
+              content_id: post.id.toString(),
+              fields,
+            },
           },
-        });
+        );
 
         if (response.error) {
           logger.warn("Failed to trigger translation for post", {
@@ -318,8 +331,11 @@ export default async function backfillPostsHandler(
       });
     });
 
-    const totalTranslations = posts.length * FIELDS_PER_POST * TARGET_LOCALES_COUNT;
-    const estimatedTimeMinutes = Math.ceil((totalTranslations * SECONDS_PER_TRANSLATION) / 60);
+    const totalTranslations = posts.length * FIELDS_PER_POST *
+      TARGET_LOCALES_COUNT;
+    const estimatedTimeMinutes = Math.ceil(
+      (totalTranslations * SECONDS_PER_TRANSLATION) / 60,
+    );
 
     const response: BackfillResponse = {
       success: true,

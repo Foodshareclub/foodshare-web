@@ -134,28 +134,31 @@ Deno.test({
       assertEquals(url.searchParams.get("limit"), "10");
     });
 
-    await t.step("createMockRequest - creates valid POST request with body", () => {
-      const body = {
-        title: "Test Product",
-        images: ["https://example.com/image.jpg"],
-        postType: "food",
-        latitude: 51.5074,
-        longitude: -0.1278,
-      };
+    await t.step(
+      "createMockRequest - creates valid POST request with body",
+      () => {
+        const body = {
+          title: "Test Product",
+          images: ["https://example.com/image.jpg"],
+          postType: "food",
+          latitude: 51.5074,
+          longitude: -0.1278,
+        };
 
-      const request = createMockRequest({
-        method: "POST",
-        path: "/api-v1-products",
-        body,
-        headers: {
-          Authorization: "Bearer test-token",
-        },
-      });
+        const request = createMockRequest({
+          method: "POST",
+          path: "/api-v1-products",
+          body,
+          headers: {
+            Authorization: "Bearer test-token",
+          },
+        });
 
-      assertEquals(request.method, "POST");
-      assertEquals(request.headers.get("Authorization"), "Bearer test-token");
-      assertEquals(request.headers.get("Content-Type"), "application/json");
-    });
+        assertEquals(request.method, "POST");
+        assertEquals(request.headers.get("Authorization"), "Bearer test-token");
+        assertEquals(request.headers.get("Content-Type"), "application/json");
+      },
+    );
 
     // ========================================================================
     // Mock Data Tests
@@ -228,26 +231,29 @@ Deno.test({
     // Update Schema Tests
     // ========================================================================
 
-    await t.step("updateProductSchema - requires version for optimistic locking", () => {
-      const updateProductSchema = z.object({
-        title: z.string().min(3).max(100).optional(),
-        description: z.string().max(2000).optional(),
-        version: z.number().int().positive(),
-      });
+    await t.step(
+      "updateProductSchema - requires version for optimistic locking",
+      () => {
+        const updateProductSchema = z.object({
+          title: z.string().min(3).max(100).optional(),
+          description: z.string().max(2000).optional(),
+          version: z.number().int().positive(),
+        });
 
-      // Missing version
-      const withoutVersion = updateProductSchema.safeParse({
-        title: "Updated Title",
-      });
-      assertEquals(withoutVersion.success, false);
+        // Missing version
+        const withoutVersion = updateProductSchema.safeParse({
+          title: "Updated Title",
+        });
+        assertEquals(withoutVersion.success, false);
 
-      // With version
-      const withVersion = updateProductSchema.safeParse({
-        title: "Updated Title",
-        version: 1,
-      });
-      assertEquals(withVersion.success, true);
-    });
+        // With version
+        const withVersion = updateProductSchema.safeParse({
+          title: "Updated Title",
+          version: 1,
+        });
+        assertEquals(withVersion.success, true);
+      },
+    );
 
     // ========================================================================
     // Cleanup
@@ -271,14 +277,20 @@ Deno.test({
       console.log("Integration test placeholder");
     });
 
-    await t.step("POST /api-v1-products - creates product with valid auth", async () => {
-      // This would make a real request to the Edge Function
-      console.log("Integration test placeholder");
-    });
+    await t.step(
+      "POST /api-v1-products - creates product with valid auth",
+      async () => {
+        // This would make a real request to the Edge Function
+        console.log("Integration test placeholder");
+      },
+    );
 
-    await t.step("POST /api-v1-products - rejects unauthenticated request", async () => {
-      // This would make a real request to the Edge Function
-      console.log("Integration test placeholder");
-    });
+    await t.step(
+      "POST /api-v1-products - rejects unauthenticated request",
+      async () => {
+        // This would make a real request to the Edge Function
+        console.log("Integration test placeholder");
+      },
+    );
   },
 });

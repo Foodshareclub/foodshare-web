@@ -29,7 +29,9 @@ const channelAdapters = new Map<NotificationChannel, ChannelAdapter>([
 /**
  * Get channel adapter by name
  */
-export function getChannelAdapter(channel: NotificationChannel): ChannelAdapter | undefined {
+export function getChannelAdapter(
+  channel: NotificationChannel,
+): ChannelAdapter | undefined {
   return channelAdapters.get(channel);
 }
 
@@ -60,7 +62,10 @@ export async function getAllChannelHealth(): Promise<
     }
   >
 > {
-  const health: Record<string, { healthy: boolean; latencyMs?: number; error?: string }> = {};
+  const health: Record<
+    string,
+    { healthy: boolean; latencyMs?: number; error?: string }
+  > = {};
 
   await Promise.all(
     Array.from(channelAdapters.entries()).map(async ([name, adapter]) => {

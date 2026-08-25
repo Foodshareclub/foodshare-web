@@ -51,7 +51,9 @@ interface WelcomeEmailParams {
   email: string;
 }
 
-export function welcomeEmail(params: WelcomeEmailParams): { subject: string; html: string } {
+export function welcomeEmail(
+  params: WelcomeEmailParams,
+): { subject: string; html: string } {
   const displayName = extractDisplayName({
     firstName: params.name,
     email: params.email,
@@ -111,7 +113,8 @@ export function welcomeEmail(params: WelcomeEmailParams): { subject: string; htm
       cta: {
         text: "Get Started",
         url: `https://${
-          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+          "foodshare.club"
         }/products`,
         emoji: "🚀",
       },
@@ -128,7 +131,9 @@ interface GoodbyeEmailParams {
   email: string;
 }
 
-export function goodbyeEmail(params: GoodbyeEmailParams): { subject: string; html: string } {
+export function goodbyeEmail(
+  params: GoodbyeEmailParams,
+): { subject: string; html: string } {
   const displayName = extractDisplayName({
     firstName: params.name,
     email: params.email,
@@ -138,13 +143,21 @@ export function goodbyeEmail(params: GoodbyeEmailParams): { subject: string; htm
     <p style="margin: 0 0 20px; font-size: 17px; line-height: 1.7; color: ${BRAND.textPrimary};">
       Hey <strong>${displayName}</strong>,
     </p>
-    ${paragraph("We're very sad to see you go. Your presence in our community will be missed.")}
+    ${
+    paragraph(
+      "We're very sad to see you go. Your presence in our community will be missed.",
+    )
+  }
     ${
     paragraph(
       "If there's anything we could have done better, please don't hesitate to let us know. Your feedback helps us improve for everyone.",
     )
   }
-    ${paragraph("Remember, you're always welcome back if you change your mind! 💚")}
+    ${
+    paragraph(
+      "Remember, you're always welcome back if you change your mind! 💚",
+    )
+  }
     ${
     infoBox(
       "Note",
@@ -163,7 +176,8 @@ export function goodbyeEmail(params: GoodbyeEmailParams): { subject: string; htm
       cta: {
         text: "Give Feedback",
         url: `https://${
-          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+          "foodshare.club"
         }/feedback`,
         emoji: "📝",
       },
@@ -226,7 +240,9 @@ interface PasswordResetParams {
   expiresIn?: string;
 }
 
-export function passwordResetEmail(params: PasswordResetParams): { subject: string; html: string } {
+export function passwordResetEmail(
+  params: PasswordResetParams,
+): { subject: string; html: string } {
   const expiresIn = params.expiresIn || "1 hour";
 
   const content = `
@@ -321,7 +337,8 @@ export function feedbackAlertEmail(params: FeedbackAlertParams): {
       cta: {
         text: "View in Dashboard",
         url: `https://${
-          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+          "foodshare.club"
         }/admin/feedback`,
         emoji: "📋",
       },
@@ -344,7 +361,9 @@ interface NewListingEmailParams {
   listingType?: string;
 }
 
-export function newListingEmail(params: NewListingEmailParams): { subject: string; html: string } {
+export function newListingEmail(
+  params: NewListingEmailParams,
+): { subject: string; html: string } {
   const typeEmoji: Record<string, string> = {
     food: "🍎",
     request: "🙋",
@@ -475,10 +494,7 @@ export function notificationEmail(params: NotificationEmailParams): {
     ${
     highlightBox(
       `<p style="margin: 0; font-size: 16px; line-height: 1.7; color: ${BRAND.textSecondary};">${
-        params.body.replace(
-          /\n/g,
-          "<br>",
-        )
+        params.body.replace(/\n/g, "<br>")
       }</p>`,
     )
   }
@@ -497,7 +513,8 @@ export function notificationEmail(params: NotificationEmailParams): {
         text: params.actionText || "View Details",
         url: params.actionUrl ||
           `https://${
-            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+            "foodshare.club"
           }`,
       },
       footer: { showUnsubscribe: true, unsubscribeUrl: params.unsubscribeUrl },
@@ -621,7 +638,8 @@ export function digestEmail(params: DigestEmailParams): {
       <a href="${
     params.settingsUrl ||
     `https://${
-      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+      "foodshare.club"
     }/settings/notifications`
   }" style="color: ${BRAND.primaryColor}; text-decoration: none;">Manage Preferences</a>
       &nbsp;|&nbsp;
@@ -642,7 +660,8 @@ export function digestEmail(params: DigestEmailParams): {
       cta: {
         text: "Open FoodShare",
         url: `https://${
-          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+          "foodshare.club"
         }`,
       },
       footer: { showUnsubscribe: true, unsubscribeUrl: params.unsubscribeUrl },

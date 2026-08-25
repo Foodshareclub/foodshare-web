@@ -32,7 +32,10 @@ const CODE_EXPIRY_MINUTES = 15;
 // Resend rate limit: 3 per hour per email (in-memory)
 const RESEND_RATE_LIMIT_MAX = 3;
 const RESEND_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
-const resendRateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const resendRateLimitMap = new Map<
+  string,
+  { count: number; resetAt: number }
+>();
 
 // =============================================================================
 // Helpers
@@ -42,14 +45,20 @@ function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-function json(data: unknown, corsHeaders: Record<string, string>, status = 200): Response {
+function json(
+  data: unknown,
+  corsHeaders: Record<string, string>,
+  status = 200,
+): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
 
-function checkResendRateLimit(email: string): { allowed: boolean; remainingMinutes?: number } {
+function checkResendRateLimit(
+  email: string,
+): { allowed: boolean; remainingMinutes?: number } {
   const key = email.toLowerCase().trim();
   const now = Date.now();
   const limit = resendRateLimitMap.get(key);
@@ -79,14 +88,16 @@ function checkResendRateLimit(email: string): { allowed: boolean; remainingMinut
   return { allowed: true };
 }
 
-async function sendVerificationEmail(email: string, code: string): Promise<boolean> {
+async function sendVerificationEmail(
+  email: string,
+  code: string,
+): Promise<boolean> {
   try {
     const emailService = getEmailService();
-    const result = await emailService.sendEmail(
-      {
-        to: email,
-        subject: "FoodShare - Verify Your Email",
-        html: `
+    const result = await emailService.sendEmail({
+      to: email,
+      subject: "FoodShare - Verify Your Email",
+      html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #22c55e;">FoodShare Email Verification</h2>
           <p>Your verification code is:</p>
@@ -99,10 +110,8 @@ async function sendVerificationEmail(email: string, code: string): Promise<boole
           <p style="color: #9ca3af; font-size: 12px;">If you didn't request this, please ignore this email.</p>
         </div>
       `,
-        tags: ["verification"],
-      },
-      "auth",
-    );
+      tags: ["verification"],
+    }, "auth");
 
     return result.success;
   } catch (error) {
@@ -122,7 +131,10 @@ async function sendVerificationEmail(email: string, code: string): Promise<boole
  * POST /verify/send
  * Generate a 6-digit code, store it on the profile, and send via email.
  */
-export async function handleVerifySend(body: VerifySendBody, ctx: AuthContext): Promise<Response> {
+export async function handleVerifySend(
+  body: VerifySendBody,
+  ctx: AuthContext,
+): Promise<Response> {
   const { supabase, corsHeaders } = ctx;
   const email = body.email.toLowerCase().trim();
 
@@ -146,11 +158,19 @@ export async function handleVerifySend(body: VerifySendBody, ctx: AuthContext): 
   } | null;
 
   if (!profileData) {
-    return json({ success: false, error: "No account found for this email" }, corsHeaders, 404);
+    return json(
+      { success: false, error: "No account found for this email" },
+      corsHeaders,
+      404,
+    );
   }
 
   if (profileData.email_verified) {
-    return json({ success: false, error: "Email is already verified" }, corsHeaders, 409);
+    return json(
+      { success: false, error: "Email is already verified" },
+      corsHeaders,
+      409,
+    );
   }
 
   // Check lockout
@@ -187,14 +207,21 @@ export async function handleVerifySend(body: VerifySendBody, ctx: AuthContext): 
     .eq("id", profileData.id);
 
   if (updateError) {
-    logger.error("Error storing verification code", new Error(updateError.message));
+    logger.error(
+      "Error storing verification code",
+      new Error(updateError.message),
+    );
     return json({ success: false, error: "Internal error" }, corsHeaders, 500);
   }
 
   // Send email
   const sent = await sendVerificationEmail(email, code);
   if (!sent) {
-    return json({ success: false, error: "Failed to send verification email" }, corsHeaders, 502);
+    return json(
+      { success: false, error: "Failed to send verification email" },
+      corsHeaders,
+      502,
+    );
   }
 
   logger.info("Verification code sent", {
@@ -202,14 +229,11 @@ export async function handleVerifySend(body: VerifySendBody, ctx: AuthContext): 
     requestId: ctx.requestId,
   });
 
-  return json(
-    {
-      success: true,
-      message: "Verification code sent",
-      expiresAt: expiresAt.toISOString(),
-    },
-    corsHeaders,
-  );
+  return json({
+    success: true,
+    message: "Verification code sent",
+    expiresAt: expiresAt.toISOString(),
+  }, corsHeaders);
 }
 
 /**
@@ -246,7 +270,11 @@ export async function handleVerifyConfirm(
   } | null;
 
   if (!profileData) {
-    return json({ success: false, error: "No account found for this email" }, corsHeaders, 404);
+    return json(
+      { success: false, error: "No account found for this email" },
+      corsHeaders,
+      404,
+    );
   }
 
   // Check lockout
@@ -290,7 +318,9 @@ export async function handleVerifyConfirm(
 
     if (newAttempts >= MAX_VERIFICATION_ATTEMPTS) {
       // Lock the account
-      const lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000);
+      const lockedUntil = new Date(
+        Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000,
+      );
       await supabase
         .from("profiles")
         .update({
@@ -346,7 +376,10 @@ export async function handleVerifyConfirm(
     .eq("id", profileData.id);
 
   if (verifyError) {
-    logger.error("Error marking email verified", new Error(verifyError.message));
+    logger.error(
+      "Error marking email verified",
+      new Error(verifyError.message),
+    );
     return json({ success: false, error: "Internal error" }, corsHeaders, 500);
   }
 
@@ -355,7 +388,10 @@ export async function handleVerifyConfirm(
     requestId: ctx.requestId,
   });
 
-  return json({ success: true, message: "Email verified successfully" }, corsHeaders);
+  return json(
+    { success: true, message: "Email verified successfully" },
+    corsHeaders,
+  );
 }
 
 /**
@@ -402,11 +438,19 @@ export async function handleVerifyResend(
   } | null;
 
   if (!profileData) {
-    return json({ success: false, error: "No account found for this email" }, corsHeaders, 404);
+    return json(
+      { success: false, error: "No account found for this email" },
+      corsHeaders,
+      404,
+    );
   }
 
   if (profileData.email_verified) {
-    return json({ success: false, error: "Email is already verified" }, corsHeaders, 409);
+    return json(
+      { success: false, error: "Email is already verified" },
+      corsHeaders,
+      409,
+    );
   }
 
   // Check lockout
@@ -441,14 +485,21 @@ export async function handleVerifyResend(
     .eq("id", profileData.id);
 
   if (updateError) {
-    logger.error("Error storing verification code", new Error(updateError.message));
+    logger.error(
+      "Error storing verification code",
+      new Error(updateError.message),
+    );
     return json({ success: false, error: "Internal error" }, corsHeaders, 500);
   }
 
   // Send email
   const sent = await sendVerificationEmail(email, code);
   if (!sent) {
-    return json({ success: false, error: "Failed to send verification email" }, corsHeaders, 502);
+    return json(
+      { success: false, error: "Failed to send verification email" },
+      corsHeaders,
+      502,
+    );
   }
 
   logger.info("Verification code resent", {
@@ -456,12 +507,9 @@ export async function handleVerifyResend(
     requestId: ctx.requestId,
   });
 
-  return json(
-    {
-      success: true,
-      message: "New verification code sent",
-      expiresAt: expiresAt.toISOString(),
-    },
-    corsHeaders,
-  );
+  return json({
+    success: true,
+    message: "New verification code sent",
+    expiresAt: expiresAt.toISOString(),
+  }, corsHeaders);
 }

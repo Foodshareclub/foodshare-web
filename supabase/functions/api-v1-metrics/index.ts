@@ -94,7 +94,9 @@ type BatchEventsRequest = z.infer<typeof batchEventsSchema>;
 // =============================================================================
 
 async function getErrorRate(
-  supabase: ReturnType<typeof import("../_shared/supabase.ts").getSupabaseClient>,
+  supabase: ReturnType<
+    typeof import("../_shared/supabase.ts").getSupabaseClient
+  >,
   minutes: number,
 ): Promise<number> {
   try {
@@ -109,14 +111,19 @@ async function getErrorRate(
 }
 
 async function getActiveUsers(
-  supabase: ReturnType<typeof import("../_shared/supabase.ts").getSupabaseClient>,
+  supabase: ReturnType<
+    typeof import("../_shared/supabase.ts").getSupabaseClient
+  >,
   minutes: number,
 ): Promise<number> {
   try {
     const { count, error } = await supabase
       .from("profiles")
       .select("id", { count: "exact", head: true })
-      .gte("last_active_at", new Date(Date.now() - minutes * 60 * 1000).toISOString());
+      .gte(
+        "last_active_at",
+        new Date(Date.now() - minutes * 60 * 1000).toISOString(),
+      );
 
     if (error) return 0;
     return count || 0;
@@ -126,7 +133,9 @@ async function getActiveUsers(
 }
 
 async function getRequestCount(
-  supabase: ReturnType<typeof import("../_shared/supabase.ts").getSupabaseClient>,
+  supabase: ReturnType<
+    typeof import("../_shared/supabase.ts").getSupabaseClient
+  >,
   minutes: number,
 ): Promise<number> {
   try {
@@ -138,9 +147,12 @@ async function getRequestCount(
       .gte("created_at", since);
 
     if (error) {
-      const { data, error: rpcError } = await supabase.rpc("get_request_count", {
-        p_minutes: minutes,
-      });
+      const { data, error: rpcError } = await supabase.rpc(
+        "get_request_count",
+        {
+          p_minutes: minutes,
+        },
+      );
 
       if (rpcError) return 0;
       return data || 0;
@@ -197,7 +209,9 @@ function generatePrometheusMetrics(
   }
 
   lines.push("");
-  lines.push("# HELP foodshare_web_vitals_sample_count Number of samples per metric");
+  lines.push(
+    "# HELP foodshare_web_vitals_sample_count Number of samples per metric",
+  );
   lines.push("# TYPE foodshare_web_vitals_sample_count gauge");
   for (const vital of webVitals) {
     lines.push(
@@ -233,25 +247,43 @@ function generatePrometheusMetrics(
   lines.push("");
   lines.push("# HELP foodshare_error_rate Error rate as decimal (0-1)");
   lines.push("# TYPE foodshare_error_rate gauge");
-  lines.push(`foodshare_error_rate{window="5m"} ${stats.errorRate5m} ${timestamp}`);
-  lines.push(`foodshare_error_rate{window="1h"} ${stats.errorRate1h} ${timestamp}`);
-  lines.push(`foodshare_error_rate{window="24h"} ${stats.errorRate24h} ${timestamp}`);
+  lines.push(
+    `foodshare_error_rate{window="5m"} ${stats.errorRate5m} ${timestamp}`,
+  );
+  lines.push(
+    `foodshare_error_rate{window="1h"} ${stats.errorRate1h} ${timestamp}`,
+  );
+  lines.push(
+    `foodshare_error_rate{window="24h"} ${stats.errorRate24h} ${timestamp}`,
+  );
 
   // Active users
   lines.push("");
   lines.push("# HELP foodshare_active_users Number of active users");
   lines.push("# TYPE foodshare_active_users gauge");
-  lines.push(`foodshare_active_users{window="5m"} ${stats.activeUsers5m} ${timestamp}`);
-  lines.push(`foodshare_active_users{window="1h"} ${stats.activeUsers1h} ${timestamp}`);
-  lines.push(`foodshare_active_users{window="24h"} ${stats.activeUsers24h} ${timestamp}`);
+  lines.push(
+    `foodshare_active_users{window="5m"} ${stats.activeUsers5m} ${timestamp}`,
+  );
+  lines.push(
+    `foodshare_active_users{window="1h"} ${stats.activeUsers1h} ${timestamp}`,
+  );
+  lines.push(
+    `foodshare_active_users{window="24h"} ${stats.activeUsers24h} ${timestamp}`,
+  );
 
   // Request counts
   lines.push("");
   lines.push("# HELP foodshare_request_count Total API requests");
   lines.push("# TYPE foodshare_request_count gauge");
-  lines.push(`foodshare_request_count{window="5m"} ${stats.requestCount5m} ${timestamp}`);
-  lines.push(`foodshare_request_count{window="1h"} ${stats.requestCount1h} ${timestamp}`);
-  lines.push(`foodshare_request_count{window="24h"} ${stats.requestCount24h} ${timestamp}`);
+  lines.push(
+    `foodshare_request_count{window="5m"} ${stats.requestCount5m} ${timestamp}`,
+  );
+  lines.push(
+    `foodshare_request_count{window="1h"} ${stats.requestCount1h} ${timestamp}`,
+  );
+  lines.push(
+    `foodshare_request_count{window="24h"} ${stats.requestCount24h} ${timestamp}`,
+  );
 
   // Service info
   lines.push("");
@@ -270,7 +302,9 @@ function generatePrometheusMetrics(
 // Handler Implementation
 // =============================================================================
 
-async function handleGetMetrics(ctx: HandlerContext<unknown, MetricsQuery>): Promise<Response> {
+async function handleGetMetrics(
+  ctx: HandlerContext<unknown, MetricsQuery>,
+): Promise<Response> {
   // Health check
   const url = new URL(ctx.request.url);
   if (url.pathname.endsWith("/health")) {
@@ -410,7 +444,9 @@ function mapEventToActivityType(eventType: string): string {
   return mapping[eventType] || "view";
 }
 
-async function handleTrackEvent(ctx: HandlerContext<EventRequest>): Promise<Response> {
+async function handleTrackEvent(
+  ctx: HandlerContext<EventRequest>,
+): Promise<Response> {
   const { supabase, userId, body } = ctx;
 
   if (!userId) {
@@ -447,7 +483,9 @@ async function handleTrackEvent(ctx: HandlerContext<EventRequest>): Promise<Resp
   return ok({ tracked: true, eventType: body.eventType }, ctx);
 }
 
-async function handleTrackBatchEvents(ctx: HandlerContext<BatchEventsRequest>): Promise<Response> {
+async function handleTrackBatchEvents(
+  ctx: HandlerContext<BatchEventsRequest>,
+): Promise<Response> {
   const { supabase, userId, body } = ctx;
 
   if (!userId) {
@@ -455,7 +493,9 @@ async function handleTrackBatchEvents(ctx: HandlerContext<BatchEventsRequest>): 
   }
 
   const validEvents = body.events.filter((event) =>
-    VALID_EVENT_TYPES.includes(event.eventType as (typeof VALID_EVENT_TYPES)[number])
+    VALID_EVENT_TYPES.includes(
+      event.eventType as typeof VALID_EVENT_TYPES[number],
+    )
   );
 
   const results = await Promise.all(
@@ -493,14 +533,11 @@ async function handleTrackBatchEvents(ctx: HandlerContext<BatchEventsRequest>): 
 
   const trackedCount = results.filter((success) => success).length;
 
-  return ok(
-    {
-      tracked: trackedCount,
-      total: body.events.length,
-      skipped: body.events.length - trackedCount,
-    },
-    ctx,
-  );
+  return ok({
+    tracked: trackedCount,
+    total: body.events.length,
+    skipped: body.events.length - trackedCount,
+  }, ctx);
 }
 
 // =============================================================================
@@ -526,25 +563,23 @@ async function handlePost(
 // Export Handler
 // =============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: "api-v1-metrics",
-    version: "2.0.0",
-    requireAuth: false, // Allow unauthenticated scraping, but check role if authenticated
-    rateLimit: {
-      limit: 100,
-      windowMs: 60000,
-      keyBy: "ip",
+Deno.serve(createAPIHandler({
+  service: "api-v1-metrics",
+  version: "2.0.0",
+  requireAuth: false, // Allow unauthenticated scraping, but check role if authenticated
+  rateLimit: {
+    limit: 100,
+    windowMs: 60000,
+    keyBy: "ip",
+  },
+  routes: {
+    GET: {
+      querySchema: metricsQuerySchema,
+      handler: handleGetMetrics,
     },
-    routes: {
-      GET: {
-        querySchema: metricsQuerySchema,
-        handler: handleGetMetrics,
-      },
-      POST: {
-        handler: handlePost,
-        requireAuth: true,
-      },
+    POST: {
+      handler: handlePost,
+      requireAuth: true,
     },
-  }),
-);
+  },
+}));

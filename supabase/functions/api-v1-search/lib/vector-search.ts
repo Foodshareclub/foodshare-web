@@ -60,7 +60,9 @@ export async function semanticSearch(
     filter: vectorFilter,
   });
 
-  const filteredByScore = vectorResults.filter((r) => r.score >= MIN_SCORE_THRESHOLD);
+  const filteredByScore = vectorResults.filter(
+    (r) => r.score >= MIN_SCORE_THRESHOLD,
+  );
 
   let results = filteredByScore.map(transformVectorResult);
 
@@ -114,8 +116,15 @@ export async function hybridSearch(
   }
 
   if (semanticResults.length === 0 && textResults.length === 0) {
-    if (semanticResult.status === "rejected" && textResult.status === "rejected") {
-      throw new AppError("Search service temporarily unavailable", "SEARCH_FAILED", 503);
+    if (
+      semanticResult.status === "rejected" &&
+      textResult.status === "rejected"
+    ) {
+      throw new AppError(
+        "Search service temporarily unavailable",
+        "SEARCH_FAILED",
+        503,
+      );
     }
     return { results: [], total: 0 };
   }
@@ -162,7 +171,8 @@ export async function executeSearch(
 
 async function indexPost(post: PostRecord): Promise<void> {
   const category = post.category_name || `category_${post.category_id}`;
-  const textToEmbed = `${post.post_name} ${post.post_description} ${category}`.slice(0, 8000);
+  const textToEmbed = `${post.post_name} ${post.post_description} ${category}`
+    .slice(0, 8000);
   const embeddingResult = await generateEmbeddings([textToEmbed]);
 
   const vectorRecord: VectorRecord = {
@@ -294,10 +304,15 @@ async function deletePostFromIndex(postId: string): Promise<void> {
 // Webhook Signature Verification
 // =============================================================================
 
-export async function verifyWebhookSignature(request: Request, rawBody: string): Promise<boolean> {
+export async function verifyWebhookSignature(
+  request: Request,
+  rawBody: string,
+): Promise<boolean> {
   const webhookSecret = Deno.env.get("WEBHOOK_SECRET");
   if (!webhookSecret) {
-    logger.warn("WEBHOOK_SECRET not configured - skipping signature verification");
+    logger.warn(
+      "WEBHOOK_SECRET not configured - skipping signature verification",
+    );
     return true;
   }
 
@@ -314,7 +329,11 @@ export async function verifyWebhookSignature(request: Request, rawBody: string):
       ["sign"],
     );
 
-    const signatureBytes = await crypto.subtle.sign("HMAC", key, encoder.encode(rawBody));
+    const signatureBytes = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      encoder.encode(rawBody),
+    );
     const expectedSignature = Array.from(new Uint8Array(signatureBytes))
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
@@ -390,7 +409,9 @@ export async function handleWebhookIndex(
     }
   } catch (error) {
     result.failed = 1;
-    result.errors.push(error instanceof Error ? error.message : String(error));
+    result.errors.push(
+      error instanceof Error ? error.message : String(error),
+    );
     logger.error(
       "Webhook index failed",
       error instanceof Error ? error : new Error(String(error)),
@@ -443,12 +464,20 @@ export async function handleBatchIndex(
   const { data: posts, error } = await query;
 
   if (error) {
-    logger.error("Failed to fetch posts for batch index", new Error(error.message), {
-      offset,
-      limit,
-      postIds: request.post_ids?.length,
-    });
-    throw new AppError("Unable to fetch posts at this time", "DB_ERROR", 500);
+    logger.error(
+      "Failed to fetch posts for batch index",
+      new Error(error.message),
+      {
+        offset,
+        limit,
+        postIds: request.post_ids?.length,
+      },
+    );
+    throw new AppError(
+      "Unable to fetch posts at this time",
+      "DB_ERROR",
+      500,
+    );
   }
 
   if (!posts || posts.length === 0) {
@@ -462,25 +491,27 @@ export async function handleBatchIndex(
     };
   }
 
-  const transformedPosts: PostRecord[] = posts.map((p: Record<string, unknown>) => ({
-    id: p.id as string,
-    post_name: p.post_name as string,
-    post_description: p.post_description as string,
-    post_address: p.post_address as string,
-    post_type: p.post_type as string,
-    category_id: p.category_id as number,
-    category_name: (p.categories as { name: string } | null)?.name,
-    images: p.images as string[],
-    latitude: p.latitude as number | undefined,
-    longitude: p.longitude as number | undefined,
-    profile_id: p.profile_id as string,
-    is_active: p.is_active as boolean,
-    is_arranged: p.is_arranged as boolean,
-    created_at: p.created_at as string,
-    updated_at: p.updated_at as string | undefined,
-    pickup_time: p.pickup_time as string | undefined,
-    available_hours: p.available_hours as number | undefined,
-  }));
+  const transformedPosts: PostRecord[] = posts.map(
+    (p: Record<string, unknown>) => ({
+      id: p.id as string,
+      post_name: p.post_name as string,
+      post_description: p.post_description as string,
+      post_address: p.post_address as string,
+      post_type: p.post_type as string,
+      category_id: p.category_id as number,
+      category_name: (p.categories as { name: string } | null)?.name,
+      images: p.images as string[],
+      latitude: p.latitude as number | undefined,
+      longitude: p.longitude as number | undefined,
+      profile_id: p.profile_id as string,
+      is_active: p.is_active as boolean,
+      is_arranged: p.is_arranged as boolean,
+      created_at: p.created_at as string,
+      updated_at: p.updated_at as string | undefined,
+      pickup_time: p.pickup_time as string | undefined,
+      available_hours: p.available_hours as number | undefined,
+    }),
+  );
 
   return indexPostsBatch(transformedPosts);
 }

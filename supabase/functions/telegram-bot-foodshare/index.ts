@@ -118,14 +118,18 @@ function getMetrics(): Record<string, unknown> {
 // ============================================================================
 
 async function verifyWebhookSignature(ctx: HandlerContext): Promise<boolean> {
-  const secret = (await ctx.getSecret("TELEGRAM_WEBHOOK_SECRET")) ||
+  const secret = await ctx.getSecret("TELEGRAM_WEBHOOK_SECRET") ||
     Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
   if (!secret) {
     if (isDevelopment()) {
-      logger.warn("TELEGRAM_WEBHOOK_SECRET not configured - skipping verification (dev mode)");
+      logger.warn(
+        "TELEGRAM_WEBHOOK_SECRET not configured - skipping verification (dev mode)",
+      );
       return true;
     }
-    logger.error("TELEGRAM_WEBHOOK_SECRET not configured - rejecting request in production");
+    logger.error(
+      "TELEGRAM_WEBHOOK_SECRET not configured - rejecting request in production",
+    );
     return false;
   }
 
@@ -145,16 +149,18 @@ async function ensureInitialized(ctx: HandlerContext): Promise<boolean> {
   if (isInitialized) return true;
 
   try {
-    const botToken = (await ctx.getSecret("TELEGRAM_BOT_TOKEN")) ||
-      (await ctx.getSecret("BOT_TOKEN")) ||
-      Deno.env.get("TELEGRAM_BOT_TOKEN") ||
+    const botToken = await ctx.getSecret("TELEGRAM_BOT_TOKEN") ||
+      await ctx.getSecret("BOT_TOKEN") || Deno.env.get("TELEGRAM_BOT_TOKEN") ||
       Deno.env.get("BOT_TOKEN");
-    const supabaseUrl = (await ctx.getSecret("SUPABASE_URL")) || Deno.env.get("SUPABASE_URL");
-    const supabaseKey = (await ctx.getSecret("SUPABASE_SERVICE_ROLE_KEY")) ||
+    const supabaseUrl = await ctx.getSecret("SUPABASE_URL") ||
+      Deno.env.get("SUPABASE_URL");
+    const supabaseKey = await ctx.getSecret("SUPABASE_SERVICE_ROLE_KEY") ||
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!botToken) {
-      throw new Error("Missing BOT_TOKEN or TELEGRAM_BOT_TOKEN environment variable");
+      throw new Error(
+        "Missing BOT_TOKEN or TELEGRAM_BOT_TOKEN environment variable",
+      );
     }
     if (!supabaseUrl) {
       throw new Error("Missing SUPABASE_URL environment variable");
@@ -175,7 +181,9 @@ async function ensureInitialized(ctx: HandlerContext): Promise<boolean> {
   }
 }
 
-async function handleInternalDeleteMessages(ctx: HandlerContext): Promise<Response> {
+async function handleInternalDeleteMessages(
+  ctx: HandlerContext,
+): Promise<Response> {
   const supabase = getAdminClient();
   const { data, error } = await supabase
     .from("group_message_deletions")
@@ -253,13 +261,12 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
       return jsonOk({ error: "Missing webhook URL parameter" }, ctx, 400);
     }
 
-    const webhookSecret = (await ctx.getSecret("TELEGRAM_WEBHOOK_SECRET")) ||
+    const webhookSecret = await ctx.getSecret("TELEGRAM_WEBHOOK_SECRET") ||
       Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
 
     // TEMPORARY DEBUGGING
-    const token = (await ctx.getSecret("TELEGRAM_BOT_TOKEN")) ||
-      (await ctx.getSecret("BOT_TOKEN")) ||
-      Deno.env.get("TELEGRAM_BOT_TOKEN") ||
+    const token = await ctx.getSecret("TELEGRAM_BOT_TOKEN") ||
+      await ctx.getSecret("BOT_TOKEN") || Deno.env.get("TELEGRAM_BOT_TOKEN") ||
       Deno.env.get("BOT_TOKEN");
     logger.error("DEBUG_TOKEN_IS", {
       token: String(token),
@@ -282,32 +289,34 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
 
   // Metrics endpoint
   if (pathname.endsWith("/metrics")) {
-    return jsonOk(
-      {
-        ...getMetrics(),
-        cache: getCacheStats(),
-        timestamp: new Date().toISOString(),
-      },
-      ctx,
-    );
+    return jsonOk({
+      ...getMetrics(),
+      cache: getCacheStats(),
+      timestamp: new Date().toISOString(),
+    }, ctx);
   }
 
   // Chat ID lookup endpoint
   if (pathname.endsWith("/chat-id")) {
-    const botToken = (await ctx.getSecret("TELEGRAM_BOT_TOKEN")) ||
-      (await ctx.getSecret("BOT_TOKEN")) ||
-      Deno.env.get("TELEGRAM_BOT_TOKEN") ||
+    const botToken = await ctx.getSecret("TELEGRAM_BOT_TOKEN") ||
+      await ctx.getSecret("BOT_TOKEN") || Deno.env.get("TELEGRAM_BOT_TOKEN") ||
       Deno.env.get("BOT_TOKEN");
     if (!botToken) {
       return jsonOk({ error: "Bot token not configured" }, ctx, 500);
     }
 
     try {
-      const tgResponse = await fetch(`https://api.telegram.org/bot${botToken}/getUpdates?limit=10`);
+      const tgResponse = await fetch(
+        `https://api.telegram.org/bot${botToken}/getUpdates?limit=10`,
+      );
       const tgResult = await tgResponse.json();
 
       if (!tgResult.ok) {
-        return jsonOk({ error: `Telegram API error: ${tgResult.description}` }, ctx, 502);
+        return jsonOk(
+          { error: `Telegram API error: ${tgResult.description}` },
+          ctx,
+          502,
+        );
       }
 
       const chatIds = new Set<number>();
@@ -327,7 +336,8 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
           messages.push({
             chat_id: msg.chat.id,
             chat_type: msg.chat.type,
-            from: msg.from.first_name + (msg.from.last_name ? " " + msg.from.last_name : ""),
+            from: msg.from.first_name +
+              (msg.from.last_name ? " " + msg.from.last_name : ""),
             username: msg.from.username || "N/A",
             text: msg.text || "[media]",
             date: new Date(msg.date * 1000).toISOString(),
@@ -335,18 +345,19 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
         }
       }
 
-      return jsonOk(
-        {
-          success: true,
-          instructions:
-            "Send any message to your bot, then call this endpoint again to see your chat_id",
-          unique_chat_ids: Array.from(chatIds),
-          recent_messages: messages,
-        },
-        ctx,
-      );
+      return jsonOk({
+        success: true,
+        instructions:
+          "Send any message to your bot, then call this endpoint again to see your chat_id",
+        unique_chat_ids: Array.from(chatIds),
+        recent_messages: messages,
+      }, ctx);
     } catch (error) {
-      return jsonOk({ error: error instanceof Error ? error.message : String(error) }, ctx, 500);
+      return jsonOk(
+        { error: error instanceof Error ? error.message : String(error) },
+        ctx,
+        500,
+      );
     }
   }
 
@@ -413,7 +424,8 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
 
   try {
     update = ctx.body as TelegramUpdate;
-    const userId = update!.message?.from?.id || update!.callback_query?.from?.id;
+    const userId = update!.message?.from?.id ||
+      update!.callback_query?.from?.id;
 
     // Distributed rate limiting
     if (userId) {
@@ -427,14 +439,11 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
           retryAfter: rateLimit.retryAfterSeconds,
         });
         // Return 200 to Telegram but include rate limit info
-        return jsonOk(
-          {
-            ok: false,
-            error: "Rate limit exceeded",
-            retryAfter: rateLimit.retryAfterSeconds,
-          },
-          ctx,
-        );
+        return jsonOk({
+          ok: false,
+          error: "Rate limit exceeded",
+          retryAfter: rateLimit.retryAfterSeconds,
+        }, ctx);
       }
     }
 
@@ -527,7 +536,10 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
               break;
             case "/help": {
               const { detectLanguage } = await import("./lib/i18n.ts");
-              await handleHelpCommand(chatId, detectLanguage(message.from?.language_code));
+              await handleHelpCommand(
+                chatId,
+                detectLanguage(message.from?.language_code),
+              );
               break;
             }
             case "/share":
@@ -541,7 +553,11 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
               }
               break;
             case "/find":
-              await handleFindCommand(chatId, commandArg, message.from?.language_code);
+              await handleFindCommand(
+                chatId,
+                commandArg,
+                message.from?.language_code,
+              );
               break;
             case "/nearby":
               if (msgUserId) await handleNearbyCommand(chatId, msgUserId);
@@ -554,11 +570,18 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
               break;
             case "/stats":
               if (msgUserId) {
-                await handleStatsCommand(chatId, msgUserId, message.from?.language_code);
+                await handleStatsCommand(
+                  chatId,
+                  msgUserId,
+                  message.from?.language_code,
+                );
               }
               break;
             case "/leaderboard":
-              await handleLeaderboardCommand(chatId, message.from?.language_code);
+              await handleLeaderboardCommand(
+                chatId,
+                message.from?.language_code,
+              );
               break;
             case "/language":
             case "/lang":
@@ -614,15 +637,13 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
 // API Handler
 // ============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: SERVICE,
-    version: VERSION,
-    requireAuth: false,
-    csrf: false,
-    routes: {
-      GET: { handler: handleGet, requireAuth: false },
-      POST: { handler: handlePost, requireAuth: false },
-    },
-  }),
-);
+Deno.serve(createAPIHandler({
+  service: SERVICE,
+  version: VERSION,
+  requireAuth: false,
+  csrf: false,
+  routes: {
+    GET: { handler: handleGet, requireAuth: false },
+    POST: { handler: handlePost, requireAuth: false },
+  },
+}));

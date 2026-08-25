@@ -198,7 +198,9 @@ async function routeRequest(ctx: HandlerContext): Promise<Response> {
     return jsonResponse(result, result.success ? 200 : 400);
   }
 
-  if (segments[0] === "send" && segments[1] === "template" && method === "POST") {
+  if (
+    segments[0] === "send" && segments[1] === "template" && method === "POST"
+  ) {
     const result = await handleSendTemplate(ctx.body, context);
     return jsonResponse(result, result.success ? 200 : 400);
   }
@@ -207,27 +209,38 @@ async function routeRequest(ctx: HandlerContext): Promise<Response> {
   // Preference Routes (JWT)
   // =========================================================================
 
-  if (segments[0] === "preferences" && segments.length === 1 && method === "GET") {
+  if (
+    segments[0] === "preferences" && segments.length === 1 && method === "GET"
+  ) {
     const result = await handleGetPreferences(context);
     return jsonResponse(result, result.success ? 200 : 400);
   }
 
-  if (segments[0] === "preferences" && segments.length === 1 && method === "PUT") {
+  if (
+    segments[0] === "preferences" && segments.length === 1 && method === "PUT"
+  ) {
     const result = await handleUpdatePreferences(ctx.body, context);
     return jsonResponse(result, result.success ? 200 : 400);
   }
 
-  if (segments[0] === "preferences" && segments[1] === "channel" && method === "PUT") {
+  if (
+    segments[0] === "preferences" && segments[1] === "channel" && method === "PUT"
+  ) {
     const result = await handleUpdateCategoryChannelPreference(ctx.body, context);
     return jsonResponse(result, result.success ? 200 : 400);
   }
 
-  if (segments[0] === "preferences" && segments[1] === "dnd" && method === "POST") {
+  if (
+    segments[0] === "preferences" && segments[1] === "dnd" && method === "POST"
+  ) {
     const result = await handleEnableDnd(ctx.body, context);
     return jsonResponse(result, result.success ? 200 : 400);
   }
 
-  if (segments[0] === "preferences" && segments[1] === "dnd" && method === "DELETE") {
+  if (
+    segments[0] === "preferences" && segments[1] === "dnd" &&
+    method === "DELETE"
+  ) {
     const result = await handleDisableDnd(context);
     return jsonResponse(result, result.success ? 200 : 400);
   }
@@ -236,7 +249,9 @@ async function routeRequest(ctx: HandlerContext): Promise<Response> {
   // Dashboard Routes (JWT)
   // =========================================================================
 
-  if (segments[0] === "dashboard" && segments.length === 1 && method === "GET") {
+  if (
+    segments[0] === "dashboard" && segments.length === 1 && method === "GET"
+  ) {
     const result = await handleDashboard(context);
     return jsonResponse(result, result.success ? 200 : 500);
   }
@@ -302,22 +317,20 @@ async function routeRequest(ctx: HandlerContext): Promise<Response> {
 // API Handler
 // =============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: SERVICE,
-    version: VERSION,
-    requireAuth: false, // Auth handled per-route
-    csrf: false,
-    rateLimit: {
-      limit: 60,
-      windowMs: 60_000,
-      keyBy: "user",
-    },
-    routes: {
-      GET: { handler: routeRequest },
-      POST: { handler: routeRequest },
-      PUT: { handler: routeRequest },
-      DELETE: { handler: routeRequest },
-    },
-  }),
-);
+Deno.serve(createAPIHandler({
+  service: SERVICE,
+  version: VERSION,
+  requireAuth: false, // Auth handled per-route
+  csrf: false,
+  rateLimit: {
+    limit: 60,
+    windowMs: 60_000,
+    keyBy: "user",
+  },
+  routes: {
+    GET: { handler: routeRequest },
+    POST: { handler: routeRequest },
+    PUT: { handler: routeRequest },
+    DELETE: { handler: routeRequest },
+  },
+}));

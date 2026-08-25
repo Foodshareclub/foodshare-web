@@ -69,7 +69,9 @@ function handlePost(ctx: HandlerContext): Promise<Response> {
 
   if (path.endsWith("/process/automation")) {
     const body = automationProcessSchema.parse(ctx.body || {});
-    return handleProcessAutomation({ ...ctx, body } as HandlerContext<typeof body>);
+    return handleProcessAutomation(
+      { ...ctx, body } as HandlerContext<typeof body>,
+    );
   }
 
   if (path.endsWith("/process")) {
@@ -79,7 +81,9 @@ function handlePost(ctx: HandlerContext): Promise<Response> {
 
   if (path.endsWith("/send/invitation")) {
     const body = sendInvitationSchema.parse(ctx.body);
-    return handleSendInvitation({ ...ctx, body } as HandlerContext<typeof body>);
+    return handleSendInvitation(
+      { ...ctx, body } as HandlerContext<typeof body>,
+    );
   }
 
   if (path.endsWith("/send/template")) {
@@ -108,24 +112,22 @@ function handlePost(ctx: HandlerContext): Promise<Response> {
 // Export Handler
 // =============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: "api-v1-email",
-    version: VERSION,
-    requireAuth: false, // Auth handled per-route (service/cron for queue ops, JWT for send)
-    csrf: false, // Service-to-service + cron + mobile clients
-    rateLimit: {
-      limit: 30,
-      windowMs: 60000,
-      keyBy: "ip",
+Deno.serve(createAPIHandler({
+  service: "api-v1-email",
+  version: VERSION,
+  requireAuth: false, // Auth handled per-route (service/cron for queue ops, JWT for send)
+  csrf: false, // Service-to-service + cron + mobile clients
+  rateLimit: {
+    limit: 30,
+    windowMs: 60000,
+    keyBy: "ip",
+  },
+  routes: {
+    GET: {
+      handler: handleGet,
     },
-    routes: {
-      GET: {
-        handler: handleGet,
-      },
-      POST: {
-        handler: handlePost,
-      },
+    POST: {
+      handler: handlePost,
     },
-  }),
-);
+  },
+}));

@@ -14,7 +14,10 @@ import { timingSafeEqual } from "../../_shared/utils.ts";
 /**
  * Compute HMAC-SHA256 signature (mirrors what the bots do)
  */
-async function computeHmacSha256(payload: string, secret: string): Promise<string> {
+async function computeHmacSha256(
+  payload: string,
+  secret: string,
+): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -24,7 +27,11 @@ async function computeHmacSha256(payload: string, secret: string): Promise<strin
     ["sign"],
   );
 
-  const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+  const signatureBuffer = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(payload),
+  );
 
   const hashArray = Array.from(new Uint8Array(signatureBuffer));
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -214,7 +221,10 @@ Deno.test("Webhook - prevents replay attacks (signature tied to payload)", async
   });
 
   // Attacker captures legitimate signature
-  const legitimateSignature = await computeHmacSha256(legitimatePayload, secret);
+  const legitimateSignature = await computeHmacSha256(
+    legitimatePayload,
+    secret,
+  );
 
   // Attacker tries to use that signature with different payload
   const maliciousSignature = await computeHmacSha256(maliciousPayload, secret);

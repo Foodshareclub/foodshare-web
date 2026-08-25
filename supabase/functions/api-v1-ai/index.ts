@@ -84,7 +84,10 @@ function getSubPath(url: URL): string {
 // =============================================================================
 
 const MAX_INFERENCE_CACHE_SIZE = 200;
-const inferenceCache = new Map<string, { result: unknown; timestamp: number; hits: number }>();
+const inferenceCache = new Map<
+  string,
+  { result: unknown; timestamp: number; hits: number }
+>();
 
 setInterval(() => {
   const now = Date.now();
@@ -95,7 +98,11 @@ setInterval(() => {
   }
 }, 300000);
 
-function generateCacheKey(model: string, inputs: unknown, params?: unknown): string {
+function generateCacheKey(
+  model: string,
+  inputs: unknown,
+  params?: unknown,
+): string {
   return btoa(JSON.stringify({ model, inputs, params })).slice(0, 64);
 }
 
@@ -130,7 +137,11 @@ async function getCachedResult(
 }
 
 // deno-lint-ignore no-explicit-any
-async function setCachedResult(cacheKey: string, result: unknown, supabase: any): Promise<void> {
+async function setCachedResult(
+  cacheKey: string,
+  result: unknown,
+  supabase: any,
+): Promise<void> {
   // Evict oldest if cache is full
   if (inferenceCache.size >= MAX_INFERENCE_CACHE_SIZE) {
     const firstKey = inferenceCache.keys().next().value;
@@ -152,7 +163,12 @@ async function setCachedResult(cacheKey: string, result: unknown, supabase: any)
 // Groq Chat
 // =============================================================================
 
-async function groqChat(messages: unknown[], model: string, temp: number, maxTokens?: number) {
+async function groqChat(
+  messages: unknown[],
+  model: string,
+  temp: number,
+  maxTokens?: number,
+) {
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -227,17 +243,23 @@ async function runHfInference(
   // deno-lint-ignore no-explicit-any
   supabase: any,
   _requestId: string,
-): Promise<{
-  result: unknown;
-  contentType: string;
-  cached: boolean;
-  cacheSource?: string;
-}> {
+): Promise<
+  {
+    result: unknown;
+    contentType: string;
+    cached: boolean;
+    cacheSource?: string;
+  }
+> {
   const hfToken = Deno.env.get("HUGGINGFACE_ACCESS_TOKEN");
   if (!hfToken) throw new ServerError("Missing HUGGINGFACE_ACCESS_TOKEN");
 
   const model = body?.model || task;
-  const cacheKey = generateCacheKey(model, body?.inputs || body?.input, body?.parameters);
+  const cacheKey = generateCacheKey(
+    model,
+    body?.inputs || body?.input,
+    body?.parameters,
+  );
 
   const cached = await getCachedResult(cacheKey, supabase);
   if (cached) {
@@ -249,7 +271,9 @@ async function runHfInference(
     };
   }
 
-  const { HfInference } = await import("https://esm.sh/@huggingface/inference@2.6.4");
+  const { HfInference } = await import(
+    "https://esm.sh/@huggingface/inference@2.6.4"
+  );
   const hf = new HfInference(hfToken);
   let result: unknown;
   let contentType = "application/json";
@@ -396,7 +420,9 @@ async function handlePost(ctx: HandlerContext<PostBody>): Promise<Response> {
     );
   }
 
-  throw new ValidationError("Unknown endpoint. Use /chat, /embeddings, or /inference/:task");
+  throw new ValidationError(
+    "Unknown endpoint. Use /chat, /embeddings, or /inference/:task",
+  );
 }
 
 async function handleGet(ctx: HandlerContext): Promise<Response> {
@@ -476,25 +502,23 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
 // Export Handler
 // =============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: "api-v1-ai",
-    version: VERSION,
-    requireAuth: false, // Auth handled per-route: chat/embeddings require JWT, inference/health/models public
-    csrf: false, // API clients
-    rateLimit: {
-      limit: 30,
-      windowMs: 60000,
-      keyBy: "ip",
+Deno.serve(createAPIHandler({
+  service: "api-v1-ai",
+  version: VERSION,
+  requireAuth: false, // Auth handled per-route: chat/embeddings require JWT, inference/health/models public
+  csrf: false, // API clients
+  rateLimit: {
+    limit: 30,
+    windowMs: 60000,
+    keyBy: "ip",
+  },
+  routes: {
+    GET: {
+      handler: handleGet,
     },
-    routes: {
-      GET: {
-        handler: handleGet,
-      },
-      POST: {
-        schema: postBodySchema,
-        handler: handlePost,
-      },
+    POST: {
+      schema: postBodySchema,
+      handler: handlePost,
     },
-  }),
-);
+  },
+}));

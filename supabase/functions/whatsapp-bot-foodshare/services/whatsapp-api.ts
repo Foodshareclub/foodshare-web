@@ -105,7 +105,10 @@ async function sendWithRetry<T>(
         lastError = result.error || "Unknown error";
 
         // Don't retry on client errors (4xx)
-        if (lastError.includes("400") || lastError.includes("401") || lastError.includes("403")) {
+        if (
+          lastError.includes("400") || lastError.includes("401") ||
+          lastError.includes("403")
+        ) {
           return result;
         }
 
@@ -127,7 +130,10 @@ async function sendWithRetry<T>(
 /**
  * Send a text message
  */
-export async function sendTextMessage(to: string, text: string): Promise<boolean> {
+export async function sendTextMessage(
+  to: string,
+  text: string,
+): Promise<boolean> {
   const message: TextMessage = {
     messaging_product: "whatsapp",
     recipient_type: "individual",
@@ -204,7 +210,9 @@ export async function sendButtonMessage(
   footerText?: string,
 ): Promise<boolean> {
   // Validate and truncate button titles (max 20 chars)
-  const formattedButtons: InteractiveButton[] = buttons.slice(0, 3).map((btn) => ({
+  const formattedButtons: InteractiveButton[] = buttons.slice(0, 3).map((
+    btn,
+  ) => ({
     type: "reply" as const,
     reply: {
       id: btn.id,
@@ -292,12 +300,15 @@ export async function markAsRead(messageId: string): Promise<boolean> {
  */
 export async function getMediaUrl(mediaId: string): Promise<string | null> {
   try {
-    const response = await fetchWithTimeout(`${getWhatsappApiUrl()}/${mediaId}`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${getWhatsappAccessToken()}`,
+    const response = await fetchWithTimeout(
+      `${getWhatsappApiUrl()}/${mediaId}`,
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${getWhatsappAccessToken()}`,
+        },
       },
-    });
+    );
 
     if (!response.ok) {
       return null;
@@ -314,18 +325,16 @@ export async function getMediaUrl(mediaId: string): Promise<string | null> {
 /**
  * Download media from WhatsApp
  */
-export async function downloadMedia(mediaUrl: string): Promise<ArrayBuffer | null> {
+export async function downloadMedia(
+  mediaUrl: string,
+): Promise<ArrayBuffer | null> {
   try {
-    const response = await fetchWithTimeout(
-      mediaUrl,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${getWhatsappAccessToken()}`,
-        },
+    const response = await fetchWithTimeout(mediaUrl, {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${getWhatsappAccessToken()}`,
       },
-      30000,
-    );
+    }, 30000);
 
     if (!response.ok) {
       return null;

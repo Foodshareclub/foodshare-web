@@ -99,7 +99,14 @@ export interface SLICounterData {
 }
 
 const LATENCY_BUCKET_BOUNDARIES = [100, 250, 500, 1000, 3000];
-const LATENCY_BUCKET_LABELS = ["le100", "le250", "le500", "le1000", "le3000", "leInf"];
+const LATENCY_BUCKET_LABELS = [
+  "le100",
+  "le250",
+  "le500",
+  "le1000",
+  "le3000",
+  "leInf",
+];
 
 const sliCounters = new Map<string, SLICounterData>();
 
@@ -109,7 +116,9 @@ function getOrCreateSLI(handler: string): SLICounterData {
     counter = {
       requestCount: 0,
       errorCount: 0,
-      latencyBuckets: Object.fromEntries(LATENCY_BUCKET_LABELS.map((l) => [l, 0])),
+      latencyBuckets: Object.fromEntries(
+        LATENCY_BUCKET_LABELS.map((l) => [l, 0]),
+      ),
     };
     sliCounters.set(handler, counter);
   }
@@ -119,7 +128,11 @@ function getOrCreateSLI(handler: string): SLICounterData {
 /**
  * Increment SLI counters for a completed request.
  */
-export function recordSLI(handler: string, durationMs: number, isError: boolean): void {
+export function recordSLI(
+  handler: string,
+  durationMs: number,
+  isError: boolean,
+): void {
   const counter = getOrCreateSLI(handler);
   counter.requestCount++;
   if (isError) counter.errorCount++;
@@ -356,7 +369,9 @@ export function getMetricsSummary(operation?: string): MetricsSummary[] {
     summaries.push({
       operation: op,
       count: metrics.length,
-      avgDurationMs: Math.round(durations.reduce((a, b) => a + b, 0) / durations.length),
+      avgDurationMs: Math.round(
+        durations.reduce((a, b) => a + b, 0) / durations.length,
+      ),
       minDurationMs: durations[0],
       maxDurationMs: durations[durations.length - 1],
       p50DurationMs: durations[Math.floor(durations.length * 0.5)],

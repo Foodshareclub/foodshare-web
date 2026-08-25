@@ -51,10 +51,16 @@ function generateRequestId(): string {
 /**
  * Detect platform from User-Agent or custom header
  */
-function detectPlatform(request: Request): "ios" | "android" | "web" | "unknown" {
+function detectPlatform(
+  request: Request,
+): "ios" | "android" | "web" | "unknown" {
   // Check custom header first
-  const clientPlatform = request.headers.get("x-client-platform")?.toLowerCase();
-  if (clientPlatform === "ios" || clientPlatform === "android" || clientPlatform === "web") {
+  const clientPlatform = request.headers.get("x-client-platform")
+    ?.toLowerCase();
+  if (
+    clientPlatform === "ios" || clientPlatform === "android" ||
+    clientPlatform === "web"
+  ) {
     return clientPlatform;
   }
 
@@ -70,8 +76,7 @@ function detectPlatform(request: Request): "ios" | "android" | "web" | "unknown"
   if (userAgent.includes("iphone") || userAgent.includes("ipad")) return "ios";
   if (userAgent.includes("android")) return "android";
   if (
-    userAgent.includes("mozilla") ||
-    userAgent.includes("chrome") ||
+    userAgent.includes("mozilla") || userAgent.includes("chrome") ||
     userAgent.includes("safari")
   ) {
     return "web";
@@ -91,7 +96,10 @@ function detectPlatform(request: Request): "ios" | "android" | "web" | "unknown"
  * });
  * ```
  */
-export function createContext(request: Request, service?: string): RequestContext {
+export function createContext(
+  request: Request,
+  service?: string,
+): RequestContext {
   const correlationId = request.headers.get("x-correlation-id") ||
     request.headers.get("x-request-id") ||
     generateRequestId();
@@ -124,7 +132,9 @@ export function getContext(): RequestContext | null {
  */
 export function requireContext(): RequestContext {
   if (!currentContext) {
-    throw new Error("Request context not initialized. Call createContext first.");
+    throw new Error(
+      "Request context not initialized. Call createContext first.",
+    );
   }
   return currentContext;
 }
@@ -136,7 +146,9 @@ export function updateContext(
   updates: Partial<Omit<RequestContext, "requestId" | "startTime">>,
 ): void {
   if (!currentContext) {
-    throw new Error("Request context not initialized. Call createContext first.");
+    throw new Error(
+      "Request context not initialized. Call createContext first.",
+    );
   }
 
   if (updates.userId !== undefined) currentContext.userId = updates.userId;
@@ -192,7 +204,10 @@ export function clearContext(): void {
  * Execute a function with a specific context
  * Useful for background tasks or async operations
  */
-export async function withContext<T>(context: RequestContext, fn: () => Promise<T>): Promise<T> {
+export async function withContext<T>(
+  context: RequestContext,
+  fn: () => Promise<T>,
+): Promise<T> {
   const previousContext = currentContext;
   currentContext = context;
 

@@ -69,13 +69,10 @@ Deno.test("API Handler - POST with Zod validation", async () => {
       POST: {
         schema,
         handler: async (ctx) => {
-          return created(
-            {
-              id: "123",
-              ...(ctx.body as Record<string, unknown>),
-            },
-            ctx,
-          );
+          return created({
+            id: "123",
+            ...(ctx.body as Record<string, unknown>),
+          }, ctx);
         },
       },
     },
@@ -217,13 +214,10 @@ Deno.test("API Handler - Query parameter validation", async () => {
       GET: {
         querySchema,
         handler: async (ctx) => {
-          return ok(
-            {
-              page: Number(ctx.query.page),
-              limit: Number(ctx.query.limit),
-            },
-            ctx,
-          );
+          return ok({
+            page: Number(ctx.query.page),
+            limit: Number(ctx.query.limit),
+          }, ctx);
         },
       },
     },
@@ -249,13 +243,10 @@ Deno.test("API Handler - Path parameter extraction", async () => {
     routes: {
       GET: {
         handler: async (ctx) => {
-          return ok(
-            {
-              productId: ctx.params.productId,
-              reviewId: ctx.params.reviewId,
-            },
-            ctx,
-          );
+          return ok({
+            productId: ctx.params.productId,
+            reviewId: ctx.params.reviewId,
+          }, ctx);
         },
       },
     },

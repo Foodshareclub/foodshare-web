@@ -79,7 +79,10 @@ function startCleanup() {
  * Check rate limit using in-memory store
  * Fast but not suitable for distributed environments
  */
-export function checkMemoryRateLimit(key: string, config: RateLimitConfig): RateLimitResult {
+export function checkMemoryRateLimit(
+  key: string,
+  config: RateLimitConfig,
+): RateLimitResult {
   startCleanup();
 
   const now = Date.now();
@@ -192,7 +195,10 @@ export async function checkDistributedRateLimit(
     });
 
     if (error) {
-      logger.error("Distributed rate limit check failed", new Error(error.message));
+      logger.error(
+        "Distributed rate limit check failed",
+        new Error(error.message),
+      );
       // Fail open - allow request if rate limiting fails
       return {
         allowed: true,
@@ -209,7 +215,10 @@ export async function checkDistributedRateLimit(
       retryAfterMs: data.retry_after_ms,
     };
   } catch (error) {
-    logger.error("Rate limit error", error instanceof Error ? error : new Error(String(error)));
+    logger.error(
+      "Rate limit error",
+      error instanceof Error ? error : new Error(String(error)),
+    );
     // Fail open
     return {
       allowed: true,

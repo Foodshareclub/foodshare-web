@@ -52,13 +52,15 @@ export function approximateLocation(
 
   // Random distance between MIN_OFFSET and RADIUS (100-200m)
   const distance = LOCATION_PRIVACY.MIN_OFFSET_METERS +
-    random2() * (LOCATION_PRIVACY.RADIUS_METERS - LOCATION_PRIVACY.MIN_OFFSET_METERS);
+    random2() *
+      (LOCATION_PRIVACY.RADIUS_METERS - LOCATION_PRIVACY.MIN_OFFSET_METERS);
 
   // Convert meters to degrees (approximation)
   // 1 degree latitude ≈ 111,320 meters
   // 1 degree longitude ≈ 111,320 * cos(latitude) meters
   const latOffset = (distance * Math.cos(angle)) / 111320;
-  const lngOffset = (distance * Math.sin(angle)) / (111320 * Math.cos((lat * Math.PI) / 180));
+  const lngOffset = (distance * Math.sin(angle)) /
+    (111320 * Math.cos((lat * Math.PI) / 180));
 
   return {
     latitude: lat + latOffset,

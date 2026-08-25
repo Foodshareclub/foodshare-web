@@ -139,7 +139,10 @@ function cleanExpiredCache(): void {
   }
 }
 
-async function checkRateLimit(supabase: SupabaseClient, identifier: string): Promise<boolean> {
+async function checkRateLimit(
+  supabase: SupabaseClient,
+  identifier: string,
+): Promise<boolean> {
   try {
     const { data, error } = await supabase
       .from("rate_limits")
@@ -194,10 +197,13 @@ export default async function uiStringsHandler(
     const supabase = getSupabaseClient();
 
     const url = new URL(req.url);
-    const locale = normalizeLocale(url.searchParams.get("locale") || DEFAULT_LOCALE);
+    const locale = normalizeLocale(
+      url.searchParams.get("locale") || DEFAULT_LOCALE,
+    );
     const platform = url.searchParams.get("platform") || "web";
     const clientETag = req.headers.get("if-none-match");
-    const ipAddress = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip");
+    const ipAddress = req.headers.get("x-forwarded-for") ||
+      req.headers.get("x-real-ip");
 
     // Rate limiting
     const identifier = ipAddress || "anonymous";
@@ -260,10 +266,13 @@ export default async function uiStringsHandler(
         .single();
 
       if (fallbackError || !fallbackTranslation) {
-        return new Response(JSON.stringify({ error: "Translation not found" }), {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({ error: "Translation not found" }),
+          {
+            status: 404,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
       }
 
       const responseData: TranslationResponse = {

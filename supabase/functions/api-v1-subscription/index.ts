@@ -49,7 +49,13 @@ const syncSubscriptionSchema = z.object({
   environment: z.enum(["Production", "Sandbox"]).default("Production"),
   appAccountToken: z.string().uuid().optional(),
   status: z
-    .enum(["active", "expired", "in_grace_period", "in_billing_retry", "revoked"])
+    .enum([
+      "active",
+      "expired",
+      "in_grace_period",
+      "in_billing_retry",
+      "revoked",
+    ])
     .default("active"),
   autoRenewStatus: z.boolean().default(true),
   autoRenewProductId: z.string().optional(),
@@ -74,7 +80,10 @@ function verifyCronAuth(request: Request): boolean {
   const authHeader = request.headers.get("X-Cron-Secret");
   if (authHeader && cronSecret && authHeader === cronSecret) return true;
 
-  const bearerToken = request.headers.get("Authorization")?.replace("Bearer ", "");
+  const bearerToken = request.headers.get("Authorization")?.replace(
+    "Bearer ",
+    "",
+  );
   if (bearerToken && cronSecret && bearerToken === cronSecret) return true;
   if (bearerToken === serviceRoleKey) return true;
 
@@ -135,11 +144,19 @@ async function handleSyncSubscription(
   );
 
   if (upsertError) {
-    logger.error("Failed to sync subscription", new Error(upsertError.message), {
-      userId,
-      originalTransactionId: body.originalTransactionId,
-    });
-    throw new AppError("Failed to sync subscription", "SUBSCRIPTION_SYNC_FAILED", 500);
+    logger.error(
+      "Failed to sync subscription",
+      new Error(upsertError.message),
+      {
+        userId,
+        originalTransactionId: body.originalTransactionId,
+      },
+    );
+    throw new AppError(
+      "Failed to sync subscription",
+      "SUBSCRIPTION_SYNC_FAILED",
+      500,
+    );
   }
 
   logger.info("Subscription synced successfully", {
@@ -172,7 +189,8 @@ async function handleSyncSubscription(
         status: body.status,
         expires_date: body.expiresDate ? new Date(body.expiresDate).toISOString() : null,
         auto_renew_status: body.autoRenewStatus,
-        is_active: body.status === "active" || body.status === "in_grace_period",
+        is_active: body.status === "active" ||
+          body.status === "in_grace_period",
         environment: body.environment,
       },
     },
@@ -187,28 +205,30 @@ async function handleCheckSubscription(ctx: HandlerContext): Promise<Response> {
     throw new ValidationError("Authentication required");
   }
 
-  const { data: subscription, error } = await supabase.rpc("billing.get_user_subscription", {
-    p_user_id: userId,
-  });
+  const { data: subscription, error } = await supabase.rpc(
+    "billing.get_user_subscription",
+    { p_user_id: userId },
+  );
 
   if (error) {
     logger.error("Failed to get subscription", new Error(error.message), {
       userId,
     });
-    throw new AppError("Failed to get subscription status", "SUBSCRIPTION_FETCH_FAILED", 500);
+    throw new AppError(
+      "Failed to get subscription status",
+      "SUBSCRIPTION_FETCH_FAILED",
+      500,
+    );
   }
 
   const { data: isPremium } = await supabase.rpc("billing.is_user_premium", {
     p_user_id: userId,
   });
 
-  return ok(
-    {
-      is_premium: isPremium ?? false,
-      subscription: subscription || null,
-    },
-    ctx,
-  );
+  return ok({
+    is_premium: isPremium ?? false,
+    subscription: subscription || null,
+  }, ctx);
 }
 
 // =============================================================================
@@ -331,7 +351,10 @@ async function cleanupOldEvents(
     logger.info("Old events cleaned up", data);
     return result;
   } catch (error) {
-    logger.error("Cleanup failed", error instanceof Error ? error : new Error(String(error)));
+    logger.error(
+      "Cleanup failed",
+      error instanceof Error ? error : new Error(String(error)),
+    );
     return { deleted: 0 };
   }
 }
@@ -352,7 +375,9 @@ async function sendHealthReport(
       .from("subscription_health")
       .select("*");
 
-    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0];
 
     const { data: metrics } = await supabase
       .schema("billing")
@@ -360,16 +385,20 @@ async function sendHealthReport(
       .select("*")
       .eq("metric_date", yesterday);
 
-    const { data: dlq } = await supabase.schema("billing").from("dlq_summary").select("*");
+    const { data: dlq } = await supabase
+      .schema("billing")
+      .from("dlq_summary")
+      .select("*");
 
     await sendTelegramAlert(
       "low",
       "Daily Subscription Health Report",
       {
         Date: yesterday,
-        "Active Subscriptions": health?.reduce((sum: number, h: { active_count: number }) =>
-          sum + h.active_count, 0) ||
+        "Active Subscriptions": health?.reduce(
+          (sum: number, h: { active_count: number }) => sum + h.active_count,
           0,
+        ) || 0,
         "New Yesterday": metrics?.reduce(
           (sum: number, m: { new_subscriptions: number }) => sum + m.new_subscriptions,
           0,
@@ -386,7 +415,10 @@ async function sendHealthReport(
 
     return true;
   } catch (error) {
-    logger.error("Health report failed", error instanceof Error ? error : new Error(String(error)));
+    logger.error(
+      "Health report failed",
+      error instanceof Error ? error : new Error(String(error)),
+    );
     return false;
   }
 }
@@ -409,15 +441,12 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
     if (!verifyCronAuth(ctx.request)) {
       throw new ForbiddenError("Service authentication required");
     }
-    return ok(
-      {
-        service: "api-v1-subscription",
-        version: VERSION,
-        timestamp: new Date().toISOString(),
-        ...getWebhookMetricsData(),
-      },
-      ctx,
-    );
+    return ok({
+      service: "api-v1-subscription",
+      version: VERSION,
+      timestamp: new Date().toISOString(),
+      ...getWebhookMetricsData(),
+    }, ctx);
   }
 
   // GET /cron — trigger cron tasks (for cron triggers)
@@ -458,12 +487,13 @@ async function runCronTasks(ctx: HandlerContext): Promise<Response> {
   const startTime = performance.now();
   const supabase = getServiceRoleClient();
 
-  const [dlqResult, metricsResult, cleanupResult, healthResult] = await Promise.all([
-    processDLQ(supabase),
-    updateDailyMetrics(supabase),
-    cleanupOldEvents(supabase),
-    sendHealthReport(supabase),
-  ]);
+  const [dlqResult, metricsResult, cleanupResult, healthResult] = await Promise
+    .all([
+      processDLQ(supabase),
+      updateDailyMetrics(supabase),
+      cleanupOldEvents(supabase),
+      sendHealthReport(supabase),
+    ]);
 
   const result: CronResult = {
     dlq: dlqResult,
@@ -483,24 +513,22 @@ async function runCronTasks(ctx: HandlerContext): Promise<Response> {
 // Export Handler
 // =============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: "api-v1-subscription",
-    version: VERSION,
-    requireAuth: false, // Auth handled per-route (JWT for sync/status, cron auth for cron)
-    csrf: false, // Mobile clients + cron
-    rateLimit: {
-      limit: 30,
-      windowMs: 60000,
-      keyBy: "ip",
+Deno.serve(createAPIHandler({
+  service: "api-v1-subscription",
+  version: VERSION,
+  requireAuth: false, // Auth handled per-route (JWT for sync/status, cron auth for cron)
+  csrf: false, // Mobile clients + cron
+  rateLimit: {
+    limit: 30,
+    windowMs: 60000,
+    keyBy: "ip",
+  },
+  routes: {
+    GET: {
+      handler: handleGet,
     },
-    routes: {
-      GET: {
-        handler: handleGet,
-      },
-      POST: {
-        handler: handlePost,
-      },
+    POST: {
+      handler: handlePost,
     },
-  }),
-);
+  },
+}));

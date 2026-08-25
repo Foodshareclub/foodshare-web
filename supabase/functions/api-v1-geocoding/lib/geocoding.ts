@@ -36,7 +36,8 @@ export const CONFIG = {
 // =============================================================================
 
 export const SIGNUP_LOCATION_CONFIG = {
-  hookSecret: Deno.env.get("BEFORE_USER_CREATED_HOOK_SECRET")?.replace("v1,whsec_", "") || null,
+  hookSecret: Deno.env.get("BEFORE_USER_CREATED_HOOK_SECRET")?.replace("v1,whsec_", "") ||
+    null,
   enabled: Deno.env.get("GEOLOCATE_USER_ENABLED") !== "false",
   timeoutMs: (() => {
     const ms = parseInt(Deno.env.get("GEOLOCATE_TIMEOUT_MS") || "3000", 10);
@@ -113,7 +114,10 @@ const IP_API_CIRCUIT_RESET_TIMEOUT_MS = 30_000;
 
 function isIpApiCircuitOpen(): boolean {
   if (ipApiCircuitBreaker.state === "open") {
-    if (Date.now() - ipApiCircuitBreaker.lastFailure > IP_API_CIRCUIT_RESET_TIMEOUT_MS) {
+    if (
+      Date.now() - ipApiCircuitBreaker.lastFailure >
+        IP_API_CIRCUIT_RESET_TIMEOUT_MS
+    ) {
       ipApiCircuitBreaker.state = "half-open";
       return false;
     }
@@ -197,7 +201,10 @@ export async function getLocationFromIP(
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), SIGNUP_LOCATION_CONFIG.timeoutMs);
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      SIGNUP_LOCATION_CONFIG.timeoutMs,
+    );
 
     const response = await fetch(
       `${SIGNUP_LOCATION_CONFIG.ipApiBaseUrl}/${ipAddress}?fields=status,lat,lon,city,regionName,country,countryCode`,
@@ -253,7 +260,8 @@ export async function getLocationFromIP(
   } catch (error) {
     recordIpApiFailure();
 
-    const isTimeout = error instanceof DOMException && error.name === "AbortError";
+    const isTimeout = error instanceof DOMException &&
+      error.name === "AbortError";
     logger.error("Geolocation error", {
       requestId,
       error: isTimeout ? "timeout" : String(error),
@@ -303,10 +311,13 @@ export function verifySignupWebhook(
     return { success: true, payload, shouldAllowSignup: true };
   } catch (error) {
     const errorMessage = String(error);
-    logger.warn("Signup webhook verification failed — allowing signup (graceful degradation)", {
-      requestId,
-      error: errorMessage,
-    });
+    logger.warn(
+      "Signup webhook verification failed — allowing signup (graceful degradation)",
+      {
+        requestId,
+        error: errorMessage,
+      },
+    );
     return { success: false, error: errorMessage, shouldAllowSignup: true };
   }
 }
@@ -366,10 +377,7 @@ export async function getAuthenticatedUser(
 
   const token = authHeader.replace("Bearer ", "");
   const supabase = getSupabaseClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser(token);
+  const { data: { user }, error } = await supabase.auth.getUser(token);
 
   if (error || !user) {
     logger.warn("Map route: auth failed", { requestId, error: error?.message });
@@ -400,7 +408,11 @@ export function errorResponse(
   status = 400,
   requestId?: string,
 ): Response {
-  return jsonResponse({ success: false, error, requestId }, corsHeaders, status);
+  return jsonResponse(
+    { success: false, error, requestId },
+    corsHeaders,
+    status,
+  );
 }
 
 // =============================================================================
@@ -415,9 +427,10 @@ export function generateTileUrls(
   const urls: string[] = [];
   const z = Math.floor(zoom);
   const x = Math.floor(((center.lng + 180) / 360) * Math.pow(2, z));
-  const latRad = (center.lat * Math.PI) / 180;
+  const latRad = center.lat * Math.PI / 180;
   const y = Math.floor(
-    ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * Math.pow(2, z),
+    (1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 *
+      Math.pow(2, z),
   );
 
   for (let dx = -radius; dx <= radius; dx++) {
@@ -462,16 +475,19 @@ export interface UserMatch {
 
 // Safely coerce string coordinates to numbers without z.coerce.number() which
 // silently turns null -> 0 and "" -> 0. Accepts numbers, numeric strings, null, undefined.
-const optionalCoordinate = z.preprocess((val) => {
-  if (val === undefined) return undefined;
-  if (val === null || val === "") return null;
-  if (typeof val === "number") return val;
-  if (typeof val === "string") {
-    const num = Number(val);
-    return isNaN(num) ? val : num;
-  }
-  return val; // non-number/non-string types fall through for z.number() to reject
-}, z.number().optional().nullable());
+const optionalCoordinate = z.preprocess(
+  (val) => {
+    if (val === undefined) return undefined;
+    if (val === null || val === "") return null;
+    if (typeof val === "number") return val;
+    if (typeof val === "string") {
+      const num = Number(val);
+      return isNaN(num) ? val : num;
+    }
+    return val; // non-number/non-string types fall through for z.number() to reject
+  },
+  z.number().optional().nullable(),
+);
 
 const addressSchema = z.object({
   profile_id: z.string(),

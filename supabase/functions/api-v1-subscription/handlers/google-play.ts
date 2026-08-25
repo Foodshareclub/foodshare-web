@@ -115,7 +115,10 @@ interface GooglePlayNotificationData {
 // Event Type Mapping
 // =============================================================================
 
-const NOTIFICATION_TYPE_MAP: Record<SubscriptionNotificationType, SubscriptionEventType> = {
+const NOTIFICATION_TYPE_MAP: Record<
+  SubscriptionNotificationType,
+  SubscriptionEventType
+> = {
   [SubscriptionNotificationType.SUBSCRIPTION_RECOVERED]: "billing_recovered",
   [SubscriptionNotificationType.SUBSCRIPTION_RENEWED]: "subscription_renewed",
   [SubscriptionNotificationType.SUBSCRIPTION_CANCELED]: "subscription_canceled",
@@ -155,7 +158,9 @@ const STATUS_MAP: Record<SubscriptionNotificationType, SubscriptionStatus> = {
   [SubscriptionNotificationType.SUBSCRIPTION_PENDING_PURCHASE_CANCELED]: "expired",
 };
 
-function mapGooglePlayStatus(notificationType: SubscriptionNotificationType): SubscriptionStatus {
+function mapGooglePlayStatus(
+  notificationType: SubscriptionNotificationType,
+): SubscriptionStatus {
   return STATUS_MAP[notificationType] || "unknown";
 }
 
@@ -167,14 +172,19 @@ function getNotificationTypeName(type: SubscriptionNotificationType): string {
 // Message Validation
 // =============================================================================
 
-function isValidPubSubMessage(parsed: unknown): parsed is GooglePlayPubSubMessage {
+function isValidPubSubMessage(
+  parsed: unknown,
+): parsed is GooglePlayPubSubMessage {
   if (!parsed || typeof parsed !== "object") return false;
   const msg = parsed as Record<string, unknown>;
 
   if (!msg.message || typeof msg.message !== "object") return false;
   const message = msg.message as Record<string, unknown>;
 
-  return typeof message.data === "string" && typeof message.messageId === "string";
+  return (
+    typeof message.data === "string" &&
+    typeof message.messageId === "string"
+  );
 }
 
 function decodeBase64(data: string): string {
@@ -183,7 +193,7 @@ function decodeBase64(data: string): string {
   } catch {
     // Handle URL-safe base64
     const padded = data.replace(/-/g, "+").replace(/_/g, "/");
-    const paddedLength = padded.length + ((4 - (padded.length % 4)) % 4);
+    const paddedLength = padded.length + (4 - (padded.length % 4)) % 4;
     return atob(padded.padEnd(paddedLength, "="));
   }
 }
@@ -225,7 +235,11 @@ async function getGoogleJWKS(): Promise<JsonWebKey[]> {
     return jwksCache.keys;
   }
 
-  const response = await tracedFetch(GOOGLE_JWKS_URL, undefined, "google.jwks.fetch");
+  const response = await tracedFetch(
+    GOOGLE_JWKS_URL,
+    undefined,
+    "google.jwks.fetch",
+  );
 
   if (!response.ok) {
     throw new Error(`Failed to fetch Google JWKS: ${response.status}`);
@@ -285,7 +299,9 @@ async function verifyGoogleJWT(request: Request): Promise<boolean> {
 
     // Fetch JWKS and find matching key
     const keys = await getGoogleJWKS();
-    const matchingKey = keys.find((k) => (k as Record<string, unknown>).kid === header.kid);
+    const matchingKey = keys.find(
+      (k) => (k as Record<string, unknown>).kid === header.kid,
+    );
 
     if (!matchingKey) {
       logger.warn("No matching key found in Google JWKS", { kid: header.kid });
@@ -384,14 +400,19 @@ export const googlePlayHandler: PlatformHandler = {
 
     // Check for Cloud Pub/Sub user-agent
     const userAgent = request.headers.get("user-agent") || "";
-    if (userAgent.includes("CloudPubSub") || userAgent.includes("Google-Cloud-Pub/Sub")) {
+    if (
+      userAgent.includes("CloudPubSub") ||
+      userAgent.includes("Google-Cloud-Pub/Sub")
+    ) {
       return true;
     }
 
     // Also accept requests with specific headers from GCP
     const gcpProject = request.headers.get("x-goog-project-id");
     const configuredGcpProject = getGoogleCloudProject();
-    if (gcpProject && configuredGcpProject && gcpProject === configuredGcpProject) {
+    if (
+      gcpProject && configuredGcpProject && gcpProject === configuredGcpProject
+    ) {
       return true;
     }
 
@@ -466,7 +487,10 @@ export const googlePlayHandler: PlatformHandler = {
       }
 
       // Validate package name for real notifications
-      if (configuredPackageName && notification.packageName !== configuredPackageName) {
+      if (
+        configuredPackageName &&
+        notification.packageName !== configuredPackageName
+      ) {
         timer.end({ success: false, reason: "package_mismatch" });
         logger.warn("Google Play package name mismatch", {
           expected: configuredPackageName,
@@ -490,7 +514,10 @@ export const googlePlayHandler: PlatformHandler = {
     }
   },
 
-  async parseEvent(_request: Request, body: string): Promise<SubscriptionEvent> {
+  async parseEvent(
+    _request: Request,
+    body: string,
+  ): Promise<SubscriptionEvent> {
     const timer = new PerformanceTimer("google_play.parse_event");
 
     // Parse Pub/Sub message
@@ -618,10 +645,10 @@ export const googlePlayHandler: PlatformHandler = {
     // Handle one-time product notifications
     if (notification.oneTimeProductNotification) {
       const otpNotif = notification.oneTimeProductNotification;
-      const eventType =
-        otpNotif.notificationType === OneTimeProductNotificationType.ONE_TIME_PRODUCT_PURCHASED
-          ? "subscription_created"
-          : "subscription_canceled";
+      const eventType = otpNotif.notificationType ===
+          OneTimeProductNotificationType.ONE_TIME_PRODUCT_PURCHASED
+        ? "subscription_created"
+        : "subscription_canceled";
 
       timer.end({ eventType, productType: "one_time" });
 

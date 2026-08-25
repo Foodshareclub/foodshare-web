@@ -155,7 +155,10 @@ export async function flushMetrics(): Promise<void> {
 /**
  * Sync circuit breaker status to database
  */
-export async function syncCircuitStatus(circuitName: string, _state: CircuitState): Promise<void> {
+export async function syncCircuitStatus(
+  circuitName: string,
+  _state: CircuitState,
+): Promise<void> {
   try {
     const status = getCircuitStatus(circuitName);
     if (!status) return;
@@ -209,7 +212,8 @@ export async function getMetricsSummary(minutes: number = 5): Promise<
       return null;
     }
 
-    const errorData = errorRateResult.data?.[0] || { total_requests: 0, error_rate: 0 };
+    const errorData = errorRateResult.data?.[0] ||
+      { total_requests: 0, error_rate: 0 };
 
     return {
       errorRate: parseFloat(errorData.error_rate) || 0,

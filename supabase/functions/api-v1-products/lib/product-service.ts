@@ -33,10 +33,7 @@ export interface UpdateProductInput {
 }
 
 export class ProductService {
-  constructor(
-    private supabase: SupabaseClient,
-    private userId: string,
-  ) {}
+  constructor(private supabase: SupabaseClient, private userId: string) {}
 
   async createProduct(input: CreateProductInput) {
     const insertData = {
@@ -127,13 +124,11 @@ export class ProductService {
   async getProduct(productId: number) {
     const { data, error } = await this.supabase
       .from("products")
-      .select(
-        `
+      .select(`
         *,
         profile:profiles!products_profile_id_fkey(id, nickname, avatar_url, is_verified),
         category:categories(id, name, icon)
-      `,
-      )
+      `)
       .eq("id", productId)
       .single();
 
@@ -152,14 +147,16 @@ export class ProductService {
     limit: number;
     offset: number;
   }) {
-    let query = this.supabase.from("products").select(
-      `
+    let query = this.supabase
+      .from("products")
+      .select(
+        `
         *,
         profile:profiles!products_profile_id_fkey(id, nickname, avatar_url),
         category:categories(id, name, icon)
       `,
-      { count: "exact" },
-    );
+        { count: "exact" },
+      );
 
     if (params.categoryId) {
       query = query.eq("category_id", params.categoryId);
@@ -173,11 +170,14 @@ export class ProductService {
 
     // Geographic filtering
     if (params.lat && params.lng && params.radius) {
-      const { data: nearbyIds } = await this.supabase.rpc("get_nearby_products", {
-        p_lat: params.lat,
-        p_lng: params.lng,
-        p_radius_km: params.radius,
-      });
+      const { data: nearbyIds } = await this.supabase.rpc(
+        "get_nearby_products",
+        {
+          p_lat: params.lat,
+          p_lng: params.lng,
+          p_radius_km: params.radius,
+        },
+      );
 
       if (nearbyIds && nearbyIds.length > 0) {
         query = query.in("id", nearbyIds);

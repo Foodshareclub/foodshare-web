@@ -23,20 +23,28 @@ export function formatPrometheusMetrics(): string {
 
   if (sliCounters.size > 0) {
     // Request count
-    lines.push("# HELP foodshare_http_requests_total Total number of HTTP requests.");
+    lines.push(
+      "# HELP foodshare_http_requests_total Total number of HTTP requests.",
+    );
     lines.push("# TYPE foodshare_http_requests_total counter");
     for (const [handler, data] of sliCounters) {
       const sanitized = sanitizeLabel(handler);
-      lines.push(`foodshare_http_requests_total{handler="${sanitized}"} ${data.requestCount}`);
+      lines.push(
+        `foodshare_http_requests_total{handler="${sanitized}"} ${data.requestCount}`,
+      );
     }
     lines.push("");
 
     // Error count
-    lines.push("# HELP foodshare_http_errors_total Total number of HTTP errors.");
+    lines.push(
+      "# HELP foodshare_http_errors_total Total number of HTTP errors.",
+    );
     lines.push("# TYPE foodshare_http_errors_total counter");
     for (const [handler, data] of sliCounters) {
       const sanitized = sanitizeLabel(handler);
-      lines.push(`foodshare_http_errors_total{handler="${sanitized}"} ${data.errorCount}`);
+      lines.push(
+        `foodshare_http_errors_total{handler="${sanitized}"} ${data.errorCount}`,
+      );
     }
     lines.push("");
 
@@ -73,18 +81,20 @@ export function formatPrometheusMetrics(): string {
     lines.push("# TYPE foodshare_circuit_breaker_state gauge");
     for (const [name, cb] of cbEntries) {
       const stateValue = cb.state === "closed" ? 0 : cb.state === "half-open" ? 1 : 2;
-      lines.push(`foodshare_circuit_breaker_state{name="${sanitizeLabel(name)}"} ${stateValue}`);
+      lines.push(
+        `foodshare_circuit_breaker_state{name="${sanitizeLabel(name)}"} ${stateValue}`,
+      );
     }
     lines.push("");
 
-    lines.push("# HELP foodshare_circuit_breaker_failures_total Total circuit breaker failures.");
+    lines.push(
+      "# HELP foodshare_circuit_breaker_failures_total Total circuit breaker failures.",
+    );
     lines.push("# TYPE foodshare_circuit_breaker_failures_total counter");
     for (const [name, cb] of cbEntries) {
       lines.push(
         `foodshare_circuit_breaker_failures_total{name="${
-          sanitizeLabel(
-            name,
-          )
+          sanitizeLabel(name)
         }"} ${cb.totalFailures}`,
       );
     }
@@ -103,7 +113,9 @@ export function formatPrometheusMetrics(): string {
   // Memory usage
   try {
     const mem = Deno.memoryUsage();
-    lines.push("# HELP foodshare_memory_heap_used_bytes Heap memory used in bytes.");
+    lines.push(
+      "# HELP foodshare_memory_heap_used_bytes Heap memory used in bytes.",
+    );
     lines.push("# TYPE foodshare_memory_heap_used_bytes gauge");
     lines.push(`foodshare_memory_heap_used_bytes ${mem.heapUsed}`);
     lines.push("");
@@ -122,5 +134,8 @@ export function formatPrometheusMetrics(): string {
  * Sanitize a label value for Prometheus (escape backslashes, quotes, newlines).
  */
 function sanitizeLabel(value: string): string {
-  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
+  return value
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, "\\n");
 }

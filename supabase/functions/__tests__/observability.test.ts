@@ -146,10 +146,18 @@ Deno.test("formatPrometheusMetrics: includes valid metric names and types", () =
 
   // Check for required Prometheus format elements
   assertEquals(output.includes("# HELP foodshare_http_requests_total"), true);
-  assertEquals(output.includes("# TYPE foodshare_http_requests_total counter"), true);
+  assertEquals(
+    output.includes("# TYPE foodshare_http_requests_total counter"),
+    true,
+  );
   assertEquals(output.includes("# HELP foodshare_errors_total"), true);
   assertEquals(output.includes("# TYPE foodshare_errors_total counter"), true);
-  assertEquals(output.includes('foodshare_http_requests_total{handler="test-prom-handler"}'), true);
+  assertEquals(
+    output.includes(
+      'foodshare_http_requests_total{handler="test-prom-handler"}',
+    ),
+    true,
+  );
   // Output should end with newline
   assertEquals(output.endsWith("\n"), true);
 });
@@ -157,13 +165,19 @@ Deno.test("formatPrometheusMetrics: includes valid metric names and types", () =
 Deno.test("formatPrometheusMetrics: includes latency histogram buckets", () => {
   recordSLI("test-prom-hist", 250, false);
   const output = formatPrometheusMetrics();
-  assertEquals(output.includes("foodshare_http_request_duration_ms_bucket"), true);
+  assertEquals(
+    output.includes("foodshare_http_request_duration_ms_bucket"),
+    true,
+  );
   assertEquals(output.includes('le="+Inf"'), true);
 });
 
 Deno.test("formatPrometheusMetrics: includes error severity breakdown", () => {
   const output = formatPrometheusMetrics();
-  assertEquals(output.includes('foodshare_errors_total{severity="critical"}'), true);
+  assertEquals(
+    output.includes('foodshare_errors_total{severity="critical"}'),
+    true,
+  );
   assertEquals(output.includes('foodshare_errors_total{severity="low"}'), true);
 });
 
@@ -191,13 +205,9 @@ Deno.test("tracedFetch: creates span and forwards context headers", async () => 
   };
 
   try {
-    const response = await tracedFetch(
-      "https://example.com/api/test",
-      {
-        method: "GET",
-      },
-      "test.external.api",
-    );
+    const response = await tracedFetch("https://example.com/api/test", {
+      method: "GET",
+    }, "test.external.api");
 
     assertEquals(response.status, 200);
 

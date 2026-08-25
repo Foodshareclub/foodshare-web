@@ -53,7 +53,12 @@ const DEFAULT_STATE_TTL: Record<string, number> = {
 export function createBotUserStateService<TState extends { action?: string }>(
   config: BotUserStateConfig,
 ) {
-  const { tableName, idColumn, ttlConfig = DEFAULT_STATE_TTL, defaultTTL = 30 } = config;
+  const {
+    tableName,
+    idColumn,
+    ttlConfig = DEFAULT_STATE_TTL,
+    defaultTTL = 30,
+  } = config;
 
   function getTTLMinutes(action?: string): number {
     if (!action) return defaultTTL;

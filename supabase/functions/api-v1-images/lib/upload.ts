@@ -36,7 +36,10 @@ export async function handleUpload(ctx: HandlerContext): Promise<Response> {
   }
 
   if (file.size > 10 * 1024 * 1024) {
-    throw new PayloadTooLargeError("File too large (max 10MB)", 10 * 1024 * 1024);
+    throw new PayloadTooLargeError(
+      "File too large (max 10MB)",
+      10 * 1024 * 1024,
+    );
   }
 
   const { supabase, userId } = ctx;
@@ -103,7 +106,10 @@ export async function handleUpload(ctx: HandlerContext): Promise<Response> {
     try {
       ai = await analyzeImage(publicUrl);
     } catch (error) {
-      logger.error("AI analysis failed", error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "AI analysis failed",
+        error instanceof Error ? error : new Error(String(error)),
+      );
     }
   }
 
@@ -150,7 +156,9 @@ export async function handleUpload(ctx: HandlerContext): Promise<Response> {
 /**
  * Batch image upload handler.
  */
-export async function handleBatchUpload(ctx: HandlerContext): Promise<Response> {
+export async function handleBatchUpload(
+  ctx: HandlerContext,
+): Promise<Response> {
   const startTime = Date.now();
 
   const formData = await ctx.request.formData();
@@ -170,7 +178,9 @@ export async function handleBatchUpload(ctx: HandlerContext): Promise<Response> 
   }
 
   if (files.length > MAX_BATCH_SIZE) {
-    throw new ValidationError(`Too many files. Maximum ${MAX_BATCH_SIZE} files per batch upload`);
+    throw new ValidationError(
+      `Too many files. Maximum ${MAX_BATCH_SIZE} files per batch upload`,
+    );
   }
 
   const results: ImageUploadResponse[] = [];
@@ -194,14 +204,17 @@ export async function handleBatchUpload(ctx: HandlerContext): Promise<Response> 
       // Create a sub-context for each file upload
       const subCtx: HandlerContext = { ...ctx, request: mockReq };
       const result = await handleUpload(subCtx);
-      const data = (await result.clone().json()) as ImageUploadResponse;
+      const data = await result.clone().json() as ImageUploadResponse;
 
       results.push(data);
       succeeded++;
       totalSavedBytes += data.metadata.savedBytes;
     } catch (error) {
       failed++;
-      logger.error("Batch upload error", error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        "Batch upload error",
+        error instanceof Error ? error : new Error(String(error)),
+      );
     }
   }
 

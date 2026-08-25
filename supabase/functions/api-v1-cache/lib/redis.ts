@@ -112,7 +112,10 @@ export async function executeRedisPipeline(
 // Request Coalescing
 // =============================================================================
 
-export async function coalesceRequest<T>(key: string, operation: () => Promise<T>): Promise<T> {
+export async function coalesceRequest<T>(
+  key: string,
+  operation: () => Promise<T>,
+): Promise<T> {
   const existing = pendingRequests.get(key);
   if (existing) {
     metrics.coalescedRequests++;
@@ -160,8 +163,12 @@ export async function decompressValue(value: string): Promise<string> {
   return await new Response(ds.readable).text();
 }
 
-export function shouldCompress(value: string, options?: { compress?: boolean }): boolean {
-  return options?.compress !== false && value.length > CONFIG.compressionThreshold;
+export function shouldCompress(
+  value: string,
+  options?: { compress?: boolean },
+): boolean {
+  return (options?.compress !== false) &&
+    value.length > CONFIG.compressionThreshold;
 }
 
 // =============================================================================
@@ -176,7 +183,9 @@ export function validateAndScopeKey(
   if (key.startsWith("user:")) {
     const userPrefix = `user:${userId}:`;
     if (!key.startsWith(userPrefix)) {
-      throw new ValidationError(`User-scoped keys must start with: ${userPrefix}`);
+      throw new ValidationError(
+        `User-scoped keys must start with: ${userPrefix}`,
+      );
     }
     return { scope: KeyScope.User, scopedKey: key };
   }
@@ -229,9 +238,12 @@ export function isWriteOperation(operation: string): boolean {
   ].includes(operation);
 }
 
-export function getOperationType(operation: string): "read" | "write" | "delete" {
+export function getOperationType(
+  operation: string,
+): "read" | "write" | "delete" {
   if (
-    ["delete", "mdel", "hdel", "zrem", "lpop", "rpop", "srem", "flush_pattern"].includes(operation)
+    ["delete", "mdel", "hdel", "zrem", "lpop", "rpop", "srem", "flush_pattern"]
+      .includes(operation)
   ) {
     return "delete";
   }

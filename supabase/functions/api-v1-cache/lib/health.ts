@@ -31,7 +31,9 @@ async function performDetailedHealthCheck(
   recommendations: string[];
 }> {
   const startTime = performance.now();
-  const alerts: Array<{ severity: string; component: string; message: string }> = [];
+  const alerts: Array<
+    { severity: string; component: string; message: string }
+  > = [];
   const recommendations: string[] = [];
 
   // 1. Connectivity Check
@@ -66,10 +68,18 @@ async function performDetailedHealthCheck(
 
   try {
     const [stats, memory, clients, server] = await Promise.all([
-      executeRedisCommand(redisUrl, redisToken, ["INFO", "stats"]) as Promise<string>,
-      executeRedisCommand(redisUrl, redisToken, ["INFO", "memory"]) as Promise<string>,
-      executeRedisCommand(redisUrl, redisToken, ["INFO", "clients"]) as Promise<string>,
-      executeRedisCommand(redisUrl, redisToken, ["INFO", "server"]) as Promise<string>,
+      executeRedisCommand(redisUrl, redisToken, ["INFO", "stats"]) as Promise<
+        string
+      >,
+      executeRedisCommand(redisUrl, redisToken, ["INFO", "memory"]) as Promise<
+        string
+      >,
+      executeRedisCommand(redisUrl, redisToken, ["INFO", "clients"]) as Promise<
+        string
+      >,
+      executeRedisCommand(redisUrl, redisToken, ["INFO", "server"]) as Promise<
+        string
+      >,
     ]);
     infoStats = parseRedisInfo(stats);
     infoMemory = parseRedisInfo(memory);
@@ -168,7 +178,9 @@ async function performDetailedHealthCheck(
       value: `${Math.round(hitRate * 100)}%`,
       message: "Hit rate excellent",
     };
-  } else if (hitRate >= CONFIG.healthThresholds.hitRateCritical || totalOps <= 100) {
+  } else if (
+    hitRate >= CONFIG.healthThresholds.hitRateCritical || totalOps <= 100
+  ) {
     hitRateCheck = {
       status: "warn",
       value: `${Math.round(hitRate * 100)}%`,
@@ -271,32 +283,34 @@ async function checkUpstashServices(supabase: any): Promise<{
   results: ServiceCheckResult[];
 }> {
   // All Upstash services for cross-platform FoodShare apps (iOS, Android, Web)
-  const { data: secrets } = await supabase.rpc("get_secrets", {
-    secret_names: [
-      "UPSTASH_REDIS_REST_URL",
-      "UPSTASH_REDIS_URL",
-      "UPSTASH_REDIS_REST_TOKEN",
-      "UPSTASH_REDIS_TOKEN",
-      "UPSTASH_VECTOR_REST_URL",
-      "UPSTASH_VECTOR_URL",
-      "UPSTASH_VECTOR_REST_TOKEN",
-      "UPSTASH_VECTOR_TOKEN",
-      "QSTASH_URL",
-      "QSTASH_REST_URL",
-      "QSTASH_TOKEN",
-      "QSTASH_REST_TOKEN",
-      "UPSTASH_SEARCH_REST_URL",
-      "UPSTASH_SEARCH_URL",
-      "UPSTASH_SEARCH_REST_TOKEN",
-      "UPSTASH_SEARCH_TOKEN",
-    ],
-  });
+  const { data: secrets } = await supabase.rpc(
+    "get_secrets",
+    {
+      secret_names: [
+        "UPSTASH_REDIS_REST_URL",
+        "UPSTASH_REDIS_URL",
+        "UPSTASH_REDIS_REST_TOKEN",
+        "UPSTASH_REDIS_TOKEN",
+        "UPSTASH_VECTOR_REST_URL",
+        "UPSTASH_VECTOR_URL",
+        "UPSTASH_VECTOR_REST_TOKEN",
+        "UPSTASH_VECTOR_TOKEN",
+        "QSTASH_URL",
+        "QSTASH_REST_URL",
+        "QSTASH_TOKEN",
+        "QSTASH_REST_TOKEN",
+        "UPSTASH_SEARCH_REST_URL",
+        "UPSTASH_SEARCH_URL",
+        "UPSTASH_SEARCH_REST_TOKEN",
+        "UPSTASH_SEARCH_TOKEN",
+      ],
+    },
+  );
 
   const getSecret = (...names: string[]): string => {
     for (const name of names) {
-      const fromVault = secrets?.find(
-        (s: { name: string; value: string }) => s.name === name,
-      )?.value;
+      const fromVault = secrets?.find((s: { name: string; value: string }) => s.name === name)
+        ?.value;
       if (fromVault) return fromVault;
       const fromEnv = Deno.env.get(name);
       if (fromEnv) return fromEnv;
@@ -310,7 +324,10 @@ async function checkUpstashServices(supabase: any): Promise<{
     url: string,
     token: string,
     endpoint: string,
-    validateFn: (data: any, response: Response) => { ok: boolean; message: string },
+    validateFn: (
+      data: any,
+      response: Response,
+    ) => { ok: boolean; message: string },
   ): Promise<ServiceCheckResult & { skipped?: boolean }> => {
     if (!url || !token) {
       return {
@@ -391,7 +408,9 @@ async function checkUpstashServices(supabase: any): Promise<{
   const skipped = results.filter((r) => (r as any).skipped);
   const responseTimes = configured.filter((r) => r.responseTime).map((r) => r.responseTime!);
   const avgResponseTime = responseTimes.length > 0
-    ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
+    ? Math.round(
+      responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length,
+    )
     : 0;
 
   return {
@@ -425,30 +444,24 @@ export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
 
   // Quick ping (no credentials needed for basic status)
   if (checkType === "ping") {
-    return ok(
-      {
-        success: true,
-        status: isCircuitBreakerOpen() ? "degraded" : "healthy",
-        version: CONFIG.version,
-        circuitBreaker: circuitBreaker.state,
-        timestamp: new Date().toISOString(),
-      },
-      ctx,
-    );
+    return ok({
+      success: true,
+      status: isCircuitBreakerOpen() ? "degraded" : "healthy",
+      version: CONFIG.version,
+      circuitBreaker: circuitBreaker.state,
+      timestamp: new Date().toISOString(),
+    }, ctx);
   }
 
   // All Upstash services check
   if (checkType === "services") {
     const servicesHealth = await checkUpstashServices(supabase);
     logger.info("Upstash services check completed", servicesHealth.summary);
-    return ok(
-      {
-        ...servicesHealth,
-        version: CONFIG.version,
-        timestamp: new Date().toISOString(),
-      },
-      ctx,
-    );
+    return ok({
+      ...servicesHealth,
+      version: CONFIG.version,
+      timestamp: new Date().toISOString(),
+    }, ctx);
   }
 
   // Detailed Redis health check
@@ -465,19 +478,21 @@ export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
     }),
   ]);
 
-  if (urlResult.error || tokenResult.error || !urlResult.data || !tokenResult.data) {
-    return ok(
-      {
-        status: "unhealthy",
-        error: "Failed to retrieve Redis credentials",
-        version: CONFIG.version,
-        timestamp: new Date().toISOString(),
-      },
-      ctx,
-    );
+  if (
+    urlResult.error || tokenResult.error || !urlResult.data || !tokenResult.data
+  ) {
+    return ok({
+      status: "unhealthy",
+      error: "Failed to retrieve Redis credentials",
+      version: CONFIG.version,
+      timestamp: new Date().toISOString(),
+    }, ctx);
   }
 
-  const healthResult = await performDetailedHealthCheck(urlResult.data, tokenResult.data);
+  const healthResult = await performDetailedHealthCheck(
+    urlResult.data,
+    tokenResult.data,
+  );
 
   logger.info("Cache health check completed", {
     status: healthResult.status,
@@ -485,12 +500,9 @@ export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
     alerts: healthResult.alerts.length,
   });
 
-  return ok(
-    {
-      ...healthResult,
-      version: CONFIG.version,
-      timestamp: new Date().toISOString(),
-    },
-    ctx,
-  );
+  return ok({
+    ...healthResult,
+    version: CONFIG.version,
+    timestamp: new Date().toISOString(),
+  }, ctx);
 }

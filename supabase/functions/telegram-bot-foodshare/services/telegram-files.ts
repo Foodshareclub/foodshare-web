@@ -20,7 +20,10 @@ export async function downloadAndUploadTelegramFile(
 
       // Step 1: Get file path from Telegram with timeout
       const fileInfoController = new AbortController();
-      const fileInfoTimeout = setTimeout(() => fileInfoController.abort(), 5000);
+      const fileInfoTimeout = setTimeout(
+        () => fileInfoController.abort(),
+        5000,
+      );
 
       const token = getTelegramBotToken();
       if (!token) throw new Error("Missing TELEGRAM_BOT_TOKEN");
@@ -107,7 +110,10 @@ export async function downloadAndUploadTelegramFile(
       const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
       const formData = new FormData();
-      formData.append("file", new Blob([fileBuffer], { type: fileBlob.type || "image/jpeg" }));
+      formData.append(
+        "file",
+        new Blob([fileBuffer], { type: fileBlob.type || "image/jpeg" }),
+      );
       formData.append("bucket", "posts");
       formData.append("path", storagePath);
       formData.append("generateThumbnail", "false");
@@ -117,13 +123,16 @@ export async function downloadAndUploadTelegramFile(
       let uploadError = null;
       for (let uploadAttempt = 1; uploadAttempt <= 2; uploadAttempt++) {
         try {
-          const uploadResponse = await fetch(`${supabaseUrl}/functions/v1/api-v1-images/upload`, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${serviceKey}`,
+          const uploadResponse = await fetch(
+            `${supabaseUrl}/functions/v1/api-v1-images/upload`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${serviceKey}`,
+              },
+              body: formData,
             },
-            body: formData,
-          });
+          );
 
           if (uploadResponse.ok) {
             const result = await uploadResponse.json();

@@ -10,7 +10,12 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 // Trust & Request Types
 // =============================================================================
 
-export type TrustLevel = "unknown" | "trusted" | "verified" | "suspicious" | "blocked";
+export type TrustLevel =
+  | "unknown"
+  | "trusted"
+  | "verified"
+  | "suspicious"
+  | "blocked";
 export type IOSRequestType = "attestation" | "assertion" | "device_check";
 export type AndroidRequestType = "integrity" | "safetynet";
 export type RequestType = IOSRequestType | AndroidRequestType;
@@ -24,7 +29,10 @@ export type DeviceVerdict =
   | "MEETS_BASIC_INTEGRITY"
   | "MEETS_STRONG_INTEGRITY"
   | "MEETS_VIRTUAL_INTEGRITY";
-export type AppVerdict = "PLAY_RECOGNIZED" | "UNRECOGNIZED_VERSION" | "UNEVALUATED";
+export type AppVerdict =
+  | "PLAY_RECOGNIZED"
+  | "UNRECOGNIZED_VERSION"
+  | "UNEVALUATED";
 export type AccountVerdict = "LICENSED" | "UNLICENSED" | "UNEVALUATED";
 
 // =============================================================================
@@ -110,4 +118,7 @@ export const androidAttestationSchema = z.object({
   timestamp: z.string().optional(),
 });
 
-export const unifiedSchema = z.union([iosAttestationSchema, androidAttestationSchema]);
+export const unifiedSchema = z.union([
+  iosAttestationSchema,
+  androidAttestationSchema,
+]);

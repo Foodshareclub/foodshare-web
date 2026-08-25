@@ -57,7 +57,10 @@ export class FunctionChecker {
   /**
    * Check a single function's health
    */
-  async checkFunction(config: FunctionConfig, isRetry = false): Promise<FunctionHealthResult> {
+  async checkFunction(
+    config: FunctionConfig,
+    isRetry = false,
+  ): Promise<FunctionHealthResult> {
     const startMs = performance.now();
     const url = `${this.supabaseUrl}/functions/v1/${config.name}`;
     const expectedStatuses = config.expectedStatus || [200, 400, 401, 404];
@@ -134,7 +137,9 @@ export class FunctionChecker {
    * Check a function with cold start retry
    * If the first attempt times out or fails, waits and retries once
    */
-  async checkFunctionWithRetry(config: FunctionConfig): Promise<FunctionHealthResult> {
+  async checkFunctionWithRetry(
+    config: FunctionConfig,
+  ): Promise<FunctionHealthResult> {
     // First attempt
     const result = await this.checkFunction(config, false);
 
@@ -149,7 +154,9 @@ export class FunctionChecker {
       const retryResult = await this.checkFunction(config, true);
 
       // If retry succeeded, mark as recovered from cold start
-      if (retryResult.status === "healthy" || retryResult.status === "degraded") {
+      if (
+        retryResult.status === "healthy" || retryResult.status === "degraded"
+      ) {
         retryResult.recoveredFromColdStart = true;
         return retryResult;
       }
@@ -164,7 +171,9 @@ export class FunctionChecker {
   /**
    * Check all functions with controlled concurrency
    */
-  async checkAllFunctions(functions: FunctionConfig[]): Promise<FunctionHealthResult[]> {
+  async checkAllFunctions(
+    functions: FunctionConfig[],
+  ): Promise<FunctionHealthResult[]> {
     const results: FunctionHealthResult[] = [];
     const batches: FunctionConfig[][] = [];
 
@@ -194,10 +203,13 @@ let checkerInstance: FunctionChecker | null = null;
 /**
  * Create or get the function checker instance (singleton)
  */
-export function createFunctionChecker(config?: Partial<FunctionCheckerConfig>): FunctionChecker {
+export function createFunctionChecker(
+  config?: Partial<FunctionCheckerConfig>,
+): FunctionChecker {
   if (!checkerInstance) {
     const supabaseUrl = config?.supabaseUrl ?? Deno.env.get("SUPABASE_URL");
-    const supabaseAnonKey = config?.supabaseAnonKey ?? Deno.env.get("SUPABASE_ANON_KEY");
+    const supabaseAnonKey = config?.supabaseAnonKey ??
+      Deno.env.get("SUPABASE_ANON_KEY");
 
     if (!supabaseUrl || !supabaseAnonKey) {
       throw new Error("Missing SUPABASE_URL or SUPABASE_ANON_KEY");

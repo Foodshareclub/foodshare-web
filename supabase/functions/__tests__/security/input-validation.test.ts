@@ -202,10 +202,7 @@ Deno.test("validateEmailEnhanced - rejects invalid formats", () => {
 Deno.test("validateEmailEnhanced - rejects consecutive dots", () => {
   const result = validateEmailEnhanced("user..name@example.com");
   assertEquals(result.isValid, false);
-  assertEquals(
-    result.errors.some((e) => e.includes("consecutive")),
-    true,
-  );
+  assertEquals(result.errors.some((e) => e.includes("consecutive")), true);
 });
 
 Deno.test("validateEmailEnhanced - rejects overly long domains", () => {
@@ -240,8 +237,14 @@ Deno.test("validateEmailEnhanced - trims and lowercases", () => {
 // ============================================================================
 
 Deno.test("Boundary - maximum integer values", () => {
-  assertEquals(parseIntSafe(String(Number.MAX_SAFE_INTEGER)), Number.MAX_SAFE_INTEGER);
-  assertEquals(parseIntSafe(String(Number.MIN_SAFE_INTEGER)), Number.MIN_SAFE_INTEGER);
+  assertEquals(
+    parseIntSafe(String(Number.MAX_SAFE_INTEGER)),
+    Number.MAX_SAFE_INTEGER,
+  );
+  assertEquals(
+    parseIntSafe(String(Number.MIN_SAFE_INTEGER)),
+    Number.MIN_SAFE_INTEGER,
+  );
 });
 
 Deno.test("Boundary - floating point precision", () => {

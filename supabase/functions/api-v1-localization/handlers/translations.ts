@@ -98,14 +98,11 @@ const SUPPORTED_LOCALES = [
 const SUPPORTED_PLATFORMS = ["ios", "android", "web", "desktop"];
 
 // In-memory cache for translations (Edge runtime)
-const translationCache = new Map<
-  string,
-  {
-    data: TranslationData;
-    timestamp: number;
-    etag: string;
-  }
->();
+const translationCache = new Map<string, {
+  data: TranslationData;
+  timestamp: number;
+  etag: string;
+}>();
 
 const CACHE_TTL_MS = 300_000; // 5 minutes for edge cache
 
@@ -120,7 +117,7 @@ function generateETag(content: string): string {
   let hash = 0;
   for (let i = 0; i < content.length; i++) {
     const char = content.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
+    hash = ((hash << 5) - hash) + char;
     hash = hash & hash;
   }
   return `"${Math.abs(hash).toString(36)}"`;
@@ -169,9 +166,7 @@ async function getUserContext(
   if (!authHeader) return defaultContext;
 
   try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return defaultContext;
 
     // Fetch user profile with preferences
@@ -342,10 +337,13 @@ export default async function translationsHandler(
   const startTime = Date.now();
 
   if (request.method !== "GET") {
-    return new Response(JSON.stringify({ success: false, error: "Method not allowed" }), {
-      status: 405,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ success: false, error: "Method not allowed" }),
+      {
+        status: 405,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
   }
 
   try {
@@ -390,13 +388,15 @@ export default async function translationsHandler(
     const userContext = await getUserContext(supabase, authHeader);
 
     // Use user's preferred locale if set and different from requested
-    const effectiveLocale =
-      userContext.preferredLocale && SUPPORTED_LOCALES.includes(userContext.preferredLocale)
-        ? userContext.preferredLocale
-        : locale;
+    const effectiveLocale = userContext.preferredLocale &&
+        SUPPORTED_LOCALES.includes(userContext.preferredLocale)
+      ? userContext.preferredLocale
+      : locale;
 
     // Merge feature flags
-    const activeFeatures = [...new Set([...requestedFeatures, ...userContext.featureFlags])];
+    const activeFeatures = [
+      ...new Set([...requestedFeatures, ...userContext.featureFlags]),
+    ];
 
     logger.debug("Fetching translations", {
       userId: userContext.userId,
@@ -411,7 +411,7 @@ export default async function translationsHandler(
     const cached = translationCache.get(cacheKey);
     const now = Date.now();
 
-    if (cached && now - cached.timestamp < CACHE_TTL_MS) {
+    if (cached && (now - cached.timestamp) < CACHE_TTL_MS) {
       // Check ETag for 304
       if (ifNoneMatch && ifNoneMatch === cached.etag) {
         await trackAnalytics(supabase, {
@@ -428,7 +428,7 @@ export default async function translationsHandler(
           status: 304,
           headers: {
             ...corsHeaders,
-            ETag: cached.etag,
+            "ETag": cached.etag,
             "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
             "X-Cache": "HIT",
           },
@@ -469,7 +469,7 @@ export default async function translationsHandler(
           ...corsHeaders,
           "Content-Type": "application/json",
           "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
-          ETag: cached.etag,
+          "ETag": cached.etag,
           "X-Cache": "HIT",
         },
       });
@@ -477,7 +477,11 @@ export default async function translationsHandler(
 
     // Try delta sync if client has a version
     if (clientVersion) {
-      const deltaResult = await getDeltaChanges(supabase, effectiveLocale, clientVersion);
+      const deltaResult = await getDeltaChanges(
+        supabase,
+        effectiveLocale,
+        clientVersion,
+      );
 
       if (deltaResult) {
         const hasChanges = Object.keys(deltaResult.delta.added).length > 0 ||
@@ -500,7 +504,7 @@ export default async function translationsHandler(
             status: 304,
             headers: {
               ...corsHeaders,
-              ETag: `"${deltaResult.currentVersion}"`,
+              "ETag": `"${deltaResult.currentVersion}"`,
               "X-Delta-Sync": "true",
               "X-No-Changes": "true",
             },
@@ -550,7 +554,7 @@ export default async function translationsHandler(
           headers: {
             ...corsHeaders,
             "Content-Type": "application/json",
-            ETag: `"${deltaResult.currentVersion}"`,
+            "ETag": `"${deltaResult.currentVersion}"`,
             "X-Delta-Sync": "true",
           },
         });
@@ -581,10 +585,13 @@ export default async function translationsHandler(
         logger.error("Failed to fetch fallback translations", {
           error: fallbackError?.message,
         });
-        return new Response(JSON.stringify({ success: false, error: "No translations found" }), {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({ success: false, error: "No translations found" }),
+          {
+            status: 404,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
       }
 
       let messages = fallback.messages as Record<string, unknown>;
@@ -651,7 +658,7 @@ export default async function translationsHandler(
           ...corsHeaders,
           "Content-Type": "application/json",
           "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
-          ETag: etag,
+          "ETag": etag,
           "X-Fallback": "true",
           "X-Cache": "MISS",
         },
@@ -675,7 +682,7 @@ export default async function translationsHandler(
         status: 304,
         headers: {
           ...corsHeaders,
-          ETag: currentEtag,
+          "ETag": currentEtag,
           "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
         },
       });
@@ -743,7 +750,7 @@ export default async function translationsHandler(
         ...corsHeaders,
         "Content-Type": "application/json",
         "Cache-Control": "public, max-age=300, stale-while-revalidate=600",
-        ETag: currentEtag,
+        "ETag": currentEtag,
         "X-Cache": "MISS",
       },
     });
@@ -751,9 +758,12 @@ export default async function translationsHandler(
     logger.error("Translation handler error", {
       error: (err as Error).message,
     });
-    return new Response(JSON.stringify({ success: false, error: "Internal server error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ success: false, error: "Internal server error" }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
   }
 }

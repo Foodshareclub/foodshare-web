@@ -103,13 +103,9 @@ function isPrivateIp(ip: string): boolean {
   const ipNum = ipToNumber(ip);
   if (ipNum === -1) {
     // Invalid IPv4, check for IPv6 loopback
-    return (
-      ip === "::1" ||
-      ip === "[::1]" ||
-      ip.startsWith("fe80:") ||
+    return ip === "::1" || ip === "[::1]" || ip.startsWith("fe80:") ||
       ip.startsWith("fc00:") ||
-      ip.startsWith("fd00:")
-    );
+      ip.startsWith("fd00:");
   }
 
   for (const range of PRIVATE_IP_RANGES) {
@@ -141,7 +137,10 @@ function looksLikeIp(hostname: string): boolean {
 /**
  * Check if a hostname is blocked
  */
-function isBlockedHostname(hostname: string, additionalBlocked: string[] = []): boolean {
+function isBlockedHostname(
+  hostname: string,
+  additionalBlocked: string[] = [],
+): boolean {
   const normalizedHostname = hostname.toLowerCase().replace(/^\[|\]$/g, "");
   const allBlocked = [...BLOCKED_HOSTNAMES, ...additionalBlocked].map((h) => h.toLowerCase());
 
@@ -215,7 +214,13 @@ export function validateUrl(
 
   // Check for localhost
   if (!allowLocalhost) {
-    const localhostPatterns = ["localhost", "127.0.0.1", "::1", "[::1]", "0.0.0.0"];
+    const localhostPatterns = [
+      "localhost",
+      "127.0.0.1",
+      "::1",
+      "[::1]",
+      "0.0.0.0",
+    ];
     if (localhostPatterns.some((p) => hostname.toLowerCase() === p)) {
       return { valid: false, reason: "Localhost not allowed", hostname };
     }
@@ -232,7 +237,7 @@ export function validateUrl(
   }
 
   // Check for unusual ports on non-standard schemes
-  const port = url.port ? parseInt(url.port, 10) : url.protocol === "https:" ? 443 : 80;
+  const port = url.port ? parseInt(url.port, 10) : (url.protocol === "https:" ? 443 : 80);
   const suspiciousPorts = [22, 23, 25, 110, 143, 3306, 5432, 6379, 27017];
   if (suspiciousPorts.includes(port)) {
     return {
@@ -268,7 +273,16 @@ export function validateImageUrl(
   }
 
   // Check for image-like extension
-  const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".ico", ".bmp"];
+  const imageExtensions = [
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".webp",
+    ".svg",
+    ".ico",
+    ".bmp",
+  ];
   const pathname = url.pathname.toLowerCase();
   const hasImageExtension = imageExtensions.some((ext) => pathname.endsWith(ext));
 
@@ -287,14 +301,21 @@ export function validateImageUrl(
     Deno.env.get("SITE_DOMAIN") || "foodshare.club",
     "images.foodshare.app",
   ];
-  const isKnownHost = knownImageHosts.some(
-    (host) => url.hostname.endsWith(host) || url.hostname === host,
+  const isKnownHost = knownImageHosts.some((host) =>
+    url.hostname.endsWith(host) || url.hostname === host
   );
 
   // Must have image extension or be from known host
   if (!hasImageExtension && !isKnownHost) {
     // Check if pathname suggests image serving
-    const imagePathPatterns = ["/image", "/img", "/photo", "/avatar", "/media", "/upload"];
+    const imagePathPatterns = [
+      "/image",
+      "/img",
+      "/photo",
+      "/avatar",
+      "/media",
+      "/upload",
+    ];
     const hasImagePath = imagePathPatterns.some((p) => pathname.includes(p));
 
     if (!hasImagePath) {

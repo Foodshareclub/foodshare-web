@@ -19,7 +19,10 @@ export class InAppChannelAdapter implements ChannelAdapter {
   name = "in_app";
   channel = "in_app" as const;
 
-  async send(payload: InAppPayload, context: NotificationContext): Promise<ChannelDeliveryResult> {
+  async send(
+    payload: InAppPayload,
+    context: NotificationContext,
+  ): Promise<ChannelDeliveryResult> {
     const startTime = performance.now();
 
     try {
@@ -47,9 +50,13 @@ export class InAppChannelAdapter implements ChannelAdapter {
         .single();
 
       if (insertError) {
-        logger.error("Failed to store in-app notification", new Error(insertError.message), {
-          userId: payload.userId,
-        });
+        logger.error(
+          "Failed to store in-app notification",
+          new Error(insertError.message),
+          {
+            userId: payload.userId,
+          },
+        );
 
         return {
           channel: "in_app",
@@ -60,7 +67,9 @@ export class InAppChannelAdapter implements ChannelAdapter {
       }
 
       // Broadcast via Realtime channel
-      const channel = context.supabase.channel(`user:${payload.userId}:notifications`);
+      const channel = context.supabase.channel(
+        `user:${payload.userId}:notifications`,
+      );
 
       await channel.send({
         type: "broadcast",
@@ -118,7 +127,9 @@ export class InAppChannelAdapter implements ChannelAdapter {
     });
 
     // Send in parallel
-    const results = await Promise.all(payloads.map((payload) => this.send(payload, context)));
+    const results = await Promise.all(
+      payloads.map((payload) => this.send(payload, context)),
+    );
 
     return results;
   }
@@ -134,14 +145,19 @@ export class InAppChannelAdapter implements ChannelAdapter {
       // Check if in_app_notifications table exists
       // This is a simple check - just query the table
       const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-      const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get(
+        "SUPABASE_SERVICE_ROLE_KEY",
+      )!;
 
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/in_app_notifications?limit=1`, {
-        headers: {
-          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-          apikey: SUPABASE_SERVICE_ROLE_KEY,
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/in_app_notifications?limit=1`,
+        {
+          headers: {
+            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+            apikey: SUPABASE_SERVICE_ROLE_KEY,
+          },
         },
-      });
+      );
 
       const latencyMs = Math.round(performance.now() - startTime);
 
@@ -174,10 +190,14 @@ export async function markAsRead(
       .eq("user_id", userId);
 
     if (error) {
-      logger.error("Failed to mark notification as read", new Error(error.message), {
-        notificationId,
-        userId,
-      });
+      logger.error(
+        "Failed to mark notification as read",
+        new Error(error.message),
+        {
+          notificationId,
+          userId,
+        },
+      );
       return false;
     }
 

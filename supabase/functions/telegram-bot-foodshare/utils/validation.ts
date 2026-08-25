@@ -49,7 +49,9 @@ export function validateEmail(email: string): boolean {
   return true;
 }
 
-export function validateDescription(description: string): { valid: boolean; error?: string } {
+export function validateDescription(
+  description: string,
+): { valid: boolean; error?: string } {
   if (!description || description.trim().length === 0) {
     return { valid: false, error: "Description cannot be empty" };
   }
@@ -87,7 +89,8 @@ export function validateImageUrl(url: string): boolean {
       (parsed.hostname.includes(supabaseHost) ||
         parsed.hostname === Deno.env.get("CDN_DOMAIN") ||
         "cdn.foodshare.club") &&
-      (parsed.pathname.includes("/storage/v1/object/public/") || parsed.pathname.startsWith("/"))
+      (parsed.pathname.includes("/storage/v1/object/public/") ||
+        parsed.pathname.startsWith("/"))
     );
   } catch {
     return false;
@@ -176,7 +179,10 @@ export function sanitizeHtmlForTelegram(text: string): string {
   }
 
   // Restore safe anchor tags (only https URLs)
-  sanitized = sanitized.replace(/&lt;a href=&quot;(https:\/\/[^&]+)&quot;&gt;/gi, '<a href="$1">');
+  sanitized = sanitized.replace(
+    /&lt;a href=&quot;(https:\/\/[^&]+)&quot;&gt;/gi,
+    '<a href="$1">',
+  );
   sanitized = sanitized.replace(/&lt;\/a&gt;/gi, "</a>");
 
   return sanitized;

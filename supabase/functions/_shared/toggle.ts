@@ -56,7 +56,11 @@ export async function toggleRow(
 
   if (existing) {
     // Remove
-    await supabase.from(table).delete().eq(entityColumn, entityId).eq(userColumn, userId);
+    await supabase
+      .from(table)
+      .delete()
+      .eq(entityColumn, entityId)
+      .eq(userColumn, userId);
 
     logger.debug("Toggle removed", {
       table,

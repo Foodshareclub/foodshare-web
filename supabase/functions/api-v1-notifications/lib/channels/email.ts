@@ -23,7 +23,10 @@ export class EmailChannelAdapter implements ChannelAdapter {
 
   private emailService = getEmailService();
 
-  async send(payload: EmailPayload, context: NotificationContext): Promise<ChannelDeliveryResult> {
+  async send(
+    payload: EmailPayload,
+    context: NotificationContext,
+  ): Promise<ChannelDeliveryResult> {
     const startTime = performance.now();
 
     try {
@@ -113,7 +116,9 @@ export class EmailChannelAdapter implements ChannelAdapter {
 
     for (let i = 0; i < payloads.length; i += BATCH_SIZE) {
       const batch = payloads.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.all(batch.map((payload) => this.send(payload, context)));
+      const batchResults = await Promise.all(
+        batch.map((payload) => this.send(payload, context)),
+      );
       results.push(...batchResults);
     }
 
@@ -141,8 +146,8 @@ export class EmailChannelAdapter implements ChannelAdapter {
       const latencyMs = Math.round(performance.now() - startTime);
 
       // Consider healthy if at least one provider is operational
-      const anyHealthy = Object.values(health).some(
-        (p) => p.status === "ok" || p.status === "degraded",
+      const anyHealthy = Object.values(health).some((p) =>
+        p.status === "ok" || p.status === "degraded"
       );
 
       return {

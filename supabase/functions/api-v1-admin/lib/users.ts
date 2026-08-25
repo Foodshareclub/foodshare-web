@@ -48,7 +48,11 @@ class NotFoundError extends Error {
 // Response Helper
 // =============================================================================
 
-function jsonResponse(data: unknown, corsHeaders: Record<string, string>, status = 200): Response {
+function jsonResponse(
+  data: unknown,
+  corsHeaders: Record<string, string>,
+  status = 200,
+): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -83,7 +87,9 @@ async function logAdminAction(
 // =============================================================================
 
 function isValidUUID(str: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    str,
+  );
 }
 
 // =============================================================================
@@ -155,7 +161,10 @@ async function handleListUsers(
     dbQuery = dbQuery.eq("is_active", queryParams.isActive === "true");
   }
 
-  dbQuery = dbQuery.order("created_time", { ascending: false }).range(offset, offset + limit - 1);
+  dbQuery = dbQuery.order("created_time", { ascending: false }).range(
+    offset,
+    offset + limit - 1,
+  );
 
   const { data, count, error } = await dbQuery;
 
@@ -164,21 +173,24 @@ async function handleListUsers(
   // Get product counts and roles for each user
   const usersWithData = await Promise.all(
     (data ?? []).map(async (user) => {
-      const [{ count: productsCount }, { data: userRoles }] = await Promise.all([
-        ctx.supabase
-          .from("posts")
-          .select("*", { count: "exact", head: true })
-          .eq("profile_id", user.id),
-        ctx.supabase.from("user_roles").select("roles!inner(name)").eq("profile_id", user.id),
-      ]);
+      const [{ count: productsCount }, { data: userRoles }] = await Promise.all(
+        [
+          ctx.supabase
+            .from("posts")
+            .select("*", { count: "exact", head: true })
+            .eq("profile_id", user.id),
+          ctx.supabase
+            .from("user_roles")
+            .select("roles!inner(name)")
+            .eq("profile_id", user.id),
+        ],
+      );
 
       const roles = (userRoles ?? [])
         .map((r) => {
-          const roleData = r.roles as unknown as
-            | { name: string }
-            | {
-              name: string;
-            }[];
+          const roleData = r.roles as unknown as { name: string } | {
+            name: string;
+          }[];
           return Array.isArray(roleData) ? roleData[0]?.name : roleData?.name;
         })
         .filter(Boolean) as string[];
@@ -205,19 +217,16 @@ async function handleListUsers(
   const total = count ?? 0;
   const hasMore = offset + limit < total;
 
-  return jsonResponse(
-    {
-      success: true,
-      data: filteredUsers,
-      pagination: {
-        page,
-        limit,
-        total,
-        hasMore,
-      },
+  return jsonResponse({
+    success: true,
+    data: filteredUsers,
+    pagination: {
+      page,
+      limit,
+      total,
+      hasMore,
     },
-    ctx.corsHeaders,
-  );
+  }, ctx.corsHeaders);
 }
 
 async function handleUpdateRole(
@@ -245,7 +254,10 @@ async function handleUpdateRole(
   // Upsert into user_roles
   const { error } = await ctx.supabase
     .from("user_roles")
-    .upsert({ profile_id: userId, role_id: roleData.id }, { onConflict: "profile_id,role_id" });
+    .upsert(
+      { profile_id: userId, role_id: roleData.id },
+      { onConflict: "profile_id,role_id" },
+    );
 
   if (error) throw new Error(error.message);
 
@@ -253,15 +265,12 @@ async function handleUpdateRole(
     newRole: input.role,
   });
 
-  return jsonResponse(
-    {
-      success: true,
-      userId,
-      role: input.role,
-      updated: true,
-    },
-    ctx.corsHeaders,
-  );
+  return jsonResponse({
+    success: true,
+    userId,
+    role: input.role,
+    updated: true,
+  }, ctx.corsHeaders);
 }
 
 async function handleUpdateRoles(
@@ -276,7 +285,9 @@ async function handleUpdateRoles(
   const input = updateRolesSchema.parse(body);
 
   // Get all role IDs from roles table
-  const { data: allRoles, error: rolesError } = await ctx.supabase.from("roles").select("id,name");
+  const { data: allRoles, error: rolesError } = await ctx.supabase
+    .from("roles")
+    .select("id,name");
 
   if (rolesError) throw new Error(rolesError.message);
 
@@ -298,7 +309,9 @@ async function handleUpdateRoles(
     .map((roleId) => ({ profile_id: userId, role_id: roleId }));
 
   if (rolesToInsert.length > 0) {
-    const { error: insertError } = await ctx.supabase.from("user_roles").insert(rolesToInsert);
+    const { error: insertError } = await ctx.supabase
+      .from("user_roles")
+      .insert(rolesToInsert);
 
     if (insertError) throw new Error(insertError.message);
   }
@@ -313,7 +326,11 @@ async function handleUpdateRoles(
   );
 }
 
-async function handleBanUser(userId: string, body: unknown, ctx: AdminContext): Promise<Response> {
+async function handleBanUser(
+  userId: string,
+  body: unknown,
+  ctx: AdminContext,
+): Promise<Response> {
   if (userId === ctx.adminId) {
     throw new ValidationError("Cannot ban yourself");
   }
@@ -340,25 +357,28 @@ async function handleBanUser(userId: string, body: unknown, ctx: AdminContext): 
   if (error) throw new Error(error.message);
 
   // Deactivate all user's listings
-  await ctx.supabase.from("posts").update({ is_active: false }).eq("profile_id", userId);
+  await ctx.supabase
+    .from("posts")
+    .update({ is_active: false })
+    .eq("profile_id", userId);
 
   await logAdminAction(ctx, "BAN_USER", userId, {
     targetEmail: targetUser.email,
     reason: input.reason,
   });
 
-  return jsonResponse(
-    {
-      success: true,
-      userId,
-      banned: true,
-      reason: input.reason,
-    },
-    ctx.corsHeaders,
-  );
+  return jsonResponse({
+    success: true,
+    userId,
+    banned: true,
+    reason: input.reason,
+  }, ctx.corsHeaders);
 }
 
-async function handleUnbanUser(userId: string, ctx: AdminContext): Promise<Response> {
+async function handleUnbanUser(
+  userId: string,
+  ctx: AdminContext,
+): Promise<Response> {
   // Check if user exists
   const { data: targetUser } = await ctx.supabase
     .from("profiles")
@@ -386,5 +406,8 @@ async function handleUnbanUser(userId: string, ctx: AdminContext): Promise<Respo
     targetEmail: targetUser.email,
   });
 
-  return jsonResponse({ success: true, userId, unbanned: true }, ctx.corsHeaders);
+  return jsonResponse(
+    { success: true, userId, unbanned: true },
+    ctx.corsHeaders,
+  );
 }

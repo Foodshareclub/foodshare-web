@@ -281,7 +281,10 @@ export function invalidateUserCache(userId: string): void {
 /**
  * Invalidate a listing and related caches
  */
-export function invalidateListingCache(listingId: string | number, ownerId?: string): void {
+export function invalidateListingCache(
+  listingId: string | number,
+  ownerId?: string,
+): void {
   cache.delete(CACHE_KEYS.listing(listingId));
   if (ownerId) {
     cache.delete(CACHE_KEYS.userListings(ownerId));
@@ -316,20 +319,40 @@ export function invalidateGlobalCaches(): void {
 /**
  * Get profile from cache or fetch
  */
-export async function getCachedProfile<T>(userId: string, fetcher: () => Promise<T>): Promise<T> {
-  return cacheThrough(CACHE_KEYS.profile(userId), fetcher, { ttl: CACHE_TTLS.profile });
+export async function getCachedProfile<T>(
+  userId: string,
+  fetcher: () => Promise<T>,
+): Promise<T> {
+  return cacheThrough(
+    CACHE_KEYS.profile(userId),
+    fetcher,
+    { ttl: CACHE_TTLS.profile },
+  );
 }
 
 /**
  * Get address from cache or fetch
  */
-export async function getCachedAddress<T>(userId: string, fetcher: () => Promise<T>): Promise<T> {
-  return cacheThrough(CACHE_KEYS.address(userId), fetcher, { ttl: CACHE_TTLS.address });
+export async function getCachedAddress<T>(
+  userId: string,
+  fetcher: () => Promise<T>,
+): Promise<T> {
+  return cacheThrough(
+    CACHE_KEYS.address(userId),
+    fetcher,
+    { ttl: CACHE_TTLS.address },
+  );
 }
 
 /**
  * Get categories from cache or fetch
  */
-export async function getCachedCategories<T>(fetcher: () => Promise<T>): Promise<T> {
-  return cacheThrough(CACHE_KEYS.categories(), fetcher, { ttl: CACHE_TTLS.categories });
+export async function getCachedCategories<T>(
+  fetcher: () => Promise<T>,
+): Promise<T> {
+  return cacheThrough(
+    CACHE_KEYS.categories(),
+    fetcher,
+    { ttl: CACHE_TTLS.categories },
+  );
 }

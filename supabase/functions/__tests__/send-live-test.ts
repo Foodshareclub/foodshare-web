@@ -15,7 +15,9 @@ const botToken = Deno.env.get("TELEGRAM_BOT_TOKEN");
 const chatId = Deno.env.get("ADMIN_CHAT_ID");
 
 if (!botToken || !chatId) {
-  console.error("❌ ERROR: TELEGRAM_BOT_TOKEN or ADMIN_CHAT_ID is missing from environment.");
+  console.error(
+    "❌ ERROR: TELEGRAM_BOT_TOKEN or ADMIN_CHAT_ID is missing from environment.",
+  );
   console.log("\nUsage:");
   console.log(
     "  TELEGRAM_BOT_TOKEN='<your_token>' ADMIN_CHAT_ID='<your_chat_id>' deno run --allow-all supabase/functions/__tests__/send-live-test.ts\n",
@@ -28,7 +30,9 @@ const mockContext: NotificationContext = {
   supabase: {} as any,
 };
 
-console.log(`🚀 Dispatching live registration alert to Telegram Chat ID: ${chatId}...`);
+console.log(
+  `🚀 Dispatching live registration alert to Telegram Chat ID: ${chatId}...`,
+);
 
 // 1. Send Registration Notification
 const registrationPayload = {
@@ -53,7 +57,9 @@ console.log(
 );
 
 // 2. Send Verification Notification
-console.log(`🚀 Dispatching live email verification alert to Telegram Chat ID: ${chatId}...`);
+console.log(
+  `🚀 Dispatching live email verification alert to Telegram Chat ID: ${chatId}...`,
+);
 
 const verificationPayload = {
   record: {
@@ -66,7 +72,10 @@ const verificationPayload = {
   },
 };
 
-const verResult = await handleTriggerUserVerified(verificationPayload, mockContext);
+const verResult = await handleTriggerUserVerified(
+  verificationPayload,
+  mockContext,
+);
 console.log(
   `Result: ${
     verResult.success

@@ -22,7 +22,10 @@ import { VERIFICATION_CODE_EXPIRY_MS } from "../config/constants.ts";
 /**
  * Handle new user or returning user
  */
-export async function handleStart(phoneNumber: string, contactName?: string): Promise<void> {
+export async function handleStart(
+  phoneNumber: string,
+  contactName?: string,
+): Promise<void> {
   const lang = await getUserLanguage(phoneNumber);
   const profile = await getProfileByWhatsAppPhone(phoneNumber);
 
@@ -50,10 +53,7 @@ export async function handleStart(phoneNumber: string, contactName?: string): Pr
 
   // New user - ask for email
   const welcomeMsg = `${emoji.WAVE} *${t(lang, "welcome.title")}*\n\n${
-    t(
-      lang,
-      "welcome.subtitle",
-    )
+    t(lang, "welcome.subtitle")
   }\n\n${emoji.EMAIL} ${t(lang, "auth.sendEmailToRegister")}`;
   await sendTextMessage(phoneNumber, welcomeMsg);
   await setUserState(phoneNumber, { action: "awaiting_email", data: {} });
@@ -75,10 +75,7 @@ export async function handleEmailInput(
     await sendTextMessage(
       phoneNumber,
       `${emoji.ERROR} *${t(lang, "auth.invalidEmailTitle")}*\n\n${
-        t(
-          lang,
-          "auth.invalidEmailMessage",
-        )
+        t(lang, "auth.invalidEmailMessage")
       }`,
     );
     return;
@@ -89,14 +86,14 @@ export async function handleEmailInput(
 
   if (existingProfile) {
     // Check if already linked to another WhatsApp
-    if (existingProfile.whatsapp_phone && existingProfile.whatsapp_phone !== phoneNumber) {
+    if (
+      existingProfile.whatsapp_phone &&
+      existingProfile.whatsapp_phone !== phoneNumber
+    ) {
       await sendTextMessage(
         phoneNumber,
         `${emoji.ERROR} *${t(lang, "auth.emailAlreadyLinkedTitle")}*\n\n${
-          t(
-            lang,
-            "auth.emailAlreadyLinkedMessage",
-          )
+          t(lang, "auth.emailAlreadyLinkedMessage")
         }`,
       );
       await setUserState(phoneNumber, null);
@@ -105,7 +102,8 @@ export async function handleEmailInput(
 
     // Generate and send verification code
     const code = generateVerificationCode();
-    const expiresAt = new Date(Date.now() + VERIFICATION_CODE_EXPIRY_MS).toISOString();
+    const expiresAt = new Date(Date.now() + VERIFICATION_CODE_EXPIRY_MS)
+      .toISOString();
 
     await updateProfile(existingProfile.id, {
       verification_code: code,
@@ -118,10 +116,7 @@ export async function handleEmailInput(
       await sendTextMessage(
         phoneNumber,
         `${emoji.ERROR} *${t(lang, "auth.emailDeliveryFailedTitle")}*\n\n${
-          t(
-            lang,
-            "auth.emailDeliveryFailedMessage",
-          )
+          t(lang, "auth.emailDeliveryFailedMessage")
         }`,
       );
       return;
@@ -130,15 +125,9 @@ export async function handleEmailInput(
     await sendButtonMessage(
       phoneNumber,
       `${emoji.SUCCESS} *${t(lang, "auth.accountFound")}*\n\n${
-        t(
-          lang,
-          "auth.codeEmailSent",
-        )
+        t(lang, "auth.codeEmailSent")
       }\n\n${emoji.EMAIL} ${normalizedEmail}\n\n${
-        t(
-          lang,
-          "auth.enterCodeToSignIn",
-        )
+        t(lang, "auth.enterCodeToSignIn")
       }\n\n${emoji.CLOCK} ${t(lang, "auth.codeExpires")}`,
       getAuthButtons(lang),
       t(lang, "auth.checkInbox"),
@@ -156,7 +145,8 @@ export async function handleEmailInput(
 
   // New user - create profile
   const code = generateVerificationCode();
-  const expiresAt = new Date(Date.now() + VERIFICATION_CODE_EXPIRY_MS).toISOString();
+  const expiresAt = new Date(Date.now() + VERIFICATION_CODE_EXPIRY_MS)
+    .toISOString();
 
   const newProfile = await createProfile({
     id: crypto.randomUUID(),
@@ -172,10 +162,7 @@ export async function handleEmailInput(
     await sendTextMessage(
       phoneNumber,
       `${emoji.ERROR} *${t(lang, "auth.registrationFailedTitle")}*\n\n${
-        t(
-          lang,
-          "auth.registrationFailedMessage",
-        )
+        t(lang, "auth.registrationFailedMessage")
       }`,
     );
     return;
@@ -187,10 +174,7 @@ export async function handleEmailInput(
     await sendTextMessage(
       phoneNumber,
       `${emoji.ERROR} *${t(lang, "auth.emailDeliveryFailedTitle")}*\n\n${
-        t(
-          lang,
-          "auth.emailDeliveryFailedMessage",
-        )
+        t(lang, "auth.emailDeliveryFailedMessage")
       }`,
     );
     return;
@@ -199,10 +183,7 @@ export async function handleEmailInput(
   await sendButtonMessage(
     phoneNumber,
     `${emoji.SUCCESS} *${t(lang, "auth.accountCreated")}*\n\n${
-      t(
-        lang,
-        "auth.codeSentTo",
-      )
+      t(lang, "auth.codeSentTo")
     }\n${emoji.EMAIL} ${normalizedEmail}\n\n${emoji.CLOCK} ${t(lang, "auth.codeExpires")}`,
     getAuthButtons(lang),
     t(lang, "auth.verifyEmailTitle"),
@@ -220,7 +201,10 @@ export async function handleEmailInput(
 /**
  * Handle verification code input
  */
-export async function handleVerificationCode(phoneNumber: string, code: string): Promise<boolean> {
+export async function handleVerificationCode(
+  phoneNumber: string,
+  code: string,
+): Promise<boolean> {
   const lang = await getUserLanguage(phoneNumber);
   const state = await getUserState(phoneNumber);
 
@@ -231,7 +215,10 @@ export async function handleVerificationCode(phoneNumber: string, code: string):
   const trimmedCode = code.trim();
 
   if (!isValidVerificationCode(trimmedCode)) {
-    await sendTextMessage(phoneNumber, `${emoji.ERROR} ${t(lang, "auth.invalidCode")}`);
+    await sendTextMessage(
+      phoneNumber,
+      `${emoji.ERROR} ${t(lang, "auth.invalidCode")}`,
+    );
     return true; // Handled, but invalid
   }
 
@@ -251,7 +238,10 @@ export async function handleVerificationCode(phoneNumber: string, code: string):
 
   // Check code validity
   if (profile.verification_code !== trimmedCode) {
-    await sendTextMessage(phoneNumber, `${emoji.ERROR} ${t(lang, "auth.invalidCode")}`);
+    await sendTextMessage(
+      phoneNumber,
+      `${emoji.ERROR} ${t(lang, "auth.invalidCode")}`,
+    );
     return true;
   }
 
@@ -259,7 +249,10 @@ export async function handleVerificationCode(phoneNumber: string, code: string):
   if (profile.verification_code_expires_at) {
     const expiresAt = new Date(profile.verification_code_expires_at);
     if (expiresAt < new Date()) {
-      await sendTextMessage(phoneNumber, `${emoji.WARNING} ${t(lang, "auth.codeExpired")}`);
+      await sendTextMessage(
+        phoneNumber,
+        `${emoji.WARNING} ${t(lang, "auth.codeExpired")}`,
+      );
       return true;
     }
   }
@@ -311,7 +304,8 @@ export async function handleResendCode(phoneNumber: string): Promise<void> {
 
   // Generate new code
   const code = generateVerificationCode();
-  const expiresAt = new Date(Date.now() + VERIFICATION_CODE_EXPIRY_MS).toISOString();
+  const expiresAt = new Date(Date.now() + VERIFICATION_CODE_EXPIRY_MS)
+    .toISOString();
 
   await updateProfile(profile.id, {
     verification_code: code,
@@ -324,10 +318,7 @@ export async function handleResendCode(phoneNumber: string): Promise<void> {
     await sendTextMessage(
       phoneNumber,
       `${emoji.SUCCESS} New code sent to ${state.data.email}\n\n${emoji.CLOCK} ${
-        t(
-          lang,
-          "auth.codeExpires",
-        )
+        t(lang, "auth.codeExpires")
       }`,
     );
   } else {
@@ -349,10 +340,7 @@ export async function requireAuth(phoneNumber: string): Promise<boolean> {
     await sendTextMessage(
       phoneNumber,
       `${emoji.LOCK} ${t(lang, "share.linkAccountFirst")}\n\n${emoji.EMAIL} ${
-        t(
-          lang,
-          "auth.sendEmailToRegister",
-        )
+        t(lang, "auth.sendEmailToRegister")
       }`,
     );
     await setUserState(phoneNumber, { action: "awaiting_email", data: {} });

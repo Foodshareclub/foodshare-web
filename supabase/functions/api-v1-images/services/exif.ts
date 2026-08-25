@@ -7,7 +7,9 @@ import ExifReader from "npm:exifreader@4.23.3";
 import type { EXIFData } from "../types/index.ts";
 import { logger } from "../../_shared/logger.ts";
 
-export async function extractEXIF(imageData: Uint8Array): Promise<EXIFData | null> {
+export async function extractEXIF(
+  imageData: Uint8Array,
+): Promise<EXIFData | null> {
   try {
     const tags = ExifReader.load(imageData.buffer);
 
@@ -58,7 +60,8 @@ function parseGPSCoordinate(description: string | undefined): number | null {
   if (!match) return null;
 
   const [, degrees, minutes, seconds, direction] = match;
-  let decimal = parseFloat(degrees) + parseFloat(minutes) / 60 + parseFloat(seconds) / 3600;
+  let decimal = parseFloat(degrees) + parseFloat(minutes) / 60 +
+    parseFloat(seconds) / 3600;
 
   if (direction === "S" || direction === "W") {
     decimal = -decimal;

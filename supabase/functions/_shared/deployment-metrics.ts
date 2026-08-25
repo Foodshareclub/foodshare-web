@@ -42,7 +42,10 @@ export function endDeploymentTracking(
   metric.p95Latency = p95Latency;
 
   // Send to monitoring (Telegram, Datadog, etc.)
-  logger.info("deployment_metric", metric as unknown as Record<string, unknown>);
+  logger.info(
+    "deployment_metric",
+    metric as unknown as Record<string, unknown>,
+  );
 }
 
 export function getRecentDeployments(limit = 10): DeploymentMetrics[] {

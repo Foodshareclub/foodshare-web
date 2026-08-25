@@ -45,14 +45,20 @@ const SUPPORTED_LOCALES = [
 /**
  * Recursively flatten nested object to dot-notation paths
  */
-function flattenObject(obj: Record<string, unknown>, prefix = ""): Record<string, string> {
+function flattenObject(
+  obj: Record<string, unknown>,
+  prefix = "",
+): Record<string, string> {
   const result: Record<string, string> = {};
 
   for (const [key, value] of Object.entries(obj)) {
     const path = prefix ? `${prefix}.${key}` : key;
 
     if (value !== null && typeof value === "object" && !Array.isArray(value)) {
-      Object.assign(result, flattenObject(value as Record<string, unknown>, path));
+      Object.assign(
+        result,
+        flattenObject(value as Record<string, unknown>, path),
+      );
     } else if (typeof value === "string") {
       result[path] = value;
     }
@@ -145,7 +151,9 @@ export default async function auditHandler(
     );
   }
 
-  const englishFlat = flattenObject(englishData.messages as Record<string, unknown>);
+  const englishFlat = flattenObject(
+    englishData.messages as Record<string, unknown>,
+  );
 
   // Single locale audit
   if (locale && !all) {
@@ -183,7 +191,9 @@ export default async function auditHandler(
       );
     }
 
-    const localeFlat = flattenObject(localeData.messages as Record<string, unknown>);
+    const localeFlat = flattenObject(
+      localeData.messages as Record<string, unknown>,
+    );
     let untranslated = findUntranslatedKeys(englishFlat, localeFlat);
 
     // Filter by category if specified
@@ -243,19 +253,18 @@ export default async function auditHandler(
       );
     }
 
-    const summary: Record<
-      string,
-      {
-        locale: string;
-        version: string;
-        totalKeys: number;
-        untranslatedCount: number;
-        byCategory: Record<string, number>;
-      }
-    > = {};
+    const summary: Record<string, {
+      locale: string;
+      version: string;
+      totalKeys: number;
+      untranslatedCount: number;
+      byCategory: Record<string, number>;
+    }> = {};
 
     for (const localeData of allLocales) {
-      const localeFlat = flattenObject(localeData.messages as Record<string, unknown>);
+      const localeFlat = flattenObject(
+        localeData.messages as Record<string, unknown>,
+      );
       const untranslated = findUntranslatedKeys(englishFlat, localeFlat);
 
       const byCategory: Record<string, number> = {};
@@ -282,7 +291,10 @@ export default async function auditHandler(
         version: VERSION,
         englishKeyCount: Object.keys(englishFlat).length,
         localeCount: sorted.length,
-        totalUntranslated: sorted.reduce((sum, l) => sum + l.untranslatedCount, 0),
+        totalUntranslated: sorted.reduce(
+          (sum, l) => sum + l.untranslatedCount,
+          0,
+        ),
         locales: sorted,
       }),
       {

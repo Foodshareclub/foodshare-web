@@ -30,13 +30,22 @@ export async function recompressOldImages(
     totalSaved: 0,
   };
 
-  const buckets = ["food-images", "profiles", "forum", "challenges", "avatars", "posts"];
+  const buckets = [
+    "food-images",
+    "profiles",
+    "forum",
+    "challenges",
+    "avatars",
+    "posts",
+  ];
 
   for (const bucket of buckets) {
-    const { data: files } = await supabase.storage.from(bucket).list("", {
-      limit: batchSize,
-      sortBy: { column: "created_at", order: "asc" },
-    });
+    const { data: files } = await supabase.storage
+      .from(bucket)
+      .list("", {
+        limit: batchSize,
+        sortBy: { column: "created_at", order: "asc" },
+      });
 
     if (!files) continue;
 
@@ -61,7 +70,9 @@ export async function recompressOldImages(
       }
 
       try {
-        const { data: fileData } = await supabase.storage.from(bucket).download(file.name);
+        const { data: fileData } = await supabase.storage
+          .from(bucket)
+          .download(file.name);
 
         if (!fileData) {
           results.failed++;
@@ -82,13 +93,16 @@ export async function recompressOldImages(
         formData.append("extractEXIF", "false");
         formData.append("enableAI", "false");
 
-        const uploadResponse = await fetch(`${supabaseUrl}/functions/v1/api-v1-images/upload`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${serviceKey}`,
+        const uploadResponse = await fetch(
+          `${supabaseUrl}/functions/v1/api-v1-images/upload`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${serviceKey}`,
+            },
+            body: formData,
           },
-          body: formData,
-        });
+        );
 
         if (uploadResponse.ok) {
           const result = await uploadResponse.json();

@@ -54,7 +54,7 @@ const SUPPORTED_LANGUAGES = [
   "hi",
 ] as const;
 
-type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
+type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
 
 /** Translation error codes for structured error handling */
 enum TranslationErrorCode {
@@ -335,7 +335,10 @@ class LLMTranslationService {
   private readonly startupTime = Date.now();
 
   // LRU Cache with TTL
-  private cache: LRUCache<string, { text: string; quality: number; service: string }>;
+  private cache: LRUCache<
+    string,
+    { text: string; quality: number; service: string }
+  >;
   private readonly CACHE_TTL = 3600000; // 1 hour
   private readonly MAX_CACHE_SIZE = 10000;
 
@@ -400,7 +403,9 @@ class LLMTranslationService {
     // Warn if API key is missing — translate calls will fail but the function can still serve
     // cached translations and other non-LLM routes without crashing on startup
     if (!config.apiKey) {
-      sharedLogger.warn("LLM_TRANSLATION_API_KEY not set - LLM translation will be unavailable");
+      sharedLogger.warn(
+        "LLM_TRANSLATION_API_KEY not set - LLM translation will be unavailable",
+      );
     }
 
     this.config = {
@@ -482,7 +487,10 @@ class LLMTranslationService {
   /**
    * Record success for circuit breaker
    */
-  private recordCircuitSuccess(service: string, logger: StructuredLogger): void {
+  private recordCircuitSuccess(
+    service: string,
+    logger: StructuredLogger,
+  ): void {
     const cb = this.getCircuitBreaker(service);
     cb.lastSuccess = Date.now();
     cb.failures = 0;
@@ -503,7 +511,11 @@ class LLMTranslationService {
   /**
    * Record failure for circuit breaker
    */
-  private recordCircuitFailure(service: string, error: string, logger: StructuredLogger): void {
+  private recordCircuitFailure(
+    service: string,
+    error: string,
+    logger: StructuredLogger,
+  ): void {
     const cb = this.getCircuitBreaker(service);
     cb.failures++;
     cb.lastFailure = Date.now();
@@ -563,7 +575,10 @@ class LLMTranslationService {
   /**
    * Check if deadline has been exceeded
    */
-  private checkDeadline(deadline: number | undefined, logger: StructuredLogger): void {
+  private checkDeadline(
+    deadline: number | undefined,
+    logger: StructuredLogger,
+  ): void {
     if (deadline && Date.now() > deadline) {
       logger.warn("deadline_exceeded", {
         deadline: new Date(deadline).toISOString(),
@@ -601,7 +616,10 @@ class LLMTranslationService {
   /**
    * Check if service is known to be exhausted (fast path, no DB call)
    */
-  private isServiceExhausted(service: string, logger: StructuredLogger): boolean {
+  private isServiceExhausted(
+    service: string,
+    logger: StructuredLogger,
+  ): boolean {
     const exhaustedAt = this.exhaustedServices.get(service);
     if (!exhaustedAt) return false;
 
@@ -616,7 +634,10 @@ class LLMTranslationService {
   /**
    * Mark service as exhausted - will be skipped until cache expires
    */
-  private markServiceExhausted(service: string, logger: StructuredLogger): void {
+  private markServiceExhausted(
+    service: string,
+    logger: StructuredLogger,
+  ): void {
     this.exhaustedServices.set(service, Date.now());
     logger.warn("service_exhausted", {
       service,
@@ -681,7 +702,10 @@ class LLMTranslationService {
    * Get quota info for all services (for health check)
    */
   private async getQuotaInfo(): Promise<
-    Record<string, { used: number; limit: number; remaining: number; percent: number }>
+    Record<
+      string,
+      { used: number; limit: number; remaining: number; percent: number }
+    >
   > {
     const quotaInfo: Record<
       string,
@@ -727,12 +751,15 @@ class LLMTranslationService {
       const supabase = this.getSupabaseClientInstance();
       const monthYear = this.getCurrentMonth();
 
-      const { data, error } = await supabase.rpc("increment_translation_usage", {
-        p_service: service,
-        p_month: monthYear,
-        p_chars: charCount,
-        p_limit: this.FREE_LIMITS[service],
-      });
+      const { data, error } = await supabase.rpc(
+        "increment_translation_usage",
+        {
+          p_service: service,
+          p_month: monthYear,
+          p_chars: charCount,
+          p_limit: this.FREE_LIMITS[service],
+        },
+      );
 
       if (error) {
         logger.warn("usage_record_failed", { service, error: error.message });
@@ -742,7 +769,7 @@ class LLMTranslationService {
       const newUsage = data?.[0]?.chars_used ?? 0;
       const freeLimit = this.FREE_LIMITS[service];
       const remaining = freeLimit - newUsage;
-      const percentUsed = ((newUsage / freeLimit) * 100).toFixed(1);
+      const percentUsed = (newUsage / freeLimit * 100).toFixed(1);
 
       logger.info("usage_recorded", {
         service,
@@ -817,7 +844,10 @@ class LLMTranslationService {
 
     // Rotate order for load balancing
     const startIndex = this.fallbackIndex % available.length;
-    const rotated = [...available.slice(startIndex), ...available.slice(0, startIndex)];
+    const rotated = [
+      ...available.slice(startIndex),
+      ...available.slice(0, startIndex),
+    ];
     this.fallbackIndex++;
 
     logger.debug("fallback_services_available", { services: rotated });
@@ -868,34 +898,34 @@ class LLMTranslationService {
    */
   private mapToDeepLLanguage(lang: string): string {
     const mapping: Record<string, string> = {
-      en: "EN",
-      ru: "RU",
-      es: "ES",
-      fr: "FR",
-      de: "DE",
-      it: "IT",
-      pt: "PT-BR",
-      ja: "JA",
-      ko: "KO",
-      zh: "ZH",
-      ar: "AR",
-      nl: "NL",
-      pl: "PL",
-      tr: "TR",
-      uk: "UK",
-      cs: "CS",
-      da: "DA",
-      fi: "FI",
-      el: "EL",
-      hu: "HU",
-      id: "ID",
-      no: "NB",
-      ro: "RO",
-      sk: "SK",
-      sv: "SV",
-      th: "TH",
-      vi: "VI",
-      hi: "HI",
+      "en": "EN",
+      "ru": "RU",
+      "es": "ES",
+      "fr": "FR",
+      "de": "DE",
+      "it": "IT",
+      "pt": "PT-BR",
+      "ja": "JA",
+      "ko": "KO",
+      "zh": "ZH",
+      "ar": "AR",
+      "nl": "NL",
+      "pl": "PL",
+      "tr": "TR",
+      "uk": "UK",
+      "cs": "CS",
+      "da": "DA",
+      "fi": "FI",
+      "el": "EL",
+      "hu": "HU",
+      "id": "ID",
+      "no": "NB",
+      "ro": "RO",
+      "sk": "SK",
+      "sv": "SV",
+      "th": "TH",
+      "vi": "VI",
+      "hi": "HI",
     };
     return mapping[lang.toLowerCase()] || lang.toUpperCase();
   }
@@ -906,8 +936,8 @@ class LLMTranslationService {
    */
   private mapToGoogleLanguage(lang: string): string {
     const mapping: Record<string, string> = {
-      zh: "zh-CN", // Simplified Chinese
-      pt: "pt-BR", // Brazilian Portuguese
+      "zh": "zh-CN", // Simplified Chinese
+      "pt": "pt-BR", // Brazilian Portuguese
     };
     return mapping[lang.toLowerCase()] || lang.toLowerCase();
   }
@@ -917,8 +947,8 @@ class LLMTranslationService {
    */
   private mapToMicrosoftLanguage(lang: string): string {
     const mapping: Record<string, string> = {
-      zh: "zh-Hans", // Simplified Chinese
-      pt: "pt-br", // Brazilian Portuguese
+      "zh": "zh-Hans", // Simplified Chinese
+      "pt": "pt-br", // Brazilian Portuguese
     };
     return mapping[lang.toLowerCase()] || lang.toLowerCase();
   }
@@ -928,8 +958,8 @@ class LLMTranslationService {
    */
   private mapToAmazonLanguage(lang: string): string {
     const mapping: Record<string, string> = {
-      zh: "zh", // Simplified Chinese
-      pt: "pt-BR", // Brazilian Portuguese
+      "zh": "zh", // Simplified Chinese
+      "pt": "pt-BR", // Brazilian Portuguese
     };
     return mapping[lang.toLowerCase()] || lang.toLowerCase();
   }
@@ -965,7 +995,7 @@ class LLMTranslationService {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
-          Authorization: `DeepL-Auth-Key ${deeplKey}`,
+          "Authorization": `DeepL-Auth-Key ${deeplKey}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -1032,10 +1062,13 @@ class LLMTranslationService {
     sourceLang: string,
     targetLang: string,
   ): Promise<TranslationResult> {
-    const googleKey = this.config.googleApiKey || Deno.env.get("GOOGLE_TRANSLATE_API_KEY");
+    const googleKey = this.config.googleApiKey ||
+      Deno.env.get("GOOGLE_TRANSLATE_API_KEY");
 
     if (!googleKey) {
-      sharedLogger.warn("Google Translate API key not configured, skipping fallback");
+      sharedLogger.warn(
+        "Google Translate API key not configured, skipping fallback",
+      );
       return { text, cached: false, quality: 0, service: "google" } as any;
     }
 
@@ -1121,12 +1154,16 @@ class LLMTranslationService {
     sourceLang: string,
     targetLang: string,
   ): Promise<TranslationResult> {
-    const msKey = this.config.microsoftApiKey || Deno.env.get("MICROSOFT_TRANSLATOR_API_KEY");
-    const msRegion = this.config.microsoftRegion || Deno.env.get("MICROSOFT_TRANSLATOR_REGION") ||
+    const msKey = this.config.microsoftApiKey ||
+      Deno.env.get("MICROSOFT_TRANSLATOR_API_KEY");
+    const msRegion = this.config.microsoftRegion ||
+      Deno.env.get("MICROSOFT_TRANSLATOR_REGION") ||
       "global";
 
     if (!msKey) {
-      sharedLogger.warn("Microsoft Translator API key not configured, skipping fallback");
+      sharedLogger.warn(
+        "Microsoft Translator API key not configured, skipping fallback",
+      );
       return { text, cached: false, quality: 0, service: "microsoft" } as any;
     }
 
@@ -1232,7 +1269,12 @@ class LLMTranslationService {
     const stringToSign = `${algorithm}\n${amzDate}\n${credentialScope}\n${canonicalRequestHash}`;
 
     // Calculate signature
-    const signingKey = await this.getSignatureKey(secretAccessKey, dateStamp, region, service);
+    const signingKey = await this.getSignatureKey(
+      secretAccessKey,
+      dateStamp,
+      region,
+      service,
+    );
     const signature = await this.hmacSha256Hex(signingKey, stringToSign);
 
     // Create authorization header
@@ -1244,7 +1286,7 @@ class LLMTranslationService {
         "Content-Type": "application/json",
         "X-Amz-Date": amzDate,
         "X-Amz-Target": "AWSShineFrontendService_20170701.TranslateText",
-        Authorization: authorizationHeader,
+        "Authorization": authorizationHeader,
       },
     };
   }
@@ -1253,12 +1295,15 @@ class LLMTranslationService {
     const encoder = new TextEncoder();
     const data = encoder.encode(message);
     const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    return Array.from(new Uint8Array(hashBuffer))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+    return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join(
+      "",
+    );
   }
 
-  private async hmacSha256(key: ArrayBuffer, message: string): Promise<ArrayBuffer> {
+  private async hmacSha256(
+    key: ArrayBuffer,
+    message: string,
+  ): Promise<ArrayBuffer> {
     const encoder = new TextEncoder();
     const cryptoKey = await crypto.subtle.importKey(
       "raw",
@@ -1270,11 +1315,14 @@ class LLMTranslationService {
     return crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(message));
   }
 
-  private async hmacSha256Hex(key: ArrayBuffer, message: string): Promise<string> {
+  private async hmacSha256Hex(
+    key: ArrayBuffer,
+    message: string,
+  ): Promise<string> {
     const signature = await this.hmacSha256(key, message);
-    return Array.from(new Uint8Array(signature))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+    return Array.from(new Uint8Array(signature)).map((b) => b.toString(16).padStart(2, "0")).join(
+      "",
+    );
   }
 
   private async getSignatureKey(
@@ -1284,7 +1332,10 @@ class LLMTranslationService {
     service: string,
   ): Promise<ArrayBuffer> {
     const encoder = new TextEncoder();
-    const kDate = await this.hmacSha256(encoder.encode("AWS4" + secretKey) as any, dateStamp);
+    const kDate = await this.hmacSha256(
+      encoder.encode("AWS4" + secretKey) as any,
+      dateStamp,
+    );
     const kRegion = await this.hmacSha256(kDate, region);
     const kService = await this.hmacSha256(kRegion, service);
     return this.hmacSha256(kService, "aws4_request");
@@ -1299,13 +1350,17 @@ class LLMTranslationService {
     sourceLang: string,
     targetLang: string,
   ): Promise<TranslationResult> {
-    const awsAccessKeyId = this.config.awsAccessKeyId || Deno.env.get("AWS_ACCESS_KEY_ID");
+    const awsAccessKeyId = this.config.awsAccessKeyId ||
+      Deno.env.get("AWS_ACCESS_KEY_ID");
     const awsSecretAccessKey = this.config.awsSecretAccessKey ||
       Deno.env.get("AWS_SECRET_ACCESS_KEY");
-    const awsRegion = this.config.awsRegion || Deno.env.get("AWS_REGION") || "us-east-1";
+    const awsRegion = this.config.awsRegion || Deno.env.get("AWS_REGION") ||
+      "us-east-1";
 
     if (!awsAccessKeyId || !awsSecretAccessKey) {
-      sharedLogger.warn("AWS credentials not configured, skipping Amazon Translate fallback");
+      sharedLogger.warn(
+        "AWS credentials not configured, skipping Amazon Translate fallback",
+      );
       return { text, cached: false, quality: 0, service: "amazon" } as any;
     }
 
@@ -1432,10 +1487,14 @@ class LLMTranslationService {
         if (quota.percent >= ALERT_THRESHOLDS.quotaCritical) {
           status = "DOWN";
           overallStatus = "DEGRADED";
-          alerts.push(`${service} quota critical: ${(quota.percent * 100).toFixed(1)}% used`);
+          alerts.push(
+            `${service} quota critical: ${(quota.percent * 100).toFixed(1)}% used`,
+          );
         } else if (quota.percent >= ALERT_THRESHOLDS.quotaWarning) {
           if (status === "UP") status = "DEGRADED";
-          alerts.push(`${service} quota warning: ${(quota.percent * 100).toFixed(1)}% used`);
+          alerts.push(
+            `${service} quota warning: ${(quota.percent * 100).toFixed(1)}% used`,
+          );
         }
       }
 
@@ -1577,7 +1636,9 @@ class LLMTranslationService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Translation API error: ${response.status} - ${errorText}`);
+        throw new Error(
+          `Translation API error: ${response.status} - ${errorText}`,
+        );
       }
 
       const data = await response.json();
@@ -1590,7 +1651,8 @@ class LLMTranslationService {
           try {
             const cleanJson = trimmed.replace(/\n/g, "").replace(/\r/g, "");
             const parsed = JSON.parse(cleanJson);
-            translatedText = parsed.translation || parsed.translatedText || parsed.text ||
+            translatedText = parsed.translation || parsed.translatedText ||
+              parsed.text ||
               translatedText;
           } catch {
             const patterns = [
@@ -1640,13 +1702,16 @@ class LLMTranslationService {
     const baseContext = "food-sharing platform where people share surplus food";
 
     // Detect content characteristics
-    const hasFood = /\b(food|meal|bread|fruit|vegetable|meat|dairy|snack|drink|beverage)\b/i.test(
-      text,
-    );
-    const hasLocation = /\b(pickup|location|address|street|avenue|road)\b/i.test(text);
-    const hasTime = /\b(today|tomorrow|tonight|morning|afternoon|evening|expires|expiry)\b/i.test(
-      text,
-    );
+    const hasFood = /\b(food|meal|bread|fruit|vegetable|meat|dairy|snack|drink|beverage)\b/i
+      .test(
+        text,
+      );
+    const hasLocation = /\b(pickup|location|address|street|avenue|road)\b/i
+      .test(text);
+    const hasTime = /\b(today|tomorrow|tonight|morning|afternoon|evening|expires|expiry)\b/i
+      .test(
+        text,
+      );
 
     let context = baseContext;
     if (hasFood) context += ", describing food items";
@@ -1691,7 +1756,9 @@ class LLMTranslationService {
     const originalFormat = this.detectContentFormat(original);
     if (originalFormat === "html") {
       const originalTags = (original.match(/<[^>]+>/g) || []).sort().join(",");
-      const translatedTags = (translated.match(/<[^>]+>/g) || []).sort().join(",");
+      const translatedTags = (translated.match(/<[^>]+>/g) || []).sort().join(
+        ",",
+      );
 
       if (originalTags !== translatedTags) {
         quality *= 0.5; // Penalize if HTML structure changed
@@ -1745,7 +1812,14 @@ class LLMTranslationService {
     }
 
     // Create and track new request
-    const promise = this.translateInternal(text, sourceLang, targetLang, context, deadline, logger);
+    const promise = this.translateInternal(
+      text,
+      sourceLang,
+      targetLang,
+      context,
+      deadline,
+      logger,
+    );
     this.inFlightRequests.set(cacheKey, promise);
 
     try {
@@ -1844,7 +1918,12 @@ class LLMTranslationService {
         }
 
         try {
-          const result = await this.tryPrimaryService(text, sourceLang, targetLang, context);
+          const result = await this.tryPrimaryService(
+            text,
+            sourceLang,
+            targetLang,
+            context,
+          );
 
           if (result.quality > 0.5) {
             // Cache the result
@@ -1913,7 +1992,10 @@ class LLMTranslationService {
     // Try fallback services
     if (shouldTryFallback) {
       const charCount = text.length;
-      const availableServices = await this.getAvailableFallbackServices(charCount, logger);
+      const availableServices = await this.getAvailableFallbackServices(
+        charCount,
+        logger,
+      );
 
       if (availableServices.length === 0) {
         return {
@@ -1942,7 +2024,12 @@ class LLMTranslationService {
           continue;
         }
 
-        const result = await this.tryFallbackService(service, text, sourceLang, targetLang);
+        const result = await this.tryFallbackService(
+          service,
+          text,
+          sourceLang,
+          targetLang,
+        );
 
         if (result.quality > 0.5) {
           // Record usage and circuit success
@@ -2112,11 +2199,18 @@ class LLMTranslationService {
     logger.debug("chunks_created", { chunkCount: chunks.length });
 
     // Translate chunks in parallel
-    const batchResult = await this.batchTranslate(chunks, sourceLang, targetLang, context, options);
+    const batchResult = await this.batchTranslate(
+      chunks,
+      sourceLang,
+      targetLang,
+      context,
+      options,
+    );
 
     // Combine translated chunks
     const combinedText = batchResult.translations.join(" ");
-    const avgQuality = batchResult.quality.reduce((a, b) => a + b, 0) / batchResult.quality.length;
+    const avgQuality = batchResult.quality.reduce((a, b) => a + b, 0) /
+      batchResult.quality.length;
 
     return {
       success: true,
@@ -2159,7 +2253,12 @@ class LLMTranslationService {
     });
 
     for (const lang of targetLangs) {
-      await this.batchTranslate(commonPhrases, sourceLang, lang, "food-sharing");
+      await this.batchTranslate(
+        commonPhrases,
+        sourceLang,
+        lang,
+        "food-sharing",
+      );
     }
 
     const stats = this.cache.getStats();
@@ -2178,7 +2277,9 @@ class LLMTranslationService {
 function createTranslationService(): LLMTranslationService {
   const apiKey = Deno.env.get("LLM_TRANSLATION_API_KEY");
   if (!apiKey) {
-    sharedLogger.error("CRITICAL: LLM_TRANSLATION_API_KEY environment variable is required");
+    sharedLogger.error(
+      "CRITICAL: LLM_TRANSLATION_API_KEY environment variable is required",
+    );
     // Don't throw here - let the constructor handle validation
   }
 

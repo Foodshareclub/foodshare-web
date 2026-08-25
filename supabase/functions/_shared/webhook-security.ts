@@ -128,7 +128,11 @@ export async function computeHmac(
     ["sign"],
   );
 
-  const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+  const signatureBuffer = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(payload),
+  );
 
   // Convert to hex
   const hashArray = Array.from(new Uint8Array(signatureBuffer));
@@ -152,7 +156,11 @@ export async function computeHmacBase64(
     ["sign"],
   );
 
-  const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
+  const signatureBuffer = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(payload),
+  );
 
   // Convert to base64
   return btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
@@ -194,8 +202,14 @@ export async function verifyMetaWebhook(
     return { valid: false, error: "Invalid signature format" };
   }
 
-  const providedHash = signature.slice(WebhookProviders.meta.signaturePrefix.length);
-  const computedHash = await computeHmac(payload, secret, WebhookProviders.meta.algorithm);
+  const providedHash = signature.slice(
+    WebhookProviders.meta.signaturePrefix.length,
+  );
+  const computedHash = await computeHmac(
+    payload,
+    secret,
+    WebhookProviders.meta.algorithm,
+  );
 
   if (!constantTimeCompare(computedHash, providedHash)) {
     return { valid: false, error: "Signature mismatch" };
@@ -247,7 +261,11 @@ export async function verifyStripeWebhook(
   // Compute expected signature
   // Stripe uses: timestamp + "." + payload
   const signedPayload = `${timestamp}.${payload}`;
-  const computedHash = await computeHmac(signedPayload, secret, WebhookProviders.stripe.algorithm);
+  const computedHash = await computeHmac(
+    signedPayload,
+    secret,
+    WebhookProviders.stripe.algorithm,
+  );
 
   if (!constantTimeCompare(computedHash, signature)) {
     return { valid: false, error: "Signature mismatch" };
@@ -282,8 +300,14 @@ export async function verifyGitHubWebhook(
     return { valid: false, error: "Invalid signature format" };
   }
 
-  const providedHash = signature.slice(WebhookProviders.github.signaturePrefix.length);
-  const computedHash = await computeHmac(payload, secret, WebhookProviders.github.algorithm);
+  const providedHash = signature.slice(
+    WebhookProviders.github.signaturePrefix.length,
+  );
+  const computedHash = await computeHmac(
+    payload,
+    secret,
+    WebhookProviders.github.algorithm,
+  );
 
   if (!constantTimeCompare(computedHash, providedHash)) {
     return { valid: false, error: "Signature mismatch" };
@@ -304,7 +328,10 @@ export async function verifyGitHubWebhook(
  * }
  * ```
  */
-export function verifyTelegramWebhook(headers: Headers, secret: string): WebhookVerificationResult {
+export function verifyTelegramWebhook(
+  headers: Headers,
+  secret: string,
+): WebhookVerificationResult {
   const token = headers.get(WebhookProviders.telegram.signatureHeader);
 
   if (!token) {
@@ -444,7 +471,10 @@ export function createWebhookVerifier(
  * }
  * ```
  */
-export function handleMetaWebhookChallenge(request: Request, verifyToken: string): Response | null {
+export function handleMetaWebhookChallenge(
+  request: Request,
+  verifyToken: string,
+): Response | null {
   const url = new URL(request.url);
   const mode = url.searchParams.get("hub.mode");
   const token = url.searchParams.get("hub.verify_token");

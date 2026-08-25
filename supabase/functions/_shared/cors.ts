@@ -22,8 +22,14 @@
 export const DEFAULT_ALLOWED_ORIGINS = [
   "https://foodshare.app",
   "https://www.foodshare.app",
-  `https://${Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"}`,
-  `https://www.${Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"}`,
+  `https://${
+    Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+    "foodshare.club"
+  }`,
+  `https://www.${
+    Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+    "foodshare.club"
+  }`,
   "http://localhost:3000", // React dev
   "http://localhost:5173", // Vite dev
   "http://localhost:8000", // Alternative dev
@@ -86,8 +92,15 @@ export function getCorsHeaders(
   return result;
 }
 
-function computeCorsHeaders(origin: string, additionalOrigins: string[]): Record<string, string> {
-  const allAllowed = [...DEFAULT_ALLOWED_ORIGINS, ...MOBILE_ORIGINS, ...additionalOrigins];
+function computeCorsHeaders(
+  origin: string,
+  additionalOrigins: string[],
+): Record<string, string> {
+  const allAllowed = [
+    ...DEFAULT_ALLOWED_ORIGINS,
+    ...MOBILE_ORIGINS,
+    ...additionalOrigins,
+  ];
 
   // Handle null origin (native mobile apps send this)
   if (origin === "null") {
@@ -124,7 +137,10 @@ function computeCorsHeaders(origin: string, additionalOrigins: string[]): Record
 /**
  * Handle OPTIONS preflight request (web + mobile aware)
  */
-export function handleCorsPreflight(request: Request, additionalOrigins?: string[]): Response {
+export function handleCorsPreflight(
+  request: Request,
+  additionalOrigins?: string[],
+): Response {
   return new Response(null, {
     headers: getCorsHeaders(request, additionalOrigins),
     status: 204,

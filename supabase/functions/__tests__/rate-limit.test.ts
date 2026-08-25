@@ -86,7 +86,10 @@ const ENDPOINT_LIMITS: Record<string, RateLimitConfig> = {
 class TestRateLimitStore {
   private store: Map<string, { count: number; resetAt: number }> = new Map();
 
-  async increment(key: string, windowMs: number): Promise<{ count: number; resetAt: number }> {
+  async increment(
+    key: string,
+    windowMs: number,
+  ): Promise<{ count: number; resetAt: number }> {
     const now = Date.now();
     const existing = this.store.get(key);
 
@@ -123,7 +126,10 @@ class TestRateLimitStore {
 class RateLimiter {
   constructor(private store: TestRateLimitStore) {}
 
-  async checkLimit(identifier: string, config: RateLimitConfig): Promise<RateLimitResult> {
+  async checkLimit(
+    identifier: string,
+    config: RateLimitConfig,
+  ): Promise<RateLimitResult> {
     const key = `${config.keyPrefix}:${identifier}`;
     const { count, resetAt } = await this.store.increment(key, config.windowMs);
 
@@ -134,7 +140,10 @@ class RateLimiter {
     return { allowed, remaining, resetAt, retryAfter };
   }
 
-  async getRemainingRequests(identifier: string, config: RateLimitConfig): Promise<number> {
+  async getRemainingRequests(
+    identifier: string,
+    config: RateLimitConfig,
+  ): Promise<number> {
     const key = `${config.keyPrefix}:${identifier}`;
     const entry = await this.store.get(key);
 
@@ -524,7 +533,7 @@ describe("Rate Limit Monitoring", () => {
     }
 
     const remaining = await limiter.getRemainingRequests("user-1", config);
-    const usagePercent = ((100 - remaining) / 100) * 100;
+    const usagePercent = (100 - remaining) / 100 * 100;
 
     assertEquals(remaining, 25);
     assertEquals(usagePercent, 75);

@@ -46,7 +46,7 @@ const ALL_LOCALES = [
   "sv",
 ] as const;
 
-type Locale = (typeof ALL_LOCALES)[number];
+type Locale = typeof ALL_LOCALES[number];
 
 const TARGET_LOCALES = ALL_LOCALES.filter((l): l is Exclude<Locale, "en"> => l !== "en");
 
@@ -184,15 +184,12 @@ async function cacheTranslations(
 ): Promise<void> {
   try {
     const supabase = getSupabaseClient();
-    await supabase.from(CACHE_TABLE).upsert(
-      {
-        content_hash: contentHash,
-        locale,
-        translations,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "content_hash,locale" },
-    );
+    await supabase.from(CACHE_TABLE).upsert({
+      content_hash: contentHash,
+      locale,
+      translations,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "content_hash,locale" });
   } catch (e) {
     logger.warn("Cache write failed", { locale, error: (e as Error).message });
   }
@@ -201,7 +198,10 @@ async function cacheTranslations(
 /**
  * Format as InfoPlist.strings file
  */
-function formatInfoPlistStrings(locale: string, strings: Record<string, string>): string {
+function formatInfoPlistStrings(
+  locale: string,
+  strings: Record<string, string>,
+): string {
   const lines = [
     `/* Localized Info.plist - ${LOCALE_NAMES[locale as Locale] || locale} */`,
     `/* Generated: ${new Date().toISOString()} */`,
@@ -303,32 +303,35 @@ async function processLocalesParallel(
   const queue = [...TARGET_LOCALES];
 
   // Process with concurrency limit
-  const workers = Array(CONCURRENCY_LIMIT)
-    .fill(null)
-    .map(async () => {
-      while (queue.length > 0) {
-        const locale = queue.shift();
-        if (!locale) break;
+  const workers = Array(CONCURRENCY_LIMIT).fill(null).map(async () => {
+    while (queue.length > 0) {
+      const locale = queue.shift();
+      if (!locale) break;
 
-        try {
-          const result = await translateLocale(strings, locale, contentHash, skipCache);
-          results.push(result);
-          logger.info("Locale complete", {
-            locale,
-            cached: result.cached,
-            duration: result.duration,
-          });
-        } catch (e) {
-          results.push({
-            locale,
-            translations: { ...strings }, // Fallback
-            cached: false,
-            duration: 0,
-            error: (e as Error).message,
-          });
-        }
+      try {
+        const result = await translateLocale(
+          strings,
+          locale,
+          contentHash,
+          skipCache,
+        );
+        results.push(result);
+        logger.info("Locale complete", {
+          locale,
+          cached: result.cached,
+          duration: result.duration,
+        });
+      } catch (e) {
+        results.push({
+          locale,
+          translations: { ...strings }, // Fallback
+          cached: false,
+          duration: 0,
+          error: (e as Error).message,
+        });
       }
-    });
+    }
+  });
 
   await Promise.all(workers);
   return results;
@@ -356,11 +359,14 @@ export default async function generateInfoPlistStringsHandler(
   }
 
   try {
-    const body = (await req.json()) as GenerateRequest;
+    const body = await req.json() as GenerateRequest;
     const { strings, skipCache = false } = body;
 
     // Validate input
-    if (!strings || typeof strings !== "object" || Object.keys(strings).length === 0) {
+    if (
+      !strings || typeof strings !== "object" ||
+      Object.keys(strings).length === 0
+    ) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -395,7 +401,11 @@ export default async function generateInfoPlistStringsHandler(
     const errors: string[] = [];
 
     // Translate all other locales in parallel
-    const results = await processLocalesParallel(strings, contentHash, skipCache);
+    const results = await processLocalesParallel(
+      strings,
+      contentHash,
+      skipCache,
+    );
 
     let fromCache = 0;
     let translated = 0;
@@ -403,7 +413,10 @@ export default async function generateInfoPlistStringsHandler(
 
     for (const result of results) {
       locales[result.locale] = result.translations;
-      files[result.locale] = formatInfoPlistStrings(result.locale, result.translations);
+      files[result.locale] = formatInfoPlistStrings(
+        result.locale,
+        result.translations,
+      );
 
       if (result.cached) {
         fromCache++;

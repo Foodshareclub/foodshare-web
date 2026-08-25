@@ -185,7 +185,9 @@ export async function handleSendTemplate(
 ): Promise<{ success: boolean; data?: DeliveryResult; error?: string }> {
   try {
     // Validate request
-    const request = templateSendRequestSchema.parse(_body) as TemplateSendRequest;
+    const request = templateSendRequestSchema.parse(
+      _body,
+    ) as TemplateSendRequest;
 
     logger.info("Sending template notification", {
       requestId: context.requestId,
@@ -213,11 +215,15 @@ export async function handleSendTemplate(
       type: (template.type as SendRequest["type"]) || "system_announcement",
       title,
       body,
-      channels: request.channels || (template.channels as SendRequest["channels"]),
-      priority: request.priority || (template.priority as SendRequest["priority"]),
+      channels: request.channels ||
+        (template.channels as SendRequest["channels"]),
+      priority: request.priority ||
+        (template.priority as SendRequest["priority"]),
       data: {
         template: request.template,
-        ...Object.fromEntries(Object.entries(request.variables).map(([k, v]) => [k, String(v)])),
+        ...Object.fromEntries(
+          Object.entries(request.variables).map(([k, v]) => [k, String(v)]),
+        ),
       },
     };
 

@@ -71,7 +71,10 @@ export default async function translateBatchHandler(
     const { content_type, content_id, fields } = body;
 
     // Validate input
-    if (!content_type || !["post", "challenge", "forum_post"].includes(content_type)) {
+    if (
+      !content_type ||
+      !["post", "challenge", "forum_post"].includes(content_type)
+    ) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -144,11 +147,13 @@ export default async function translateBatchHandler(
     // Insert into queue (upsert to handle duplicates)
     let queuedCount = 0;
     if (queueItems.length > 0) {
-      const { error, count } = await supabase.from("translation_queue").upsert(queueItems, {
-        onConflict: "content_type,field_name,source_text,target_locale",
-        ignoreDuplicates: true,
-        count: "exact",
-      });
+      const { error, count } = await supabase
+        .from("translation_queue")
+        .upsert(queueItems, {
+          onConflict: "content_type,field_name,source_text,target_locale",
+          ignoreDuplicates: true,
+          count: "exact",
+        });
 
       if (error) {
         logger.error("Failed to queue translations", error);

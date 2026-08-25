@@ -60,23 +60,25 @@ async function getGoogleAccessToken(): Promise<string | null> {
       exp: now + 3600,
     };
 
-    const headerBase64 = btoa(JSON.stringify(header))
-      .replace(/\+/g, "-")
+    const headerBase64 = btoa(JSON.stringify(header)).replace(/\+/g, "-")
       .replace(/\//g, "_")
       .replace(/=/g, "");
-    const payloadBase64 = btoa(JSON.stringify(payload))
-      .replace(/\+/g, "-")
+    const payloadBase64 = btoa(JSON.stringify(payload)).replace(/\+/g, "-")
       .replace(/\//g, "_")
       .replace(/=/g, "");
 
     const signatureInput = `${headerBase64}.${payloadBase64}`;
 
     const privateKeyPem = credentials.private_key;
-    const pemContents = privateKeyPem
-      .replace("-----BEGIN PRIVATE KEY-----", "")
-      .replace("-----END PRIVATE KEY-----", "")
-      .replace(/\s/g, "");
-    const binaryKey = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
+    const pemContents = privateKeyPem.replace("-----BEGIN PRIVATE KEY-----", "")
+      .replace(
+        "-----END PRIVATE KEY-----",
+        "",
+      ).replace(/\s/g, "");
+    const binaryKey = Uint8Array.from(
+      atob(pemContents),
+      (c) => c.charCodeAt(0),
+    );
 
     const cryptoKey = await crypto.subtle.importKey(
       "pkcs8",
@@ -92,10 +94,10 @@ async function getGoogleAccessToken(): Promise<string | null> {
       new TextEncoder().encode(signatureInput),
     );
 
-    const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)))
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=/g, "");
+    const signatureBase64 = btoa(
+      String.fromCharCode(...new Uint8Array(signatureBuffer)),
+    )
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 
     const jwt = `${signatureInput}.${signatureBase64}`;
 
@@ -109,7 +111,10 @@ async function getGoogleAccessToken(): Promise<string | null> {
     });
 
     if (!tokenResponse.ok) {
-      logger.error("Google token exchange failed", new Error(await tokenResponse.text()));
+      logger.error(
+        "Google token exchange failed",
+        new Error(await tokenResponse.text()),
+      );
       return null;
     }
 
@@ -117,7 +122,7 @@ async function getGoogleAccessToken(): Promise<string | null> {
 
     cachedAccessToken = {
       token: tokenData.access_token,
-      expiresAt: Date.now() + tokenData.expires_in * 1000,
+      expiresAt: Date.now() + (tokenData.expires_in * 1000),
     };
 
     return cachedAccessToken.token;
@@ -136,7 +141,9 @@ async function getGoogleAccessToken(): Promise<string | null> {
 
 async function decodeIntegrityToken(
   integrityToken: string,
-): Promise<{ success: boolean; payload?: PlayIntegrityPayload; error?: string }> {
+): Promise<
+  { success: boolean; payload?: PlayIntegrityPayload; error?: string }
+> {
   const accessToken = await getGoogleAccessToken();
 
   if (!accessToken) {
@@ -145,14 +152,17 @@ async function decodeIntegrityToken(
 
   try {
     const projectId = getGoogleCloudProjectId();
-    const response = await fetch(`${PLAY_INTEGRITY_API_URL}/${projectId}:decodeIntegrityToken`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `${PLAY_INTEGRITY_API_URL}/${projectId}:decodeIntegrityToken`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ integrityToken }),
       },
-      body: JSON.stringify({ integrityToken }),
-    });
+    );
 
     if (!response.ok) {
       const error = await response.text();
@@ -287,11 +297,12 @@ export async function verifyPlayIntegrity(
     trustLevel = "suspicious";
   }
 
-  const verified = deviceVerdicts.length > 0 &&
-    (deviceVerdicts.includes("MEETS_BASIC_INTEGRITY") ||
-      deviceVerdicts.includes("MEETS_DEVICE_INTEGRITY") ||
-      deviceVerdicts.includes("MEETS_STRONG_INTEGRITY") ||
-      deviceVerdicts.includes("MEETS_VIRTUAL_INTEGRITY"));
+  const verified = deviceVerdicts.length > 0 && (
+    deviceVerdicts.includes("MEETS_BASIC_INTEGRITY") ||
+    deviceVerdicts.includes("MEETS_DEVICE_INTEGRITY") ||
+    deviceVerdicts.includes("MEETS_STRONG_INTEGRITY") ||
+    deviceVerdicts.includes("MEETS_VIRTUAL_INTEGRITY")
+  );
 
   logger.info("Play Integrity verified", {
     verified,
@@ -317,12 +328,16 @@ export async function verifyPlayIntegrity(
 // SafetyNet Verification (Deprecated)
 // =============================================================================
 
-export async function verifySafetyNet(attestation: string): Promise<{
-  verified: boolean;
-  trustLevel: TrustLevel;
-  riskScore: number;
-  message?: string;
-}> {
+export async function verifySafetyNet(
+  attestation: string,
+): Promise<
+  {
+    verified: boolean;
+    trustLevel: TrustLevel;
+    riskScore: number;
+    message?: string;
+  }
+> {
   if (!attestation || attestation.length < 100) {
     return {
       verified: false,

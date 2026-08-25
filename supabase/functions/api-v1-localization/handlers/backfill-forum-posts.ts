@@ -166,21 +166,26 @@ export default async function backfillForumPostsHandler(
 
     // Fetch forum posts based on mode
     let forumPosts:
-      | Array<{
-        id: number;
-        forum_post_name: string;
-        forum_post_description: string | null;
-      }>
+      | Array<
+        {
+          id: number;
+          forum_post_name: string;
+          forum_post_description: string | null;
+        }
+      >
       | null = null;
     let count: number | null = null;
     let error: Error | null = null;
 
     if (onlyUntranslated) {
       // Only untranslated mode: use RPC to find forum posts without translations
-      const { data, error: rpcError } = await supabase.rpc("get_untranslated_forum_posts", {
-        p_limit: limit,
-        p_offset: offset,
-      });
+      const { data, error: rpcError } = await supabase.rpc(
+        "get_untranslated_forum_posts",
+        {
+          p_limit: limit,
+          p_offset: offset,
+        },
+      );
 
       if (rpcError) {
         error = new Error(rpcError.message);
@@ -201,7 +206,8 @@ export default async function backfillForumPostsHandler(
 
       if (mode === "incremental") {
         // Incremental mode: fetch recent forum posts (created in last N hours)
-        const cutoffTime = new Date(Date.now() - hoursBack * 60 * 60 * 1000).toISOString();
+        const cutoffTime = new Date(Date.now() - hoursBack * 60 * 60 * 1000)
+          .toISOString();
         query = query
           .gte("forum_post_created_at", cutoffTime)
           .order("forum_post_created_at", { ascending: false })
@@ -258,8 +264,11 @@ export default async function backfillForumPostsHandler(
 
     // If dry run, just return counts
     if (dryRun) {
-      const totalTranslations = forumPosts.length * FIELDS_PER_FORUM_POST * TARGET_LOCALES_COUNT;
-      const estimatedTimeMinutes = Math.ceil((totalTranslations * SECONDS_PER_TRANSLATION) / 60);
+      const totalTranslations = forumPosts.length * FIELDS_PER_FORUM_POST *
+        TARGET_LOCALES_COUNT;
+      const estimatedTimeMinutes = Math.ceil(
+        (totalTranslations * SECONDS_PER_TRANSLATION) / 60,
+      );
 
       return new Response(
         JSON.stringify({
@@ -281,11 +290,16 @@ export default async function backfillForumPostsHandler(
     const translationPromises = forumPosts.map(async (forumPost) => {
       const fields = [];
 
-      if (forumPost.forum_post_name && forumPost.forum_post_name.trim().length > 0) {
+      if (
+        forumPost.forum_post_name && forumPost.forum_post_name.trim().length > 0
+      ) {
         fields.push({ name: "title", text: forumPost.forum_post_name });
       }
 
-      if (forumPost.forum_post_description && forumPost.forum_post_description.trim().length > 0) {
+      if (
+        forumPost.forum_post_description &&
+        forumPost.forum_post_description.trim().length > 0
+      ) {
         fields.push({
           name: "description",
           text: forumPost.forum_post_description,
@@ -297,13 +311,16 @@ export default async function backfillForumPostsHandler(
       }
 
       try {
-        const response = await supabase.functions.invoke("localization/translate-batch", {
-          body: {
-            content_type: "forum_post",
-            content_id: forumPost.id.toString(),
-            fields,
+        const response = await supabase.functions.invoke(
+          "localization/translate-batch",
+          {
+            body: {
+              content_type: "forum_post",
+              content_id: forumPost.id.toString(),
+              fields,
+            },
           },
-        });
+        );
 
         if (response.error) {
           logger.warn("Failed to trigger translation for forum post", {
@@ -330,8 +347,11 @@ export default async function backfillForumPostsHandler(
       });
     });
 
-    const totalTranslations = forumPosts.length * FIELDS_PER_FORUM_POST * TARGET_LOCALES_COUNT;
-    const estimatedTimeMinutes = Math.ceil((totalTranslations * SECONDS_PER_TRANSLATION) / 60);
+    const totalTranslations = forumPosts.length * FIELDS_PER_FORUM_POST *
+      TARGET_LOCALES_COUNT;
+    const estimatedTimeMinutes = Math.ceil(
+      (totalTranslations * SECONDS_PER_TRANSLATION) / 60,
+    );
 
     const response: BackfillResponse = {
       success: true,

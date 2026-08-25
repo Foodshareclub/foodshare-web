@@ -55,24 +55,32 @@ type HandlerFn = (
 // Lazy handler maps — each handler is loaded only when its route is first accessed
 const postHandlerLoaders: Record<string, () => Promise<HandlerFn>> = {
   "translate-content": lazyImport<HandlerFn>("./handlers/translate-content.ts"),
-  prewarm: lazyImport<HandlerFn>("./handlers/prewarm.ts"),
+  "prewarm": lazyImport<HandlerFn>("./handlers/prewarm.ts"),
   "translate-batch": lazyImport<HandlerFn>("./handlers/translate-batch.ts"),
-  "ui-batch-translate": lazyImport<HandlerFn>("./handlers/ui-batch-translate.ts"),
-  update: lazyImport<HandlerFn>("./handlers/update.ts"),
+  "ui-batch-translate": lazyImport<HandlerFn>(
+    "./handlers/ui-batch-translate.ts",
+  ),
+  "update": lazyImport<HandlerFn>("./handlers/update.ts"),
   "get-translations": lazyImport<HandlerFn>("./handlers/get-translations.ts"),
   "backfill-posts": lazyImport<HandlerFn>("./handlers/backfill-posts.ts"),
-  "backfill-challenges": lazyImport<HandlerFn>("./handlers/backfill-challenges.ts"),
-  "backfill-forum-posts": lazyImport<HandlerFn>("./handlers/backfill-forum-posts.ts"),
+  "backfill-challenges": lazyImport<HandlerFn>(
+    "./handlers/backfill-challenges.ts",
+  ),
+  "backfill-forum-posts": lazyImport<HandlerFn>(
+    "./handlers/backfill-forum-posts.ts",
+  ),
   "process-queue": lazyImport<HandlerFn>("./handlers/process-queue.ts"),
-  "generate-infoplist-strings": lazyImport<HandlerFn>("./handlers/generate-infoplist-strings.ts"),
+  "generate-infoplist-strings": lazyImport<HandlerFn>(
+    "./handlers/generate-infoplist-strings.ts",
+  ),
   "sync-to-redis": lazyImport<HandlerFn>("./handlers/sync-to-redis.ts"),
 };
 
 // Lazy handler maps for GET routes
 const getHandlerLoaders: Record<string, () => Promise<HandlerFn>> = {
-  translations: lazyImport<HandlerFn>("./handlers/translations.ts"),
-  audit: lazyImport<HandlerFn>("./handlers/audit.ts"),
-  health: lazyImport<HandlerFn>("./handlers/health.ts"),
+  "translations": lazyImport<HandlerFn>("./handlers/translations.ts"),
+  "audit": lazyImport<HandlerFn>("./handlers/audit.ts"),
+  "health": lazyImport<HandlerFn>("./handlers/health.ts"),
 };
 
 // Cache resolved handlers to avoid re-importing on subsequent requests
@@ -249,20 +257,18 @@ async function routeRequest(ctx: HandlerContext): Promise<Response> {
 // API Handler
 // =============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: SERVICE,
-    version: "3",
-    requireAuth: false,
-    csrf: false,
-    rateLimit: {
-      limit: 100,
-      windowMs: 60_000,
-      keyBy: "ip",
-    },
-    routes: {
-      GET: { handler: routeRequest },
-      POST: { handler: routeRequest },
-    },
-  }),
-);
+Deno.serve(createAPIHandler({
+  service: SERVICE,
+  version: "3",
+  requireAuth: false,
+  csrf: false,
+  rateLimit: {
+    limit: 100,
+    windowMs: 60_000,
+    keyBy: "ip",
+  },
+  routes: {
+    GET: { handler: routeRequest },
+    POST: { handler: routeRequest },
+  },
+}));

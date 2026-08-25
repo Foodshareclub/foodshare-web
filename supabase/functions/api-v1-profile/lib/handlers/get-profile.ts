@@ -10,7 +10,9 @@ import type { QueryParams } from "../schemas.ts";
 const VERSION = "1.0.0";
 const healthCheck = createHealthHandler("api-v1-profile", VERSION);
 
-export async function getProfile(ctx: HandlerContext<unknown, QueryParams>): Promise<Response> {
+export async function getProfile(
+  ctx: HandlerContext<unknown, QueryParams>,
+): Promise<Response> {
   const { supabase, userId } = ctx;
 
   if (!userId) {
@@ -25,8 +27,7 @@ export async function getProfile(ctx: HandlerContext<unknown, QueryParams>): Pro
 
   const { data, error } = await supabase
     .from("profiles")
-    .select(
-      `
+    .select(`
       id,
       first_name,
       second_name,
@@ -41,8 +42,7 @@ export async function getProfile(ctx: HandlerContext<unknown, QueryParams>): Pro
       created_at,
       updated_at,
       profile_visibility
-    `,
-    )
+    `)
     .eq("id", userId)
     .single();
 
@@ -54,7 +54,9 @@ export async function getProfile(ctx: HandlerContext<unknown, QueryParams>): Pro
   return ok(transformProfile(data), ctx);
 }
 
-export async function getAddress(ctx: HandlerContext<unknown, QueryParams>): Promise<Response> {
+export async function getAddress(
+  ctx: HandlerContext<unknown, QueryParams>,
+): Promise<Response> {
   const { supabase, userId } = ctx;
 
   if (!userId) {
@@ -63,8 +65,7 @@ export async function getAddress(ctx: HandlerContext<unknown, QueryParams>): Pro
 
   const { data, error } = await supabase
     .from("address")
-    .select(
-      `
+    .select(`
       profile_id,
       address_line_1,
       address_line_2,
@@ -77,8 +78,7 @@ export async function getAddress(ctx: HandlerContext<unknown, QueryParams>): Pro
       long,
       generated_full_address,
       radius_meters
-    `,
-    )
+    `)
     .eq("profile_id", userId)
     .single();
 
@@ -92,7 +92,9 @@ export async function getAddress(ctx: HandlerContext<unknown, QueryParams>): Pro
   return ok(transformAddress(data), ctx);
 }
 
-export async function getSession(ctx: HandlerContext<unknown, QueryParams>): Promise<Response> {
+export async function getSession(
+  ctx: HandlerContext<unknown, QueryParams>,
+): Promise<Response> {
   const { supabase, userId } = ctx;
 
   if (!userId) {
@@ -109,19 +111,18 @@ export async function getSession(ctx: HandlerContext<unknown, QueryParams>): Pro
     return ok({ userId, locale: "en", localeSource: "default" }, ctx);
   }
 
-  return ok(
-    {
-      userId: data.id,
-      displayName: data.display_name,
-      avatarUrl: data.avatar_url,
-      locale: data.preferred_locale || "en",
-      localeSource: data.preferred_locale ? "database" : "default",
-    },
-    ctx,
-  );
+  return ok({
+    userId: data.id,
+    displayName: data.display_name,
+    avatarUrl: data.avatar_url,
+    locale: data.preferred_locale || "en",
+    localeSource: data.preferred_locale ? "database" : "default",
+  }, ctx);
 }
 
-export async function getDashboard(ctx: HandlerContext<unknown, QueryParams>): Promise<Response> {
+export async function getDashboard(
+  ctx: HandlerContext<unknown, QueryParams>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
 
   if (!userId) {
@@ -146,19 +147,18 @@ export async function getDashboard(ctx: HandlerContext<unknown, QueryParams>): P
     recentListings = data || [];
   }
 
-  return ok(
-    {
-      user: profile.data,
-      stats,
-      impact,
-      counts,
-      recentListings,
-    },
-    ctx,
-  );
+  return ok({
+    user: profile.data,
+    stats,
+    impact,
+    counts,
+    recentListings,
+  }, ctx);
 }
 
-export function handleGet(ctx: HandlerContext<unknown, QueryParams>): Promise<Response> {
+export function handleGet(
+  ctx: HandlerContext<unknown, QueryParams>,
+): Promise<Response> {
   const url = new URL(ctx.request.url);
   if (url.pathname.endsWith("/health")) {
     return healthCheck(ctx);

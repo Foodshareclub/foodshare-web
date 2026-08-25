@@ -60,7 +60,10 @@ async function getMotherDuckToken(): Promise<string> {
   return data;
 }
 
-async function executeMotherDuckQuery(token: string, sql: string): Promise<unknown> {
+async function executeMotherDuckQuery(
+  token: string,
+  sql: string,
+): Promise<unknown> {
   const response = await fetch("https://api.motherduck.com/v1/sql", {
     method: "POST",
     headers: {
@@ -72,7 +75,9 @@ async function executeMotherDuckQuery(token: string, sql: string): Promise<unkno
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new ServerError(`MotherDuck API error: ${response.status} - ${errorText}`);
+    throw new ServerError(
+      `MotherDuck API error: ${response.status} - ${errorText}`,
+    );
   }
 
   return response.json();
@@ -162,7 +167,10 @@ async function ensureSchema(mdToken: string): Promise<void> {
 // Sync Metadata
 // =============================================================================
 
-async function getLastSyncTime(mdToken: string, tableName: string): Promise<Date | null> {
+async function getLastSyncTime(
+  mdToken: string,
+  tableName: string,
+): Promise<Date | null> {
   try {
     const result = (await executeMotherDuckQuery(
       mdToken,
@@ -191,7 +199,9 @@ async function updateSyncMetadata(
   );
 }
 
-async function getSyncStatus(mdToken: string): Promise<Array<Record<string, unknown>>> {
+async function getSyncStatus(
+  mdToken: string,
+): Promise<Array<Record<string, unknown>>> {
   try {
     const result = (await executeMotherDuckQuery(
       mdToken,
@@ -207,7 +217,10 @@ async function getSyncStatus(mdToken: string): Promise<Array<Record<string, unkn
 // Batch Sync Logic
 // =============================================================================
 
-async function syncUsers(mdToken: string, mode: "full" | "incremental"): Promise<number> {
+async function syncUsers(
+  mdToken: string,
+  mode: "full" | "incremental",
+): Promise<number> {
   const supabase = getServiceRoleClient();
 
   if (mode === "full") {
@@ -236,7 +249,10 @@ async function syncUsers(mdToken: string, mode: "full" | "incremental"): Promise
   // Incremental: delete existing records before re-inserting
   if (mode === "incremental") {
     const ids = profiles.map((p) => escapeValue(p.id)).join(",");
-    await executeMotherDuckQuery(mdToken, `DELETE FROM full_users WHERE id IN (${ids})`);
+    await executeMotherDuckQuery(
+      mdToken,
+      `DELETE FROM full_users WHERE id IN (${ids})`,
+    );
   }
 
   for (let i = 0; i < profiles.length; i += CONFIG.batchSize) {
@@ -245,17 +261,11 @@ async function syncUsers(mdToken: string, mode: "full" | "incremental"): Promise
       .map(
         (p) =>
           `(${escapeValue(p.id)}, ${escapeValue(p.created_time)}, ${escapeValue(p.updated_at)}, ${
-            escapeValue(
-              p.email,
-            )
+            escapeValue(p.email)
           }, ${escapeValue(p.nickname)}, ${escapeValue(p.first_name)}, ${
-            escapeValue(
-              p.second_name,
-            )
+            escapeValue(p.second_name)
           }, ${escapeValue(p.is_active)}, ${escapeValue(p.is_verified)}, ${
-            escapeValue(
-              p.last_seen_at,
-            )
+            escapeValue(p.last_seen_at)
           }, CURRENT_TIMESTAMP)`,
       )
       .join(",");
@@ -269,7 +279,10 @@ async function syncUsers(mdToken: string, mode: "full" | "incremental"): Promise
   return profiles.length;
 }
 
-async function syncListings(mdToken: string, mode: "full" | "incremental"): Promise<number> {
+async function syncListings(
+  mdToken: string,
+  mode: "full" | "incremental",
+): Promise<number> {
   const supabase = getServiceRoleClient();
 
   if (mode === "full") {
@@ -298,7 +311,10 @@ async function syncListings(mdToken: string, mode: "full" | "incremental"): Prom
   // Incremental: delete existing records before re-inserting
   if (mode === "incremental") {
     const ids = posts.map((p) => p.id).join(",");
-    await executeMotherDuckQuery(mdToken, `DELETE FROM full_listings WHERE id IN (${ids})`);
+    await executeMotherDuckQuery(
+      mdToken,
+      `DELETE FROM full_listings WHERE id IN (${ids})`,
+    );
   }
 
   for (let i = 0; i < posts.length; i += CONFIG.batchSize) {
@@ -307,19 +323,13 @@ async function syncListings(mdToken: string, mode: "full" | "incremental"): Prom
       .map(
         (p) =>
           `(${p.id}, ${escapeValue(p.created_at)}, ${escapeValue(p.updated_at)}, ${
-            escapeValue(
-              p.post_name,
-            )
+            escapeValue(p.post_name)
           }, ${escapeValue(p.post_type)}, ${escapeValue(p.is_active)}, ${
-            escapeValue(
-              p.is_arranged,
-            )
+            escapeValue(p.is_arranged)
           }, ${escapeValue(p.post_arranged_at)}, ${escapeValue(p.profile_id)}, ${
             p.post_views || 0
           }, ${p.post_like_counter || 0}, ${escapeValue(p.latitude)}, ${
-            escapeValue(
-              p.longitude,
-            )
+            escapeValue(p.longitude)
           }, CURRENT_TIMESTAMP)`,
       )
       .join(",");
@@ -361,13 +371,10 @@ async function handleGetStatus(ctx: HandlerContext): Promise<Response> {
   const mdToken = await getMotherDuckToken();
   const syncStatus = await getSyncStatus(mdToken);
 
-  return ok(
-    {
-      version: CONFIG.version,
-      tables: syncStatus,
-    },
-    ctx,
-  );
+  return ok({
+    version: CONFIG.version,
+    tables: syncStatus,
+  }, ctx);
 }
 
 async function handleSync(ctx: HandlerContext<SyncRequest>): Promise<Response> {
@@ -409,25 +416,23 @@ async function handleSync(ctx: HandlerContext<SyncRequest>): Promise<Response> {
 // Export Handler
 // =============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: "api-v1-analytics",
-    version: CONFIG.version,
-    requireAuth: false, // Cron + internal; auth handled at config.toml level
-    csrf: false, // Service-to-service / cron function
-    rateLimit: {
-      limit: 10,
-      windowMs: 60000,
-      keyBy: "ip",
+Deno.serve(createAPIHandler({
+  service: "api-v1-analytics",
+  version: CONFIG.version,
+  requireAuth: false, // Cron + internal; auth handled at config.toml level
+  csrf: false, // Service-to-service / cron function
+  rateLimit: {
+    limit: 10,
+    windowMs: 60000,
+    keyBy: "ip",
+  },
+  routes: {
+    GET: {
+      handler: handleGetStatus,
     },
-    routes: {
-      GET: {
-        handler: handleGetStatus,
-      },
-      POST: {
-        schema: syncSchema,
-        handler: handleSync,
-      },
+    POST: {
+      schema: syncSchema,
+      handler: handleSync,
     },
-  }),
-);
+  },
+}));

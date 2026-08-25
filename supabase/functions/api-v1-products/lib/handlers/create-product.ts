@@ -11,7 +11,9 @@ import { validateProductImageUrls } from "../../../_shared/storage-urls.ts";
 import type { CreateProductBody } from "../schemas.ts";
 import { transformProduct } from "../transformers.ts";
 
-export async function createProduct(ctx: HandlerContext<CreateProductBody>): Promise<Response> {
+export async function createProduct(
+  ctx: HandlerContext<CreateProductBody>,
+): Promise<Response> {
   const { supabase, userId, body } = ctx;
 
   if (!userId) {
@@ -20,9 +22,10 @@ export async function createProduct(ctx: HandlerContext<CreateProductBody>): Pro
 
   const imageCheck = await validateProductImageUrls(body.images);
   if (!imageCheck.valid) {
-    throw new ValidationError("All image URLs must be uploaded through our image API", {
-      invalidUrls: imageCheck.invalidUrls,
-    });
+    throw new ValidationError(
+      "All image URLs must be uploaded through our image API",
+      { invalidUrls: imageCheck.invalidUrls },
+    );
   }
 
   const sanitizedTitle = sanitizeHtml(body.title);
@@ -77,23 +80,21 @@ export async function createProduct(ctx: HandlerContext<CreateProductBody>): Pro
 
   try {
     (globalThis as any).EdgeRuntime.waitUntil(
-      supabase.functions
-        .invoke("api-v1-notifications", {
-          body: {
-            route: "trigger/new-listing",
-            food_item_id: data.id,
-            user_id: userId,
-            latitude: data.latitude,
-            longitude: data.longitude,
-            post_name: data.post_name,
-            post_type: data.post_type,
-          },
-        })
-        .catch((err: unknown) => {
-          logger.warn("Failed to trigger new-listing notification", {
-            error: err instanceof Error ? err.message : String(err),
-          });
-        }),
+      supabase.functions.invoke("api-v1-notifications", {
+        body: {
+          route: "trigger/new-listing",
+          food_item_id: data.id,
+          user_id: userId,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          post_name: data.post_name,
+          post_type: data.post_type,
+        },
+      }).catch((err: unknown) => {
+        logger.warn("Failed to trigger new-listing notification", {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }),
     );
   } catch {
     // (globalThis as any).EdgeRuntime.waitUntil may not be available in all environments

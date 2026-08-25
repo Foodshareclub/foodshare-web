@@ -20,12 +20,19 @@ function initWebPush(): boolean {
   const env = getEnv();
   if (!env.vapidPublicKey || !env.vapidPrivateKey) return false;
 
-  webpush.setVapidDetails(env.vapidSubject, env.vapidPublicKey, env.vapidPrivateKey);
+  webpush.setVapidDetails(
+    env.vapidSubject,
+    env.vapidPublicKey,
+    env.vapidPrivateKey,
+  );
   webPushInitialized = true;
   return true;
 }
 
-export async function sendWebPush(device: DeviceToken, payload: PushPayload): Promise<SendResult> {
+export async function sendWebPush(
+  device: DeviceToken,
+  payload: PushPayload,
+): Promise<SendResult> {
   if (!initWebPush()) {
     return { success: false, platform: "web", error: "VAPID not configured" };
   }
@@ -69,10 +76,14 @@ export async function sendWebPush(device: DeviceToken, payload: PushPayload): Pr
     return await withCircuitBreaker(
       "push-web",
       async () => {
-        const result = await webpush.sendNotification(subscription, webPayload, {
-          TTL: payload.ttl || 86400,
-          urgency: payload.priority === "normal" ? "normal" : "high",
-        });
+        const result = await webpush.sendNotification(
+          subscription,
+          webPayload,
+          {
+            TTL: payload.ttl || 86400,
+            urgency: payload.priority === "normal" ? "normal" : "high",
+          },
+        );
 
         return {
           success: true,
@@ -93,7 +104,8 @@ export async function sendWebPush(device: DeviceToken, payload: PushPayload): Pr
     }
 
     const err = e as { statusCode?: number; body?: string };
-    const isInvalidSubscription = err.statusCode === 404 || err.statusCode === 410;
+    const isInvalidSubscription = err.statusCode === 404 ||
+      err.statusCode === 410;
 
     return {
       success: false,

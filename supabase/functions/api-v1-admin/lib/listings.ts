@@ -40,7 +40,11 @@ const updateNotesSchema = z.object({
 // Response Helper
 // =============================================================================
 
-function jsonResponse(data: unknown, corsHeaders: Record<string, string>, status = 200): Response {
+function jsonResponse(
+  data: unknown,
+  corsHeaders: Record<string, string>,
+  status = 200,
+): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -85,7 +89,11 @@ export async function handleListingsRoute(
     const operation = segments[1];
 
     if (method !== "POST") {
-      return jsonResponse({ error: "Method not allowed" }, ctx.corsHeaders, 405);
+      return jsonResponse(
+        { error: "Method not allowed" },
+        ctx.corsHeaders,
+        405,
+      );
     }
 
     switch (operation) {
@@ -96,7 +104,11 @@ export async function handleListingsRoute(
       case "delete":
         return handleBulkDelete(body, ctx);
       default:
-        return jsonResponse({ error: "Unknown bulk operation" }, ctx.corsHeaders, 404);
+        return jsonResponse(
+          { error: "Unknown bulk operation" },
+          ctx.corsHeaders,
+          404,
+        );
     }
   }
 
@@ -155,7 +167,10 @@ async function handleUpdate(
   if (input.isActive !== undefined) updateData.is_active = input.isActive;
   if (input.adminNotes !== undefined) updateData.admin_notes = input.adminNotes;
 
-  const { error } = await ctx.supabase.from("posts").update(updateData).eq("id", listingId);
+  const { error } = await ctx.supabase
+    .from("posts")
+    .update(updateData)
+    .eq("id", listingId);
 
   if (error) throw new Error(error.message);
 
@@ -163,10 +178,16 @@ async function handleUpdate(
     updatedFields: Object.keys(input),
   });
 
-  return jsonResponse({ success: true, listingId, updated: true }, ctx.corsHeaders);
+  return jsonResponse(
+    { success: true, listingId, updated: true },
+    ctx.corsHeaders,
+  );
 }
 
-async function handleActivate(listingId: number, ctx: AdminContext): Promise<Response> {
+async function handleActivate(
+  listingId: number,
+  ctx: AdminContext,
+): Promise<Response> {
   const { error } = await ctx.supabase
     .from("posts")
     .update({ is_active: true, updated_at: new Date().toISOString() })
@@ -176,7 +197,10 @@ async function handleActivate(listingId: number, ctx: AdminContext): Promise<Res
 
   await logAdminAction(ctx, "activate_listing", String(listingId));
 
-  return jsonResponse({ success: true, listingId, isActive: true }, ctx.corsHeaders);
+  return jsonResponse(
+    { success: true, listingId, isActive: true },
+    ctx.corsHeaders,
+  );
 }
 
 async function handleDeactivate(
@@ -184,7 +208,9 @@ async function handleDeactivate(
   body: unknown,
   ctx: AdminContext,
 ): Promise<Response> {
-  const input = z.object({ reason: z.string().max(500).optional() }).parse(body || {});
+  const input = z.object({ reason: z.string().max(500).optional() }).parse(
+    body || {},
+  );
 
   const { error } = await ctx.supabase
     .from("posts")
@@ -201,11 +227,20 @@ async function handleDeactivate(
     reason: input.reason,
   });
 
-  return jsonResponse({ success: true, listingId, isActive: false }, ctx.corsHeaders);
+  return jsonResponse(
+    { success: true, listingId, isActive: false },
+    ctx.corsHeaders,
+  );
 }
 
-async function handleDelete(listingId: number, ctx: AdminContext): Promise<Response> {
-  const { error } = await ctx.supabase.from("posts").delete().eq("id", listingId);
+async function handleDelete(
+  listingId: number,
+  ctx: AdminContext,
+): Promise<Response> {
+  const { error } = await ctx.supabase.from("posts").delete().eq(
+    "id",
+    listingId,
+  );
 
   if (error) throw new Error(error.message);
 
@@ -233,10 +268,16 @@ async function handleUpdateNotes(
 
   await logAdminAction(ctx, "update_admin_notes", String(listingId));
 
-  return jsonResponse({ success: true, listingId, notesUpdated: true }, ctx.corsHeaders);
+  return jsonResponse(
+    { success: true, listingId, notesUpdated: true },
+    ctx.corsHeaders,
+  );
 }
 
-async function handleBulkActivate(body: unknown, ctx: AdminContext): Promise<Response> {
+async function handleBulkActivate(
+  body: unknown,
+  ctx: AdminContext,
+): Promise<Response> {
   const input = bulkIdsSchema.parse(body);
 
   const { error } = await ctx.supabase
@@ -256,7 +297,10 @@ async function handleBulkActivate(body: unknown, ctx: AdminContext): Promise<Res
   );
 }
 
-async function handleBulkDeactivate(body: unknown, ctx: AdminContext): Promise<Response> {
+async function handleBulkDeactivate(
+  body: unknown,
+  ctx: AdminContext,
+): Promise<Response> {
   const input = bulkDeactivateSchema.parse(body);
 
   const { error } = await ctx.supabase
@@ -281,10 +325,16 @@ async function handleBulkDeactivate(body: unknown, ctx: AdminContext): Promise<R
   );
 }
 
-async function handleBulkDelete(body: unknown, ctx: AdminContext): Promise<Response> {
+async function handleBulkDelete(
+  body: unknown,
+  ctx: AdminContext,
+): Promise<Response> {
   const input = bulkIdsSchema.parse(body);
 
-  const { error } = await ctx.supabase.from("posts").delete().in("id", input.ids);
+  const { error } = await ctx.supabase.from("posts").delete().in(
+    "id",
+    input.ids,
+  );
 
   if (error) throw new Error(error.message);
 

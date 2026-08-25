@@ -114,8 +114,7 @@ async function authenticateJWT(req: Request): Promise<AuthResult> {
  */
 function authenticateService(req: Request): AuthResult {
   const authHeader = req.headers.get("Authorization");
-  const apiKey = req.headers.get("apikey") ||
-    req.headers.get("x-api-key") ||
+  const apiKey = req.headers.get("apikey") || req.headers.get("x-api-key") ||
     req.headers.get("x-webhook-secret");
   const serviceKey = getSupabaseServiceRoleKey();
   const anonKey = getSupabaseAnonKey();
@@ -325,7 +324,11 @@ function verifyBrevoSignature(req: Request, secret: string): AuthResult {
   return { authenticated: false, error: "Invalid signature" };
 }
 
-function verifySESSignature(req: Request, secret: string, _rawBody?: string): AuthResult {
+function verifySESSignature(
+  req: Request,
+  secret: string,
+  _rawBody?: string,
+): AuthResult {
   // AWS SES uses SNS, which has its own signature verification
   // For now, use secret header comparison
   return verifySecretHeader(req, secret);
@@ -352,7 +355,8 @@ async function verifyMailerSendSignature(
 }
 
 function verifySecretHeader(req: Request, secret: string): AuthResult {
-  const providedSecret = req.headers.get("x-webhook-secret") || req.headers.get("x-secret");
+  const providedSecret = req.headers.get("x-webhook-secret") ||
+    req.headers.get("x-secret");
 
   if (!providedSecret) {
     return { authenticated: false, error: "Missing secret header" };

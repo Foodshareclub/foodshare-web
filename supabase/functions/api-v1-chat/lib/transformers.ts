@@ -34,7 +34,9 @@ export function transformRoom(data: Record<string, unknown>) {
 }
 
 export function transformRoomDetail(data: Record<string, unknown>) {
-  const members = data.members as Array<{ profile: Record<string, unknown> }> | null;
+  const members = data.members as
+    | Array<{ profile: Record<string, unknown> }>
+    | null;
 
   return {
     id: data.id,
@@ -42,7 +44,8 @@ export function transformRoomDetail(data: Record<string, unknown>) {
     roomType: data.room_type,
     createdBy: data.created_by,
     createdAt: data.created_at,
-    members: members?.map((m) => transformProfileSummary(m.profile)).filter(Boolean) || [],
+    members: members?.map((m) => transformProfileSummary(m.profile)).filter(Boolean) ||
+      [],
   };
 }
 
@@ -72,10 +75,15 @@ export function transformMessage(data: Record<string, unknown>) {
 // Food Chat Transformers
 // =============================================================================
 
-export function transformFoodRoom(data: Record<string, unknown>, currentUserId: string) {
+export function transformFoodRoom(
+  data: Record<string, unknown>,
+  currentUserId: string,
+) {
   const post = data.posts as Record<string, unknown> | null;
   const sharerProfile = data.sharer_profile as Record<string, unknown> | null;
-  const requesterProfile = data.requester_profile as Record<string, unknown> | null;
+  const requesterProfile = data.requester_profile as
+    | Record<string, unknown>
+    | null;
   const isSharer = data.sharer === currentUserId;
   const otherProfile = isSharer ? requesterProfile : sharerProfile;
 
@@ -102,7 +110,10 @@ export function transformFoodRoom(data: Record<string, unknown>, currentUserId: 
   };
 }
 
-export function transformFoodRoomDetail(data: Record<string, unknown>, currentUserId: string) {
+export function transformFoodRoomDetail(
+  data: Record<string, unknown>,
+  currentUserId: string,
+) {
   const base = transformFoodRoom(data, currentUserId);
   const post = data.posts as Record<string, unknown> | null;
 

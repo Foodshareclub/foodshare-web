@@ -65,7 +65,11 @@ export function divider(char: string = "─", length: number = 20): string {
 /**
  * Create a progress bar
  */
-export function progressBar(current: number, total: number, width: number = 10): string {
+export function progressBar(
+  current: number,
+  total: number,
+  width: number = 10,
+): string {
   const filled = Math.floor((current / total) * width);
   const empty = width - filled;
   return "🔵".repeat(filled) + "🔘".repeat(empty);
@@ -83,7 +87,11 @@ export function stepIndicator(current: number, total: number): string {
 /**
  * Format a success message
  */
-export function successMessage(title: string, message: string, details?: string[]): string {
+export function successMessage(
+  title: string,
+  message: string,
+  details?: string[],
+): string {
   let msg = `${emoji.SUCCESS} <b>${title}</b>\n\n${message}`;
 
   if (details && details.length > 0) {
@@ -97,7 +105,11 @@ export function successMessage(title: string, message: string, details?: string[
 /**
  * Format an error message
  */
-export function errorMessage(title: string, message: string, suggestion?: string): string {
+export function errorMessage(
+  title: string,
+  message: string,
+  suggestion?: string,
+): string {
   let msg = `${emoji.ERROR} <b>${title}</b>\n\n${message}`;
 
   if (suggestion) {
@@ -140,7 +152,11 @@ function padEndDisplay(str: string, targetWidth: number): string {
 /**
  * Create a card layout with proper width calculation
  */
-export function card(header: string, content: string[], footer?: string): string {
+export function card(
+  header: string,
+  content: string[],
+  footer?: string,
+): string {
   const width = 24;
   const topLine = "┏" + "━".repeat(width) + "┓";
   const midLine = "┣" + "━".repeat(width) + "┫";
@@ -175,7 +191,9 @@ export function card(header: string, content: string[], footer?: string): string
 /**
  * Format a list with emojis
  */
-export function bulletList(items: Array<{ emoji: string; text: string }>): string {
+export function bulletList(
+  items: Array<{ emoji: string; text: string }>,
+): string {
   return items.map((item) => `${item.emoji} ${item.text}`).join("\n");
 }
 
@@ -239,7 +257,9 @@ export function welcomeBanner(name?: string): string {
   return (
     `${emoji.WAVE} <b>${greeting}</b>\n\n` +
     `${emoji.SPARKLES} Your journey to reduce food waste starts here!\n\n` +
-    boxedHeader(`${emoji.FOOD} Share ${emoji.SEARCH} Find ${emoji.EARTH} Save`) +
+    boxedHeader(
+      `${emoji.FOOD} Share ${emoji.SEARCH} Find ${emoji.EARTH} Save`,
+    ) +
     "\n"
   );
 }

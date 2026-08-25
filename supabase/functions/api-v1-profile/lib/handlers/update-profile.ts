@@ -7,7 +7,9 @@ import { transformAddress } from "../../../_shared/transformers.ts";
 import { transformProfile } from "../transformers.ts";
 import type { QueryParams, UpdateAddressBody, UpdateProfileBody } from "../schemas.ts";
 
-export async function updateProfile(ctx: HandlerContext<UpdateProfileBody>): Promise<Response> {
+export async function updateProfile(
+  ctx: HandlerContext<UpdateProfileBody>,
+): Promise<Response> {
   const { supabase, userId, body } = ctx;
 
   if (!userId) {
@@ -53,7 +55,9 @@ export async function updateProfile(ctx: HandlerContext<UpdateProfileBody>): Pro
   return ok(transformProfile(data), ctx);
 }
 
-export async function updateAddress(ctx: HandlerContext<UpdateAddressBody>): Promise<Response> {
+export async function updateAddress(
+  ctx: HandlerContext<UpdateAddressBody>,
+): Promise<Response> {
   const { supabase, userId, body } = ctx;
 
   if (!userId) {
@@ -108,7 +112,11 @@ export async function updateAddress(ctx: HandlerContext<UpdateAddressBody>): Pro
     }
     result = data;
   } else {
-    const { data, error } = await supabase.from("address").insert(addressData).select().single();
+    const { data, error } = await supabase
+      .from("address")
+      .insert(addressData)
+      .select()
+      .single();
 
     if (error) {
       logger.error("Failed to create address", new Error(error.message));

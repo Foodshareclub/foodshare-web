@@ -197,7 +197,8 @@ export const cacheOperationSchema = z.object({
   ttl: z.number().optional(),
   score: z.number().optional(),
   member: z.string().optional(),
-  members: z.array(z.object({ score: z.number(), member: z.string() })).optional(),
+  members: z.array(z.object({ score: z.number(), member: z.string() }))
+    .optional(),
   min: z.union([z.number(), z.string()]).optional(),
   max: z.union([z.number(), z.string()]).optional(),
   start: z.number().optional().default(0),
@@ -205,18 +206,18 @@ export const cacheOperationSchema = z.object({
   cursor: z.string().optional().default("0"),
   count: z.number().optional().default(100),
   pattern: z.string().optional(),
-  options: z
-    .object({
-      compress: z.boolean().optional().default(true),
-      encrypt: z.boolean().optional().default(false),
-      nx: z.boolean().optional(),
-      xx: z.boolean().optional(),
-      withScores: z.boolean().optional().default(false),
-      reverse: z.boolean().optional().default(false),
-      coalesce: z.boolean().optional().default(true),
-      priority: z.enum(["low", "normal", "high", "critical"]).optional().default("normal"),
-    })
-    .optional(),
+  options: z.object({
+    compress: z.boolean().optional().default(true),
+    encrypt: z.boolean().optional().default(false),
+    nx: z.boolean().optional(),
+    xx: z.boolean().optional(),
+    withScores: z.boolean().optional().default(false),
+    reverse: z.boolean().optional().default(false),
+    coalesce: z.boolean().optional().default(true),
+    priority: z.enum(["low", "normal", "high", "critical"]).optional().default(
+      "normal",
+    ),
+  }).optional(),
 });
 
 export type CacheOperationRequest = z.infer<typeof cacheOperationSchema>;

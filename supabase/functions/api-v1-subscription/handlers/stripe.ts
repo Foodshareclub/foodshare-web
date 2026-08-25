@@ -161,14 +161,14 @@ function mapStripeEventType(type: string): SubscriptionEventType {
 }
 
 const STATUS_MAP: Record<StripeSubscriptionStatus, SubscriptionStatus> = {
-  active: "active",
-  trialing: "active",
-  past_due: "in_billing_retry",
-  paused: "paused",
-  canceled: "expired",
-  incomplete_expired: "expired",
-  unpaid: "in_billing_retry",
-  incomplete: "pending",
+  "active": "active",
+  "trialing": "active",
+  "past_due": "in_billing_retry",
+  "paused": "paused",
+  "canceled": "expired",
+  "incomplete_expired": "expired",
+  "unpaid": "in_billing_retry",
+  "incomplete": "pending",
 };
 
 function mapStripeStatus(status: StripeSubscriptionStatus): SubscriptionStatus {
@@ -195,7 +195,11 @@ async function computeHmacSignature(
     ["sign"],
   );
 
-  const signatureBytes = await crypto.subtle.sign("HMAC", key, encoder.encode(signedPayload));
+  const signatureBytes = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(signedPayload),
+  );
 
   return Array.from(new Uint8Array(signatureBytes))
     .map((b) => b.toString(16).padStart(2, "0"))
@@ -245,7 +249,11 @@ async function verifyStripeSignature(
   }
 
   // Compute expected signature
-  const expectedSignature = await computeHmacSignature(payload, timestamp, secret);
+  const expectedSignature = await computeHmacSignature(
+    payload,
+    timestamp,
+    secret,
+  );
 
   // Constant-time comparison
   if (!timingSafeEqual(expectedSignature, v1Signature)) {
@@ -285,7 +293,9 @@ function parseSubscriptionEvent(
   // Detect specific status changes
   let eventType = mapStripeEventType(stripeEvent.type);
   if (stripeEvent.type === "customer.subscription.updated") {
-    const prevAttrs = stripeEvent.data.previous_attributes as Record<string, unknown> | undefined;
+    const prevAttrs = stripeEvent.data.previous_attributes as
+      | Record<string, unknown>
+      | undefined;
 
     // Check for specific changes
     if (prevAttrs?.cancel_at_period_end !== undefined) {
@@ -421,7 +431,10 @@ export const stripeHandler: PlatformHandler = {
     return true;
   },
 
-  async parseEvent(_request: Request, body: string): Promise<SubscriptionEvent> {
+  async parseEvent(
+    _request: Request,
+    body: string,
+  ): Promise<SubscriptionEvent> {
     const timer = new PerformanceTimer("stripe.parse_event");
 
     const stripeEvent: StripeWebhookEvent = JSON.parse(body);
@@ -437,7 +450,11 @@ export const stripeHandler: PlatformHandler = {
     const dataObject = stripeEvent.data.object;
 
     if (dataObject.object === "subscription") {
-      event = parseSubscriptionEvent(stripeEvent, dataObject as StripeSubscription, body);
+      event = parseSubscriptionEvent(
+        stripeEvent,
+        dataObject as StripeSubscription,
+        body,
+      );
     } else if (dataObject.object === "invoice") {
       event = parseInvoiceEvent(stripeEvent, dataObject as StripeInvoice, body);
     } else if (dataObject.object === "charge") {

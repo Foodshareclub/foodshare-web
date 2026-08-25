@@ -17,11 +17,12 @@ export async function deleteAccount(ctx: HandlerContext): Promise<Response> {
   const supabaseAdmin = getAdminClient();
 
   try {
-    const { data: avatarFiles } = await supabaseAdmin.storage.from("avatars").list(userId);
+    const { data: avatarFiles } = await supabaseAdmin.storage.from("avatars")
+      .list(userId);
     if (avatarFiles?.length) {
-      await supabaseAdmin.storage
-        .from("avatars")
-        .remove(avatarFiles.map((f) => `${userId}/${f.name}`));
+      await supabaseAdmin.storage.from("avatars").remove(
+        avatarFiles.map((f) => `${userId}/${f.name}`),
+      );
       logger.info("Deleted avatar files", { count: avatarFiles.length });
     }
   } catch (error) {
@@ -31,11 +32,12 @@ export async function deleteAccount(ctx: HandlerContext): Promise<Response> {
   }
 
   try {
-    const { data: postImages } = await supabaseAdmin.storage.from("post-images").list(userId);
+    const { data: postImages } = await supabaseAdmin.storage.from("post-images")
+      .list(userId);
     if (postImages?.length) {
-      await supabaseAdmin.storage
-        .from("post-images")
-        .remove(postImages.map((f) => `${userId}/${f.name}`));
+      await supabaseAdmin.storage.from("post-images").remove(
+        postImages.map((f) => `${userId}/${f.name}`),
+      );
       logger.info("Deleted post images", { count: postImages.length });
     }
   } catch (error) {
@@ -44,7 +46,9 @@ export async function deleteAccount(ctx: HandlerContext): Promise<Response> {
     });
   }
 
-  const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+  const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
+    userId,
+  );
 
   if (deleteError) {
     logger.error("Failed to delete user", new Error(deleteError.message));
@@ -63,12 +67,16 @@ export async function deleteAccount(ctx: HandlerContext): Promise<Response> {
   );
 }
 
-export function handleDelete(ctx: HandlerContext<unknown, QueryParams>): Promise<Response> {
+export function handleDelete(
+  ctx: HandlerContext<unknown, QueryParams>,
+): Promise<Response> {
   if (ctx.query.action === "avatar") {
     return deleteAvatar(ctx);
   }
   if (ctx.query.action === "account") {
     return deleteAccount(ctx);
   }
-  throw new ValidationError("Invalid action. Use ?action=avatar or ?action=account");
+  throw new ValidationError(
+    "Invalid action. Use ?action=avatar or ?action=account",
+  );
 }

@@ -23,7 +23,9 @@ export const createPostSchema = z.object({
   title: z.string().min(3).max(200),
   description: z.string().min(1).max(10000),
   categoryId: positiveIntSchema.optional(),
-  postType: z.enum(["discussion", "question", "announcement", "guide"]).default("discussion"),
+  postType: z.enum(["discussion", "question", "announcement", "guide"]).default(
+    "discussion",
+  ),
   tags: z.array(positiveIntSchema).max(5).optional(),
   imageUrl: z.string().url().optional(),
   richContent: z.record(z.unknown()).optional(),
@@ -33,7 +35,8 @@ export const updatePostSchema = z.object({
   title: z.string().min(3).max(200).optional(),
   description: z.string().min(1).max(10000).optional(),
   categoryId: positiveIntSchema.optional(),
-  postType: z.enum(["discussion", "question", "announcement", "guide"]).optional(),
+  postType: z.enum(["discussion", "question", "announcement", "guide"])
+    .optional(),
   tags: z.array(positiveIntSchema).max(5).optional(),
   imageUrl: z.string().url().nullable().optional(),
   richContent: z.record(z.unknown()).nullable().optional(),
@@ -70,7 +73,10 @@ export const featurePostSchema = z.object({
 const MODERATOR_ROLES = ["moderator", "admin", "superadmin"];
 
 // deno-lint-ignore no-explicit-any
-async function hasModeratorRole(supabase: any, userId: string): Promise<boolean> {
+async function hasModeratorRole(
+  supabase: any,
+  userId: string,
+): Promise<boolean> {
   const { data: userRoles } = await supabase
     .from("user_roles")
     .select("roles!inner(name)")
@@ -78,22 +84,24 @@ async function hasModeratorRole(supabase: any, userId: string): Promise<boolean>
 
   if (!userRoles || userRoles.length === 0) return false;
 
-  return userRoles.some((r: { roles: { name: string } | { name: string }[] }) => {
-    const roleData = r.roles as unknown as
-      | { name: string }
-      | {
+  return userRoles.some(
+    (r: { roles: { name: string } | { name: string }[] }) => {
+      const roleData = r.roles as unknown as { name: string } | {
         name: string;
       }[];
-    const name = Array.isArray(roleData) ? roleData[0]?.name : roleData?.name;
-    return name && MODERATOR_ROLES.includes(name);
-  });
+      const name = Array.isArray(roleData) ? roleData[0]?.name : roleData?.name;
+      return name && MODERATOR_ROLES.includes(name);
+    },
+  );
 }
 
 // =============================================================================
 // GET Handlers
 // =============================================================================
 
-export async function getFeed(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+export async function getFeed(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
 
   const service = new ForumService(supabase, userId || "");
@@ -109,7 +117,9 @@ export async function getFeed(ctx: HandlerContext<unknown, ForumQuery>): Promise
   return ok(data, ctx);
 }
 
-export async function getPostDetail(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+export async function getPostDetail(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
   const postId = parseInt(query.id!);
 
@@ -123,7 +133,9 @@ export async function getPostDetail(ctx: HandlerContext<unknown, ForumQuery>): P
   return ok(data, ctx);
 }
 
-export async function getCategories(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+export async function getCategories(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { supabase } = ctx;
 
   const cacheKey = "forum:categories";
@@ -147,7 +159,9 @@ export async function getCategories(ctx: HandlerContext<unknown, ForumQuery>): P
   return ok(data, ctx);
 }
 
-export async function searchPosts(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+export async function searchPosts(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { supabase, query } = ctx;
 
   if (!query.q || query.q.trim().length === 0) {
@@ -157,10 +171,7 @@ export async function searchPosts(ctx: HandlerContext<unknown, ForumQuery>): Pro
   const limit = Math.min(parseInt(query.limit || "20"), 50);
   const offset = parseInt(query.offset || "0");
   const tags = query.tags
-    ? query.tags
-      .split(",")
-      .map((t) => parseInt(t.trim()))
-      .filter((t) => !isNaN(t))
+    ? query.tags.split(",").map((t) => parseInt(t.trim())).filter((t) => !isNaN(t))
     : undefined;
 
   const service = new ForumService(supabase, "");
@@ -179,7 +190,9 @@ export async function searchPosts(ctx: HandlerContext<unknown, ForumQuery>): Pro
   return ok(data, ctx);
 }
 
-export async function getUnread(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+export async function getUnread(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
 
   if (!userId) {
@@ -202,7 +215,9 @@ export async function getUnread(ctx: HandlerContext<unknown, ForumQuery>): Promi
   return ok(data, ctx);
 }
 
-export async function getSeries(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+export async function getSeries(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { supabase, query } = ctx;
 
   if (!query.id) {
@@ -210,7 +225,11 @@ export async function getSeries(ctx: HandlerContext<unknown, ForumQuery>): Promi
   }
 
   const [seriesResult, postsResult] = await Promise.all([
-    supabase.from("forum_series").select("*").eq("id", query.id).single(),
+    supabase
+      .from("forum_series")
+      .select("*")
+      .eq("id", query.id)
+      .single(),
     supabase
       .from("forum_series_posts")
       .select("*")
@@ -222,13 +241,10 @@ export async function getSeries(ctx: HandlerContext<unknown, ForumQuery>): Promi
     throw new NotFoundError("Forum series", query.id);
   }
 
-  return ok(
-    {
-      ...seriesResult.data,
-      posts: postsResult.data || [],
-    },
-    ctx,
-  );
+  return ok({
+    ...seriesResult.data,
+    posts: postsResult.data || [],
+  }, ctx);
 }
 
 // =============================================================================
@@ -299,7 +315,9 @@ export async function togglePin(ctx: HandlerContext): Promise<Response> {
     // Check moderator role
     const isMod = await hasModeratorRole(supabase, userId);
     if (!isMod) {
-      throw new AuthorizationError("Only the post author or a moderator can pin/unpin");
+      throw new AuthorizationError(
+        "Only the post author or a moderator can pin/unpin",
+      );
     }
   }
 
@@ -405,7 +423,9 @@ export async function featurePost(ctx: HandlerContext): Promise<Response> {
 // PUT Handlers
 // =============================================================================
 
-export async function updatePost(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+export async function updatePost(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
   const body = updatePostSchema.parse(ctx.body);
   const postId = parseInt(query.id!);
@@ -436,7 +456,9 @@ export async function updatePost(ctx: HandlerContext<unknown, ForumQuery>): Prom
 // DELETE Handlers
 // =============================================================================
 
-export async function deletePost(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+export async function deletePost(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
   const postId = parseInt(query.id!);
 

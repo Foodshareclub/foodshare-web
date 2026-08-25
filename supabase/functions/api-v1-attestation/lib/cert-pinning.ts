@@ -135,28 +135,34 @@ const PIN_CONFIG = {
 
 function detectCertPinPlatform(request: Request): CertPinPlatform {
   const platformHeader = request.headers.get("x-platform")?.toLowerCase();
-  if (platformHeader === "ios" || platformHeader === "android" || platformHeader === "web") {
+  if (
+    platformHeader === "ios" || platformHeader === "android" ||
+    platformHeader === "web"
+  ) {
     return platformHeader;
   }
 
-  const clientPlatform = request.headers.get("x-client-platform")?.toLowerCase();
-  if (clientPlatform === "ios" || clientPlatform === "android" || clientPlatform === "web") {
+  const clientPlatform = request.headers.get("x-client-platform")
+    ?.toLowerCase();
+  if (
+    clientPlatform === "ios" || clientPlatform === "android" ||
+    clientPlatform === "web"
+  ) {
     return clientPlatform;
   }
 
   const ua = request.headers.get("user-agent") || "";
-  if (ua.includes("iPhone") || ua.includes("iPad") || ua.includes("iOS") || ua.includes("Darwin")) {
+  if (
+    ua.includes("iPhone") || ua.includes("iPad") || ua.includes("iOS") ||
+    ua.includes("Darwin")
+  ) {
     return "ios";
   }
   if (ua.includes("Android") || ua.includes("okhttp")) return "android";
   if (
-    ua.includes("Mozilla") ||
-    ua.includes("Chrome") ||
-    ua.includes("Safari") ||
+    ua.includes("Mozilla") || ua.includes("Chrome") || ua.includes("Safari") ||
     ua.includes("Firefox")
-  ) {
-    return "web";
-  }
+  ) return "web";
 
   return "unknown";
 }
@@ -172,7 +178,10 @@ function formatIOSPins(pins: CertificatePin[]): IOSPinFormat {
   };
 }
 
-function formatAndroidPins(pins: CertificatePin[], validUntil: string): AndroidPinFormat {
+function formatAndroidPins(
+  pins: CertificatePin[],
+  validUntil: string,
+): AndroidPinFormat {
   const pinEntries = pins
     .map((p) => `            <pin digest="SHA-256">${p.hash.replace("sha256/", "")}</pin>`)
     .join("\n");
@@ -203,7 +212,9 @@ ${pinEntries}
 }
 
 function formatWebPins(pins: CertificatePin[]): WebPinFormat {
-  const pinDirectives = pins.map((p) => `pin-sha256="${p.hash.replace("sha256/", "")}"`).join("; ");
+  const pinDirectives = pins
+    .map((p) => `pin-sha256="${p.hash.replace("sha256/", "")}"`)
+    .join("; ");
 
   return {
     sha256: pins.map((p) => p.hash),
@@ -211,7 +222,10 @@ function formatWebPins(pins: CertificatePin[]): WebPinFormat {
   };
 }
 
-function generatePlatformPins(pins: CertificatePin[], validUntil: string): PlatformPins {
+function generatePlatformPins(
+  pins: CertificatePin[],
+  validUntil: string,
+): PlatformPins {
   return {
     ios: formatIOSPins(pins),
     android: formatAndroidPins(pins, validUntil),
@@ -257,7 +271,8 @@ function calculateRotationWarning(pins: CertificatePin[]): RotationWarning {
   }
   if (PIN_CONFIG.nextRotation) {
     const daysUntilRotation = Math.ceil(
-      (new Date(PIN_CONFIG.nextRotation).getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+      (new Date(PIN_CONFIG.nextRotation).getTime() - now.getTime()) /
+        (1000 * 60 * 60 * 24),
     );
     if (daysUntilRotation <= PIN_CONFIG.warningThresholdDays) {
       return {
@@ -307,7 +322,10 @@ function hashPins(pins: CertificatePin[]): string {
 // Certificate Pins Handler
 // =============================================================================
 
-export function handleCertificatePins(req: Request, corsHeaders: Record<string, string>): Response {
+export function handleCertificatePins(
+  req: Request,
+  corsHeaders: Record<string, string>,
+): Response {
   const platform = detectCertPinPlatform(req);
   const appVersion = req.headers.get("x-app-version") || "unknown";
   const wantsLegacyFormat = (req.headers.get("accept") || "").includes(
@@ -332,17 +350,16 @@ export function handleCertificatePins(req: Request, corsHeaders: Record<string, 
   const allPins = inGracePeriod ? [...validPins, ...UPCOMING_PINS] : validPins;
   allPins.sort((a, b) => a.priority - b.priority);
 
-  const earliestExpiry = allPins.reduce(
-    (earliest, pin) => {
-      const expires = new Date(pin.expires);
-      return !earliest || expires < earliest ? expires : earliest;
-    },
-    null as Date | null,
-  );
+  const earliestExpiry = allPins.reduce((earliest, pin) => {
+    const expires = new Date(pin.expires);
+    return !earliest || expires < earliest ? expires : earliest;
+  }, null as Date | null);
 
-  const validUntil = earliestExpiry?.toISOString().split("T")[0] || "2025-12-31";
+  const validUntil = earliestExpiry?.toISOString().split("T")[0] ||
+    "2025-12-31";
 
-  const minVersion = PIN_CONFIG.minAppVersions[platform] || PIN_CONFIG.minAppVersion;
+  const minVersion = PIN_CONFIG.minAppVersions[platform] ||
+    PIN_CONFIG.minAppVersion;
   if (isVersionLessThan(appVersion, minVersion)) {
     logger.warn("App version below minimum", {
       platform,
@@ -370,7 +387,7 @@ export function handleCertificatePins(req: Request, corsHeaders: Record<string, 
     ...corsHeaders,
     "Content-Type": "application/json",
     "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
-    ETag: `"${hashPins(allPins)}"`,
+    "ETag": `"${hashPins(allPins)}"`,
     "X-Platform-Detected": platform,
     "X-Pins-Valid-Until": validUntil,
   };
@@ -378,7 +395,9 @@ export function handleCertificatePins(req: Request, corsHeaders: Record<string, 
   if (rotationWarning.active) {
     responseHeaders["X-Pin-Rotation-Warning"] = rotationWarning.severity;
     if (rotationWarning.daysUntilExpiry !== undefined) {
-      responseHeaders["X-Pin-Days-Until-Expiry"] = String(rotationWarning.daysUntilExpiry);
+      responseHeaders["X-Pin-Days-Until-Expiry"] = String(
+        rotationWarning.daysUntilExpiry,
+      );
     }
   }
 

@@ -28,12 +28,17 @@ const LOCKOUT_DURATION_MINUTES = 15;
 // Rate limiting for resend code (3 requests per hour per user)
 const RESEND_RATE_LIMIT_MAX = 3;
 const RESEND_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
-const resendRateLimitMap = new Map<number, { count: number; resetAt: number }>();
+const resendRateLimitMap = new Map<
+  number,
+  { count: number; resetAt: number }
+>();
 
 /**
  * Check if user can resend verification code
  */
-function checkResendRateLimit(userId: number): { allowed: boolean; remainingMinutes?: number } {
+function checkResendRateLimit(
+  userId: number,
+): { allowed: boolean; remainingMinutes?: number } {
   const now = Date.now();
   const limit = resendRateLimitMap.get(userId);
 
@@ -99,7 +104,9 @@ async function incrementFailedAttempts(
 
   if (newAttempts >= MAX_VERIFICATION_ATTEMPTS) {
     // Lock the account
-    const lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000);
+    const lockedUntil = new Date(
+      Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000,
+    );
     await updateProfile(profileId, {
       verification_attempts: newAttempts,
       verification_locked_until: lockedUntil.toISOString(),
@@ -127,12 +134,10 @@ export async function handleEmailInput(
   if (!emailRegex.test(email)) {
     const keyboard = {
       inline_keyboard: [
-        [
-          {
-            text: `${emoji.BACK} ${t(lang, "common.back")}`,
-            callback_data: "back_to_start",
-          },
-        ],
+        [{
+          text: `${emoji.BACK} ${t(lang, "common.back")}`,
+          callback_data: "back_to_start",
+        }],
       ],
     };
 
@@ -161,12 +166,10 @@ export async function handleEmailInput(
     if (existingProfile && existingProfile.id !== telegramProfile.id) {
       const keyboard = {
         inline_keyboard: [
-          [
-            {
-              text: `${emoji.BACK} ${t(lang, "common.back")}`,
-              callback_data: "back_to_start",
-            },
-          ],
+          [{
+            text: `${emoji.BACK} ${t(lang, "common.back")}`,
+            callback_data: "back_to_start",
+          }],
         ],
       };
 
@@ -200,15 +203,16 @@ export async function handleEmailInput(
   // Case 2: Email exists with verified account - Link Telegram to existing account
   if (existingProfile && existingProfile.email_verified) {
     // Check if already linked to another Telegram account
-    if (existingProfile.telegram_id && existingProfile.telegram_id !== telegramUser.id) {
+    if (
+      existingProfile.telegram_id &&
+      existingProfile.telegram_id !== telegramUser.id
+    ) {
       const keyboard = {
         inline_keyboard: [
-          [
-            {
-              text: `${emoji.BACK} ${t(lang, "common.back")}`,
-              callback_data: "back_to_start",
-            },
-          ],
+          [{
+            text: `${emoji.BACK} ${t(lang, "common.back")}`,
+            callback_data: "back_to_start",
+          }],
         ],
       };
 
@@ -237,12 +241,10 @@ export async function handleEmailInput(
     if (emailSent) {
       const keyboard = {
         inline_keyboard: [
-          [
-            {
-              text: `${emoji.BACK} ${t(lang, "common.back")}`,
-              callback_data: "back_to_start",
-            },
-          ],
+          [{
+            text: `${emoji.BACK} ${t(lang, "common.back")}`,
+            callback_data: "back_to_start",
+          }],
         ],
       };
 
@@ -281,12 +283,10 @@ export async function handleEmailInput(
     } else {
       const keyboard = {
         inline_keyboard: [
-          [
-            {
-              text: `${emoji.BACK} ${t(lang, "common.back")}`,
-              callback_data: "back_to_start",
-            },
-          ],
+          [{
+            text: `${emoji.BACK} ${t(lang, "common.back")}`,
+            callback_data: "back_to_start",
+          }],
         ],
       };
 
@@ -305,15 +305,16 @@ export async function handleEmailInput(
   // Case 3: Email exists but not verified - Complete Registration Flow
   if (existingProfile && !existingProfile.email_verified) {
     // Check if already linked to another Telegram account
-    if (existingProfile.telegram_id && existingProfile.telegram_id !== telegramUser.id) {
+    if (
+      existingProfile.telegram_id &&
+      existingProfile.telegram_id !== telegramUser.id
+    ) {
       const keyboard = {
         inline_keyboard: [
-          [
-            {
-              text: `${emoji.BACK} ${t(lang, "common.back")}`,
-              callback_data: "back_to_start",
-            },
-          ],
+          [{
+            text: `${emoji.BACK} ${t(lang, "common.back")}`,
+            callback_data: "back_to_start",
+          }],
         ],
       };
 
@@ -351,18 +352,18 @@ export async function handleEmailInput(
     if (emailSent) {
       const keyboard = {
         inline_keyboard: [
-          [
-            {
-              text: `${emoji.BACK} ${t(lang, "common.back")}`,
-              callback_data: "back_to_start",
-            },
-          ],
+          [{
+            text: `${emoji.BACK} ${t(lang, "common.back")}`,
+            callback_data: "back_to_start",
+          }],
         ],
       };
 
       await sendMessage(
         chatId,
-        msg.boxedHeader(`${emoji.EMAIL} ${t(lang, "auth.completeRegistrationTitle")}`) +
+        msg.boxedHeader(
+          `${emoji.EMAIL} ${t(lang, "auth.completeRegistrationTitle")}`,
+        ) +
           "\n\n" +
           `${emoji.SUCCESS} <b>${t(lang, "auth.accountFound")}</b>\n\n` +
           msg.divider("─", 30) +
@@ -392,12 +393,10 @@ export async function handleEmailInput(
     } else {
       const keyboard = {
         inline_keyboard: [
-          [
-            {
-              text: `${emoji.BACK} ${t(lang, "common.back")}`,
-              callback_data: "back_to_start",
-            },
-          ],
+          [{
+            text: `${emoji.BACK} ${t(lang, "common.back")}`,
+            callback_data: "back_to_start",
+          }],
         ],
       };
 
@@ -429,12 +428,10 @@ export async function handleEmailInput(
     if (emailSent) {
       const keyboard = {
         inline_keyboard: [
-          [
-            {
-              text: `${emoji.BACK} ${t(lang, "common.back")}`,
-              callback_data: "back_to_start",
-            },
-          ],
+          [{
+            text: `${emoji.BACK} ${t(lang, "common.back")}`,
+            callback_data: "back_to_start",
+          }],
         ],
       };
 
@@ -471,12 +468,10 @@ export async function handleEmailInput(
     } else {
       const keyboard = {
         inline_keyboard: [
-          [
-            {
-              text: `${emoji.BACK} ${t(lang, "common.back")}`,
-              callback_data: "back_to_start",
-            },
-          ],
+          [{
+            text: `${emoji.BACK} ${t(lang, "common.back")}`,
+            callback_data: "back_to_start",
+          }],
         ],
       };
 
@@ -510,12 +505,10 @@ export async function handleEmailInput(
   if (!newProfile) {
     const keyboard = {
       inline_keyboard: [
-        [
-          {
-            text: `${emoji.BACK} ${t(lang, "common.back")}`,
-            callback_data: "back_to_start",
-          },
-        ],
+        [{
+          text: `${emoji.BACK} ${t(lang, "common.back")}`,
+          callback_data: "back_to_start",
+        }],
       ],
     };
 
@@ -535,12 +528,10 @@ export async function handleEmailInput(
   if (emailSent) {
     const keyboard = {
       inline_keyboard: [
-        [
-          {
-            text: `${emoji.BACK} ${t(lang, "common.back")}`,
-            callback_data: "back_to_start",
-          },
-        ],
+        [{
+          text: `${emoji.BACK} ${t(lang, "common.back")}`,
+          callback_data: "back_to_start",
+        }],
       ],
     };
 
@@ -579,12 +570,10 @@ export async function handleEmailInput(
 
     const keyboard = {
       inline_keyboard: [
-        [
-          {
-            text: `${emoji.BACK} ${t(lang, "common.back")}`,
-            callback_data: "back_to_start",
-          },
-        ],
+        [{
+          text: `${emoji.BACK} ${t(lang, "common.back")}`,
+          callback_data: "back_to_start",
+        }],
       ],
     };
 
@@ -629,7 +618,10 @@ export async function handleVerificationCode(
     if (!existingProfile) {
       await sendMessage(
         chatId,
-        msg.errorMessage("Profile Not Found", "Please try signing in again with /start"),
+        msg.errorMessage(
+          "Profile Not Found",
+          "Please try signing in again with /start",
+        ),
       );
       await setUserState(telegramUser.id, null);
       return false;
@@ -730,7 +722,10 @@ export async function handleVerificationCode(
     if (!profile) {
       await sendMessage(
         chatId,
-        msg.errorMessage("Profile Not Found", "Please try registering again with /start"),
+        msg.errorMessage(
+          "Profile Not Found",
+          "Please try registering again with /start",
+        ),
       );
       await setUserState(telegramUser.id, null);
       return false;
@@ -752,8 +747,12 @@ export async function handleVerificationCode(
     }
 
     if (profile.verification_code !== code) {
-      await incrementFailedAttempts(profile_id as string, profile.verification_attempts || 0);
-      const attemptsLeft = MAX_VERIFICATION_ATTEMPTS - ((profile.verification_attempts || 0) + 1);
+      await incrementFailedAttempts(
+        profile_id as string,
+        profile.verification_attempts || 0,
+      );
+      const attemptsLeft = MAX_VERIFICATION_ATTEMPTS -
+        ((profile.verification_attempts || 0) + 1);
 
       await sendMessage(
         chatId,
@@ -819,13 +818,17 @@ export async function handleVerificationCode(
     chatId,
     msg.errorMessage(
       "No Active Verification",
-      "You don't have an active verification process.\n\n" + `${emoji.INFO} Use /start to begin.`,
+      "You don't have an active verification process.\n\n" +
+        `${emoji.INFO} Use /start to begin.`,
     ),
   );
   return false;
 }
 
-export async function handleResendCode(telegramUser: TelegramUser, chatId: number): Promise<void> {
+export async function handleResendCode(
+  telegramUser: TelegramUser,
+  chatId: number,
+): Promise<void> {
   // Check rate limit first
   const rateLimit = checkResendRateLimit(telegramUser.id);
   if (!rateLimit.allowed) {
@@ -852,7 +855,8 @@ export async function handleResendCode(telegramUser: TelegramUser, chatId: numbe
       chatId,
       msg.infoMessage(
         "No Active Verification",
-        "You don't have an active verification process.\n\n" + `${emoji.INFO} Use /start to begin.`,
+        "You don't have an active verification process.\n\n" +
+          `${emoji.INFO} Use /start to begin.`,
       ),
     );
     return;
@@ -880,7 +884,10 @@ export async function handleResendCode(telegramUser: TelegramUser, chatId: numbe
   if (!email || !profileId) {
     await sendMessage(
       chatId,
-      msg.errorMessage("Email Not Found", "Please send your email address first."),
+      msg.errorMessage(
+        "Email Not Found",
+        "Please send your email address first.",
+      ),
     );
     await setUserState(telegramUser.id, {
       action: "awaiting_email",

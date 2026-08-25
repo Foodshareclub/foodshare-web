@@ -34,7 +34,12 @@ export type NotificationCategory =
 
 export type NotificationChannel = "push" | "email" | "sms" | "telegram" | "in_app";
 
-export type NotificationFrequency = "instant" | "hourly" | "daily" | "weekly" | "never";
+export type NotificationFrequency =
+  | "instant"
+  | "hourly"
+  | "daily"
+  | "weekly"
+  | "never";
 
 export interface ShouldSendResult {
   send: boolean;
@@ -286,7 +291,9 @@ export function shouldBypassPreferences(type: string): boolean {
 /**
  * Get default channel for a notification category.
  */
-export function getDefaultChannel(category: NotificationCategory): NotificationChannel {
+export function getDefaultChannel(
+  category: NotificationCategory,
+): NotificationChannel {
   const defaults: Record<NotificationCategory, NotificationChannel> = {
     posts: "push",
     forum: "push",

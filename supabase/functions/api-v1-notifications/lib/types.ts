@@ -61,7 +61,12 @@ export type NotificationCategory =
 
 export type NotificationChannel = "push" | "email" | "sms" | "in_app" | "telegram";
 
-export type NotificationFrequency = "instant" | "hourly" | "daily" | "weekly" | "never";
+export type NotificationFrequency =
+  | "instant"
+  | "hourly"
+  | "daily"
+  | "weekly"
+  | "never";
 
 export type PriorityLevel = "critical" | "high" | "normal" | "low";
 
@@ -391,7 +396,13 @@ export interface PushPayload {
     liveActivityToken?: string;
   };
   android?: {
-    channelId?: "default" | "messages" | "listings" | "alerts" | "updates" | "social";
+    channelId?:
+      | "default"
+      | "messages"
+      | "listings"
+      | "alerts"
+      | "updates"
+      | "social";
     visibility?: "private" | "public" | "secret";
     groupKey?: string;
     groupSummary?: boolean;
@@ -488,9 +499,17 @@ export interface NotificationContext {
 export interface ChannelAdapter {
   name: string;
   channel: NotificationChannel;
-  send(payload: unknown, context: NotificationContext): Promise<ChannelDeliveryResult>;
-  sendBatch?(payloads: unknown[], context: NotificationContext): Promise<ChannelDeliveryResult[]>;
-  healthCheck?(): Promise<{ healthy: boolean; latencyMs?: number; error?: string }>;
+  send(
+    payload: unknown,
+    context: NotificationContext,
+  ): Promise<ChannelDeliveryResult>;
+  sendBatch?(
+    payloads: unknown[],
+    context: NotificationContext,
+  ): Promise<ChannelDeliveryResult[]>;
+  healthCheck?(): Promise<
+    { healthy: boolean; latencyMs?: number; error?: string }
+  >;
 }
 
 // =============================================================================

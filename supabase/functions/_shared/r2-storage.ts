@@ -49,12 +49,14 @@ export async function getR2Config(): Promise<R2Config | null> {
   const bucketName = await getSecret("R2_BUCKET_NAME");
   const publicUrl = await getSecret("R2_PUBLIC_URL");
 
-  if (!accountId || !accessKeyId || !secretAccessKey || !bucketName || !publicUrl) {
+  if (
+    !accountId || !accessKeyId || !secretAccessKey || !bucketName || !publicUrl
+  ) {
     cachedConfig = null;
     return null;
   }
 
-  const jurisdiction = ((await getSecret("R2_JURISDICTION")) || "").toLowerCase();
+  const jurisdiction = (await getSecret("R2_JURISDICTION") || "").toLowerCase();
   cachedConfig = {
     accountId,
     accessKeyId,
@@ -90,7 +92,12 @@ export async function uploadToR2(
     return { success: false, path, publicUrl: "", error: "R2 not configured" };
   }
 
-  const signer = new AWSV4Signer("auto", "s3", config.accessKeyId, config.secretAccessKey);
+  const signer = new AWSV4Signer(
+    "auto",
+    "s3",
+    config.accessKeyId,
+    config.secretAccessKey,
+  );
   const jPrefix = config.jurisdiction ? `${config.jurisdiction}.` : "";
   const endpoint = `https://${config.accountId}.${jPrefix}r2.cloudflarestorage.com`;
   const objectUrl = `${endpoint}/${config.bucketName}/${path}`;
@@ -101,7 +108,12 @@ export async function uploadToR2(
     "cache-control": "public, max-age=31536000, immutable",
   };
 
-  const signedHeaders = await signer.signRequest("PUT", objectUrl, headers, buffer);
+  const signedHeaders = await signer.signRequest(
+    "PUT",
+    objectUrl,
+    headers,
+    buffer,
+  );
 
   const response = await fetch(objectUrl, {
     method: "PUT",
@@ -139,13 +151,23 @@ export async function deleteFromR2(path: string): Promise<R2DeleteResult> {
     return { success: false, path, error: "R2 not configured" };
   }
 
-  const signer = new AWSV4Signer("auto", "s3", config.accessKeyId, config.secretAccessKey);
+  const signer = new AWSV4Signer(
+    "auto",
+    "s3",
+    config.accessKeyId,
+    config.secretAccessKey,
+  );
   const jPrefix = config.jurisdiction ? `${config.jurisdiction}.` : "";
   const endpoint = `https://${config.accountId}.${jPrefix}r2.cloudflarestorage.com`;
   const objectUrl = `${endpoint}/${config.bucketName}/${path}`;
 
   const headers: Record<string, string> = {};
-  const signedHeaders = await signer.signRequest("DELETE", objectUrl, headers, "");
+  const signedHeaders = await signer.signRequest(
+    "DELETE",
+    objectUrl,
+    headers,
+    "",
+  );
 
   const response = await fetch(objectUrl, {
     method: "DELETE",

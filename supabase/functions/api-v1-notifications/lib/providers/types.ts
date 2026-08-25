@@ -15,7 +15,13 @@ export interface IOSPayloadOptions {
 }
 
 export interface AndroidPayloadOptions {
-  channelId?: "default" | "messages" | "listings" | "alerts" | "updates" | "social";
+  channelId?:
+    | "default"
+    | "messages"
+    | "listings"
+    | "alerts"
+    | "updates"
+    | "social";
   visibility?: "private" | "public" | "secret";
   groupKey?: string;
   groupSummary?: boolean;
@@ -88,12 +94,16 @@ export const DEEP_LINK_CONFIG = {
   android: { scheme: "foodshare://" },
   web: {
     baseUrl: `https://${
-      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+      "foodshare.club"
     }`,
   },
 } as const;
 
-export function generateDeepLink(platform: Platform, deepLink: DeepLinkConfig): string {
+export function generateDeepLink(
+  platform: Platform,
+  deepLink: DeepLinkConfig,
+): string {
   const path = `/${deepLink.entityType}/${deepLink.entityId}`;
   switch (platform) {
     case "ios":

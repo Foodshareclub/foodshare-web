@@ -38,7 +38,9 @@ import {
 /**
  * Handle incoming text message
  */
-export async function handleTextMessage(message: WhatsAppMessage): Promise<void> {
+export async function handleTextMessage(
+  message: WhatsAppMessage,
+): Promise<void> {
   const phoneNumber = message.from;
   const rawText = message.text?.body?.trim() || "";
   const text = sanitizeText(rawText);
@@ -93,7 +95,9 @@ export async function handleTextMessage(message: WhatsAppMessage): Promise<void>
 /**
  * Handle incoming photo message
  */
-export async function handlePhotoMessage(message: WhatsAppMessage): Promise<void> {
+export async function handlePhotoMessage(
+  message: WhatsAppMessage,
+): Promise<void> {
   const phoneNumber = message.from;
   const lang = await getUserLanguage(phoneNumber);
   const state = await getUserState(phoneNumber);
@@ -152,7 +156,9 @@ export async function handlePhotoMessage(message: WhatsAppMessage): Promise<void
 /**
  * Handle incoming location message
  */
-export async function handleLocationMessage(message: WhatsAppMessage): Promise<void> {
+export async function handleLocationMessage(
+  message: WhatsAppMessage,
+): Promise<void> {
   const phoneNumber = message.from;
   const state = await getUserState(phoneNumber);
 
@@ -214,8 +220,15 @@ async function handleHelp(phoneNumber: string): Promise<void> {
 async function handleCancel(phoneNumber: string): Promise<void> {
   const lang = await getUserLanguage(phoneNumber);
   await setUserState(phoneNumber, null);
-  await sendTextMessage(phoneNumber, `${emoji.SUCCESS} ${t(lang, "common.cancel")}`);
-  await sendButtonMessage(phoneNumber, "What would you like to do?", getMainMenuButtons(lang));
+  await sendTextMessage(
+    phoneNumber,
+    `${emoji.SUCCESS} ${t(lang, "common.cancel")}`,
+  );
+  await sendButtonMessage(
+    phoneNumber,
+    "What would you like to do?",
+    getMainMenuButtons(lang),
+  );
 }
 
 /**
@@ -244,7 +257,11 @@ async function handleSharingFoodText(
       },
     });
 
-    await sendButtonMessage(phoneNumber, t(lang, "share.step3Location"), getLocationButtons(lang));
+    await sendButtonMessage(
+      phoneNumber,
+      t(lang, "share.step3Location"),
+      getLocationButtons(lang),
+    );
     return;
   }
 
@@ -327,11 +344,15 @@ async function createFoodPost(
     }
   }
 
-  const { data: post, error } = await supabase.from("posts").insert(postData).select("id").single();
+  const { data: post, error } = await supabase.from("posts").insert(postData)
+    .select("id").single();
 
   if (error) {
     logger.error("Failed to create post", { error: String(error) });
-    await sendTextMessage(phoneNumber, `${emoji.ERROR} Failed to create post. Please try again.`);
+    await sendTextMessage(
+      phoneNumber,
+      `${emoji.ERROR} Failed to create post. Please try again.`,
+    );
     await setUserState(phoneNumber, null);
     return;
   }
@@ -344,7 +365,11 @@ async function createFoodPost(
     `${emoji.CELEBRATE} *${t(lang, "share.success")}*\n\n${emoji.LINK} ${postUrl}`,
   );
 
-  await sendButtonMessage(phoneNumber, "What's next?", getMainMenuButtons(lang));
+  await sendButtonMessage(
+    phoneNumber,
+    "What's next?",
+    getMainMenuButtons(lang),
+  );
 }
 
 /**

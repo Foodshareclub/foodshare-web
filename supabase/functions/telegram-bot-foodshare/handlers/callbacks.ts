@@ -33,7 +33,9 @@ const PROTECTED_CALLBACKS = new Set([
   "action_stats",
 ]);
 
-export async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery): Promise<void> {
+export async function handleCallbackQuery(
+  callbackQuery: TelegramCallbackQuery,
+): Promise<void> {
   const chatId = callbackQuery.message.chat.id;
   const userId = callbackQuery.from.id;
   const data = callbackQuery.data;
@@ -43,7 +45,10 @@ export async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery):
 
   // Check auth for protected callbacks
   if (PROTECTED_CALLBACKS.has(data)) {
-    const lang = await getUserLanguage(userId, callbackQuery.from?.language_code);
+    const lang = await getUserLanguage(
+      userId,
+      callbackQuery.from?.language_code,
+    );
     // Extract action name for friendly message (e.g., "action_share" -> "share")
     const actionName = data.replace("action_", "").replace("_via_chat", "");
     const auth = await requireAuth(userId, chatId, lang, actionName);
@@ -85,7 +90,11 @@ export async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery):
       break;
 
     case "action_stats":
-      await handleStatsCommand(chatId, userId, callbackQuery.from?.language_code);
+      await handleStatsCommand(
+        chatId,
+        userId,
+        callbackQuery.from?.language_code,
+      );
       break;
 
     case "action_leaderboard":
@@ -95,7 +104,12 @@ export async function handleCallbackQuery(callbackQuery: TelegramCallbackQuery):
     case "lang_en":
     case "lang_ru":
     case "lang_de":
-      await handleLanguageSelection(chatId, userId, data.replace("lang_", ""), callbackQuery.from);
+      await handleLanguageSelection(
+        chatId,
+        userId,
+        data.replace("lang_", ""),
+        callbackQuery.from,
+      );
       break;
 
     case "back_to_start":
@@ -142,13 +156,19 @@ async function handleLanguageSelection(
   }, 1000);
 }
 
-async function handleProfileLocationUpdate(chatId: number, userId: number): Promise<void> {
+async function handleProfileLocationUpdate(
+  chatId: number,
+  userId: number,
+): Promise<void> {
   const profile = await getProfileByTelegramId(userId);
 
   if (!profile || requiresEmailVerification(profile)) {
     await sendMessage(
       chatId,
-      msg.infoMessage("Verification Required", "Please verify your email to update your profile."),
+      msg.infoMessage(
+        "Verification Required",
+        "Please verify your email to update your profile.",
+      ),
     );
     return;
   }
@@ -160,13 +180,19 @@ async function handleProfileLocationUpdate(chatId: number, userId: number): Prom
   await setUserState(userId, { action: "updating_profile_location", data: {} });
 }
 
-async function handleProfileRadiusUpdate(chatId: number, userId: number): Promise<void> {
+async function handleProfileRadiusUpdate(
+  chatId: number,
+  userId: number,
+): Promise<void> {
   const profile = await getProfileByTelegramId(userId);
 
   if (!profile || requiresEmailVerification(profile)) {
     await sendMessage(
       chatId,
-      msg.infoMessage("Verification Required", "Please verify your email to update your profile."),
+      msg.infoMessage(
+        "Verification Required",
+        "Please verify your email to update your profile.",
+      ),
     );
     return;
   }

@@ -73,7 +73,10 @@ class UpstashRestClient implements RedisClient {
     this.retries = retries;
   }
 
-  private async execute(command: string[], attempt: number = 0): Promise<unknown> {
+  private async execute(
+    command: string[],
+    attempt: number = 0,
+  ): Promise<unknown> {
     try {
       const response = await fetch(this.url, {
         method: "POST",
@@ -85,7 +88,9 @@ class UpstashRestClient implements RedisClient {
       });
 
       if (!response.ok) {
-        throw new Error(`Upstash error: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Upstash error: ${response.status} ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
@@ -143,7 +148,9 @@ class UpstashRestClient implements RedisClient {
     const BATCH_SIZE = 10;
     for (let i = 0; i < commands.length; i += BATCH_SIZE) {
       const batch = commands.slice(i, i + BATCH_SIZE);
-      const batchResults = await Promise.all(batch.map((cmd) => this.execute(cmd)));
+      const batchResults = await Promise.all(
+        batch.map((cmd) => this.execute(cmd)),
+      );
       results.push(...batchResults);
     }
 
@@ -288,10 +295,12 @@ export const translationCache = {
     if (!redis) return;
 
     try {
-      const commands = Object.entries(translations).map(([field, translation]) => {
-        const key = getCacheKey(contentType, contentId, field, locale);
-        return ["SETEX", key, String(CACHE_TTL), translation];
-      });
+      const commands = Object.entries(translations).map(
+        ([field, translation]) => {
+          const key = getCacheKey(contentType, contentId, field, locale);
+          return ["SETEX", key, String(CACHE_TTL), translation];
+        },
+      );
 
       if (commands.length > 0) {
         await redis.pipeline(commands);
@@ -328,7 +337,12 @@ export const translationCache = {
 
       for (const item of items) {
         for (const [field, translation] of Object.entries(item.translations)) {
-          const key = getCacheKey(item.contentType, item.contentId, field, item.locale);
+          const key = getCacheKey(
+            item.contentType,
+            item.contentId,
+            field,
+            item.locale,
+          );
           commands.push(["SETEX", key, String(CACHE_TTL), translation]);
         }
       }
@@ -350,7 +364,10 @@ export const translationCache = {
   /**
    * Delete cached translations for a content item
    */
-  async invalidate(contentType: string, contentId: string): Promise<void> {
+  async invalidate(
+    contentType: string,
+    contentId: string,
+  ): Promise<void> {
     const redis = await initRedis();
     if (!redis) return;
 

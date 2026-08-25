@@ -46,10 +46,13 @@ async function getCryptoKey(): Promise<CryptoKey | null> {
       return null;
     }
 
-    _cryptoKey = await crypto.subtle.importKey("raw", keyBytes, { name: "AES-GCM" }, false, [
-      "encrypt",
-      "decrypt",
-    ]);
+    _cryptoKey = await crypto.subtle.importKey(
+      "raw",
+      keyBytes,
+      { name: "AES-GCM" },
+      false,
+      ["encrypt", "decrypt"],
+    );
     return _cryptoKey;
   } catch (error) {
     logger.error(
@@ -72,7 +75,11 @@ export async function encryptMessage(plaintext: string): Promise<string> {
     const nonce = crypto.getRandomValues(new Uint8Array(NONCE_LENGTH));
     const encoded = new TextEncoder().encode(plaintext);
 
-    const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, key, encoded);
+    const ciphertext = await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: nonce },
+      key,
+      encoded,
+    );
 
     // Combine nonce + ciphertext (which includes the GCM tag)
     const combined = new Uint8Array(nonce.length + ciphertext.byteLength);
@@ -116,7 +123,11 @@ export async function decryptMessage(stored: string): Promise<string> {
     const nonce = combined.slice(0, NONCE_LENGTH);
     const ciphertext = combined.slice(NONCE_LENGTH);
 
-    const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: nonce }, key, ciphertext);
+    const decrypted = await crypto.subtle.decrypt(
+      { name: "AES-GCM", iv: nonce },
+      key,
+      ciphertext,
+    );
 
     return new TextDecoder().decode(decrypted);
   } catch (error) {

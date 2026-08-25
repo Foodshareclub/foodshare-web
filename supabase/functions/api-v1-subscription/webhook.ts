@@ -83,7 +83,11 @@ const REVENUE_CRITICAL_EVENTS: SubscriptionEventType[] = [
   "revoked",
 ];
 
-const handlers: PlatformHandler[] = [appleHandler, stripeHandler, googlePlayHandler];
+const handlers: PlatformHandler[] = [
+  appleHandler,
+  stripeHandler,
+  googlePlayHandler,
+];
 
 // =============================================================================
 // Metrics & State
@@ -142,7 +146,10 @@ const latencyBuffer: number[] = [];
 const LATENCY_BUFFER_SIZE = 100;
 
 const dedupCache = new Map<string, number>();
-const rateLimitCache = new Map<string, { count: number; windowStart: number }>();
+const rateLimitCache = new Map<
+  string,
+  { count: number; windowStart: number }
+>();
 
 // =============================================================================
 // Initialize Circuit Breakers
@@ -161,14 +168,19 @@ configureCircuit("subscription-db", {
       totalFailures: state.totalFailures,
     });
 
-    if (to === "open" || to === "half-open" || (to === "closed" && from !== "closed")) {
-      sendCircuitBreakerAlert(service, to as "open" | "half-open" | "closed", state.failures).catch(
-        (err) => {
-          logger.warn("Failed to send circuit breaker alert", {
-            error: err instanceof Error ? err.message : String(err),
-          });
-        },
-      );
+    if (
+      to === "open" || to === "half-open" ||
+      (to === "closed" && from !== "closed")
+    ) {
+      sendCircuitBreakerAlert(
+        service,
+        to as "open" | "half-open" | "closed",
+        state.failures,
+      ).catch((err) => {
+        logger.warn("Failed to send circuit breaker alert", {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      });
     }
   },
 });
@@ -281,7 +293,11 @@ function checkErrorRateAndAlert(): void {
       errors: metrics.requestsError,
     });
 
-    sendErrorRateAlert(errorRate, metrics.requestsTotal, metrics.requestsError).catch((err) => {
+    sendErrorRateAlert(
+      errorRate,
+      metrics.requestsTotal,
+      metrics.requestsError,
+    ).catch((err) => {
       logger.warn("Failed to send error rate alert", {
         error: err instanceof Error ? err.message : String(err),
       });
@@ -293,7 +309,10 @@ async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function retryWithBackoff<T>(operation: () => Promise<T>, operationName: string): Promise<T> {
+async function retryWithBackoff<T>(
+  operation: () => Promise<T>,
+  operationName: string,
+): Promise<T> {
   let lastError: Error | undefined;
 
   for (let attempt = 0; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
@@ -325,7 +344,10 @@ async function retryWithBackoff<T>(operation: () => Promise<T>, operationName: s
   throw lastError;
 }
 
-function checkRateLimit(clientIp: string, platform?: SubscriptionPlatform): boolean {
+function checkRateLimit(
+  clientIp: string,
+  platform?: SubscriptionPlatform,
+): boolean {
   const now = Date.now();
   const key = platform ? `${platform}:${clientIp}` : clientIp;
 
@@ -394,23 +416,25 @@ async function findUserForTransaction(
   originalTransactionId: string,
 ): Promise<string | null> {
   return await withCircuitBreaker("subscription-db", async () => {
-    return await measureAsync(
-      "db.find_user",
-      async () => {
-        const { data, error } = await supabase.rpc("billing_find_user_for_transaction", {
+    return await measureAsync("db.find_user", async () => {
+      const { data, error } = await supabase.rpc(
+        "billing_find_user_for_transaction",
+        {
           p_app_account_token: appAccountToken || null,
           p_original_transaction_id: originalTransactionId,
-        });
+        },
+      );
 
-        if (error) {
-          logger.error("Failed to find user for transaction", new Error(error.message));
-          return null;
-        }
+      if (error) {
+        logger.error(
+          "Failed to find user for transaction",
+          new Error(error.message),
+        );
+        return null;
+      }
 
-        return data;
-      },
-      { originalTransactionId },
-    );
+      return data;
+    }, { originalTransactionId });
   });
 }
 
@@ -467,20 +491,26 @@ async function validateStatusTransition(
   eventType: string,
 ): Promise<{ valid: boolean; currentStatus: string }> {
   return await withCircuitBreaker("subscription-db", async () => {
-    const { data: currentStatus } = await supabase.rpc("billing_get_current_status", {
-      p_original_transaction_id: originalTransactionId,
-      p_platform: platform,
-    });
+    const { data: currentStatus } = await supabase.rpc(
+      "billing_get_current_status",
+      {
+        p_original_transaction_id: originalTransactionId,
+        p_platform: platform,
+      },
+    );
 
     if (currentStatus === "unknown") {
       return { valid: true, currentStatus };
     }
 
-    const { data: isValid } = await supabase.rpc("billing_validate_status_transition", {
-      p_current_status: currentStatus,
-      p_new_status: newStatus,
-      p_event_type: eventType,
-    });
+    const { data: isValid } = await supabase.rpc(
+      "billing_validate_status_transition",
+      {
+        p_current_status: currentStatus,
+        p_new_status: newStatus,
+        p_event_type: eventType,
+      },
+    );
 
     return { valid: isValid ?? true, currentStatus };
   });
@@ -505,12 +535,12 @@ async function processWebhookAtomically(
 ): Promise<AtomicProcessResult> {
   return await withCircuitBreaker("subscription-db", async () => {
     return await retryWithBackoff(async () => {
-      return await measureAsync(
-        "db.process_atomic",
-        async () => {
-          const sub = event.subscription;
+      return await measureAsync("db.process_atomic", async () => {
+        const sub = event.subscription;
 
-          const { data, error } = await supabase.rpc("billing_process_webhook_atomically", {
+        const { data, error } = await supabase.rpc(
+          "billing_process_webhook_atomically",
+          {
             p_notification_uuid: event.eventId,
             p_platform: event.platform,
             p_notification_type: event.rawEventType,
@@ -529,27 +559,27 @@ async function processWebhookAtomically(
             p_bundle_id: sub.bundleId || null,
             p_status: sub.status,
             p_purchase_date: sub.purchaseDate?.toISOString() || null,
-            p_original_purchase_date: sub.originalPurchaseDate?.toISOString() || null,
+            p_original_purchase_date: sub.originalPurchaseDate?.toISOString() ||
+              null,
             p_expires_date: sub.expiresDate?.toISOString() || null,
             p_auto_renew_status: sub.autoRenewEnabled ?? null,
             p_auto_renew_product_id: sub.autoRenewProductId || null,
             p_environment: event.environment === "production" ? "Production" : "Sandbox",
             p_app_account_token: sub.appUserId || null,
-          });
+          },
+        );
 
-          if (error) {
-            throw new Error(`Atomic processing failed: ${error.message}`);
-          }
+        if (error) {
+          throw new Error(`Atomic processing failed: ${error.message}`);
+        }
 
-          return {
-            success: data?.success ?? false,
-            alreadyProcessed: data?.already_processed ?? false,
-            eventId: data?.event_id || null,
-            subscriptionId: data?.subscription_id || null,
-          };
-        },
-        { platform: event.platform, eventType: event.eventType },
-      );
+        return {
+          success: data?.success ?? false,
+          alreadyProcessed: data?.already_processed ?? false,
+          eventId: data?.event_id || null,
+          subscriptionId: data?.subscription_id || null,
+        };
+      }, { platform: event.platform, eventType: event.eventType });
     }, "processWebhookAtomically");
   });
 }
@@ -609,7 +639,9 @@ export async function handleWebhook(req: Request): Promise<Response> {
       if (parsed.signedPayload) {
         handler = appleHandler;
         platform = "apple";
-      } else if (parsed.object === "event" && parsed.type?.startsWith("customer.")) {
+      } else if (
+        parsed.object === "event" && parsed.type?.startsWith("customer.")
+      ) {
         handler = stripeHandler;
         platform = "stripe";
       } else if (parsed.message?.data) {
@@ -630,7 +662,11 @@ export async function handleWebhook(req: Request): Promise<Response> {
       bodyPreview: body.substring(0, 100),
     });
     return buildErrorResponse(
-      new AppError("Unable to detect webhook platform", "UNKNOWN_PLATFORM", 400),
+      new AppError(
+        "Unable to detect webhook platform",
+        "UNKNOWN_PLATFORM",
+        400,
+      ),
       corsHeaders,
     );
   }
@@ -645,9 +681,11 @@ export async function handleWebhook(req: Request): Promise<Response> {
   // Verify webhook authenticity
   let isValid: boolean;
   try {
-    isValid = await measureAsync("webhook.verify", () => handler!.verifyWebhook(req, body), {
-      platform,
-    });
+    isValid = await measureAsync(
+      "webhook.verify",
+      () => handler!.verifyWebhook(req, body),
+      { platform },
+    );
   } catch (error) {
     metrics.requestsError++;
     metrics.byPlatform[platform].error++;
@@ -655,7 +693,10 @@ export async function handleWebhook(req: Request): Promise<Response> {
     const err = error instanceof Error ? error : new Error(String(error));
     trackError(err, { platform, operation: "verify_webhook", requestId });
     logger.error(`${platform} webhook verification error`, err);
-    return buildSuccessResponse({ received: true, error: "verification_error" }, corsHeaders);
+    return buildSuccessResponse(
+      { received: true, error: "verification_error" },
+      corsHeaders,
+    );
   }
 
   if (!isValid) {
@@ -663,13 +704,20 @@ export async function handleWebhook(req: Request): Promise<Response> {
     metrics.byPlatform[platform].error++;
     checkErrorRateAndAlert();
     logger.warn(`${platform} webhook verification failed`, { requestId });
-    return buildSuccessResponse({ received: true, error: "verification_failed" }, corsHeaders);
+    return buildSuccessResponse(
+      { received: true, error: "verification_failed" },
+      corsHeaders,
+    );
   }
 
   // Parse the event
   let event: SubscriptionEvent;
   try {
-    event = await measureAsync("webhook.parse", () => handler!.parseEvent(req, body), { platform });
+    event = await measureAsync(
+      "webhook.parse",
+      () => handler!.parseEvent(req, body),
+      { platform },
+    );
   } catch (error) {
     metrics.requestsError++;
     metrics.byPlatform[platform].error++;
@@ -677,7 +725,10 @@ export async function handleWebhook(req: Request): Promise<Response> {
     const err = error instanceof Error ? error : new Error(String(error));
     trackError(err, { platform, operation: "parse_event", requestId });
     logger.error(`Failed to parse ${platform} event`, err);
-    return buildSuccessResponse({ received: true, error: "parse_failed" }, corsHeaders);
+    return buildSuccessResponse(
+      { received: true, error: "parse_failed" },
+      corsHeaders,
+    );
   }
 
   // Check deduplication
@@ -756,7 +807,10 @@ export async function handleWebhook(req: Request): Promise<Response> {
     updateLatencyMetrics(durationMs);
     metrics.lastProcessedAt = new Date().toISOString();
 
-    return buildSuccessResponse({ received: true, processed: true, action: "none" }, corsHeaders);
+    return buildSuccessResponse(
+      { received: true, processed: true, action: "none" },
+      corsHeaders,
+    );
   }
 
   // Step 3: Find user for transaction
@@ -937,20 +991,17 @@ export function getWebhookHealthData(_req: Request): Record<string, unknown> {
         dedupCacheSize: dedupCache.size,
         rateLimitCacheSize: rateLimitCache.size,
       },
-      circuits: Object.entries(circuitStatuses).reduce(
-        (acc, [name, state]) => {
-          acc[name] = {
-            state: state.state,
-            failures: state.failures,
-            totalRequests: state.totalRequests,
-            failureRate: state.totalRequests > 0
-              ? Math.round((state.totalFailures / state.totalRequests) * 100)
-              : 0,
-          };
-          return acc;
-        },
-        {} as Record<string, unknown>,
-      ),
+      circuits: Object.entries(circuitStatuses).reduce((acc, [name, state]) => {
+        acc[name] = {
+          state: state.state,
+          failures: state.failures,
+          totalRequests: state.totalRequests,
+          failureRate: state.totalRequests > 0
+            ? Math.round((state.totalFailures / state.totalRequests) * 100)
+            : 0,
+        };
+        return acc;
+      }, {} as Record<string, unknown>),
     },
   };
 }
@@ -965,16 +1016,15 @@ export function getWebhookMetricsData(): Record<string, unknown> {
     : "0.00";
 
   const churnRate = metrics.revenueEvents.subscriptions > 0
-    ? ((metrics.revenueEvents.cancellations / metrics.revenueEvents.subscriptions) * 100).toFixed(
-      2,
-    )
+    ? ((metrics.revenueEvents.cancellations /
+      metrics.revenueEvents.subscriptions) * 100).toFixed(2)
     : "0.00";
 
   const graceRecoveryRate = metrics.revenueEvents.billingIssues > 0
-    ? (
-      (metrics.revenueEvents.graceRecoveries / metrics.revenueEvents.billingIssues) *
-      100
-    ).toFixed(2)
+    ? ((metrics.revenueEvents.graceRecoveries /
+      metrics.revenueEvents.billingIssues) * 100).toFixed(
+        2,
+      )
     : "0.00";
 
   return {
@@ -986,7 +1036,8 @@ export function getWebhookMetricsData(): Record<string, unknown> {
       events: metrics.revenueEvents,
       churnRate: `${churnRate}%`,
       graceRecoveryRate: `${graceRecoveryRate}%`,
-      netSubscriptions: metrics.revenueEvents.subscriptions - metrics.revenueEvents.cancellations,
+      netSubscriptions: metrics.revenueEvents.subscriptions -
+        metrics.revenueEvents.cancellations,
     },
     errors: {
       total: errorStats.total,

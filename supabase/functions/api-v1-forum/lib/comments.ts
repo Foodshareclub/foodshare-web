@@ -39,7 +39,9 @@ export const markBestAnswerSchema = z.object({
 // GET Handlers
 // =============================================================================
 
-export async function getComments(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+export async function getComments(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { supabase, query } = ctx;
 
   if (!query.id) {
@@ -56,12 +58,10 @@ export async function getComments(ctx: HandlerContext<unknown, ForumQuery>): Pro
 
   const { data, error } = await supabase
     .from("comments")
-    .select(
-      `
+    .select(`
       *,
       author:profiles!comments_user_id_fkey(id, nickname, avatar_url, is_verified)
-    `,
-    )
+    `)
     .eq("forum_id", forumId)
     .order("comment_created_at", { ascending: true })
     .range(offset, offset + limit - 1);
@@ -114,7 +114,9 @@ export async function markBestAnswer(ctx: HandlerContext): Promise<Response> {
 // PUT Handlers
 // =============================================================================
 
-export async function updateComment(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+export async function updateComment(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
   const body = updateCommentSchema.parse(ctx.body);
   const commentId = parseInt(query.id!);
@@ -139,7 +141,9 @@ export async function updateComment(ctx: HandlerContext<unknown, ForumQuery>): P
 // DELETE Handlers
 // =============================================================================
 
-export async function deleteComment(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+export async function deleteComment(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
   const commentId = parseInt(query.id!);
 

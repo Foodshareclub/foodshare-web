@@ -35,9 +35,7 @@ function buildInvitationEmail(
 ): { subject: string; html: string } {
   const personalMessage = message
     ? `<p style="color: #555; font-style: italic; border-left: 3px solid #2ECC71; padding-left: 12px; margin: 20px 0;">"${
-      escapeHtml(
-        message,
-      )
+      escapeHtml(message)
     }"</p>`
     : "";
 
@@ -56,9 +54,7 @@ function buildInvitationEmail(
       <div style="text-align: center; margin-bottom: 30px;">
         <h1 style="color: #2ECC71; font-size: 28px; margin: 0 0 10px;">You're Invited!</h1>
         <p style="color: #666; font-size: 16px; margin: 0;">${
-    escapeHtml(
-      senderName,
-    )
+    escapeHtml(senderName)
   } wants you to join FoodShare</p>
       </div>
       ${personalMessage}
@@ -114,7 +110,11 @@ export async function handleSend(
   );
 
   if (!result.success) {
-    throw new AppError(result.error || "Failed to send email", "EMAIL_SEND_FAILED", 502);
+    throw new AppError(
+      result.error || "Failed to send email",
+      "EMAIL_SEND_FAILED",
+      502,
+    );
   }
 
   return ok(
@@ -139,7 +139,10 @@ export async function handleSendTemplate(
 
   const emailService = getEmailService();
   const params: SendTemplateEmailParams = { to, slug, variables };
-  const result = await emailService.sendTemplateEmail(params, emailType as EmailType);
+  const result = await emailService.sendTemplateEmail(
+    params,
+    emailType as EmailType,
+  );
 
   if (!result.success) {
     throw new AppError(
@@ -193,20 +196,19 @@ export async function handleSendInvitation(
   );
 
   if (!result.success) {
-    throw new AppError(result.error || "Failed to send invitation", "INVITATION_SEND_FAILED", 502);
+    throw new AppError(
+      result.error || "Failed to send invitation",
+      "INVITATION_SEND_FAILED",
+      502,
+    );
   }
 
   // Log analytics (non-blocking)
-  ctx.supabase
-    .from("post_activity_logs")
-    .insert({
-      actor_id: ctx.userId,
-      activity_type: "shared",
-      notes: `invitation:email=${recipientEmail.substring(0, 3)}***`,
-    })
-    .then(undefined, () => {
-      /* analytics failure is non-critical */
-    });
+  ctx.supabase.from("post_activity_logs").insert({
+    actor_id: ctx.userId,
+    activity_type: "shared",
+    notes: `invitation:email=${recipientEmail.substring(0, 3)}***`,
+  }).then(undefined, () => {/* analytics failure is non-critical */});
 
   return ok(
     {
@@ -231,14 +233,11 @@ export async function handleProviders(ctx: HandlerContext): Promise<Response> {
 /** GET /health — Health check (no auth) */
 export function handleHealth(ctx: HandlerContext): Promise<Response> {
   return Promise.resolve(
-    ok(
-      {
-        status: "healthy",
-        version: VERSION,
-        timestamp: new Date().toISOString(),
-      },
-      ctx,
-    ),
+    ok({
+      status: "healthy",
+      version: VERSION,
+      timestamp: new Date().toISOString(),
+    }, ctx),
   );
 }
 
@@ -291,7 +290,11 @@ export async function handleGoTrueWebhook(
   // because GoTrue handles the PKCE/OTP verification before redirecting.
   const apiUrl = Deno.env.get("SUPABASE_URL");
   if (!apiUrl) {
-    throw new AppError("Missing SUPABASE_URL environment variable", "INTERNAL_ERROR", 500);
+    throw new AppError(
+      "Missing SUPABASE_URL environment variable",
+      "INTERNAL_ERROR",
+      500,
+    );
   }
   const actionLink = `${apiUrl}/auth/v1/verify?${urlParams.toString()}`;
 
@@ -315,7 +318,11 @@ export async function handleGoTrueWebhook(
 
   if (!result.success) {
     logger.error("Failed to send webhook email", { error: result.error });
-    throw new AppError(result.error || "Failed to send auth email", "WEBHOOK_SEND_FAILED", 502);
+    throw new AppError(
+      result.error || "Failed to send auth email",
+      "WEBHOOK_SEND_FAILED",
+      502,
+    );
   }
 
   return ok(

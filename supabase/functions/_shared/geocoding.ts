@@ -106,19 +106,21 @@ async function getFromDbCache(address: string): Promise<Coordinates | null> {
 /**
  * Save coordinates to persistent DB cache
  */
-async function saveToDbCache(address: string, coordinates: Coordinates): Promise<void> {
+async function saveToDbCache(
+  address: string,
+  coordinates: Coordinates,
+): Promise<void> {
   const normalized = normalizeAddress(address);
   try {
     const supabase = getSupabaseClient();
-    await supabase.from("geocoding_cache").upsert(
-      {
+    await supabase
+      .from("geocoding_cache")
+      .upsert({
         address: normalized,
         latitude: coordinates.latitude,
         longitude: coordinates.longitude,
         cached_at: new Date().toISOString(),
-      },
-      { onConflict: "address" },
-    );
+      }, { onConflict: "address" });
   } catch (err) {
     logger.warn("DB geocode cache write failed", { error: String(err) });
   }
@@ -160,7 +162,10 @@ async function enforceRateLimit(): Promise<void> {
 /**
  * Fetch with timeout and retry logic
  */
-async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Response | null> {
+async function fetchWithRetry(
+  url: string,
+  retries = MAX_RETRIES,
+): Promise<Response | null> {
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
       const controller = new AbortController();
@@ -250,7 +255,9 @@ function isValidCoordinates(lat: number, lon: number): boolean {
 /**
  * Try geocoding with progressive address simplification
  */
-async function geocodeWithFallback(address: string): Promise<Coordinates | null> {
+async function geocodeWithFallback(
+  address: string,
+): Promise<Coordinates | null> {
   const addressParts = address.split(/\s+/);
 
   // Try full address first, then progressively remove parts from the end
@@ -296,7 +303,9 @@ async function geocodeWithFallback(address: string): Promise<Coordinates | null>
 /**
  * Main geocoding function with caching
  */
-export async function geocodeAddress(address: string): Promise<Coordinates | null> {
+export async function geocodeAddress(
+  address: string,
+): Promise<Coordinates | null> {
   if (!address || address.trim().length === 0) {
     logger.warn("Empty address provided");
     return null;
@@ -355,7 +364,13 @@ export async function geocodeAddress(address: string): Promise<Coordinates | nul
  */
 export async function geocodeWithCountryFallback(
   location: string,
-  fallbackCountries: string[] = ["USA", "United States", "Czech Republic", "France", "Russia"],
+  fallbackCountries: string[] = [
+    "USA",
+    "United States",
+    "Czech Republic",
+    "France",
+    "Russia",
+  ],
 ): Promise<Coordinates | null> {
   if (!location || location.trim().length === 0) {
     logger.warn("Empty location provided");

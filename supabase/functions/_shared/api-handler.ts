@@ -60,19 +60,22 @@ import { getSecret, loadAllSecrets } from "./vault.ts";
 interface Schema<T = unknown> {
   // Zod
   parse?: (data: unknown) => T;
-  safeParse?: (data: unknown) =>
-    | { success: true; data: T }
-    | {
-      success: false;
-      error: { errors: Array<{ path: (string | number)[]; message: string }> };
-    };
+  safeParse?: (
+    data: unknown,
+  ) => { success: true; data: T } | {
+    success: false;
+    error: { errors: Array<{ path: (string | number)[]; message: string }> };
+  };
   // Valibot (use `any` for input/output to remain compatible with Zod's internal types)
   // deno-lint-ignore no-explicit-any
   _parse?: (input: any) => any;
 }
 
 /** Handler context with parsed data and auth info */
-export interface HandlerContext<TBody = unknown, TQuery = Record<string, unknown>> {
+export interface HandlerContext<
+  TBody = unknown,
+  TQuery = Record<string, unknown>,
+> {
   /** The original request */
   request: Request;
   /** Request context (requestId, correlationId, etc.) */
@@ -106,7 +109,10 @@ export type RouteHandler<TBody = unknown, TQuery = Record<string, unknown>> = (
 ) => Promise<Response>;
 
 /** Route configuration */
-export interface RouteConfig<TBody = unknown, TQuery = Record<string, unknown>> {
+export interface RouteConfig<
+  TBody = unknown,
+  TQuery = Record<string, unknown>,
+> {
   /** Zod schema for request body validation (POST/PUT/PATCH) */
   schema?: Schema<TBody>;
   /** Zod schema for query parameters */
@@ -199,10 +205,7 @@ async function authenticateRequest(
   supabase: SupabaseClient<any, any, any>,
 ): Promise<string | null> {
   try {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
+    const { data: { user }, error } = await supabase.auth.getUser();
 
     if (error || !user) {
       return null;
@@ -262,7 +265,10 @@ async function storeIdempotencyKey(
 
 const DEFAULT_MAX_BODY_SIZE = 1024 * 1024; // 1MB
 
-async function parseRequestBody(request: Request, maxBodySize?: number): Promise<unknown> {
+async function parseRequestBody(
+  request: Request,
+  maxBodySize?: number,
+): Promise<unknown> {
   const limit = maxBodySize ?? DEFAULT_MAX_BODY_SIZE;
   const contentType = request.headers.get("content-type") || "";
 
@@ -315,7 +321,11 @@ function parseQueryParams(url: URL): Record<string, string> {
 // Validation
 // =============================================================================
 
-function validateWithSchema<T>(schema: Schema<T>, data: unknown, location: string): T {
+function validateWithSchema<T>(
+  schema: Schema<T>,
+  data: unknown,
+  location: string,
+): T {
   // Try Zod first (check safeParse before _parse, since Zod also has _parse
   // but with a different signature that expects ParseInput, not raw data)
   if (typeof schema.safeParse === "function") {
@@ -338,12 +348,13 @@ function validateWithSchema<T>(schema: Schema<T>, data: unknown, location: strin
     const result = schema._parse(data);
 
     if ("issues" in result) {
-      const errors = result.issues.map(
-        (issue: { path?: Array<{ key: string }>; message: string }) => ({
-          field: issue.path?.map((p: { key: string }) => p.key).join(".") || "root",
-          message: issue.message,
-        }),
-      );
+      const errors = result.issues.map((
+        issue: { path?: Array<{ key: string }>; message: string },
+      ) => ({
+        field: issue.path?.map((p: { key: string }) => p.key).join(".") ||
+          "root",
+        message: issue.message,
+      }));
       throw new ValidationError(`Invalid ${location}`, errors);
     }
 
@@ -481,7 +492,8 @@ function getRateLimitKey(
         ? `user:${ctx.userId}:${service}`
         : `anon:${getClientIp(ctx.request)}:${service}`;
     case "device": {
-      const deviceId = ctx.headers.get("x-device-id") || ctx.headers.get("x-client-id");
+      const deviceId = ctx.headers.get("x-device-id") ||
+        ctx.headers.get("x-client-id");
       return deviceId
         ? `device:${deviceId}:${service}`
         : `ip:${getClientIp(ctx.request)}:${service}`;
@@ -520,8 +532,14 @@ function addStandardHeaders(
   // Rate limit headers
   if (rateLimitInfo) {
     response.headers.set("X-RateLimit-Limit", String(rateLimitInfo.limit));
-    response.headers.set("X-RateLimit-Remaining", String(Math.max(0, rateLimitInfo.remaining)));
-    response.headers.set("X-RateLimit-Reset", String(Math.ceil(rateLimitInfo.reset / 1000)));
+    response.headers.set(
+      "X-RateLimit-Remaining",
+      String(Math.max(0, rateLimitInfo.remaining)),
+    );
+    response.headers.set(
+      "X-RateLimit-Reset",
+      String(Math.ceil(rateLimitInfo.reset / 1000)),
+    );
   }
 }
 
@@ -640,7 +658,11 @@ export function createAPIHandler(config: APIHandlerConfig) {
         userId = await authenticateRequest(supabase);
 
         if (!userId) {
-          return buildErrorResponse(new AuthenticationError(), corsHeaders, { version });
+          return buildErrorResponse(
+            new AuthenticationError(),
+            corsHeaders,
+            { version },
+          );
         }
 
         setUserId(userId);
@@ -713,7 +735,11 @@ export function createAPIHandler(config: APIHandlerConfig) {
         const shouldSkip = rateLimit.skip?.(handlerContext) ?? false;
 
         if (!shouldSkip) {
-          const rateLimitKey = getRateLimitKey(handlerContext, rateLimit.keyBy, service);
+          const rateLimitKey = getRateLimitKey(
+            handlerContext,
+            rateLimit.keyBy,
+            service,
+          );
 
           let rateLimitResult: {
             allowed: boolean;
@@ -756,7 +782,11 @@ export function createAPIHandler(config: APIHandlerConfig) {
               corsHeaders,
               { version, retryAfterMs },
             );
-            addStandardHeaders(errorResponse, ctx, handlerContext.rateLimitInfo);
+            addStandardHeaders(
+              errorResponse,
+              ctx,
+              handlerContext.rateLimitInfo,
+            );
             return errorResponse;
           }
         }
@@ -840,7 +870,11 @@ export function createAPIHandler(config: APIHandlerConfig) {
       const statusCode = error instanceof AppError ? error.statusCode : 500;
       perfTracker.end(statusCode);
 
-      const errorResponse = buildErrorResponse(appError, corsHeaders, { version });
+      const errorResponse = buildErrorResponse(
+        appError,
+        corsHeaders,
+        { version },
+      );
       addStandardHeaders(errorResponse, ctx);
       return errorResponse;
     } finally {
@@ -876,13 +910,11 @@ export function createAPIHandler(config: APIHandlerConfig) {
 export function ok<T>(
   data: T,
   ctx: HandlerContext,
-  statusOrOptions?:
-    | number
-    | {
-      status?: number;
-      cacheTTL?: number;
-      uiHints?: Record<string, unknown>;
-    },
+  statusOrOptions?: number | {
+    status?: number;
+    cacheTTL?: number;
+    uiHints?: Record<string, unknown>;
+  },
 ): Response {
   const options = typeof statusOrOptions === "number"
     ? { status: statusOrOptions }

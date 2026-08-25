@@ -33,7 +33,11 @@ export function getCached<T>(key: string): T | null {
   return entry.data as T;
 }
 
-export function setCache<T>(key: string, data: T, ttlMs: number = 300000): void {
+export function setCache<T>(
+  key: string,
+  data: T,
+  ttlMs: number = 300000,
+): void {
   cache.set(key, {
     data,
     expires: Date.now() + ttlMs,

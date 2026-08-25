@@ -99,7 +99,9 @@ export function createBotRateLimiter(config: BotRateLimiterConfig) {
         // Window active — check limit
         if (existing.request_count >= maxRequests) {
           const resetAt = new Date(existingWindowStart.getTime() + windowMs);
-          const retryAfterSeconds = Math.ceil((resetAt.getTime() - now.getTime()) / 1000);
+          const retryAfterSeconds = Math.ceil(
+            (resetAt.getTime() - now.getTime()) / 1000,
+          );
 
           return {
             allowed: false,

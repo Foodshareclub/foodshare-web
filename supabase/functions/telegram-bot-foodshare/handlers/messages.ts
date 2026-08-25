@@ -29,7 +29,14 @@ import {
 import { handleEmailInput, handleVerificationCode } from "./auth.ts";
 
 // Actions that require authorization
-const PROTECTED_ACTIONS = new Set(["share", "nearby", "profile", "impact", "stats", "language"]);
+const PROTECTED_ACTIONS = new Set([
+  "share",
+  "nearby",
+  "profile",
+  "impact",
+  "stats",
+  "language",
+]);
 
 /**
  * Check if user is authorized (has verified email)
@@ -42,7 +49,8 @@ export async function requireAuth(
   action?: string,
 ): Promise<{
   authorized: boolean;
-  profile?: ReturnType<typeof getProfileByTelegramId> extends Promise<infer T> ? T : never;
+  profile?: ReturnType<typeof getProfileByTelegramId> extends Promise<infer T> ? T
+    : never;
 }> {
   const profile = await getProfileByTelegramId(telegramUserId);
 
@@ -104,7 +112,9 @@ export async function handleNewChatMembers(
   });
 }
 
-export async function handleTextMessage(message: TelegramMessage): Promise<void> {
+export async function handleTextMessage(
+  message: TelegramMessage,
+): Promise<void> {
   const userId = message.from?.id;
   const chatId = message.chat.id;
   const text = message.text?.trim();
@@ -137,7 +147,12 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
 
     switch (menuAction) {
       case "share":
-        return handleShareCommand(chatId, userId, message.from!, message.from?.language_code);
+        return handleShareCommand(
+          chatId,
+          userId,
+          message.from!,
+          message.from?.language_code,
+        );
       case "find":
         return handleFindCommand(chatId, "", message.from?.language_code);
       case "nearby":
@@ -150,7 +165,10 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
         return handleStatsCommand(chatId, userId, message.from?.language_code);
       case "help": {
         const { detectLanguage } = await import("../lib/i18n.ts");
-        return handleHelpCommand(chatId, detectLanguage(message.from?.language_code));
+        return handleHelpCommand(
+          chatId,
+          detectLanguage(message.from?.language_code),
+        );
       }
       case "language":
         return handleLanguageCommand(chatId, userId);
@@ -199,7 +217,10 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
     if (isNaN(radius) || radius < 1 || radius > 805) {
       await sendMessage(
         chatId,
-        msg.errorMessage("Invalid Radius", "Please enter a number between 1 and 805."),
+        msg.errorMessage(
+          "Invalid Radius",
+          "Please enter a number between 1 and 805.",
+        ),
       );
       return;
     }
@@ -209,7 +230,10 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
       await updateProfile(profile.id, { search_radius_km: radius });
       await sendMessage(
         chatId,
-        msg.successMessage("Radius Updated", `Search radius set to ${radius}km.`),
+        msg.successMessage(
+          "Radius Updated",
+          `Search radius set to ${radius}km.`,
+        ),
       );
       await setUserState(userId, null);
       await handleProfileCommand(chatId, userId);
@@ -218,7 +242,9 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
   }
 
   // Handle food sharing description
-  if (userState?.action === "sharing_food" && userState.step === "description") {
+  if (
+    userState?.action === "sharing_food" && userState.step === "description"
+  ) {
     userState.data.description = text;
     userState.step = "location";
     await setUserState(userId, userState);
@@ -260,9 +286,14 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
       withTimeout(extractCoordinates(text), 5000, "Geocoding timeout"),
       userState.data.photo
         ? (async () => {
-          const { downloadAndUploadTelegramFile } = await import("../services/telegram-files.ts");
+          const { downloadAndUploadTelegramFile } = await import(
+            "../services/telegram-files.ts"
+          );
           return withTimeout(
-            downloadAndUploadTelegramFile(userState.data.photo as string, userId),
+            downloadAndUploadTelegramFile(
+              userState.data.photo as string,
+              userId,
+            ),
             30000,
             "Photo upload timeout",
           );
@@ -335,7 +366,10 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
       .from("posts")
       .insert({
         profile_id: profile.value.id,
-        post_name: (userState.data.description || "").split("\n")[0].substring(0, 100),
+        post_name: (userState.data.description || "").split("\n")[0].substring(
+          0,
+          100,
+        ),
         post_description: userState.data.description,
         post_address: text,
         location: point,
@@ -389,7 +423,9 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
   );
 }
 
-export async function handlePhotoMessage(message: TelegramMessage): Promise<void> {
+export async function handlePhotoMessage(
+  message: TelegramMessage,
+): Promise<void> {
   const userId = message.from?.id;
   const chatId = message.chat.id;
 
@@ -434,7 +470,9 @@ export async function handlePhotoMessage(message: TelegramMessage): Promise<void
   }
 }
 
-export async function handleLocationMessage(message: TelegramMessage): Promise<void> {
+export async function handleLocationMessage(
+  message: TelegramMessage,
+): Promise<void> {
   const userId = message.from?.id;
   const chatId = message.chat.id;
 
@@ -457,9 +495,14 @@ export async function handleLocationMessage(message: TelegramMessage): Promise<v
     const [uploadResult, profile] = await Promise.allSettled([
       userState.data.photo
         ? (async () => {
-          const { downloadAndUploadTelegramFile } = await import("../services/telegram-files.ts");
+          const { downloadAndUploadTelegramFile } = await import(
+            "../services/telegram-files.ts"
+          );
           return withTimeout(
-            downloadAndUploadTelegramFile(userState.data.photo as string, userId),
+            downloadAndUploadTelegramFile(
+              userState.data.photo as string,
+              userId,
+            ),
             30000,
             "Photo upload timeout",
           );
@@ -502,7 +545,10 @@ export async function handleLocationMessage(message: TelegramMessage): Promise<v
       .from("posts")
       .insert({
         profile_id: profile.value.id,
-        post_name: (userState.data.description || "").split("\n")[0].substring(0, 100),
+        post_name: (userState.data.description || "").split("\n")[0].substring(
+          0,
+          100,
+        ),
         post_description: userState.data.description,
         location: point,
         post_type: "food",

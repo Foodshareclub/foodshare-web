@@ -3,7 +3,9 @@ import { ServerError, ValidationError } from "../../../_shared/errors.ts";
 import { logger } from "../../../_shared/logger.ts";
 import type { QueryParams, UploadAvatarBody } from "../schemas.ts";
 
-export async function uploadAvatar(ctx: HandlerContext<UploadAvatarBody>): Promise<Response> {
+export async function uploadAvatar(
+  ctx: HandlerContext<UploadAvatarBody>,
+): Promise<Response> {
   const { supabase, userId, body } = ctx;
 
   if (!userId) {
@@ -49,13 +51,16 @@ export async function uploadAvatar(ctx: HandlerContext<UploadAvatarBody>): Promi
   formData.append("extractEXIF", "false");
   formData.append("enableAI", "false");
 
-  const uploadResponse = await fetch(`${supabaseUrl}/functions/v1/api-v1-images/upload`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${serviceKey}`,
+  const uploadResponse = await fetch(
+    `${supabaseUrl}/functions/v1/api-v1-images/upload`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${serviceKey}`,
+      },
+      body: formData,
     },
-    body: formData,
-  });
+  );
 
   if (!uploadResponse.ok) {
     const error = await uploadResponse.text();
@@ -89,7 +94,10 @@ export async function uploadAvatar(ctx: HandlerContext<UploadAvatarBody>): Promi
     .eq("id", userId);
 
   if (updateError) {
-    logger.error("Failed to update profile with avatar", new Error(updateError.message));
+    logger.error(
+      "Failed to update profile with avatar",
+      new Error(updateError.message),
+    );
     throw updateError;
   }
 
@@ -98,7 +106,9 @@ export async function uploadAvatar(ctx: HandlerContext<UploadAvatarBody>): Promi
   return ok({ url: publicUrl }, ctx);
 }
 
-export async function deleteAvatar(ctx: HandlerContext<unknown, QueryParams>): Promise<Response> {
+export async function deleteAvatar(
+  ctx: HandlerContext<unknown, QueryParams>,
+): Promise<Response> {
   const { supabase, userId } = ctx;
 
   if (!userId) {
@@ -144,7 +154,9 @@ export async function deleteAvatar(ctx: HandlerContext<unknown, QueryParams>): P
   return noContent(ctx);
 }
 
-export function handlePost(ctx: HandlerContext<UploadAvatarBody, QueryParams>): Promise<Response> {
+export function handlePost(
+  ctx: HandlerContext<UploadAvatarBody, QueryParams>,
+): Promise<Response> {
   if (ctx.query.action === "avatar") {
     return uploadAvatar(ctx);
   }

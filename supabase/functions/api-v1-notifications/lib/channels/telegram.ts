@@ -165,7 +165,10 @@ export class TelegramChannelAdapter implements ChannelAdapter {
   private formatTelegramMessage(payload: TelegramPayload): string {
     const categoryIcon = this.getCategoryIcon(payload.category);
     const escape = (text: string) =>
-      text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
 
     let message = `${categoryIcon} <b>${escape(payload.title)}</b>\n\n`;
     message += `${escape(payload.body)}`;

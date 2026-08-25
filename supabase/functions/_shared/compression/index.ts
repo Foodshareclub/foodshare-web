@@ -38,7 +38,8 @@ function checkCircuit(service: string): boolean {
 }
 
 function recordFailure(service: string) {
-  const circuit = circuits.get(service) || { failures: 0, lastFailure: 0, isOpen: false };
+  const circuit = circuits.get(service) ||
+    { failures: 0, lastFailure: 0, isOpen: false };
   circuit.failures++;
   circuit.lastFailure = Date.now();
 
@@ -98,7 +99,9 @@ async function compressWithTinyPNG(
     service: "tinypng",
     originalSize: imageData.length,
     compressedSize: buffer.length,
-    savedPercent: Math.round(((imageData.length - buffer.length) / imageData.length) * 100),
+    savedPercent: Math.round(
+      ((imageData.length - buffer.length) / imageData.length) * 100,
+    ),
   };
 }
 
@@ -153,7 +156,9 @@ async function compressWithCloudinary(
     service: "cloudinary",
     originalSize: imageData.length,
     compressedSize: buffer.length,
-    savedPercent: Math.round(((imageData.length - buffer.length) / imageData.length) * 100),
+    savedPercent: Math.round(
+      ((imageData.length - buffer.length) / imageData.length) * 100,
+    ),
   };
 }
 

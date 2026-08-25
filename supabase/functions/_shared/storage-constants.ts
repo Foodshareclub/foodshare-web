@@ -33,7 +33,14 @@ export type StorageBucket = (typeof STORAGE_BUCKETS)[keyof typeof STORAGE_BUCKET
  * Server-side validation for edge functions
  */
 export const ALLOWED_MIME_TYPES = {
-  PROFILES: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"],
+  PROFILES: [
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "image/webp",
+    "image/gif",
+    "image/avif",
+  ],
   POSTS: [
     "image/png",
     "image/jpeg",
@@ -63,8 +70,22 @@ export const ALLOWED_MIME_TYPES = {
     "application/pdf",
     "text/plain",
   ],
-  CHALLENGES: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"],
-  ROOMS: ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/avif"],
+  CHALLENGES: [
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "image/webp",
+    "image/gif",
+    "image/avif",
+  ],
+  ROOMS: [
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "image/webp",
+    "image/gif",
+    "image/avif",
+  ],
   ASSETS: [
     "image/png",
     "image/jpeg",
@@ -109,7 +130,10 @@ export function isValidFileType(
 /**
  * Validate file size against bucket's maximum
  */
-export function isValidFileSize(fileSize: number, bucket: keyof typeof STORAGE_BUCKETS): boolean {
+export function isValidFileSize(
+  fileSize: number,
+  bucket: keyof typeof STORAGE_BUCKETS,
+): boolean {
   const maxSize = MAX_FILE_SIZES[bucket];
   return fileSize <= maxSize;
 }

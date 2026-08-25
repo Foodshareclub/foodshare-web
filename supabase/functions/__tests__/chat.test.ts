@@ -32,7 +32,8 @@ const updateRoomStateSchema = z.object({
 const listRoomsSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20),
   offset: z.coerce.number().int().min(0).default(0),
-  status: z.enum(["pending", "accepted", "completed", "archived", "cancelled"]).optional(),
+  status: z.enum(["pending", "accepted", "completed", "archived", "cancelled"])
+    .optional(),
 });
 
 // =============================================================================
@@ -261,18 +262,21 @@ Deno.test("message sending: validates room membership", () => {
 
   // Non-member should fail
   const nonMemberId = "user-3";
-  const isNonMember = room.buyer_id === nonMemberId || room.seller_id === nonMemberId;
+  const isNonMember = room.buyer_id === nonMemberId ||
+    room.seller_id === nonMemberId;
   assertEquals(isNonMember, false);
 });
 
 Deno.test("message sending: rejects if room is archived", () => {
   const room = { status: "archived" };
-  const canSendMessage = room.status !== "archived" && room.status !== "cancelled";
+  const canSendMessage = room.status !== "archived" &&
+    room.status !== "cancelled";
   assertEquals(canSendMessage, false);
 });
 
 Deno.test("message sending: allows if room is accepted", () => {
   const room = { status: "accepted" };
-  const canSendMessage = room.status !== "archived" && room.status !== "cancelled";
+  const canSendMessage = room.status !== "archived" &&
+    room.status !== "cancelled";
   assertEquals(canSendMessage, true);
 });

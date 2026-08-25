@@ -39,17 +39,20 @@ export class TelegramAlerter {
    */
   async sendAlert(message: string, silent = false): Promise<boolean> {
     try {
-      const response = await fetch(`https://api.telegram.org/bot${this.botToken}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: this.chatId,
-          text: message,
-          parse_mode: "HTML",
-          disable_notification: silent,
-          disable_web_page_preview: true,
-        }),
-      });
+      const response = await fetch(
+        `https://api.telegram.org/bot${this.botToken}/sendMessage`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: this.chatId,
+            text: message,
+            parse_mode: "HTML",
+            disable_notification: silent,
+            disable_web_page_preview: true,
+          }),
+        },
+      );
 
       const result = await response.json();
       if (!result.ok) {
@@ -58,7 +61,10 @@ export class TelegramAlerter {
       }
       return true;
     } catch (error) {
-      logger.error("Failed to send Telegram alert", error instanceof Error ? error : { error });
+      logger.error(
+        "Failed to send Telegram alert",
+        error instanceof Error ? error : { error },
+      );
       return false;
     }
   }
@@ -172,7 +178,9 @@ let alerterInstance: TelegramAlerter | null = null;
  * Create or get the Telegram alerter instance
  * Returns null if Telegram credentials are not configured
  */
-export function createTelegramAlerter(config?: Partial<TelegramConfig>): TelegramAlerter | null {
+export function createTelegramAlerter(
+  config?: Partial<TelegramConfig>,
+): TelegramAlerter | null {
   if (!alerterInstance) {
     const botToken = config?.botToken ?? getSecretSync("BOT_TOKEN");
     const chatId = config?.chatId ?? getSecretSync("ADMIN_CHAT_ID");

@@ -42,7 +42,9 @@ export class ExternalServiceError extends Error {
 /**
  * Format error for logging
  */
-export function formatError(error: unknown): { message: string; stack?: string; name?: string } {
+export function formatError(
+  error: unknown,
+): { message: string; stack?: string; name?: string } {
   if (error instanceof Error) {
     return {
       message: error.message,

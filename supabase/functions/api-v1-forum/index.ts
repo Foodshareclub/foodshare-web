@@ -94,37 +94,36 @@ const healthCheck = createHealthHandler("api-v1-forum", VERSION);
 // =============================================================================
 
 const forumQuerySchema = z.object({
-  action: z
-    .enum([
-      "categories",
-      "search",
-      "drafts",
-      "bookmarks",
-      "unread",
-      "series",
-      "comments",
-      "create",
-      "comment",
-      "like",
-      "bookmark",
-      "react",
-      "subscribe",
-      "report",
-      "draft",
-      "poll",
-      "vote",
-      "view",
-      "pin",
-      "lock",
-      "remove",
-      "feature",
-      "best-answer",
-    ])
-    .optional(),
+  action: z.enum([
+    "categories",
+    "search",
+    "drafts",
+    "bookmarks",
+    "unread",
+    "series",
+    "comments",
+    "create",
+    "comment",
+    "like",
+    "bookmark",
+    "react",
+    "subscribe",
+    "report",
+    "draft",
+    "poll",
+    "vote",
+    "view",
+    "pin",
+    "lock",
+    "remove",
+    "feature",
+    "best-answer",
+  ]).optional(),
   id: z.string().optional(),
   q: z.string().optional(),
   categoryId: z.string().optional(),
-  postType: z.enum(["discussion", "question", "announcement", "guide"]).optional(),
+  postType: z.enum(["discussion", "question", "announcement", "guide"])
+    .optional(),
   sortBy: z.enum(["recent", "popular", "trending", "unanswered"]).optional(),
   authorId: uuidSchema.optional(),
   dateFrom: z.string().optional(),
@@ -140,7 +139,9 @@ export type ForumQuery = z.infer<typeof forumQuerySchema>;
 // Route Dispatchers
 // =============================================================================
 
-async function handleGet(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+async function handleGet(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   // Health check
   const url = new URL(ctx.request.url);
   if (url.pathname.endsWith("/health")) {
@@ -174,7 +175,9 @@ async function handleGet(ctx: HandlerContext<unknown, ForumQuery>): Promise<Resp
   }
 }
 
-async function handlePost(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+async function handlePost(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { query } = ctx;
 
   switch (query.action) {
@@ -217,7 +220,9 @@ async function handlePost(ctx: HandlerContext<unknown, ForumQuery>): Promise<Res
   }
 }
 
-async function handlePut(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+async function handlePut(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { query } = ctx;
 
   if (!query.id) {
@@ -231,7 +236,9 @@ async function handlePut(ctx: HandlerContext<unknown, ForumQuery>): Promise<Resp
   return updatePost(ctx);
 }
 
-async function handleDelete(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+async function handleDelete(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { query } = ctx;
 
   if (!query.id && query.action !== "draft") {
@@ -252,38 +259,36 @@ async function handleDelete(ctx: HandlerContext<unknown, ForumQuery>): Promise<R
 // Export Handler
 // =============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: "api-v1-forum",
-    version: VERSION,
-    requireAuth: false, // GET is public, mutations require auth
-    csrf: true,
-    rateLimit: {
-      limit: 120,
-      windowMs: 60000,
-      keyBy: "ip",
+Deno.serve(createAPIHandler({
+  service: "api-v1-forum",
+  version: VERSION,
+  requireAuth: false, // GET is public, mutations require auth
+  csrf: true,
+  rateLimit: {
+    limit: 120,
+    windowMs: 60000,
+    keyBy: "ip",
+  },
+  routes: {
+    GET: {
+      querySchema: forumQuerySchema,
+      handler: handleGet,
+      requireAuth: false,
     },
-    routes: {
-      GET: {
-        querySchema: forumQuerySchema,
-        handler: handleGet,
-        requireAuth: false,
-      },
-      POST: {
-        querySchema: forumQuerySchema,
-        handler: handlePost,
-        requireAuth: true,
-      },
-      PUT: {
-        querySchema: forumQuerySchema,
-        handler: handlePut,
-        requireAuth: true,
-      },
-      DELETE: {
-        querySchema: forumQuerySchema,
-        handler: handleDelete,
-        requireAuth: true,
-      },
+    POST: {
+      querySchema: forumQuerySchema,
+      handler: handlePost,
+      requireAuth: true,
     },
-  }),
-);
+    PUT: {
+      querySchema: forumQuerySchema,
+      handler: handlePut,
+      requireAuth: true,
+    },
+    DELETE: {
+      querySchema: forumQuerySchema,
+      handler: handleDelete,
+      requireAuth: true,
+    },
+  },
+}));

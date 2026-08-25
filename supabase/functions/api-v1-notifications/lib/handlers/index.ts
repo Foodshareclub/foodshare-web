@@ -31,7 +31,9 @@ export async function handleHealth(
 /**
  * GET /stats - Statistics
  */
-export async function handleStats(context: NotificationContext): Promise<{
+export async function handleStats(
+  context: NotificationContext,
+): Promise<{
   success: boolean;
   data?: Record<string, unknown>;
   error?: string;
@@ -40,7 +42,10 @@ export async function handleStats(context: NotificationContext): Promise<{
     const { data, error } = await context.supabase
       .from("notification_delivery_log")
       .select("status", { count: "exact" })
-      .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+      .gte(
+        "created_at",
+        new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      );
 
     if (error) {
       return { success: false, error: error.message };
@@ -65,7 +70,9 @@ export async function handleStats(context: NotificationContext): Promise<{
 /**
  * GET /preferences - Get user preferences
  */
-export async function handleGetPreferences(context: NotificationContext): Promise<{
+export async function handleGetPreferences(
+  context: NotificationContext,
+): Promise<{
   success: boolean;
   data?: unknown;
   error?: string;
@@ -75,9 +82,12 @@ export async function handleGetPreferences(context: NotificationContext): Promis
   }
 
   try {
-    const { data, error } = await context.supabase.rpc("get_notification_preferences", {
-      p_user_id: context.userId,
-    });
+    const { data, error } = await context.supabase.rpc(
+      "get_notification_preferences",
+      {
+        p_user_id: context.userId,
+      },
+    );
 
     if (error) {
       return { success: false, error: error.message };
@@ -105,10 +115,13 @@ export async function handleUpdatePreferences(
   }
 
   try {
-    const { data, error } = await context.supabase.rpc("update_notification_settings", {
-      p_user_id: context.userId,
-      p_settings: body,
-    });
+    const { data, error } = await context.supabase.rpc(
+      "update_notification_settings",
+      {
+        p_user_id: context.userId,
+        p_settings: body,
+      },
+    );
 
     if (error) {
       return { success: false, error: error.message };
@@ -135,12 +148,7 @@ export async function handleUpdateCategoryChannelPreference(
     return { success: false, error: "User ID required" };
   }
 
-  const {
-    category,
-    channel,
-    enabled,
-    frequency = "instant",
-  } = (body as {
+  const { category, channel, enabled, frequency = "instant" } = (body as {
     category?: string;
     channel?: string;
     enabled?: boolean;
@@ -152,13 +160,16 @@ export async function handleUpdateCategoryChannelPreference(
   }
 
   try {
-    const { data, error } = await context.supabase.rpc("update_notification_preference_channel", {
-      p_user_id: context.userId,
-      p_category: category,
-      p_channel: channel,
-      p_enabled: enabled,
-      p_frequency: frequency,
-    });
+    const { data, error } = await context.supabase.rpc(
+      "update_notification_preference_channel",
+      {
+        p_user_id: context.userId,
+        p_category: category,
+        p_channel: channel,
+        p_enabled: enabled,
+        p_frequency: frequency,
+      },
+    );
 
     if (error) {
       return { success: false, error: error.message };
@@ -189,15 +200,18 @@ export async function handleEnableDnd(
     const { duration_hours = 8 } = (body as { duration_hours?: number }) || {};
     const until = new Date(Date.now() + duration_hours * 60 * 60 * 1000);
 
-    const { data: _data, error } = await context.supabase.rpc("update_notification_settings", {
-      p_user_id: context.userId,
-      p_settings: {
-        dnd: {
-          enabled: true,
-          until: until.toISOString(),
+    const { data: _data, error } = await context.supabase.rpc(
+      "update_notification_settings",
+      {
+        p_user_id: context.userId,
+        p_settings: {
+          dnd: {
+            enabled: true,
+            until: until.toISOString(),
+          },
         },
       },
-    });
+    );
 
     if (error) {
       return { success: false, error: error.message };
@@ -215,7 +229,9 @@ export async function handleEnableDnd(
 /**
  * DELETE /preferences/dnd - Disable Do Not Disturb
  */
-export async function handleDisableDnd(context: NotificationContext): Promise<{
+export async function handleDisableDnd(
+  context: NotificationContext,
+): Promise<{
   success: boolean;
   data?: unknown;
   error?: string;
@@ -225,15 +241,18 @@ export async function handleDisableDnd(context: NotificationContext): Promise<{
   }
 
   try {
-    const { data: _data, error } = await context.supabase.rpc("update_notification_settings", {
-      p_user_id: context.userId,
-      p_settings: {
-        dnd: {
-          enabled: false,
-          until: null,
+    const { data: _data, error } = await context.supabase.rpc(
+      "update_notification_settings",
+      {
+        p_user_id: context.userId,
+        p_settings: {
+          dnd: {
+            enabled: false,
+            until: null,
+          },
         },
       },
-    });
+    );
 
     if (error) {
       return { success: false, error: error.message };
@@ -282,11 +301,14 @@ export async function handleWebhook(
 
     for (const event of events) {
       try {
-        const { error } = await context.supabase.rpc("update_email_delivery_status", {
-          p_message_id: event.messageId,
-          p_status: event.status,
-          p_metadata: event.metadata || {},
-        });
+        const { error } = await context.supabase.rpc(
+          "update_email_delivery_status",
+          {
+            p_message_id: event.messageId,
+            p_status: event.status,
+            p_metadata: event.metadata || {},
+          },
+        );
 
         if (error) {
           errors.push(`${event.messageId}: ${error.message}`);
@@ -329,7 +351,14 @@ export async function handleWebhook(
  */
 interface WebhookEvent {
   messageId: string;
-  status: "sent" | "delivered" | "opened" | "clicked" | "bounced" | "complained" | "failed";
+  status:
+    | "sent"
+    | "delivered"
+    | "opened"
+    | "clicked"
+    | "bounced"
+    | "complained"
+    | "failed";
   metadata?: Record<string, unknown>;
 }
 
@@ -393,17 +422,15 @@ function parseResendEvents(body: unknown): WebhookEvent[] {
   const status = statusMap[payload.type];
   if (!status) return [];
 
-  return [
-    {
-      messageId: payload.data.email_id,
-      status,
-      metadata: {
-        eventType: payload.type,
-        recipient: payload.data.to?.[0],
-        bounceType: payload.data.bounce?.type,
-      },
+  return [{
+    messageId: payload.data.email_id,
+    status,
+    metadata: {
+      eventType: payload.type,
+      recipient: payload.data.to?.[0],
+      bounceType: payload.data.bounce?.type,
     },
-  ];
+  }];
 }
 
 /**
@@ -436,18 +463,16 @@ function parseBrevoEvents(body: unknown): WebhookEvent[] {
   const status = statusMap[payload.event];
   if (!status) return [];
 
-  return [
-    {
-      messageId: payload["message-id"],
-      status,
-      metadata: {
-        eventType: payload.event,
-        recipient: payload.email,
-        errorMessage: payload.reason,
-        tag: payload.tag,
-      },
+  return [{
+    messageId: payload["message-id"],
+    status,
+    metadata: {
+      eventType: payload.event,
+      recipient: payload.email,
+      errorMessage: payload.reason,
+      tag: payload.tag,
     },
-  ];
+  }];
 }
 
 /**
@@ -511,19 +536,17 @@ function parseSesEvents(body: unknown): WebhookEvent[] {
   const status = statusMap[eventType];
   if (!status) return [];
 
-  return [
-    {
-      messageId,
-      status,
-      metadata: {
-        eventType,
-        recipients: notification.mail?.destination,
-        bounceType: notification.bounce?.bounceType,
-        bounceSubType: notification.bounce?.bounceSubType,
-        complaintType: notification.complaint?.complaintFeedbackType,
-      },
+  return [{
+    messageId,
+    status,
+    metadata: {
+      eventType,
+      recipients: notification.mail?.destination,
+      bounceType: notification.bounce?.bounceType,
+      bounceSubType: notification.bounce?.bounceSubType,
+      complaintType: notification.complaint?.complaintFeedbackType,
     },
-  ];
+  }];
 }
 
 /**
@@ -563,18 +586,16 @@ function parseMailerSendEvents(body: unknown): WebhookEvent[] {
   const status = statusMap[payload.type];
   if (!status) return [];
 
-  return [
-    {
-      messageId: payload.data.email.message.id,
-      status,
-      metadata: {
-        eventType: payload.type,
-        recipient: payload.data.recipient?.email,
-        clickedUrl: payload.data.url,
-        errorMessage: payload.data.reason,
-      },
+  return [{
+    messageId: payload.data.email.message.id,
+    status,
+    metadata: {
+      eventType: payload.type,
+      recipient: payload.data.recipient?.email,
+      clickedUrl: payload.data.url,
+      errorMessage: payload.data.reason,
     },
-  ];
+  }];
 }
 
 /**
@@ -601,16 +622,14 @@ function parseFcmEvents(body: unknown): WebhookEvent[] {
   const status = statusMap[payload.status || "sent"];
   if (!status) return [];
 
-  return [
-    {
-      messageId: payload.messageId,
-      status,
-      metadata: {
-        eventType: payload.status,
-        errorMessage: payload.error,
-      },
+  return [{
+    messageId: payload.messageId,
+    status,
+    metadata: {
+      eventType: payload.status,
+      errorMessage: payload.error,
     },
-  ];
+  }];
 }
 
 /**
@@ -627,11 +646,7 @@ export async function handleDigestProcess(
   const startTime = performance.now();
 
   try {
-    const {
-      frequency = "daily",
-      limit = 100,
-      dryRun = false,
-    } = (body as {
+    const { frequency = "daily", limit = 100, dryRun = false } = (body as {
       frequency?: string;
       limit?: number;
       dryRun?: boolean;
@@ -654,7 +669,10 @@ export async function handleDigestProcess(
     );
 
     if (fetchError) {
-      logger.error("Failed to fetch digest notifications", new Error(fetchError.message));
+      logger.error(
+        "Failed to fetch digest notifications",
+        new Error(fetchError.message),
+      );
       return {
         success: false,
         error: `Failed to fetch pending notifications: ${fetchError.message}`,
@@ -704,20 +722,16 @@ export async function handleDigestProcess(
       if (frequency !== "hourly") {
         try {
           const { sendToChannel } = await import("../orchestrator.ts");
-          const emailResult = await sendToChannel(
-            "email",
-            {
-              userId: userDigest.user_id,
-              type: "digest",
-              title: createDigestTitle(items, frequency),
-              body: createDigestBody(items),
-              data: {
-                frequency,
-                itemCount: String(items.length),
-              },
+          const emailResult = await sendToChannel("email", {
+            userId: userDigest.user_id,
+            type: "digest",
+            title: createDigestTitle(items, frequency),
+            body: createDigestBody(items),
+            data: {
+              frequency,
+              itemCount: String(items.length),
             },
-            context,
-          );
+          }, context);
 
           if (emailResult.success) {
             emailsSent++;
@@ -726,29 +740,27 @@ export async function handleDigestProcess(
           }
         } catch (e) {
           emailsFailed++;
-          errors.push(`Email failed for ${userDigest.user_id}: ${(e as Error).message}`);
+          errors.push(
+            `Email failed for ${userDigest.user_id}: ${(e as Error).message}`,
+          );
         }
       }
 
       // Send push notification
       try {
         const { sendToChannel } = await import("../orchestrator.ts");
-        const pushResult = await sendToChannel(
-          "push",
-          {
-            userId: userDigest.user_id,
+        const pushResult = await sendToChannel("push", {
+          userId: userDigest.user_id,
+          type: "digest",
+          title: createDigestTitle(items, frequency),
+          body: createDigestBody(items),
+          data: {
             type: "digest",
-            title: createDigestTitle(items, frequency),
-            body: createDigestBody(items),
-            data: {
-              type: "digest",
-              frequency,
-              itemCount: String(items.length),
-            },
-            collapseKey: `digest-${frequency}`,
+            frequency,
+            itemCount: String(items.length),
           },
-          context,
-        );
+          collapseKey: `digest-${frequency}`,
+        }, context);
 
         if (pushResult.success) {
           pushSent++;
@@ -762,12 +774,15 @@ export async function handleDigestProcess(
 
     // Mark notifications as sent (unless dry run)
     if (!dryRun && allNotificationIds.length > 0) {
-      const { error: markError } = await context.supabase.rpc("mark_digest_notifications_sent", {
-        p_notification_ids: allNotificationIds,
-      });
+      const { error: markError } = await context.supabase.rpc(
+        "mark_digest_notifications_sent",
+        { p_notification_ids: allNotificationIds },
+      );
 
       if (markError) {
-        errors.push(`Failed to mark notifications as sent: ${markError.message}`);
+        errors.push(
+          `Failed to mark notifications as sent: ${markError.message}`,
+        );
       }
     }
 
@@ -807,7 +822,10 @@ export async function handleDigestProcess(
 }
 
 // Helper functions for digest
-function createDigestTitle(items: Array<{ category?: string }>, frequency: string): string {
+function createDigestTitle(
+  items: Array<{ category?: string }>,
+  frequency: string,
+): string {
   const categoryNames: Record<string, string> = {
     posts: "listings",
     forum: "forum posts",
@@ -854,7 +872,9 @@ function createDigestBody(items: Array<{ title?: string }>): string {
 /**
  * GET /dashboard - Dashboard statistics
  */
-export async function handleDashboard(context: NotificationContext): Promise<{
+export async function handleDashboard(
+  context: NotificationContext,
+): Promise<{
   success: boolean;
   data?: unknown;
   error?: string;

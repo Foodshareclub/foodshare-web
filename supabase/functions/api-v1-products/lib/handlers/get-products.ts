@@ -25,7 +25,9 @@ const healthCheck = createHealthHandler("api-v1-products", VERSION);
 /**
  * Aggregated feed with unread counts
  */
-export async function getFeed(ctx: HandlerContext<unknown, ListQuery>): Promise<Response> {
+export async function getFeed(
+  ctx: HandlerContext<unknown, ListQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
 
   if (!userId) {
@@ -62,21 +64,20 @@ export async function getFeed(ctx: HandlerContext<unknown, ListQuery>): Promise<
   const fuzzedListings = fuzzProductListCoordinates(resultItems, userId);
   const nextCursor = hasMore ? cursor + limit : null;
 
-  return ok(
-    {
-      listings: fuzzedListings,
-      counts,
-      hasMore,
-      nextCursor,
-    },
-    ctx,
-  );
+  return ok({
+    listings: fuzzedListings,
+    counts,
+    hasMore,
+    nextCursor,
+  }, ctx);
 }
 
 /**
  * List products with filters and pagination
  */
-export async function listProducts(ctx: HandlerContext<unknown, ListQuery>): Promise<Response> {
+export async function listProducts(
+  ctx: HandlerContext<unknown, ListQuery>,
+): Promise<Response> {
   const { supabase, query } = ctx;
 
   const cacheKey = `products:list:${JSON.stringify(query)}`;
@@ -88,7 +89,10 @@ export async function listProducts(ctx: HandlerContext<unknown, ListQuery>): Pro
   }
   const cached = cache.get<CachedListResult>(cacheKey);
   if (cached) {
-    const fuzzedCachedItems = fuzzProductListCoordinates(cached.items, ctx.userId);
+    const fuzzedCachedItems = fuzzProductListCoordinates(
+      cached.items,
+      ctx.userId,
+    );
     return paginated(fuzzedCachedItems, ctx, {
       offset: 0,
       limit: cached.limit,
@@ -102,7 +106,12 @@ export async function listProducts(ctx: HandlerContext<unknown, ListQuery>): Pro
   const categoryId = query.categoryId ? parseIntSafe(query.categoryId) : undefined;
   const lat = query.lat ? parseFloatSafe(query.lat) : undefined;
   const lng = query.lng ? parseFloatSafe(query.lng) : undefined;
-  const radius = parseFloatSafeWithBounds(query.radiusKm || query.radius, 0.1, 1000, 10);
+  const radius = parseFloatSafeWithBounds(
+    query.radiusKm || query.radius,
+    0.1,
+    1000,
+    10,
+  );
   const userId = query.userId;
 
   let dbQuery;
@@ -118,18 +127,14 @@ export async function listProducts(ctx: HandlerContext<unknown, ListQuery>): Pro
       }
     }
 
-    dbQuery = supabase.rpc(
-      "get_nearby_posts",
-      {
-        p_latitude: lat,
-        p_longitude: lng,
-        p_radius_meters: radius * 1000,
-        p_limit: limit + 1,
-        p_offset: offset,
-        p_post_type: postType,
-      },
-      { count: "exact" },
-    );
+    dbQuery = supabase.rpc("get_nearby_posts", {
+      p_latitude: lat,
+      p_longitude: lng,
+      p_radius_meters: radius * 1000,
+      p_limit: limit + 1,
+      p_offset: offset,
+      p_post_type: postType,
+    }, { count: "exact" });
 
     if (categoryId) {
       dbQuery = dbQuery.eq("category_id", categoryId);
@@ -195,31 +200,33 @@ export async function listProducts(ctx: HandlerContext<unknown, ListQuery>): Pro
 
   const transformedItems = resultItems.map(transformProduct);
 
-  cache.set(
-    cacheKey,
-    {
-      items: transformedItems,
-      total: count || resultItems.length,
-      nextCursor,
-      limit,
-    },
-    60_000,
-  );
+  cache.set(cacheKey, {
+    items: transformedItems,
+    total: count || resultItems.length,
+    nextCursor,
+    limit,
+  }, 60_000);
 
   const fuzzedItems = fuzzProductListCoordinates(transformedItems, ctx.userId);
 
-  return paginated(fuzzedItems, ctx, {
-    offset: 0,
-    limit,
-    total: count || resultItems.length,
-    nextCursor,
-  });
+  return paginated(
+    fuzzedItems,
+    ctx,
+    {
+      offset: 0,
+      limit,
+      total: count || resultItems.length,
+      nextCursor,
+    },
+  );
 }
 
 /**
  * Get single product by ID
  */
-export async function getProduct(ctx: HandlerContext<unknown, ListQuery>): Promise<Response> {
+export async function getProduct(
+  ctx: HandlerContext<unknown, ListQuery>,
+): Promise<Response> {
   const { supabase, query, userId } = ctx;
   const productId = query.id;
 
@@ -237,13 +244,11 @@ export async function getProduct(ctx: HandlerContext<unknown, ListQuery>): Promi
 
   const { data, error } = await supabase
     .from("posts_with_location")
-    .select(
-      `
+    .select(`
       *,
       profile:profiles!posts_profile_id_fkey(${profileFields}),
       category:categories(id, name, icon)
-    `,
-    )
+    `)
     .eq("id", productId)
     .single();
 
@@ -251,19 +256,26 @@ export async function getProduct(ctx: HandlerContext<unknown, ListQuery>): Promi
     throw new NotFoundError("Product", productId);
   }
 
-  const result: any = fuzzProductCoordinates(transformProductDetail(data), userId);
+  const result: any = fuzzProductCoordinates(
+    transformProductDetail(data),
+    userId,
+  );
 
   if (includeRelated && data.latitude && data.longitude) {
     const { data: related } = await supabase
       .from("posts_with_location")
-      .select("id,title,images,post_type,created_at,latitude,longitude,profile_id")
+      .select(
+        "id,title,images,post_type,created_at,latitude,longitude,profile_id",
+      )
       .neq("id", productId)
       .eq("status", "active")
       .or(`category_id.eq.${data.category_id},post_type.eq.${data.post_type}`)
       .limit(6);
 
     if (related) {
-      result.relatedListings = fuzzProductListCoordinates(related, userId).map((r) => ({
+      result.relatedListings = fuzzProductListCoordinates(related, userId).map((
+        r,
+      ) => ({
         id: r.id,
         title: r.title,
         imageUrl: (r.images as string[])?.[0],
@@ -292,7 +304,9 @@ export async function getProduct(ctx: HandlerContext<unknown, ListQuery>): Promi
 /**
  * Route GET requests
  */
-export async function handleGet(ctx: HandlerContext<unknown, ListQuery>): Promise<Response> {
+export async function handleGet(
+  ctx: HandlerContext<unknown, ListQuery>,
+): Promise<Response> {
   const url = new URL(ctx.request.url);
   if (url.pathname.endsWith("/health")) {
     return healthCheck(ctx);

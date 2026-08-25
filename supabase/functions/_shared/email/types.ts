@@ -182,7 +182,10 @@ export const DEFAULT_EMAIL_CONFIG: EmailServiceConfig = {
 // Provider Limits
 // ============================================================================
 
-export const PROVIDER_LIMITS: Record<EmailProviderName, { daily: number; monthly: number }> = {
+export const PROVIDER_LIMITS: Record<
+  EmailProviderName,
+  { daily: number; monthly: number }
+> = {
   resend: { daily: 100, monthly: 3000 },
   brevo: { daily: 300, monthly: 9000 },
   mailersend: { daily: 400, monthly: 12000 },

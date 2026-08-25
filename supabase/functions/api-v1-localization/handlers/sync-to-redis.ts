@@ -39,7 +39,7 @@ export default async function syncToRedisHandler(
 
   try {
     // Parse request body
-    const body = (await req.json()) as SyncToRedisRequest;
+    const body = await req.json() as SyncToRedisRequest;
     const { userId, locale } = body;
 
     // Validate required fields

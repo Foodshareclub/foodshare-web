@@ -102,7 +102,9 @@ async function processEmailQueue(
           html: emailContent.html,
           text: emailContent.text,
           replyTo: emailContent.replyTo,
-          tags: [email.email_type, email.template_slug || "default"].filter(Boolean) as string[],
+          tags: [email.email_type, email.template_slug || "default"].filter(
+            Boolean,
+          ) as string[],
         },
         email.email_type as EmailType,
       );
@@ -174,9 +176,13 @@ async function buildEmailContent(
       .single();
 
     if (error || !campaign) {
-      logger.error("Failed to fetch campaign", new Error(error?.message || "Campaign not found"), {
-        campaignId: email.campaign_id,
-      });
+      logger.error(
+        "Failed to fetch campaign",
+        new Error(error?.message || "Campaign not found"),
+        {
+          campaignId: email.campaign_id,
+        },
+      );
       return null;
     }
 
@@ -186,7 +192,11 @@ async function buildEmailContent(
       email.user_email,
     );
     const personalizedText = campaign.text_content
-      ? personalizeContent(campaign.text_content, email.user_first_name, email.user_email)
+      ? personalizeContent(
+        campaign.text_content,
+        email.user_first_name,
+        email.user_email,
+      )
       : undefined;
 
     return {
@@ -251,14 +261,22 @@ async function buildEmailContent(
 // Content Helpers
 // =============================================================================
 
-function personalizeContent(content: string, firstName: string | null, email: string): string {
+function personalizeContent(
+  content: string,
+  firstName: string | null,
+  email: string,
+): string {
   return content
     .replace(/\{\{first_name\}\}/gi, firstName || "there")
     .replace(/\{\{name\}\}/gi, firstName || "there")
     .replace(/\{\{email\}\}/gi, email);
 }
 
-function buildGenericHtml(firstName: string | null, title: string, body: string): string {
+function buildGenericHtml(
+  firstName: string | null,
+  title: string,
+  body: string,
+): string {
   return `
 <!DOCTYPE html>
 <html>
@@ -280,8 +298,12 @@ function buildGenericHtml(firstName: string | null, title: string, body: string)
 </html>`;
 }
 
-function buildDigestHtml(firstName: string | null, metadata: Record<string, unknown>): string {
-  const items = (metadata.items as Array<{ title?: string; body?: string }>) || [];
+function buildDigestHtml(
+  firstName: string | null,
+  metadata: Record<string, unknown>,
+): string {
+  const items = (metadata.items as Array<{ title?: string; body?: string }>) ||
+    [];
   const frequency = (metadata.frequency as string) || "daily";
 
   const itemsHtml = items
@@ -307,9 +329,7 @@ function buildDigestHtml(firstName: string | null, metadata: Record<string, unkn
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
   <div style="background: #f8f9fa; border-radius: 8px; padding: 30px;">
     <h1 style="margin: 0 0 20px; color: #1a1a1a; font-size: 24px;">Your ${
-    escapeHtml(
-      frequency,
-    )
+    escapeHtml(frequency)
   } digest</h1>
     <p style="margin: 0 0 20px;">Hi ${escapeHtml(firstName || "there")}, here's what you missed:</p>
     <ul style="padding-left: 20px; margin: 0;">
@@ -328,8 +348,12 @@ function buildDigestHtml(firstName: string | null, metadata: Record<string, unkn
 </html>`;
 }
 
-function buildDigestText(firstName: string | null, metadata: Record<string, unknown>): string {
-  const items = (metadata.items as Array<{ title?: string; body?: string }>) || [];
+function buildDigestText(
+  firstName: string | null,
+  metadata: Record<string, unknown>,
+): string {
+  const items = (metadata.items as Array<{ title?: string; body?: string }>) ||
+    [];
   const frequency = (metadata.frequency as string) || "daily";
 
   const itemsText = items
@@ -422,7 +446,9 @@ async function resolveAutomationEmailContent(
     const name = profile.first_name || profile.nickname || "there";
     return {
       subject: emailData.subject.replace(/\{\{name\}\}/g, name),
-      html: emailData.html.replace(/\{\{name\}\}/g, name).replace(/\{\{email\}\}/g, profile.email),
+      html: emailData.html
+        .replace(/\{\{name\}\}/g, name)
+        .replace(/\{\{email\}\}/g, profile.email),
       to: profile.email,
     };
   }
@@ -434,13 +460,15 @@ async function processAutomationQueueItem(
   supabase: ReturnType<typeof getServiceRoleClient>,
   item: AutomationQueueItem,
   dryRun: boolean,
-): Promise<{
-  id: string;
-  success: boolean;
-  provider?: string;
-  error?: string;
-  latencyMs: number;
-}> {
+): Promise<
+  {
+    id: string;
+    success: boolean;
+    provider?: string;
+    error?: string;
+    latencyMs: number;
+  }
+> {
   const startTime = performance.now();
   const maxAttempts = 3;
 
@@ -606,7 +634,12 @@ export async function handleProcess(
     provider,
   });
 
-  const result = await processEmailQueue(requestId, batchSize, dryRun, provider);
+  const result = await processEmailQueue(
+    requestId,
+    batchSize,
+    dryRun,
+    provider,
+  );
   result.durationMs = Math.round(performance.now() - startTime);
 
   logger.info("Email queue processing complete", {
@@ -652,18 +685,15 @@ export async function handleProcessAutomation(
   }
 
   if (!queueItems?.length) {
-    return ok(
-      {
-        success: true,
-        message: "No pending automation emails to process",
-        dryRun,
-        processed: 0,
-        successful: 0,
-        failed: 0,
-        durationMs: Math.round(performance.now() - startTime),
-      },
-      ctx,
-    );
+    return ok({
+      success: true,
+      message: "No pending automation emails to process",
+      dryRun,
+      processed: 0,
+      successful: 0,
+      failed: 0,
+      durationMs: Math.round(performance.now() - startTime),
+    }, ctx);
   }
 
   const results: Awaited<ReturnType<typeof processAutomationQueueItem>>[] = [];
@@ -671,7 +701,11 @@ export async function handleProcessAutomation(
     const chunk = queueItems.slice(i, i + concurrency);
     const chunkResults = await Promise.all(
       chunk.map((item) =>
-        processAutomationQueueItem(supabase, item as AutomationQueueItem, dryRun)
+        processAutomationQueueItem(
+          supabase,
+          item as AutomationQueueItem,
+          dryRun,
+        )
       ),
     );
     results.push(...chunkResults);
@@ -688,20 +722,19 @@ export async function handleProcessAutomation(
     durationMs: Math.round(performance.now() - startTime),
   });
 
-  return ok(
-    {
-      success: true,
-      message: dryRun ? "Dry run completed" : "Automation queue processed",
-      dryRun,
-      processed: results.length,
-      successful: successful.length,
-      failed: failed.length,
-      avgLatencyMs: results.length > 0
-        ? Math.round(results.reduce((sum, r) => sum + r.latencyMs, 0) / results.length)
-        : 0,
-      errors: failed.map((f) => ({ id: f.id, error: f.error })),
-      durationMs: Math.round(performance.now() - startTime),
-    },
-    ctx,
-  );
+  return ok({
+    success: true,
+    message: dryRun ? "Dry run completed" : "Automation queue processed",
+    dryRun,
+    processed: results.length,
+    successful: successful.length,
+    failed: failed.length,
+    avgLatencyMs: results.length > 0
+      ? Math.round(
+        results.reduce((sum, r) => sum + r.latencyMs, 0) / results.length,
+      )
+      : 0,
+    errors: failed.map((f) => ({ id: f.id, error: f.error })),
+    durationMs: Math.round(performance.now() - startTime),
+  }, ctx);
 }

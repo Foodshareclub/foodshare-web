@@ -56,7 +56,8 @@ export const BRAND = {
 
   // Assets
   logoUrl: `https://${
-    Deno.env.get("API_DOMAIN") || Deno.env.get("API_DOMAIN") || "api.foodshare.club"
+    Deno.env.get("API_DOMAIN") || Deno.env.get("API_DOMAIN") ||
+    "api.foodshare.club"
   }/storage/v1/object/public/assets/logo-512.png`,
 
   // App Store links
@@ -64,10 +65,12 @@ export const BRAND = {
     ios: "https://apps.apple.com/us/app/foodshare-club/id1573242804",
     android: null, // Coming soon
     iosBadge: `https://${
-      Deno.env.get("API_DOMAIN") || Deno.env.get("API_DOMAIN") || "api.foodshare.club"
+      Deno.env.get("API_DOMAIN") || Deno.env.get("API_DOMAIN") ||
+      "api.foodshare.club"
     }/storage/v1/object/public/assets/apple-store.png`,
     androidBadge: `https://${
-      Deno.env.get("API_DOMAIN") || Deno.env.get("API_DOMAIN") || "api.foodshare.club"
+      Deno.env.get("API_DOMAIN") || Deno.env.get("API_DOMAIN") ||
+      "api.foodshare.club"
     }/storage/v1/object/public/assets/google-store.png`,
   },
 
@@ -79,13 +82,16 @@ export const BRAND = {
     city: "Sacramento, CA 95841",
     email: Deno.env.get("EMAIL_SUPPORT") || "support@foodshare.club",
     website: `https://${
-      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+      "foodshare.club"
     }`,
     privacy: `https://${
-      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+      "foodshare.club"
     }/privacy`,
     terms: `https://${
-      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+      Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+      "foodshare.club"
     }/terms`,
   },
 
@@ -216,7 +222,11 @@ export function bulletList(items: BulletItem[]): string {
 // Component: Info Box
 // ============================================================================
 
-export function infoBox(title: string, content: string, emoji?: string): string {
+export function infoBox(
+  title: string,
+  content: string,
+  emoji?: string,
+): string {
   return `<div style="margin: 24px 0 0; padding: 20px; background: linear-gradient(135deg, #f8f8f8 0%, #f3f3f3 100%); border-radius: 8px; border-left: 4px solid ${BRAND.primaryColor};">
   <p style="margin: 0; font-size: 14px; line-height: 1.6; color: ${BRAND.textMuted};"><strong style="color: ${BRAND.primaryColor};">${
     emoji ? emoji + " " : ""
@@ -281,7 +291,10 @@ export function ctaButton({ text, url, emoji, secondary }: CTAProps): string {
 // Component: Hero Image (inspired by Olio)
 // ============================================================================
 
-export function heroImage(imageUrl: string, alt = "FoodShare community"): string {
+export function heroImage(
+  imageUrl: string,
+  alt = "FoodShare community",
+): string {
   return `<tr>
   <td style="padding: 0;">
     <img src="${imageUrl}" alt="${alt}" style="width: 100%; height: auto; display: block;" />
@@ -323,22 +336,18 @@ export function statsBar(stats: StatItem[]): string {
 
   if (visibleStats.length === 0) return "";
 
-  const statCells = visibleStats
-    .map((stat) => {
-      const displayValue = typeof stat.value === "number"
-        ? formatStatNumber(stat.value)
-        : stat.value;
+  const statCells = visibleStats.map((stat) => {
+    const displayValue = typeof stat.value === "number" ? formatStatNumber(stat.value) : stat.value;
 
-      return `
+    return `
     <td align="center" style="padding: 16px 8px;">
       <p style="margin: 0; font-size: 28px; font-weight: 800; color: ${
-        stat.color || BRAND.primaryColor
-      };">${displayValue}</p>
+      stat.color || BRAND.primaryColor
+    };">${displayValue}</p>
       <p style="margin: 4px 0 0; font-size: 13px; color: ${BRAND.textMuted}; text-transform: uppercase; letter-spacing: 0.5px;">${stat.label}</p>
     </td>
   `;
-    })
-    .join("");
+  }).join("");
 
   return `<div style="margin: 24px 0; padding: 20px; background: ${BRAND.bgSecondary}; border-radius: ${BRAND.cardRadius};">
   <table width="100%" cellpadding="0" cellspacing="0">
@@ -377,25 +386,20 @@ export function featuredItems(
   items: FeaturedItem[],
   title = "See what others are sharing",
 ): string {
-  const itemCards = items
-    .slice(0, 3)
-    .map(
-      (item) => `
+  const itemCards = items.slice(0, 3).map((item) => `
     <td align="center" valign="top" style="width: 33%; padding: 8px;">
       <a href="${item.url || BRAND.company.website}" style="text-decoration: none;">
         <img src="${item.imageUrl}" alt="${item.title}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; display: block;" />
         <p style="margin: 10px 0 4px; font-size: 14px; font-weight: 700; color: ${BRAND.textPrimary}; line-height: 1.3;">${item.title}</p>
         <p style="margin: 0; font-size: 12px; color: ${BRAND.textMuted};">Shared by ${item.sharedBy}</p>
         ${
-        item.timeAgo
-          ? `<p style="margin: 2px 0 0; font-size: 11px; color: ${BRAND.textLight};">Requested in ${item.timeAgo}</p>`
-          : ""
-      }
+    item.timeAgo
+      ? `<p style="margin: 2px 0 0; font-size: 11px; color: ${BRAND.textLight};">Requested in ${item.timeAgo}</p>`
+      : ""
+  }
       </a>
     </td>
-  `,
-    )
-    .join("");
+  `).join("");
 
   return `<div style="margin: 30px 0; padding: 24px 0; border-top: 1px solid #f0f0f0;">
   <h3 style="margin: 0 0 20px; font-size: 20px; font-weight: 700; color: ${BRAND.textPrimary}; text-align: center;">${title}</h3>
@@ -444,7 +448,10 @@ export function socialIcons(): string {
 // Component: Footer Sign-Off (warm closing like Olio's "Happy sharing!")
 // ============================================================================
 
-export function signOff(message = "Happy sharing!", teamName = "Team FoodShare"): string {
+export function signOff(
+  message = "Happy sharing!",
+  teamName = "Team FoodShare",
+): string {
   return `<tr>
   <td style="background: ${BRAND.primaryGradient}; padding: 32px 30px; text-align: center; border-radius: 0 0 0 0;">
     <p style="margin: 0; font-size: 22px; font-weight: 700; color: #ffffff;">${message}</p>
@@ -592,7 +599,9 @@ export function buildEmail(config: EmailConfig): string {
   const contentWithCta = cta ? `${content}${ctaButton(cta)}` : content;
 
   const emailBody = emailContainer(
-    header({ title, subtitle }) + contentSection(contentWithCta) + footer(footerProps),
+    header({ title, subtitle }) +
+      contentSection(contentWithCta) +
+      footer(footerProps),
   );
 
   return documentWrapper(emailBody, title);

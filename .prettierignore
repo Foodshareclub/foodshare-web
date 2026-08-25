@@ -28,3 +28,5 @@ coverage
 # OS files
 .DS_Store
 Thumbs.db
+# vendored backend code must stay byte-identical to foodshare-backend
+/supabase/

@@ -5,7 +5,10 @@
 
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 
-export async function aggregateCounts(supabase: SupabaseClient, userId: string) {
+export async function aggregateCounts(
+  supabase: SupabaseClient,
+  userId: string,
+) {
   // Single RPC call replaces 3 sequential COUNT queries
   const { data, error } = await supabase.rpc("get_user_unread_counts", {
     p_user_id: userId,
@@ -14,30 +17,27 @@ export async function aggregateCounts(supabase: SupabaseClient, userId: string) 
   if (error || !data || data.length === 0) {
     // Fallback to individual queries if RPC fails
     const [notifications, messages, requests] = await Promise.all([
-      supabase
-        .from("notifications")
-        .select("id", {
-          count: "exact",
-          head: true,
-        })
-        .eq("user_id", userId)
-        .eq("read", false),
-      supabase
-        .from("chat_messages")
-        .select("id", {
-          count: "exact",
-          head: true,
-        })
-        .eq("recipient_id", userId)
-        .eq("read", false),
-      supabase
-        .from("listing_requests")
-        .select("id", {
-          count: "exact",
-          head: true,
-        })
-        .eq("owner_id", userId)
-        .eq("status", "pending"),
+      supabase.from("notifications").select("id", {
+        count: "exact",
+        head: true,
+      }).eq(
+        "user_id",
+        userId,
+      ).eq("read", false),
+      supabase.from("chat_messages").select("id", {
+        count: "exact",
+        head: true,
+      }).eq(
+        "recipient_id",
+        userId,
+      ).eq("read", false),
+      supabase.from("listing_requests").select("id", {
+        count: "exact",
+        head: true,
+      }).eq(
+        "owner_id",
+        userId,
+      ).eq("status", "pending"),
     ]);
 
     return {
@@ -57,24 +57,27 @@ export async function aggregateCounts(supabase: SupabaseClient, userId: string) 
 
 export async function aggregateStats(supabase: SupabaseClient, userId: string) {
   const [shared, received, active, ratings] = await Promise.all([
-    supabase
-      .from("posts")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .eq("status", "completed"),
-    supabase
-      .from("listing_requests")
-      .select("id", {
-        count: "exact",
-        head: true,
-      })
-      .eq("requester_id", userId)
-      .eq("status", "completed"),
-    supabase
-      .from("posts")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .eq("status", "active"),
+    supabase.from("posts").select("id", { count: "exact", head: true }).eq(
+      "user_id",
+      userId,
+    ).eq(
+      "status",
+      "completed",
+    ),
+    supabase.from("listing_requests").select("id", {
+      count: "exact",
+      head: true,
+    }).eq(
+      "requester_id",
+      userId,
+    ).eq("status", "completed"),
+    supabase.from("posts").select("id", { count: "exact", head: true }).eq(
+      "user_id",
+      userId,
+    ).eq(
+      "status",
+      "active",
+    ),
     supabase.from("reviews").select("rating").eq("reviewee_id", userId),
   ]);
 
@@ -91,7 +94,10 @@ export async function aggregateStats(supabase: SupabaseClient, userId: string) {
   };
 }
 
-export async function aggregateImpact(supabase: SupabaseClient, userId: string) {
+export async function aggregateImpact(
+  supabase: SupabaseClient,
+  userId: string,
+) {
   const { data } = await supabase
     .from("user_impact")
     .select("food_saved_kg,co2_saved_kg,meals_provided")

@@ -66,7 +66,9 @@ export type ListQuery = {
 // Handlers
 // =============================================================================
 
-export async function foodListRooms(ctx: HandlerContext<unknown, ListQuery>): Promise<Response> {
+export async function foodListRooms(
+  ctx: HandlerContext<unknown, ListQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
 
   if (!userId) {
@@ -129,7 +131,9 @@ export async function foodListRooms(ctx: HandlerContext<unknown, ListQuery>): Pr
   );
 }
 
-export async function foodGetRoom(ctx: HandlerContext<unknown, ListQuery>): Promise<Response> {
+export async function foodGetRoom(
+  ctx: HandlerContext<unknown, ListQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
   const roomId = query.roomId;
 
@@ -138,16 +142,14 @@ export async function foodGetRoom(ctx: HandlerContext<unknown, ListQuery>): Prom
 
   const { data: room, error: roomError } = await supabase
     .from("rooms")
-    .select(
-      `
+    .select(`
       id, post_id, sharer, requester,
       last_message, last_message_sent_by, last_message_seen_by, last_message_time,
       post_arranged_to, post_arranged_at, is_archived, created_at,
       posts:post_id (id, post_name, post_address, images, post_type, profile_id),
       sharer_profile:sharer (id, first_name, second_name, avatar_url, email),
       requester_profile:requester (id, first_name, second_name, avatar_url, email)
-    `,
-    )
+    `)
     .eq("id", roomId)
     .single();
 
@@ -159,12 +161,10 @@ export async function foodGetRoom(ctx: HandlerContext<unknown, ListQuery>): Prom
   const messageLimit = Math.min(parseInt(query.limit || "50"), 100);
   const { data: messages, error: messagesError } = await supabase
     .from("room_participants")
-    .select(
-      `
+    .select(`
       id, room_id, profile_id, text, image, timestamp,
       sender:profile_id (id, first_name, second_name, avatar_url)
-    `,
-    )
+    `)
     .eq("room_id", roomId)
     .order("timestamp", { ascending: true })
     .limit(messageLimit);
@@ -174,7 +174,10 @@ export async function foodGetRoom(ctx: HandlerContext<unknown, ListQuery>): Prom
     throw messagesError;
   }
 
-  await supabase.from("rooms").update({ last_message_seen_by: userId }).eq("id", roomId);
+  await supabase
+    .from("rooms")
+    .update({ last_message_seen_by: userId })
+    .eq("id", roomId);
 
   // Decrypt message text and room last_message
   const decryptedMessages = await Promise.all(
@@ -190,21 +193,22 @@ export async function foodGetRoom(ctx: HandlerContext<unknown, ListQuery>): Prom
     ? { ...room, last_message: await decryptMessage(room.last_message) }
     : room;
 
-  return ok(
-    {
-      room: transformFoodRoomDetail(decryptedRoom, userId),
-      messages: decryptedMessages.map(transformFoodMessage),
-    },
-    ctx,
-  );
+  return ok({
+    room: transformFoodRoomDetail(decryptedRoom, userId),
+    messages: decryptedMessages.map(transformFoodMessage),
+  }, ctx);
 }
 
-export async function foodCreateRoom(ctx: HandlerContext<FoodCreateRoomBody>): Promise<Response> {
+export async function foodCreateRoom(
+  ctx: HandlerContext<FoodCreateRoomBody>,
+): Promise<Response> {
   const { supabase, userId, body } = ctx;
 
   if (!userId) throw new ValidationError("Authentication required");
   if (userId === body.sharerId) {
-    throw new ValidationError("You cannot chat with yourself about your own listing");
+    throw new ValidationError(
+      "You cannot chat with yourself about your own listing",
+    );
   }
 
   const { data: post, error: postError } = await supabase
@@ -275,7 +279,9 @@ export async function foodCreateRoom(ctx: HandlerContext<FoodCreateRoomBody>): P
   return created({ roomId: newRoom.id, created: true }, ctx);
 }
 
-export async function foodSendMessage(ctx: HandlerContext<FoodSendMessageBody>): Promise<Response> {
+export async function foodSendMessage(
+  ctx: HandlerContext<FoodSendMessageBody>,
+): Promise<Response> {
   const { supabase, userId, body } = ctx;
 
   if (!userId) throw new ValidationError("Authentication required");
@@ -344,12 +350,10 @@ export async function foodUpdateRoom(
 
   const { data: room, error: roomError } = await supabase
     .from("rooms")
-    .select(
-      `
+    .select(`
       id, sharer, requester, post_arranged_to,
       posts:post_id (id, post_name, post_address)
-    `,
-    )
+    `)
     .eq("id", roomId)
     .single();
 
@@ -376,7 +380,9 @@ export async function foodUpdateRoom(
         }".`;
 
       const encryptedAcceptMessage = await encryptMessage(acceptMessage);
-      const encryptedAcceptPreview = await encryptMessage(acceptMessage.substring(0, 100) + "...");
+      const encryptedAcceptPreview = await encryptMessage(
+        acceptMessage.substring(0, 100) + "...",
+      );
 
       await supabase
         .from("rooms")
@@ -415,7 +421,10 @@ export async function foodUpdateRoom(
       const encryptedCompleteMessage = await encryptMessage(completeMessage);
 
       if (post) {
-        await supabase.from("posts").update({ is_arranged: true }).eq("id", post.id);
+        await supabase.from("posts").update({ is_arranged: true }).eq(
+          "id",
+          post.id,
+        );
       }
 
       await supabase.from("room_participants").insert({
@@ -453,7 +462,9 @@ export async function foodUpdateRoom(
   }
 }
 
-export async function foodArchiveRoom(ctx: HandlerContext<unknown, ListQuery>): Promise<Response> {
+export async function foodArchiveRoom(
+  ctx: HandlerContext<unknown, ListQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
   const roomId = query.roomId;
 

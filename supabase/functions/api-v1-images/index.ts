@@ -45,25 +45,30 @@ const SERVICE = "api-v1-images";
 // =============================================================================
 
 async function handleGet(ctx: HandlerContext): Promise<Response> {
-  const route = parseRoute(new URL(ctx.request.url), ctx.request.method, SERVICE);
+  const route = parseRoute(
+    new URL(ctx.request.url),
+    ctx.request.method,
+    SERVICE,
+  );
 
   if (route.resource === "health" || route.resource === "") {
-    return ok(
-      {
-        status: "healthy",
-        version: VERSION,
-        service: SERVICE,
-        r2: await isR2Configured(),
-      },
-      ctx,
-    );
+    return ok({
+      status: "healthy",
+      version: VERSION,
+      service: SERVICE,
+      r2: await isR2Configured(),
+    }, ctx);
   }
 
   throw new AppError("Not found", "NOT_FOUND", 404);
 }
 
 async function handlePost(ctx: HandlerContext): Promise<Response> {
-  const route = parseRoute(new URL(ctx.request.url), ctx.request.method, SERVICE);
+  const route = parseRoute(
+    new URL(ctx.request.url),
+    ctx.request.method,
+    SERVICE,
+  );
 
   switch (route.resource) {
     case "upload":
@@ -87,20 +92,18 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
 // API Handler
 // =============================================================================
 
-Deno.serve(
-  createAPIHandler({
-    service: SERVICE,
-    version: VERSION,
-    requireAuth: false,
-    csrf: false,
-    rateLimit: {
-      limit: 30,
-      windowMs: 60_000,
-      keyBy: "ip",
-    },
-    routes: {
-      GET: { handler: handleGet },
-      POST: { handler: handlePost },
-    },
-  }),
-);
+Deno.serve(createAPIHandler({
+  service: SERVICE,
+  version: VERSION,
+  requireAuth: false,
+  csrf: false,
+  rateLimit: {
+    limit: 30,
+    windowMs: 60_000,
+    keyBy: "ip",
+  },
+  routes: {
+    GET: { handler: handleGet },
+    POST: { handler: handlePost },
+  },
+}));

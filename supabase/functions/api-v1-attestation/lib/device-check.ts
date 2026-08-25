@@ -13,12 +13,16 @@ import type { TrustLevel } from "./types.ts";
 // DeviceCheck Verification
 // =============================================================================
 
-export async function verifyDeviceCheck(token: string): Promise<{
-  verified: boolean;
-  trustLevel: TrustLevel;
-  message?: string;
-  riskScore: number;
-}> {
+export async function verifyDeviceCheck(
+  token: string,
+): Promise<
+  {
+    verified: boolean;
+    trustLevel: TrustLevel;
+    message?: string;
+    riskScore: number;
+  }
+> {
   try {
     if (!token || token.length < 50) {
       return {

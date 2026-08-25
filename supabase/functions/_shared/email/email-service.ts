@@ -74,7 +74,10 @@ export interface SendTemplateEmailParams {
 // Template Rendering Utilities
 // ============================================================================
 
-function renderTemplateString(template: string, variables: Record<string, unknown>): string {
+function renderTemplateString(
+  template: string,
+  variables: Record<string, unknown>,
+): string {
   if (!template) return "";
 
   let result = template;
@@ -158,7 +161,10 @@ class CircuitBreaker {
     if (!circuit) return "closed";
 
     // Check if circuit should transition from open to half-open
-    if (circuit.state === "open" && Date.now() - circuit.lastFailure > this.resetMs) {
+    if (
+      circuit.state === "open" &&
+      Date.now() - circuit.lastFailure > this.resetMs
+    ) {
       circuit.state = "half-open";
     }
 
@@ -267,12 +273,8 @@ export class EmailService {
     params: SendEmailParams,
     emailType: EmailType = "notification",
   ): Promise<SendEmailResult> {
-    const priority = this.config.providerPriority[emailType] || [
-      "resend",
-      "brevo",
-      "mailersend",
-      "aws_ses",
-    ];
+    const priority = this.config.providerPriority[emailType] ||
+      ["resend", "brevo", "mailersend", "aws_ses"];
 
     // Apply defaults
     const emailParams: SendEmailParams = {
@@ -387,9 +389,14 @@ export class EmailService {
   /**
    * Check health of all providers
    */
-  async checkAllHealth(forceRefresh: boolean = false): Promise<ProviderHealth[]> {
+  async checkAllHealth(
+    forceRefresh: boolean = false,
+  ): Promise<ProviderHealth[]> {
     // Return cached if valid
-    if (!forceRefresh && this.healthCacheExpiry > Date.now() && this.healthCache.size > 0) {
+    if (
+      !forceRefresh && this.healthCacheExpiry > Date.now() &&
+      this.healthCache.size > 0
+    ) {
       return Array.from(this.healthCache.values());
     }
 
@@ -408,14 +415,12 @@ export class EmailService {
   /**
    * Get the best available provider based on health
    */
-  async getBestProvider(emailType: EmailType = "notification"): Promise<EmailProviderName | null> {
+  async getBestProvider(
+    emailType: EmailType = "notification",
+  ): Promise<EmailProviderName | null> {
     const health = await this.checkAllHealth();
-    const priority = this.config.providerPriority[emailType] || [
-      "resend",
-      "brevo",
-      "mailersend",
-      "aws_ses",
-    ];
+    const priority = this.config.providerPriority[emailType] ||
+      ["resend", "brevo", "mailersend", "aws_ses"];
 
     // Sort by priority, then by health score
     const available = health
@@ -474,7 +479,9 @@ export class EmailService {
   /**
    * Fetch a template from the database with caching
    */
-  private async fetchTemplateBySlug(slug: string): Promise<EmailTemplate | null> {
+  private async fetchTemplateBySlug(
+    slug: string,
+  ): Promise<EmailTemplate | null> {
     if (!USE_DB_TEMPLATES) {
       logger.info("Database templates disabled via feature flag", { slug });
       return null;
@@ -630,7 +637,9 @@ export class EmailService {
           rendered = templates.newListingEmail({
             recipientName: String(variables.recipientName || "there"),
             listingTitle: String(variables.listingTitle || ""),
-            listingDescription: variables.listingDescription as string | undefined,
+            listingDescription: variables.listingDescription as
+              | string
+              | undefined,
             listingAddress: variables.listingAddress as string | undefined,
             posterName: String(variables.posterName || ""),
             listingUrl: String(variables.listingUrl || ""),
@@ -726,7 +735,9 @@ let emailServiceInstance: EmailService | null = null;
 /**
  * Get the singleton email service instance
  */
-export function getEmailService(config?: Partial<EmailServiceConfig>): EmailService {
+export function getEmailService(
+  config?: Partial<EmailServiceConfig>,
+): EmailService {
   if (!emailServiceInstance) {
     emailServiceInstance = new EmailService(config);
   }

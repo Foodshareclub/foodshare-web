@@ -75,7 +75,10 @@ export function verifyServiceAuth(request: Request): boolean {
   const authHeader = request.headers.get("X-Cron-Secret");
   if (authHeader && cronSecret && authHeader === cronSecret) return true;
 
-  const bearerToken = request.headers.get("Authorization")?.replace("Bearer ", "");
+  const bearerToken = request.headers.get("Authorization")?.replace(
+    "Bearer ",
+    "",
+  );
   if (bearerToken && cronSecret && bearerToken === cronSecret) return true;
   if (bearerToken === serviceRoleKey) return true;
 

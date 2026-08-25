@@ -41,11 +41,20 @@ export class AWSV4Signer {
     };
 
     // Create canonical request
-    const canonicalRequest = await this.createCanonicalRequest(method, url, signedHeaders, payload);
+    const canonicalRequest = await this.createCanonicalRequest(
+      method,
+      url,
+      signedHeaders,
+      payload,
+    );
 
     // Create string to sign
     const credentialScope = `${dateStamp}/${this.region}/${this.service}/aws4_request`;
-    const stringToSign = await this.createStringToSign(amzDate, credentialScope, canonicalRequest);
+    const stringToSign = await this.createStringToSign(
+      amzDate,
+      credentialScope,
+      canonicalRequest,
+    );
 
     // Calculate signature
     const signature = await this.calculateSignature(dateStamp, stringToSign);
@@ -103,11 +112,18 @@ export class AWSV4Signer {
   ): Promise<string> {
     const hashedCanonicalRequest = await this.sha256Hex(canonicalRequest);
 
-    return [this.algorithm, amzDate, credentialScope, hashedCanonicalRequest].join("\n");
+    return [this.algorithm, amzDate, credentialScope, hashedCanonicalRequest]
+      .join("\n");
   }
 
-  private async calculateSignature(dateStamp: string, stringToSign: string): Promise<string> {
-    const kDate = await this.hmacSha256(`AWS4${this.secretAccessKey}`, dateStamp);
+  private async calculateSignature(
+    dateStamp: string,
+    stringToSign: string,
+  ): Promise<string> {
+    const kDate = await this.hmacSha256(
+      `AWS4${this.secretAccessKey}`,
+      dateStamp,
+    );
     const kRegion = await this.hmacSha256(kDate, this.region);
     const kService = await this.hmacSha256(kRegion, this.service);
     const kSigning = await this.hmacSha256(kService, "aws4_request");
@@ -126,11 +142,17 @@ export class AWSV4Signer {
 
   private async sha256Hex(data: string | Uint8Array): Promise<string> {
     const encoded = typeof data === "string" ? new TextEncoder().encode(data) : data;
-    const hashBuffer = await crypto.subtle.digest("SHA-256", encoded as BufferSource);
+    const hashBuffer = await crypto.subtle.digest(
+      "SHA-256",
+      encoded as BufferSource,
+    );
     return this.bufferToHex(new Uint8Array(hashBuffer));
   }
 
-  private async hmacSha256(key: string | Uint8Array, data: string): Promise<Uint8Array> {
+  private async hmacSha256(
+    key: string | Uint8Array,
+    data: string,
+  ): Promise<Uint8Array> {
     const encoder = new TextEncoder();
     const keyData = typeof key === "string" ? encoder.encode(key) : key;
 
@@ -142,7 +164,11 @@ export class AWSV4Signer {
       ["sign"],
     );
 
-    const signature = await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(data));
+    const signature = await crypto.subtle.sign(
+      "HMAC",
+      cryptoKey,
+      encoder.encode(data),
+    );
 
     return new Uint8Array(signature);
   }

@@ -25,9 +25,7 @@ export async function generateDeviceId(keyId: string): Promise<string> {
   const data = encoder.encode(`device:${keyId}:foodshare`);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray
-    .slice(0, 16)
-    .map((b) => b.toString(16).padStart(2, "0"))
+  return hashArray.slice(0, 16).map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }
 

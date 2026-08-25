@@ -37,10 +37,7 @@ export const verifySendSchema = z.object({
 
 export const verifyConfirmSchema = z.object({
   email: z.string().email(),
-  code: z
-    .string()
-    .length(6)
-    .regex(/^\d{6}$/, "Code must be 6 digits"),
+  code: z.string().length(6).regex(/^\d{6}$/, "Code must be 6 digits"),
 });
 
 export const verifyResendSchema = z.object({

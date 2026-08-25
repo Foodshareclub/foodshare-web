@@ -78,34 +78,25 @@ Deno.test("canHandle: detects CloudPubSub user-agent", () => {
 });
 
 Deno.test("canHandle: detects Google-Cloud-Pub/Sub user-agent", () => {
-  const request = createPubSubRequest(
-    {},
-    {
-      userAgent: "Google-Cloud-Pub/Sub",
-    },
-  );
+  const request = createPubSubRequest({}, {
+    userAgent: "Google-Cloud-Pub/Sub",
+  });
   assertEquals(googlePlayHandler.canHandle(request), true);
 });
 
 Deno.test("canHandle: rejects non-POST requests", () => {
-  const request = createPubSubRequest(
-    {},
-    {
-      method: "GET",
-      userAgent: "CloudPubSub-Google",
-    },
-  );
+  const request = createPubSubRequest({}, {
+    method: "GET",
+    userAgent: "CloudPubSub-Google",
+  });
   assertEquals(googlePlayHandler.canHandle(request), false);
 });
 
 Deno.test("canHandle: rejects non-JSON content type", () => {
-  const request = createPubSubRequest(
-    {},
-    {
-      userAgent: "CloudPubSub-Google",
-      contentType: "text/plain",
-    },
-  );
+  const request = createPubSubRequest({}, {
+    userAgent: "CloudPubSub-Google",
+    contentType: "text/plain",
+  });
   assertEquals(googlePlayHandler.canHandle(request), false);
 });
 
@@ -168,31 +159,28 @@ Deno.test("verifyWebhook: bad base64 data fails", async () => {
   assertEquals(result, false);
 });
 
-Deno.test(
-  "verifyWebhook: package name mismatch passes when GOOGLE_PLAY_PACKAGE_NAME is unconfigured",
-  async () => {
-    // When GOOGLE_PLAY_PACKAGE_NAME is empty (module-level default),
-    // the package check is skipped and any package is accepted.
-    const notification = {
+Deno.test("verifyWebhook: package name mismatch passes when GOOGLE_PLAY_PACKAGE_NAME is unconfigured", async () => {
+  // When GOOGLE_PLAY_PACKAGE_NAME is empty (module-level default),
+  // the package check is skipped and any package is accepted.
+  const notification = {
+    version: "1.0",
+    packageName: "com.other.app",
+    eventTimeMillis: String(Date.now()),
+    subscriptionNotification: {
       version: "1.0",
-      packageName: "com.other.app",
-      eventTimeMillis: String(Date.now()),
-      subscriptionNotification: {
-        version: "1.0",
-        notificationType: 4,
-        purchaseToken: "test-token",
-        subscriptionId: "premium_monthly",
-      },
-    };
+      notificationType: 4,
+      purchaseToken: "test-token",
+      subscriptionId: "premium_monthly",
+    },
+  };
 
-    const pubsubMessage = createValidPubSubMessage(notification);
-    const request = createPubSubRequest(pubsubMessage);
-    const body = JSON.stringify(pubsubMessage);
+  const pubsubMessage = createValidPubSubMessage(notification);
+  const request = createPubSubRequest(pubsubMessage);
+  const body = JSON.stringify(pubsubMessage);
 
-    const result = await googlePlayHandler.verifyWebhook(request, body);
-    assertEquals(result, true);
-  },
-);
+  const result = await googlePlayHandler.verifyWebhook(request, body);
+  assertEquals(result, true);
+});
 
 Deno.test("verifyWebhook: test notification bypasses package validation", async () => {
   const notification = {
@@ -254,7 +242,10 @@ Deno.test("parseEvent: subscription canceled maps correctly", async () => {
 
   const pubsubMessage = createValidPubSubMessage(notification);
   const request = createPubSubRequest(pubsubMessage);
-  const event = await googlePlayHandler.parseEvent(request, JSON.stringify(pubsubMessage));
+  const event = await googlePlayHandler.parseEvent(
+    request,
+    JSON.stringify(pubsubMessage),
+  );
 
   assertEquals(event.eventType, "subscription_canceled");
   assertEquals(event.subscription.status, "expired");
@@ -276,7 +267,10 @@ Deno.test("parseEvent: subscription renewed maps correctly", async () => {
 
   const pubsubMessage = createValidPubSubMessage(notification);
   const request = createPubSubRequest(pubsubMessage);
-  const event = await googlePlayHandler.parseEvent(request, JSON.stringify(pubsubMessage));
+  const event = await googlePlayHandler.parseEvent(
+    request,
+    JSON.stringify(pubsubMessage),
+  );
 
   assertEquals(event.eventType, "subscription_renewed");
   assertEquals(event.subscription.status, "active");
@@ -297,7 +291,10 @@ Deno.test("parseEvent: subscription expired maps correctly", async () => {
 
   const pubsubMessage = createValidPubSubMessage(notification);
   const request = createPubSubRequest(pubsubMessage);
-  const event = await googlePlayHandler.parseEvent(request, JSON.stringify(pubsubMessage));
+  const event = await googlePlayHandler.parseEvent(
+    request,
+    JSON.stringify(pubsubMessage),
+  );
 
   assertEquals(event.eventType, "subscription_expired");
   assertEquals(event.subscription.status, "expired");
@@ -318,7 +315,10 @@ Deno.test("parseEvent: subscription on hold maps to billing_issue", async () => 
 
   const pubsubMessage = createValidPubSubMessage(notification);
   const request = createPubSubRequest(pubsubMessage);
-  const event = await googlePlayHandler.parseEvent(request, JSON.stringify(pubsubMessage));
+  const event = await googlePlayHandler.parseEvent(
+    request,
+    JSON.stringify(pubsubMessage),
+  );
 
   assertEquals(event.eventType, "billing_issue");
   assertEquals(event.subscription.status, "on_hold");
@@ -339,7 +339,10 @@ Deno.test("parseEvent: subscription paused maps correctly", async () => {
 
   const pubsubMessage = createValidPubSubMessage(notification);
   const request = createPubSubRequest(pubsubMessage);
-  const event = await googlePlayHandler.parseEvent(request, JSON.stringify(pubsubMessage));
+  const event = await googlePlayHandler.parseEvent(
+    request,
+    JSON.stringify(pubsubMessage),
+  );
 
   assertEquals(event.eventType, "paused");
   assertEquals(event.subscription.status, "paused");
@@ -360,7 +363,10 @@ Deno.test("parseEvent: subscription revoked maps correctly", async () => {
 
   const pubsubMessage = createValidPubSubMessage(notification);
   const request = createPubSubRequest(pubsubMessage);
-  const event = await googlePlayHandler.parseEvent(request, JSON.stringify(pubsubMessage));
+  const event = await googlePlayHandler.parseEvent(
+    request,
+    JSON.stringify(pubsubMessage),
+  );
 
   assertEquals(event.eventType, "revoked");
   assertEquals(event.subscription.status, "revoked");
@@ -381,7 +387,10 @@ Deno.test("parseEvent: voided purchase maps to refunded", async () => {
 
   const pubsubMessage = createValidPubSubMessage(notification);
   const request = createPubSubRequest(pubsubMessage);
-  const event = await googlePlayHandler.parseEvent(request, JSON.stringify(pubsubMessage));
+  const event = await googlePlayHandler.parseEvent(
+    request,
+    JSON.stringify(pubsubMessage),
+  );
 
   assertEquals(event.eventType, "refunded");
   assertEquals(event.rawEventType, "VOIDED_PURCHASE");
@@ -403,7 +412,10 @@ Deno.test("parseEvent: one-time product purchased maps to subscription_created",
 
   const pubsubMessage = createValidPubSubMessage(notification);
   const request = createPubSubRequest(pubsubMessage);
-  const event = await googlePlayHandler.parseEvent(request, JSON.stringify(pubsubMessage));
+  const event = await googlePlayHandler.parseEvent(
+    request,
+    JSON.stringify(pubsubMessage),
+  );
 
   assertEquals(event.eventType, "subscription_created");
   assertEquals(event.subscription.productId, "donation_5");
@@ -420,7 +432,10 @@ Deno.test("parseEvent: test notification returns test event type", async () => {
 
   const pubsubMessage = createValidPubSubMessage(notification);
   const request = createPubSubRequest(pubsubMessage);
-  const event = await googlePlayHandler.parseEvent(request, JSON.stringify(pubsubMessage));
+  const event = await googlePlayHandler.parseEvent(
+    request,
+    JSON.stringify(pubsubMessage),
+  );
 
   assertEquals(event.eventType, "test");
   assertEquals(event.rawEventType, "TEST_NOTIFICATION");
@@ -436,7 +451,10 @@ Deno.test("parseEvent: unknown notification type returns unknown", async () => {
 
   const pubsubMessage = createValidPubSubMessage(notification);
   const request = createPubSubRequest(pubsubMessage);
-  const event = await googlePlayHandler.parseEvent(request, JSON.stringify(pubsubMessage));
+  const event = await googlePlayHandler.parseEvent(
+    request,
+    JSON.stringify(pubsubMessage),
+  );
 
   assertEquals(event.eventType, "unknown");
 });
@@ -454,7 +472,10 @@ Deno.test("base64UrlDecode: decodes standard base64", () => {
 Deno.test("base64UrlDecode: decodes URL-safe base64", () => {
   // URL-safe: replace + with - and / with _
   const standard = btoa("test?data&more");
-  const urlSafe = standard.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const urlSafe = standard.replace(/\+/g, "-").replace(/\//g, "_").replace(
+    /=+$/,
+    "",
+  );
   const decoded = new TextDecoder().decode(base64UrlDecode(urlSafe));
   assertEquals(decoded, "test?data&more");
 });

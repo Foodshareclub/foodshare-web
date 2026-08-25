@@ -11,7 +11,9 @@ export { geocodeAddress } from "../../_shared/geocoding.ts";
 /**
  * Extract coordinates from a WhatsApp location message
  */
-export function extractCoordinates(location: { latitude: number; longitude: number }): Coordinates {
+export function extractCoordinates(
+  location: { latitude: number; longitude: number },
+): Coordinates {
   return {
     latitude: location.latitude,
     longitude: location.longitude,

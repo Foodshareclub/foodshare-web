@@ -50,7 +50,10 @@ export function t(
   // Replace placeholders
   if (replacements) {
     for (const [placeholder, replacement] of Object.entries(replacements)) {
-      result = result.replace(new RegExp(`\\{${placeholder}\\}`, "g"), String(replacement));
+      result = result.replace(
+        new RegExp(`\\{${placeholder}\\}`, "g"),
+        String(replacement),
+      );
     }
   }
 
@@ -105,11 +108,17 @@ export async function getUserLanguage(phoneNumber: string): Promise<Language> {
 /**
  * Save user's language preference
  */
-export async function saveUserLanguage(phoneNumber: string, language: Language): Promise<void> {
+export async function saveUserLanguage(
+  phoneNumber: string,
+  language: Language,
+): Promise<void> {
   try {
     const supabase = getSupabaseClient();
 
-    await supabase.from("profiles").update({ language }).eq("whatsapp_phone", phoneNumber);
+    await supabase.from("profiles").update({ language }).eq(
+      "whatsapp_phone",
+      phoneNumber,
+    );
 
     logger.info("Saved language preference", {
       language,
@@ -125,7 +134,9 @@ export async function saveUserLanguage(phoneNumber: string, language: Language):
 /**
  * Get all supported languages
  */
-export function getSupportedLanguages(): Array<{ code: Language; name: string; flag: string }> {
+export function getSupportedLanguages(): Array<
+  { code: Language; name: string; flag: string }
+> {
   return [
     { code: "en", name: "English", flag: "🇬🇧" },
     { code: "ru", name: "Русский", flag: "🇷🇺" },

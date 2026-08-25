@@ -81,8 +81,16 @@ Deno.test("convertDistance - handles same unit", () => {
 });
 
 Deno.test("convertDistance - converts between units", () => {
-  assertAlmostEquals(convertDistance(10, "kilometers", "miles"), 6.21371192, 0.0001);
-  assertAlmostEquals(convertDistance(10, "miles", "kilometers"), 16.09344, 0.0001);
+  assertAlmostEquals(
+    convertDistance(10, "kilometers", "miles"),
+    6.21371192,
+    0.0001,
+  );
+  assertAlmostEquals(
+    convertDistance(10, "miles", "kilometers"),
+    16.09344,
+    0.0001,
+  );
 });
 
 Deno.test("getDistanceInBothUnits - returns both values", () => {
@@ -123,7 +131,12 @@ Deno.test("haversineDistance - London to Paris", () => {
 });
 
 Deno.test("calculateDistanceKm - raw coordinates", () => {
-  const distance = calculateDistanceKm(NYC.lat, NYC.lng, LONDON.lat, LONDON.lng);
+  const distance = calculateDistanceKm(
+    NYC.lat,
+    NYC.lng,
+    LONDON.lat,
+    LONDON.lng,
+  );
   assertAlmostEquals(distance, 5570, 10);
 });
 

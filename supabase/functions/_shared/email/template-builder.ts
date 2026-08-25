@@ -41,7 +41,9 @@ export interface WelcomeParams {
 const NEARBY_THRESHOLD = 10; // Show "nearby" stats only if >= 10 members
 const MEALS_THRESHOLD = 100; // Show meals stat only if >= 100
 
-export function welcomeTemplate(params: WelcomeParams): { subject: string; html: string } {
+export function welcomeTemplate(
+  params: WelcomeParams,
+): { subject: string; html: string } {
   const nearbyMembers = params.nearbyMembers ?? 0;
   const mealsShared = params.mealsSharedMonthly ?? 0;
   const totalMembers = params.totalMembers ?? 0;
@@ -146,10 +148,12 @@ export function welcomeTemplate(params: WelcomeParams): { subject: string; html:
         text: isEarlyStage ? "Share Something" : "Start Exploring",
         url: isEarlyStage
           ? `https://${
-            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+            "foodshare.club"
           }/new`
           : `https://${
-            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+            "foodshare.club"
           }/map`,
         emoji: isEarlyStage ? "🍎" : "🗺️",
       },
@@ -166,10 +170,9 @@ export interface EmailVerificationParams {
   verifyUrl: string;
 }
 
-export function emailVerificationTemplate(params: EmailVerificationParams): {
-  subject: string;
-  html: string;
-} {
+export function emailVerificationTemplate(
+  params: EmailVerificationParams,
+): { subject: string; html: string } {
   const content = `
     <p style="margin: 0 0 20px; font-size: 17px; line-height: 1.7; color: ${BRAND.textPrimary};">Thanks for signing up for <strong style="color: ${BRAND.primaryColor};">FoodShare</strong>! 🥗</p>
     ${
@@ -212,10 +215,9 @@ export interface PasswordResetParams {
   expiresIn?: string;
 }
 
-export function passwordResetTemplate(params: PasswordResetParams): {
-  subject: string;
-  html: string;
-} {
+export function passwordResetTemplate(
+  params: PasswordResetParams,
+): { subject: string; html: string } {
   const expiresIn = params.expiresIn || "1 hour";
 
   const content = `
@@ -261,10 +263,9 @@ export interface ChatNotificationParams {
   chatUrl: string;
 }
 
-export function chatNotificationTemplate(params: ChatNotificationParams): {
-  subject: string;
-  html: string;
-} {
+export function chatNotificationTemplate(
+  params: ChatNotificationParams,
+): { subject: string; html: string } {
   const preview = params.messagePreview.length > 100
     ? params.messagePreview.substring(0, 100) + "..."
     : params.messagePreview;
@@ -310,7 +311,9 @@ export interface NewListingParams {
   listingEmoji?: string;
 }
 
-export function newListingTemplate(params: NewListingParams): { subject: string; html: string } {
+export function newListingTemplate(
+  params: NewListingParams,
+): { subject: string; html: string } {
   const emoji = params.listingEmoji || "🍎";
   const listingType = params.listingType || "food";
   const shortDesc = params.listingDescription
@@ -360,10 +363,9 @@ export interface VolunteerWelcomeParams {
   name: string;
 }
 
-export function volunteerWelcomeTemplate(params: VolunteerWelcomeParams): {
-  subject: string;
-  html: string;
-} {
+export function volunteerWelcomeTemplate(
+  params: VolunteerWelcomeParams,
+): { subject: string; html: string } {
   const features: BulletItem[] = [
     {
       emoji: "📦",
@@ -418,7 +420,8 @@ export function volunteerWelcomeTemplate(params: VolunteerWelcomeParams): {
       cta: {
         text: "Start Volunteering",
         url: `https://${
-          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+          "foodshare.club"
         }/volunteer/dashboard`,
         emoji: "🚀",
       },
@@ -435,10 +438,9 @@ export interface CompleteProfileParams {
   completionPercent?: number;
 }
 
-export function completeProfileTemplate(params: CompleteProfileParams): {
-  subject: string;
-  html: string;
-} {
+export function completeProfileTemplate(
+  params: CompleteProfileParams,
+): { subject: string; html: string } {
   const percent = params.completionPercent || 50;
 
   const benefits: BulletItem[] = [
@@ -489,7 +491,8 @@ export function completeProfileTemplate(params: CompleteProfileParams): {
       cta: {
         text: "Complete Profile",
         url: `https://${
-          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+          "foodshare.club"
         }/settings/profile`,
         emoji: "📝",
       },
@@ -505,10 +508,9 @@ export interface FirstShareTipsParams {
   name: string;
 }
 
-export function firstShareTipsTemplate(params: FirstShareTipsParams): {
-  subject: string;
-  html: string;
-} {
+export function firstShareTipsTemplate(
+  params: FirstShareTipsParams,
+): { subject: string; html: string } {
   const tips: BulletItem[] = [
     {
       emoji: "📷",
@@ -563,7 +565,8 @@ export function firstShareTipsTemplate(params: FirstShareTipsParams): {
       cta: {
         text: "Create Your First Share",
         url: `https://${
-          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+          "foodshare.club"
         }/new`,
         emoji: "🍎",
       },
@@ -584,10 +587,13 @@ export interface MilestoneParams {
   nextMilestone?: string;
 }
 
-export function milestoneTemplate(params: MilestoneParams): { subject: string; html: string } {
+export function milestoneTemplate(
+  params: MilestoneParams,
+): { subject: string; html: string } {
   const emoji = params.milestoneEmoji || "🏆";
   const percentile = params.percentile || 10;
-  const nextMilestone = params.nextMilestone || "Keep sharing to unlock your next achievement!";
+  const nextMilestone = params.nextMilestone ||
+    "Keep sharing to unlock your next achievement!";
 
   const milestoneBox = `
     <div style="margin: 24px 0; padding: 32px; background: linear-gradient(135deg, ${BRAND.accentPurple} 0%, #A78BFA 100%); border-radius: 16px; text-align: center;">
@@ -617,7 +623,8 @@ export function milestoneTemplate(params: MilestoneParams): { subject: string; h
       cta: {
         text: "View All Achievements",
         url: `https://${
-          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+          "foodshare.club"
         }/achievements`,
         emoji: "🏆",
       },
@@ -639,10 +646,9 @@ export interface ReengagementParams {
   unsubscribeUrl: string;
 }
 
-export function reengagementTemplate(params: ReengagementParams): {
-  subject: string;
-  html: string;
-} {
+export function reengagementTemplate(
+  params: ReengagementParams,
+): { subject: string; html: string } {
   const newListings = params.newListingsNearby ?? 0;
   const mealsSaved = params.mealsSavedCommunity ?? 0;
   const newMembers = params.newMembersNearby ?? 0;
@@ -728,10 +734,12 @@ export function reengagementTemplate(params: ReengagementParams): {
         text: hasActivity ? "See What's New" : "Share Something",
         url: hasActivity
           ? `https://${
-            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+            "foodshare.club"
           }/map`
           : `https://${
-            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+            "foodshare.club"
           }/new`,
         emoji: hasActivity ? "🗺️" : "🍎",
       },
@@ -760,10 +768,9 @@ export interface FeedbackAlertParams {
   timestamp?: string;
 }
 
-export function feedbackAlertTemplate(params: FeedbackAlertParams): {
-  subject: string;
-  html: string;
-} {
+export function feedbackAlertTemplate(
+  params: FeedbackAlertParams,
+): { subject: string; html: string } {
   const emoji = params.feedbackEmoji || "📩";
   const timestamp = params.timestamp || new Date().toISOString();
 
@@ -791,7 +798,8 @@ export function feedbackAlertTemplate(params: FeedbackAlertParams): {
       cta: {
         text: "View in Dashboard",
         url: `https://${
-          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") ||
+          "foodshare.club"
         }/admin/feedback`,
         emoji: "📋",
       },
@@ -809,7 +817,9 @@ export interface AppLiveParams {
   platform: "iOS" | "Android";
 }
 
-export function appReleaseTemplate(params: AppLiveParams): { subject: string; html: string } {
+export function appReleaseTemplate(
+  params: AppLiveParams,
+): { subject: string; html: string } {
   const { name, platform } = params;
 
   const platformIcon = platform === "iOS" ? "🍎" : "🤖";

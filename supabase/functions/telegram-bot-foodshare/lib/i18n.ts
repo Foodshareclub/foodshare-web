@@ -48,7 +48,10 @@ export function t(
   // Replace placeholders
   if (replacements) {
     for (const [placeholder, replacement] of Object.entries(replacements)) {
-      value = value.replace(new RegExp(`\\{${placeholder}\\}`, "g"), String(replacement));
+      value = value.replace(
+        new RegExp(`\\{${placeholder}\\}`, "g"),
+        String(replacement),
+      );
     }
   }
 
@@ -79,7 +82,10 @@ export function detectLanguage(languageCode?: string): Language {
 /**
  * Get user's language from database or detect from Telegram
  */
-export async function getUserLanguage(userId: number, languageCode?: string): Promise<Language> {
+export async function getUserLanguage(
+  userId: number,
+  languageCode?: string,
+): Promise<Language> {
   if (userId) {
     try {
       const supabase = getSupabaseClient();
@@ -106,10 +112,16 @@ export async function getUserLanguage(userId: number, languageCode?: string): Pr
 /**
  * Save user's language preference to profile
  */
-export async function saveUserLanguage(userId: number, language: Language): Promise<void> {
+export async function saveUserLanguage(
+  userId: number,
+  language: Language,
+): Promise<void> {
   try {
     const supabase = getSupabaseClient();
-    await supabase.from("profiles").update({ language }).eq("telegram_id", userId);
+    await supabase.from("profiles").update({ language }).eq(
+      "telegram_id",
+      userId,
+    );
     logger.info("Saved language preference", { language, userId });
   } catch (error) {
     logger.error("Error saving user language preference", {

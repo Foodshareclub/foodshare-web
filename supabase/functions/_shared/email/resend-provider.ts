@@ -71,11 +71,11 @@ export class ResendProvider implements EmailProvider {
   constructor(config: Partial<ResendConfig> = {}) {
     this.config = {
       apiKey: config.apiKey || getSecretSync("RESEND_API_KEY") || "",
-      fromEmail: config.fromEmail ||
-        getSecretSync("EMAIL_FROM") ||
+      fromEmail: config.fromEmail || getSecretSync("EMAIL_FROM") ||
         Deno.env.get("EMAIL_FROM") ||
         "contact@foodshare.club",
-      fromName: config.fromName || getSecretSync("EMAIL_FROM_NAME") || "FoodShare",
+      fromName: config.fromName || getSecretSync("EMAIL_FROM_NAME") ||
+        "FoodShare",
     };
   }
 
@@ -114,7 +114,8 @@ export class ResendProvider implements EmailProvider {
         html: params.html,
         ...(params.text && { text: params.text }),
         ...(params.replyTo && { reply_to: params.replyTo }),
-        ...(params.tags && { tags: params.tags.map((t) => ({ name: t, value: "true" })) }),
+        ...(params.tags &&
+          { tags: params.tags.map((t) => ({ name: t, value: "true" })) }),
       };
 
       const response = await fetchWithTimeout(`${RESEND_API_BASE}/emails`, {

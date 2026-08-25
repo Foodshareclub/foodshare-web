@@ -16,7 +16,10 @@ export async function withTimeout<T>(
   errorMessage: string = "Operation timed out",
 ): Promise<T> {
   const timeout = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new TimeoutError(errorMessage, errorMessage)), timeoutMs)
+    setTimeout(
+      () => reject(new TimeoutError(errorMessage, errorMessage)),
+      timeoutMs,
+    )
   );
   return Promise.race([promise, timeout]);
 }
@@ -30,7 +33,10 @@ export async function withBatchTimeout<T>(
   errorMessage: string = "Batch operation timed out",
 ): Promise<PromiseSettledResult<T>[]> {
   const timeout = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new TimeoutError(errorMessage, errorMessage)), timeoutMs)
+    setTimeout(
+      () => reject(new TimeoutError(errorMessage, errorMessage)),
+      timeoutMs,
+    )
   );
 
   return Promise.race([Promise.allSettled(promises), timeout]) as Promise<

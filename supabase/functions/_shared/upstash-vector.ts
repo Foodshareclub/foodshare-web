@@ -140,7 +140,11 @@ export class UpstashVectorClient {
   /**
    * Execute a request to Upstash Vector
    */
-  private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  private async request<T>(
+    method: string,
+    path: string,
+    body?: unknown,
+  ): Promise<T> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.config.timeoutMs);
 
@@ -188,17 +192,24 @@ export class UpstashVectorClient {
   /**
    * Execute request with circuit breaker and retry
    */
-  private async safeRequest<T>(method: string, path: string, body?: unknown): Promise<T> {
+  private async safeRequest<T>(
+    method: string,
+    path: string,
+    body?: unknown,
+  ): Promise<T> {
     return withCircuitBreaker(
       "upstash-vector",
       async () => {
-        return withRetry(() => this.request<T>(method, path, body), {
-          ...RETRY_PRESETS.quick,
-          maxRetries: 2,
-          shouldRetry: (error) => {
-            return error instanceof VectorClientError && error.retryable;
+        return withRetry(
+          () => this.request<T>(method, path, body),
+          {
+            ...RETRY_PRESETS.quick,
+            maxRetries: 2,
+            shouldRetry: (error) => {
+              return error instanceof VectorClientError && error.retryable;
+            },
           },
-        });
+        );
       },
       {
         failureThreshold: this.config.circuitBreakerThreshold,
@@ -258,10 +269,18 @@ export class UpstashVectorClient {
   /**
    * Query vectors by similarity
    */
-  async query(vector: number[], options: VectorQueryOptions = {}): Promise<VectorQueryResult[]> {
+  async query(
+    vector: number[],
+    options: VectorQueryOptions = {},
+  ): Promise<VectorQueryResult[]> {
     const startTime = performance.now();
 
-    const { topK = 10, includeMetadata = true, includeVectors = false, filter } = options;
+    const {
+      topK = 10,
+      includeMetadata = true,
+      includeVectors = false,
+      filter,
+    } = options;
 
     const body: {
       vector: number[];
@@ -280,7 +299,11 @@ export class UpstashVectorClient {
       body.filter = filter;
     }
 
-    const results = await this.safeRequest<VectorQueryResult[]>("POST", "/query", body);
+    const results = await this.safeRequest<VectorQueryResult[]>(
+      "POST",
+      "/query",
+      body,
+    );
 
     logger.debug("Vector query executed", {
       topK,
@@ -295,13 +318,20 @@ export class UpstashVectorClient {
   /**
    * Fetch vectors by IDs
    */
-  async fetch(ids: string[], includeMetadata = true): Promise<(VectorRecord | null)[]> {
+  async fetch(
+    ids: string[],
+    includeMetadata = true,
+  ): Promise<(VectorRecord | null)[]> {
     const startTime = performance.now();
 
-    const results = await this.safeRequest<(VectorRecord | null)[]>("POST", "/fetch", {
-      ids,
-      includeMetadata,
-    });
+    const results = await this.safeRequest<(VectorRecord | null)[]>(
+      "POST",
+      "/fetch",
+      {
+        ids,
+        includeMetadata,
+      },
+    );
 
     logger.debug("Vectors fetched", {
       requestedCount: ids.length,
@@ -322,9 +352,13 @@ export class UpstashVectorClient {
 
     const startTime = performance.now();
 
-    const result = await this.safeRequest<{ deleted: number }>("POST", "/delete", {
-      ids,
-    });
+    const result = await this.safeRequest<{ deleted: number }>(
+      "POST",
+      "/delete",
+      {
+        ids,
+      },
+    );
 
     logger.info("Vectors deleted", {
       deleted: result.deleted,
@@ -382,7 +416,9 @@ let clientInstance: UpstashVectorClient | null = null;
 /**
  * Get or create the Upstash Vector client (singleton)
  */
-export function getVectorClient(config?: Partial<VectorClientConfig>): UpstashVectorClient {
+export function getVectorClient(
+  config?: Partial<VectorClientConfig>,
+): UpstashVectorClient {
   if (!clientInstance) {
     const url = config?.url || getSecretSync("UPSTASH_VECTOR_REST_URL");
     const token = config?.token || getSecretSync("UPSTASH_VECTOR_REST_TOKEN");
@@ -407,7 +443,9 @@ export function getVectorClient(config?: Partial<VectorClientConfig>): UpstashVe
 /**
  * Create a new client instance (for testing or multi-index scenarios)
  */
-export function createVectorClient(config: VectorClientConfig): UpstashVectorClient {
+export function createVectorClient(
+  config: VectorClientConfig,
+): UpstashVectorClient {
   return new UpstashVectorClient(config);
 }
 

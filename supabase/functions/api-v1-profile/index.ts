@@ -14,37 +14,35 @@ import { handlePut } from "./lib/handlers/update-profile.ts";
 import { handlePost } from "./lib/handlers/avatar.ts";
 import { handleDelete } from "./lib/handlers/account.ts";
 
-Deno.serve(
-  createAPIHandler({
-    service: "api-v1-profile",
-    version: "1.0.0",
-    requireAuth: true,
-    csrf: true,
-    rateLimit: {
-      limit: 60,
-      windowMs: 60000,
-      keyBy: "user",
+Deno.serve(createAPIHandler({
+  service: "api-v1-profile",
+  version: "1.0.0",
+  requireAuth: true,
+  csrf: true,
+  rateLimit: {
+    limit: 60,
+    windowMs: 60000,
+    keyBy: "user",
+  },
+  routes: {
+    GET: {
+      querySchema,
+      handler: handleGet,
     },
-    routes: {
-      GET: {
-        querySchema,
-        handler: handleGet,
-      },
-      PUT: {
-        querySchema,
-        handler: handlePut,
-        idempotent: true,
-      },
-      POST: {
-        schema: uploadAvatarSchema,
-        querySchema,
-        handler: handlePost,
-        idempotent: true,
-      },
-      DELETE: {
-        querySchema,
-        handler: handleDelete,
-      },
+    PUT: {
+      querySchema,
+      handler: handlePut,
+      idempotent: true,
     },
-  }),
-);
+    POST: {
+      schema: uploadAvatarSchema,
+      querySchema,
+      handler: handlePost,
+      idempotent: true,
+    },
+    DELETE: {
+      querySchema,
+      handler: handleDelete,
+    },
+  },
+}));

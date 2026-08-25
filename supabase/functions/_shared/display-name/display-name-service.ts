@@ -79,7 +79,10 @@ export class DisplayNameService {
   /**
    * Get display name for a user with caching
    */
-  async getDisplayName(userId: string, options?: ExtractOptions): Promise<DisplayNameResult> {
+  async getDisplayName(
+    userId: string,
+    options?: ExtractOptions,
+  ): Promise<DisplayNameResult> {
     const startTime = performance.now();
     metrics.totalLookups++;
 
@@ -119,7 +122,9 @@ export class DisplayNameService {
       }
 
       // Extract display name using pure function
-      const profileData = mapDatabaseProfile(profile as unknown as Record<string, unknown>);
+      const profileData = mapDatabaseProfile(
+        profile as unknown as Record<string, unknown>,
+      );
       const name = extractDisplayName(profileData, options);
 
       // Determine source
@@ -215,7 +220,11 @@ export class DisplayNameService {
                 options,
               );
               results[item.user_id] = result;
-              cache.set(CACHE_KEYS.displayName(item.user_id), result, CACHE_TTLS.displayName);
+              cache.set(
+                CACHE_KEYS.displayName(item.user_id),
+                result,
+                CACHE_TTLS.displayName,
+              );
             } catch (err) {
               errors[item.user_id] = err instanceof Error ? err.message : String(err);
             }
@@ -252,11 +261,15 @@ export class DisplayNameService {
   ): Promise<DisplayNameOverride> {
     // Validate display name
     if (!displayName || displayName.trim().length < 2) {
-      throw new InvalidDisplayNameError("Display name must be at least 2 characters");
+      throw new InvalidDisplayNameError(
+        "Display name must be at least 2 characters",
+      );
     }
 
     if (displayName.length > 100) {
-      throw new InvalidDisplayNameError("Display name must be at most 100 characters");
+      throw new InvalidDisplayNameError(
+        "Display name must be at most 100 characters",
+      );
     }
 
     const trimmedName = displayName.trim();
@@ -277,10 +290,14 @@ export class DisplayNameService {
       .single();
 
     if (error) {
-      logger.error("Failed to set display name override", new Error(error.message), {
-        userId,
-        adminUserId,
-      });
+      logger.error(
+        "Failed to set display name override",
+        new Error(error.message),
+        {
+          userId,
+          adminUserId,
+        },
+      );
       throw error;
     }
 
@@ -315,9 +332,13 @@ export class DisplayNameService {
       .eq("user_id", userId);
 
     if (error) {
-      logger.error("Failed to remove display name override", new Error(error.message), {
-        userId,
-      });
+      logger.error(
+        "Failed to remove display name override",
+        new Error(error.message),
+        {
+          userId,
+        },
+      );
       throw error;
     }
 
@@ -373,7 +394,9 @@ export class DisplayNameService {
   // Private Methods
   // =============================================================================
 
-  private async fetchProfileData(userId: string): Promise<DatabaseProfileRow | null> {
+  private async fetchProfileData(
+    userId: string,
+  ): Promise<DatabaseProfileRow | null> {
     const { data, error } = await this.supabase
       .from("profiles")
       .select("id,display_name,first_name,second_name,nickname,email")
@@ -391,7 +414,9 @@ export class DisplayNameService {
     return data;
   }
 
-  private async getOverride(userId: string): Promise<DisplayNameOverride | null> {
+  private async getOverride(
+    userId: string,
+  ): Promise<DisplayNameOverride | null> {
     const cacheKey = CACHE_KEYS.displayNameOverride(userId);
 
     return cacheThrough(
@@ -444,12 +469,17 @@ export class DisplayNameService {
     // Check in priority order
     if (
       profile.displayName &&
-      extractedName.toLowerCase().includes(profile.displayName.toLowerCase().split(" ")[0])
+      extractedName.toLowerCase().includes(
+        profile.displayName.toLowerCase().split(" ")[0],
+      )
     ) {
       return "displayName";
     }
 
-    if (profile.firstName && extractedName.toLowerCase() === profile.firstName.toLowerCase()) {
+    if (
+      profile.firstName &&
+      extractedName.toLowerCase() === profile.firstName.toLowerCase()
+    ) {
       return "firstName";
     }
 
@@ -462,7 +492,9 @@ export class DisplayNameService {
 
     if (
       profile.nickname &&
-      extractedName.toLowerCase().includes(profile.nickname.toLowerCase().split(" ")[0])
+      extractedName.toLowerCase().includes(
+        profile.nickname.toLowerCase().split(" ")[0],
+      )
     ) {
       return "nickname";
     }
@@ -506,7 +538,9 @@ export class DisplayNameService {
       throw new UserNotFoundError(userId);
     }
 
-    const profileData = mapDatabaseProfile(profile as unknown as Record<string, unknown>);
+    const profileData = mapDatabaseProfile(
+      profile as unknown as Record<string, unknown>,
+    );
     const name = extractDisplayName(profileData, options);
     const source = this.determineSource(profileData, name, options);
 
@@ -546,9 +580,13 @@ export class DisplayNameService {
       .select("*")
       .in("user_id", userIds);
 
-    const overrideMap = new Map((overrides || []).map((o) => [o.user_id, o]));
+    const overrideMap = new Map(
+      (overrides || []).map((o) => [o.user_id, o]),
+    );
 
-    const profileMap = new Map((profiles || []).map((p) => [p.id, p]));
+    const profileMap = new Map(
+      (profiles || []).map((p) => [p.id, p]),
+    );
 
     for (const userId of userIds) {
       try {
@@ -557,7 +595,11 @@ export class DisplayNameService {
 
         const result = this.processUserData(userId, profile, override, options);
         results[userId] = result;
-        cache.set(CACHE_KEYS.displayName(userId), result, CACHE_TTLS.displayName);
+        cache.set(
+          CACHE_KEYS.displayName(userId),
+          result,
+          CACHE_TTLS.displayName,
+        );
       } catch (err) {
         errors[userId] = err instanceof Error ? err.message : String(err);
       }
@@ -574,7 +616,9 @@ let serviceInstance: DisplayNameService | null = null;
 /**
  * Get singleton instance of DisplayNameService
  */
-export function getDisplayNameService(supabase: SupabaseClient): DisplayNameService {
+export function getDisplayNameService(
+  supabase: SupabaseClient,
+): DisplayNameService {
   if (!serviceInstance) {
     serviceInstance = new DisplayNameService(supabase);
   }

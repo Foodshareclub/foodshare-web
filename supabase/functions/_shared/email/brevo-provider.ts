@@ -75,11 +75,11 @@ export class BrevoProvider implements EmailProvider {
   constructor(config: Partial<BrevoConfig> = {}) {
     this.config = {
       apiKey: config.apiKey || getSecretSync("BREVO_API_KEY") || "",
-      fromEmail: config.fromEmail ||
-        getSecretSync("EMAIL_FROM") ||
+      fromEmail: config.fromEmail || getSecretSync("EMAIL_FROM") ||
         Deno.env.get("EMAIL_FROM") ||
         "contact@foodshare.club",
-      fromName: config.fromName || getSecretSync("EMAIL_FROM_NAME") || "FoodShare",
+      fromName: config.fromName || getSecretSync("EMAIL_FROM_NAME") ||
+        "FoodShare",
     };
   }
 

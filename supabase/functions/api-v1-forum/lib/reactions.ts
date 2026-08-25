@@ -55,7 +55,8 @@ export const saveDraftSchema = z.object({
   description: z.string().max(10000).optional(),
   richContent: z.record(z.unknown()).optional(),
   categoryId: positiveIntSchema.optional(),
-  postType: z.enum(["discussion", "question", "announcement", "guide"]).optional(),
+  postType: z.enum(["discussion", "question", "announcement", "guide"])
+    .optional(),
   tags: z.array(positiveIntSchema).max(5).optional(),
   imageUrl: z.string().url().optional(),
   pollData: z.record(z.unknown()).optional(),
@@ -80,7 +81,9 @@ export const votePollSchema = z.object({
 // GET Handlers
 // =============================================================================
 
-export async function getDrafts(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+export async function getDrafts(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
 
   if (!userId) {
@@ -109,7 +112,9 @@ export async function getDrafts(ctx: HandlerContext<unknown, ForumQuery>): Promi
   });
 }
 
-export async function getBookmarks(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+export async function getBookmarks(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
 
   if (!userId) {
@@ -179,7 +184,9 @@ export async function toggleReaction(ctx: HandlerContext): Promise<Response> {
   return ok(data, ctx);
 }
 
-export async function toggleSubscription(ctx: HandlerContext): Promise<Response> {
+export async function toggleSubscription(
+  ctx: HandlerContext,
+): Promise<Response> {
   const { supabase, userId } = ctx;
   const body = toggleSubscriptionSchema.parse(ctx.body);
 
@@ -313,7 +320,9 @@ export async function votePoll(ctx: HandlerContext): Promise<Response> {
 // DELETE Handlers
 // =============================================================================
 
-export async function deleteDraft(ctx: HandlerContext<unknown, ForumQuery>): Promise<Response> {
+export async function deleteDraft(
+  ctx: HandlerContext<unknown, ForumQuery>,
+): Promise<Response> {
   const { supabase, userId, query } = ctx;
 
   if (!query.id) {

@@ -8,7 +8,10 @@ let vaultSecretsLastFetched = 0;
 const VAULT_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 async function getCachedVaultSecrets(): Promise<[string, string][]> {
-  if (Date.now() - vaultSecretsLastFetched < VAULT_CACHE_TTL_MS && cachedVaultSecrets.length > 0) {
+  if (
+    Date.now() - vaultSecretsLastFetched < VAULT_CACHE_TTL_MS &&
+    cachedVaultSecrets.length > 0
+  ) {
     return cachedVaultSecrets;
   }
 
@@ -45,7 +48,10 @@ Deno.serve(async (req: Request) => {
   const { pathname } = url;
 
   if (pathname === "/_internal/health") {
-    return new Response(JSON.stringify({ message: "ok" }), { status: 200, headers });
+    return new Response(
+      JSON.stringify({ message: "ok" }),
+      { status: 200, headers },
+    );
   }
 
   if (pathname === "/_internal/metric") {
@@ -58,10 +64,10 @@ Deno.serve(async (req: Request) => {
   const serviceName = pathParts[1];
 
   if (!serviceName || serviceName === "") {
-    return new Response(JSON.stringify({ msg: "missing function name in request" }), {
-      status: 400,
-      headers,
-    });
+    return new Response(
+      JSON.stringify({ msg: "missing function name in request" }),
+      { status: 400, headers },
+    );
   }
 
   const servicePath = `/home/deno/functions/${serviceName}`;
@@ -103,7 +109,10 @@ Deno.serve(async (req: Request) => {
       if (e instanceof Deno.errors.WorkerAlreadyRetired) {
         return await callWorker();
       }
-      return new Response(JSON.stringify({ msg: String(e) }), { status: 500, headers });
+      return new Response(
+        JSON.stringify({ msg: String(e) }),
+        { status: 500, headers },
+      );
     }
   };
 
