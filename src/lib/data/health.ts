@@ -56,7 +56,9 @@ export async function isDatabaseHealthy(timeoutMs = 8000, maxRetries = 1): Promi
 
       clearTimeout(timeoutId);
 
-      if (response.ok || response.status < 500) {
+      if (response.ok) {
+        // Only 2xx counts as healthy - a 401 means the anon key was rejected
+        // (e.g. after a key rotation) and must NOT mark the backend as up
         // Verify response is JSON (not HTML from a misconfigured proxy)
         const contentType = response.headers.get("content-type") || "";
         if (contentType.includes("text/html")) {

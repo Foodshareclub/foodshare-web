@@ -88,7 +88,7 @@ async function probeService(
     });
 
     clearTimeout(timeoutId);
-    return { ok: response.status < 500, latency: Date.now() - start };
+    return { ok: response.ok, latency: Date.now() - start };
   } catch {
     return { ok: false, latency: Date.now() - start };
   }
@@ -124,8 +124,9 @@ async function checkDatabaseConnectivity(
       clearTimeout(timeoutId);
       lastStatus = response.status;
 
-      // Success or client error (not server error)
-      if (response.ok || response.status < 500) {
+      // Only 2xx counts as up - a 401 here means the anon key was rejected
+      // (e.g. after a key rotation) and must NOT be reported as healthy
+      if (response.ok) {
         return { ok: true, status: response.status };
       }
 
