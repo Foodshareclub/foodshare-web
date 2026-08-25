@@ -85,7 +85,7 @@ const metrics: Metrics = {
 function recordMetric(
   type: "success" | "error" | "ratelimit",
   latencyMs: number,
-  command?: string
+  command?: string,
 ): void {
   metrics.requestsTotal++;
   metrics.latencySum += latencyMs;
@@ -118,8 +118,8 @@ function getMetrics(): Record<string, unknown> {
 // ============================================================================
 
 async function verifyWebhookSignature(ctx: HandlerContext): Promise<boolean> {
-  const secret =
-    (await ctx.getSecret("TELEGRAM_WEBHOOK_SECRET")) || Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
+  const secret = (await ctx.getSecret("TELEGRAM_WEBHOOK_SECRET")) ||
+    Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
   if (!secret) {
     if (isDevelopment()) {
       logger.warn("TELEGRAM_WEBHOOK_SECRET not configured - skipping verification (dev mode)");
@@ -145,14 +145,12 @@ async function ensureInitialized(ctx: HandlerContext): Promise<boolean> {
   if (isInitialized) return true;
 
   try {
-    const botToken =
-      (await ctx.getSecret("TELEGRAM_BOT_TOKEN")) ||
+    const botToken = (await ctx.getSecret("TELEGRAM_BOT_TOKEN")) ||
       (await ctx.getSecret("BOT_TOKEN")) ||
       Deno.env.get("TELEGRAM_BOT_TOKEN") ||
       Deno.env.get("BOT_TOKEN");
     const supabaseUrl = (await ctx.getSecret("SUPABASE_URL")) || Deno.env.get("SUPABASE_URL");
-    const supabaseKey =
-      (await ctx.getSecret("SUPABASE_SERVICE_ROLE_KEY")) ||
+    const supabaseKey = (await ctx.getSecret("SUPABASE_SERVICE_ROLE_KEY")) ||
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!botToken) {
@@ -241,7 +239,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
     return jsonOk(
       { error: "Service temporarily unavailable", details: initError?.message },
       ctx,
-      503
+      503,
     );
   }
 
@@ -255,12 +253,11 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
       return jsonOk({ error: "Missing webhook URL parameter" }, ctx, 400);
     }
 
-    const webhookSecret =
-      (await ctx.getSecret("TELEGRAM_WEBHOOK_SECRET")) || Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
+    const webhookSecret = (await ctx.getSecret("TELEGRAM_WEBHOOK_SECRET")) ||
+      Deno.env.get("TELEGRAM_WEBHOOK_SECRET");
 
     // TEMPORARY DEBUGGING
-    const token =
-      (await ctx.getSecret("TELEGRAM_BOT_TOKEN")) ||
+    const token = (await ctx.getSecret("TELEGRAM_BOT_TOKEN")) ||
       (await ctx.getSecret("BOT_TOKEN")) ||
       Deno.env.get("TELEGRAM_BOT_TOKEN") ||
       Deno.env.get("BOT_TOKEN");
@@ -279,7 +276,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
         telegram_result: result,
       },
       ctx,
-      success ? 200 : 500
+      success ? 200 : 500,
     );
   }
 
@@ -291,14 +288,13 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
         cache: getCacheStats(),
         timestamp: new Date().toISOString(),
       },
-      ctx
+      ctx,
     );
   }
 
   // Chat ID lookup endpoint
   if (pathname.endsWith("/chat-id")) {
-    const botToken =
-      (await ctx.getSecret("TELEGRAM_BOT_TOKEN")) ||
+    const botToken = (await ctx.getSecret("TELEGRAM_BOT_TOKEN")) ||
       (await ctx.getSecret("BOT_TOKEN")) ||
       Deno.env.get("TELEGRAM_BOT_TOKEN") ||
       Deno.env.get("BOT_TOKEN");
@@ -347,7 +343,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
           unique_chat_ids: Array.from(chatIds),
           recent_messages: messages,
         },
-        ctx
+        ctx,
       );
     } catch (error) {
       return jsonOk({ error: error instanceof Error ? error.message : String(error) }, ctx, 500);
@@ -386,7 +382,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
       metrics: getMetrics(),
     },
     ctx,
-    overallStatus === "healthy" ? 200 : 503
+    overallStatus === "healthy" ? 200 : 503,
   );
 }
 
@@ -397,7 +393,7 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
     return jsonOk(
       { error: "Service temporarily unavailable", details: initError?.message },
       ctx,
-      503
+      503,
     );
   }
 
@@ -437,7 +433,7 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
             error: "Rate limit exceeded",
             retryAfter: rateLimit.retryAfterSeconds,
           },
-          ctx
+          ctx,
         );
       }
     }
@@ -478,13 +474,12 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
         }
 
         // Check if bot is @mentioned in the message
-        const isBotMentioned =
-          text?.toLowerCase().includes(`@${getBotUsername()}`) ||
+        const isBotMentioned = text?.toLowerCase().includes(`@${getBotUsername()}`) ||
           message.entities?.some(
             (e) =>
               e.type === "mention" &&
               text?.substring(e.offset, e.offset + e.length).toLowerCase() ===
-                `@${getBotUsername()}`
+                `@${getBotUsername()}`,
           );
 
         // Skip if not a command and not a bot mention
@@ -516,7 +511,7 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
                   msgUserId,
                   message.from,
                   message.from.language_code,
-                  commandArg
+                  commandArg,
                 );
               }
               break;
@@ -526,7 +521,7 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
                 await handleUnlinkCommand(
                   message.from,
                   chatId,
-                  detectLanguage(message.from.language_code)
+                  detectLanguage(message.from.language_code),
                 );
               }
               break;
@@ -541,7 +536,7 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
                   chatId,
                   msgUserId,
                   message.from,
-                  message.from.language_code
+                  message.from.language_code,
                 );
               }
               break;
@@ -629,5 +624,5 @@ Deno.serve(
       GET: { handler: handleGet, requireAuth: false },
       POST: { handler: handlePost, requireAuth: false },
     },
-  })
+  }),
 );

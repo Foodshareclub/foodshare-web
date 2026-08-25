@@ -62,7 +62,7 @@ interface TranslateRequest {
 
 export default async function translateContentHandler(
   req: Request,
-  corsHeaders: Record<string, string>
+  corsHeaders: Record<string, string>,
 ): Promise<Response> {
   const startTime = performance.now();
 
@@ -75,7 +75,7 @@ export default async function translateContentHandler(
       {
         status: 405,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 
@@ -94,7 +94,7 @@ export default async function translateContentHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -111,7 +111,7 @@ export default async function translateContentHandler(
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -125,7 +125,7 @@ export default async function translateContentHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -145,7 +145,7 @@ export default async function translateContentHandler(
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -184,7 +184,7 @@ export default async function translateContentHandler(
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -196,12 +196,11 @@ export default async function translateContentHandler(
     const llmResult = await llmTranslationService.translate(text, "en", targetLocale, contentType);
 
     // Determine cache layer from service used
-    const cacheLayer =
-      llmResult.service === "llm"
-        ? "llm"
-        : llmResult.service === "none"
-          ? "failed"
-          : llmResult.service || "llm";
+    const cacheLayer = llmResult.service === "llm"
+      ? "llm"
+      : llmResult.service === "none"
+      ? "failed"
+      : llmResult.service || "llm";
 
     // Only cache high-quality translations (quality > 0.5)
     // This prevents cache poisoning from failed/low-quality translations
@@ -266,7 +265,7 @@ export default async function translateContentHandler(
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error) {
     logger.error("Translation error", { error: (error as Error).message });
@@ -278,7 +277,7 @@ export default async function translateContentHandler(
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 }
@@ -313,7 +312,7 @@ function updateMemoryCache(key: string, text: string, quality: number): void {
 async function translateBatch(
   texts: string[],
   targetLocale: string,
-  contentType: string
+  contentType: string,
 ): Promise<string[]> {
   return llmTranslationService.batchTranslate(texts, "en", targetLocale, contentType) as any;
 }

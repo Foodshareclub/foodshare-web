@@ -35,7 +35,7 @@ import {
 // =============================================================================
 
 export async function handleCacheOperation(
-  ctx: HandlerContext<CacheOperationRequest>
+  ctx: HandlerContext<CacheOperationRequest>,
 ): Promise<Response> {
   const startTime = performance.now();
   metrics.totalRequests++;
@@ -55,8 +55,9 @@ export async function handleCacheOperation(
           circuitBreaker: circuitBreaker.state,
           metrics: {
             totalRequests: metrics.totalRequests,
-            successRate:
-              metrics.totalRequests > 0 ? metrics.successfulRequests / metrics.totalRequests : 1,
+            successRate: metrics.totalRequests > 0
+              ? metrics.successfulRequests / metrics.totalRequests
+              : 1,
             averageLatencyMs: metrics.averageLatencyMs,
           },
         },
@@ -65,7 +66,7 @@ export async function handleCacheOperation(
           executionMs: Math.round(performance.now() - startTime),
         },
       },
-      ctx
+      ctx,
     );
   }
 
@@ -76,7 +77,7 @@ export async function handleCacheOperation(
         error: "Service temporarily unavailable (circuit breaker open)",
         status: 503,
         retryAfter: Math.ceil(
-          (CONFIG.circuitBreaker.resetTimeoutMs - (Date.now() - circuitBreaker.lastFailure)) / 1000
+          (CONFIG.circuitBreaker.resetTimeoutMs - (Date.now() - circuitBreaker.lastFailure)) / 1000,
         ),
       }),
       {
@@ -85,7 +86,7 @@ export async function handleCacheOperation(
           "Content-Type": "application/json",
           "Retry-After": String(Math.ceil(CONFIG.circuitBreaker.resetTimeoutMs / 1000)),
         },
-      }
+      },
     );
   }
 
@@ -105,7 +106,7 @@ export async function handleCacheOperation(
         {
           status: 429,
           headers: { "Content-Type": "application/json", "Retry-After": "60" },
-        }
+        },
       );
     }
   }
@@ -171,8 +172,9 @@ export async function handleCacheOperation(
             throw new ValidationError("Missing value");
           }
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
-          let valueToStore =
-            typeof body.value === "string" ? body.value : JSON.stringify(body.value);
+          let valueToStore = typeof body.value === "string"
+            ? body.value
+            : JSON.stringify(body.value);
 
           if (shouldCompress(valueToStore, options)) {
             valueToStore = await compressValue(valueToStore);
@@ -194,8 +196,9 @@ export async function handleCacheOperation(
             throw new ValidationError("Missing value");
           }
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
-          let valueToStore =
-            typeof body.value === "string" ? body.value : JSON.stringify(body.value);
+          let valueToStore = typeof body.value === "string"
+            ? body.value
+            : JSON.stringify(body.value);
 
           if (shouldCompress(valueToStore, options)) {
             valueToStore = await compressValue(valueToStore);
@@ -278,7 +281,7 @@ export async function handleCacheOperation(
             ...scopedKeys,
           ])) as (string | null)[];
           const decompressed = await Promise.all(
-            values.map((v) => (v ? decompressValue(v) : null))
+            values.map((v) => (v ? decompressValue(v) : null)),
           );
           return { values: decompressed };
         }
@@ -304,7 +307,7 @@ export async function handleCacheOperation(
 
           const ttl = body.ttl || CONFIG.ttlPresets.medium;
           const pipeline = entries.map(
-            (_, i) => ["EXPIRE", scopedPairs[i * 2], ttl] as (string | number)[]
+            (_, i) => ["EXPIRE", scopedPairs[i * 2], ttl] as (string | number)[],
           );
           await executeRedisPipeline(redisUrl, redisToken, pipeline);
 
@@ -343,7 +346,7 @@ export async function handleCacheOperation(
             ...body.fields,
           ])) as (string | null)[];
           const decompressed = await Promise.all(
-            values.map((v) => (v ? decompressValue(v) : null))
+            values.map((v) => (v ? decompressValue(v) : null)),
           );
 
           const hashResult: Record<string, string | null> = {};
@@ -359,8 +362,9 @@ export async function handleCacheOperation(
             throw new ValidationError("Missing field or value");
           }
           const { scopedKey } = validateAndScopeKey(body.key, userId, true);
-          let valueToStore =
-            typeof body.value === "string" ? body.value : JSON.stringify(body.value);
+          let valueToStore = typeof body.value === "string"
+            ? body.value
+            : JSON.stringify(body.value);
           if (shouldCompress(valueToStore, options)) {
             valueToStore = await compressValue(valueToStore);
           }
@@ -709,12 +713,11 @@ export async function handleCacheOperation(
           if (!body.member) throw new ValidationError("Missing member");
           const { scopedKey } = validateAndScopeKey(body.key, userId, false);
           return {
-            isMember:
-              (await executeRedisCommand(redisUrl, redisToken, [
-                "SISMEMBER",
-                scopedKey,
-                body.member,
-              ])) === 1,
+            isMember: (await executeRedisCommand(redisUrl, redisToken, [
+              "SISMEMBER",
+              scopedKey,
+              body.member,
+            ])) === 1,
           };
         }
 
@@ -872,6 +875,6 @@ export async function handleCacheOperation(
         circuitBreaker: circuitBreaker.state,
       },
     },
-    ctx
+    ctx,
   );
 }

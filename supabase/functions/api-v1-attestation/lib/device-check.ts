@@ -55,7 +55,7 @@ export async function verifyDeviceCheck(token: string): Promise<{
   } catch (error) {
     logger.error(
       "DeviceCheck verification error",
-      error instanceof Error ? error : new Error(String(error))
+      error instanceof Error ? error : new Error(String(error)),
     );
     return {
       verified: false,

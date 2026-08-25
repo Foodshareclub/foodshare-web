@@ -66,7 +66,7 @@ function flattenObject(obj: Record<string, unknown>, prefix = ""): Record<string
  */
 function findUntranslatedKeys(
   englishFlat: Record<string, string>,
-  localeFlat: Record<string, string>
+  localeFlat: Record<string, string>,
 ): { key: string; value: string }[] {
   const untranslated: { key: string; value: string }[] = [];
 
@@ -100,7 +100,7 @@ function findUntranslatedKeys(
 
 export default async function auditHandler(
   req: Request,
-  corsHeaders: Record<string, string>
+  corsHeaders: Record<string, string>,
 ): Promise<Response> {
   if (req.method !== "GET") {
     return new Response(
@@ -111,7 +111,7 @@ export default async function auditHandler(
       {
         status: 405,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 
@@ -141,7 +141,7 @@ export default async function auditHandler(
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 
@@ -159,7 +159,7 @@ export default async function auditHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -179,7 +179,7 @@ export default async function auditHandler(
         {
           status: 404,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -218,7 +218,7 @@ export default async function auditHandler(
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 
@@ -239,7 +239,7 @@ export default async function auditHandler(
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -287,7 +287,7 @@ export default async function auditHandler(
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 
@@ -306,6 +306,6 @@ export default async function auditHandler(
     }),
     {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-    }
+    },
   );
 }

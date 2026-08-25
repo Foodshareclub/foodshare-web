@@ -172,7 +172,7 @@ function isBlockedHostname(hostname: string, additionalBlocked: string[] = []): 
  */
 export function validateUrl(
   urlString: string,
-  options: UrlValidationOptions = {}
+  options: UrlValidationOptions = {},
 ): UrlValidationResult {
   const {
     allowHttp = true,
@@ -253,7 +253,7 @@ export function validateUrl(
  */
 export function validateImageUrl(
   urlString: string,
-  options: UrlValidationOptions = {}
+  options: UrlValidationOptions = {},
 ): UrlValidationResult {
   const baseResult = validateUrl(urlString, options);
   if (!baseResult.valid) {
@@ -288,7 +288,7 @@ export function validateImageUrl(
     "images.foodshare.app",
   ];
   const isKnownHost = knownImageHosts.some(
-    (host) => url.hostname.endsWith(host) || url.hostname === host
+    (host) => url.hostname.endsWith(host) || url.hostname === host,
   );
 
   // Must have image extension or be from known host
@@ -336,7 +336,7 @@ export function sanitizeUrl(urlString: string): string | null {
  */
 export function isSafeToFetch(
   urlString: string,
-  options: UrlValidationOptions = {}
+  options: UrlValidationOptions = {},
 ): { safe: boolean; sanitizedUrl?: string; reason?: string } {
   const validation = validateUrl(urlString, options);
 

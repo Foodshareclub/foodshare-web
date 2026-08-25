@@ -100,7 +100,7 @@ export function createMockSupabaseClient(
     user?: MockUser | null;
     queryResults?: Map<string, unknown[]>;
     queryErrors?: Map<string, Error>;
-  } = {}
+  } = {},
 ): MockSupabaseClient {
   const { user = createMockUser(), queryResults = new Map(), queryErrors = new Map() } = config;
 
@@ -177,12 +177,12 @@ export async function parseJsonResponse<T = unknown>(response: Response): Promis
  */
 export async function assertResponseStatus<T = unknown>(
   response: Response,
-  expectedStatus: number
+  expectedStatus: number,
 ): Promise<T> {
   assertEquals(
     response.status,
     expectedStatus,
-    `Expected status ${expectedStatus}, got ${response.status}`
+    `Expected status ${expectedStatus}, got ${response.status}`,
   );
   return parseJsonResponse<T>(response);
 }
@@ -202,11 +202,11 @@ export async function assertSuccessResponse<T = unknown>(response: Response): Pr
 export async function assertErrorResponse(
   response: Response,
   expectedStatus: number,
-  expectedCode?: string
+  expectedCode?: string,
 ): Promise<{ error: { code: string; message: string } }> {
   const body = await assertResponseStatus<{ error: { code: string; message: string } }>(
     response,
-    expectedStatus
+    expectedStatus,
   );
   assertExists(body.error, "Response should have error property");
   if (expectedCode) {
@@ -223,7 +223,7 @@ export async function assertErrorResponse(
  * Generate a mock product
  */
 export function createMockProduct(
-  overrides: Record<string, unknown> = {}
+  overrides: Record<string, unknown> = {},
 ): Record<string, unknown> {
   return {
     id: Math.floor(Math.random() * 10000),
@@ -247,7 +247,7 @@ export function createMockProduct(
  * Generate a mock profile
  */
 export function createMockProfile(
-  overrides: Record<string, unknown> = {}
+  overrides: Record<string, unknown> = {},
 ): Record<string, unknown> {
   return {
     id: "test-user-id-12345",
@@ -274,7 +274,7 @@ export function createMockSupabaseClientWithRpc(
     queryErrors?: Map<string, Error>;
     rpcResults?: Map<string, unknown>;
     rpcErrors?: Map<string, Error>;
-  } = {}
+  } = {},
 ): MockSupabaseClient & {
   rpc: (name: string, params?: unknown) => Promise<{ data: unknown; error: unknown }>;
 } {
@@ -300,7 +300,7 @@ export function createMockNotificationContext(
     user?: MockUser | null;
     queryResults?: Map<string, unknown[]>;
     rpcResults?: Map<string, unknown>;
-  } = {}
+  } = {},
 ): {
   supabase: ReturnType<typeof createMockSupabaseClientWithRpc>;
   requestId: string;
@@ -341,7 +341,7 @@ export function createMockRoom(overrides: Record<string, unknown> = {}): Record<
  * Create a mock chat message
  */
 export function createMockMessage(
-  overrides: Record<string, unknown> = {}
+  overrides: Record<string, unknown> = {},
 ): Record<string, unknown> {
   return {
     id: crypto.randomUUID(),
@@ -459,7 +459,7 @@ export async function computeTestHmac(payload: string, secret: string): Promise<
     encoder.encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"]
+    ["sign"],
   );
   const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
   const hashArray = Array.from(new Uint8Array(signatureBuffer));
@@ -472,7 +472,7 @@ export async function computeTestHmac(payload: string, secret: string): Promise<
 export async function createMetaWebhookRequest(
   payload: unknown,
   secret: string,
-  options: { valid?: boolean; path?: string } = {}
+  options: { valid?: boolean; path?: string } = {},
 ): Promise<Request> {
   const { valid = true, path = "/whatsapp-bot-foodshare" } = options;
   const body = JSON.stringify(payload);
@@ -494,7 +494,7 @@ export async function createMetaWebhookRequest(
 export function createTelegramWebhookRequest(
   payload: unknown,
   secret: string,
-  options: { valid?: boolean; path?: string } = {}
+  options: { valid?: boolean; path?: string } = {},
 ): Request {
   const { valid = true, path = "/telegram-bot-foodshare" } = options;
   const body = JSON.stringify(payload);
@@ -515,7 +515,7 @@ export function createTelegramWebhookRequest(
 export async function createStripeWebhookRequest(
   payload: unknown,
   secret: string,
-  options: { valid?: boolean; timestamp?: number; path?: string } = {}
+  options: { valid?: boolean; timestamp?: number; path?: string } = {},
 ): Promise<Request> {
   const { valid = true, path = "/stripe-webhook" } = options;
   const timestamp = options.timestamp ?? Math.floor(Date.now() / 1000);
@@ -540,7 +540,7 @@ export async function createStripeWebhookRequest(
 export async function createGitHubWebhookRequest(
   payload: unknown,
   secret: string,
-  options: { valid?: boolean; event?: string; path?: string } = {}
+  options: { valid?: boolean; event?: string; path?: string } = {},
 ): Promise<Request> {
   const { valid = true, event = "push", path = "/github-webhook" } = options;
   const body = JSON.stringify(payload);
@@ -632,7 +632,7 @@ export const MOCK_WEBHOOK_PAYLOADS = {
  */
 export function createRequestWithOrigin(
   origin: string | null,
-  options: { method?: string; path?: string; referer?: string } = {}
+  options: { method?: string; path?: string; referer?: string } = {},
 ): Request {
   const { method = "POST", path = "/api/test", referer } = options;
   const headers: Record<string, string> = {
@@ -675,7 +675,7 @@ export const MALICIOUS_ORIGINS = [
  * Measure async operation execution time
  */
 export async function measureExecutionTime<T>(
-  fn: () => Promise<T>
+  fn: () => Promise<T>,
 ): Promise<{ result: T; durationMs: number }> {
   const start = performance.now();
   const result = await fn();
@@ -698,7 +698,7 @@ export function measureSyncExecutionTime<T>(fn: () => T): { result: T; durationM
  */
 export async function benchmark(
   fn: () => Promise<void>,
-  iterations: number = 100
+  iterations: number = 100,
 ): Promise<{
   min: number;
   max: number;
@@ -730,13 +730,13 @@ export async function benchmark(
 export async function assertExecutionTime<T>(
   fn: () => Promise<T>,
   maxMs: number,
-  description?: string
+  description?: string,
 ): Promise<T> {
   const { result, durationMs } = await measureExecutionTime(fn);
   if (durationMs > maxMs) {
     throw new Error(
       `${description || "Operation"} took ${durationMs.toFixed(2)}ms, ` +
-        `exceeding limit of ${maxMs}ms`
+        `exceeding limit of ${maxMs}ms`,
     );
   }
   return result;

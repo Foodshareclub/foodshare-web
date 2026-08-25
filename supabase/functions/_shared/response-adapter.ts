@@ -75,7 +75,7 @@ export function buildSuccessResponse<T>(
     uiHints?: UIHints;
     cacheTTL?: number;
     version?: string;
-  }
+  },
 ): Response {
   const ctx = getContext();
 
@@ -134,16 +134,16 @@ export function buildErrorResponse(
     | AppError
     | Error
     | {
-        code: string;
-        message: string;
-        details?: unknown;
-      },
+      code: string;
+      message: string;
+      details?: unknown;
+    },
   corsHeaders: Record<string, string>,
   options?: {
     status?: number;
     version?: string;
     retryAfterMs?: number;
-  }
+  },
 ): Response {
   const ctx = getContext();
   const isProduction = Deno.env.get("ENVIRONMENT") === "production";
@@ -309,7 +309,7 @@ export interface PlatformOptimizationOptions {
 export function applyPlatformOptimizations<T extends Record<string, unknown>>(
   data: T,
   platform: Platform,
-  options?: PlatformOptimizationOptions
+  options?: PlatformOptimizationOptions,
 ): T & { _platformHints?: Record<string, unknown> } {
   const result = { ...data } as T & {
     _platformHints?: Record<string, unknown>;
@@ -379,12 +379,12 @@ export function buildPlatformOptimizedResponse<T>(
     cacheTTL?: number;
     version?: string;
     platformOptions?: PlatformOptimizationOptions;
-  }
+  },
 ): Response {
   const platform = detectPlatform(request);
   const platformUIHints = getPlatformUIHints(
     platform,
-    options?.pagination ? { showEmptyState: true } : undefined
+    options?.pagination ? { showEmptyState: true } : undefined,
   );
 
   // Apply platform-specific data transformations if data is an object
@@ -399,7 +399,7 @@ export function buildPlatformOptimizedResponse<T>(
         includeCanonicalUrls: platform === "web",
         baseUrl: "https://foodshare.app",
         ...options?.platformOptions,
-      }
+      },
     ) as unknown as T;
   }
 
@@ -418,7 +418,7 @@ export function buildPlatformOptimizedResponse<T>(
 export function createDeepLinks(
   entityType: "listing" | "profile" | "chat" | "notification",
   entityId: string,
-  baseWebUrl: string = "https://foodshare.app"
+  baseWebUrl: string = "https://foodshare.app",
 ): Record<Platform, string> {
   const paths: Record<typeof entityType, string> = {
     listing: "listing",

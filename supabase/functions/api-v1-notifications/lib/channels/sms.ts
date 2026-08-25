@@ -69,7 +69,8 @@ export class SmsChannelAdapter implements ChannelAdapter {
       const result = await withCircuitBreaker(
         "twilio-sms",
         async () => {
-          const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${config.accountSid}/Messages.json`;
+          const twilioUrl =
+            `https://api.twilio.com/2010-04-01/Accounts/${config.accountSid}/Messages.json`;
 
           const body = new URLSearchParams({
             To: payload.to,
@@ -87,7 +88,7 @@ export class SmsChannelAdapter implements ChannelAdapter {
               },
               body: body.toString(),
             },
-            "twilio.sms.send"
+            "twilio.sms.send",
           );
 
           if (!response.ok) {
@@ -98,7 +99,7 @@ export class SmsChannelAdapter implements ChannelAdapter {
           const data = await response.json();
           return data;
         },
-        { failureThreshold: 3, resetTimeoutMs: 60000 }
+        { failureThreshold: 3, resetTimeoutMs: 60000 },
       );
 
       logger.info("SMS sent successfully", {
@@ -154,7 +155,7 @@ export class SmsChannelAdapter implements ChannelAdapter {
             Authorization: `Basic ${btoa(`${config.accountSid}:${config.authToken}`)}`,
           },
         },
-        "twilio.healthcheck"
+        "twilio.healthcheck",
       );
 
       const latencyMs = Date.now() - start;
@@ -183,7 +184,7 @@ export class SmsChannelAdapter implements ChannelAdapter {
  */
 export async function getUserPhoneNumber(
   context: NotificationContext,
-  userId: string
+  userId: string,
 ): Promise<string | null> {
   try {
     const { data, error } = await context.supabase.rpc("get_notification_preferences", {

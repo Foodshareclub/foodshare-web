@@ -17,7 +17,7 @@ export type RateLimitResult = BotRateLimitResult;
 export function checkRateLimitDistributed(
   phoneNumber: string,
   maxRequests?: number,
-  windowMs?: number
+  windowMs?: number,
 ): Promise<RateLimitResult> {
   return rateLimiter.checkDistributed(phoneNumber, maxRequests, windowMs);
 }
@@ -25,7 +25,7 @@ export function checkRateLimitDistributed(
 export function checkRateLimit(
   phoneNumber: string,
   maxRequests?: number,
-  windowMs?: number
+  windowMs?: number,
 ): boolean {
   return rateLimiter.checkSync(phoneNumber, maxRequests, windowMs);
 }

@@ -116,7 +116,7 @@ async function handleMetrics(ctx: HandlerContext): Promise<Response> {
       })),
     },
     ctx,
-    { status: httpStatus }
+    { status: httpStatus },
   );
 }
 
@@ -173,11 +173,11 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
             failures: cb.failures,
             totalRequests: cb.totalRequests,
             totalFailures: cb.totalFailures,
-          })
+          }),
         ),
       },
       ctx,
-      { status: httpStatus }
+      { status: httpStatus },
     );
   }
 
@@ -202,13 +202,16 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
       throw new AppError(
         (result as { error: string }).error || "Function not found",
         "NOT_FOUND",
-        404
+        404,
       );
     }
 
     const healthResult = result as FunctionHealthResult;
-    const httpStatus =
-      healthResult.status === "healthy" ? 200 : healthResult.status === "degraded" ? 200 : 503;
+    const httpStatus = healthResult.status === "healthy"
+      ? 200
+      : healthResult.status === "degraded"
+      ? 200
+      : 503;
     return ok(result, ctx, { status: httpStatus });
   }
 
@@ -256,5 +259,5 @@ Deno.serve(
       GET: { handler: handleGet },
       POST: { handler: handlePost },
     },
-  })
+  }),
 );

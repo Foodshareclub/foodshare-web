@@ -326,7 +326,7 @@ export interface ExternalPurchaseTokenData {
 export function mapNotificationToStatus(
   notificationType: NotificationType,
   _subtype?: NotificationSubtype,
-  renewalInfo?: JWSRenewalInfoDecodedPayload
+  renewalInfo?: JWSRenewalInfoDecodedPayload,
 ): SubscriptionStatus {
   switch (notificationType) {
     case "SUBSCRIBED":
@@ -430,52 +430,46 @@ export function shouldUpdateSubscription(notificationType: NotificationType): bo
  */
 export function getNotificationDescription(
   notificationType: NotificationType,
-  subtype?: NotificationSubtype
+  subtype?: NotificationSubtype,
 ): string {
   const descriptions: Record<NotificationType, string> = {
     CONSUMPTION_REQUEST: "App Store is requesting consumption information",
-    DID_CHANGE_RENEWAL_PREF:
-      subtype === "DOWNGRADE"
-        ? "User downgraded to a cheaper subscription"
-        : subtype === "UPGRADE"
-          ? "User upgraded to a more expensive subscription"
-          : "User changed their renewal preference",
-    DID_CHANGE_RENEWAL_STATUS:
-      subtype === "AUTO_RENEW_ENABLED"
-        ? "User re-enabled auto-renewal"
-        : "User disabled auto-renewal",
+    DID_CHANGE_RENEWAL_PREF: subtype === "DOWNGRADE"
+      ? "User downgraded to a cheaper subscription"
+      : subtype === "UPGRADE"
+      ? "User upgraded to a more expensive subscription"
+      : "User changed their renewal preference",
+    DID_CHANGE_RENEWAL_STATUS: subtype === "AUTO_RENEW_ENABLED"
+      ? "User re-enabled auto-renewal"
+      : "User disabled auto-renewal",
     DID_FAIL_TO_RENEW: "Subscription renewal failed due to billing issue",
-    DID_RENEW:
-      subtype === "BILLING_RECOVERY"
-        ? "Subscription renewed after billing recovery"
-        : "Subscription successfully renewed",
-    EXPIRED:
-      subtype === "VOLUNTARY"
-        ? "Subscription expired (user chose not to renew)"
-        : subtype === "BILLING_RETRY"
-          ? "Subscription expired after billing retry failed"
-          : "Subscription expired",
+    DID_RENEW: subtype === "BILLING_RECOVERY"
+      ? "Subscription renewed after billing recovery"
+      : "Subscription successfully renewed",
+    EXPIRED: subtype === "VOLUNTARY"
+      ? "Subscription expired (user chose not to renew)"
+      : subtype === "BILLING_RETRY"
+      ? "Subscription expired after billing retry failed"
+      : "Subscription expired",
     EXTERNAL_PURCHASE_TOKEN: "External purchase token notification",
     GRACE_PERIOD_EXPIRED: "Grace period expired, subscription is now in billing retry",
     OFFER_REDEEMED: "User redeemed a promotional offer",
-    PRICE_INCREASE:
-      subtype === "ACCEPTED"
-        ? "User accepted the price increase"
-        : subtype === "PENDING"
-          ? "Price increase pending user response"
-          : "Price increase notification",
+    PRICE_INCREASE: subtype === "ACCEPTED"
+      ? "User accepted the price increase"
+      : subtype === "PENDING"
+      ? "Price increase pending user response"
+      : "Price increase notification",
     REFUND: "Subscription was refunded",
     REFUND_DECLINED: "Refund request was declined",
     REFUND_REVERSED: "Previous refund was reversed",
     RENEWAL_EXTENDED: "Subscription renewal date was extended",
     RENEWAL_EXTENSION: "Bulk renewal extension summary",
     REVOKE: "Subscription access was revoked (Family Sharing)",
-    SUBSCRIBED:
-      subtype === "INITIAL_BUY"
-        ? "New subscription purchase"
-        : subtype === "RESUBSCRIBE"
-          ? "User resubscribed after expiration"
-          : "User subscribed",
+    SUBSCRIBED: subtype === "INITIAL_BUY"
+      ? "New subscription purchase"
+      : subtype === "RESUBSCRIBE"
+      ? "User resubscribed after expiration"
+      : "User subscribed",
     TEST: "Test notification from App Store Connect",
   };
 
@@ -501,10 +495,12 @@ export function parseAppAccountToken(token: string | undefined): string | null {
   if (cleaned.length !== 32) return null;
 
   // Reconstruct with hyphens
-  const uuid = `${cleaned.slice(0, 8)}-${cleaned.slice(8, 12)}-${cleaned.slice(12, 16)}-${cleaned.slice(
-    16,
-    20
-  )}-${cleaned.slice(20)}`;
+  const uuid = `${cleaned.slice(0, 8)}-${cleaned.slice(8, 12)}-${cleaned.slice(12, 16)}-${
+    cleaned.slice(
+      16,
+      20,
+    )
+  }-${cleaned.slice(20)}`;
 
   // Validate UUID v4 pattern (or accept any valid UUID)
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

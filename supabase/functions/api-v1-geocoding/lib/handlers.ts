@@ -56,7 +56,7 @@ import {
 async function handleSignupLocation(
   req: Request,
   corsHeaders: Record<string, string>,
-  requestId: string
+  requestId: string,
 ): Promise<Response> {
   const startTime = Date.now();
 
@@ -73,7 +73,7 @@ async function handleSignupLocation(
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 
@@ -107,7 +107,7 @@ async function handleSignupLocation(
           {
             status: 401,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          },
         );
       }
 
@@ -195,7 +195,7 @@ async function handleMapPreferencesGet(
   req: Request,
   corsHeaders: Record<string, string>,
   requestId: string,
-  userId: string
+  userId: string,
 ): Promise<Response> {
   const url = new URL(req.url);
   const platform = url.searchParams.get("platform") || "web";
@@ -222,7 +222,7 @@ async function handleMapPreferencesGet(
       preferences: (data as MapPreferencesRow | null) ?? null,
       source: "database",
     },
-    corsHeaders
+    corsHeaders,
   );
 }
 
@@ -230,7 +230,7 @@ async function handleMapPreferencesSave(
   body: unknown,
   corsHeaders: Record<string, string>,
   requestId: string,
-  userId: string
+  userId: string,
 ): Promise<Response> {
   const { center, zoom, mapStyle, searchRadius, platform, deviceId } = body as Record<
     string,
@@ -282,7 +282,7 @@ async function handleMapAnalyticsTrack(
   body: unknown,
   corsHeaders: Record<string, string>,
   requestId: string,
-  userId: string
+  userId: string,
 ): Promise<Response> {
   const analytics = body as Record<string, unknown>;
   const center = analytics.center as { lat: number; lng: number } | undefined;
@@ -324,7 +324,7 @@ async function handleMapAnalyticsHotspots(
   req: Request,
   corsHeaders: Record<string, string>,
   requestId: string,
-  userId: string
+  userId: string,
 ): Promise<Response> {
   const url = new URL(req.url);
   const radius = parseInt(url.searchParams.get("radius") || "1000", 10);
@@ -362,7 +362,7 @@ async function handleMapAnalyticsHotspots(
       hotspots,
       predictedCenter: hotspots[0]?.center || null,
     },
-    corsHeaders
+    corsHeaders,
   );
 }
 
@@ -370,7 +370,7 @@ async function handleMapQualityUpdate(
   body: unknown,
   corsHeaders: Record<string, string>,
   requestId: string,
-  userId: string
+  userId: string,
 ): Promise<Response> {
   const { bandwidth, latency, connectionType, deviceInfo } = body as Record<string, unknown>;
 
@@ -397,7 +397,7 @@ async function handleMapQualityUpdate(
 async function handleMapQualityGet(
   corsHeaders: Record<string, string>,
   _requestId: string,
-  userId: string
+  userId: string,
 ): Promise<Response> {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
@@ -419,7 +419,7 @@ async function handleMapQualityGet(
           compression: "medium",
         },
       },
-      corsHeaders
+      corsHeaders,
     );
   }
 
@@ -439,15 +439,14 @@ async function handleMapQualityGet(
         retina: profile.enable_retina,
         vector: profile.enable_vector_tiles,
         concurrent_tiles: profile.max_concurrent_tiles,
-        compression:
-          profile.avg_bandwidth_mbps < 2
-            ? "high"
-            : profile.avg_bandwidth_mbps < 10
-              ? "medium"
-              : "low",
+        compression: profile.avg_bandwidth_mbps < 2
+          ? "high"
+          : profile.avg_bandwidth_mbps < 10
+          ? "medium"
+          : "low",
       },
     },
-    corsHeaders
+    corsHeaders,
   );
 }
 
@@ -455,7 +454,7 @@ async function handleMapPreload(
   _req: Request,
   corsHeaders: Record<string, string>,
   _requestId: string,
-  userId: string
+  userId: string,
 ): Promise<Response> {
   const supabase = getSupabaseClient();
 
@@ -513,7 +512,7 @@ async function handleMapPreload(
       quality,
       maxTiles,
     },
-    corsHeaders
+    corsHeaders,
   );
 }
 
@@ -525,7 +524,7 @@ async function handleMatchUsers(
   body: unknown,
   corsHeaders: Record<string, string>,
   requestId: string,
-  userId: string
+  userId: string,
 ): Promise<Response> {
   const parsed = matchUsersSchema.safeParse(body);
   if (!parsed.success) {
@@ -572,7 +571,7 @@ async function handleMatchUsers(
       userLocation: { latitude, longitude },
       radiusKm,
     },
-    corsHeaders
+    corsHeaders,
   );
 }
 
@@ -583,7 +582,7 @@ async function handleMatchUsers(
 async function handleAddressUpdate(
   body: unknown,
   corsHeaders: Record<string, string>,
-  requestId: string
+  requestId: string,
 ): Promise<Response> {
   const parsed = updateAddressSchema.safeParse(body);
   if (!parsed.success) {
@@ -660,10 +659,9 @@ async function handleAddressUpdate(
     profile_id: address.profile_id,
     status: "updated",
     address: address.generated_full_address,
-    oldCoordinates:
-      address.lat != null && address.long != null
-        ? { lat: address.lat, long: address.long }
-        : undefined,
+    oldCoordinates: address.lat != null && address.long != null
+      ? { lat: address.lat, long: address.long }
+      : undefined,
     newCoordinates: { lat, long: lon },
   };
 
@@ -677,7 +675,7 @@ async function handleAddressUpdate(
 async function handlePostBatch(
   body: unknown,
   corsHeaders: Record<string, string>,
-  requestId: string
+  requestId: string,
 ): Promise<Response> {
   const parsed = batchPostSchema.safeParse(body || {});
   const batchSize = parsed.success
@@ -697,7 +695,7 @@ async function handlePostBatch(
       `Failed to fetch queue: ${fetchError.message}`,
       corsHeaders,
       500,
-      requestId
+      requestId,
     );
   }
 
@@ -710,7 +708,7 @@ async function handlePostBatch(
         failed: 0,
         results: [],
       },
-      corsHeaders
+      corsHeaders,
     );
   }
 
@@ -746,14 +744,14 @@ async function handlePostBatch(
       failed,
       results,
     },
-    corsHeaders
+    corsHeaders,
   );
 }
 
 async function handleSinglePost(
   body: unknown,
   corsHeaders: Record<string, string>,
-  requestId: string
+  requestId: string,
 ): Promise<Response> {
   const parsed = singlePostSchema.safeParse(body);
   if (!parsed.success) {
@@ -770,7 +768,7 @@ async function handleSinglePost(
         success: false,
         reason: "No address provided",
       },
-      corsHeaders
+      corsHeaders,
     );
   }
 
@@ -783,7 +781,7 @@ async function handleSinglePost(
         success: false,
         reason: "No coordinates found",
       },
-      corsHeaders
+      corsHeaders,
     );
   }
 
@@ -804,7 +802,7 @@ async function handleSinglePost(
       success: true,
       coordinates,
     },
-    corsHeaders
+    corsHeaders,
   );
 }
 
@@ -847,7 +845,7 @@ async function handlePostStats(corsHeaders: Record<string, string>): Promise<Res
 async function handlePostCleanup(
   body: unknown,
   corsHeaders: Record<string, string>,
-  requestId: string
+  requestId: string,
 ): Promise<Response> {
   const parsed = cleanupSchema.safeParse(body || {});
   const daysOld = parsed.success ? parsed.data.days_old || 30 : 30;
@@ -867,14 +865,14 @@ async function handlePostCleanup(
       message: `Cleaned up ${data || 0} old queue entries`,
       deleted: data || 0,
     },
-    corsHeaders
+    corsHeaders,
   );
 }
 
 async function handleGeocodeOnly(
   body: unknown,
   corsHeaders: Record<string, string>,
-  requestId: string
+  requestId: string,
 ): Promise<Response> {
   const parsed = geocodeOnlySchema.safeParse(body);
   if (!parsed.success) {
@@ -890,7 +888,7 @@ async function handleGeocodeOnly(
         address: parsed.data.address,
         message: "No coordinates found for this address",
       },
-      corsHeaders
+      corsHeaders,
     );
   }
 
@@ -900,7 +898,7 @@ async function handleGeocodeOnly(
       address: parsed.data.address,
       coordinates,
     },
-    corsHeaders
+    corsHeaders,
   );
 }
 
@@ -942,7 +940,7 @@ export async function handleGet(ctx: HandlerContext): Promise<Response> {
           circuitBreaker: ipApiCircuitBreaker.state,
         },
       },
-      ctx
+      ctx,
     );
   }
 

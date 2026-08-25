@@ -73,7 +73,7 @@ function renderTemplateString(template: string, variables: Record<string, unknow
 
 export async function sendNotification(
   request: SendRequest,
-  context: NotificationContext
+  context: NotificationContext,
 ): Promise<DeliveryResult> {
   const startTime = performance.now();
   const notificationId = crypto.randomUUID();
@@ -111,8 +111,8 @@ export async function sendNotification(
 
     // 2. Check preferences, quiet hours, DND
     const category = mapTypeToCategory(request.type);
-    const bypassPreferences =
-      shouldBypassPreferences(request.type) || request.priority === "critical";
+    const bypassPreferences = shouldBypassPreferences(request.type) ||
+      request.priority === "critical";
 
     const preferenceResults = await Promise.all(
       channels.map((channel) =>
@@ -121,7 +121,7 @@ export async function sendNotification(
           channel: channel as any,
           bypassPreferences,
         })
-      )
+      ),
     );
 
     // 3. Handle scheduling (quiet hours)
@@ -236,7 +236,7 @@ export async function sendNotification(
 
 async function determineChannels(
   request: SendRequest,
-  context: NotificationContext
+  context: NotificationContext,
 ): Promise<NotificationChannel[]> {
   // If channels explicitly specified, use those
   if (request.channels && request.channels.length > 0) {
@@ -312,7 +312,7 @@ async function sendToChannels(
   request: SendRequest,
   channels: NotificationChannel[],
   context: NotificationContext,
-  _notificationId: string
+  _notificationId: string,
 ): Promise<ChannelDeliveryResult[]> {
   const results: ChannelDeliveryResult[] = [];
 
@@ -365,7 +365,7 @@ async function sendToChannels(
 export async function sendToChannel(
   channel: NotificationChannel,
   request: SendRequest,
-  context: NotificationContext
+  context: NotificationContext,
 ): Promise<ChannelDeliveryResult> {
   const results = await sendToChannels(request, [channel], context, crypto.randomUUID());
   return (
@@ -381,7 +381,7 @@ export async function sendToChannel(
 async function buildChannelPayload(
   request: SendRequest,
   channel: NotificationChannel,
-  context: NotificationContext
+  context: NotificationContext,
 ): Promise<unknown | null> {
   switch (channel) {
     case "email": {
@@ -522,7 +522,7 @@ function formatEmailHtml(request: SendRequest): string {
 async function scheduleNotification(
   request: SendRequest,
   scheduledFor: string,
-  context: NotificationContext
+  context: NotificationContext,
 ): Promise<void> {
   try {
     await context.supabase.from("notification_queue").insert({
@@ -549,7 +549,7 @@ async function scheduleNotification(
 async function queueForDigest(
   request: SendRequest,
   frequency: string,
-  context: NotificationContext
+  context: NotificationContext,
 ): Promise<void> {
   try {
     const now = new Date();
@@ -609,7 +609,7 @@ async function trackDelivery(
   notificationId: string,
   request: SendRequest,
   results: ChannelDeliveryResult[],
-  context: NotificationContext
+  context: NotificationContext,
 ): Promise<void> {
   try {
     await context.supabase.from("notification_delivery_log").insert({
@@ -639,7 +639,7 @@ async function trackDelivery(
 async function handleFallbacks(
   request: SendRequest,
   results: ChannelDeliveryResult[],
-  context: NotificationContext
+  context: NotificationContext,
 ): Promise<void> {
   // Fallback chain: push → email → SMS
   const pushResult = results.find((r) => r.channel === "push");

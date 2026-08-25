@@ -78,7 +78,7 @@ const batchSchema = z.object({
       z.object({
         type: z.enum(["listing", "profile", "review", "email", "password"]),
         data: z.record(z.unknown()),
-      })
+      }),
     )
     .min(1)
     .max(20),
@@ -196,7 +196,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
           timestamp: new Date().toISOString(),
           endpoints: ["listing", "profile", "review", "email", "password", "batch", "rules"],
         },
-        ctx
+        ctx,
       );
 
     case "rules":
@@ -207,7 +207,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
           version: VERSION,
         },
         ctx,
-        { cacheTTL: 3600 }
+        { cacheTTL: 3600 },
       );
 
     default:
@@ -244,7 +244,7 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
         error.errors.map((e) => ({
           field: e.path.join("."),
           message: e.message,
-        }))
+        })),
       );
     }
     throw error;
@@ -270,5 +270,5 @@ Deno.serve(
       GET: { handler: handleGet },
       POST: { handler: handlePost },
     },
-  })
+  }),
 );

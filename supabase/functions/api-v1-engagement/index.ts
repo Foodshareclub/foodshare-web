@@ -92,10 +92,11 @@ async function getEngagement(ctx: HandlerContext<unknown, QueryParams>): Promise
 
     // Check cache first
     const cacheKey = CACHE_KEYS.engagement(postIds, userId);
-    const cached =
-      cache.get<Record<number, { isLiked: boolean; isBookmarked: boolean; likeCount: number }>>(
-        cacheKey
-      );
+    const cached = cache.get<
+      Record<number, { isLiked: boolean; isBookmarked: boolean; likeCount: number }>
+    >(
+      cacheKey,
+    );
     if (cached) {
       return ok(cached, ctx);
     }
@@ -210,7 +211,7 @@ async function getEngagement(ctx: HandlerContext<unknown, QueryParams>): Promise
         isBookmarked,
         likeCount: likeCount || 0,
       },
-      ctx
+      ctx,
     );
   }
 
@@ -246,7 +247,7 @@ async function getUserBookmarks(ctx: HandlerContext<unknown, QueryParams>): Prom
       postIds: (data || []).map((b) => b.post_id),
       count: data?.length || 0,
     },
-    ctx
+    ctx,
   );
 }
 
@@ -268,7 +269,7 @@ async function toggleLike(ctx: HandlerContext<ToggleBody>): Promise<Response> {
       userColumn: "profile_id",
     },
     body.postId,
-    userId
+    userId,
   );
 
   const isLiked = result.active;
@@ -288,7 +289,7 @@ async function toggleLike(ctx: HandlerContext<ToggleBody>): Promise<Response> {
       isLiked,
       likeCount: count || 0,
     },
-    ctx
+    ctx,
   );
 }
 
@@ -310,7 +311,7 @@ async function toggleBookmark(ctx: HandlerContext<ToggleBody>): Promise<Response
       userColumn: "profile_id",
     },
     body.postId,
-    userId
+    userId,
   );
 
   const isBookmarked = result.active;
@@ -327,7 +328,7 @@ async function toggleBookmark(ctx: HandlerContext<ToggleBody>): Promise<Response
       postId: body.postId,
       isBookmarked,
     },
-    ctx
+    ctx,
   );
 }
 
@@ -388,7 +389,7 @@ async function toggleFavorite(ctx: HandlerContext<ToggleBody, QueryParams>): Pro
       .from("favorites")
       .upsert(
         { user_id: userId, post_id: body.postId },
-        { onConflict: "user_id,post_id", ignoreDuplicates: true }
+        { onConflict: "user_id,post_id", ignoreDuplicates: true },
       );
 
     if (error) {
@@ -444,7 +445,7 @@ async function toggleFavorite(ctx: HandlerContext<ToggleBody, QueryParams>): Pro
       likeCount: post?.post_like_counter ?? 0,
       action,
     },
-    ctx
+    ctx,
   );
 }
 
@@ -457,7 +458,7 @@ async function logActivity(
   postId: number,
   actorId: string | null,
   activityType: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ) {
   try {
     // @ts-ignore - supabase client type
@@ -494,7 +495,7 @@ function handleGet(ctx: HandlerContext<unknown, QueryParams>): Promise<Response>
 }
 
 function handlePost(
-  ctx: HandlerContext<ToggleBody | ShareBody | BatchOperationsBody, QueryParams>
+  ctx: HandlerContext<ToggleBody | ShareBody | BatchOperationsBody, QueryParams>,
 ): Promise<Response> {
   const url = new URL(ctx.request.url);
 
@@ -519,7 +520,7 @@ function handlePost(
 }
 
 async function handleBatchOperations(
-  ctx: HandlerContext<BatchOperationsBody, QueryParams>
+  ctx: HandlerContext<BatchOperationsBody, QueryParams>,
 ): Promise<Response> {
   const { operations } = ctx.body;
   const { userId, supabase } = ctx;
@@ -562,7 +563,7 @@ async function handleBatchOperations(
                 userColumn: "profile_id",
               },
               entityId,
-              userId
+              userId,
             );
             data = { isLiked: likeResult.active };
             break;
@@ -576,7 +577,7 @@ async function handleBatchOperations(
                 userColumn: "profile_id",
               },
               entityId,
-              userId
+              userId,
             );
             data = { isBookmarked: bookmarkResult.active };
             break;
@@ -610,7 +611,7 @@ async function handleBatchOperations(
           error: (error as Error).message,
         };
       }
-    })
+    }),
   );
 
   const successful = results.filter((r) => r.success).length;
@@ -623,7 +624,7 @@ async function handleBatchOperations(
       failed,
       results,
     },
-    ctx
+    ctx,
   );
 }
 
@@ -654,5 +655,5 @@ Deno.serve(
         requireAuth: true,
       },
     },
-  })
+  }),
 );

@@ -78,7 +78,7 @@ const EVENT_TYPE_MAP: Record<
 
 function mapAppleEventType(
   notificationType: NotificationType,
-  subtype?: NotificationSubtype
+  subtype?: NotificationSubtype,
 ): SubscriptionEventType {
   const mapping = EVENT_TYPE_MAP[notificationType];
 
@@ -100,7 +100,7 @@ function mapAppleEventType(
 function mapAppleStatus(
   notificationType: NotificationType,
   subtype?: NotificationSubtype,
-  renewalInfo?: JWSRenewalInfoDecodedPayload
+  renewalInfo?: JWSRenewalInfoDecodedPayload,
 ): SubscriptionStatus {
   return mapNotificationToStatus(notificationType, subtype, renewalInfo);
 }
@@ -140,7 +140,7 @@ function cachePayload(signedPayload: string, payload: ResponseBodyV2DecodedPaylo
 
 async function verifyAndDecodePayload(
   signedPayload: string,
-  context: Record<string, unknown> = {}
+  context: Record<string, unknown> = {},
 ): Promise<ResponseBodyV2DecodedPayload> {
   return await measureAsync(
     "apple.verify_jws",
@@ -148,20 +148,20 @@ async function verifyAndDecodePayload(
       const result = await verifyAppleJWS<ResponseBodyV2DecodedPayload>(signedPayload);
       return result;
     },
-    context
+    context,
   );
 }
 
 async function verifyNestedJWS<T>(
   signedData: string,
   name: string,
-  context: Record<string, unknown> = {}
+  context: Record<string, unknown> = {},
 ): Promise<T | null> {
   try {
     return await measureAsync(
       `apple.verify_${name}`,
       async () => await verifyAppleJWS<T>(signedData),
-      context
+      context,
     );
   } catch (error) {
     logger.warn(`Failed to verify Apple ${name}`, {
@@ -234,7 +234,7 @@ export const appleHandler: PlatformHandler = {
       });
       logger.error(
         "Apple webhook verification failed",
-        error instanceof Error ? error : new Error(String(error))
+        error instanceof Error ? error : new Error(String(error)),
       );
       return false;
     }
@@ -266,23 +266,21 @@ export const appleHandler: PlatformHandler = {
     // Decode transaction info
     let transactionInfo: JWSTransactionDecodedPayload | undefined;
     if (decodedPayload.data.signedTransactionInfo) {
-      transactionInfo =
-        (await verifyNestedJWS<JWSTransactionDecodedPayload>(
-          decodedPayload.data.signedTransactionInfo,
-          "transaction_info",
-          context
-        )) ?? undefined;
+      transactionInfo = (await verifyNestedJWS<JWSTransactionDecodedPayload>(
+        decodedPayload.data.signedTransactionInfo,
+        "transaction_info",
+        context,
+      )) ?? undefined;
     }
 
     // Decode renewal info
     let renewalInfo: JWSRenewalInfoDecodedPayload | undefined;
     if (decodedPayload.data.signedRenewalInfo) {
-      renewalInfo =
-        (await verifyNestedJWS<JWSRenewalInfoDecodedPayload>(
-          decodedPayload.data.signedRenewalInfo,
-          "renewal_info",
-          context
-        )) ?? undefined;
+      renewalInfo = (await verifyNestedJWS<JWSRenewalInfoDecodedPayload>(
+        decodedPayload.data.signedRenewalInfo,
+        "renewal_info",
+        context,
+      )) ?? undefined;
     }
 
     // Build normalized subscription data

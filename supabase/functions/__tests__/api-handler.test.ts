@@ -74,7 +74,7 @@ Deno.test("API Handler - POST with Zod validation", async () => {
               id: "123",
               ...(ctx.body as Record<string, unknown>),
             },
-            ctx
+            ctx,
           );
         },
       },
@@ -222,7 +222,7 @@ Deno.test("API Handler - Query parameter validation", async () => {
               page: Number(ctx.query.page),
               limit: Number(ctx.query.limit),
             },
-            ctx
+            ctx,
           );
         },
       },
@@ -254,7 +254,7 @@ Deno.test("API Handler - Path parameter extraction", async () => {
               productId: ctx.params.productId,
               reviewId: ctx.params.reviewId,
             },
-            ctx
+            ctx,
           );
         },
       },

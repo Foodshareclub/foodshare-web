@@ -26,7 +26,7 @@ const RATE_LIMIT_WINDOW = 86400; // 24 hours
 // deno-lint-ignore no-explicit-any
 export async function checkRateLimit(
   userId: string,
-  supabase: SupabaseClient<any, any, any>
+  supabase: SupabaseClient<any, any, any>,
 ): Promise<boolean> {
   const { data, error } = await supabase
     .from("user_rate_limits")
@@ -76,7 +76,7 @@ export async function uploadWithFallback(
   bucket: string,
   path: string,
   buffer: Uint8Array,
-  contentType: string
+  contentType: string,
 ): Promise<{ publicUrl: string; storage: "r2" | "supabase" }> {
   if (await isR2Configured()) {
     const r2Path = `${bucket}/${path}`;

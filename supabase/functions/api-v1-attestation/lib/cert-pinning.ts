@@ -154,8 +154,9 @@ function detectCertPinPlatform(request: Request): CertPinPlatform {
     ua.includes("Chrome") ||
     ua.includes("Safari") ||
     ua.includes("Firefox")
-  )
+  ) {
     return "web";
+  }
 
   return "unknown";
 }
@@ -233,7 +234,7 @@ function calculateRotationWarning(pins: CertificatePin[]): RotationWarning {
   if (!earliestExpiry) return { active: false, severity: "info" };
 
   const daysUntilExpiry = Math.ceil(
-    (earliestExpiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    (earliestExpiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
   );
 
   if (daysUntilExpiry <= PIN_CONFIG.criticalThresholdDays) {
@@ -256,7 +257,7 @@ function calculateRotationWarning(pins: CertificatePin[]): RotationWarning {
   }
   if (PIN_CONFIG.nextRotation) {
     const daysUntilRotation = Math.ceil(
-      (new Date(PIN_CONFIG.nextRotation).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      (new Date(PIN_CONFIG.nextRotation).getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
     );
     if (daysUntilRotation <= PIN_CONFIG.warningThresholdDays) {
       return {
@@ -310,7 +311,7 @@ export function handleCertificatePins(req: Request, corsHeaders: Record<string, 
   const platform = detectCertPinPlatform(req);
   const appVersion = req.headers.get("x-app-version") || "unknown";
   const wantsLegacyFormat = (req.headers.get("accept") || "").includes(
-    "application/vnd.foodshare.pins.v1"
+    "application/vnd.foodshare.pins.v1",
   );
 
   logger.info("Certificate pins requested", {
@@ -336,7 +337,7 @@ export function handleCertificatePins(req: Request, corsHeaders: Record<string, 
       const expires = new Date(pin.expires);
       return !earliest || expires < earliest ? expires : earliest;
     },
-    null as Date | null
+    null as Date | null,
   );
 
   const validUntil = earliestExpiry?.toISOString().split("T")[0] || "2025-12-31";

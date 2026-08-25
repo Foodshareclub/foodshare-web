@@ -49,7 +49,7 @@ interface ResendDomain {
 async function fetchWithTimeout(
   url: string,
   options: RequestInit,
-  timeoutMs: number = REQUEST_TIMEOUT_MS
+  timeoutMs: number = REQUEST_TIMEOUT_MS,
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -71,8 +71,7 @@ export class ResendProvider implements EmailProvider {
   constructor(config: Partial<ResendConfig> = {}) {
     this.config = {
       apiKey: config.apiKey || getSecretSync("RESEND_API_KEY") || "",
-      fromEmail:
-        config.fromEmail ||
+      fromEmail: config.fromEmail ||
         getSecretSync("EMAIL_FROM") ||
         Deno.env.get("EMAIL_FROM") ||
         "contact@foodshare.club",
@@ -149,12 +148,9 @@ export class ResendProvider implements EmailProvider {
       };
     } catch (error) {
       const latencyMs = Math.round(performance.now() - startTime);
-      const message =
-        error instanceof Error
-          ? error.name === "AbortError"
-            ? "Request timeout"
-            : error.message
-          : "Unknown error";
+      const message = error instanceof Error
+        ? error.name === "AbortError" ? "Request timeout" : error.message
+        : "Unknown error";
 
       return {
         success: false,
@@ -226,12 +222,9 @@ export class ResendProvider implements EmailProvider {
       };
     } catch (error) {
       const latencyMs = Math.round(performance.now() - startTime);
-      const message =
-        error instanceof Error
-          ? error.name === "AbortError"
-            ? "Request timeout (10s)"
-            : error.message
-          : "Unknown error";
+      const message = error instanceof Error
+        ? error.name === "AbortError" ? "Request timeout (10s)" : error.message
+        : "Unknown error";
 
       return {
         provider: this.name,

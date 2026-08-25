@@ -39,7 +39,7 @@ export async function requireAuth(
   telegramUserId: number,
   chatId: number,
   lang: Language,
-  action?: string
+  action?: string,
 ): Promise<{
   authorized: boolean;
   profile?: ReturnType<typeof getProfileByTelegramId> extends Promise<infer T> ? T : never;
@@ -56,8 +56,7 @@ export async function requireAuth(
       language: `${emoji.GLOBE} To change your language, please register first!`,
     };
 
-    const message =
-      actionMessages[action || ""] ||
+    const message = actionMessages[action || ""] ||
       `${emoji.LOCK} Please complete registration to use this feature!`;
 
     await sendMessage(
@@ -66,9 +65,9 @@ export async function requireAuth(
         t(lang, "auth.registrationRequired") || "Registration Required",
         `${message}\n\n` +
           `${emoji.INFO} Use /start to register or sign in.\n\n` +
-          `${emoji.SPARKLES} It only takes a minute!`
+          `${emoji.SPARKLES} It only takes a minute!`,
       ),
-      { reply_markup: getMainMenuKeyboard(lang) }
+      { reply_markup: getMainMenuKeyboard(lang) },
     );
 
     return { authorized: false };
@@ -82,7 +81,7 @@ export async function requireAuth(
  */
 export async function handleNewChatMembers(
   chatId: number,
-  newMembers: TelegramUser[]
+  newMembers: TelegramUser[],
 ): Promise<void> {
   // Skip bots joining
   const humans = newMembers.filter((m) => !m.is_bot);
@@ -90,8 +89,7 @@ export async function handleNewChatMembers(
 
   const names = humans.map((m) => m.first_name).join(", ");
 
-  const greeting =
-    `${emoji.WAVE} <b>Welcome, ${names}!</b>\n\n` +
+  const greeting = `${emoji.WAVE} <b>Welcome, ${names}!</b>\n\n` +
     `${emoji.SPARKLES} Glad to have you in the FoodShare community!\n\n` +
     `${emoji.FOOD} <b>Share Food</b> - Share surplus food\n` +
     `${emoji.SEARCH} <b>Find Food</b> - Discover free food nearby\n` +
@@ -180,14 +178,14 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
         setTimeout(() => {
           safeExecute(
             () => handleShareViaChat(chatId, userId, message.from!),
-            "post-verification-share"
+            "post-verification-share",
           );
         }, 1000);
       } else {
         setTimeout(() => {
           safeExecute(
             () => handleStartCommand(chatId, userId, message.from!),
-            "post-verification-start"
+            "post-verification-start",
           );
         }, 1000);
       }
@@ -201,7 +199,7 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
     if (isNaN(radius) || radius < 1 || radius > 805) {
       await sendMessage(
         chatId,
-        msg.errorMessage("Invalid Radius", "Please enter a number between 1 and 805.")
+        msg.errorMessage("Invalid Radius", "Please enter a number between 1 and 805."),
       );
       return;
     }
@@ -211,7 +209,7 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
       await updateProfile(profile.id, { search_radius_km: radius });
       await sendMessage(
         chatId,
-        msg.successMessage("Radius Updated", `Search radius set to ${radius}km.`)
+        msg.successMessage("Radius Updated", `Search radius set to ${radius}km.`),
       );
       await setUserState(userId, null);
       await handleProfileCommand(chatId, userId);
@@ -225,8 +223,7 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
     userState.step = "location";
     await setUserState(userId, userState);
 
-    const locationMsg =
-      `${emoji.SUCCESS} <b>Description Received!</b>\n\n` +
+    const locationMsg = `${emoji.SUCCESS} <b>Description Received!</b>\n\n` +
       `${emoji.LOCATION} <b>Share Food - Step 3/3</b>\n\n` +
       msg.progressBar(3, 3, 12) +
       " 100%\n\n" +
@@ -263,13 +260,13 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
       withTimeout(extractCoordinates(text), 5000, "Geocoding timeout"),
       userState.data.photo
         ? (async () => {
-            const { downloadAndUploadTelegramFile } = await import("../services/telegram-files.ts");
-            return withTimeout(
-              downloadAndUploadTelegramFile(userState.data.photo as string, userId),
-              30000,
-              "Photo upload timeout"
-            );
-          })()
+          const { downloadAndUploadTelegramFile } = await import("../services/telegram-files.ts");
+          return withTimeout(
+            downloadAndUploadTelegramFile(userState.data.photo as string, userId),
+            30000,
+            "Photo upload timeout",
+          );
+        })()
         : Promise.resolve(null),
       getProfileByTelegramId(userId),
     ]);
@@ -284,8 +281,8 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
             `${emoji.INFO} Please try:\n` +
             `• A more specific address\n` +
             `• City and country (e.g., "Prague, Czech Republic")\n` +
-            `• Or use the 📍 Share Location button`
-        )
+            `• Or use the 📍 Share Location button`,
+        ),
       );
       return;
     }
@@ -296,7 +293,7 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
     if (profile.status === "rejected" || !profile.value) {
       await sendMessage(
         chatId,
-        msg.errorMessage("Profile Not Found", "Please start over with /start")
+        msg.errorMessage("Profile Not Found", "Please start over with /start"),
       );
       await setUserState(userId, null);
       return;
@@ -326,7 +323,8 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
         logger.warn("Failed to upload photo", {
           reason: uploadResult.status === "rejected" ? String(uploadResult.reason) : "No result",
         });
-        photoWarning = `\n\n${emoji.WARNING} <i>Note: Photo upload failed, but your post was created.</i>`;
+        photoWarning =
+          `\n\n${emoji.WARNING} <i>Note: Photo upload failed, but your post was created.</i>`;
       }
     }
 
@@ -353,8 +351,8 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
         chatId,
         msg.errorMessage(
           "Failed to Create Post",
-          `${emoji.ERROR} Something went wrong. Please try again with /share`
-        )
+          `${emoji.ERROR} Something went wrong. Please try again with /share`,
+        ),
       );
       await setUserState(userId, null);
       return;
@@ -366,9 +364,9 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
         "Food Shared Successfully!",
         `${emoji.CELEBRATE} Your food is now available for the community!\n\n` +
           `${emoji.LINK} <a href="${getAppUrl()}/product/${post.id}">View Your Post</a>\n\n` +
-          `${emoji.SPARKLES} Thank you for reducing food waste! 🌍${photoWarning}`
+          `${emoji.SPARKLES} Thank you for reducing food waste! 🌍${photoWarning}`,
       ),
-      { reply_markup: { remove_keyboard: true } }
+      { reply_markup: { remove_keyboard: true } },
     );
 
     await setUserState(userId, null);
@@ -385,9 +383,9 @@ export async function handleTextMessage(message: TelegramMessage): Promise<void>
         `${emoji.FOOD} <b>Share Food</b> - Share surplus food\n` +
         `${emoji.SEARCH} <b>Find Food</b> - Discover free food nearby\n` +
         `${emoji.USER} <b>Profile</b> - View your profile\n\n` +
-        `${emoji.INFO} Or use /start to register or sign in.`
+        `${emoji.INFO} Or use /start to register or sign in.`,
     ),
-    { reply_markup: getMainMenuKeyboard(lang) }
+    { reply_markup: getMainMenuKeyboard(lang) },
   );
 }
 
@@ -410,8 +408,7 @@ export async function handlePhotoMessage(message: TelegramMessage): Promise<void
     userState.step = "description";
     await setUserState(userId, userState);
 
-    const descMsg =
-      `${emoji.SUCCESS} <b>Photo Received!</b>\n\n` +
+    const descMsg = `${emoji.SUCCESS} <b>Photo Received!</b>\n\n` +
       `${emoji.TEXT} <b>Share Food - Step 2/3</b>\n\n` +
       msg.progressBar(2, 3, 12) +
       " 67%\n\n" +
@@ -460,13 +457,13 @@ export async function handleLocationMessage(message: TelegramMessage): Promise<v
     const [uploadResult, profile] = await Promise.allSettled([
       userState.data.photo
         ? (async () => {
-            const { downloadAndUploadTelegramFile } = await import("../services/telegram-files.ts");
-            return withTimeout(
-              downloadAndUploadTelegramFile(userState.data.photo as string, userId),
-              30000,
-              "Photo upload timeout"
-            );
-          })()
+          const { downloadAndUploadTelegramFile } = await import("../services/telegram-files.ts");
+          return withTimeout(
+            downloadAndUploadTelegramFile(userState.data.photo as string, userId),
+            30000,
+            "Photo upload timeout",
+          );
+        })()
         : Promise.resolve(null),
       getProfileByTelegramId(userId),
     ]);
@@ -475,7 +472,7 @@ export async function handleLocationMessage(message: TelegramMessage): Promise<v
     if (profile.status === "rejected" || !profile.value) {
       await sendMessage(
         chatId,
-        msg.errorMessage("Profile Not Found", "Please start over with /start")
+        msg.errorMessage("Profile Not Found", "Please start over with /start"),
       );
       await setUserState(userId, null);
       return;
@@ -493,7 +490,8 @@ export async function handleLocationMessage(message: TelegramMessage): Promise<v
         logger.warn("Failed to upload photo", {
           reason: uploadResult.status === "rejected" ? String(uploadResult.reason) : "No result",
         });
-        photoWarning = `\n\n${emoji.WARNING} <i>Note: Photo upload failed, but your post was created.</i>`;
+        photoWarning =
+          `\n\n${emoji.WARNING} <i>Note: Photo upload failed, but your post was created.</i>`;
       }
     }
 
@@ -519,8 +517,8 @@ export async function handleLocationMessage(message: TelegramMessage): Promise<v
         chatId,
         msg.errorMessage(
           "Failed to Create Post",
-          `${emoji.ERROR} Something went wrong. Please try again with /share`
-        )
+          `${emoji.ERROR} Something went wrong. Please try again with /share`,
+        ),
       );
       await setUserState(userId, null);
       return;
@@ -532,9 +530,9 @@ export async function handleLocationMessage(message: TelegramMessage): Promise<v
         "Food Shared Successfully!",
         `${emoji.CELEBRATE} Your food is now available for the community!\n\n` +
           `${emoji.LINK} <a href="${getAppUrl()}/product/${post.id}">View Your Post</a>\n\n` +
-          `${emoji.SPARKLES} Thank you for reducing food waste! 🌍${photoWarning}`
+          `${emoji.SPARKLES} Thank you for reducing food waste! 🌍${photoWarning}`,
       ),
-      { reply_markup: { remove_keyboard: true } }
+      { reply_markup: { remove_keyboard: true } },
     );
 
     await setUserState(userId, null);
@@ -552,8 +550,8 @@ export async function handleLocationMessage(message: TelegramMessage): Promise<v
         chatId,
         msg.successMessage(
           "Location Updated",
-          "Your profile location has been updated successfully!"
-        )
+          "Your profile location has been updated successfully!",
+        ),
       );
       await setUserState(userId, null);
       await handleProfileCommand(chatId, userId);

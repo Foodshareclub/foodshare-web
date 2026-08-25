@@ -80,7 +80,7 @@ export async function sendWebPush(device: DeviceToken, payload: PushPayload): Pr
           messageId: result.headers?.location,
         };
       },
-      { failureThreshold: 5, resetTimeoutMs: 60000, halfOpenMaxAttempts: 3 }
+      { failureThreshold: 5, resetTimeoutMs: 60000, halfOpenMaxAttempts: 3 },
     );
   } catch (e: unknown) {
     if (e instanceof CircuitBreakerError) {

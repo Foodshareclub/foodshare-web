@@ -66,7 +66,7 @@ const MAX_CORS_CACHE_SIZE = 50;
  */
 export function getCorsHeaders(
   request: Request,
-  additionalOrigins: string[] = []
+  additionalOrigins: string[] = [],
 ): Record<string, string> {
   const origin = request.headers.get("origin") || "null";
   const cacheKey = `${origin}:${additionalOrigins.join(",")}`;
@@ -156,7 +156,7 @@ export function isMobileOrigin(request: Request): boolean {
 export function isOriginAllowed(
   request: Request,
   allowedOrigins: string[] = DEFAULT_ALLOWED_ORIGINS,
-  allowMobile: boolean = true
+  allowMobile: boolean = true,
 ): boolean {
   const origin = request.headers.get("origin");
 

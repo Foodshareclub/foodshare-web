@@ -32,7 +32,7 @@ function createMockAuthContext(
   options: {
     updateError?: boolean;
     lookupError?: boolean;
-  } = {}
+  } = {},
 ) {
   let lastUpdate: Record<string, unknown> | null = null;
 
@@ -170,7 +170,7 @@ Deno.test("handleVerifyConfirm: expired code returns 410", async () => {
   const { handleVerifyConfirm } = await import("../api-v1-auth/lib/verify.ts");
   const response = await handleVerifyConfirm(
     { email: "test@example.com", code: "123456" },
-    ctx as any
+    ctx as any,
   );
 
   assertEquals(response.status, 410);
@@ -193,7 +193,7 @@ Deno.test("handleVerifyConfirm: wrong code increments attempts", async () => {
   const { handleVerifyConfirm } = await import("../api-v1-auth/lib/verify.ts");
   const response = await handleVerifyConfirm(
     { email: "test@example.com", code: "111111" },
-    ctx as any
+    ctx as any,
   );
 
   assertEquals(response.status, 400);
@@ -217,7 +217,7 @@ Deno.test("handleVerifyConfirm: correct code returns success", async () => {
   const { handleVerifyConfirm } = await import("../api-v1-auth/lib/verify.ts");
   const response = await handleVerifyConfirm(
     { email: "test@example.com", code: "123456" },
-    ctx as any
+    ctx as any,
   );
 
   assertEquals(response.status, 200);

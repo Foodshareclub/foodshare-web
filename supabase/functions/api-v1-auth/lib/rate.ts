@@ -69,7 +69,7 @@ async function sendLockoutAlert(
   email: string,
   ipAddress: string | null,
   failedCount: number,
-  requestId: string
+  requestId: string,
 ): Promise<void> {
   try {
     logger.warn("SECURITY ALERT: Account locked for 24 hours", {
@@ -95,7 +95,7 @@ async function sendLockoutAlert(
   } catch (error) {
     logger.error(
       "Failed to send lockout alert",
-      error instanceof Error ? error : new Error(String(error))
+      error instanceof Error ? error : new Error(String(error)),
     );
   }
 }
@@ -124,7 +124,7 @@ export async function handleRateCheck(body: RateCheckBody, ctx: AuthContext): Pr
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 
@@ -149,22 +149,24 @@ export async function handleRateCheck(body: RateCheckBody, ctx: AuthContext): Pr
       message: status.is_locked
         ? `Account temporarily locked. Try again ${formatTimeRemaining(status.locked_until)}.`
         : status.ip_blocked
-          ? `Too many attempts from this IP. Try again ${formatTimeRemaining(
-              status.ip_blocked_until
-            )}.`
-          : null,
+        ? `Too many attempts from this IP. Try again ${
+          formatTimeRemaining(
+            status.ip_blocked_until,
+          )
+        }.`
+        : null,
     }),
     {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-    }
+    },
   );
 }
 
 export async function handleRateRecord(
   body: RateRecordBody,
   request: Request,
-  ctx: AuthContext
+  ctx: AuthContext,
 ): Promise<Response> {
   const { supabase, corsHeaders, clientIp, requestId } = ctx;
   const email = body.email.toLowerCase().trim();
@@ -191,7 +193,7 @@ export async function handleRateRecord(
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 
@@ -210,14 +212,16 @@ export async function handleRateRecord(
       failedCount: result?.failed_count || 0,
       ipBlocked: result?.ip_blocked || false,
       message: result?.is_locked
-        ? `Account locked due to too many failed attempts. Try again ${formatTimeRemaining(
-            result.locked_until
-          )}.`
+        ? `Account locked due to too many failed attempts. Try again ${
+          formatTimeRemaining(
+            result.locked_until,
+          )
+        }.`
         : null,
     }),
     {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-    }
+    },
   );
 }

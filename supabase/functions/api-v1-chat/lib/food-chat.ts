@@ -87,7 +87,7 @@ export async function foodListRooms(ctx: HandlerContext<unknown, ListQuery>): Pr
       sharer_profile:sharer (id, first_name, second_name, avatar_url),
       requester_profile:requester (id, first_name, second_name, avatar_url)
     `,
-      { count: "exact" }
+      { count: "exact" },
     )
     .or(`sharer.eq.${userId},requester.eq.${userId}`)
     .eq("is_archived", false)
@@ -119,13 +119,13 @@ export async function foodListRooms(ctx: HandlerContext<unknown, ListQuery>): Pr
         };
       }
       return room;
-    })
+    }),
   );
 
   return paginated(
     decryptedRooms.map((room) => transformFoodRoom(room, userId)),
     ctx,
-    { offset: 0, limit, total: count || resultItems.length }
+    { offset: 0, limit, total: count || resultItems.length },
   );
 }
 
@@ -146,7 +146,7 @@ export async function foodGetRoom(ctx: HandlerContext<unknown, ListQuery>): Prom
       posts:post_id (id, post_name, post_address, images, post_type, profile_id),
       sharer_profile:sharer (id, first_name, second_name, avatar_url, email),
       requester_profile:requester (id, first_name, second_name, avatar_url, email)
-    `
+    `,
     )
     .eq("id", roomId)
     .single();
@@ -163,7 +163,7 @@ export async function foodGetRoom(ctx: HandlerContext<unknown, ListQuery>): Prom
       `
       id, room_id, profile_id, text, image, timestamp,
       sender:profile_id (id, first_name, second_name, avatar_url)
-    `
+    `,
     )
     .eq("room_id", roomId)
     .order("timestamp", { ascending: true })
@@ -183,20 +183,19 @@ export async function foodGetRoom(ctx: HandlerContext<unknown, ListQuery>): Prom
         return { ...msg, text: await decryptMessage(msg.text) };
       }
       return msg;
-    })
+    }),
   );
 
-  const decryptedRoom =
-    room.last_message && typeof room.last_message === "string"
-      ? { ...room, last_message: await decryptMessage(room.last_message) }
-      : room;
+  const decryptedRoom = room.last_message && typeof room.last_message === "string"
+    ? { ...room, last_message: await decryptMessage(room.last_message) }
+    : room;
 
   return ok(
     {
       room: transformFoodRoomDetail(decryptedRoom, userId),
       messages: decryptedMessages.map(transformFoodMessage),
     },
-    ctx
+    ctx,
   );
 }
 
@@ -335,7 +334,7 @@ export async function foodSendMessage(ctx: HandlerContext<FoodSendMessageBody>):
 }
 
 export async function foodUpdateRoom(
-  ctx: HandlerContext<FoodUpdateRoomBody, ListQuery>
+  ctx: HandlerContext<FoodUpdateRoomBody, ListQuery>,
 ): Promise<Response> {
   const { supabase, userId, body, query } = ctx;
   const roomId = query.roomId;
@@ -349,7 +348,7 @@ export async function foodUpdateRoom(
       `
       id, sharer, requester, post_arranged_to,
       posts:post_id (id, post_name, post_address)
-    `
+    `,
     )
     .eq("id", roomId)
     .single();
@@ -371,9 +370,10 @@ export async function foodUpdateRoom(
       }
 
       const address = post?.post_address || "Address not set";
-      const acceptMessage = `🎉 Request Accepted!\n\n📍 Pickup Address:\n${address}\n\nPlease arrange a time to collect "${
-        post?.post_name || "the item"
-      }".`;
+      const acceptMessage =
+        `🎉 Request Accepted!\n\n📍 Pickup Address:\n${address}\n\nPlease arrange a time to collect "${
+          post?.post_name || "the item"
+        }".`;
 
       const encryptedAcceptMessage = await encryptMessage(acceptMessage);
       const encryptedAcceptPreview = await encryptMessage(acceptMessage.substring(0, 100) + "...");

@@ -37,7 +37,7 @@ export interface CircuitBreakerConfig {
     service: string,
     from: CircuitState,
     to: CircuitState,
-    state: CircuitBreakerState
+    state: CircuitBreakerState,
   ) => void;
 }
 
@@ -95,7 +95,7 @@ function transitionState(
   serviceName: string,
   circuit: CircuitBreakerState,
   newState: CircuitState,
-  config: CircuitBreakerConfig
+  config: CircuitBreakerConfig,
 ): void {
   if (circuit.state === newState) return;
 
@@ -196,7 +196,7 @@ function recordFailure(serviceName: string): void {
 export async function withCircuitBreaker<T>(
   serviceName: string,
   operation: () => Promise<T>,
-  options?: Partial<CircuitBreakerConfig>
+  options?: Partial<CircuitBreakerConfig>,
 ): Promise<T> {
   // Merge options with defaults
   if (options) {
@@ -270,7 +270,7 @@ export function resetCircuit(serviceName: string): void {
  */
 export function configureCircuit(
   serviceName: string,
-  options: Partial<CircuitBreakerConfig>
+  options: Partial<CircuitBreakerConfig>,
 ): void {
   const existingConfig = configs.get(serviceName);
   configs.set(serviceName, {
@@ -310,10 +310,9 @@ export function getCircuitMetrics(serviceName: string): {
 
   return {
     state: circuit.state,
-    failureRate:
-      circuit.totalRequests > 0
-        ? Math.round((circuit.totalFailures / circuit.totalRequests) * 100)
-        : 0,
+    failureRate: circuit.totalRequests > 0
+      ? Math.round((circuit.totalFailures / circuit.totalRequests) * 100)
+      : 0,
     totalRequests: circuit.totalRequests,
     totalFailures: circuit.totalFailures,
     isHealthy: isCircuitHealthy(serviceName),

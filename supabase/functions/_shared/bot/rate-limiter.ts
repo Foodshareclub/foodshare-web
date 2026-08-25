@@ -64,7 +64,7 @@ export function createBotRateLimiter(config: BotRateLimiterConfig) {
   async function checkDistributed(
     id: string | number,
     maxRequests = defaultMax,
-    windowMs = defaultWindow
+    windowMs = defaultWindow,
   ): Promise<BotRateLimitResult> {
     const supabase = getSupabaseClient();
     const now = new Date();
@@ -157,7 +157,7 @@ export function createBotRateLimiter(config: BotRateLimiterConfig) {
   function checkSync(
     id: string | number,
     maxRequests = defaultMax,
-    windowMs = defaultWindow
+    windowMs = defaultWindow,
   ): boolean {
     const key = String(id);
     const now = Date.now();

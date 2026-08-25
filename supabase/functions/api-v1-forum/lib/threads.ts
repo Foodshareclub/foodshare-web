@@ -82,8 +82,8 @@ async function hasModeratorRole(supabase: any, userId: string): Promise<boolean>
     const roleData = r.roles as unknown as
       | { name: string }
       | {
-          name: string;
-        }[];
+        name: string;
+      }[];
     const name = Array.isArray(roleData) ? roleData[0]?.name : roleData?.name;
     return name && MODERATOR_ROLES.includes(name);
   });
@@ -158,9 +158,9 @@ export async function searchPosts(ctx: HandlerContext<unknown, ForumQuery>): Pro
   const offset = parseInt(query.offset || "0");
   const tags = query.tags
     ? query.tags
-        .split(",")
-        .map((t) => parseInt(t.trim()))
-        .filter((t) => !isNaN(t))
+      .split(",")
+      .map((t) => parseInt(t.trim()))
+      .filter((t) => !isNaN(t))
     : undefined;
 
   const service = new ForumService(supabase, "");
@@ -227,7 +227,7 @@ export async function getSeries(ctx: HandlerContext<unknown, ForumQuery>): Promi
       ...seriesResult.data,
       posts: postsResult.data || [],
     },
-    ctx
+    ctx,
   );
 }
 

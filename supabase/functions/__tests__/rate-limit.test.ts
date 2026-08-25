@@ -463,8 +463,9 @@ describe("Rate Limit Tier Selection", () => {
 
   it("should select authenticated tier for regular users", () => {
     const user = { id: "user-1", subscription: "free" };
-    const tier =
-      user.subscription === "premium" ? RATE_LIMIT_TIERS.premium : RATE_LIMIT_TIERS.authenticated;
+    const tier = user.subscription === "premium"
+      ? RATE_LIMIT_TIERS.premium
+      : RATE_LIMIT_TIERS.authenticated;
 
     assertEquals(tier.keyPrefix, "rl:auth");
     assertEquals(tier.maxRequests, 100);
@@ -472,8 +473,9 @@ describe("Rate Limit Tier Selection", () => {
 
   it("should select premium tier for premium users", () => {
     const user = { id: "user-1", subscription: "premium" };
-    const tier =
-      user.subscription === "premium" ? RATE_LIMIT_TIERS.premium : RATE_LIMIT_TIERS.authenticated;
+    const tier = user.subscription === "premium"
+      ? RATE_LIMIT_TIERS.premium
+      : RATE_LIMIT_TIERS.authenticated;
 
     assertEquals(tier.keyPrefix, "rl:premium");
     assertEquals(tier.maxRequests, 500);

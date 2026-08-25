@@ -64,7 +64,7 @@ export function recordFailure(): void {
 export async function executeRedisCommand(
   redisUrl: string,
   redisToken: string,
-  command: (string | number)[]
+  command: (string | number)[],
 ): Promise<unknown> {
   const response = await fetch(redisUrl, {
     method: "POST",
@@ -87,7 +87,7 @@ export async function executeRedisCommand(
 export async function executeRedisPipeline(
   redisUrl: string,
   redisToken: string,
-  commands: (string | number)[][]
+  commands: (string | number)[][],
 ): Promise<unknown[]> {
   const pipelineUrl = redisUrl.replace(/\/?$/, "/pipeline");
   const response = await fetch(pipelineUrl, {
@@ -171,7 +171,7 @@ export function shouldCompress(value: string, options?: { compress?: boolean }):
 export function validateAndScopeKey(
   key: string,
   userId: string | null,
-  allowWrite: boolean
+  allowWrite: boolean,
 ): { scope: KeyScope; scopedKey: string } {
   if (key.startsWith("user:")) {
     const userPrefix = `user:${userId}:`;
@@ -247,7 +247,7 @@ export async function checkRateLimit(
   supabase: any,
   userId: string,
   operation: string,
-  tier: keyof typeof CONFIG.rateLimits = "free"
+  tier: keyof typeof CONFIG.rateLimits = "free",
 ): Promise<boolean> {
   const opType = getOperationType(operation);
   const limit = CONFIG.rateLimits[tier][opType];

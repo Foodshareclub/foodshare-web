@@ -12,7 +12,7 @@ export class AWSV4Signer {
     private region: string,
     private service: string,
     private accessKeyId: string,
-    private secretAccessKey: string
+    private secretAccessKey: string,
   ) {}
 
   /**
@@ -23,7 +23,7 @@ export class AWSV4Signer {
     method: string,
     url: string,
     headers: Record<string, string>,
-    payload: string | Uint8Array
+    payload: string | Uint8Array,
   ): Promise<Record<string, string>> {
     const now = new Date();
     const dateStamp = this.getDateStamp(now);
@@ -53,8 +53,7 @@ export class AWSV4Signer {
     // Create authorization header
     const signedHeadersList = Object.keys(signedHeaders).sort().join(";");
 
-    const authorization =
-      `${this.algorithm} Credential=${this.accessKeyId}/${credentialScope}, ` +
+    const authorization = `${this.algorithm} Credential=${this.accessKeyId}/${credentialScope}, ` +
       `SignedHeaders=${signedHeadersList}, Signature=${signature}`;
 
     return {
@@ -67,18 +66,17 @@ export class AWSV4Signer {
     method: string,
     url: string,
     headers: Record<string, string>,
-    payload: string | Uint8Array
+    payload: string | Uint8Array,
   ): Promise<string> {
     const urlObj = new URL(url);
     const canonicalUri = urlObj.pathname || "/";
     const canonicalQueryString = urlObj.search.slice(1) || "";
 
     // Canonical headers (sorted, lowercase keys)
-    const canonicalHeaders =
-      Object.keys(headers)
-        .sort()
-        .map((key) => `${key.toLowerCase()}:${headers[key].trim()}`)
-        .join("\n") + "\n";
+    const canonicalHeaders = Object.keys(headers)
+      .sort()
+      .map((key) => `${key.toLowerCase()}:${headers[key].trim()}`)
+      .join("\n") + "\n";
 
     const signedHeaders = Object.keys(headers)
       .sort()
@@ -101,7 +99,7 @@ export class AWSV4Signer {
   private async createStringToSign(
     amzDate: string,
     credentialScope: string,
-    canonicalRequest: string
+    canonicalRequest: string,
   ): Promise<string> {
     const hashedCanonicalRequest = await this.sha256Hex(canonicalRequest);
 
@@ -141,7 +139,7 @@ export class AWSV4Signer {
       keyData as BufferSource,
       { name: "HMAC", hash: "SHA-256" },
       false,
-      ["sign"]
+      ["sign"],
     );
 
     const signature = await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(data));

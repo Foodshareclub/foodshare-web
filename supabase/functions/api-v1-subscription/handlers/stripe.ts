@@ -182,7 +182,7 @@ function mapStripeStatus(status: StripeSubscriptionStatus): SubscriptionStatus {
 async function computeHmacSignature(
   payload: string,
   timestamp: string,
-  secret: string
+  secret: string,
 ): Promise<string> {
   const signedPayload = `${timestamp}.${payload}`;
   const encoder = new TextEncoder();
@@ -192,7 +192,7 @@ async function computeHmacSignature(
     encoder.encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"]
+    ["sign"],
   );
 
   const signatureBytes = await crypto.subtle.sign("HMAC", key, encoder.encode(signedPayload));
@@ -205,7 +205,7 @@ async function computeHmacSignature(
 async function verifyStripeSignature(
   payload: string,
   signatureHeader: string,
-  secret: string
+  secret: string,
 ): Promise<{ valid: boolean; reason?: string }> {
   if (!signatureHeader || !secret) {
     return { valid: false, reason: "missing_signature_or_secret" };
@@ -262,7 +262,7 @@ async function verifyStripeSignature(
 function parseSubscriptionEvent(
   stripeEvent: StripeWebhookEvent,
   sub: StripeSubscription,
-  body: string
+  body: string,
 ): SubscriptionEvent {
   const priceItem = sub.items.data[0];
 
@@ -319,7 +319,7 @@ function parseSubscriptionEvent(
 function parseInvoiceEvent(
   stripeEvent: StripeWebhookEvent,
   invoice: StripeInvoice,
-  body: string
+  body: string,
 ): SubscriptionEvent {
   const subscription: SubscriptionData = {
     platformSubscriptionId: invoice.subscription || invoice.id,
@@ -349,7 +349,7 @@ function parseInvoiceEvent(
 function parseChargeEvent(
   stripeEvent: StripeWebhookEvent,
   charge: StripeCharge,
-  body: string
+  body: string,
 ): SubscriptionEvent {
   const subscription: SubscriptionData = {
     platformSubscriptionId: charge.invoice || charge.id,
@@ -406,7 +406,7 @@ export const stripeHandler: PlatformHandler = {
     const result = await measureAsync(
       "stripe.verify_signature",
       async () => verifyStripeSignature(body, signature, secret),
-      {}
+      {},
     );
 
     if (!result.valid) {

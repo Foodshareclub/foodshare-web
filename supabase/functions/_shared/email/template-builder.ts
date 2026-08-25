@@ -146,11 +146,11 @@ export function welcomeTemplate(params: WelcomeParams): { subject: string; html:
         text: isEarlyStage ? "Share Something" : "Start Exploring",
         url: isEarlyStage
           ? `https://${
-              Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
-            }/new`
+            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          }/new`
           : `https://${
-              Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
-            }/map`,
+            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          }/map`,
         emoji: isEarlyStage ? "🍎" : "🗺️",
       },
       footer: { showAppBadges: true, signOffMessage: "Happy sharing!" },
@@ -172,17 +172,23 @@ export function emailVerificationTemplate(params: EmailVerificationParams): {
 } {
   const content = `
     <p style="margin: 0 0 20px; font-size: 17px; line-height: 1.7; color: ${BRAND.textPrimary};">Thanks for signing up for <strong style="color: ${BRAND.primaryColor};">FoodShare</strong>! 🥗</p>
-    ${paragraph(
-      "We're excited to have you join our community dedicated to reducing food waste and sharing delicious meals. To complete your registration and start making a difference, please confirm your email address below:"
-    )}
-    ${infoBox(
+    ${
+    paragraph(
+      "We're excited to have you join our community dedicated to reducing food waste and sharing delicious meals. To complete your registration and start making a difference, please confirm your email address below:",
+    )
+  }
+    ${
+    infoBox(
       "What happens next?",
       "Once confirmed, your email will be uniquely associated with your account, and you'll gain full access to share and discover food in your community.",
-      "✨"
-    )}
-    ${disclaimerBox(
-      `<strong style="color: ${BRAND.textMuted};">Didn't sign up?</strong><br>If you didn't register with FoodShare, you can safely ignore this email.`
-    )}
+      "✨",
+    )
+  }
+    ${
+    disclaimerBox(
+      `<strong style="color: ${BRAND.textMuted};">Didn't sign up?</strong><br>If you didn't register with FoodShare, you can safely ignore this email.`,
+    )
+  }
   `;
 
   return {
@@ -214,17 +220,23 @@ export function passwordResetTemplate(params: PasswordResetParams): {
 
   const content = `
     ${greeting(params.name, "")}
-    ${paragraph(
-      "We received a request to reset your password. Click the button below to create a new password:"
-    )}
-    ${infoBox(
+    ${
+    paragraph(
+      "We received a request to reset your password. Click the button below to create a new password:",
+    )
+  }
+    ${
+    infoBox(
       "Time Sensitive",
       `This link will expire in <strong>${expiresIn}</strong>. If you didn't request this, you can safely ignore this email.`,
-      "⏰"
-    )}
-    ${disclaimerBox(
-      `<strong style="color: ${BRAND.textMuted};">Didn't request this?</strong><br>If you didn't request a password reset, your account is still secure. No action is needed.`
-    )}
+      "⏰",
+    )
+  }
+    ${
+    disclaimerBox(
+      `<strong style="color: ${BRAND.textMuted};">Didn't request this?</strong><br>If you didn't request a password reset, your account is still secure. No action is needed.`,
+    )
+  }
   `;
 
   return {
@@ -253,19 +265,22 @@ export function chatNotificationTemplate(params: ChatNotificationParams): {
   subject: string;
   html: string;
 } {
-  const preview =
-    params.messagePreview.length > 100
-      ? params.messagePreview.substring(0, 100) + "..."
-      : params.messagePreview;
+  const preview = params.messagePreview.length > 100
+    ? params.messagePreview.substring(0, 100) + "..."
+    : params.messagePreview;
 
   const content = `
     ${greeting(params.recipientName)}
-    ${paragraph(
-      `You have a new message from <strong style="color: ${BRAND.primaryColor};">${params.senderName}</strong>:`
-    )}
-    ${highlightBox(
-      `<p style="margin: 0; font-size: 16px; line-height: 1.7; color: ${BRAND.textSecondary}; font-style: italic;">"${preview}"</p>`
-    )}
+    ${
+    paragraph(
+      `You have a new message from <strong style="color: ${BRAND.primaryColor};">${params.senderName}</strong>:`,
+    )
+  }
+    ${
+    highlightBox(
+      `<p style="margin: 0; font-size: 16px; line-height: 1.7; color: ${BRAND.textSecondary}; font-style: italic;">"${preview}"</p>`,
+    )
+  }
     ${paragraph("Reply now to continue the conversation! 💬", "0")}
   `;
 
@@ -307,15 +322,15 @@ export function newListingTemplate(params: NewListingParams): { subject: string;
   const listingBox = `
     <p style="font-size: 20px; font-weight: 700; margin: 0 0 12px; color: ${BRAND.textPrimary};">${emoji} ${params.listingTitle}</p>
     ${
-      params.listingAddress
-        ? `<p style="margin: 0 0 8px; color: ${BRAND.textMuted}; font-size: 14px;">📍 ${params.listingAddress}</p>`
-        : ""
-    }
+    params.listingAddress
+      ? `<p style="margin: 0 0 8px; color: ${BRAND.textMuted}; font-size: 14px;">📍 ${params.listingAddress}</p>`
+      : ""
+  }
     ${
-      shortDesc
-        ? `<p style="margin: 12px 0 0; font-size: 15px; line-height: 1.6; color: ${BRAND.textSecondary};">${shortDesc}</p>`
-        : ""
-    }
+    shortDesc
+      ? `<p style="margin: 12px 0 0; font-size: 15px; line-height: 1.6; color: ${BRAND.textSecondary};">${shortDesc}</p>`
+      : ""
+  }
     <p style="margin: 12px 0 0; color: ${BRAND.textLight}; font-size: 14px;">Posted by <strong style="color: ${BRAND.textSecondary};">${params.posterName}</strong></p>
   `;
 
@@ -378,16 +393,20 @@ export function volunteerWelcomeTemplate(params: VolunteerWelcomeParams): {
 
   const content = `
     ${greeting(params.name)}
-    ${paragraph(
-      `Thank you for joining the <strong style="color: ${BRAND.primaryColor};">FoodShare Volunteer Program</strong>! Your dedication helps make our community stronger.`
-    )}
+    ${
+    paragraph(
+      `Thank you for joining the <strong style="color: ${BRAND.primaryColor};">FoodShare Volunteer Program</strong>! Your dedication helps make our community stronger.`,
+    )
+  }
     <p style="margin: 0 0 16px; font-size: 16px; line-height: 1.7; color: ${BRAND.textSecondary};"><strong>🌟 As a volunteer, you can:</strong></p>
     ${bulletList(features)}
-    ${infoBox(
+    ${
+    infoBox(
       "Your Impact Starts Now",
       "Every volunteer hour helps reduce food waste and feeds families in need. Thank you for being part of the solution!",
-      "💪"
-    )}
+      "💪",
+    )
+  }
   `;
 
   return {
@@ -445,16 +464,20 @@ export function completeProfileTemplate(params: CompleteProfileParams): {
 
   const content = `
     ${greeting(params.name)}
-    ${paragraph(
-      `Your FoodShare profile is <strong>${percent}%</strong> complete. Add a few more details to get the full experience!`
-    )}
+    ${
+    paragraph(
+      `Your FoodShare profile is <strong>${percent}%</strong> complete. Add a few more details to get the full experience!`,
+    )
+  }
     <p style="margin: 0 0 16px; font-size: 16px; line-height: 1.7; color: ${BRAND.textSecondary};"><strong>✅ A complete profile helps you:</strong></p>
     ${bulletList(benefits)}
-    ${infoBox(
+    ${
+    infoBox(
       "Quick Tip",
       "Adding a profile photo increases your chances of successful connections by 3x!",
-      "💡"
-    )}
+      "💡",
+    )
+  }
   `;
 
   return {
@@ -515,16 +538,20 @@ export function firstShareTipsTemplate(params: FirstShareTipsParams): {
 
   const content = `
     ${greeting(params.name)}
-    ${paragraph(
-      "Ready to make your first food share? Here are some tips to make it a great experience:"
-    )}
+    ${
+    paragraph(
+      "Ready to make your first food share? Here are some tips to make it a great experience:",
+    )
+  }
     <p style="margin: 0 0 16px; font-size: 16px; line-height: 1.7; color: ${BRAND.textSecondary};"><strong>📸 Creating a Great Listing:</strong></p>
     ${bulletList(tips)}
-    ${infoBox(
+    ${
+    infoBox(
       "Pro Tip",
       "Start with items that are still fresh but you can't use in time. Produce, bread, and leftovers are popular first shares!",
-      "🌟"
-    )}
+      "🌟",
+    )
+  }
   `;
 
   return {
@@ -573,9 +600,11 @@ export function milestoneTemplate(params: MilestoneParams): { subject: string; h
   const content = `
     <p style="margin: 0 0 20px; font-size: 17px; line-height: 1.7; color: ${BRAND.textPrimary};">Congratulations <strong>${params.name}</strong>! 🎊</p>
     ${milestoneBox}
-    ${paragraph(
-      `This achievement puts you in the top <strong style="color: ${BRAND.primaryColor};">${percentile}%</strong> of FoodShare members. Keep up the amazing work!`
-    )}
+    ${
+    paragraph(
+      `This achievement puts you in the top <strong style="color: ${BRAND.primaryColor};">${percentile}%</strong> of FoodShare members. Keep up the amazing work!`,
+    )
+  }
     ${infoBox("Next Goal", nextMilestone, "🎯")}
   `;
 
@@ -656,18 +685,23 @@ export function reengagementTemplate(params: ReengagementParams): {
   let closingMessage = "";
 
   if (hasActivity) {
-    mainMessage = `It's been <strong>${params.daysSinceLastVisit} days</strong> since we've seen you, and your community has been busy!`;
+    mainMessage =
+      `It's been <strong>${params.daysSinceLastVisit} days</strong> since we've seen you, and your community has been busy!`;
     statsSection = statsBar(stats);
-    closingMessage = `Maybe you've finished a good book recently, or have some extra groceries you won't use in time? Why not pop back and see what's happening?`;
+    closingMessage =
+      `Maybe you've finished a good book recently, or have some extra groceries you won't use in time? Why not pop back and see what's happening?`;
   } else {
     // No local activity - focus on encouraging them to be a pioneer
-    mainMessage = `It's been <strong>${params.daysSinceLastVisit} days</strong> since we've seen you. We've missed you!`;
-    statsSection = `<div style="margin: 24px 0; padding: 20px; background: linear-gradient(135deg, ${BRAND.bgSecondary} 0%, #fff5f7 100%); border-radius: ${BRAND.cardRadius}; text-align: center;">
+    mainMessage =
+      `It's been <strong>${params.daysSinceLastVisit} days</strong> since we've seen you. We've missed you!`;
+    statsSection =
+      `<div style="margin: 24px 0; padding: 20px; background: linear-gradient(135deg, ${BRAND.bgSecondary} 0%, #fff5f7 100%); border-radius: ${BRAND.cardRadius}; text-align: center;">
   <p style="margin: 0 0 8px; font-size: 24px;">💚</p>
   <p style="margin: 0 0 4px; font-size: 16px; font-weight: 700; color: ${BRAND.textPrimary};">Your neighborhood needs you!</p>
   <p style="margin: 0; font-size: 14px; color: ${BRAND.textSecondary}; line-height: 1.5;">Be the one to kickstart food sharing in your area. One listing could inspire your whole community.</p>
 </div>`;
-    closingMessage = `Got something you're not using? A book you've finished, some extra groceries, or that thing in the cupboard you keep meaning to sort out? Someone nearby might love it!`;
+    closingMessage =
+      `Got something you're not using? A book you've finished, some extra groceries, or that thing in the cupboard you keep meaning to sort out? Someone nearby might love it!`;
   }
 
   const content = `
@@ -676,10 +710,12 @@ export function reengagementTemplate(params: ReengagementParams): {
     ${statsSection}
     ${paragraph(closingMessage)}
     ${divider()}
-    ${paragraph(
+    ${
+    paragraph(
       `One person's spare is another person's treasure. Why not make someone's day? 💚`,
-      "0"
-    )}
+      "0",
+    )
+  }
   `;
 
   return {
@@ -692,11 +728,11 @@ export function reengagementTemplate(params: ReengagementParams): {
         text: hasActivity ? "See What's New" : "Share Something",
         url: hasActivity
           ? `https://${
-              Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
-            }/map`
+            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          }/map`
           : `https://${
-              Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
-            }/new`,
+            Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          }/new`,
         emoji: hasActivity ? "🗺️" : "🍎",
       },
       footer: {
@@ -778,10 +814,9 @@ export function appReleaseTemplate(params: AppLiveParams): { subject: string; ht
 
   const platformIcon = platform === "iOS" ? "🍎" : "🤖";
   const platformName = platform === "iOS" ? "App Store" : "Google Play";
-  const appStoreUrl =
-    platform === "iOS"
-      ? "https://apps.apple.com/us/app/foodshare-club/id1573242804"
-      : "https://play.google.com/store/apps/details?id=com.flutterflow.foodshare";
+  const appStoreUrl = platform === "iOS"
+    ? "https://apps.apple.com/us/app/foodshare-club/id1573242804"
+    : "https://play.google.com/store/apps/details?id=com.flutterflow.foodshare";
 
   const features: BulletItem[] = [
     {
@@ -812,18 +847,22 @@ export function appReleaseTemplate(params: AppLiveParams): { subject: string; ht
 
   const content = `
     ${greeting(name || "there")}
-    ${paragraph(
-      `<strong style="color: ${BRAND.primaryColor};">Exciting news!</strong> FoodShare is now available on the ${platformIcon} <strong>${platformName}</strong>! Download the app and join thousands of neighbors who are reducing food waste and building community together.`
-    )}
+    ${
+    paragraph(
+      `<strong style="color: ${BRAND.primaryColor};">Exciting news!</strong> FoodShare is now available on the ${platformIcon} <strong>${platformName}</strong>! Download the app and join thousands of neighbors who are reducing food waste and building community together.`,
+    )
+  }
 
     <p style="margin: 24px 0 16px; font-size: 16px; line-height: 1.7; color: ${BRAND.textSecondary};"><strong>🌱 With FoodShare you can:</strong></p>
     ${bulletList(features)}
 
     ${divider()}
 
-    ${paragraph(
-      `Be part of the movement! Every item shared is one less item wasted. Download FoodShare today and start making a difference in your community.`
-    )}
+    ${
+    paragraph(
+      `Be part of the movement! Every item shared is one less item wasted. Download FoodShare today and start making a difference in your community.`,
+    )
+  }
   `;
 
   return {
@@ -873,7 +912,7 @@ export type TemplateSlug = keyof typeof templates;
 
 export function renderTemplate(
   slug: string,
-  variables: Record<string, unknown>
+  variables: Record<string, unknown>,
 ): { subject: string; html: string } | null {
   const templateFn = templates[slug as TemplateSlug];
 

@@ -49,7 +49,7 @@ export interface UpdatePostInput {
 export class ForumService {
   constructor(
     private supabase: SupabaseClient<any, any, any>,
-    private userId: string
+    private userId: string,
   ) {}
 
   async createPost(input: CreatePostInput) {

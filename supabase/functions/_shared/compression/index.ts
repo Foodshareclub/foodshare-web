@@ -55,7 +55,7 @@ function recordSuccess(service: string) {
 
 async function compressWithTinyPNG(
   imageData: Uint8Array,
-  targetWidth: number = 800
+  targetWidth: number = 800,
 ): Promise<CompressResult> {
   const apiKey = getSecretSync("TINYPNG_API_KEY");
   if (!apiKey) throw new Error("TINYPNG_API_KEY not set");
@@ -104,7 +104,7 @@ async function compressWithTinyPNG(
 
 async function compressWithCloudinary(
   imageData: Uint8Array,
-  targetWidth: number = 800
+  targetWidth: number = 800,
 ): Promise<CompressResult> {
   const cloudName = getSecretSync("CLOUDINARY_CLOUD_NAME");
   const apiKey = getSecretSync("CLOUDINARY_API_KEY");
@@ -137,7 +137,7 @@ async function compressWithCloudinary(
   const uploadResult = await uploadResponse.json();
   const transformedUrl = uploadResult.secure_url.replace(
     "/upload/",
-    `/upload/w_${targetWidth},c_fit,q_auto,f_auto/`
+    `/upload/w_${targetWidth},c_fit,q_auto,f_auto/`,
   );
 
   const imageResponse = await fetch(transformedUrl);
@@ -159,7 +159,7 @@ async function compressWithCloudinary(
 
 export async function compressImage(
   imageData: Uint8Array,
-  targetWidth: number = 800
+  targetWidth: number = 800,
 ): Promise<CompressResult> {
   const originalSize = imageData.length;
 
@@ -195,7 +195,7 @@ export async function compressImage(
         .catch((error) => {
           recordFailure("tinypng");
           throw error;
-        })
+        }),
     );
   }
 
@@ -209,7 +209,7 @@ export async function compressImage(
         .catch((error) => {
           recordFailure("cloudinary");
           throw error;
-        })
+        }),
     );
   }
 
@@ -218,7 +218,7 @@ export async function compressImage(
 
 export async function generateThumbnail(
   imageData: Uint8Array,
-  maxWidth: number = 300
+  maxWidth: number = 300,
 ): Promise<Uint8Array> {
   const result = await compressImage(imageData, maxWidth);
   return result.buffer;

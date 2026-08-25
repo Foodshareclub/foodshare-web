@@ -8,7 +8,7 @@ import { llmTranslationService } from "../services/llm-translation.ts";
 
 export default async function healthHandler(
   req: Request,
-  corsHeaders: Record<string, string>
+  corsHeaders: Record<string, string>,
 ): Promise<Response> {
   if (req.method !== "GET") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -48,7 +48,7 @@ export default async function healthHandler(
       {
         status: 503,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 }

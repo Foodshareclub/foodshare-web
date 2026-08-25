@@ -69,7 +69,7 @@ export async function getFeed(ctx: HandlerContext<unknown, ListQuery>): Promise<
       hasMore,
       nextCursor,
     },
-    ctx
+    ctx,
   );
 }
 
@@ -128,7 +128,7 @@ export async function listProducts(ctx: HandlerContext<unknown, ListQuery>): Pro
         p_offset: offset,
         p_post_type: postType,
       },
-      { count: "exact" }
+      { count: "exact" },
     );
 
     if (categoryId) {
@@ -162,7 +162,7 @@ export async function listProducts(ctx: HandlerContext<unknown, ListQuery>): Pro
 
     if (compositeCursor) {
       dbQuery = dbQuery.or(
-        `created_at.lt.${compositeCursor.timestamp},and(created_at.eq.${compositeCursor.timestamp},id.lt.${compositeCursor.id})`
+        `created_at.lt.${compositeCursor.timestamp},and(created_at.eq.${compositeCursor.timestamp},id.lt.${compositeCursor.id})`,
       );
     }
   }
@@ -203,7 +203,7 @@ export async function listProducts(ctx: HandlerContext<unknown, ListQuery>): Pro
       nextCursor,
       limit,
     },
-    60_000
+    60_000,
   );
 
   const fuzzedItems = fuzzProductListCoordinates(transformedItems, ctx.userId);
@@ -242,7 +242,7 @@ export async function getProduct(ctx: HandlerContext<unknown, ListQuery>): Promi
       *,
       profile:profiles!posts_profile_id_fkey(${profileFields}),
       category:categories(id, name, icon)
-    `
+    `,
     )
     .eq("id", productId)
     .single();

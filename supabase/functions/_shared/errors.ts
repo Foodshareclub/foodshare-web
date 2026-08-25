@@ -59,7 +59,7 @@ export class AppError extends Error {
       retryable?: boolean;
       details?: unknown;
       cause?: Error;
-    }
+    },
   ) {
     super(message, { cause: options?.cause });
     this.name = this.constructor.name;
@@ -272,7 +272,7 @@ export class UnprocessableEntityError extends AppError {
 export function assertValid(
   condition: unknown,
   message: string,
-  details?: unknown
+  details?: unknown,
 ): asserts condition {
   if (!condition) {
     throw new ValidationError(message, details);
@@ -285,7 +285,7 @@ export function assertValid(
 export function assertFound<T>(
   value: T | null | undefined,
   resource: string,
-  id?: string
+  id?: string,
 ): asserts value is T {
   if (value === null || value === undefined) {
     throw new NotFoundError(resource, id);
@@ -306,7 +306,7 @@ export function assertAuthenticated(userId?: string | null): asserts userId is s
  */
 export async function withExternalService<T>(
   serviceName: string,
-  operation: () => Promise<T>
+  operation: () => Promise<T>,
 ): Promise<T> {
   try {
     return await operation();
@@ -316,7 +316,7 @@ export async function withExternalService<T>(
     }
     throw new ExternalServiceError(
       serviceName,
-      error instanceof Error ? error.message : String(error)
+      error instanceof Error ? error.message : String(error),
     );
   }
 }

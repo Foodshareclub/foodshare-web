@@ -59,7 +59,7 @@ export async function deleteAccount(ctx: HandlerContext): Promise<Response> {
       message: "Account deleted successfully",
       deletedUserId: userId,
     },
-    ctx
+    ctx,
   );
 }
 

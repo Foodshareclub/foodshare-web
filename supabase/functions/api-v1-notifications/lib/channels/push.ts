@@ -103,7 +103,7 @@ export class PushChannelAdapter implements ChannelAdapter {
 
   async sendBatch(
     payloads: PushPayload[],
-    context: NotificationContext
+    context: NotificationContext,
   ): Promise<ChannelDeliveryResult[]> {
     logger.info("Sending batch push notifications", {
       requestId: context.requestId,
@@ -152,8 +152,8 @@ export class PushChannelAdapter implements ChannelAdapter {
       const latencyMs = Math.round(performance.now() - startTime);
 
       return {
-        healthy:
-          (fcmConfigured || apnsConfigured) && Object.values(circuits).every((s) => s !== "open"),
+        healthy: (fcmConfigured || apnsConfigured) &&
+          Object.values(circuits).every((s) => s !== "open"),
         latencyMs,
       };
     } catch (error) {
@@ -184,7 +184,7 @@ export class PushChannelAdapter implements ChannelAdapter {
   private async sendToDevices(
     payload: PushPayload,
     devices: DeviceToken[],
-    _context: NotificationContext
+    _context: NotificationContext,
   ): Promise<SendResult[]> {
     const CONCURRENCY = 10;
     const results: SendResult[] = [];
@@ -230,7 +230,7 @@ export class PushChannelAdapter implements ChannelAdapter {
               error: (e as Error).message,
             } as SendResult;
           }
-        })
+        }),
       );
 
       results.push(...chunkResults);
@@ -241,7 +241,7 @@ export class PushChannelAdapter implements ChannelAdapter {
 
   private async cleanupInvalidTokens(
     context: NotificationContext,
-    results: SendResult[]
+    results: SendResult[],
   ): Promise<void> {
     const invalidTokens = results.filter((r) => !r.success && !r.retryable && r.token);
 
@@ -272,7 +272,7 @@ export class PushChannelAdapter implements ChannelAdapter {
 
 export async function cleanupInactiveTokens(
   context: NotificationContext,
-  tokenIds: string[]
+  tokenIds: string[],
 ): Promise<void> {
   if (tokenIds.length === 0) return;
 

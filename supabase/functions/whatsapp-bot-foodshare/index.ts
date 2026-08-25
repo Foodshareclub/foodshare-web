@@ -40,15 +40,14 @@ async function ensureInitialized(ctx: HandlerContext): Promise<boolean> {
   if (isInitialized) return true;
 
   try {
-    const accessToken =
-      (await ctx.getSecret("WHATSAPP_ACCESS_TOKEN")) || Deno.env.get("WHATSAPP_ACCESS_TOKEN");
-    const phoneNumberId =
-      (await ctx.getSecret("WHATSAPP_PHONE_NUMBER_ID")) || Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
-    const verifyToken =
-      (await ctx.getSecret("WHATSAPP_VERIFY_TOKEN")) || Deno.env.get("WHATSAPP_VERIFY_TOKEN");
+    const accessToken = (await ctx.getSecret("WHATSAPP_ACCESS_TOKEN")) ||
+      Deno.env.get("WHATSAPP_ACCESS_TOKEN");
+    const phoneNumberId = (await ctx.getSecret("WHATSAPP_PHONE_NUMBER_ID")) ||
+      Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
+    const verifyToken = (await ctx.getSecret("WHATSAPP_VERIFY_TOKEN")) ||
+      Deno.env.get("WHATSAPP_VERIFY_TOKEN");
     const supabaseUrl = (await ctx.getSecret("SUPABASE_URL")) || Deno.env.get("SUPABASE_URL");
-    const supabaseKey =
-      (await ctx.getSecret("SUPABASE_SERVICE_ROLE_KEY")) ||
+    const supabaseKey = (await ctx.getSecret("SUPABASE_SERVICE_ROLE_KEY")) ||
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!accessToken) {
@@ -84,13 +83,13 @@ async function ensureInitialized(ctx: HandlerContext): Promise<boolean> {
 async function verifyWebhookSignature(
   payload: string,
   headers: Headers,
-  ctx: HandlerContext
+  ctx: HandlerContext,
 ): Promise<boolean> {
   const appSecret = (await ctx.getSecret("WHATSAPP_APP_SECRET")) || getWhatsappAppSecret();
   if (!appSecret) {
     if (isDevelopment()) {
       logger.warn(
-        "WHATSAPP_APP_SECRET not configured - skipping signature verification (dev mode)"
+        "WHATSAPP_APP_SECRET not configured - skipping signature verification (dev mode)",
       );
       return true;
     }
@@ -128,7 +127,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
     return jsonOk(
       { error: "Service temporarily unavailable", details: initError?.message },
       ctx,
-      503
+      503,
     );
   }
 
@@ -140,8 +139,8 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
   const challenge = url.searchParams.get("hub.challenge");
 
   if (mode === "subscribe" && token && challenge) {
-    const expectedToken =
-      (await ctx.getSecret("WHATSAPP_VERIFY_TOKEN")) || getWhatsappVerifyToken();
+    const expectedToken = (await ctx.getSecret("WHATSAPP_VERIFY_TOKEN")) ||
+      getWhatsappVerifyToken();
     if (token === expectedToken) {
       logger.info("Webhook verified successfully");
       return new Response(challenge, {
@@ -182,7 +181,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
       },
     },
     ctx,
-    overallStatus === "healthy" ? 200 : 503
+    overallStatus === "healthy" ? 200 : 503,
   );
 }
 
@@ -195,7 +194,7 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
     return jsonOk(
       { error: "Service temporarily unavailable", details: initError?.message },
       ctx,
-      503
+      503,
     );
   }
 
@@ -277,7 +276,7 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
 async function routeMessage(
   message: WhatsAppMessage,
   requestId: string,
-  startTime: number
+  startTime: number,
 ): Promise<void> {
   const phoneNumber = message.from;
 
@@ -375,5 +374,5 @@ Deno.serve(
       GET: { handler: handleGet },
       POST: { handler: handlePost },
     },
-  })
+  }),
 );

@@ -100,7 +100,7 @@ function handlePost(ctx: HandlerContext): Promise<Response> {
   throw new AppError(
     "Unknown route. Available: /process, /send, /send/template, /send/invitation, /webhook",
     "NOT_FOUND",
-    404
+    404,
   );
 }
 
@@ -127,5 +127,5 @@ Deno.serve(
         handler: handlePost,
       },
     },
-  })
+  }),
 );

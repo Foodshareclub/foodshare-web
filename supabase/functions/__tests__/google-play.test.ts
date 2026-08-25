@@ -28,7 +28,7 @@ function createPubSubRequest(
     userAgent?: string;
     contentType?: string;
     authorization?: string;
-  } = {}
+  } = {},
 ): Request {
   const {
     method = "POST",
@@ -82,7 +82,7 @@ Deno.test("canHandle: detects Google-Cloud-Pub/Sub user-agent", () => {
     {},
     {
       userAgent: "Google-Cloud-Pub/Sub",
-    }
+    },
   );
   assertEquals(googlePlayHandler.canHandle(request), true);
 });
@@ -93,7 +93,7 @@ Deno.test("canHandle: rejects non-POST requests", () => {
     {
       method: "GET",
       userAgent: "CloudPubSub-Google",
-    }
+    },
   );
   assertEquals(googlePlayHandler.canHandle(request), false);
 });
@@ -104,7 +104,7 @@ Deno.test("canHandle: rejects non-JSON content type", () => {
     {
       userAgent: "CloudPubSub-Google",
       contentType: "text/plain",
-    }
+    },
   );
   assertEquals(googlePlayHandler.canHandle(request), false);
 });
@@ -191,7 +191,7 @@ Deno.test(
 
     const result = await googlePlayHandler.verifyWebhook(request, body);
     assertEquals(result, true);
-  }
+  },
 );
 
 Deno.test("verifyWebhook: test notification bypasses package validation", async () => {

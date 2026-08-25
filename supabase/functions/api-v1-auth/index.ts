@@ -53,7 +53,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
         service: SERVICE,
         timestamp: new Date().toISOString(),
       },
-      ctx
+      ctx,
     );
   }
 
@@ -65,8 +65,7 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
   const route = parseRoute(url, ctx.request.method, SERVICE);
 
   // Extract client IP
-  const clientIp =
-    ctx.request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+  const clientIp = ctx.request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     ctx.request.headers.get("x-real-ip") ||
     null;
 
@@ -149,7 +148,7 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
         error.errors.map((e) => ({
           field: e.path.join("."),
           message: e.message,
-        }))
+        })),
       );
     }
     throw error;
@@ -175,5 +174,5 @@ Deno.serve(
       GET: { handler: handleGet },
       POST: { handler: handlePost },
     },
-  })
+  }),
 );

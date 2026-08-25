@@ -24,7 +24,7 @@ export async function textSearch(
   query: string,
   limit: number,
   offset: number,
-  filters?: SearchFilters
+  filters?: SearchFilters,
 ): Promise<{ results: SearchResultItem[]; total: number }> {
   const normalizedQuery = normalizeQuery(query);
 
@@ -32,7 +32,7 @@ export async function textSearch(
     .from("posts_with_location")
     .select(
       `id, post_name, post_description, post_address, post_type, category_id, images, latitude, longitude, categories(name), profile_id, created_at, is_active`,
-      { count: "exact" }
+      { count: "exact" },
     )
     .eq("is_active", true)
     .eq("is_arranged", false);
@@ -97,7 +97,7 @@ export async function textSearch(
     .from("posts_with_location")
     .select(
       `id, post_name, post_description, post_address, post_type, category_id, images, latitude, longitude, categories(name), profile_id, created_at`,
-      { count: "exact" }
+      { count: "exact" },
     )
     .eq("is_active", true)
     .eq("is_arranged", false)
@@ -125,7 +125,7 @@ export async function fuzzySearch(
   query: string,
   limit: number,
   offset: number,
-  filters?: SearchFilters
+  filters?: SearchFilters,
 ): Promise<{ results: SearchResultItem[]; total: number }> {
   const escapedQuery = escapePostgresLike(sanitizeInput(query));
 
@@ -133,7 +133,7 @@ export async function fuzzySearch(
     .from("posts_with_location")
     .select(
       `id, post_name, post_description, post_address, post_type, category_id, images, latitude, longitude, categories(name), profile_id, created_at`,
-      { count: "exact" }
+      { count: "exact" },
     )
     .or(`post_name.ilike.%${escapedQuery}%,post_description.ilike.%${escapedQuery}%`)
     .eq("is_active", true)

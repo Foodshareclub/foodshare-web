@@ -184,7 +184,7 @@ Deno.test("tracedFetch: creates span and forwards context headers", async () => 
 
   globalThis.fetch = async (
     _input: string | URL | Request,
-    init?: RequestInit
+    init?: RequestInit,
   ): Promise<Response> => {
     capturedHeaders = new Headers(init?.headers);
     return new Response(JSON.stringify({ ok: true }), { status: 200 });
@@ -196,7 +196,7 @@ Deno.test("tracedFetch: creates span and forwards context headers", async () => 
       {
         method: "GET",
       },
-      "test.external.api"
+      "test.external.api",
     );
 
     assertEquals(response.status, 200);

@@ -59,7 +59,7 @@ export async function handleAppleSignIn(body: unknown, ctx: AuthContext): Promis
     // For now, we search existing users.
 
     let existingUser = (user?.users || []).find(
-      (u) => u.user_metadata?.sub === appleSub || u.email === appleEmail
+      (u) => u.user_metadata?.sub === appleSub || u.email === appleEmail,
     );
 
     if (!existingUser) {
@@ -79,7 +79,7 @@ export async function handleAppleSignIn(body: unknown, ctx: AuthContext): Promis
         throw new AppError(
           `Failed to create user: ${createError.message}`,
           "AUTH_CREATE_FAILED",
-          500
+          500,
         );
       }
       existingUser = newUser.user;
@@ -145,7 +145,7 @@ export async function handleAppleSignIn(body: unknown, ctx: AuthContext): Promis
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error) {
     logger.error("Apple Sign-In failed", error instanceof Error ? error : new Error(String(error)));

@@ -33,14 +33,14 @@ const VERSION = "2.0.0";
  */
 function deepMerge(
   target: Record<string, unknown>,
-  source: Record<string, unknown>
+  source: Record<string, unknown>,
 ): Record<string, unknown> {
   const result = { ...target };
   for (const [key, value] of Object.entries(source)) {
     if (value !== null && typeof value === "object" && !Array.isArray(value)) {
       result[key] = deepMerge(
         (result[key] as Record<string, unknown>) || {},
-        value as Record<string, unknown>
+        value as Record<string, unknown>,
       );
     } else {
       result[key] = value;
@@ -66,7 +66,7 @@ function countKeys(obj: Record<string, unknown>): number {
 
 export default async function updateHandler(
   req: Request,
-  corsHeaders: Record<string, string>
+  corsHeaders: Record<string, string>,
 ): Promise<Response> {
   if (req.method !== "POST") {
     return new Response(
@@ -77,7 +77,7 @@ export default async function updateHandler(
       {
         status: 405,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 
@@ -97,7 +97,7 @@ export default async function updateHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -118,7 +118,7 @@ export default async function updateHandler(
         {
           status: 404,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -149,7 +149,7 @@ export default async function updateHandler(
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -164,7 +164,7 @@ export default async function updateHandler(
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error) {
     return new Response(
@@ -176,7 +176,7 @@ export default async function updateHandler(
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 }

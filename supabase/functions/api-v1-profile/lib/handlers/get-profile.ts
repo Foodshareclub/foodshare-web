@@ -41,7 +41,7 @@ export async function getProfile(ctx: HandlerContext<unknown, QueryParams>): Pro
       created_at,
       updated_at,
       profile_visibility
-    `
+    `,
     )
     .eq("id", userId)
     .single();
@@ -77,7 +77,7 @@ export async function getAddress(ctx: HandlerContext<unknown, QueryParams>): Pro
       long,
       generated_full_address,
       radius_meters
-    `
+    `,
     )
     .eq("profile_id", userId)
     .single();
@@ -117,7 +117,7 @@ export async function getSession(ctx: HandlerContext<unknown, QueryParams>): Pro
       locale: data.preferred_locale || "en",
       localeSource: data.preferred_locale ? "database" : "default",
     },
-    ctx
+    ctx,
   );
 }
 
@@ -154,7 +154,7 @@ export async function getDashboard(ctx: HandlerContext<unknown, QueryParams>): P
       counts,
       recentListings,
     },
-    ctx
+    ctx,
   );
 }
 

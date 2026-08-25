@@ -92,8 +92,7 @@ function detectPlatform(request: Request): "ios" | "android" | "web" | "unknown"
  * ```
  */
 export function createContext(request: Request, service?: string): RequestContext {
-  const correlationId =
-    request.headers.get("x-correlation-id") ||
+  const correlationId = request.headers.get("x-correlation-id") ||
     request.headers.get("x-request-id") ||
     generateRequestId();
 
@@ -134,7 +133,7 @@ export function requireContext(): RequestContext {
  * Update the current context with new values
  */
 export function updateContext(
-  updates: Partial<Omit<RequestContext, "requestId" | "startTime">>
+  updates: Partial<Omit<RequestContext, "requestId" | "startTime">>,
 ): void {
   if (!currentContext) {
     throw new Error("Request context not initialized. Call createContext first.");
@@ -227,7 +226,7 @@ export function getContextHeaders(): Record<string, string> {
  * Get standard response headers including context
  */
 export function getResponseHeaders(
-  additionalHeaders?: Record<string, string>
+  additionalHeaders?: Record<string, string>,
 ): Record<string, string> {
   const ctx = currentContext;
 
@@ -272,7 +271,7 @@ export function getContextSummary(): Record<string, unknown> {
  */
 export function handleWithContext(
   service: string,
-  handler: (request: Request, context: RequestContext) => Promise<Response>
+  handler: (request: Request, context: RequestContext) => Promise<Response>,
 ): (request: Request) => Promise<Response> {
   return async (request: Request) => {
     const ctx = createContext(request, service);

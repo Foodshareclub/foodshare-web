@@ -497,7 +497,7 @@ export function formatGreeting(
   profile: ProfileNameData,
   prefix = "Hey",
   suffix = "!",
-  options: ExtractOptions = {}
+  options: ExtractOptions = {},
 ): string {
   const name = extractDisplayName(profile, options);
   return `${prefix} ${name}${suffix}`;

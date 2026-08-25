@@ -28,7 +28,7 @@ const CBOR_MAJOR_TEXT = 3;
 const CBOR_MAJOR_ARRAY = 4;
 
 export function decodeCBOR(
-  data: Uint8Array
+  data: Uint8Array,
 ): { fmt: string; attStmt: Record<string, Uint8Array>; authData: Uint8Array } | null {
   try {
     let offset = 0;
@@ -48,8 +48,8 @@ export function decodeCBOR(
       } else if (additionalInfo === 25) {
         value = (data[offset++] << 8) | data[offset++];
       } else if (additionalInfo === 26) {
-        value =
-          (data[offset++] << 24) | (data[offset++] << 16) | (data[offset++] << 8) | data[offset++];
+        value = (data[offset++] << 24) | (data[offset++] << 16) | (data[offset++] << 8) |
+          data[offset++];
       } else {
         return null;
       }
@@ -119,8 +119,7 @@ export function parseAuthData(authData: Uint8Array): {
     offset += 32;
 
     const flags = authData[offset++];
-    const signCount =
-      (authData[offset++] << 24) |
+    const signCount = (authData[offset++] << 24) |
       (authData[offset++] << 16) |
       (authData[offset++] << 8) |
       authData[offset++];
@@ -216,7 +215,7 @@ export async function verifySignature(
   authData: Uint8Array,
   clientDataHash: Uint8Array,
   signature: Uint8Array,
-  publicKeyBase64: string
+  publicKeyBase64: string,
 ): Promise<boolean> {
   try {
     const publicKeyRaw = Uint8Array.from(atob(publicKeyBase64), (c) => c.charCodeAt(0));
@@ -226,7 +225,7 @@ export async function verifySignature(
       publicKeyRaw,
       { name: "ECDSA", namedCurve: "P-256" },
       false,
-      ["verify"]
+      ["verify"],
     );
 
     const signedData = new Uint8Array(authData.length + clientDataHash.length);
@@ -239,7 +238,7 @@ export async function verifySignature(
       { name: "ECDSA", hash: "SHA-256" },
       publicKey,
       rawSignature as any,
-      signedData
+      signedData,
     );
   } catch {
     return false;
@@ -254,7 +253,7 @@ export async function verifyAppAttest(
   keyId: string,
   attestation: string,
   _challenge: string,
-  bundleId: string
+  bundleId: string,
 ): Promise<{ verified: boolean; publicKey?: string; message?: string; riskScore: number }> {
   try {
     let attestationData: Uint8Array;
@@ -336,7 +335,7 @@ export async function verifyAppAttest(
   } catch (error) {
     logger.error(
       "App Attest verification error",
-      error instanceof Error ? error : new Error(String(error))
+      error instanceof Error ? error : new Error(String(error)),
     );
     return { verified: false, message: "Verification failed", riskScore: 100 };
   }

@@ -75,7 +75,7 @@ function formatAlertMessage(
   severity: AlertSeverity,
   title: string,
   details: Record<string, unknown>,
-  tags?: Record<string, string>
+  tags?: Record<string, string>,
 ): string {
   const emoji = SEVERITY_EMOJI[severity];
   const prefix = SEVERITY_PREFIX[severity];
@@ -116,7 +116,7 @@ export async function sendTelegramAlert(
   severity: AlertSeverity,
   title: string,
   details: Record<string, unknown>,
-  options: AlertOptions = {}
+  options: AlertOptions = {},
 ): Promise<boolean> {
   // Check configuration
   const botToken = getAlertBotToken();
@@ -166,7 +166,7 @@ export async function sendTelegramAlert(
   } catch (error) {
     logger.error(
       "Failed to send Telegram alert",
-      error instanceof Error ? error : new Error(String(error))
+      error instanceof Error ? error : new Error(String(error)),
     );
     return false;
   }
@@ -183,14 +183,14 @@ export async function sendSubscriptionAlert(
     userId?: string;
     originalTransactionId?: string;
     status?: string;
-  }
+  },
 ): Promise<boolean> {
   const severity: AlertSeverity =
     eventType === "billing_issue" || eventType === "grace_period_expired"
       ? "high"
       : eventType === "refunded" || eventType === "revoked"
-        ? "medium"
-        : "low";
+      ? "medium"
+      : "low";
 
   return sendTelegramAlert(
     severity,
@@ -205,7 +205,7 @@ export async function sendSubscriptionAlert(
     {
       throttleKey: `subscription:${eventType}:${details.originalTransactionId}`,
       tags: { platform: details.platform, event: eventType },
-    }
+    },
   );
 }
 
@@ -215,7 +215,7 @@ export async function sendSubscriptionAlert(
 export async function sendCircuitBreakerAlert(
   serviceName: string,
   state: "open" | "half-open" | "closed",
-  failures: number
+  failures: number,
 ): Promise<boolean> {
   if (state === "closed") {
     return sendTelegramAlert(
@@ -226,7 +226,7 @@ export async function sendCircuitBreakerAlert(
         State: state,
         Message: "Service is back to normal",
       },
-      { throttleKey: `circuit:${serviceName}:recovered` }
+      { throttleKey: `circuit:${serviceName}:recovered` },
     );
   }
 
@@ -239,7 +239,7 @@ export async function sendCircuitBreakerAlert(
       Failures: failures,
       Action: state === "open" ? "All requests blocked" : "Testing recovery",
     },
-    { throttleKey: `circuit:${serviceName}:${state}` }
+    { throttleKey: `circuit:${serviceName}:${state}` },
   );
 }
 
@@ -248,10 +248,13 @@ export async function sendCircuitBreakerAlert(
  */
 export async function sendDLQAlert(
   pendingCount: number,
-  platformBreakdown: Record<string, number>
+  platformBreakdown: Record<string, number>,
 ): Promise<boolean> {
-  const severity: AlertSeverity =
-    pendingCount > 100 ? "critical" : pendingCount > 50 ? "high" : "medium";
+  const severity: AlertSeverity = pendingCount > 100
+    ? "critical"
+    : pendingCount > 50
+    ? "high"
+    : "medium";
 
   return sendTelegramAlert(
     severity,
@@ -264,7 +267,7 @@ export async function sendDLQAlert(
     {
       throttleKey: "dlq:threshold",
       throttleDurationMs: 15 * 60 * 1000, // 15 minutes
-    }
+    },
   );
 }
 
@@ -274,7 +277,7 @@ export async function sendDLQAlert(
 export async function sendErrorRateAlert(
   errorRate: number,
   totalRequests: number,
-  errors: number
+  errors: number,
 ): Promise<boolean> {
   return sendTelegramAlert(
     errorRate > 20 ? "critical" : "high",
@@ -288,6 +291,6 @@ export async function sendErrorRateAlert(
     {
       throttleKey: "error-rate:high",
       throttleDurationMs: 10 * 60 * 1000, // 10 minutes
-    }
+    },
   );
 }

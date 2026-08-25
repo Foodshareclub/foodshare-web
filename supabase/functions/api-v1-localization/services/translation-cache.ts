@@ -156,12 +156,10 @@ async function initRedis(): Promise<RedisClient | null> {
   redisInitialized = true;
 
   // Support self-hosted Redis HTTP adapter (priority) and Upstash (fallback)
-  const redisUrl =
-    Deno.env.get("REDIS_HTTP_URL") ||
+  const redisUrl = Deno.env.get("REDIS_HTTP_URL") ||
     Deno.env.get("UPSTASH_REDIS_REST_URL") ||
     Deno.env.get("UPSTASH_REDIS_URL");
-  const redisToken =
-    Deno.env.get("REDIS_HTTP_TOKEN") ||
+  const redisToken = Deno.env.get("REDIS_HTTP_TOKEN") ||
     Deno.env.get("UPSTASH_REDIS_REST_TOKEN") ||
     Deno.env.get("UPSTASH_REDIS_TOKEN");
 
@@ -187,7 +185,7 @@ function getCacheKey(
   contentType: string,
   contentId: string,
   field: string,
-  locale: string
+  locale: string,
 ): string {
   return `${CACHE_PREFIX}:${contentType}:${contentId}:${field}:${locale}`;
 }
@@ -203,7 +201,7 @@ export const translationCache = {
     contentType: string,
     contentId: string,
     field: string,
-    locale: string
+    locale: string,
   ): Promise<string | null> {
     const redis = await initRedis();
     if (!redis) return null;
@@ -226,7 +224,7 @@ export const translationCache = {
     contentType: string,
     contentId: string,
     fields: string[],
-    locale: string
+    locale: string,
   ): Promise<Record<string, string | null>> {
     const redis = await initRedis();
     const result: Record<string, string | null> = {};
@@ -262,7 +260,7 @@ export const translationCache = {
     contentId: string,
     field: string,
     locale: string,
-    translation: string
+    translation: string,
   ): Promise<void> {
     const redis = await initRedis();
     if (!redis) return;
@@ -284,7 +282,7 @@ export const translationCache = {
     contentType: string,
     contentId: string,
     translations: Record<string, string>,
-    locale: string
+    locale: string,
   ): Promise<void> {
     const redis = await initRedis();
     if (!redis) return;
@@ -320,7 +318,7 @@ export const translationCache = {
       contentId: string;
       translations: Record<string, string>;
       locale: string;
-    }>
+    }>,
   ): Promise<void> {
     const redis = await initRedis();
     if (!redis) return;
@@ -593,7 +591,7 @@ export async function getContentTranslationsBatch(
   contentType: string,
   items: TranslatableContent[],
   locale: string,
-  fields: string[] = ["title", "description"]
+  fields: string[] = ["title", "description"],
 ): Promise<Map<string, Record<string, string | null>>> {
   const translationsMap = new Map<string, Record<string, string | null>>();
 
@@ -610,7 +608,7 @@ export async function getContentTranslationsBatch(
         contentType,
         contentId,
         fields,
-        locale
+        locale,
       );
       return { contentId, translations };
     });

@@ -55,7 +55,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
         service: SERVICE,
         r2: await isR2Configured(),
       },
-      ctx
+      ctx,
     );
   }
 
@@ -102,5 +102,5 @@ Deno.serve(
       GET: { handler: handleGet },
       POST: { handler: handlePost },
     },
-  })
+  }),
 );

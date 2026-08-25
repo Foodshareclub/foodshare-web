@@ -46,5 +46,5 @@ Deno.serve(
         handler: handleDelete,
       },
     },
-  })
+  }),
 );

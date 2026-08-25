@@ -50,7 +50,7 @@ export async function handleProxy(ctx: HandlerContext): Promise<Response> {
     bucket,
     filename,
     compressed.buffer,
-    `image/${format}`
+    `image/${format}`,
   );
 
   return ok(
@@ -69,7 +69,7 @@ export async function handleProxy(ctx: HandlerContext): Promise<Response> {
         storage,
       },
     },
-    ctx
+    ctx,
   );
 }
 
@@ -107,7 +107,7 @@ export async function handleUploadFromUrl(ctx: HandlerContext): Promise<Response
     bucket,
     filename,
     compressed.buffer,
-    `image/${format}`
+    `image/${format}`,
   );
 
   if (challengeId) {
@@ -140,6 +140,6 @@ export async function handleUploadFromUrl(ctx: HandlerContext): Promise<Response
         storage,
       },
     },
-    ctx
+    ctx,
   );
 }

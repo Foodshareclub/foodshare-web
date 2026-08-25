@@ -46,7 +46,7 @@ export class EmailChannelAdapter implements ChannelAdapter {
           from: payload.from,
           replyTo: payload.replyTo,
         },
-        emailType
+        emailType,
       );
 
       const duration = performance.now() - startTime;
@@ -100,7 +100,7 @@ export class EmailChannelAdapter implements ChannelAdapter {
 
   async sendBatch(
     payloads: EmailPayload[],
-    context: NotificationContext
+    context: NotificationContext,
   ): Promise<ChannelDeliveryResult[]> {
     logger.info("Sending batch email notifications", {
       requestId: context.requestId,
@@ -142,7 +142,7 @@ export class EmailChannelAdapter implements ChannelAdapter {
 
       // Consider healthy if at least one provider is operational
       const anyHealthy = Object.values(health).some(
-        (p) => p.status === "ok" || p.status === "degraded"
+        (p) => p.status === "ok" || p.status === "degraded",
       );
 
       return {
@@ -184,7 +184,7 @@ export class EmailChannelAdapter implements ChannelAdapter {
  */
 export async function getUserEmail(
   context: NotificationContext,
-  userId: string
+  userId: string,
 ): Promise<string | null> {
   try {
     const { data, error } = await context.supabase
@@ -210,7 +210,7 @@ export async function getUserEmail(
  */
 export async function isEmailSuppressed(
   context: NotificationContext,
-  email: string
+  email: string,
 ): Promise<boolean> {
   try {
     const { data, error } = await context.supabase

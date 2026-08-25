@@ -60,7 +60,7 @@ Deno.test("TelegramChannelAdapter: fails gracefully when no linked telegram_id",
       title: "New Food Item",
       body: "Apples available nearby",
     },
-    context
+    context,
   );
 
   assertEquals(result.success, false);
@@ -102,7 +102,7 @@ Deno.test(
           actionText: "View Request",
           category: "posts",
         },
-        context
+        context,
       );
 
       assertEquals(result.success, true);
@@ -111,14 +111,14 @@ Deno.test(
     } finally {
       globalThis.fetch = originalFetch;
     }
-  }
+  },
 );
 
 Deno.test("handleDeepLinkToken: rejects empty token", async () => {
   const result = await handleDeepLinkToken(
     "",
     { id: 123456, first_name: "Test", is_bot: false },
-    123456
+    123456,
   );
   assertEquals(result, false);
 });

@@ -117,7 +117,7 @@ export const WebhookProviders = {
 export async function computeHmac(
   payload: string,
   secret: string,
-  algorithm: HashAlgorithm = "SHA-256"
+  algorithm: HashAlgorithm = "SHA-256",
 ): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
@@ -125,7 +125,7 @@ export async function computeHmac(
     encoder.encode(secret),
     { name: "HMAC", hash: algorithm },
     false,
-    ["sign"]
+    ["sign"],
   );
 
   const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
@@ -141,7 +141,7 @@ export async function computeHmac(
 export async function computeHmacBase64(
   payload: string,
   secret: string,
-  algorithm: HashAlgorithm = "SHA-256"
+  algorithm: HashAlgorithm = "SHA-256",
 ): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
@@ -149,7 +149,7 @@ export async function computeHmacBase64(
     encoder.encode(secret),
     { name: "HMAC", hash: algorithm },
     false,
-    ["sign"]
+    ["sign"],
   );
 
   const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));
@@ -182,7 +182,7 @@ export const constantTimeCompare = timingSafeEqual;
 export async function verifyMetaWebhook(
   payload: string,
   headers: Headers,
-  secret: string
+  secret: string,
 ): Promise<WebhookVerificationResult> {
   const signature = headers.get(WebhookProviders.meta.signatureHeader);
 
@@ -218,7 +218,7 @@ export async function verifyMetaWebhook(
 export async function verifyStripeWebhook(
   payload: string,
   headers: Headers,
-  secret: string
+  secret: string,
 ): Promise<WebhookVerificationResult> {
   const signatureHeader = headers.get(WebhookProviders.stripe.signatureHeader);
 
@@ -270,7 +270,7 @@ export async function verifyStripeWebhook(
 export async function verifyGitHubWebhook(
   payload: string,
   headers: Headers,
-  secret: string
+  secret: string,
 ): Promise<WebhookVerificationResult> {
   const signature = headers.get(WebhookProviders.github.signatureHeader);
 
@@ -344,7 +344,7 @@ export async function verifyHmacSignature(
     algorithm?: HashAlgorithm;
     prefix?: string;
     base64?: boolean;
-  }
+  },
 ): Promise<WebhookVerificationResult> {
   if (!signature) {
     return { valid: false, error: "Missing signature" };
@@ -395,7 +395,7 @@ export async function verifyHmacSignature(
  */
 export function createWebhookVerifier(
   provider: keyof typeof WebhookProviders,
-  getSecret: () => string
+  getSecret: () => string,
 ): (payload: string, headers: Headers) => Promise<WebhookVerificationResult> {
   const config = WebhookProviders[provider];
 

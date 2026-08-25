@@ -157,7 +157,7 @@ export function trackError(error: Error | AppError, context: Record<string, unkn
     // Maintain buffer size
     if (errorBuffer.size > ERROR_BUFFER_SIZE) {
       const oldest = Array.from(errorBuffer.entries()).sort(
-        (a, b) => new Date(a[1].lastSeen).getTime() - new Date(b[1].lastSeen).getTime()
+        (a, b) => new Date(a[1].lastSeen).getTime() - new Date(b[1].lastSeen).getTime(),
       )[0];
       errorBuffer.delete(oldest[0]);
     }
@@ -236,8 +236,8 @@ async function sendAlert(alert: ErrorAlert): Promise<void> {
  * Send alert to Slack webhook
  */
 async function sendSlackAlert(alert: ErrorAlert): Promise<void> {
-  const webhookUrl =
-    (await getSecret("SLACK_ALERT_WEBHOOK_URL")) || (await getSecret("ERROR_ALERT_WEBHOOK_URL"));
+  const webhookUrl = (await getSecret("SLACK_ALERT_WEBHOOK_URL")) ||
+    (await getSecret("ERROR_ALERT_WEBHOOK_URL"));
   if (!webhookUrl) return;
 
   const severityEmoji: Record<ErrorSeverity, string> = {
@@ -299,10 +299,12 @@ async function sendSlackAlert(alert: ErrorAlert): Promise<void> {
                 elements: [
                   {
                     type: "mrkdwn",
-                    text: `Error ID: \`${alert.errorId.substring(
-                      0,
-                      50
-                    )}\` | Time: ${alert.timestamp}`,
+                    text: `Error ID: \`${
+                      alert.errorId.substring(
+                        0,
+                        50,
+                      )
+                    }\` | Time: ${alert.timestamp}`,
                   },
                 ],
               },
@@ -383,7 +385,7 @@ export function getTrackedErrors(
     severity?: ErrorSeverity;
     limit?: number;
     sortBy?: "count" | "lastSeen" | "severity";
-  } = {}
+  } = {},
 ): TrackedError[] {
   const { severity, limit = 50, sortBy = "count" } = options;
 

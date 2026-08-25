@@ -55,7 +55,7 @@ export interface AdminContext {
 
 async function authenticateAdmin(
   req: Request,
-  supabase: ReturnType<typeof getSupabaseClient>
+  supabase: ReturnType<typeof getSupabaseClient>,
 ): Promise<{ authenticated: boolean; adminId?: string; error?: string }> {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
@@ -110,7 +110,7 @@ async function handleRequest(ctx: HandlerContext): Promise<Response> {
         service: SERVICE,
         timestamp: new Date().toISOString(),
       },
-      ctx
+      ctx,
     );
   }
 
@@ -156,7 +156,7 @@ async function handleRequest(ctx: HandlerContext): Promise<Response> {
         ctx.request.method,
         body,
         query,
-        context
+        context,
       );
 
     case "listings":
@@ -190,5 +190,5 @@ Deno.serve(
       PUT: { handler: handleRequest },
       DELETE: { handler: handleRequest },
     },
-  })
+  }),
 );

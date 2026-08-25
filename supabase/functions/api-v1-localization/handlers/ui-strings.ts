@@ -186,7 +186,7 @@ async function checkRateLimit(supabase: SupabaseClient, identifier: string): Pro
 
 export default async function uiStringsHandler(
   req: Request,
-  corsHeaders: Record<string, string>
+  corsHeaders: Record<string, string>,
 ): Promise<Response> {
   // const _startTime = Date.now();
 
@@ -358,7 +358,7 @@ export default async function uiStringsHandler(
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 }

@@ -28,8 +28,9 @@ export async function checkStorage(supabase: SupabaseClient): Promise<ServiceHea
       };
     }
 
-    const status: HealthStatus =
-      responseTimeMs > STORAGE_DEGRADED_THRESHOLD_MS ? "degraded" : "healthy";
+    const status: HealthStatus = responseTimeMs > STORAGE_DEGRADED_THRESHOLD_MS
+      ? "degraded"
+      : "healthy";
     return { service: "storage", status, responseTimeMs };
   } catch (error) {
     return {

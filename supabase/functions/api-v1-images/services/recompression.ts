@@ -17,7 +17,7 @@ export async function recompressOldImages(
   options: {
     batchSize?: number;
     cutoffDate?: string;
-  } = {}
+  } = {},
 ): Promise<RecompressionResults> {
   const batchSize = options.batchSize ?? 50;
   // const _cutoffDate = options.cutoffDate ?? "2026-02-06T00:00:00Z";

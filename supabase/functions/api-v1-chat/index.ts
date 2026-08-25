@@ -161,5 +161,5 @@ Deno.serve(
         handler: handleDelete,
       },
     },
-  })
+  }),
 );

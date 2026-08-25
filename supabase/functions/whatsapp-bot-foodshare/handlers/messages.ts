@@ -105,7 +105,7 @@ export async function handlePhotoMessage(message: WhatsAppMessage): Promise<void
     if (!mediaId) {
       await sendTextMessage(
         phoneNumber,
-        `${emoji.ERROR} Could not process photo. Please try again.`
+        `${emoji.ERROR} Could not process photo. Please try again.`,
       );
       return;
     }
@@ -116,7 +116,7 @@ export async function handlePhotoMessage(message: WhatsAppMessage): Promise<void
     if (!mediaUrl) {
       await sendTextMessage(
         phoneNumber,
-        `${emoji.ERROR} Could not download photo. Please try again.`
+        `${emoji.ERROR} Could not download photo. Please try again.`,
       );
       return;
     }
@@ -139,12 +139,12 @@ export async function handlePhotoMessage(message: WhatsAppMessage): Promise<void
   if (await requireAuth(phoneNumber)) {
     await sendTextMessage(
       phoneNumber,
-      `${emoji.PHOTO} Nice photo! Would you like to share food?\n\nTap the button below to start sharing.`
+      `${emoji.PHOTO} Nice photo! Would you like to share food?\n\nTap the button below to start sharing.`,
     );
     await sendButtonMessage(
       phoneNumber,
       "Share this food with the community?",
-      getShareMethodButtons(lang)
+      getShareMethodButtons(lang),
     );
   }
 }
@@ -185,7 +185,7 @@ export async function handleLocationMessage(message: WhatsAppMessage): Promise<v
 
     await sendTextMessage(
       phoneNumber,
-      `${emoji.SUCCESS} Location updated!\n\n${emoji.SEARCH} Looking for nearby food...`
+      `${emoji.SUCCESS} Location updated!\n\n${emoji.SEARCH} Looking for nearby food...`,
     );
 
     await handleNearby(phoneNumber, coords.latitude, coords.longitude);
@@ -204,7 +204,7 @@ async function handleHelp(phoneNumber: string): Promise<void> {
     helpMsg,
     "View Options",
     getExtendedMenuSections(lang),
-    t(lang, "help.title")
+    t(lang, "help.title"),
   );
 }
 
@@ -228,7 +228,7 @@ async function handleSharingFoodText(
     action: string;
     step?: string;
     data: Record<string, string | undefined>;
-  }
+  },
 ): Promise<void> {
   const lang = await getUserLanguage(phoneNumber);
 
@@ -297,7 +297,7 @@ async function handleSharingFoodText(
  */
 async function createFoodPost(
   phoneNumber: string,
-  data: Record<string, string | number | undefined>
+  data: Record<string, string | number | undefined>,
 ): Promise<void> {
   const lang = await getUserLanguage(phoneNumber);
   const profile = await getProfileByWhatsAppPhone(phoneNumber);
@@ -341,7 +341,7 @@ async function createFoodPost(
   const postUrl = `${getAppUrl()}/food/${post.id}`;
   await sendTextMessage(
     phoneNumber,
-    `${emoji.CELEBRATE} *${t(lang, "share.success")}*\n\n${emoji.LINK} ${postUrl}`
+    `${emoji.CELEBRATE} *${t(lang, "share.success")}*\n\n${emoji.LINK} ${postUrl}`,
   );
 
   await sendButtonMessage(phoneNumber, "What's next?", getMainMenuButtons(lang));
@@ -353,7 +353,7 @@ async function createFoodPost(
 async function handleNearby(
   phoneNumber: string,
   _latitude: number,
-  _longitude: number
+  _longitude: number,
 ): Promise<void> {
   const lang = await getUserLanguage(phoneNumber);
   const supabase = getSupabaseClient();
@@ -373,7 +373,7 @@ async function handleNearby(
 
   await sendTextMessage(
     phoneNumber,
-    `${emoji.FOOD} *${t(lang, "find.title", { count: posts.length })}*`
+    `${emoji.FOOD} *${t(lang, "find.title", { count: posts.length })}*`,
   );
 
   for (const post of posts) {

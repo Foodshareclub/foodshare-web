@@ -93,7 +93,7 @@ function isAccountLocked(profile: {
  */
 async function incrementFailedAttempts(
   profileId: string,
-  currentAttempts: number = 0
+  currentAttempts: number = 0,
 ): Promise<void> {
   const newAttempts = currentAttempts + 1;
 
@@ -120,7 +120,7 @@ export async function handleEmailInput(
   email: string,
   telegramUser: TelegramUser,
   chatId: number,
-  lang: Language = "en"
+  lang: Language = "en",
 ): Promise<void> {
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -142,9 +142,9 @@ export async function handleEmailInput(
         t(lang, "auth.invalidEmailTitle"),
         t(lang, "auth.invalidEmailMessage") +
           "\n\n" +
-          `${emoji.INFO} <b>${t(lang, "common.example")}:</b> <code>user@example.com</code>`
+          `${emoji.INFO} <b>${t(lang, "common.example")}:</b> <code>user@example.com</code>`,
       ),
-      { reply_markup: keyboard }
+      { reply_markup: keyboard },
     );
     return;
   }
@@ -174,9 +174,9 @@ export async function handleEmailInput(
         chatId,
         msg.errorMessage(
           t(lang, "auth.emailAlreadyLinkedTitle"),
-          t(lang, "auth.emailAlreadyLinkedMessage")
+          t(lang, "auth.emailAlreadyLinkedMessage"),
         ),
-        { reply_markup: keyboard }
+        { reply_markup: keyboard },
       );
       return;
     }
@@ -191,8 +191,8 @@ export async function handleEmailInput(
       msg.successMessage(
         t(lang, "auth.accountReady"),
         `${emoji.EMAIL} <b>${t(lang, "common.email")}:</b> <code>${email}</code>\n\n` +
-          `${emoji.SUCCESS} ${t(lang, "auth.alreadyVerified")}`
-      )
+          `${emoji.SUCCESS} ${t(lang, "auth.alreadyVerified")}`,
+      ),
     );
     return;
   }
@@ -216,9 +216,9 @@ export async function handleEmailInput(
         chatId,
         msg.errorMessage(
           t(lang, "auth.emailAlreadyLinkedTitle"),
-          t(lang, "auth.emailAlreadyLinkedMessage")
+          t(lang, "auth.emailAlreadyLinkedMessage"),
         ),
-        { reply_markup: keyboard }
+        { reply_markup: keyboard },
       );
       return;
     }
@@ -266,7 +266,7 @@ export async function handleEmailInput(
           "\n\n" +
           `${emoji.CLOCK} ${t(lang, "auth.codeExpires")}\n` +
           `${emoji.REFRESH} ${t(lang, "auth.resendHint")}`,
-        { reply_markup: keyboard }
+        { reply_markup: keyboard },
       );
 
       await setUserState(telegramUser.id, {
@@ -294,9 +294,9 @@ export async function handleEmailInput(
         chatId,
         msg.errorMessage(
           t(lang, "auth.emailDeliveryFailedTitle"),
-          t(lang, "auth.emailDeliveryFailedMessage")
+          t(lang, "auth.emailDeliveryFailedMessage"),
         ),
-        { reply_markup: keyboard }
+        { reply_markup: keyboard },
       );
       return;
     }
@@ -321,9 +321,9 @@ export async function handleEmailInput(
         chatId,
         msg.errorMessage(
           t(lang, "auth.emailAlreadyLinkedTitle"),
-          t(lang, "auth.emailAlreadyLinkedMessage")
+          t(lang, "auth.emailAlreadyLinkedMessage"),
         ),
-        { reply_markup: keyboard }
+        { reply_markup: keyboard },
       );
       return;
     }
@@ -377,7 +377,7 @@ export async function handleEmailInput(
           "\n\n" +
           `${emoji.CLOCK} ${t(lang, "auth.codeExpires")}\n` +
           `${emoji.REFRESH} ${t(lang, "auth.resendHint")}`,
-        { reply_markup: keyboard }
+        { reply_markup: keyboard },
       );
 
       await setUserState(telegramUser.id, {
@@ -405,9 +405,9 @@ export async function handleEmailInput(
         chatId,
         msg.errorMessage(
           t(lang, "auth.emailDeliveryFailedTitle"),
-          t(lang, "auth.emailDeliveryFailedMessage")
+          t(lang, "auth.emailDeliveryFailedMessage"),
         ),
-        { reply_markup: keyboard }
+        { reply_markup: keyboard },
       );
       return;
     }
@@ -456,7 +456,7 @@ export async function handleEmailInput(
           "\n\n" +
           `${emoji.CLOCK} ${t(lang, "auth.codeExpires")}\n` +
           `${emoji.REFRESH} ${t(lang, "auth.resendHint")}`,
-        { reply_markup: keyboard }
+        { reply_markup: keyboard },
       );
 
       await setUserState(telegramUser.id, {
@@ -484,9 +484,9 @@ export async function handleEmailInput(
         chatId,
         msg.errorMessage(
           t(lang, "auth.emailDeliveryFailedTitle"),
-          t(lang, "auth.emailDeliveryFailedMessage")
+          t(lang, "auth.emailDeliveryFailedMessage"),
         ),
-        { reply_markup: keyboard }
+        { reply_markup: keyboard },
       );
       return;
     }
@@ -523,9 +523,9 @@ export async function handleEmailInput(
       chatId,
       msg.errorMessage(
         t(lang, "auth.registrationFailedTitle"),
-        t(lang, "auth.registrationFailedMessage")
+        t(lang, "auth.registrationFailedMessage"),
       ),
-      { reply_markup: keyboard }
+      { reply_markup: keyboard },
     );
     return;
   }
@@ -562,7 +562,7 @@ export async function handleEmailInput(
         "\n\n" +
         `${emoji.CLOCK} ${t(lang, "auth.codeExpires")}\n` +
         `${emoji.REFRESH} ${t(lang, "auth.resendHint")}`,
-      { reply_markup: keyboard }
+      { reply_markup: keyboard },
     );
 
     await setUserState(telegramUser.id, {
@@ -592,9 +592,9 @@ export async function handleEmailInput(
       chatId,
       msg.errorMessage(
         t(lang, "auth.emailDeliveryFailedTitle"),
-        t(lang, "auth.emailDeliveryFailedMessage")
+        t(lang, "auth.emailDeliveryFailedMessage"),
       ),
-      { reply_markup: keyboard }
+      { reply_markup: keyboard },
     );
   }
 }
@@ -602,7 +602,7 @@ export async function handleEmailInput(
 export async function handleVerificationCode(
   code: string,
   telegramUser: TelegramUser,
-  chatId: number
+  chatId: number,
 ): Promise<boolean> {
   const userState = await getUserState(telegramUser.id);
 
@@ -614,8 +614,8 @@ export async function handleVerificationCode(
         "Invalid Code Format",
         "Please enter a 6-digit code.\n\n" +
           `${emoji.INFO} <b>Example:</b> <code>123456</code>\n\n` +
-          `${emoji.REFRESH} Type /resend to get a new code`
-      )
+          `${emoji.REFRESH} Type /resend to get a new code`,
+      ),
     );
     return false;
   }
@@ -629,7 +629,7 @@ export async function handleVerificationCode(
     if (!existingProfile) {
       await sendMessage(
         chatId,
-        msg.errorMessage("Profile Not Found", "Please try signing in again with /start")
+        msg.errorMessage("Profile Not Found", "Please try signing in again with /start"),
       );
       await setUserState(telegramUser.id, null);
       return false;
@@ -644,8 +644,8 @@ export async function handleVerificationCode(
           "Account Temporarily Locked",
           `Too many failed verification attempts.\n\n` +
             `${emoji.CLOCK} Please wait ${lockStatus.remainingMinutes} minutes before trying again.\n\n` +
-            `${emoji.INFO} This is a security measure to protect your account.`
-        )
+            `${emoji.INFO} This is a security measure to protect your account.`,
+        ),
       );
       return false;
     }
@@ -654,10 +654,10 @@ export async function handleVerificationCode(
     if (existingProfile.verification_code !== code) {
       await incrementFailedAttempts(
         existing_profile_id as string,
-        existingProfile.verification_attempts || 0
+        existingProfile.verification_attempts || 0,
       );
-      const attemptsLeft =
-        MAX_VERIFICATION_ATTEMPTS - ((existingProfile.verification_attempts || 0) + 1);
+      const attemptsLeft = MAX_VERIFICATION_ATTEMPTS -
+        ((existingProfile.verification_attempts || 0) + 1);
 
       await sendMessage(
         chatId,
@@ -668,8 +668,8 @@ export async function handleVerificationCode(
             (attemptsLeft > 0
               ? `${emoji.WARNING} ${attemptsLeft} attempts remaining.\n\n`
               : `${emoji.WARNING} Account will be locked after next failed attempt.\n\n`) +
-            `${emoji.REFRESH} Type /resend to get a new code`
-        )
+            `${emoji.REFRESH} Type /resend to get a new code`,
+        ),
       );
       return false;
     }
@@ -683,8 +683,8 @@ export async function handleVerificationCode(
         msg.errorMessage(
           "Code Expired",
           "Your verification code has expired.\n\n" +
-            `${emoji.REFRESH} Type /resend to get a new code`
-        )
+            `${emoji.REFRESH} Type /resend to get a new code`,
+        ),
       );
       return false;
     }
@@ -714,7 +714,7 @@ export async function handleVerificationCode(
         "\n\n" +
         `${emoji.ROCKET} <b>Ready to go!</b>\n\n` +
         `Use the menu below to get started:`,
-      { reply_markup: getMainMenuKeyboard(lang) }
+      { reply_markup: getMainMenuKeyboard(lang) },
     );
 
     await setUserState(telegramUser.id, null);
@@ -730,7 +730,7 @@ export async function handleVerificationCode(
     if (!profile) {
       await sendMessage(
         chatId,
-        msg.errorMessage("Profile Not Found", "Please try registering again with /start")
+        msg.errorMessage("Profile Not Found", "Please try registering again with /start"),
       );
       await setUserState(telegramUser.id, null);
       return false;
@@ -745,8 +745,8 @@ export async function handleVerificationCode(
           "Account Temporarily Locked",
           `Too many failed verification attempts.\n\n` +
             `${emoji.CLOCK} Please wait ${lockStatus.remainingMinutes} minutes before trying again.\n\n` +
-            `${emoji.INFO} This is a security measure to protect your account.`
-        )
+            `${emoji.INFO} This is a security measure to protect your account.`,
+        ),
       );
       return false;
     }
@@ -764,8 +764,8 @@ export async function handleVerificationCode(
             (attemptsLeft > 0
               ? `${emoji.WARNING} ${attemptsLeft} attempts remaining.\n\n`
               : `${emoji.WARNING} Account will be locked after next failed attempt.\n\n`) +
-            `${emoji.REFRESH} Type /resend to get a new code`
-        )
+            `${emoji.REFRESH} Type /resend to get a new code`,
+        ),
       );
       return false;
     }
@@ -779,8 +779,8 @@ export async function handleVerificationCode(
         msg.errorMessage(
           "Code Expired",
           "Your verification code has expired.\n\n" +
-            `${emoji.REFRESH} Type /resend to get a new code`
-        )
+            `${emoji.REFRESH} Type /resend to get a new code`,
+        ),
       );
       return false;
     }
@@ -807,7 +807,7 @@ export async function handleVerificationCode(
         "\n\n" +
         `${emoji.ROCKET} <b>Let's get started!</b>\n\n` +
         `Use the menu below to share or find food:`,
-      { reply_markup: getMainMenuKeyboard(lang) }
+      { reply_markup: getMainMenuKeyboard(lang) },
     );
 
     await setUserState(telegramUser.id, null);
@@ -819,8 +819,8 @@ export async function handleVerificationCode(
     chatId,
     msg.errorMessage(
       "No Active Verification",
-      "You don't have an active verification process.\n\n" + `${emoji.INFO} Use /start to begin.`
-    )
+      "You don't have an active verification process.\n\n" + `${emoji.INFO} Use /start to begin.`,
+    ),
   );
   return false;
 }
@@ -835,8 +835,8 @@ export async function handleResendCode(telegramUser: TelegramUser, chatId: numbe
         "Too Many Requests",
         `You've requested too many verification codes.\n\n` +
           `${emoji.CLOCK} Please wait ${rateLimit.remainingMinutes} minutes before trying again.\n\n` +
-          `${emoji.INFO} This limit helps prevent spam and protects your account.`
-      )
+          `${emoji.INFO} This limit helps prevent spam and protects your account.`,
+      ),
     );
     return;
   }
@@ -852,8 +852,8 @@ export async function handleResendCode(telegramUser: TelegramUser, chatId: numbe
       chatId,
       msg.infoMessage(
         "No Active Verification",
-        "You don't have an active verification process.\n\n" + `${emoji.INFO} Use /start to begin.`
-      )
+        "You don't have an active verification process.\n\n" + `${emoji.INFO} Use /start to begin.`,
+      ),
     );
     return;
   }
@@ -880,7 +880,7 @@ export async function handleResendCode(telegramUser: TelegramUser, chatId: numbe
   if (!email || !profileId) {
     await sendMessage(
       chatId,
-      msg.errorMessage("Email Not Found", "Please send your email address first.")
+      msg.errorMessage("Email Not Found", "Please send your email address first."),
     );
     await setUserState(telegramUser.id, {
       action: "awaiting_email",
@@ -908,8 +908,8 @@ export async function handleResendCode(telegramUser: TelegramUser, chatId: numbe
         `A new 6-digit verification code has been sent to:\n\n` +
           `${emoji.EMAIL} <code>${email}</code>\n\n` +
           `${emoji.KEY} Please enter the code below.\n\n` +
-          `${emoji.CLOCK} Code expires in 15 minutes.`
-      )
+          `${emoji.CLOCK} Code expires in 15 minutes.`,
+      ),
     );
   } else {
     await sendMessage(
@@ -917,8 +917,8 @@ export async function handleResendCode(telegramUser: TelegramUser, chatId: numbe
       msg.errorMessage(
         "Email Delivery Failed",
         "We couldn't send the verification email.\n\n" +
-          `${emoji.INFO} Please try again in a moment.`
-      )
+          `${emoji.INFO} Please try again in a moment.`,
+      ),
     );
   }
 }
@@ -930,13 +930,13 @@ export async function handleDeepLinkToken(
   token: string,
   telegramUser: TelegramUser,
   chatId: number,
-  lang: Language = "en"
+  lang: Language = "en",
 ): Promise<boolean> {
   const cleanToken = token.trim();
   if (!cleanToken) {
     await sendMessage(
       chatId,
-      msg.errorMessage("Invalid Link", "The link you provided is invalid.")
+      msg.errorMessage("Invalid Link", "The link you provided is invalid."),
     );
     return false;
   }
@@ -978,9 +978,9 @@ export async function handleDeepLinkToken(
         msg.errorMessage(
           "Link Expired or Invalid",
           `We couldn't link your account.\n\n${emoji.INFO} ${errMsg}\n\n` +
-            `Please visit your FoodShare settings to generate a new connection link.`
+            `Please visit your FoodShare settings to generate a new connection link.`,
         ),
-        { reply_markup: keyboard }
+        { reply_markup: keyboard },
       );
       return false;
     }
@@ -991,8 +991,7 @@ export async function handleDeepLinkToken(
     const userName = data.first_name || telegramUser.first_name || "FoodSharer";
     const userEmail = data.email || "";
 
-    const successMessage =
-      msg.boxedHeader(`${emoji.CELEBRATE} Account Successfully Linked!`) +
+    const successMessage = msg.boxedHeader(`${emoji.CELEBRATE} Account Successfully Linked!`) +
       "\n\n" +
       `Hi <b>${userName}</b>! Your Telegram account is now securely linked to FoodShare.\n\n` +
       msg.divider("─", 30) +
@@ -1037,8 +1036,8 @@ export async function handleDeepLinkToken(
       chatId,
       msg.errorMessage(
         "Linking Error",
-        "An unexpected error occurred while linking your account. Please try again."
-      )
+        "An unexpected error occurred while linking your account. Please try again.",
+      ),
     );
     return false;
   }
@@ -1050,7 +1049,7 @@ export async function handleDeepLinkToken(
 export async function handleUnlinkCommand(
   telegramUser: TelegramUser,
   chatId: number,
-  _lang: Language = "en"
+  _lang: Language = "en",
 ): Promise<void> {
   const profile = await getProfileByTelegramId(telegramUser.id);
 
@@ -1060,8 +1059,8 @@ export async function handleUnlinkCommand(
       msg.infoMessage(
         "Account Not Linked",
         "Your Telegram account is not currently linked to any FoodShare profile.\n\n" +
-          `Use /start to connect your account.`
-      )
+          `Use /start to connect your account.`,
+      ),
     );
     return;
   }
@@ -1082,8 +1081,8 @@ export async function handleUnlinkCommand(
           profile.email || "FoodShare"
         }</code>.\n\n` +
           `${emoji.INFO} You will no longer receive notifications on Telegram.\n\n` +
-          `You can reconnect at any time using /start or via the FoodShare website.`
-      )
+          `You can reconnect at any time using /start or via the FoodShare website.`,
+      ),
     );
   } catch (err) {
     logger.error("Failed to unlink Telegram account", err as Error);
@@ -1091,8 +1090,8 @@ export async function handleUnlinkCommand(
       chatId,
       msg.errorMessage(
         "Unlink Failed",
-        "Could not disconnect account at this time. Please try again later."
-      )
+        "Could not disconnect account at this time. Please try again later.",
+      ),
     );
   }
 }

@@ -33,7 +33,7 @@ export function timingSafeEqual(a: string, b: string): boolean {
 export async function retryWithJitter<T>(
   fn: () => Promise<T>,
   maxRetries: number = 3,
-  baseDelay: number = 1000
+  baseDelay: number = 1000,
 ): Promise<T> {
   for (let i = 0; i < maxRetries; i++) {
     try {
@@ -57,7 +57,7 @@ export async function retryWithJitter<T>(
 export async function processInParallel<T, R>(
   items: T[],
   processor: (item: T) => Promise<R>,
-  concurrency: number = 10
+  concurrency: number = 10,
 ): Promise<R[]> {
   const results: R[] = [];
 
@@ -68,7 +68,7 @@ export async function processInParallel<T, R>(
     results.push(
       ...(batchResults
         .map((r) => (r.status === "fulfilled" ? r.value : null))
-        .filter(Boolean) as R[])
+        .filter(Boolean) as R[]),
     );
   }
 
@@ -97,7 +97,7 @@ export async function deduplicate<T>(key: string, fn: () => Promise<T>): Promise
 export async function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
-  errorMessage: string = "Operation timed out"
+  errorMessage: string = "Operation timed out",
 ): Promise<T> {
   return Promise.race([
     promise,

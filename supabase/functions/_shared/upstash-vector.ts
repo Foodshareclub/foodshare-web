@@ -112,7 +112,7 @@ export class VectorClientError extends Error {
   constructor(
     message: string,
     public readonly code: string,
-    public readonly retryable: boolean = false
+    public readonly retryable: boolean = false,
   ) {
     super(message);
     this.name = "VectorClientError";
@@ -162,7 +162,7 @@ export class UpstashVectorClient {
         throw new VectorClientError(
           `Upstash Vector API error: ${response.status} - ${errorText}`,
           `HTTP_${response.status}`,
-          response.status >= 500 || response.status === 429
+          response.status >= 500 || response.status === 429,
         );
       }
 
@@ -180,7 +180,7 @@ export class UpstashVectorClient {
       throw new VectorClientError(
         `Request failed: ${error instanceof Error ? error.message : String(error)}`,
         "NETWORK_ERROR",
-        true
+        true,
       );
     }
   }
@@ -203,7 +203,7 @@ export class UpstashVectorClient {
       {
         failureThreshold: this.config.circuitBreakerThreshold,
         resetTimeoutMs: this.config.circuitBreakerResetMs,
-      }
+      },
     );
   }
 
@@ -390,7 +390,7 @@ export function getVectorClient(config?: Partial<VectorClientConfig>): UpstashVe
     if (!url || !token) {
       throw new VectorClientError(
         "UPSTASH_VECTOR_REST_URL and UPSTASH_VECTOR_REST_TOKEN must be configured",
-        "CONFIG_ERROR"
+        "CONFIG_ERROR",
       );
     }
 
@@ -441,7 +441,7 @@ export function buildVectorFilter(criteria: {
   if (criteria.dietary && criteria.dietary.length > 0) {
     // Match any of the dietary tags
     const dietaryConditions = criteria.dietary.map(
-      (tag) => `dietary_tags CONTAINS '${escapeFilterValue(tag)}'`
+      (tag) => `dietary_tags CONTAINS '${escapeFilterValue(tag)}'`,
     );
     conditions.push(`(${dietaryConditions.join(" OR ")})`);
   }

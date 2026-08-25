@@ -30,7 +30,7 @@ export function endDeploymentTracking(
   deploymentId: string,
   status: "success" | "failed" | "rolled_back",
   errorRate?: number,
-  p95Latency?: number
+  p95Latency?: number,
 ) {
   const metric = metrics.find((m) => m.deploymentId === deploymentId);
   if (!metric) return;

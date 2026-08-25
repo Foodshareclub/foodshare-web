@@ -51,7 +51,7 @@ const DEFAULT_STATE_TTL: Record<string, number> = {
 // =============================================================================
 
 export function createBotUserStateService<TState extends { action?: string }>(
-  config: BotUserStateConfig
+  config: BotUserStateConfig,
 ) {
   const { tableName, idColumn, ttlConfig = DEFAULT_STATE_TTL, defaultTTL = 30 } = config;
 

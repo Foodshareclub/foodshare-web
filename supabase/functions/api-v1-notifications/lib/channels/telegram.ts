@@ -26,7 +26,7 @@ export class TelegramChannelAdapter implements ChannelAdapter {
    */
   async send(
     payload: TelegramPayload,
-    context: NotificationContext
+    context: NotificationContext,
   ): Promise<ChannelDeliveryResult> {
     const startTime = performance.now();
     const userId = payload.userId || context.userId;
@@ -136,7 +136,7 @@ export class TelegramChannelAdapter implements ChannelAdapter {
    */
   private async getUserTelegramId(
     userId: string,
-    context: NotificationContext
+    context: NotificationContext,
   ): Promise<number | null> {
     try {
       const { data, error } = await context.supabase
@@ -203,7 +203,7 @@ export class TelegramChannelAdapter implements ChannelAdapter {
    * Construct inline keyboard for notification actions
    */
   private buildInlineKeyboard(
-    payload: TelegramPayload
+    payload: TelegramPayload,
   ):
     | { inline_keyboard: Array<Array<{ text: string; url?: string; callback_data?: string }>> }
     | undefined {

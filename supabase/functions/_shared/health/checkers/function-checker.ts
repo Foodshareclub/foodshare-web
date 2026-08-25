@@ -176,7 +176,7 @@ export class FunctionChecker {
     // Process batches
     for (const batch of batches) {
       const batchResults = await Promise.all(
-        batch.map((config) => this.checkFunctionWithRetry(config))
+        batch.map((config) => this.checkFunctionWithRetry(config)),
       );
       results.push(...batchResults);
     }

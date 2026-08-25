@@ -83,13 +83,13 @@ async function getGoogleAccessToken(): Promise<string | null> {
       binaryKey,
       { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
       false,
-      ["sign"]
+      ["sign"],
     );
 
     const signatureBuffer = await crypto.subtle.sign(
       "RSASSA-PKCS1-v1_5",
       cryptoKey,
-      new TextEncoder().encode(signatureInput)
+      new TextEncoder().encode(signatureInput),
     );
 
     const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)))
@@ -124,7 +124,7 @@ async function getGoogleAccessToken(): Promise<string | null> {
   } catch (error) {
     logger.error(
       "Failed to get Google access token",
-      error instanceof Error ? error : new Error(String(error))
+      error instanceof Error ? error : new Error(String(error)),
     );
     return null;
   }
@@ -135,7 +135,7 @@ async function getGoogleAccessToken(): Promise<string | null> {
 // =============================================================================
 
 async function decodeIntegrityToken(
-  integrityToken: string
+  integrityToken: string,
 ): Promise<{ success: boolean; payload?: PlayIntegrityPayload; error?: string }> {
   const accessToken = await getGoogleAccessToken();
 
@@ -165,7 +165,7 @@ async function decodeIntegrityToken(
   } catch (error) {
     logger.error(
       "Failed to decode integrity token",
-      error instanceof Error ? error : new Error(String(error))
+      error instanceof Error ? error : new Error(String(error)),
     );
     return { success: false, error: "Token decoding failed" };
   }
@@ -178,7 +178,7 @@ async function decodeIntegrityToken(
 export async function verifyPlayIntegrity(
   integrityToken: string,
   expectedNonce: string | undefined,
-  expectedPackageName: string
+  expectedPackageName: string,
 ): Promise<{
   verified: boolean;
   trustLevel: TrustLevel;
@@ -287,8 +287,7 @@ export async function verifyPlayIntegrity(
     trustLevel = "suspicious";
   }
 
-  const verified =
-    deviceVerdicts.length > 0 &&
+  const verified = deviceVerdicts.length > 0 &&
     (deviceVerdicts.includes("MEETS_BASIC_INTEGRITY") ||
       deviceVerdicts.includes("MEETS_DEVICE_INTEGRITY") ||
       deviceVerdicts.includes("MEETS_STRONG_INTEGRITY") ||
@@ -370,7 +369,7 @@ export async function verifySafetyNet(attestation: string): Promise<{
   } catch (error) {
     logger.error(
       "SafetyNet verification error",
-      error instanceof Error ? error : new Error(String(error))
+      error instanceof Error ? error : new Error(String(error)),
     );
     return {
       verified: false,

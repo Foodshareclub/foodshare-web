@@ -19,7 +19,7 @@ interface SyncToRedisRequest {
 
 export default async function syncToRedisHandler(
   req: Request,
-  corsHeaders: Record<string, string>
+  corsHeaders: Record<string, string>,
 ): Promise<Response> {
   // Only accept POST requests
   if (req.method !== "POST") {
@@ -31,7 +31,7 @@ export default async function syncToRedisHandler(
       {
         status: 405,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 
@@ -55,7 +55,7 @@ export default async function syncToRedisHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -96,7 +96,7 @@ export default async function syncToRedisHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -114,7 +114,7 @@ export default async function syncToRedisHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -144,7 +144,7 @@ export default async function syncToRedisHandler(
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error) {
     logger.error("Sync to Redis error", { error });
@@ -160,7 +160,7 @@ export default async function syncToRedisHandler(
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 }

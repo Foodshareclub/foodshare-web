@@ -25,7 +25,7 @@ export async function handleStartCommand(
   userId: number,
   telegramUser: TelegramUser,
   languageCode?: string,
-  startParam?: string
+  startParam?: string,
 ): Promise<void> {
   const lang = await getUserLanguage(userId, languageCode);
 
@@ -48,12 +48,13 @@ export async function handleStartCommand(
 
   // Case 1: Existing verified user - welcome back!
   if (profile && profile.email_verified) {
-    const welcomeBackMsg =
-      msg.boxedHeader(
-        `${emoji.WAVE} ${t(lang, "welcome.welcomeBack", {
+    const welcomeBackMsg = msg.boxedHeader(
+      `${emoji.WAVE} ${
+        t(lang, "welcome.welcomeBack", {
           name: profile.first_name || profile.nickname || "",
-        })}`
-      ) +
+        })
+      }`,
+    ) +
       "\n\n" +
       `Hi <b>${profile.first_name || profile.nickname}</b>! ${emoji.SPARKLES}\n\n` +
       msg.divider("─", 30) +
@@ -94,8 +95,7 @@ export async function handleStartCommand(
 
   // Case 2: Profile exists but not verified
   if (profile && !profile.email_verified && profile.email) {
-    const welcomeMsg =
-      msg.boxedHeader(`${emoji.WAVE} Welcome Back!`) +
+    const welcomeMsg = msg.boxedHeader(`${emoji.WAVE} Welcome Back!`) +
       "\n\n" +
       `Hi <b>${profile.first_name || telegramUser.first_name}</b>! ${emoji.CELEBRATE}\n\n` +
       msg.divider("─", 30) +
@@ -122,8 +122,7 @@ export async function handleStartCommand(
     ],
   };
 
-  const welcomeMsg =
-    msg.boxedHeader(`${emoji.WAVE} ${t(lang, "welcome.title")}`) +
+  const welcomeMsg = msg.boxedHeader(`${emoji.WAVE} ${t(lang, "welcome.title")}`) +
     "\n\n" +
     `Hi <b>${telegramUser.first_name}</b>! ${emoji.CELEBRATE}\n\n` +
     msg.divider("─", 30) +
@@ -151,8 +150,7 @@ export async function handleStartCommand(
 }
 
 export async function handleHelpCommand(chatId: number, lang: Language = "en"): Promise<void> {
-  const helpMsg =
-    msg.boxedHeader(`${emoji.PLATE} FoodShare Bot Help`) +
+  const helpMsg = msg.boxedHeader(`${emoji.PLATE} FoodShare Bot Help`) +
     "\n\n" +
     `${emoji.FOOD} <b>Food Sharing:</b>\n` +
     msg.bulletList([
@@ -194,7 +192,7 @@ export async function handleShareCommand(
   chatId: number,
   userId: number,
   telegramUser: TelegramUser,
-  languageCode?: string
+  languageCode?: string,
 ): Promise<void> {
   const lang = await getUserLanguage(userId, languageCode);
   const profile = await getProfileByTelegramId(telegramUser.id);
@@ -206,8 +204,8 @@ export async function handleShareCommand(
         "Email Verification Required",
         "To share food, you need to verify your email first.\n\n" +
           `${emoji.EMAIL} <b>Send your email address</b> to get started.\n` +
-          `<i>Example: user@example.com</i>`
-      )
+          `<i>Example: user@example.com</i>`,
+      ),
     );
 
     await setUserState(userId, {
@@ -247,14 +245,14 @@ export async function handleShareCommand(
       t(lang, "share.chatAlternative") +
       "\n\n" +
       t(lang, "share.webFormFaster"),
-    { reply_markup: keyboard }
+    { reply_markup: keyboard },
   );
 }
 
 export async function handleShareViaChat(
   chatId: number,
   userId: number,
-  telegramUser: TelegramUser
+  telegramUser: TelegramUser,
 ): Promise<void> {
   const profile = await getProfileByTelegramId(telegramUser.id);
 
@@ -265,8 +263,8 @@ export async function handleShareViaChat(
         "Email Verification Required",
         "To share food, you need to verify your email first.\n\n" +
           `${emoji.EMAIL} <b>Send your email address</b> to get started.\n` +
-          `<i>Example: user@example.com</i>`
-      )
+          `<i>Example: user@example.com</i>`,
+      ),
     );
 
     await setUserState(userId, {
@@ -279,8 +277,7 @@ export async function handleShareViaChat(
   const state = { action: "sharing_food", data: {}, step: "photo" };
   await setUserState(userId, state);
 
-  const shareMsg =
-    `${emoji.CAMERA} <b>Share Food - Step 1/3</b>\n\n` +
+  const shareMsg = `${emoji.CAMERA} <b>Share Food - Step 1/3</b>\n\n` +
     msg.progressBar(1, 3, 12) +
     " 33%\n\n" +
     msg.divider("─", 25) +
@@ -297,7 +294,7 @@ export async function handleShareViaChat(
 export async function handleFindCommand(
   chatId: number,
   args: string,
-  languageCode?: string
+  languageCode?: string,
 ): Promise<void> {
   const lang = await getUserLanguage(0, languageCode);
   const supabase = getSupabaseClient();
@@ -320,7 +317,7 @@ export async function handleFindCommand(
   if (error || !foods || foods.length === 0) {
     await sendMessage(
       chatId,
-      searchTerm ? t(lang, "find.noMatch", { query: searchTerm }) : t(lang, "find.noFood")
+      searchTerm ? t(lang, "find.noMatch", { query: searchTerm }) : t(lang, "find.noFood"),
     );
     return;
   }
@@ -328,12 +325,11 @@ export async function handleFindCommand(
   await sendMessage(chatId, `${emoji.SEARCH} <b>Found ${foods.length} food items:</b>\n`);
 
   for (const food of foods) {
-    const foodMsg =
-      msg.foodCard({
-        name: food.post_name,
-        description: food.post_description || undefined,
-        address: food.post_address || undefined,
-      }) + `\n${emoji.LINK} <a href="${getAppUrl()}/product/${food.id}">View Details</a>`;
+    const foodMsg = msg.foodCard({
+      name: food.post_name,
+      description: food.post_description || undefined,
+      address: food.post_address || undefined,
+    }) + `\n${emoji.LINK} <a href="${getAppUrl()}/product/${food.id}">View Details</a>`;
 
     if (food.images?.[0]) {
       await sendPhoto(chatId, food.images[0], foodMsg);
@@ -373,7 +369,7 @@ export async function handleNearbyCommand(chatId: number, userId: number): Promi
           resize_keyboard: true,
           one_time_keyboard: true,
         },
-      }
+      },
     );
     return;
   }
@@ -390,14 +386,14 @@ export async function handleNearbyCommand(chatId: number, userId: number): Promi
     await sendMessage(
       chatId,
       `📍 No food found within ${radius}km of your location.\n\n` +
-        "Try increasing your search radius in /profile"
+        "Try increasing your search radius in /profile",
     );
     return;
   }
 
   await sendMessage(
     chatId,
-    `📍 <b>Found ${nearbyFoods.length} food items within ${radius}km:</b>\n`
+    `📍 <b>Found ${nearbyFoods.length} food items within ${radius}km:</b>\n`,
   );
 
   for (const food of nearbyFoods.slice(0, 5)) {
@@ -431,7 +427,7 @@ export async function handleProfileCommand(chatId: number, userId: number): Prom
       chatId,
       "👤 <b>Profile Not Found</b>\n\n" +
         "Link your Telegram account on FoodShare:\n" +
-        `🔗 <a href="${getAppUrl()}/profile">Open Profile Settings</a>`
+        `🔗 <a href="${getAppUrl()}/profile">Open Profile Settings</a>`,
     );
     return;
   }
@@ -450,7 +446,7 @@ export async function handleProfileCommand(chatId: number, userId: number): Prom
       `${emoji.RECYCLE} Waste Prevented: ${stats.kgSaved}kg`,
       `${emoji.EARTH} CO2 Saved: ${stats.co2Saved}kg`,
     ],
-    `${emoji.LINK} Edit on Website`
+    `${emoji.LINK} Edit on Website`,
   );
 
   const keyboard = {
@@ -480,8 +476,7 @@ export async function handleProfileCommand(chatId: number, userId: number): Prom
 export async function handleImpactCommand(chatId: number, userId: number): Promise<void> {
   const stats = await getUserImpactStats(userId);
 
-  const impactMsg =
-    msg.boxedHeader(`${emoji.EARTH} Your Environmental Impact`) +
+  const impactMsg = msg.boxedHeader(`${emoji.EARTH} Your Environmental Impact`) +
     "\n\n" +
     msg.impactStats({
       foodShared: stats.foodsShared,
@@ -506,7 +501,7 @@ export async function handleImpactCommand(chatId: number, userId: number): Promi
 export async function handleStatsCommand(
   chatId: number,
   userId: number,
-  languageCode?: string
+  languageCode?: string,
 ): Promise<void> {
   const lang = await getUserLanguage(userId, languageCode);
   const supabase = getSupabaseClient();
@@ -540,7 +535,7 @@ Last active: ${data.last_message_date}
 
 export async function handleLeaderboardCommand(
   chatId: number,
-  languageCode?: string
+  languageCode?: string,
 ): Promise<void> {
   const lang = await getUserLanguage(0, languageCode);
 
@@ -591,6 +586,6 @@ export async function handleLanguageCommand(chatId: number, userId: number): Pro
     msg.boxedHeader(`${emoji.GLOBE} ${t(lang, "language.selectTitle")}`) +
       "\n\n" +
       t(lang, "language.selectMessage"),
-    { reply_markup: keyboard }
+    { reply_markup: keyboard },
   );
 }
