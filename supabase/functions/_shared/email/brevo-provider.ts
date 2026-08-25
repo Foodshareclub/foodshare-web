@@ -53,7 +53,7 @@ interface BrevoAccountResponse {
 async function fetchWithTimeout(
   url: string,
   options: RequestInit,
-  timeoutMs: number = REQUEST_TIMEOUT_MS,
+  timeoutMs: number = REQUEST_TIMEOUT_MS
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -75,7 +75,8 @@ export class BrevoProvider implements EmailProvider {
   constructor(config: Partial<BrevoConfig> = {}) {
     this.config = {
       apiKey: config.apiKey || getSecretSync("BREVO_API_KEY") || "",
-      fromEmail: config.fromEmail ||
+      fromEmail:
+        config.fromEmail ||
         getSecretSync("EMAIL_FROM") ||
         Deno.env.get("EMAIL_FROM") ||
         "contact@foodshare.club",
@@ -156,9 +157,12 @@ export class BrevoProvider implements EmailProvider {
       };
     } catch (error) {
       const latencyMs = Math.round(performance.now() - startTime);
-      const message = error instanceof Error
-        ? error.name === "AbortError" ? "Request timeout" : error.message
-        : "Unknown error";
+      const message =
+        error instanceof Error
+          ? error.name === "AbortError"
+            ? "Request timeout"
+            : error.message
+          : "Unknown error";
 
       return {
         success: false,
@@ -234,9 +238,12 @@ export class BrevoProvider implements EmailProvider {
       };
     } catch (error) {
       const latencyMs = Math.round(performance.now() - startTime);
-      const message = error instanceof Error
-        ? error.name === "AbortError" ? "Request timeout (10s)" : error.message
-        : "Unknown error";
+      const message =
+        error instanceof Error
+          ? error.name === "AbortError"
+            ? "Request timeout (10s)"
+            : error.message
+          : "Unknown error";
 
       return {
         provider: this.name,
@@ -310,9 +317,8 @@ export class BrevoProvider implements EmailProvider {
           sent: 0, // Tracked in email_provider_monthly_quota table
           limit: monthlyLimit,
           remaining: credits, // Real remaining from API
-          percentUsed: monthlyLimit > 0
-            ? Math.round(((monthlyLimit - credits) / monthlyLimit) * 100)
-            : 0,
+          percentUsed:
+            monthlyLimit > 0 ? Math.round(((monthlyLimit - credits) / monthlyLimit) * 100) : 0,
         },
       };
     } catch {

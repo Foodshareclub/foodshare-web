@@ -59,7 +59,7 @@ const SUPPORTED_LOCALES = [
  */
 async function translateWithLLM(
   keys: Record<string, string>,
-  targetLocale: string,
+  targetLocale: string
 ): Promise<Record<string, string>> {
   const translations: Record<string, string> = {};
 
@@ -70,7 +70,7 @@ async function translateWithLLM(
         englishValue,
         "en",
         targetLocale,
-        `UI string for key: ${key}`,
+        `UI string for key: ${key}`
       );
 
       // Only use translation if quality > 0 (successful)
@@ -119,7 +119,7 @@ function unflattenObject(flat: Record<string, string>): Record<string, unknown> 
  */
 function deepMerge(
   target: Record<string, unknown>,
-  source: Record<string, unknown>,
+  source: Record<string, unknown>
 ): Record<string, unknown> {
   const result = { ...target };
 
@@ -127,7 +127,7 @@ function deepMerge(
     if (value !== null && typeof value === "object" && !Array.isArray(value)) {
       result[key] = deepMerge(
         (result[key] as Record<string, unknown>) || {},
-        value as Record<string, unknown>,
+        value as Record<string, unknown>
       );
     } else {
       result[key] = value;
@@ -145,7 +145,7 @@ async function fetchUntranslatedKeys(
   supabase: any,
   locale: string,
   category?: string,
-  limit: number = MAX_KEYS_PER_BATCH,
+  limit: number = MAX_KEYS_PER_BATCH
 ): Promise<Record<string, string>> {
   // Fetch English translations as reference
   const { data: englishData, error: englishError } = await supabase
@@ -228,7 +228,7 @@ async function fetchUntranslatedKeys(
 
 export default async function uiBatchTranslateHandler(
   req: Request,
-  corsHeaders: Record<string, string>,
+  corsHeaders: Record<string, string>
 ): Promise<Response> {
   if (req.method !== "POST") {
     return new Response(
@@ -239,7 +239,7 @@ export default async function uiBatchTranslateHandler(
       {
         status: 405,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 
@@ -259,7 +259,7 @@ export default async function uiBatchTranslateHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -273,7 +273,7 @@ export default async function uiBatchTranslateHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -296,7 +296,7 @@ export default async function uiBatchTranslateHandler(
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -334,7 +334,7 @@ export default async function uiBatchTranslateHandler(
           {
             status: 404,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          },
+          }
         );
       }
 
@@ -343,7 +343,7 @@ export default async function uiBatchTranslateHandler(
       const mergedMessages = deepMerge(
         // deno-lint-ignore no-explicit-any
         (current as any).messages as Record<string, unknown>,
-        nestedTranslations,
+        nestedTranslations
       );
       const version = new Date()
         .toISOString()
@@ -372,7 +372,7 @@ export default async function uiBatchTranslateHandler(
           {
             status: 500,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          },
+          }
         );
       }
 
@@ -388,7 +388,7 @@ export default async function uiBatchTranslateHandler(
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -404,7 +404,7 @@ export default async function uiBatchTranslateHandler(
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   } catch (error) {
     return new Response(
@@ -416,7 +416,7 @@ export default async function uiBatchTranslateHandler(
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 }

@@ -48,7 +48,7 @@ const SERVICE = "api-v1-attestation";
 
 async function handleIOSAttestation(
   body: z.infer<typeof iosAttestationSchema>,
-  ctx: HandlerContext,
+  ctx: HandlerContext
 ): Promise<Response> {
   const { supabase } = ctx;
   const bundleId = body.bundleId || getBundleId();
@@ -56,7 +56,7 @@ async function handleIOSAttestation(
   if (body.type === "attestation") {
     if (!body.keyId || !body.attestation || !body.challenge) {
       throw new ValidationError(
-        "Missing required App Attest fields: keyId, attestation, challenge",
+        "Missing required App Attest fields: keyId, attestation, challenge"
       );
     }
 
@@ -71,7 +71,7 @@ async function handleIOSAttestation(
       result.publicKey || null,
       0,
       result.riskScore,
-      "ios",
+      "ios"
     );
 
     return ok(
@@ -84,14 +84,14 @@ async function handleIOSAttestation(
         deviceId,
         platform: "ios",
       } as AttestationResponse,
-      ctx,
+      ctx
     );
   }
 
   if (body.type === "assertion") {
     if (!body.keyId || !body.assertion || !body.clientDataHash) {
       throw new ValidationError(
-        "Missing required assertion fields: keyId, assertion, clientDataHash",
+        "Missing required assertion fields: keyId, assertion, clientDataHash"
       );
     }
 
@@ -104,7 +104,7 @@ async function handleIOSAttestation(
           message: "Device not registered. Please perform attestation first.",
           platform: "ios",
         } as AttestationResponse,
-        ctx,
+        ctx
       );
     }
 
@@ -116,7 +116,7 @@ async function handleIOSAttestation(
           message: "Device public key not available",
           platform: "ios",
         } as AttestationResponse,
-        ctx,
+        ctx
       );
     }
 
@@ -125,13 +125,13 @@ async function handleIOSAttestation(
       body.assertion,
       body.clientDataHash,
       deviceRecord.assertion_counter,
-      deviceRecord.public_key,
+      deviceRecord.public_key
     );
 
     const trustLevel = calculateTrustLevel(
       result.verified,
       result.riskScore,
-      deviceRecord.verification_count + 1,
+      deviceRecord.verification_count + 1
     );
 
     const deviceId = await updateDeviceRecord(
@@ -142,7 +142,7 @@ async function handleIOSAttestation(
       null,
       result.newCounter,
       result.riskScore,
-      "ios",
+      "ios"
     );
 
     return ok(
@@ -155,7 +155,7 @@ async function handleIOSAttestation(
         deviceId,
         platform: "ios",
       } as AttestationResponse,
-      ctx,
+      ctx
     );
   }
 
@@ -183,7 +183,7 @@ async function handleIOSAttestation(
       null,
       0,
       result.riskScore,
-      "ios",
+      "ios"
     );
 
     return ok(
@@ -196,7 +196,7 @@ async function handleIOSAttestation(
         deviceId,
         platform: "ios",
       } as AttestationResponse,
-      ctx,
+      ctx
     );
   }
 
@@ -205,7 +205,7 @@ async function handleIOSAttestation(
 
 async function handleAndroidAttestation(
   body: z.infer<typeof androidAttestationSchema>,
-  ctx: HandlerContext,
+  ctx: HandlerContext
 ): Promise<Response> {
   const { supabase } = ctx;
   const packageName = body.packageName || getAndroidPackageName();
@@ -223,7 +223,7 @@ async function handleAndroidAttestation(
       0,
       result.riskScore,
       "android",
-      result.verdicts,
+      result.verdicts
     );
 
     return ok(
@@ -237,7 +237,7 @@ async function handleAndroidAttestation(
         platform: "android",
         verdicts: result.verdicts,
       } as AttestationResponse,
-      ctx,
+      ctx
     );
   }
 
@@ -253,7 +253,7 @@ async function handleAndroidAttestation(
       null,
       0,
       result.riskScore,
-      "android",
+      "android"
     );
 
     return ok(
@@ -266,7 +266,7 @@ async function handleAndroidAttestation(
         deviceId,
         platform: "android",
       } as AttestationResponse,
-      ctx,
+      ctx
     );
   }
 
@@ -295,7 +295,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
         },
         routes: ["health", "certificate-pins", "ios", "android"],
       },
-      ctx,
+      ctx
     );
   }
 
@@ -341,7 +341,7 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
     }
 
     throw new ValidationError(
-      "Invalid attestation request. Provide iOS type (attestation/assertion/device_check) or Android type (integrity/safetynet)",
+      "Invalid attestation request. Provide iOS type (attestation/assertion/device_check) or Android type (integrity/safetynet)"
     );
   }
 
@@ -367,5 +367,5 @@ Deno.serve(
       GET: { handler: handleGet },
       POST: { handler: handlePost },
     },
-  }),
+  })
 );

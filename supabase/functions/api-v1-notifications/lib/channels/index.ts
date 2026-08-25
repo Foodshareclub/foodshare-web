@@ -69,7 +69,7 @@ export async function getAllChannelHealth(): Promise<
       } else {
         health[name] = { healthy: true };
       }
-    }),
+    })
   );
 
   return health;

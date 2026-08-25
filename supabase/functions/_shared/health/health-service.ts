@@ -120,8 +120,8 @@ export class HealthService {
     const overallStatus: HealthStatus = hasUnhealthy
       ? "unhealthy"
       : hasDegraded
-      ? "degraded"
-      : "healthy";
+        ? "degraded"
+        : "healthy";
 
     // Record health checks
     for (const service of services) {
@@ -130,7 +130,7 @@ export class HealthService {
         service.status as "healthy" | "degraded" | "unhealthy",
         service.responseTimeMs,
         service.details,
-        service.error,
+        service.error
       );
     }
 
@@ -145,10 +145,10 @@ export class HealthService {
       circuitBreakers,
       metrics: metrics
         ? {
-          requestsLast5Min: metrics.totalRequests,
-          errorRateLast5Min: metrics.errorRate,
-          p95LatencyMs: metrics.p95Latency,
-        }
+            requestsLast5Min: metrics.totalRequests,
+            errorRateLast5Min: metrics.errorRate,
+            p95LatencyMs: metrics.p95Latency,
+          }
         : undefined,
     };
   }
@@ -175,7 +175,7 @@ export class HealthService {
     const timeout = results.filter((r) => r.status === "timeout");
 
     const criticalIssues = results.filter(
-      (r) => r.critical && (r.status === "unhealthy" || r.status === "timeout"),
+      (r) => r.critical && (r.status === "unhealthy" || r.status === "timeout")
     );
     const degradedFunctions = results.filter((r) => r.status === "degraded");
 
@@ -227,7 +227,7 @@ export class HealthService {
       {
         functions: summary.functions,
         criticalIssueCount: criticalIssues.length,
-      },
+      }
     );
 
     return summary;
@@ -237,7 +237,7 @@ export class HealthService {
    * Check a single function by name
    */
   async checkSingleFunction(
-    functionName: string,
+    functionName: string
   ): Promise<FunctionHealthResult | { error: string; availableFunctions?: string[] }> {
     const config = getFunctionConfig(functionName);
 
@@ -256,7 +256,7 @@ export class HealthService {
    */
   private async handleAlerting(
     summary: HealthCheckSummary,
-    allUnhealthy: FunctionHealthResult[],
+    allUnhealthy: FunctionHealthResult[]
   ): Promise<void> {
     if (!this.alerter) {
       return;

@@ -68,7 +68,7 @@ function parseGPSCoordinate(description: string | undefined): number | null {
 }
 
 export function getImageDimensions(
-  imageData: Uint8Array,
+  imageData: Uint8Array
 ): { width: number; height: number } | null {
   try {
     const tags = ExifReader.load(imageData.buffer);

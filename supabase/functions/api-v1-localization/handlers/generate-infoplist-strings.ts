@@ -156,7 +156,7 @@ function hashContent(strings: Record<string, string>): string {
  */
 async function getCachedTranslations(
   contentHash: string,
-  locale: string,
+  locale: string
 ): Promise<Record<string, string> | null> {
   try {
     const supabase = getSupabaseClient();
@@ -180,7 +180,7 @@ async function getCachedTranslations(
 async function cacheTranslations(
   contentHash: string,
   locale: string,
-  translations: Record<string, string>,
+  translations: Record<string, string>
 ): Promise<void> {
   try {
     const supabase = getSupabaseClient();
@@ -191,7 +191,7 @@ async function cacheTranslations(
         translations,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "content_hash,locale" },
+      { onConflict: "content_hash,locale" }
     );
   } catch (e) {
     logger.warn("Cache write failed", { locale, error: (e as Error).message });
@@ -227,7 +227,7 @@ async function translateLocale(
   strings: Record<string, string>,
   targetLocale: string,
   contentHash: string,
-  skipCache: boolean,
+  skipCache: boolean
 ): Promise<LocaleResult> {
   const start = performance.now();
 
@@ -259,10 +259,10 @@ async function translateLocale(
           value,
           "en",
           targetLocale,
-          `iOS permission dialog for "${key}". Keep "Foodshare" untranslated. Clear, friendly tone.`,
+          `iOS permission dialog for "${key}". Keep "Foodshare" untranslated. Clear, friendly tone.`
         );
         return { key, translation: result.text, quality: result.quality };
-      }),
+      })
     );
 
     for (const result of results) {
@@ -297,7 +297,7 @@ async function translateLocale(
 async function processLocalesParallel(
   strings: Record<string, string>,
   contentHash: string,
-  skipCache: boolean,
+  skipCache: boolean
 ): Promise<LocaleResult[]> {
   const results: LocaleResult[] = [];
   const queue = [...TARGET_LOCALES];
@@ -336,7 +336,7 @@ async function processLocalesParallel(
 
 export default async function generateInfoPlistStringsHandler(
   req: Request,
-  corsHeaders: Record<string, string>,
+  corsHeaders: Record<string, string>
 ): Promise<Response> {
   const startTime = performance.now();
   const requestId = crypto.randomUUID().slice(0, 8);
@@ -351,7 +351,7 @@ export default async function generateInfoPlistStringsHandler(
       {
         status: 405,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 
@@ -370,7 +370,7 @@ export default async function generateInfoPlistStringsHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -470,7 +470,7 @@ export default async function generateInfoPlistStringsHandler(
           "X-Request-Id": requestId,
           "X-Duration-Ms": durationMs.toString(),
         },
-      },
+      }
     );
   }
 }

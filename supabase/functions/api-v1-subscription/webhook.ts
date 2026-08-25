@@ -167,7 +167,7 @@ configureCircuit("subscription-db", {
           logger.warn("Failed to send circuit breaker alert", {
             error: err instanceof Error ? err.message : String(err),
           });
-        },
+        }
       );
     }
   },
@@ -179,7 +179,7 @@ configureCircuit("subscription-db", {
 
 async function trackRevenueEvent(
   eventType: SubscriptionEventType,
-  event?: SubscriptionEvent,
+  event?: SubscriptionEvent
 ): Promise<void> {
   switch (eventType) {
     case "subscription_created":
@@ -249,7 +249,7 @@ function updateLatencyMetrics(latencyMs: number): void {
   }
 
   metrics.avgLatencyMs = Math.round(
-    latencyBuffer.reduce((a, b) => a + b, 0) / latencyBuffer.length,
+    latencyBuffer.reduce((a, b) => a + b, 0) / latencyBuffer.length
   );
 
   if (latencyBuffer.length >= 20) {
@@ -270,9 +270,8 @@ function checkErrorRateAndAlert(): void {
 
   lastErrorRateCheck = metrics.requestsTotal;
 
-  const errorRate = metrics.requestsTotal > 10
-    ? (metrics.requestsError / metrics.requestsTotal) * 100
-    : 0;
+  const errorRate =
+    metrics.requestsTotal > 10 ? (metrics.requestsError / metrics.requestsTotal) * 100 : 0;
 
   if (errorRate > ERROR_RATE_THRESHOLD) {
     logger.error("High error rate detected", {
@@ -306,8 +305,8 @@ async function retryWithBackoff<T>(operation: () => Promise<T>, operationName: s
         break;
       }
 
-      const baseDelay = RETRY_CONFIG.baseDelayMs *
-        Math.pow(RETRY_CONFIG.backoffMultiplier, attempt);
+      const baseDelay =
+        RETRY_CONFIG.baseDelayMs * Math.pow(RETRY_CONFIG.backoffMultiplier, attempt);
       const jitter = Math.random() * baseDelay * 0.1;
       const delay = Math.min(baseDelay + jitter, RETRY_CONFIG.maxDelayMs);
 
@@ -391,7 +390,7 @@ const getServiceRoleClient = getSupabaseClient;
 async function findUserForTransaction(
   supabase: ReturnType<typeof getServiceRoleClient>,
   appAccountToken: string | undefined,
-  originalTransactionId: string,
+  originalTransactionId: string
 ): Promise<string | null> {
   return await withCircuitBreaker("subscription-db", async () => {
     return await measureAsync(
@@ -409,7 +408,7 @@ async function findUserForTransaction(
 
         return data;
       },
-      { originalTransactionId },
+      { originalTransactionId }
     );
   });
 }
@@ -464,7 +463,7 @@ async function validateStatusTransition(
   originalTransactionId: string,
   platform: string,
   newStatus: string,
-  eventType: string,
+  eventType: string
 ): Promise<{ valid: boolean; currentStatus: string }> {
   return await withCircuitBreaker("subscription-db", async () => {
     const { data: currentStatus } = await supabase.rpc("billing_get_current_status", {
@@ -501,7 +500,7 @@ interface AtomicProcessResult {
 async function processWebhookAtomically(
   supabase: ReturnType<typeof getServiceRoleClient>,
   event: SubscriptionEvent,
-  userId: string | null,
+  userId: string | null
 ): Promise<AtomicProcessResult> {
   return await withCircuitBreaker("subscription-db", async () => {
     return await retryWithBackoff(async () => {
@@ -548,7 +547,7 @@ async function processWebhookAtomically(
             subscriptionId: data?.subscription_id || null,
           };
         },
-        { platform: event.platform, eventType: event.eventType },
+        { platform: event.platform, eventType: event.eventType }
       );
     }, "processWebhookAtomically");
   });
@@ -586,7 +585,7 @@ export async function handleWebhook(req: Request): Promise<Response> {
     metrics.requestsError++;
     return buildErrorResponse(
       new AppError("Empty request body", "INVALID_REQUEST", 400),
-      corsHeaders,
+      corsHeaders
     );
   }
 
@@ -631,7 +630,7 @@ export async function handleWebhook(req: Request): Promise<Response> {
     });
     return buildErrorResponse(
       new AppError("Unable to detect webhook platform", "UNKNOWN_PLATFORM", 400),
-      corsHeaders,
+      corsHeaders
     );
   }
 
@@ -690,7 +689,7 @@ export async function handleWebhook(req: Request): Promise<Response> {
     });
     return buildSuccessResponse(
       { received: true, already_processed: true, source: "cache" },
-      corsHeaders,
+      corsHeaders
     );
   }
 
@@ -723,7 +722,7 @@ export async function handleWebhook(req: Request): Promise<Response> {
         error: "validation_failed",
         details: validation.errors,
       },
-      corsHeaders,
+      corsHeaders
     );
   }
 
@@ -741,7 +740,7 @@ export async function handleWebhook(req: Request): Promise<Response> {
         metrics.requestsDuplicate++;
         return buildSuccessResponse(
           { received: true, already_processed: true, source: "database" },
-          corsHeaders,
+          corsHeaders
         );
       }
     } catch (error) {
@@ -763,7 +762,7 @@ export async function handleWebhook(req: Request): Promise<Response> {
   const userId = await findUserForTransaction(
     supabase,
     event.subscription.appUserId,
-    event.subscription.originalTransactionId,
+    event.subscription.originalTransactionId
   );
 
   // Step 4: Validate state transition
@@ -774,7 +773,7 @@ export async function handleWebhook(req: Request): Promise<Response> {
         event.subscription.originalTransactionId,
         event.platform,
         event.subscription.status,
-        event.eventType,
+        event.eventType
       );
 
       if (!transitionCheck.valid) {
@@ -813,7 +812,7 @@ export async function handleWebhook(req: Request): Promise<Response> {
 
     return buildSuccessResponse(
       { received: true, error: "processing_failed", dlq: true },
-      corsHeaders,
+      corsHeaders
     );
   }
 
@@ -826,7 +825,7 @@ export async function handleWebhook(req: Request): Promise<Response> {
     });
     return buildSuccessResponse(
       { received: true, already_processed: true, source: "database" },
-      corsHeaders,
+      corsHeaders
     );
   }
 
@@ -848,7 +847,7 @@ export async function handleWebhook(req: Request): Promise<Response> {
 
     return buildSuccessResponse(
       { received: true, processed: true, user_found: false },
-      corsHeaders,
+      corsHeaders
     );
   }
 
@@ -887,7 +886,7 @@ export async function handleWebhook(req: Request): Promise<Response> {
       status: event.subscription.status,
       subscription_id: result.subscriptionId,
     },
-    corsHeaders,
+    corsHeaders
   );
 }
 
@@ -904,9 +903,8 @@ export function getWebhookHealthData(_req: Request): Record<string, unknown> {
     : null;
   const isStale = lastEventAge && lastEventAge > 24 * 60 * 60 * 1000;
 
-  const errorRate = metrics.requestsTotal > 10
-    ? (metrics.requestsError / metrics.requestsTotal) * 100
-    : 0;
+  const errorRate =
+    metrics.requestsTotal > 10 ? (metrics.requestsError / metrics.requestsTotal) * 100 : 0;
   const highErrorRate = errorRate > 10;
 
   let status: "healthy" | "degraded" | "unhealthy" = "healthy";
@@ -943,13 +941,14 @@ export function getWebhookHealthData(_req: Request): Record<string, unknown> {
             state: state.state,
             failures: state.failures,
             totalRequests: state.totalRequests,
-            failureRate: state.totalRequests > 0
-              ? Math.round((state.totalFailures / state.totalRequests) * 100)
-              : 0,
+            failureRate:
+              state.totalRequests > 0
+                ? Math.round((state.totalFailures / state.totalRequests) * 100)
+                : 0,
           };
           return acc;
         },
-        {} as Record<string, unknown>,
+        {} as Record<string, unknown>
       ),
     },
   };
@@ -960,22 +959,25 @@ export function getWebhookMetricsData(): Record<string, unknown> {
   const performanceMetrics = getMetricsSummary();
   const healthMetrics = getHealthMetrics();
 
-  const successRate = metrics.requestsTotal > 0
-    ? ((metrics.requestsSuccess / metrics.requestsTotal) * 100).toFixed(2)
-    : "0.00";
+  const successRate =
+    metrics.requestsTotal > 0
+      ? ((metrics.requestsSuccess / metrics.requestsTotal) * 100).toFixed(2)
+      : "0.00";
 
-  const churnRate = metrics.revenueEvents.subscriptions > 0
-    ? ((metrics.revenueEvents.cancellations / metrics.revenueEvents.subscriptions) * 100).toFixed(
-      2,
-    )
-    : "0.00";
+  const churnRate =
+    metrics.revenueEvents.subscriptions > 0
+      ? ((metrics.revenueEvents.cancellations / metrics.revenueEvents.subscriptions) * 100).toFixed(
+          2
+        )
+      : "0.00";
 
-  const graceRecoveryRate = metrics.revenueEvents.billingIssues > 0
-    ? (
-      (metrics.revenueEvents.graceRecoveries / metrics.revenueEvents.billingIssues) *
-      100
-    ).toFixed(2)
-    : "0.00";
+  const graceRecoveryRate =
+    metrics.revenueEvents.billingIssues > 0
+      ? (
+          (metrics.revenueEvents.graceRecoveries / metrics.revenueEvents.billingIssues) *
+          100
+        ).toFixed(2)
+      : "0.00";
 
   return {
     webhook: {

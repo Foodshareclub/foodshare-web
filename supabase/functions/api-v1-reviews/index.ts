@@ -86,7 +86,7 @@ async function getReviews(ctx: HandlerContext<unknown, QueryParams>): Promise<Re
       feedback,
       created_at
     `,
-      { count: "exact" },
+      { count: "exact" }
     )
     .order("created_at", { ascending: false })
     .limit(limit + 1);
@@ -123,7 +123,7 @@ async function getReviews(ctx: HandlerContext<unknown, QueryParams>): Promise<Re
         items: resultItems.map(transformReview),
         total: count || resultItems.length,
       },
-      CACHE_TTLS.reviews,
+      CACHE_TTLS.reviews
     );
   }
 
@@ -275,5 +275,5 @@ Deno.serve(
         idempotent: true,
       },
     },
-  }),
+  })
 );

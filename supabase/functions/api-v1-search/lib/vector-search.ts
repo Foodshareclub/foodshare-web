@@ -37,7 +37,7 @@ export async function semanticSearch(
   query: string,
   limit: number,
   offset: number,
-  filters?: SearchFilters,
+  filters?: SearchFilters
 ): Promise<{ results: SearchResultItem[]; total: number; provider: string }> {
   const embeddingResult = await generateEmbedding(query);
 
@@ -87,7 +87,7 @@ export async function hybridSearch(
   query: string,
   limit: number,
   offset: number,
-  filters?: SearchFilters,
+  filters?: SearchFilters
 ): Promise<{ results: SearchResultItem[]; total: number; provider?: string }> {
   // Run both searches in parallel -- calling internal functions directly (no double-serialization)
   const [semanticResult, textResult] = await Promise.allSettled([
@@ -100,16 +100,16 @@ export async function hybridSearch(
 
   if (semanticResult.status === "rejected") {
     logger.warn("Semantic search failed in hybrid mode", {
-      error: semanticResult.reason instanceof Error
-        ? semanticResult.reason.message
-        : String(semanticResult.reason),
+      error:
+        semanticResult.reason instanceof Error
+          ? semanticResult.reason.message
+          : String(semanticResult.reason),
     });
   }
   if (textResult.status === "rejected") {
     logger.warn("Text search failed in hybrid mode", {
-      error: textResult.reason instanceof Error
-        ? textResult.reason.message
-        : String(textResult.reason),
+      error:
+        textResult.reason instanceof Error ? textResult.reason.message : String(textResult.reason),
     });
   }
 
@@ -141,7 +141,7 @@ export async function executeSearch(
   mode: SearchMode,
   limit: number,
   offset: number,
-  filters?: SearchFilters,
+  filters?: SearchFilters
 ): Promise<{ results: SearchResultItem[]; total: number; provider?: string }> {
   switch (mode) {
     case "semantic":
@@ -218,7 +218,7 @@ async function indexPostsBatch(posts: PostRecord[]): Promise<IndexResult> {
       result.deleted = inactivePosts.length;
     } catch (error) {
       result.errors.push(
-        `Delete failed: ${error instanceof Error ? error.message : String(error)}`,
+        `Delete failed: ${error instanceof Error ? error.message : String(error)}`
       );
     }
   }
@@ -311,7 +311,7 @@ export async function verifyWebhookSignature(request: Request, rawBody: string):
       encoder.encode(webhookSecret),
       { name: "HMAC", hash: "SHA-256" },
       false,
-      ["sign"],
+      ["sign"]
     );
 
     const signatureBytes = await crypto.subtle.sign("HMAC", key, encoder.encode(rawBody));
@@ -329,7 +329,7 @@ export async function verifyWebhookSignature(request: Request, rawBody: string):
   } catch (error) {
     logger.error(
       "Webhook signature verification failed",
-      error instanceof Error ? error : new Error(String(error)),
+      error instanceof Error ? error : new Error(String(error))
     );
     return false;
   }
@@ -342,7 +342,7 @@ export async function verifyWebhookSignature(request: Request, rawBody: string):
 // deno-lint-ignore no-explicit-any
 export async function handleWebhookIndex(
   supabase: any,
-  payload: WebhookPayload,
+  payload: WebhookPayload
 ): Promise<IndexResult> {
   const startTime = performance.now();
   const result: IndexResult = {
@@ -394,7 +394,7 @@ export async function handleWebhookIndex(
     logger.error(
       "Webhook index failed",
       error instanceof Error ? error : new Error(String(error)),
-      { recordId },
+      { recordId }
     );
   }
 
@@ -409,7 +409,7 @@ export async function handleWebhookIndex(
 // deno-lint-ignore no-explicit-any
 export async function handleBatchIndex(
   supabase: any,
-  request: BatchIndexRequest,
+  request: BatchIndexRequest
 ): Promise<IndexResult> {
   const limit = Math.min(request.limit || MAX_BATCH_SIZE, MAX_BATCH_SIZE);
   const offset = request.offset || 0;
@@ -423,7 +423,7 @@ export async function handleBatchIndex(
   let query = supabase
     .from("posts_with_location")
     .select(
-      `id, post_name, post_description, post_address, post_type, category_id, images, latitude, longitude, profile_id, is_active, is_arranged, created_at, updated_at, pickup_time, available_hours, categories(name)`,
+      `id, post_name, post_description, post_address, post_type, category_id, images, latitude, longitude, profile_id, is_active, is_arranged, created_at, updated_at, pickup_time, available_hours, categories(name)`
     )
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);

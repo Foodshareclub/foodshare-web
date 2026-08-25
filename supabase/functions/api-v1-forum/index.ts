@@ -212,7 +212,7 @@ async function handlePost(ctx: HandlerContext<unknown, ForumQuery>): Promise<Res
       return markBestAnswer(ctx);
     default:
       throw new ValidationError(
-        "action query param required (create, comment, like, bookmark, react, subscribe, report, draft, poll, vote, view, pin, lock, remove, feature, best-answer)",
+        "action query param required (create, comment, like, bookmark, react, subscribe, report, draft, poll, vote, view, pin, lock, remove, feature, best-answer)"
       );
   }
 }
@@ -285,5 +285,5 @@ Deno.serve(
         requireAuth: true,
       },
     },
-  }),
+  })
 );

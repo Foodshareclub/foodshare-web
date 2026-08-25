@@ -73,7 +73,7 @@ type ProcessQueueResponse = {
 
 export default async function processQueueHandler(
   req: Request,
-  corsHeaders: Record<string, string>,
+  corsHeaders: Record<string, string>
 ): Promise<Response> {
   const startTime = Date.now();
 
@@ -86,7 +86,7 @@ export default async function processQueueHandler(
       {
         status: 405,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 
@@ -99,7 +99,7 @@ export default async function processQueueHandler(
 
     // First, reset any stuck "processing" items older than timeout
     const timeoutCutoff = new Date(
-      Date.now() - PROCESSING_TIMEOUT_MINUTES * 60 * 1000,
+      Date.now() - PROCESSING_TIMEOUT_MINUTES * 60 * 1000
     ).toISOString();
     await supabase
       .from("translation_queue")
@@ -127,7 +127,7 @@ export default async function processQueueHandler(
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -144,7 +144,7 @@ export default async function processQueueHandler(
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -174,7 +174,7 @@ export default async function processQueueHandler(
 
     // Process a single item
     const processItem = async (
-      item: QueueItem,
+      item: QueueItem
     ): Promise<"succeeded" | "failed" | "skipped" | "retry"> => {
       try {
         // Skip empty text
@@ -201,7 +201,7 @@ export default async function processQueueHandler(
           textToTranslate,
           "en",
           item.target_locale,
-          `${item.content_type}-${item.field_name}`,
+          `${item.content_type}-${item.field_name}`
         );
 
         // Check translation quality with more specific criteria
@@ -232,7 +232,7 @@ export default async function processQueueHandler(
             item.content_id,
             item.field_name,
             item.target_locale,
-            result.text,
+            result.text
           );
 
           // Mark as completed
@@ -358,7 +358,7 @@ export default async function processQueueHandler(
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 }

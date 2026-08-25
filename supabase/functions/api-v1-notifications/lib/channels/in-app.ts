@@ -110,7 +110,7 @@ export class InAppChannelAdapter implements ChannelAdapter {
 
   async sendBatch(
     payloads: InAppPayload[],
-    context: NotificationContext,
+    context: NotificationContext
   ): Promise<ChannelDeliveryResult[]> {
     logger.info("Sending batch in-app notifications", {
       requestId: context.requestId,
@@ -164,7 +164,7 @@ export class InAppChannelAdapter implements ChannelAdapter {
 export async function markAsRead(
   context: NotificationContext,
   notificationId: string,
-  userId: string,
+  userId: string
 ): Promise<boolean> {
   try {
     const { error } = await context.supabase
@@ -196,7 +196,7 @@ export async function markAsRead(
  */
 export async function getUnreadCount(
   context: NotificationContext,
-  userId: string,
+  userId: string
 ): Promise<number> {
   try {
     const { count, error } = await context.supabase
@@ -224,7 +224,7 @@ export async function getUnreadCount(
  */
 export async function markAllAsRead(
   context: NotificationContext,
-  userId: string,
+  userId: string
 ): Promise<boolean> {
   try {
     const { error } = await context.supabase

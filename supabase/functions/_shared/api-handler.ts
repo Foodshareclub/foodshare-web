@@ -63,9 +63,9 @@ interface Schema<T = unknown> {
   safeParse?: (data: unknown) =>
     | { success: true; data: T }
     | {
-      success: false;
-      error: { errors: Array<{ path: (string | number)[]; message: string }> };
-    };
+        success: false;
+        error: { errors: Array<{ path: (string | number)[]; message: string }> };
+      };
   // Valibot (use `any` for input/output to remain compatible with Zod's internal types)
   // deno-lint-ignore no-explicit-any
   _parse?: (input: any) => any;
@@ -102,7 +102,7 @@ export interface HandlerContext<TBody = unknown, TQuery = Record<string, unknown
 
 /** Route handler function */
 export type RouteHandler<TBody = unknown, TQuery = Record<string, unknown>> = (
-  ctx: HandlerContext<TBody, TQuery>,
+  ctx: HandlerContext<TBody, TQuery>
 ) => Promise<Response>;
 
 /** Route configuration */
@@ -196,7 +196,7 @@ function createSupabaseClient(authHeader?: string | null) {
 
 // deno-lint-ignore no-explicit-any
 async function authenticateRequest(
-  supabase: SupabaseClient<any, any, any>,
+  supabase: SupabaseClient<any, any, any>
 ): Promise<string | null> {
   try {
     const {
@@ -222,7 +222,7 @@ async function authenticateRequest(
 async function checkIdempotencyKey(
   supabase: SupabaseClient<any, any, any>,
   key: string,
-  operation: string,
+  operation: string
 ): Promise<{ cached: boolean; response?: unknown }> {
   const { data, error } = await supabase.rpc("check_idempotency_key", {
     p_key: key,
@@ -243,7 +243,7 @@ async function storeIdempotencyKey(
   supabase: SupabaseClient<any, any, any>,
   key: string,
   operation: string,
-  response: unknown,
+  response: unknown
 ): Promise<void> {
   const { error } = await supabase.rpc("check_idempotency_key", {
     p_key: key,
@@ -271,7 +271,7 @@ async function parseRequestBody(request: Request, maxBodySize?: number): Promise
   if (contentLength && parseInt(contentLength, 10) > limit) {
     throw new PayloadTooLargeError(
       `Request body too large. Maximum size is ${Math.round(limit / 1024)}KB`,
-      limit,
+      limit
     );
   }
 
@@ -281,7 +281,7 @@ async function parseRequestBody(request: Request, maxBodySize?: number): Promise
       if (text.length > limit) {
         throw new PayloadTooLargeError(
           `Request body too large. Maximum size is ${Math.round(limit / 1024)}KB`,
-          limit,
+          limit
         );
       }
       return text ? JSON.parse(text) : {};
@@ -342,7 +342,7 @@ function validateWithSchema<T>(schema: Schema<T>, data: unknown, location: strin
         (issue: { path?: Array<{ key: string }>; message: string }) => ({
           field: issue.path?.map((p: { key: string }) => p.key).join(".") || "root",
           message: issue.message,
-        }),
+        })
       );
       throw new ValidationError(`Invalid ${location}`, errors);
     }
@@ -424,7 +424,7 @@ let lastMemoryCheckTime = 0;
 function checkInMemoryRateLimit(
   key: string,
   limit: number,
-  windowMs: number,
+  windowMs: number
 ): { allowed: boolean; remaining: number; resetAt: number } {
   const now = Date.now();
   const existing = rateLimitStore.get(key);
@@ -469,7 +469,7 @@ setInterval(() => {
 function getRateLimitKey(
   ctx: HandlerContext,
   keyBy: RateLimitConfig["keyBy"],
-  service: string,
+  service: string
 ): string {
   if (typeof keyBy === "function") {
     return keyBy(ctx);
@@ -511,7 +511,7 @@ function getClientIp(request: Request): string {
 function addStandardHeaders(
   response: Response,
   ctx: RequestContext,
-  rateLimitInfo?: { limit: number; remaining: number; reset: number },
+  rateLimitInfo?: { limit: number; remaining: number; reset: number }
 ): void {
   // Response time
   const elapsed = Math.round(performance.now() - ctx.startTime);
@@ -590,10 +590,10 @@ export function createAPIHandler(config: APIHandlerConfig) {
           new AppError(
             `Method ${method} not allowed. Use: ${allowedMethods.join(", ")}`,
             "METHOD_NOT_ALLOWED",
-            405,
+            405
           ),
           corsHeaders,
-          { version },
+          { version }
         );
       }
 
@@ -616,10 +616,10 @@ export function createAPIHandler(config: APIHandlerConfig) {
             new AppError(
               "Request blocked: origin validation failed",
               "CSRF_VALIDATION_FAILED",
-              403,
+              403
             ),
             corsHeaders,
-            { version },
+            { version }
           );
         }
       }
@@ -680,7 +680,7 @@ export function createAPIHandler(config: APIHandlerConfig) {
         const idempotencyCheck = await checkIdempotencyKey(
           supabase,
           idempotencyKey,
-          `${service}:${method}`,
+          `${service}:${method}`
         );
 
         if (idempotencyCheck.cached && idempotencyCheck.response) {
@@ -738,7 +738,7 @@ export function createAPIHandler(config: APIHandlerConfig) {
             rateLimitResult = checkInMemoryRateLimit(
               rateLimitKey,
               rateLimit.limit,
-              rateLimit.windowMs,
+              rateLimit.windowMs
             );
           }
 
@@ -754,7 +754,7 @@ export function createAPIHandler(config: APIHandlerConfig) {
             const errorResponse = buildErrorResponse(
               new RateLimitError("Rate limit exceeded", retryAfterMs),
               corsHeaders,
-              { version, retryAfterMs },
+              { version, retryAfterMs }
             );
             addStandardHeaders(errorResponse, ctx, handlerContext.rateLimitInfo);
             return errorResponse;
@@ -787,7 +787,7 @@ export function createAPIHandler(config: APIHandlerConfig) {
             supabase,
             idempotencyKey,
             `${service}:${method}`,
-            responseData.data,
+            responseData.data
           );
         } catch {
           // Non-critical, log and continue
@@ -824,7 +824,7 @@ export function createAPIHandler(config: APIHandlerConfig) {
         const csrfResponse = buildErrorResponse(
           new AppError(error.message, "CSRF_VALIDATION_FAILED", 403),
           corsHeaders,
-          { version },
+          { version }
         );
         addStandardHeaders(csrfResponse, ctx);
         return csrfResponse;
@@ -879,14 +879,13 @@ export function ok<T>(
   statusOrOptions?:
     | number
     | {
-      status?: number;
-      cacheTTL?: number;
-      uiHints?: Record<string, unknown>;
-    },
+        status?: number;
+        cacheTTL?: number;
+        uiHints?: Record<string, unknown>;
+      }
 ): Response {
-  const options = typeof statusOrOptions === "number"
-    ? { status: statusOrOptions }
-    : statusOrOptions || {};
+  const options =
+    typeof statusOrOptions === "number" ? { status: statusOrOptions } : statusOrOptions || {};
   return buildSuccessResponse(data, ctx.corsHeaders, {
     status: options.status || 200,
     cacheTTL: options.cacheTTL,
@@ -923,12 +922,13 @@ export function paginated<T>(
     total: number;
     /** Next cursor for cursor-based pagination */
     nextCursor?: string | null;
-  },
+  }
 ): Response {
   // Support both offset-based and cursor-based pagination
-  const hasMore = pagination.nextCursor !== undefined
-    ? pagination.nextCursor !== null
-    : pagination.offset + items.length < pagination.total;
+  const hasMore =
+    pagination.nextCursor !== undefined
+      ? pagination.nextCursor !== null
+      : pagination.offset + items.length < pagination.total;
 
   return buildSuccessResponse(items, ctx.corsHeaders, {
     pagination: {
@@ -936,9 +936,10 @@ export function paginated<T>(
       limit: pagination.limit,
       total: pagination.total,
       hasMore,
-      nextOffset: hasMore && pagination.nextCursor === undefined
-        ? pagination.offset + pagination.limit
-        : undefined,
+      nextOffset:
+        hasMore && pagination.nextCursor === undefined
+          ? pagination.offset + pagination.limit
+          : undefined,
       nextCursor: pagination.nextCursor ?? undefined,
     },
   });

@@ -51,7 +51,7 @@ type BatchTranslateResponse = {
 
 export default async function translateBatchHandler(
   req: Request,
-  corsHeaders: Record<string, string>,
+  corsHeaders: Record<string, string>
 ): Promise<Response> {
   if (req.method !== "POST") {
     return new Response(
@@ -62,7 +62,7 @@ export default async function translateBatchHandler(
       {
         status: 405,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 
@@ -80,7 +80,7 @@ export default async function translateBatchHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -93,7 +93,7 @@ export default async function translateBatchHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -106,7 +106,7 @@ export default async function translateBatchHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -160,7 +160,7 @@ export default async function translateBatchHandler(
           {
             status: 500,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          },
+          }
         );
       }
 
@@ -193,7 +193,7 @@ export default async function translateBatchHandler(
       {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 }

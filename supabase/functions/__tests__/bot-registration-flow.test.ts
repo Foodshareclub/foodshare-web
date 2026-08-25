@@ -45,5 +45,5 @@ Deno.test(
     // Submit 6-digit code without active user state
     const result = await handleVerificationCode("123456", mockUser, 11223344);
     assertEquals(result, false);
-  },
+  }
 );

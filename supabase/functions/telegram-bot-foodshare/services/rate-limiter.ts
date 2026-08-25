@@ -17,7 +17,7 @@ export type RateLimitResult = BotRateLimitResult;
 export function checkRateLimitDistributed(
   userId: number,
   maxRequests?: number,
-  windowMs?: number,
+  windowMs?: number
 ): Promise<RateLimitResult> {
   return rateLimiter.checkDistributed(userId, maxRequests, windowMs);
 }

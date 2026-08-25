@@ -137,7 +137,7 @@ async function handleDeltaSync(ctx: HandlerContext<SyncRequest>): Promise<Respon
       uiHints: {
         refreshAfter: 30, // Suggest re-sync in 30 seconds
       },
-    },
+    }
   );
 }
 
@@ -146,7 +146,7 @@ async function handleDeltaSync(ctx: HandlerContext<SyncRequest>): Promise<Respon
 // =============================================================================
 
 async function handlePendingOperations(
-  ctx: HandlerContext<PendingOperationsRequest>,
+  ctx: HandlerContext<PendingOperationsRequest>
 ): Promise<Response> {
   const { supabase, userId, body, ctx: requestCtx } = ctx;
 
@@ -180,7 +180,7 @@ async function handlePendingOperations(
           p_record_id: op.recordId || null,
           p_payload: op.data || {},
           p_client_timestamp: op.clientTimestamp,
-        },
+        }
       );
 
       if (submitError) {
@@ -263,7 +263,7 @@ async function handlePendingOperations(
       summary: { applied, conflicts, rejected },
       results,
     },
-    ctx,
+    ctx
   );
 }
 
@@ -312,14 +312,16 @@ async function handleSyncStatus(ctx: HandlerContext): Promise<Response> {
     {
       checkpoints: checkpointMap,
       pendingOperations: pendingCount || 0,
-      lastSyncAt: checkpoints && checkpoints.length > 0
-        ? checkpoints.reduce(
-          (latest, cp) => new Date(cp.last_sync_at) > new Date(latest) ? cp.last_sync_at : latest,
-          checkpoints[0].last_sync_at,
-        )
-        : null,
+      lastSyncAt:
+        checkpoints && checkpoints.length > 0
+          ? checkpoints.reduce(
+              (latest, cp) =>
+                new Date(cp.last_sync_at) > new Date(latest) ? cp.last_sync_at : latest,
+              checkpoints[0].last_sync_at
+            )
+          : null,
     },
-    ctx,
+    ctx
   );
 }
 
@@ -395,5 +397,5 @@ Deno.serve(
         handler: handlePostSync,
       },
     },
-  }),
+  })
 );

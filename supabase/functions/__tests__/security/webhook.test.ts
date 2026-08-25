@@ -21,7 +21,7 @@ async function computeHmacSha256(payload: string, secret: string): Promise<strin
     encoder.encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"],
+    ["sign"]
   );
 
   const signatureBuffer = await crypto.subtle.sign("HMAC", key, encoder.encode(payload));

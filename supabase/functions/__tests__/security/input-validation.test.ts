@@ -204,7 +204,7 @@ Deno.test("validateEmailEnhanced - rejects consecutive dots", () => {
   assertEquals(result.isValid, false);
   assertEquals(
     result.errors.some((e) => e.includes("consecutive")),
-    true,
+    true
   );
 });
 

@@ -29,9 +29,8 @@ export async function checkDatabase(supabase: SupabaseClient): Promise<ServiceHe
       };
     }
 
-    const status: HealthStatus = responseTimeMs > DATABASE_DEGRADED_THRESHOLD_MS
-      ? "degraded"
-      : "healthy";
+    const status: HealthStatus =
+      responseTimeMs > DATABASE_DEGRADED_THRESHOLD_MS ? "degraded" : "healthy";
     return { service: "database", status, responseTimeMs };
   } catch (error) {
     return {

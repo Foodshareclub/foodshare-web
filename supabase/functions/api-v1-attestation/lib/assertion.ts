@@ -19,7 +19,7 @@ export async function verifyAssertion(
   assertion: string,
   clientDataHash: string,
   storedCounter: number,
-  storedPublicKey: string,
+  storedPublicKey: string
 ): Promise<{ verified: boolean; newCounter: number; message?: string; riskScore: number }> {
   try {
     let assertionData: Uint8Array;
@@ -79,7 +79,7 @@ export async function verifyAssertion(
         cbor.authData,
         clientDataHashBytes,
         cbor.attStmt.signature as Uint8Array,
-        storedPublicKey,
+        storedPublicKey
       );
 
       if (!signatureValid) {
@@ -110,7 +110,7 @@ export async function verifyAssertion(
   } catch (error) {
     logger.error(
       "Assertion verification error",
-      error instanceof Error ? error : new Error(String(error)),
+      error instanceof Error ? error : new Error(String(error))
     );
     return {
       verified: false,

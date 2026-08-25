@@ -18,7 +18,7 @@ if (!botToken || !chatId) {
   console.error("❌ ERROR: TELEGRAM_BOT_TOKEN or ADMIN_CHAT_ID is missing from environment.");
   console.log("\nUsage:");
   console.log(
-    "  TELEGRAM_BOT_TOKEN='<your_token>' ADMIN_CHAT_ID='<your_chat_id>' deno run --allow-all supabase/functions/__tests__/send-live-test.ts\n",
+    "  TELEGRAM_BOT_TOKEN='<your_token>' ADMIN_CHAT_ID='<your_chat_id>' deno run --allow-all supabase/functions/__tests__/send-live-test.ts\n"
   );
   Deno.exit(1);
 }
@@ -49,7 +49,7 @@ console.log(
     regResult.success
       ? "✅ Message Delivered to Telegram!"
       : "❌ Delivery Failed: " + regResult.error
-  }`,
+  }`
 );
 
 // 2. Send Verification Notification
@@ -72,5 +72,5 @@ console.log(
     verResult.success
       ? "✅ Message Delivered to Telegram!"
       : "❌ Delivery Failed: " + verResult.error
-  }`,
+  }`
 );

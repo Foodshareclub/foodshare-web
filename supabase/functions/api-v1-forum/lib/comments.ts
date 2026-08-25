@@ -60,7 +60,7 @@ export async function getComments(ctx: HandlerContext<unknown, ForumQuery>): Pro
       `
       *,
       author:profiles!comments_user_id_fkey(id, nickname, avatar_url, is_verified)
-    `,
+    `
     )
     .eq("forum_id", forumId)
     .order("comment_created_at", { ascending: true })

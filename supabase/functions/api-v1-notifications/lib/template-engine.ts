@@ -69,7 +69,7 @@ export function interpolateTemplate(template: string, variables: Record<string, 
  */
 export async function loadTemplate(
   supabase: SupabaseClient,
-  name: string,
+  name: string
 ): Promise<NotificationTemplate | null> {
   // Check cache
   const cached = templateCache.get(name);
@@ -107,7 +107,7 @@ export async function loadTemplate(
     logger.error(
       "Error loading notification template",
       error instanceof Error ? error : new Error(String(error)),
-      { name },
+      { name }
     );
     return null;
   }

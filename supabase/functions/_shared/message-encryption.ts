@@ -41,7 +41,7 @@ async function getCryptoKey(): Promise<CryptoKey | null> {
     if (keyBytes.length !== 32) {
       logger.error(
         "CHAT_ENCRYPTION_KEY must be 32 bytes (256 bits)",
-        new Error("Invalid key length"),
+        new Error("Invalid key length")
       );
       return null;
     }
@@ -54,7 +54,7 @@ async function getCryptoKey(): Promise<CryptoKey | null> {
   } catch (error) {
     logger.error(
       "Failed to load encryption key",
-      error instanceof Error ? error : new Error(String(error)),
+      error instanceof Error ? error : new Error(String(error))
     );
     return null;
   }
@@ -83,7 +83,7 @@ export async function encryptMessage(plaintext: string): Promise<string> {
   } catch (error) {
     logger.error(
       "Message encryption failed, storing plaintext",
-      error instanceof Error ? error : new Error(String(error)),
+      error instanceof Error ? error : new Error(String(error))
     );
     return plaintext;
   }
@@ -122,7 +122,7 @@ export async function decryptMessage(stored: string): Promise<string> {
   } catch (error) {
     logger.error(
       "Message decryption failed",
-      error instanceof Error ? error : new Error(String(error)),
+      error instanceof Error ? error : new Error(String(error))
     );
     return "[Encrypted message]";
   }

@@ -10,7 +10,7 @@ import { logger } from "../../_shared/logger.ts";
 export class EngagementService {
   constructor(
     private supabase: SupabaseClient<any, any, any>,
-    private userId: string,
+    private userId: string
   ) {}
 
   async toggleLike(forumId: number) {
@@ -125,7 +125,7 @@ export class EngagementService {
         forum_id,
         created_at,
         forum:forum(*)
-      `,
+      `
       )
       .eq("profile_id", this.userId)
       .order("created_at", { ascending: false })

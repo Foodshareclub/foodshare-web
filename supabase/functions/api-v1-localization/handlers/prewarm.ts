@@ -35,7 +35,7 @@ interface PrewarmResponse {
 
 export default async function prewarmHandler(
   req: Request,
-  corsHeaders: Record<string, string>,
+  corsHeaders: Record<string, string>
 ): Promise<Response> {
   if (req.method !== "POST") {
     return new Response(
@@ -46,7 +46,7 @@ export default async function prewarmHandler(
       {
         status: 405,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 
@@ -64,7 +64,7 @@ export default async function prewarmHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -77,7 +77,7 @@ export default async function prewarmHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -124,7 +124,7 @@ export default async function prewarmHandler(
       {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 }

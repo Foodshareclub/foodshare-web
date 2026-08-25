@@ -31,14 +31,12 @@ import type {
 
 function buildInvitationEmail(
   senderName: string,
-  message?: string,
+  message?: string
 ): { subject: string; html: string } {
   const personalMessage = message
-    ? `<p style="color: #555; font-style: italic; border-left: 3px solid #2ECC71; padding-left: 12px; margin: 20px 0;">"${
-      escapeHtml(
-        message,
-      )
-    }"</p>`
+    ? `<p style="color: #555; font-style: italic; border-left: 3px solid #2ECC71; padding-left: 12px; margin: 20px 0;">"${escapeHtml(
+        message
+      )}"</p>`
     : "";
 
   const subject = `${senderName} invited you to join FoodShare!`;
@@ -55,11 +53,9 @@ function buildInvitationEmail(
     <div style="background: white; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
       <div style="text-align: center; margin-bottom: 30px;">
         <h1 style="color: #2ECC71; font-size: 28px; margin: 0 0 10px;">You're Invited!</h1>
-        <p style="color: #666; font-size: 16px; margin: 0;">${
-    escapeHtml(
-      senderName,
-    )
-  } wants you to join FoodShare</p>
+        <p style="color: #666; font-size: 16px; margin: 0;">${escapeHtml(
+          senderName
+        )} wants you to join FoodShare</p>
       </div>
       ${personalMessage}
       <div style="background: #f8faf8; border-radius: 12px; padding: 24px; margin: 24px 0;">
@@ -81,8 +77,8 @@ function buildInvitationEmail(
         </p>
         <p style="color: #999; font-size: 12px; margin: 8px 0 0;">
           <a href="https://${
-    Deno.env.get("SITE_DOMAIN") || "foodshare.club"
-  }" style="color: #2ECC71; text-decoration: none;">foodshare.club</a>
+            Deno.env.get("SITE_DOMAIN") || "foodshare.club"
+          }" style="color: #2ECC71; text-decoration: none;">foodshare.club</a>
         </p>
       </div>
     </div>
@@ -99,7 +95,7 @@ function buildInvitationEmail(
 
 /** POST /send — Send a single email (JWT auth) */
 export async function handleSend(
-  ctx: HandlerContext<z.infer<typeof sendSchema>>,
+  ctx: HandlerContext<z.infer<typeof sendSchema>>
 ): Promise<Response> {
   if (!ctx.userId) {
     throw new ValidationError("Authentication required");
@@ -110,7 +106,7 @@ export async function handleSend(
   const emailService = getEmailService();
   const result = await emailService.sendEmail(
     { to, subject, html, text, replyTo, tags },
-    emailType as EmailType,
+    emailType as EmailType
   );
 
   if (!result.success) {
@@ -123,13 +119,13 @@ export async function handleSend(
       provider: result.provider,
       latencyMs: result.latencyMs,
     },
-    ctx,
+    ctx
   );
 }
 
 /** POST /send/template — Send using a named template slug (JWT auth) */
 export async function handleSendTemplate(
-  ctx: HandlerContext<z.infer<typeof sendTemplateSchema>>,
+  ctx: HandlerContext<z.infer<typeof sendTemplateSchema>>
 ): Promise<Response> {
   if (!ctx.userId) {
     throw new ValidationError("Authentication required");
@@ -145,7 +141,7 @@ export async function handleSendTemplate(
     throw new AppError(
       result.error || "Failed to send template email",
       "TEMPLATE_SEND_FAILED",
-      502,
+      502
     );
   }
 
@@ -155,13 +151,13 @@ export async function handleSendTemplate(
       provider: result.provider,
       latencyMs: result.latencyMs,
     },
-    ctx,
+    ctx
   );
 }
 
 /** POST /send/invitation — Send invitation to non-user (JWT auth) */
 export async function handleSendInvitation(
-  ctx: HandlerContext<z.infer<typeof sendInvitationSchema>>,
+  ctx: HandlerContext<z.infer<typeof sendInvitationSchema>>
 ): Promise<Response> {
   if (!ctx.userId) {
     throw new ValidationError("Authentication required");
@@ -189,7 +185,7 @@ export async function handleSendInvitation(
         sender_name: senderName,
       },
     },
-    "notification",
+    "notification"
   );
 
   if (!result.success) {
@@ -214,7 +210,7 @@ export async function handleSendInvitation(
       provider: result.provider,
       latencyMs: result.latencyMs,
     },
-    ctx,
+    ctx
   );
 }
 
@@ -237,14 +233,14 @@ export function handleHealth(ctx: HandlerContext): Promise<Response> {
         version: VERSION,
         timestamp: new Date().toISOString(),
       },
-      ctx,
-    ),
+      ctx
+    )
   );
 }
 
 /** POST /webhook — Handle Supabase GoTrue Custom Email Hooks */
 export async function handleGoTrueWebhook(
-  ctx: HandlerContext<z.infer<typeof goTrueEmailHookSchema>>,
+  ctx: HandlerContext<z.infer<typeof goTrueEmailHookSchema>>
 ): Promise<Response> {
   const { user, email_data } = ctx.body;
 
@@ -271,7 +267,7 @@ export async function handleGoTrueWebhook(
     throw new AppError(
       `Unsupported email action type: ${email_data.email_action_type}`,
       "INVALID_ACTION",
-      400,
+      400
     );
   }
 
@@ -324,6 +320,6 @@ export async function handleGoTrueWebhook(
       provider: result.provider,
       latencyMs: result.latencyMs,
     },
-    ctx,
+    ctx
   );
 }

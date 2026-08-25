@@ -19,7 +19,7 @@ import { executeRedisCommand, isCircuitBreakerOpen, parseRedisInfo } from "./red
 
 async function performDetailedHealthCheck(
   redisUrl: string,
-  redisToken: string,
+  redisToken: string
 ): Promise<{
   status: "healthy" | "degraded" | "unhealthy" | "critical";
   checks: Record<string, CheckResult>;
@@ -197,11 +197,12 @@ async function performDetailedHealthCheck(
 
   // 7. Circuit Breaker Check
   const circuitBreakerCheck: CheckResult = {
-    status: circuitBreaker.state === "closed"
-      ? "pass"
-      : circuitBreaker.state === "half-open"
-      ? "warn"
-      : "fail",
+    status:
+      circuitBreaker.state === "closed"
+        ? "pass"
+        : circuitBreaker.state === "half-open"
+          ? "warn"
+          : "fail",
     value: circuitBreaker.state,
     message: `Circuit breaker is ${circuitBreaker.state}`,
   };
@@ -218,9 +219,8 @@ async function performDetailedHealthCheck(
   let overallStatus: "healthy" | "degraded" | "unhealthy" | "critical";
 
   if (checkStatuses.includes("fail")) {
-    overallStatus = checkStatuses.filter((s) => s === "fail").length >= 2
-      ? "critical"
-      : "unhealthy";
+    overallStatus =
+      checkStatuses.filter((s) => s === "fail").length >= 2 ? "critical" : "unhealthy";
   } else if (checkStatuses.includes("warn")) {
     overallStatus = "degraded";
   } else {
@@ -295,7 +295,7 @@ async function checkUpstashServices(supabase: any): Promise<{
   const getSecret = (...names: string[]): string => {
     for (const name of names) {
       const fromVault = secrets?.find(
-        (s: { name: string; value: string }) => s.name === name,
+        (s: { name: string; value: string }) => s.name === name
       )?.value;
       if (fromVault) return fromVault;
       const fromEnv = Deno.env.get(name);
@@ -310,7 +310,7 @@ async function checkUpstashServices(supabase: any): Promise<{
     url: string,
     token: string,
     endpoint: string,
-    validateFn: (data: any, response: Response) => { ok: boolean; message: string },
+    validateFn: (data: any, response: Response) => { ok: boolean; message: string }
   ): Promise<ServiceCheckResult & { skipped?: boolean }> => {
     if (!url || !token) {
       return {
@@ -353,7 +353,7 @@ async function checkUpstashServices(supabase: any): Promise<{
       (data) => ({
         ok: data.result === "PONG",
         message: data.result === "PONG" ? "PING successful" : "Unexpected response",
-      }),
+      })
     ),
     checkService(
       "Vector",
@@ -363,7 +363,7 @@ async function checkUpstashServices(supabase: any): Promise<{
       (data, res) => ({
         ok: res.ok && data.result,
         message: res.ok ? `Vector DB ready (${data.result?.vectorCount || 0} vectors)` : "Failed",
-      }),
+      })
     ),
     checkService(
       "QStash",
@@ -373,7 +373,7 @@ async function checkUpstashServices(supabase: any): Promise<{
       (data, res) => ({
         ok: res.ok,
         message: res.ok ? `QStash accessible (${data.length || 0} schedules)` : "Failed",
-      }),
+      })
     ),
     checkService(
       "Search",
@@ -383,16 +383,17 @@ async function checkUpstashServices(supabase: any): Promise<{
       (data, res) => ({
         ok: res.ok && data.result,
         message: res.ok ? `Search ready (${data.result?.vectorCount || 0} vectors)` : "Failed",
-      }),
+      })
     ),
   ]);
 
   const configured = results.filter((r) => !(r as any).skipped);
   const skipped = results.filter((r) => (r as any).skipped);
   const responseTimes = configured.filter((r) => r.responseTime).map((r) => r.responseTime!);
-  const avgResponseTime = responseTimes.length > 0
-    ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
-    : 0;
+  const avgResponseTime =
+    responseTimes.length > 0
+      ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length)
+      : 0;
 
   return {
     success: configured.every((r) => r.status === "ok"),
@@ -433,7 +434,7 @@ export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
         circuitBreaker: circuitBreaker.state,
         timestamp: new Date().toISOString(),
       },
-      ctx,
+      ctx
     );
   }
 
@@ -447,7 +448,7 @@ export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
         version: CONFIG.version,
         timestamp: new Date().toISOString(),
       },
-      ctx,
+      ctx
     );
   }
 
@@ -473,7 +474,7 @@ export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
         version: CONFIG.version,
         timestamp: new Date().toISOString(),
       },
-      ctx,
+      ctx
     );
   }
 
@@ -491,6 +492,6 @@ export async function handleGetRequest(ctx: HandlerContext): Promise<Response> {
       version: CONFIG.version,
       timestamp: new Date().toISOString(),
     },
-    ctx,
+    ctx
   );
 }

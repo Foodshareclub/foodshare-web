@@ -143,7 +143,7 @@ export class DisplayNameService {
         error instanceof Error ? error : new Error(String(error)),
         {
           userId,
-        },
+        }
       );
       throw error;
     } finally {
@@ -157,7 +157,7 @@ export class DisplayNameService {
    */
   async getDisplayNameBatch(
     userIds: string[],
-    options?: ExtractOptions,
+    options?: ExtractOptions
   ): Promise<BatchLookupResult> {
     if (userIds.length > MAX_BATCH_SIZE) {
       throw new BatchSizeExceededError(userIds.length, MAX_BATCH_SIZE);
@@ -195,7 +195,7 @@ export class DisplayNameService {
         // Try RPC batch function first
         const { data: batchData, error: batchError } = await this.supabase.rpc(
           "get_display_name_data_batch",
-          { p_user_ids: uncachedIds },
+          { p_user_ids: uncachedIds }
         );
 
         if (batchError) {
@@ -212,7 +212,7 @@ export class DisplayNameService {
                 item.user_id,
                 item.profile,
                 item.override,
-                options,
+                options
               );
               results[item.user_id] = result;
               cache.set(CACHE_KEYS.displayName(item.user_id), result, CACHE_TTLS.displayName);
@@ -248,7 +248,7 @@ export class DisplayNameService {
     displayName: string,
     reason: string,
     adminUserId: string,
-    expiresAt?: string,
+    expiresAt?: string
   ): Promise<DisplayNameOverride> {
     // Validate display name
     if (!displayName || displayName.trim().length < 2) {
@@ -271,7 +271,7 @@ export class DisplayNameService {
           overridden_by: adminUserId,
           expires_at: expiresAt || null,
         },
-        { onConflict: "user_id" },
+        { onConflict: "user_id" }
       )
       .select()
       .single();
@@ -331,14 +331,12 @@ export class DisplayNameService {
    * Get service metrics
    */
   getMetrics(): DisplayNameMetrics {
-    const avgLookupTimeMs = metrics.totalLookups > 0
-      ? metrics.totalLookupTimeMs / metrics.totalLookups
-      : 0;
+    const avgLookupTimeMs =
+      metrics.totalLookups > 0 ? metrics.totalLookupTimeMs / metrics.totalLookups : 0;
 
     const totalCacheAttempts = metrics.cacheHits + metrics.cacheMisses;
-    const cacheHitRate = totalCacheAttempts > 0
-      ? (metrics.cacheHits / totalCacheAttempts) * 100
-      : 0;
+    const cacheHitRate =
+      totalCacheAttempts > 0 ? (metrics.cacheHits / totalCacheAttempts) * 100 : 0;
 
     return {
       totalLookups: metrics.totalLookups,
@@ -419,7 +417,7 @@ export class DisplayNameService {
           createdAt: data.created_at,
         };
       },
-      { ttl: CACHE_TTLS.displayName },
+      { ttl: CACHE_TTLS.displayName }
     );
   }
 
@@ -433,7 +431,7 @@ export class DisplayNameService {
   private determineSource(
     profile: ProfileNameData,
     extractedName: string,
-    options?: ExtractOptions,
+    options?: ExtractOptions
   ): DisplayNameSource {
     const fallback = options?.fallback ?? "there";
 
@@ -478,7 +476,7 @@ export class DisplayNameService {
     userId: string,
     profile: DatabaseProfileRow | null,
     override: DatabaseOverrideRow | null,
-    options?: ExtractOptions,
+    options?: ExtractOptions
   ): DisplayNameResult {
     // Check override first
     if (override) {
@@ -522,7 +520,7 @@ export class DisplayNameService {
     userIds: string[],
     results: Record<string, DisplayNameResult>,
     errors: Record<string, string>,
-    options?: ExtractOptions,
+    options?: ExtractOptions
   ): Promise<void> {
     metrics.databaseLookups += userIds.length;
 

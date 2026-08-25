@@ -56,7 +56,7 @@ const STALE_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
 
 export default async function backfillChallengesHandler(
   req: Request,
-  corsHeaders: Record<string, string>,
+  corsHeaders: Record<string, string>
 ): Promise<Response> {
   if (req.method !== "POST") {
     return new Response(
@@ -67,7 +67,7 @@ export default async function backfillChallengesHandler(
       {
         status: 405,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 
@@ -92,7 +92,7 @@ export default async function backfillChallengesHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -129,7 +129,7 @@ export default async function backfillChallengesHandler(
           {
             status: 200,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          },
+          }
         );
       } else {
         // Stale job - mark as failed
@@ -165,13 +165,11 @@ export default async function backfillChallengesHandler(
     // ========== End Job Locking ==========
 
     // Fetch challenges based on mode
-    let challenges:
-      | Array<{
-        id: number;
-        challenge_title: string;
-        challenge_description: string | null;
-      }>
-      | null = null;
+    let challenges: Array<{
+      id: number;
+      challenge_title: string;
+      challenge_description: string | null;
+    }> | null = null;
     let count: number | null = null;
     let error: Error | null = null;
 
@@ -228,7 +226,7 @@ export default async function backfillChallengesHandler(
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -243,7 +241,7 @@ export default async function backfillChallengesHandler(
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -272,7 +270,7 @@ export default async function backfillChallengesHandler(
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -387,7 +385,7 @@ export default async function backfillChallengesHandler(
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 }

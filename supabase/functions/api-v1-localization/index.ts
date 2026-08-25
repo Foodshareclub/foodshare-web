@@ -28,7 +28,10 @@ import { AppError } from "../_shared/errors.ts";
 
 // Lazy-load handlers to reduce cold start time (~300-500ms savings)
 // Only the handler for the requested route is loaded per request
-const lazyImport = <T>(path: string) => () => import(path).then((m) => m.default as T);
+const lazyImport =
+  <T>(path: string) =>
+  () =>
+    import(path).then((m) => m.default as T);
 
 const SERVICE = "api-v1-localization";
 
@@ -49,7 +52,7 @@ function getSubPath(url: URL): string {
 // Handler signature: all handlers receive request + pre-computed CORS headers
 type HandlerFn = (
   req: Request,
-  corsHeaders: Record<string, string>,
+  corsHeaders: Record<string, string>
 ) => Promise<Response> | Response;
 
 // Lazy handler maps — each handler is loaded only when its route is first accessed
@@ -80,7 +83,7 @@ const resolvedHandlers = new Map<string, HandlerFn>();
 
 async function resolveHandler(
   loaders: Record<string, () => Promise<HandlerFn>>,
-  key: string,
+  key: string
 ): Promise<HandlerFn | null> {
   const cacheKey = `${key}`;
   const cached = resolvedHandlers.get(cacheKey);
@@ -105,7 +108,7 @@ async function routeRequest(ctx: HandlerContext): Promise<Response> {
   if (method === "GET" && (subPath === "" || subPath === "/")) {
     const handler = await resolveHandler(
       { "ui-strings": lazyImport<HandlerFn>("./handlers/ui-strings.ts") },
-      "ui-strings",
+      "ui-strings"
     );
     if (handler) return handler(ctx.request, ctx.corsHeaders);
   }
@@ -238,7 +241,7 @@ async function routeRequest(ctx: HandlerContext): Promise<Response> {
       {
         status: 200,
         headers: { ...ctx.corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 
@@ -264,5 +267,5 @@ Deno.serve(
       GET: { handler: routeRequest },
       POST: { handler: routeRequest },
     },
-  }),
+  })
 );

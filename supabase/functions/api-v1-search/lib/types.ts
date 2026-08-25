@@ -144,9 +144,9 @@ export function parseSearchQuery(params: Record<string, string>): SearchQuery {
   const radiusKm = params.radiusKm ? Number(params.radiusKm) : undefined;
   const categoryIds = params.categoryIds
     ? params.categoryIds
-      .split(",")
-      .map(Number)
-      .filter((n) => !isNaN(n))
+        .split(",")
+        .map(Number)
+        .filter((n) => !isNaN(n))
     : undefined;
 
   return { q, mode, route, lat, lng, radiusKm, categoryIds, limit, offset };
@@ -172,7 +172,7 @@ const pendingRequests = new Map<string, Promise<SearchResponse>>();
 
 export function deduplicateRequest(
   key: string,
-  fn: () => Promise<SearchResponse>,
+  fn: () => Promise<SearchResponse>
 ): Promise<SearchResponse> {
   const pending = pendingRequests.get(key);
   if (pending) return pending;
@@ -200,8 +200,8 @@ export function updateStats(latencyMs: number, cached: boolean, provider?: strin
   stats.total_searches++;
   if (cached) stats.cache_hits++;
   else stats.cache_misses++;
-  stats.avg_latency_ms = (stats.avg_latency_ms * (stats.total_searches - 1) + latencyMs) /
-    stats.total_searches;
+  stats.avg_latency_ms =
+    (stats.avg_latency_ms * (stats.total_searches - 1) + latencyMs) / stats.total_searches;
   if (provider) {
     stats.provider_usage[provider] = (stats.provider_usage[provider] || 0) + 1;
   }
@@ -248,17 +248,15 @@ export function getCacheKey(
   q: string,
   filters: SearchFilters | undefined,
   limit: number,
-  offset: number,
+  offset: number
 ): string {
-  return `search:${
-    JSON.stringify({
-      m: mode,
-      q: normalizeQuery(q),
-      f: filters,
-      l: limit,
-      o: offset,
-    })
-  }`;
+  return `search:${JSON.stringify({
+    m: mode,
+    q: normalizeQuery(q),
+    f: filters,
+    l: limit,
+    o: offset,
+  })}`;
 }
 
 // =============================================================================
@@ -324,7 +322,7 @@ export function transformPostsToResults(posts: Record<string, unknown>[]): Searc
 
 export function filterByDistance(
   results: SearchResultItem[],
-  location: GeoLocation,
+  location: GeoLocation
 ): SearchResultItem[] {
   return results
     .map((r) => {
@@ -333,7 +331,7 @@ export function filterByDistance(
         location.lat,
         location.lng,
         r.location.lat,
-        r.location.lng,
+        r.location.lng
       );
       if (distance > location.radiusKm) return null;
       return { ...r, distance_km: roundDistance(distance) } as SearchResultItem;
@@ -348,7 +346,7 @@ export function filterByDistance(
 
 export function applyRRF(
   semanticResults: SearchResultItem[],
-  textResults: SearchResultItem[],
+  textResults: SearchResultItem[]
 ): SearchResultItem[] {
   const scoreMap = new Map<string, { score: number; item: SearchResultItem }>();
 

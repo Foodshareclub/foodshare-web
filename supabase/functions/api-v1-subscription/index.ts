@@ -89,7 +89,7 @@ function verifyCronAuth(request: Request): boolean {
 // =============================================================================
 
 async function handleSyncSubscription(
-  ctx: HandlerContext<SyncSubscriptionBody>,
+  ctx: HandlerContext<SyncSubscriptionBody>
 ): Promise<Response> {
   const { body, userId, supabase } = ctx;
 
@@ -131,7 +131,7 @@ async function handleSyncSubscription(
       p_auto_renew_product_id: body.autoRenewProductId || null,
       p_environment: body.environment,
       p_app_account_token: body.appAccountToken || userId,
-    },
+    }
   );
 
   if (upsertError) {
@@ -151,7 +151,7 @@ async function handleSyncSubscription(
 
   const { data: subscription, error: fetchError } = await supabase.rpc(
     "billing.get_user_subscription",
-    { p_user_id: userId },
+    { p_user_id: userId }
   );
 
   if (fetchError) {
@@ -176,7 +176,7 @@ async function handleSyncSubscription(
         environment: body.environment,
       },
     },
-    ctx,
+    ctx
   );
 }
 
@@ -207,7 +207,7 @@ async function handleCheckSubscription(ctx: HandlerContext): Promise<Response> {
       is_premium: isPremium ?? false,
       subscription: subscription || null,
     },
-    ctx,
+    ctx
   );
 }
 
@@ -223,7 +223,7 @@ interface CronResult {
 }
 
 async function processDLQ(
-  supabase: ReturnType<typeof getServiceRoleClient>,
+  supabase: ReturnType<typeof getServiceRoleClient>
 ): Promise<{ processed: number; expired: number; pending: number }> {
   try {
     const { data, error } = await supabase.rpc("billing_process_dlq");
@@ -265,14 +265,14 @@ async function processDLQ(
   } catch (error) {
     logger.error(
       "DLQ processing failed",
-      error instanceof Error ? error : new Error(String(error)),
+      error instanceof Error ? error : new Error(String(error))
     );
     return { processed: 0, expired: 0, pending: 0 };
   }
 }
 
 async function updateDailyMetrics(
-  supabase: ReturnType<typeof getServiceRoleClient>,
+  supabase: ReturnType<typeof getServiceRoleClient>
 ): Promise<{ updated: boolean; date: string }> {
   const now = new Date();
   const hour = now.getUTCHours();
@@ -297,14 +297,14 @@ async function updateDailyMetrics(
   } catch (error) {
     logger.error(
       "Metrics update failed",
-      error instanceof Error ? error : new Error(String(error)),
+      error instanceof Error ? error : new Error(String(error))
     );
     return { updated: false, date };
   }
 }
 
 async function cleanupOldEvents(
-  supabase: ReturnType<typeof getServiceRoleClient>,
+  supabase: ReturnType<typeof getServiceRoleClient>
 ): Promise<{ deleted: number } | null> {
   const now = new Date();
   const day = now.getUTCDay();
@@ -337,7 +337,7 @@ async function cleanupOldEvents(
 }
 
 async function sendHealthReport(
-  supabase: ReturnType<typeof getServiceRoleClient>,
+  supabase: ReturnType<typeof getServiceRoleClient>
 ): Promise<boolean> {
   const now = new Date();
   const hour = now.getUTCHours();
@@ -367,21 +367,23 @@ async function sendHealthReport(
       "Daily Subscription Health Report",
       {
         Date: yesterday,
-        "Active Subscriptions": health?.reduce((sum: number, h: { active_count: number }) =>
-          sum + h.active_count, 0) ||
+        "Active Subscriptions":
+          health?.reduce((sum: number, h: { active_count: number }) => sum + h.active_count, 0) ||
           0,
-        "New Yesterday": metrics?.reduce(
-          (sum: number, m: { new_subscriptions: number }) => sum + m.new_subscriptions,
-          0,
-        ) || 0,
-        "Churned Yesterday": metrics?.reduce(
-          (sum: number, m: { churned_subscriptions: number }) => sum + m.churned_subscriptions,
-          0,
-        ) || 0,
-        "DLQ Pending": dlq?.reduce((sum: number, d: { pending: number }) => sum + d.pending, 0) ||
-          0,
+        "New Yesterday":
+          metrics?.reduce(
+            (sum: number, m: { new_subscriptions: number }) => sum + m.new_subscriptions,
+            0
+          ) || 0,
+        "Churned Yesterday":
+          metrics?.reduce(
+            (sum: number, m: { churned_subscriptions: number }) => sum + m.churned_subscriptions,
+            0
+          ) || 0,
+        "DLQ Pending":
+          dlq?.reduce((sum: number, d: { pending: number }) => sum + d.pending, 0) || 0,
       },
-      { throttleKey: "health-report:daily" },
+      { throttleKey: "health-report:daily" }
     );
 
     return true;
@@ -416,7 +418,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
         timestamp: new Date().toISOString(),
         ...getWebhookMetricsData(),
       },
-      ctx,
+      ctx
     );
   }
 
@@ -502,5 +504,5 @@ Deno.serve(
         handler: handlePost,
       },
     },
-  }),
+  })
 );

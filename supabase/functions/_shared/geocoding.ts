@@ -117,7 +117,7 @@ async function saveToDbCache(address: string, coordinates: Coordinates): Promise
         longitude: coordinates.longitude,
         cached_at: new Date().toISOString(),
       },
-      { onConflict: "address" },
+      { onConflict: "address" }
     );
   } catch (err) {
     logger.warn("DB geocode cache write failed", { error: String(err) });
@@ -325,7 +325,7 @@ export async function geocodeAddress(address: string): Promise<Coordinates | nul
     const coordinates = await withCircuitBreaker(
       "nominatim",
       () => geocodeWithFallback(normalizedAddress),
-      { failureThreshold: 5, resetTimeoutMs: 60_000 },
+      { failureThreshold: 5, resetTimeoutMs: 60_000 }
     );
 
     if (coordinates) {
@@ -355,7 +355,7 @@ export async function geocodeAddress(address: string): Promise<Coordinates | nul
  */
 export async function geocodeWithCountryFallback(
   location: string,
-  fallbackCountries: string[] = ["USA", "United States", "Czech Republic", "France", "Russia"],
+  fallbackCountries: string[] = ["USA", "United States", "Czech Republic", "France", "Russia"]
 ): Promise<Coordinates | null> {
   if (!location || location.trim().length === 0) {
     logger.warn("Empty location provided");

@@ -125,7 +125,7 @@ async function routeRequest(ctx: HandlerContext): Promise<Response> {
       {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 
@@ -319,5 +319,5 @@ Deno.serve(
       PUT: { handler: routeRequest },
       DELETE: { handler: routeRequest },
     },
-  }),
+  })
 );

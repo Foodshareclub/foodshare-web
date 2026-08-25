@@ -76,7 +76,7 @@ class TranslationError extends Error {
     message: string,
     public service?: string,
     public retryable: boolean = false,
-    public retryAfter?: number,
+    public retryAfter?: number
   ) {
     super(message);
     this.name = "TranslationError";
@@ -572,7 +572,7 @@ class LLMTranslationService {
         TranslationErrorCode.DEADLINE_EXCEEDED,
         "Translation deadline exceeded",
         undefined,
-        false,
+        false
       );
     }
   }
@@ -632,7 +632,7 @@ class LLMTranslationService {
   private async hasQuotaRemaining(
     service: string,
     charCount: number,
-    logger: StructuredLogger,
+    logger: StructuredLogger
   ): Promise<boolean> {
     try {
       const supabase = this.getSupabaseClientInstance();
@@ -721,7 +721,7 @@ class LLMTranslationService {
   private async recordUsage(
     service: string,
     charCount: number,
-    logger: StructuredLogger,
+    logger: StructuredLogger
   ): Promise<void> {
     try {
       const supabase = this.getSupabaseClientInstance();
@@ -784,7 +784,7 @@ class LLMTranslationService {
    */
   private async getAvailableFallbackServices(
     charCount: number,
-    logger: StructuredLogger,
+    logger: StructuredLogger
   ): Promise<string[]> {
     const allServices = ["deepl", "google", "microsoft", "amazon"];
     const available: string[] = [];
@@ -831,7 +831,7 @@ class LLMTranslationService {
     service: string,
     text: string,
     sourceLang: string,
-    targetLang: string,
+    targetLang: string
   ): Promise<TranslationResult> {
     switch (service) {
       case "deepl":
@@ -941,7 +941,7 @@ class LLMTranslationService {
   private async tryDeepL(
     text: string,
     sourceLang: string,
-    targetLang: string,
+    targetLang: string
   ): Promise<TranslationResult> {
     const deeplKey = this.config.deeplApiKey || Deno.env.get("DEEPL_API_KEY");
 
@@ -1030,7 +1030,7 @@ class LLMTranslationService {
   private async tryGoogleTranslate(
     text: string,
     sourceLang: string,
-    targetLang: string,
+    targetLang: string
   ): Promise<TranslationResult> {
     const googleKey = this.config.googleApiKey || Deno.env.get("GOOGLE_TRANSLATE_API_KEY");
 
@@ -1060,7 +1060,7 @@ class LLMTranslationService {
             format: "text",
           }),
           signal: controller.signal,
-        },
+        }
       );
 
       clearTimeout(timeoutId);
@@ -1119,11 +1119,11 @@ class LLMTranslationService {
   private async tryMicrosoftTranslator(
     text: string,
     sourceLang: string,
-    targetLang: string,
+    targetLang: string
   ): Promise<TranslationResult> {
     const msKey = this.config.microsoftApiKey || Deno.env.get("MICROSOFT_TRANSLATOR_API_KEY");
-    const msRegion = this.config.microsoftRegion || Deno.env.get("MICROSOFT_TRANSLATOR_REGION") ||
-      "global";
+    const msRegion =
+      this.config.microsoftRegion || Deno.env.get("MICROSOFT_TRANSLATOR_REGION") || "global";
 
     if (!msKey) {
       sharedLogger.warn("Microsoft Translator API key not configured, skipping fallback");
@@ -1148,7 +1148,7 @@ class LLMTranslationService {
           },
           body: JSON.stringify([{ text }]),
           signal: controller.signal,
-        },
+        }
       );
 
       clearTimeout(timeoutId);
@@ -1211,7 +1211,7 @@ class LLMTranslationService {
     path: string,
     payload: string,
     accessKeyId: string,
-    secretAccessKey: string,
+    secretAccessKey: string
   ): Promise<{ headers: Record<string, string> }> {
     const algorithm = "AWS4-HMAC-SHA256";
     const now = new Date();
@@ -1221,11 +1221,9 @@ class LLMTranslationService {
 
     // Create canonical request
     const payloadHash = await this.sha256Hash(payload);
-    const canonicalHeaders =
-      `content-type:application/json\nhost:${host}\nx-amz-date:${amzDate}\nx-amz-target:AWSShineFrontendService_20170701.TranslateText\n`;
+    const canonicalHeaders = `content-type:application/json\nhost:${host}\nx-amz-date:${amzDate}\nx-amz-target:AWSShineFrontendService_20170701.TranslateText\n`;
     const signedHeaders = "content-type;host;x-amz-date;x-amz-target";
-    const canonicalRequest =
-      `${method}\n${path}\n\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
+    const canonicalRequest = `${method}\n${path}\n\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
 
     // Create string to sign
     const canonicalRequestHash = await this.sha256Hash(canonicalRequest);
@@ -1236,8 +1234,7 @@ class LLMTranslationService {
     const signature = await this.hmacSha256Hex(signingKey, stringToSign);
 
     // Create authorization header
-    const authorizationHeader =
-      `${algorithm} Credential=${accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
+    const authorizationHeader = `${algorithm} Credential=${accessKeyId}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
 
     return {
       headers: {
@@ -1265,7 +1262,7 @@ class LLMTranslationService {
       key,
       { name: "HMAC", hash: "SHA-256" },
       false,
-      ["sign"],
+      ["sign"]
     );
     return crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(message));
   }
@@ -1281,7 +1278,7 @@ class LLMTranslationService {
     secretKey: string,
     dateStamp: string,
     region: string,
-    service: string,
+    service: string
   ): Promise<ArrayBuffer> {
     const encoder = new TextEncoder();
     const kDate = await this.hmacSha256(encoder.encode("AWS4" + secretKey) as any, dateStamp);
@@ -1297,11 +1294,11 @@ class LLMTranslationService {
   private async tryAmazonTranslate(
     text: string,
     sourceLang: string,
-    targetLang: string,
+    targetLang: string
   ): Promise<TranslationResult> {
     const awsAccessKeyId = this.config.awsAccessKeyId || Deno.env.get("AWS_ACCESS_KEY_ID");
-    const awsSecretAccessKey = this.config.awsSecretAccessKey ||
-      Deno.env.get("AWS_SECRET_ACCESS_KEY");
+    const awsSecretAccessKey =
+      this.config.awsSecretAccessKey || Deno.env.get("AWS_SECRET_ACCESS_KEY");
     const awsRegion = this.config.awsRegion || Deno.env.get("AWS_REGION") || "us-east-1";
 
     if (!awsAccessKeyId || !awsSecretAccessKey) {
@@ -1332,7 +1329,7 @@ class LLMTranslationService {
         path,
         payload,
         awsAccessKeyId,
-        awsSecretAccessKey,
+        awsSecretAccessKey
       );
 
       const response = await fetch(`https://${host}${path}`, {
@@ -1466,9 +1463,10 @@ class LLMTranslationService {
     }
 
     // Check error rate from metrics
-    const errorRate = this.metrics.translations_total > 0
-      ? this.metrics.translations_failed / this.metrics.translations_total
-      : 0;
+    const errorRate =
+      this.metrics.translations_total > 0
+        ? this.metrics.translations_failed / this.metrics.translations_total
+        : 0;
     if (errorRate >= ALERT_THRESHOLDS.errorRateCritical) {
       overallStatus = "UNHEALTHY";
       alerts.push(`Error rate critical: ${(errorRate * 100).toFixed(1)}%`);
@@ -1484,7 +1482,7 @@ class LLMTranslationService {
     const now = Date.now();
     const windowResetIn = Math.max(
       0,
-      this.retryBudget.windowMs - (now - this.retryBudget.windowStart),
+      this.retryBudget.windowMs - (now - this.retryBudget.windowStart)
     );
 
     logger.info("health_check_complete", {
@@ -1548,7 +1546,7 @@ class LLMTranslationService {
     text: string,
     sourceLang: string,
     targetLang: string,
-    context?: string,
+    context?: string
   ): Promise<TranslationResult> {
     const enhancedContext = this.getEnhancedContext(context || "post", text);
 
@@ -1590,8 +1588,8 @@ class LLMTranslationService {
           try {
             const cleanJson = trimmed.replace(/\n/g, "").replace(/\r/g, "");
             const parsed = JSON.parse(cleanJson);
-            translatedText = parsed.translation || parsed.translatedText || parsed.text ||
-              translatedText;
+            translatedText =
+              parsed.translation || parsed.translatedText || parsed.text || translatedText;
           } catch {
             const patterns = [
               /"translation"\s*:\s*"([^"]+)"/,
@@ -1641,11 +1639,11 @@ class LLMTranslationService {
 
     // Detect content characteristics
     const hasFood = /\b(food|meal|bread|fruit|vegetable|meat|dairy|snack|drink|beverage)\b/i.test(
-      text,
+      text
     );
     const hasLocation = /\b(pickup|location|address|street|avenue|road)\b/i.test(text);
     const hasTime = /\b(today|tomorrow|tonight|morning|afternoon|evening|expires|expiry)\b/i.test(
-      text,
+      text
     );
 
     let context = baseContext;
@@ -1717,7 +1715,7 @@ class LLMTranslationService {
     sourceLang: string,
     targetLang: string,
     context?: string,
-    options?: TranslationOptions,
+    options?: TranslationOptions
   ): Promise<TranslationResult> {
     const startTime = Date.now();
     const logger = new StructuredLogger(options?.requestId);
@@ -1725,8 +1723,8 @@ class LLMTranslationService {
     const cacheKey = `${sourceLang}:${targetLang}:${text}`;
 
     // Calculate deadline
-    const deadline = options?.deadline ||
-      (options?.timeout ? Date.now() + options.timeout : undefined);
+    const deadline =
+      options?.deadline || (options?.timeout ? Date.now() + options.timeout : undefined);
 
     logger.info("translate_start", {
       sourceLang,
@@ -1799,7 +1797,7 @@ class LLMTranslationService {
     targetLang: string,
     context: string | undefined,
     deadline: number | undefined,
-    logger: StructuredLogger,
+    logger: StructuredLogger
   ): Promise<TranslationResult> {
     const requestId = logger.getRequestId();
     const cacheKey = `${sourceLang}:${targetLang}:${text}`;
@@ -2011,7 +2009,7 @@ class LLMTranslationService {
     sourceLang: string,
     targetLang: string,
     context?: string,
-    options?: TranslationOptions,
+    options?: TranslationOptions
   ): Promise<BatchTranslationResult> {
     const startTime = Date.now();
     const logger = new StructuredLogger(options?.requestId);
@@ -2038,7 +2036,7 @@ class LLMTranslationService {
             ...options,
             requestId: `${requestId}-${i}`,
           })
-        ),
+        )
       );
       results.push(...batchResults);
     }
@@ -2080,7 +2078,7 @@ class LLMTranslationService {
     targetLang: string,
     context?: string,
     maxChunkSize: number = 500,
-    options?: TranslationOptions,
+    options?: TranslationOptions
   ): Promise<TranslationResult> {
     const logger = new StructuredLogger(options?.requestId);
 
@@ -2150,7 +2148,7 @@ class LLMTranslationService {
   async warmupCache(
     commonPhrases: string[],
     targetLangs: string[],
-    sourceLang: string = "en",
+    sourceLang: string = "en"
   ): Promise<void> {
     const logger = new StructuredLogger();
     logger.info("cache_warmup_start", {
@@ -2183,8 +2181,8 @@ function createTranslationService(): LLMTranslationService {
   }
 
   return new LLMTranslationService({
-    endpoint: Deno.env.get("LLM_TRANSLATION_ENDPOINT") ||
-      "https://translate.foodshare.club/api/translate",
+    endpoint:
+      Deno.env.get("LLM_TRANSLATION_ENDPOINT") || "https://translate.foodshare.club/api/translate",
     apiKey: apiKey || "", // Will fail in constructor if empty
     cfAccessClientId: Deno.env.get("CF_ACCESS_CLIENT_ID") || "",
     cfAccessClientSecret: Deno.env.get("CF_ACCESS_CLIENT_SECRET") || "",

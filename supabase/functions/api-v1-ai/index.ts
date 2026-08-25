@@ -102,7 +102,7 @@ function generateCacheKey(model: string, inputs: unknown, params?: unknown): str
 async function getCachedResult(
   cacheKey: string,
   // deno-lint-ignore no-explicit-any
-  supabase: any,
+  supabase: any
 ): Promise<{ result: unknown; source: string } | null> {
   const cached = inferenceCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < HF_CACHE_TTL) {
@@ -226,7 +226,7 @@ async function runHfInference(
   body: PostBody,
   // deno-lint-ignore no-explicit-any
   supabase: any,
-  _requestId: string,
+  _requestId: string
 ): Promise<{
   result: unknown;
   contentType: string;
@@ -338,7 +338,7 @@ async function handlePost(ctx: HandlerContext<PostBody>): Promise<Response> {
       body.messages || [],
       body.model || "llama-3.3-70b-versatile",
       body.temperature ?? 0.7,
-      body.maxTokens,
+      body.maxTokens
     );
     return ok(result, ctx);
   }
@@ -369,7 +369,7 @@ async function handlePost(ctx: HandlerContext<PostBody>): Promise<Response> {
       task,
       ctx.body,
       ctx.supabase,
-      ctx.ctx?.requestId || "",
+      ctx.ctx?.requestId || ""
     );
 
     const responseTime = Math.round(performance.now() - startTime);
@@ -392,7 +392,7 @@ async function handlePost(ctx: HandlerContext<PostBody>): Promise<Response> {
         ...(cacheSource ? { cacheSource } : {}),
         responseTime,
       },
-      ctx,
+      ctx
     );
   }
 
@@ -450,7 +450,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
           },
         ],
       },
-      ctx,
+      ctx
     );
   }
 
@@ -468,7 +468,7 @@ async function handleGet(ctx: HandlerContext): Promise<Response> {
         "GET /health": "Provider health check",
       },
     },
-    ctx,
+    ctx
   );
 }
 
@@ -496,5 +496,5 @@ Deno.serve(
         handler: handlePost,
       },
     },
-  }),
+  })
 );

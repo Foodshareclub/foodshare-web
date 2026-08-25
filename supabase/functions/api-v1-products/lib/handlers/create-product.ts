@@ -35,7 +35,7 @@ export async function createProduct(ctx: HandlerContext<CreateProductBody>): Pro
     {
       p_title: sanitizedTitle,
       p_description: sanitizedDescription || "",
-    },
+    }
   );
 
   if (validationError) {
@@ -93,7 +93,7 @@ export async function createProduct(ctx: HandlerContext<CreateProductBody>): Pro
           logger.warn("Failed to trigger new-listing notification", {
             error: err instanceof Error ? err.message : String(err),
           });
-        }),
+        })
     );
   } catch {
     // (globalThis as any).EdgeRuntime.waitUntil may not be available in all environments

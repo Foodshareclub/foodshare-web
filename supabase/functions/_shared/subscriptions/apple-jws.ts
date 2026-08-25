@@ -105,7 +105,7 @@ async function importCertificate(derBase64: string): Promise<CryptoKey> {
       namedCurve: "P-256",
     },
     true,
-    ["verify"],
+    ["verify"]
   );
 }
 
@@ -198,11 +198,12 @@ function extractPublicKeyFromCert(derBytes: Uint8Array): Uint8Array {
 
       if (foundP256) {
         // Extract the full SPKI
-        const totalLength = lengthByte < 0x80
-          ? 2 + spkiLength
-          : lengthByte === 0x81
-          ? 3 + spkiLength
-          : 4 + spkiLength;
+        const totalLength =
+          lengthByte < 0x80
+            ? 2 + spkiLength
+            : lengthByte === 0x81
+              ? 3 + spkiLength
+              : 4 + spkiLength;
 
         return derBytes.slice(spkiStart, spkiStart + totalLength);
       }
@@ -386,7 +387,7 @@ export async function verifyAppleJWS<T>(jws: string): Promise<T> {
         },
         publicKey,
         derSignature as any,
-        signedData as any,
+        signedData as any
       );
 
       if (!isValid) {
@@ -400,7 +401,7 @@ export async function verifyAppleJWS<T>(jws: string): Promise<T> {
     {
       failureThreshold: 3,
       resetTimeoutMs: 30000,
-    },
+    }
   );
 }
 

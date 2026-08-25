@@ -101,14 +101,14 @@ async function sendVerificationEmail(email: string, code: string): Promise<boole
       `,
         tags: ["verification"],
       },
-      "auth",
+      "auth"
     );
 
     return result.success;
   } catch (error) {
     logger.error(
       "Failed to send verification email",
-      error instanceof Error ? error : new Error(String(error)),
+      error instanceof Error ? error : new Error(String(error))
     );
     return false;
   }
@@ -167,7 +167,7 @@ export async function handleVerifySend(body: VerifySendBody, ctx: AuthContext): 
           remainingMinutes,
         },
         corsHeaders,
-        429,
+        429
       );
     }
   }
@@ -208,7 +208,7 @@ export async function handleVerifySend(body: VerifySendBody, ctx: AuthContext): 
       message: "Verification code sent",
       expiresAt: expiresAt.toISOString(),
     },
-    corsHeaders,
+    corsHeaders
   );
 }
 
@@ -218,7 +218,7 @@ export async function handleVerifySend(body: VerifySendBody, ctx: AuthContext): 
  */
 export async function handleVerifyConfirm(
   body: VerifyConfirmBody,
-  ctx: AuthContext,
+  ctx: AuthContext
 ): Promise<Response> {
   const { supabase, corsHeaders } = ctx;
   const email = body.email.toLowerCase().trim();
@@ -227,7 +227,7 @@ export async function handleVerifyConfirm(
   const { data: profile, error: lookupError } = await supabase
     .from("profiles")
     .select(
-      "id, verification_code, verification_code_expires_at, verification_attempts, verification_locked_until",
+      "id, verification_code, verification_code_expires_at, verification_attempts, verification_locked_until"
     )
     .eq("email", email)
     .maybeSingle();
@@ -263,7 +263,7 @@ export async function handleVerifyConfirm(
           remainingMinutes,
         },
         corsHeaders,
-        429,
+        429
       );
     }
   }
@@ -279,7 +279,7 @@ export async function handleVerifyConfirm(
         error: "Verification code has expired. Request a new one.",
       },
       corsHeaders,
-      410,
+      410
     );
   }
 
@@ -313,7 +313,7 @@ export async function handleVerifyConfirm(
           remainingMinutes: LOCKOUT_DURATION_MINUTES,
         },
         corsHeaders,
-        429,
+        429
       );
     }
 
@@ -329,7 +329,7 @@ export async function handleVerifyConfirm(
         attemptsRemaining: attemptsLeft,
       },
       corsHeaders,
-      400,
+      400
     );
   }
 
@@ -364,7 +364,7 @@ export async function handleVerifyConfirm(
  */
 export async function handleVerifyResend(
   body: VerifyResendBody,
-  ctx: AuthContext,
+  ctx: AuthContext
 ): Promise<Response> {
   const { supabase, corsHeaders } = ctx;
   const email = body.email.toLowerCase().trim();
@@ -379,7 +379,7 @@ export async function handleVerifyResend(
         remainingMinutes: rateLimit.remainingMinutes,
       },
       corsHeaders,
-      429,
+      429
     );
   }
 
@@ -423,7 +423,7 @@ export async function handleVerifyResend(
           remainingMinutes,
         },
         corsHeaders,
-        429,
+        429
       );
     }
   }
@@ -462,6 +462,6 @@ export async function handleVerifyResend(
       message: "New verification code sent",
       expiresAt: expiresAt.toISOString(),
     },
-    corsHeaders,
+    corsHeaders
   );
 }

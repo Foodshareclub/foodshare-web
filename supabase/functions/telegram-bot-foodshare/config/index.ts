@@ -31,9 +31,9 @@ export const getAppUrl = () =>
   validateUrl(
     optionalEnv(
       "APP_URL",
-      `https://${Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"}`,
+      `https://${Deno.env.get("SITE_DOMAIN") || Deno.env.get("SITE_DOMAIN") || "foodshare.club"}`
     ),
-    "APP_URL",
+    "APP_URL"
   );
 export const getSupabaseUrl = () => optionalEnv("SUPABASE_URL", "");
 export const getSupabaseServiceRoleKey = () => optionalEnv("SUPABASE_SERVICE_ROLE_KEY", "");

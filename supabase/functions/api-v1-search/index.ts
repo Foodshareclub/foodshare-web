@@ -200,7 +200,7 @@ async function handlePost(ctx: HandlerContext): Promise<Response> {
     }
     if (Array.isArray(bodyFilters.categoryIds)) {
       filters.categoryIds = bodyFilters.categoryIds.filter(
-        (id): id is number => typeof id === "number" && Number.isInteger(id),
+        (id): id is number => typeof id === "number" && Number.isInteger(id)
       );
     }
   }
@@ -299,5 +299,5 @@ Deno.serve(
         handler: handlePost,
       },
     },
-  }),
+  })
 );

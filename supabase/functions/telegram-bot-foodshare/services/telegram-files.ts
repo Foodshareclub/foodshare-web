@@ -12,7 +12,7 @@ const getTelegramBotToken = () => Deno.env.get("TELEGRAM_BOT_TOKEN");
 export async function downloadAndUploadTelegramFile(
   fileId: string,
   userId: number,
-  maxRetries = 3,
+  maxRetries = 3
 ): Promise<string | null> {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -27,7 +27,7 @@ export async function downloadAndUploadTelegramFile(
 
       const fileInfoResponse = await fetch(
         `https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`,
-        { signal: fileInfoController.signal },
+        { signal: fileInfoController.signal }
       );
       clearTimeout(fileInfoTimeout);
 
@@ -193,7 +193,7 @@ export async function downloadAndUploadTelegramFile(
  */
 export async function downloadAndUploadMultipleFiles(
   fileIds: string[],
-  userId: number,
+  userId: number
 ): Promise<string[]> {
   const uploadedUrls: string[] = [];
 

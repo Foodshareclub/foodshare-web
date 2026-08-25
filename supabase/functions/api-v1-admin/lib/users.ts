@@ -63,7 +63,7 @@ async function logAdminAction(
   ctx: AdminContext,
   action: string,
   resourceId: string,
-  metadata: Record<string, unknown> = {},
+  metadata: Record<string, unknown> = {}
 ): Promise<void> {
   try {
     await ctx.supabase.rpc("log_audit_event", {
@@ -95,7 +95,7 @@ export async function handleUsersRoute(
   method: string,
   body: unknown,
   query: Record<string, string>,
-  ctx: AdminContext,
+  ctx: AdminContext
 ): Promise<Response> {
   // GET / - List users
   if (method === "GET" && segments.length === 0) {
@@ -130,7 +130,7 @@ export async function handleUsersRoute(
 
 async function handleListUsers(
   query: Record<string, string>,
-  ctx: AdminContext,
+  ctx: AdminContext
 ): Promise<Response> {
   const queryParams = listUsersQuerySchema.parse(query);
 
@@ -147,7 +147,7 @@ async function handleListUsers(
   if (queryParams.search) {
     const safeSearch = queryParams.search.replace(/[%_]/g, "\\$&");
     dbQuery = dbQuery.or(
-      `first_name.ilike.%${safeSearch}%,second_name.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%`,
+      `first_name.ilike.%${safeSearch}%,second_name.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%`
     );
   }
 
@@ -177,8 +177,8 @@ async function handleListUsers(
           const roleData = r.roles as unknown as
             | { name: string }
             | {
-              name: string;
-            }[];
+                name: string;
+              }[];
           return Array.isArray(roleData) ? roleData[0]?.name : roleData?.name;
         })
         .filter(Boolean) as string[];
@@ -193,7 +193,7 @@ async function handleListUsers(
         productsCount: productsCount ?? 0,
         roles,
       };
-    }),
+    })
   );
 
   // Filter by role if specified
@@ -216,14 +216,14 @@ async function handleListUsers(
         hasMore,
       },
     },
-    ctx.corsHeaders,
+    ctx.corsHeaders
   );
 }
 
 async function handleUpdateRole(
   userId: string,
   body: unknown,
-  ctx: AdminContext,
+  ctx: AdminContext
 ): Promise<Response> {
   if (userId === ctx.adminId) {
     throw new ValidationError("Cannot change your own role");
@@ -260,14 +260,14 @@ async function handleUpdateRole(
       role: input.role,
       updated: true,
     },
-    ctx.corsHeaders,
+    ctx.corsHeaders
   );
 }
 
 async function handleUpdateRoles(
   userId: string,
   body: unknown,
-  ctx: AdminContext,
+  ctx: AdminContext
 ): Promise<Response> {
   if (userId === ctx.adminId) {
     throw new ValidationError("Cannot change your own roles");
@@ -309,7 +309,7 @@ async function handleUpdateRoles(
 
   return jsonResponse(
     { success: true, userId, roles: input.roles, updated: true },
-    ctx.corsHeaders,
+    ctx.corsHeaders
   );
 }
 
@@ -354,7 +354,7 @@ async function handleBanUser(userId: string, body: unknown, ctx: AdminContext): 
       banned: true,
       reason: input.reason,
     },
-    ctx.corsHeaders,
+    ctx.corsHeaders
   );
 }
 

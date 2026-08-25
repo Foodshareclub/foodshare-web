@@ -176,7 +176,7 @@ function isPrivateIP(ipAddress: string): boolean {
 
 export async function getLocationFromIP(
   ipAddress: string,
-  requestId: string,
+  requestId: string
 ): Promise<GeoLocation | null> {
   if (!ipAddress || isPrivateIP(ipAddress)) {
     logger.info("Geolocation skip", {
@@ -205,7 +205,7 @@ export async function getLocationFromIP(
         method: "GET",
         headers: { Accept: "application/json" },
         signal: controller.signal,
-      },
+      }
     );
 
     clearTimeout(timeoutId);
@@ -271,14 +271,14 @@ export async function getLocationFromIP(
 export function verifySignupWebhook(
   rawPayload: string,
   headers: Record<string, string>,
-  requestId: string,
+  requestId: string
 ): WebhookVerificationResult {
   if (!SIGNUP_LOCATION_CONFIG.hookSecret) {
     logger.warn(
       "Running without webhook verification — configure BEFORE_USER_CREATED_HOOK_SECRET for production",
       {
         requestId,
-      },
+      }
     );
 
     try {
@@ -356,7 +356,7 @@ export interface MapHotspot {
 
 export async function getAuthenticatedUser(
   req: Request,
-  requestId: string,
+  requestId: string
 ): Promise<{ id: string } | null> {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
@@ -386,7 +386,7 @@ export async function getAuthenticatedUser(
 export function jsonResponse(
   data: unknown,
   corsHeaders: Record<string, string>,
-  status = 200,
+  status = 200
 ): Response {
   return new Response(JSON.stringify(data), {
     status,
@@ -398,7 +398,7 @@ export function errorResponse(
   error: string,
   corsHeaders: Record<string, string>,
   status = 400,
-  requestId?: string,
+  requestId?: string
 ): Response {
   return jsonResponse({ success: false, error, requestId }, corsHeaders, status);
 }
@@ -410,14 +410,14 @@ export function errorResponse(
 export function generateTileUrls(
   center: { lat: number; lng: number },
   zoom: number,
-  radius = 1,
+  radius = 1
 ): string[] {
   const urls: string[] = [];
   const z = Math.floor(zoom);
   const x = Math.floor(((center.lng + 180) / 360) * Math.pow(2, z));
   const latRad = (center.lat * Math.PI) / 180;
   const y = Math.floor(
-    ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * Math.pow(2, z),
+    ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * Math.pow(2, z)
   );
 
   for (let dx = -radius; dx <= radius; dx++) {
@@ -556,7 +556,7 @@ export interface QueueStats {
 
 export async function processQueueItem(
   supabase: ReturnType<typeof getSupabaseClient>,
-  queueItem: QueueItem,
+  queueItem: QueueItem
 ): Promise<ProcessResult> {
   logger.info("Processing queue item", {
     queueId: queueItem.id,

@@ -29,7 +29,7 @@ import { interpolateTemplate, loadTemplate } from "../template-engine.ts";
  */
 export async function handleSend(
   body: unknown,
-  context: NotificationContext,
+  context: NotificationContext
 ): Promise<{ success: boolean; data?: DeliveryResult; error?: string }> {
   try {
     // Validate request
@@ -70,7 +70,7 @@ export async function handleSend(
  */
 export async function handleSendBatch(
   body: unknown,
-  context: NotificationContext,
+  context: NotificationContext
 ): Promise<{ success: boolean; data?: BatchDeliveryResult; error?: string }> {
   const startTime = performance.now();
 
@@ -98,7 +98,7 @@ export async function handleSendBatch(
             error: (error as Error).message,
             timestamp: new Date().toISOString(),
           }))
-        ),
+        )
       );
       results.push(...batchResults);
     } else {
@@ -181,7 +181,7 @@ export async function handleSendBatch(
  */
 export async function handleSendTemplate(
   _body: unknown,
-  context: NotificationContext,
+  context: NotificationContext
 ): Promise<{ success: boolean; data?: DeliveryResult; error?: string }> {
   try {
     // Validate request

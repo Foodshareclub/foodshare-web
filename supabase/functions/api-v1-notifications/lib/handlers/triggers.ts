@@ -96,7 +96,7 @@ function getProfileName(
     first_name?: string | null;
     second_name?: string | null;
     nickname?: string | null;
-  } | null,
+  } | null
 ): string {
   if (!profile) return "Unknown";
   const fullName = [profile.first_name, profile.second_name].filter(Boolean).join(" ");
@@ -109,7 +109,7 @@ function getProfileName(
 
 export async function handleTriggerNewPost(
   body: unknown,
-  context: NotificationContext,
+  context: NotificationContext
 ): Promise<{ success: boolean; message?: string; error?: string }> {
   const payload = body as { record?: Record<string, unknown> };
   const record = payload.record;
@@ -169,7 +169,8 @@ export async function handleTriggerNewPost(
 // =============================================================================
 
 export function renderNewUserTelegramMessage(record: NewUserWebhookRecord): string {
-  const name = [record.first_name, record.second_name].filter(Boolean).join(" ") ||
+  const name =
+    [record.first_name, record.second_name].filter(Boolean).join(" ") ||
     record.nickname ||
     "New User";
 
@@ -177,8 +178,8 @@ export function renderNewUserTelegramMessage(record: NewUserWebhookRecord): stri
   const username = record.username
     ? `@${record.username}`
     : record.nickname
-    ? `@${record.nickname}`
-    : null;
+      ? `@${record.nickname}`
+      : null;
   const source = telegramId
     ? `🤖 <b>Telegram Bot</b> ${username ? `(${username})` : `[ID: ${telegramId}]`}`
     : `🌐 <b>Web / App</b>`;
@@ -200,7 +201,7 @@ export function renderNewUserTelegramMessage(record: NewUserWebhookRecord): stri
 
 export async function handleTriggerNewUser(
   body: unknown,
-  context: NotificationContext,
+  context: NotificationContext
 ): Promise<{ success: boolean; message?: string; error?: string }> {
   const payload = body as Record<string, unknown> | null | undefined;
   let record: NewUserWebhookRecord | undefined;
@@ -270,7 +271,7 @@ export function renderForumPostTelegramMessage(record: ForumPostWebhookRecord): 
 
 export async function handleTriggerForumPost(
   body: unknown,
-  context: NotificationContext,
+  context: NotificationContext
 ): Promise<{
   success: boolean;
   adminSent?: boolean;
@@ -308,7 +309,7 @@ export async function handleTriggerForumPost(
       (r: { roles: { name: string } | { name: string }[] | null }) => {
         const name = Array.isArray(r.roles) ? r.roles[0]?.name : r.roles?.name;
         return name === "superadmin";
-      },
+      }
     );
 
     if (isSuperAdmin) {
@@ -336,7 +337,7 @@ export async function handleTriggerForumPost(
 
 export async function handleTriggerNewReport(
   body: unknown,
-  context: NotificationContext,
+  context: NotificationContext
 ): Promise<{ success: boolean; message?: string; hasImage?: boolean; error?: string }> {
   const payload = body as { record?: Record<string, unknown>; table?: string };
   const record = payload.record;
@@ -430,11 +431,9 @@ export async function handleTriggerNewReport(
   else {
     message = `📢 <b>GENERAL REPORT</b>\n━━━━━━━━━━━━━━━━━━━━\n\n`;
     if (record.description && record.description !== "-") {
-      message += `<b>Description:</b>\n${
-        escapeHtml(
-          truncate(record.description as string, 400),
-        )
-      }\n`;
+      message += `<b>Description:</b>\n${escapeHtml(
+        truncate(record.description as string, 400)
+      )}\n`;
     }
     message += `\n<b>👤 Reported by:</b> ${getProfileName(reporter)}`;
     message += `\n\n🔧 <a href="${getAppUrl()}/admin/reports">Manage in Admin</a>`;
@@ -472,7 +471,7 @@ export async function handleTriggerNewReport(
 
 export async function handleTriggerNewListing(
   body: unknown,
-  context: NotificationContext,
+  context: NotificationContext
 ): Promise<{
   success: boolean;
   notificationCount?: number;
@@ -529,7 +528,7 @@ export async function handleTriggerNewListing(
         p_radius_km: radiusKm,
         p_consolidation_key: `nearby_post_${latitude.toFixed(2)}_${longitude.toFixed(2)}`,
         p_bypass_quiet_hours: bypassQuietHours,
-      },
+      }
     );
 
     if (!queueError && queueResult) {
@@ -551,7 +550,7 @@ export async function handleTriggerNewListing(
         p_title: title,
         p_notification_type: "new_listing",
         p_radius_km: radiusKm,
-      },
+      }
     );
 
     if (rpcError) {
@@ -583,7 +582,7 @@ export async function handleTriggerNewListing(
 
 export async function handleTriggerUserVerified(
   body: unknown,
-  context: NotificationContext,
+  context: NotificationContext
 ): Promise<{ success: boolean; message?: string; error?: string }> {
   const payload = body as Record<string, unknown> | null | undefined;
   let record: Record<string, unknown> | undefined;
@@ -605,7 +604,8 @@ export async function handleTriggerUserVerified(
     return { success: false, error: "Missing record data" };
   }
 
-  const name = [record.first_name, record.second_name].filter(Boolean).join(" ") ||
+  const name =
+    [record.first_name, record.second_name].filter(Boolean).join(" ") ||
     (record.nickname as string) ||
     "User";
 
@@ -613,8 +613,8 @@ export async function handleTriggerUserVerified(
   const username = record.username
     ? `@${record.username}`
     : record.nickname
-    ? `@${record.nickname}`
-    : null;
+      ? `@${record.nickname}`
+      : null;
   const source = telegramId
     ? `🤖 <b>Telegram Bot</b> ${username ? `(${username})` : `[ID: ${telegramId}]`}`
     : `🌐 <b>Web / App</b>`;
@@ -651,7 +651,7 @@ export async function handleTriggerUserVerified(
 export async function handleTrigger(
   triggerType: string,
   body: unknown,
-  context: NotificationContext,
+  context: NotificationContext
 ): Promise<{ success: boolean; data?: unknown; error?: string }> {
   logger.info("Processing trigger", {
     requestId: context.requestId,

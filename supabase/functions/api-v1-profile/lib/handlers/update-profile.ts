@@ -123,7 +123,7 @@ export async function updateAddress(ctx: HandlerContext<UpdateAddressBody>): Pro
 }
 
 export function handlePut(
-  ctx: HandlerContext<UpdateProfileBody | UpdateAddressBody, QueryParams>,
+  ctx: HandlerContext<UpdateProfileBody | UpdateAddressBody, QueryParams>
 ): Promise<Response> {
   if (ctx.query.action === "address") {
     return updateAddress(ctx as HandlerContext<UpdateAddressBody, QueryParams>);

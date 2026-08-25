@@ -148,10 +148,10 @@ export function header({ title, subtitle }: HeaderProps): string {
     <img src="${BRAND.logoUrl}" alt="FoodShare Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 24px; border: 5px solid rgba(255, 255, 255, 0.4); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); background: white; padding: 4px;">
     <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 800; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25); letter-spacing: -0.5px;">${title}</h1>
     ${
-    subtitle
-      ? `<p style="margin: 12px 0 0; color: rgba(255, 255, 255, 0.95); font-size: 16px; font-weight: 500; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);">${subtitle}</p>`
-      : ""
-  }
+      subtitle
+        ? `<p style="margin: 12px 0 0; color: rgba(255, 255, 255, 0.95); font-size: 16px; font-weight: 500; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);">${subtitle}</p>`
+        : ""
+    }
   </td>
 </tr>`;
 }
@@ -203,7 +203,7 @@ export function bulletList(items: BulletItem[]): string {
       (item) =>
         `<li><strong style="color: ${
           item.color || BRAND.primaryColor
-        };">${item.emoji} ${item.title}</strong> – ${item.description}</li>`,
+        };">${item.emoji} ${item.title}</strong> – ${item.description}</li>`
     )
     .join("\n");
 
@@ -325,9 +325,8 @@ export function statsBar(stats: StatItem[]): string {
 
   const statCells = visibleStats
     .map((stat) => {
-      const displayValue = typeof stat.value === "number"
-        ? formatStatNumber(stat.value)
-        : stat.value;
+      const displayValue =
+        typeof stat.value === "number" ? formatStatNumber(stat.value) : stat.value;
 
       return `
     <td align="center" style="padding: 16px 8px;">
@@ -375,7 +374,7 @@ export interface FeaturedItem {
 
 export function featuredItems(
   items: FeaturedItem[],
-  title = "See what others are sharing",
+  title = "See what others are sharing"
 ): string {
   const itemCards = items
     .slice(0, 3)
@@ -387,13 +386,13 @@ export function featuredItems(
         <p style="margin: 10px 0 4px; font-size: 14px; font-weight: 700; color: ${BRAND.textPrimary}; line-height: 1.3;">${item.title}</p>
         <p style="margin: 0; font-size: 12px; color: ${BRAND.textMuted};">Shared by ${item.sharedBy}</p>
         ${
-        item.timeAgo
-          ? `<p style="margin: 2px 0 0; font-size: 11px; color: ${BRAND.textLight};">Requested in ${item.timeAgo}</p>`
-          : ""
-      }
+          item.timeAgo
+            ? `<p style="margin: 2px 0 0; font-size: 11px; color: ${BRAND.textLight};">Requested in ${item.timeAgo}</p>`
+            : ""
+        }
       </a>
     </td>
-  `,
+  `
     )
     .join("");
 
@@ -555,9 +554,10 @@ export function footer(props: FooterProps = {}): string {
   const appBadgesSection = showAppBadges ? appStoreBadges() : "";
 
   // Unsubscribe link
-  const unsubscribeLink = showUnsubscribe && unsubscribeUrl
-    ? `<a href="${unsubscribeUrl}" style="color: ${BRAND.primaryColor}; text-decoration: none;">Unsubscribe</a>`
-    : "";
+  const unsubscribeLink =
+    showUnsubscribe && unsubscribeUrl
+      ? `<a href="${unsubscribeUrl}" style="color: ${BRAND.primaryColor}; text-decoration: none;">Unsubscribe</a>`
+      : "";
 
   return `${signOffSection}
 <tr>
@@ -592,7 +592,7 @@ export function buildEmail(config: EmailConfig): string {
   const contentWithCta = cta ? `${content}${ctaButton(cta)}` : content;
 
   const emailBody = emailContainer(
-    header({ title, subtitle }) + contentSection(contentWithCta) + footer(footerProps),
+    header({ title, subtitle }) + contentSection(contentWithCta) + footer(footerProps)
   );
 
   return documentWrapper(emailBody, title);

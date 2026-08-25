@@ -229,7 +229,7 @@ export class PerformanceTimer {
 export async function measureAsync<T>(
   operation: string,
   fn: () => Promise<T>,
-  metadata?: Record<string, unknown>,
+  metadata?: Record<string, unknown>
 ): Promise<T> {
   const timer = new PerformanceTimer(operation, metadata);
 
@@ -249,7 +249,7 @@ export async function measureAsync<T>(
 export function measureSync<T>(
   operation: string,
   fn: () => T,
-  metadata?: Record<string, unknown>,
+  metadata?: Record<string, unknown>
 ): T {
   const timer = new PerformanceTimer(operation, metadata);
 
@@ -273,7 +273,7 @@ export function measureSync<T>(
 export async function trackQuery<T>(
   query: string,
   fn: () => Promise<T>,
-  context?: Record<string, unknown>,
+  context?: Record<string, unknown>
 ): Promise<T> {
   const timer = new PerformanceTimer("database_query", { query, ...context });
 

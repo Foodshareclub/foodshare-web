@@ -79,7 +79,7 @@ async function hashText(text: string): Promise<string> {
 
 export default async function getTranslationsHandler(
   req: Request,
-  corsHeaders: Record<string, string>,
+  corsHeaders: Record<string, string>
 ): Promise<Response> {
   if (req.method !== "POST") {
     return new Response(
@@ -90,7 +90,7 @@ export default async function getTranslationsHandler(
       {
         status: 405,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 
@@ -108,7 +108,7 @@ export default async function getTranslationsHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -131,7 +131,7 @@ export default async function getTranslationsHandler(
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -146,7 +146,7 @@ export default async function getTranslationsHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -162,7 +162,7 @@ export default async function getTranslationsHandler(
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -189,7 +189,7 @@ export default async function getTranslationsHandler(
       .select(selectColumns)
       .in(
         "id",
-        limitedIds.map((id) => parseInt(id, 10)),
+        limitedIds.map((id) => parseInt(id, 10))
       );
 
     if (sourceError) {
@@ -202,7 +202,7 @@ export default async function getTranslationsHandler(
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -275,7 +275,7 @@ export default async function getTranslationsHandler(
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   } catch (error) {
     logger.error("Get translations error", error as Error);
@@ -287,7 +287,7 @@ export default async function getTranslationsHandler(
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 }

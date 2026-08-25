@@ -56,7 +56,7 @@ const STALE_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
 
 export default async function backfillPostsHandler(
   req: Request,
-  corsHeaders: Record<string, string>,
+  corsHeaders: Record<string, string>
 ): Promise<Response> {
   if (req.method !== "POST") {
     return new Response(
@@ -67,7 +67,7 @@ export default async function backfillPostsHandler(
       {
         status: 405,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 
@@ -92,7 +92,7 @@ export default async function backfillPostsHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -129,7 +129,7 @@ export default async function backfillPostsHandler(
           {
             status: 200,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          },
+          }
         );
       } else {
         // Stale job - mark as failed
@@ -222,7 +222,7 @@ export default async function backfillPostsHandler(
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -237,7 +237,7 @@ export default async function backfillPostsHandler(
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -266,7 +266,7 @@ export default async function backfillPostsHandler(
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -374,7 +374,7 @@ export default async function backfillPostsHandler(
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 }

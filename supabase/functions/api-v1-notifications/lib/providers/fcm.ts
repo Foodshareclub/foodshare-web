@@ -113,9 +113,8 @@ export async function sendFcm(device: DeviceToken, payload: PushPayload): Promis
                 visibility: androidOptions.visibility
                   ? visibilityMap[androidOptions.visibility]
                   : undefined,
-                notification_priority: channelConfig.importance === "HIGH"
-                  ? "PRIORITY_HIGH"
-                  : "PRIORITY_DEFAULT",
+                notification_priority:
+                  channelConfig.importance === "HIGH" ? "PRIORITY_HIGH" : "PRIORITY_DEFAULT",
                 default_sound: true,
                 default_vibrate_timings: !androidOptions.vibrationPattern,
                 default_light_settings: !androidOptions.lightColor,
@@ -165,7 +164,7 @@ export async function sendFcm(device: DeviceToken, payload: PushPayload): Promis
             },
             body: JSON.stringify(fcmPayload),
           }),
-          "push",
+          "push"
         );
 
         if (response.ok) {
@@ -196,7 +195,7 @@ export async function sendFcm(device: DeviceToken, payload: PushPayload): Promis
 
         throw new Error(errorBody.error?.message || `HTTP ${response.status}`);
       },
-      { failureThreshold: 5, resetTimeoutMs: 60000, halfOpenMaxAttempts: 3 },
+      { failureThreshold: 5, resetTimeoutMs: 60000, halfOpenMaxAttempts: 3 }
     );
   } catch (e) {
     if (e instanceof CircuitBreakerError) {

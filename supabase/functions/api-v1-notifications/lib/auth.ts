@@ -42,7 +42,7 @@ export async function authenticate(
   req: Request,
   mode: AuthMode,
   provider?: string,
-  rawBody?: string,
+  rawBody?: string
 ): Promise<AuthResult> {
   switch (mode) {
     case "none":
@@ -114,7 +114,8 @@ async function authenticateJWT(req: Request): Promise<AuthResult> {
  */
 function authenticateService(req: Request): AuthResult {
   const authHeader = req.headers.get("Authorization");
-  const apiKey = req.headers.get("apikey") ||
+  const apiKey =
+    req.headers.get("apikey") ||
     req.headers.get("x-api-key") ||
     req.headers.get("x-webhook-secret");
   const serviceKey = getSupabaseServiceRoleKey();
@@ -162,7 +163,7 @@ function authenticateService(req: Request): AuthResult {
 async function authenticateWebhook(
   req: Request,
   provider?: string,
-  rawBody?: string,
+  rawBody?: string
 ): Promise<AuthResult> {
   if (!provider) {
     return { authenticated: false, error: "Provider not specified" };
@@ -276,7 +277,7 @@ async function authenticateAdmin(req: Request): Promise<AuthResult> {
 async function verifyResendSignature(
   req: Request,
   secret: string,
-  rawBody?: string,
+  rawBody?: string
 ): Promise<AuthResult> {
   const signature = req.headers.get("resend-signature");
 
@@ -334,7 +335,7 @@ function verifySESSignature(req: Request, secret: string, _rawBody?: string): Au
 async function verifyMailerSendSignature(
   req: Request,
   secret: string,
-  rawBody?: string,
+  rawBody?: string
 ): Promise<AuthResult> {
   const signature = req.headers.get("mailersend-signature");
 
@@ -379,7 +380,7 @@ async function computeHmacSha256(data: string, key: string): Promise<string> {
     keyData,
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"],
+    ["sign"]
   );
   const signature = await crypto.subtle.sign("HMAC", cryptoKey, dataBuffer);
   const hashArray = Array.from(new Uint8Array(signature));

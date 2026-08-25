@@ -56,7 +56,7 @@ const STALE_THRESHOLD_MS = 30 * 60 * 1000; // 30 minutes
 
 export default async function backfillForumPostsHandler(
   req: Request,
-  corsHeaders: Record<string, string>,
+  corsHeaders: Record<string, string>
 ): Promise<Response> {
   if (req.method !== "POST") {
     return new Response(
@@ -67,7 +67,7 @@ export default async function backfillForumPostsHandler(
       {
         status: 405,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 
@@ -92,7 +92,7 @@ export default async function backfillForumPostsHandler(
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -129,7 +129,7 @@ export default async function backfillForumPostsHandler(
           {
             status: 200,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          },
+          }
         );
       } else {
         // Stale job - mark as failed
@@ -165,13 +165,11 @@ export default async function backfillForumPostsHandler(
     // ========== End Job Locking ==========
 
     // Fetch forum posts based on mode
-    let forumPosts:
-      | Array<{
-        id: number;
-        forum_post_name: string;
-        forum_post_description: string | null;
-      }>
-      | null = null;
+    let forumPosts: Array<{
+      id: number;
+      forum_post_name: string;
+      forum_post_description: string | null;
+    }> | null = null;
     let count: number | null = null;
     let error: Error | null = null;
 
@@ -229,7 +227,7 @@ export default async function backfillForumPostsHandler(
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -244,7 +242,7 @@ export default async function backfillForumPostsHandler(
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -273,7 +271,7 @@ export default async function backfillForumPostsHandler(
         }),
         {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        }
       );
     }
 
@@ -388,7 +386,7 @@ export default async function backfillForumPostsHandler(
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      }
     );
   }
 }

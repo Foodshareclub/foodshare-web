@@ -132,7 +132,7 @@ function generateETag(content: string): string {
  */
 async function fetchExperimentVariant(
   supabase: SupabaseClient,
-  userId: string,
+  userId: string
 ): Promise<string | null> {
   try {
     const { data, error } = await supabase
@@ -156,7 +156,7 @@ async function fetchExperimentVariant(
  */
 async function getUserContext(
   supabase: SupabaseClient,
-  authHeader: string | null,
+  authHeader: string | null
 ): Promise<UserContext> {
   const defaultContext: UserContext = {
     userId: null,
@@ -199,7 +199,7 @@ async function getUserContext(
 async function getDeltaChanges(
   supabase: SupabaseClient,
   locale: string,
-  sinceVersion: string,
+  sinceVersion: string
 ): Promise<{ delta: DeltaData; currentVersion: string } | null> {
   try {
     // Get current version
@@ -281,7 +281,7 @@ async function getDeltaChanges(
  */
 function applyFeatureFlagOverrides(
   messages: Record<string, unknown>,
-  featureFlags: string[],
+  featureFlags: string[]
 ): Record<string, unknown> {
   // Feature flag translation overrides
   // Format: translations can have keys like "feature.premium.title" that override "title" when premium flag is active
@@ -313,7 +313,7 @@ async function trackAnalytics(
     cached: boolean;
     deltaSync: boolean;
     statusCode: number;
-  },
+  }
 ): Promise<void> {
   try {
     await supabase.from("translation_analytics").insert({
@@ -337,7 +337,7 @@ async function trackAnalytics(
 
 export default async function translationsHandler(
   request: Request,
-  corsHeaders: Record<string, string>,
+  corsHeaders: Record<string, string>
 ): Promise<Response> {
   const startTime = Date.now();
 
@@ -441,9 +441,9 @@ export default async function translationsHandler(
         data: cached.data,
         userContext: userContext.userId
           ? {
-            preferredLocale: userContext.preferredLocale,
-            featureFlags: userContext.featureFlags,
-          }
+              preferredLocale: userContext.preferredLocale,
+              featureFlags: userContext.featureFlags,
+            }
           : undefined,
         meta: {
           cached: true,
@@ -480,7 +480,8 @@ export default async function translationsHandler(
       const deltaResult = await getDeltaChanges(supabase, effectiveLocale, clientVersion);
 
       if (deltaResult) {
-        const hasChanges = Object.keys(deltaResult.delta.added).length > 0 ||
+        const hasChanges =
+          Object.keys(deltaResult.delta.added).length > 0 ||
           Object.keys(deltaResult.delta.updated).length > 0 ||
           deltaResult.delta.deleted.length > 0;
 
@@ -616,9 +617,9 @@ export default async function translationsHandler(
         data: translationData,
         userContext: userContext.userId
           ? {
-            preferredLocale: userContext.preferredLocale,
-            featureFlags: userContext.featureFlags,
-          }
+              preferredLocale: userContext.preferredLocale,
+              featureFlags: userContext.featureFlags,
+            }
           : undefined,
         meta: {
           cached: false,
@@ -707,9 +708,9 @@ export default async function translationsHandler(
       data: translationData,
       userContext: userContext.userId
         ? {
-          preferredLocale: userContext.preferredLocale,
-          featureFlags: userContext.featureFlags,
-        }
+            preferredLocale: userContext.preferredLocale,
+            featureFlags: userContext.featureFlags,
+          }
         : undefined,
       meta: {
         cached: false,

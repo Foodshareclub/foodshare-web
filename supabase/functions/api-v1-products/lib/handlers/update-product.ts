@@ -12,7 +12,7 @@ import type { ListQuery, UpdateProductBody } from "../schemas.ts";
 import { transformProduct } from "../transformers.ts";
 
 export async function updateProduct(
-  ctx: HandlerContext<UpdateProductBody, ListQuery>,
+  ctx: HandlerContext<UpdateProductBody, ListQuery>
 ): Promise<Response> {
   const { supabase, userId, body, query } = ctx;
   const productId = query.id;
@@ -42,7 +42,7 @@ export async function updateProduct(
   if (existing.version !== body.version) {
     throw new ConflictError(
       "Product was modified by another request. Please refresh and try again.",
-      { currentVersion: existing.version, expectedVersion: body.version },
+      { currentVersion: existing.version, expectedVersion: body.version }
     );
   }
 

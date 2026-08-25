@@ -95,7 +95,7 @@ type BatchEventsRequest = z.infer<typeof batchEventsSchema>;
 
 async function getErrorRate(
   supabase: ReturnType<typeof import("../_shared/supabase.ts").getSupabaseClient>,
-  minutes: number,
+  minutes: number
 ): Promise<number> {
   try {
     const { data, error } = await supabase.rpc("get_error_rate", {
@@ -110,7 +110,7 @@ async function getErrorRate(
 
 async function getActiveUsers(
   supabase: ReturnType<typeof import("../_shared/supabase.ts").getSupabaseClient>,
-  minutes: number,
+  minutes: number
 ): Promise<number> {
   try {
     const { count, error } = await supabase
@@ -127,7 +127,7 @@ async function getActiveUsers(
 
 async function getRequestCount(
   supabase: ReturnType<typeof import("../_shared/supabase.ts").getSupabaseClient>,
-  minutes: number,
+  minutes: number
 ): Promise<number> {
   try {
     const since = new Date(Date.now() - minutes * 60 * 1000).toISOString();
@@ -164,7 +164,7 @@ function generatePrometheusMetrics(
     requestCount5m: number;
     requestCount1h: number;
     requestCount24h: number;
-  },
+  }
 ): string {
   const lines: string[] = [];
   const timestamp = Date.now();
@@ -174,7 +174,7 @@ function generatePrometheusMetrics(
   lines.push("# TYPE foodshare_web_vitals_p50 gauge");
   for (const vital of webVitals) {
     lines.push(
-      `foodshare_web_vitals_p50{metric="${vital.metric_name}"} ${vital.p50 || 0} ${timestamp}`,
+      `foodshare_web_vitals_p50{metric="${vital.metric_name}"} ${vital.p50 || 0} ${timestamp}`
     );
   }
 
@@ -183,7 +183,7 @@ function generatePrometheusMetrics(
   lines.push("# TYPE foodshare_web_vitals_p75 gauge");
   for (const vital of webVitals) {
     lines.push(
-      `foodshare_web_vitals_p75{metric="${vital.metric_name}"} ${vital.p75 || 0} ${timestamp}`,
+      `foodshare_web_vitals_p75{metric="${vital.metric_name}"} ${vital.p75 || 0} ${timestamp}`
     );
   }
 
@@ -192,7 +192,7 @@ function generatePrometheusMetrics(
   lines.push("# TYPE foodshare_web_vitals_p95 gauge");
   for (const vital of webVitals) {
     lines.push(
-      `foodshare_web_vitals_p95{metric="${vital.metric_name}"} ${vital.p95 || 0} ${timestamp}`,
+      `foodshare_web_vitals_p95{metric="${vital.metric_name}"} ${vital.p95 || 0} ${timestamp}`
     );
   }
 
@@ -203,7 +203,7 @@ function generatePrometheusMetrics(
     lines.push(
       `foodshare_web_vitals_sample_count{metric="${vital.metric_name}"} ${
         vital.sample_count || 0
-      } ${timestamp}`,
+      } ${timestamp}`
     );
   }
 
@@ -214,7 +214,7 @@ function generatePrometheusMetrics(
     lines.push(
       `foodshare_web_vitals_good_pct{metric="${vital.metric_name}"} ${
         vital.good_pct || 0
-      } ${timestamp}`,
+      } ${timestamp}`
     );
   }
 
@@ -225,7 +225,7 @@ function generatePrometheusMetrics(
     lines.push(
       `foodshare_web_vitals_poor_pct{metric="${vital.metric_name}"} ${
         vital.poor_pct || 0
-      } ${timestamp}`,
+      } ${timestamp}`
     );
   }
 
@@ -260,7 +260,7 @@ function generatePrometheusMetrics(
   lines.push(
     `foodshare_info{version="${
       Deno.env.get("SUPABASE_FUNCTION_VERSION") || "2.0.0"
-    }"} 1 ${timestamp}`,
+    }"} 1 ${timestamp}`
   );
 
   return lines.join("\n");
@@ -488,7 +488,7 @@ async function handleTrackBatchEvents(ctx: HandlerContext<BatchEventsRequest>): 
       } catch {
         return false;
       }
-    }),
+    })
   );
 
   const trackedCount = results.filter((success) => success).length;
@@ -499,7 +499,7 @@ async function handleTrackBatchEvents(ctx: HandlerContext<BatchEventsRequest>): 
       total: body.events.length,
       skipped: body.events.length - trackedCount,
     },
-    ctx,
+    ctx
   );
 }
 
@@ -508,7 +508,7 @@ async function handleTrackBatchEvents(ctx: HandlerContext<BatchEventsRequest>): 
 // =============================================================================
 
 async function handlePost(
-  ctx: HandlerContext<EventRequest | BatchEventsRequest>,
+  ctx: HandlerContext<EventRequest | BatchEventsRequest>
 ): Promise<Response> {
   const url = new URL(ctx.request.url);
   const path = url.pathname;
@@ -546,5 +546,5 @@ Deno.serve(
         requireAuth: true,
       },
     },
-  }),
+  })
 );

@@ -19,7 +19,7 @@ import { logger } from "../../../_shared/logger.ts";
  * GET /health - Health check
  */
 export async function handleHealth(
-  _context: NotificationContext,
+  _context: NotificationContext
 ): Promise<{ status: string; version: string; timestamp: string }> {
   return {
     status: "healthy",
@@ -94,7 +94,7 @@ export async function handleGetPreferences(context: NotificationContext): Promis
  */
 export async function handleUpdatePreferences(
   body: unknown,
-  context: NotificationContext,
+  context: NotificationContext
 ): Promise<{
   success: boolean;
   data?: unknown;
@@ -125,7 +125,7 @@ export async function handleUpdatePreferences(
  */
 export async function handleUpdateCategoryChannelPreference(
   body: unknown,
-  context: NotificationContext,
+  context: NotificationContext
 ): Promise<{
   success: boolean;
   data?: unknown;
@@ -175,7 +175,7 @@ export async function handleUpdateCategoryChannelPreference(
  */
 export async function handleEnableDnd(
   body: unknown,
-  context: NotificationContext,
+  context: NotificationContext
 ): Promise<{
   success: boolean;
   data?: unknown;
@@ -252,7 +252,7 @@ export async function handleDisableDnd(context: NotificationContext): Promise<{
 export async function handleWebhook(
   provider: string,
   body: unknown,
-  context: NotificationContext,
+  context: NotificationContext
 ): Promise<{
   success: boolean;
   message?: string;
@@ -618,7 +618,7 @@ function parseFcmEvents(body: unknown): WebhookEvent[] {
  */
 export async function handleDigestProcess(
   body: unknown,
-  context: NotificationContext,
+  context: NotificationContext
 ): Promise<{
   success: boolean;
   data?: unknown;
@@ -650,7 +650,7 @@ export async function handleDigestProcess(
       {
         p_frequency: frequency,
         p_limit: limit,
-      },
+      }
     );
 
     if (fetchError) {
@@ -716,7 +716,7 @@ export async function handleDigestProcess(
                 itemCount: String(items.length),
               },
             },
-            context,
+            context
           );
 
           if (emailResult.success) {
@@ -747,7 +747,7 @@ export async function handleDigestProcess(
             },
             collapseKey: `digest-${frequency}`,
           },
-          context,
+          context
         );
 
         if (pushResult.success) {
@@ -835,11 +835,8 @@ function createDigestTitle(items: Array<{ category?: string }>, frequency: strin
   }
 
   const total = items.length;
-  const frequencyLabel = frequency === "hourly"
-    ? "this hour"
-    : frequency === "daily"
-    ? "today"
-    : "this week";
+  const frequencyLabel =
+    frequency === "hourly" ? "this hour" : frequency === "daily" ? "today" : "this week";
   return `${total} notifications ${frequencyLabel}`;
 }
 
@@ -891,7 +888,7 @@ export async function handleDashboard(context: NotificationContext): Promise<{
  */
 export async function handleListNotifications(
   url: URL,
-  context: NotificationContext,
+  context: NotificationContext
 ): Promise<{
   success: boolean;
   data?: unknown;

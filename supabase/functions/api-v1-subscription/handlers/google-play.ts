@@ -133,7 +133,7 @@ const NOTIFICATION_TYPE_MAP: Record<SubscriptionNotificationType, SubscriptionEv
 };
 
 function mapGooglePlayEventType(
-  notificationType: SubscriptionNotificationType,
+  notificationType: SubscriptionNotificationType
 ): SubscriptionEventType {
   return NOTIFICATION_TYPE_MAP[notificationType] || "unknown";
 }
@@ -298,7 +298,7 @@ async function verifyGoogleJWT(request: Request): Promise<boolean> {
       matchingKey,
       { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
       false,
-      ["verify"],
+      ["verify"]
     );
 
     // Verify signature
@@ -309,7 +309,7 @@ async function verifyGoogleJWT(request: Request): Promise<boolean> {
       "RSASSA-PKCS1-v1_5",
       cryptoKey,
       signature.buffer as ArrayBuffer,
-      signedData,
+      signedData
     );
 
     if (!valid) {
@@ -345,7 +345,7 @@ async function verifyGoogleJWT(request: Request): Promise<boolean> {
   } catch (error) {
     logger.error(
       "Google JWT verification error",
-      error instanceof Error ? error : new Error(String(error)),
+      error instanceof Error ? error : new Error(String(error))
     );
     return false;
   }
@@ -484,7 +484,7 @@ export const googlePlayHandler: PlatformHandler = {
       });
       logger.error(
         "Google Play webhook verification failed",
-        error instanceof Error ? error : new Error(String(error)),
+        error instanceof Error ? error : new Error(String(error))
       );
       return false;
     }

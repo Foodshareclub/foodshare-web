@@ -37,7 +37,7 @@ export async function generateDeviceId(keyId: string): Promise<string> {
 
 export async function getDeviceRecord(
   supabase: SupabaseClient,
-  keyId: string,
+  keyId: string
 ): Promise<DeviceRecord | null> {
   const { data } = await supabase
     .from("device_attestations")
@@ -61,7 +61,7 @@ export async function updateDeviceRecord(
     device?: DeviceVerdict[];
     app?: AppVerdict;
     account?: AccountVerdict;
-  },
+  }
 ): Promise<string> {
   const now = new Date().toISOString();
   const deviceId = await generateDeviceId(keyId);
@@ -115,7 +115,7 @@ export async function updateDeviceRecord(
 export function calculateTrustLevel(
   verified: boolean,
   riskScore: number,
-  verificationCount: number,
+  verificationCount: number
 ): TrustLevel {
   if (!verified) return "suspicious";
   if (riskScore >= 80) return "suspicious";

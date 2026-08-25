@@ -42,7 +42,7 @@ export async function toggleRow(
   supabase: SupabaseClient<any, any, any>,
   config: ToggleConfig,
   entityId: number | string,
-  userId: string,
+  userId: string
 ): Promise<ToggleResult> {
   const { table, entityColumn, userColumn } = config;
 

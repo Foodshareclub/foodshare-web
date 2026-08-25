@@ -209,7 +209,7 @@ export interface CacheThroughOptions {
 export async function cacheThrough<T>(
   key: string,
   fetcher: () => Promise<T>,
-  options: CacheThroughOptions = {},
+  options: CacheThroughOptions = {}
 ): Promise<T> {
   const { ttl = CACHE_TTLS.medium, forceRefresh = false, cacheKey } = options;
   const effectiveKey = cacheKey || key;
@@ -239,7 +239,7 @@ export async function cacheThrough<T>(
 export function cacheThroughSync<T>(
   key: string,
   fetcher: () => T,
-  options: CacheThroughOptions = {},
+  options: CacheThroughOptions = {}
 ): T {
   const { ttl = CACHE_TTLS.medium, forceRefresh = false, cacheKey } = options;
   const effectiveKey = cacheKey || key;

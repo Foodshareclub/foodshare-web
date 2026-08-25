@@ -38,7 +38,7 @@ export const sendMessageSchema = z.object({
         url: z.string().url(),
         name: z.string().optional(),
         size: z.number().optional(),
-      }),
+      })
     )
     .max(5)
     .optional(),
@@ -140,7 +140,7 @@ export async function getRoom(ctx: HandlerContext<unknown, ListQuery>): Promise<
       members:room_members(
         profile:profiles(id, display_name, avatar_url)
       )
-    `,
+    `
     )
     .eq("id", roomId)
     .single();
@@ -160,7 +160,7 @@ export async function getRoom(ctx: HandlerContext<unknown, ListQuery>): Promise<
       *,
       sender:profiles!messages_profile_id_fkey(id, display_name, avatar_url),
       reply_to:messages!messages_reply_to_id_fkey(id, content, profile_id)
-    `,
+    `
     )
     .eq("room_id", roomId)
     .order("created_at", { ascending: false })
@@ -196,7 +196,7 @@ export async function getRoom(ctx: HandlerContext<unknown, ListQuery>): Promise<
         ? resultMessages[resultMessages.length - 1].created_at
         : null,
     },
-    ctx,
+    ctx
   );
 }
 
@@ -239,7 +239,7 @@ export async function createRoom(ctx: HandlerContext<CreateRoomBody>): Promise<R
       members:room_members(
         profile:profiles(id, display_name, avatar_url)
       )
-    `,
+    `
     )
     .eq("id", result.room_id)
     .single();
@@ -251,7 +251,7 @@ export async function createRoom(ctx: HandlerContext<CreateRoomBody>): Promise<R
         roomId: result.room_id,
         created: result.created,
       },
-      ctx,
+      ctx
     );
   }
 
@@ -260,7 +260,7 @@ export async function createRoom(ctx: HandlerContext<CreateRoomBody>): Promise<R
       ...transformRoomDetail(room),
       created: result.created,
     },
-    ctx,
+    ctx
   );
 }
 
@@ -300,7 +300,7 @@ export async function sendMessage(ctx: HandlerContext<SendMessageBody>): Promise
       `
       *,
       sender:profiles!messages_profile_id_fkey(id, display_name, avatar_url)
-    `,
+    `
     )
     .single();
 
@@ -328,7 +328,7 @@ export async function sendMessage(ctx: HandlerContext<SendMessageBody>): Promise
  * Update room settings
  */
 export async function updateRoom(
-  ctx: HandlerContext<UpdateRoomBody, ListQuery>,
+  ctx: HandlerContext<UpdateRoomBody, ListQuery>
 ): Promise<Response> {
   const { supabase, userId, body, query } = ctx;
   const roomId = query.roomId;

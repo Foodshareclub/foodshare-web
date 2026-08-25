@@ -35,7 +35,7 @@ export interface UpdateProductInput {
 export class ProductService {
   constructor(
     private supabase: SupabaseClient,
-    private userId: string,
+    private userId: string
   ) {}
 
   async createProduct(input: CreateProductInput) {
@@ -132,7 +132,7 @@ export class ProductService {
         *,
         profile:profiles!products_profile_id_fkey(id, nickname, avatar_url, is_verified),
         category:categories(id, name, icon)
-      `,
+      `
       )
       .eq("id", productId)
       .single();
@@ -158,7 +158,7 @@ export class ProductService {
         profile:profiles!products_profile_id_fkey(id, nickname, avatar_url),
         category:categories(id, name, icon)
       `,
-      { count: "exact" },
+      { count: "exact" }
     );
 
     if (params.categoryId) {

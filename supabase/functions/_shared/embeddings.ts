@@ -106,7 +106,7 @@ export class EmbeddingError extends Error {
     message: string,
     public readonly provider: EmbeddingProvider | "all",
     public readonly code: string,
-    public readonly retryable: boolean = false,
+    public readonly retryable: boolean = false
   ) {
     super(message);
     this.name = "EmbeddingError";
@@ -120,7 +120,7 @@ export class EmbeddingError extends Error {
 async function generateZepEmbedding(
   texts: string[],
   apiKey: string,
-  timeoutMs: number,
+  timeoutMs: number
 ): Promise<number[][]> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -147,7 +147,7 @@ async function generateZepEmbedding(
         `Zep API error: ${response.status} - ${errorText}`,
         "zep",
         `HTTP_${response.status}`,
-        response.status >= 500 || response.status === 429,
+        response.status >= 500 || response.status === 429
       );
     }
 
@@ -166,7 +166,7 @@ async function generateZepEmbedding(
       `Zep request failed: ${error instanceof Error ? error.message : String(error)}`,
       "zep",
       "NETWORK_ERROR",
-      true,
+      true
     );
   }
 }
@@ -174,7 +174,7 @@ async function generateZepEmbedding(
 async function generateHuggingFaceEmbedding(
   texts: string[],
   apiKey: string,
-  timeoutMs: number,
+  timeoutMs: number
 ): Promise<number[][]> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -203,7 +203,7 @@ async function generateHuggingFaceEmbedding(
         `HuggingFace API error: ${response.status} - ${errorText}`,
         "huggingface",
         `HTTP_${response.status}`,
-        response.status >= 500 || response.status === 429 || response.status === 503,
+        response.status >= 500 || response.status === 429 || response.status === 503
       );
     }
 
@@ -229,7 +229,7 @@ async function generateHuggingFaceEmbedding(
       `HuggingFace request failed: ${error instanceof Error ? error.message : String(error)}`,
       "huggingface",
       "NETWORK_ERROR",
-      true,
+      true
     );
   }
 }
@@ -296,7 +296,7 @@ export function configureEmbeddings(options: Partial<EmbeddingConfig>): void {
  */
 export async function generateEmbedding(
   text: string,
-  options?: Partial<EmbeddingConfig>,
+  options?: Partial<EmbeddingConfig>
 ): Promise<EmbeddingResult> {
   const result = await generateEmbeddings([text], options);
   return {
@@ -313,7 +313,7 @@ export async function generateEmbedding(
  */
 export async function generateEmbeddings(
   texts: string[],
-  options?: Partial<EmbeddingConfig>,
+  options?: Partial<EmbeddingConfig>
 ): Promise<BatchEmbeddingResult> {
   const effectiveConfig = { ...config, ...options };
   const startTime = performance.now();
@@ -343,13 +343,13 @@ export async function generateEmbeddings(
                   return await generateZepEmbedding(
                     sanitizedTexts,
                     apiKey,
-                    effectiveConfig.timeoutMs,
+                    effectiveConfig.timeoutMs
                   );
                 case "huggingface":
                   return await generateHuggingFaceEmbedding(
                     sanitizedTexts,
                     apiKey,
-                    effectiveConfig.timeoutMs,
+                    effectiveConfig.timeoutMs
                   );
                 default:
                   throw new Error(`Unknown provider: ${provider.name}`);
@@ -361,13 +361,13 @@ export async function generateEmbeddings(
               shouldRetry: (error) => {
                 return error instanceof EmbeddingError && error.retryable;
               },
-            },
+            }
           );
         },
         {
           failureThreshold: effectiveConfig.circuitBreakerThreshold,
           resetTimeoutMs: effectiveConfig.circuitBreakerResetMs,
-        },
+        }
       );
 
       // Normalize dimensions if needed
@@ -416,7 +416,7 @@ export async function generateEmbeddings(
     `All embedding providers failed: ${errors.map((e) => e.message).join("; ")}`,
     "all",
     "ALL_PROVIDERS_FAILED",
-    false,
+    false
   );
 }
 

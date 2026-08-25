@@ -95,7 +95,7 @@ export async function isOwnStorageUrl(url: string): Promise<boolean> {
  * for a meaningful error message.
  */
 export async function validateProductImageUrls(
-  urls: string[],
+  urls: string[]
 ): Promise<{ valid: true } | { valid: false; invalidUrls: string[] }> {
   const invalidUrls: string[] = [];
 

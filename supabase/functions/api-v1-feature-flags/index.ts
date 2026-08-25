@@ -126,7 +126,7 @@ async function handleGetFeatureFlags(ctx: HandlerContext<unknown, FlagsQuery>): 
       uiHints: {
         refreshAfter: dbResponse.meta?.refreshAfter || 300,
       },
-    },
+    }
   );
 }
 
@@ -136,7 +136,7 @@ async function handleGetFeatureFlags(ctx: HandlerContext<unknown, FlagsQuery>): 
 
 async function handleExperimentVariant(
   ctx: HandlerContext<unknown, FlagsQuery>,
-  experimentKey: string,
+  experimentKey: string
 ): Promise<Response> {
   const { supabase, userId, ctx: requestCtx } = ctx;
 
@@ -185,7 +185,7 @@ async function handleExperimentVariant(
       isNewAssignment: dbResponse.isNewAssignment || false,
       reason: dbResponse.reason,
     },
-    ctx,
+    ctx
   );
 }
 
@@ -194,7 +194,7 @@ async function handleExperimentVariant(
 // =============================================================================
 
 async function handleCompatibilityCheck(
-  ctx: HandlerContext<unknown, FlagsQuery>,
+  ctx: HandlerContext<unknown, FlagsQuery>
 ): Promise<Response> {
   const { supabase, query, request, ctx: requestCtx } = ctx;
 
@@ -245,10 +245,10 @@ async function handleCompatibilityCheck(
       action: dbResponse.forceUpdate
         ? "force_update"
         : dbResponse.needsUpdate
-        ? "suggest_update"
-        : "none",
+          ? "suggest_update"
+          : "none",
     },
-    ctx,
+    ctx
   );
 }
 
@@ -307,5 +307,5 @@ Deno.serve(
         handler: handleGet,
       },
     },
-  }),
+  })
 );

@@ -89,7 +89,7 @@ export function recordMetricFromContext(
     errorCode?: string;
     errorMessage?: string;
     metadata?: Record<string, unknown>;
-  },
+  }
 ): void {
   const ctx = getContext();
   if (!ctx) return;
@@ -187,13 +187,11 @@ export async function syncAllCircuitStatuses(): Promise<void> {
 /**
  * Get metrics summary from database
  */
-export async function getMetricsSummary(minutes: number = 5): Promise<
-  {
-    errorRate: number;
-    p95Latency: number;
-    totalRequests: number;
-  } | null
-> {
+export async function getMetricsSummary(minutes: number = 5): Promise<{
+  errorRate: number;
+  p95Latency: number;
+  totalRequests: number;
+} | null> {
   try {
     const supabase = getSupabaseClient();
 
@@ -235,7 +233,7 @@ export async function getMetricsSummary(minutes: number = 5): Promise<
  */
 export function withMetrics(
   functionName: string,
-  handler: (req: Request) => Promise<Response>,
+  handler: (req: Request) => Promise<Response>
 ): (req: Request) => Promise<Response> {
   return async (req: Request) => {
     const startTime = performance.now();
@@ -273,7 +271,7 @@ export async function recordHealthCheck(
   status: "healthy" | "degraded" | "unhealthy",
   responseTimeMs: number,
   details?: Record<string, unknown>,
-  errorMessage?: string,
+  errorMessage?: string
 ): Promise<void> {
   try {
     const supabase = getSupabaseClient();

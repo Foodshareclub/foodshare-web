@@ -167,7 +167,7 @@ function shouldLog(level: LogLevel): boolean {
 function createLogEntry(
   level: LogLevel,
   message: string,
-  data?: Record<string, unknown>,
+  data?: Record<string, unknown>
 ): LogEntry {
   const ctx = getContext();
 
@@ -247,7 +247,7 @@ export function warn(message: string, data?: Record<string, unknown>): void {
 export function error(
   message: string,
   errorOrData?: Error | Record<string, unknown>,
-  data?: Record<string, unknown>,
+  data?: Record<string, unknown>
 ): void {
   if (!shouldLog("error")) return;
 
@@ -300,7 +300,7 @@ export function logResponse(statusCode: number, data?: Record<string, unknown>):
 export function logExternalCall(
   service: string,
   operation: string,
-  data?: Record<string, unknown>,
+  data?: Record<string, unknown>
 ): void {
   info(`External call: ${service}`, {
     externalService: service,
@@ -342,7 +342,7 @@ export function child(context: Record<string, unknown>): {
   error: (
     message: string,
     errorOrData?: Error | Record<string, unknown>,
-    data?: Record<string, unknown>,
+    data?: Record<string, unknown>
   ) => void;
 } {
   return {
@@ -355,7 +355,7 @@ export function child(context: Record<string, unknown>): {
     error: (
       message: string,
       errorOrData?: Error | Record<string, unknown>,
-      data?: Record<string, unknown>,
+      data?: Record<string, unknown>
     ) => error(message, errorOrData, { ...context, ...data }),
   };
 }

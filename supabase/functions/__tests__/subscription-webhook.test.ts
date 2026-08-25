@@ -45,7 +45,7 @@ Deno.test("shouldUpdateSubscription - returns true for status-changing events", 
     assertEquals(
       shouldUpdateSubscription(event),
       true,
-      `Expected shouldUpdateSubscription to return true for ${event}`,
+      `Expected shouldUpdateSubscription to return true for ${event}`
     );
   }
 });
@@ -57,7 +57,7 @@ Deno.test("shouldUpdateSubscription - returns false for non-status events", () =
     assertEquals(
       shouldUpdateSubscription(event),
       false,
-      `Expected shouldUpdateSubscription to return false for ${event}`,
+      `Expected shouldUpdateSubscription to return false for ${event}`
     );
   }
 });
@@ -116,7 +116,7 @@ Deno.test("hasPremiumAccess - returns false for inactive statuses", () => {
     assertEquals(
       hasPremiumAccess(status),
       false,
-      `Expected hasPremiumAccess to return false for ${status}`,
+      `Expected hasPremiumAccess to return false for ${status}`
     );
   }
 });
@@ -339,7 +339,7 @@ Deno.test("All SubscriptionEventType values are handled", () => {
     assertEquals(
       typeof result,
       "boolean",
-      `shouldUpdateSubscription should return boolean for ${type}`,
+      `shouldUpdateSubscription should return boolean for ${type}`
     );
   }
 
@@ -349,7 +349,7 @@ Deno.test("All SubscriptionEventType values are handled", () => {
     assertEquals(
       ["info", "warn", "error"].includes(result),
       true,
-      `getEventSeverity should return valid severity for ${type}`,
+      `getEventSeverity should return valid severity for ${type}`
     );
   }
 });

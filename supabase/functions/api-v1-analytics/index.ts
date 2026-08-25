@@ -112,7 +112,7 @@ async function ensureSchema(mdToken: string): Promise<void> {
       is_verified BOOLEAN,
       last_seen_at TIMESTAMP,
       synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )`,
+    )`
   );
 
   await executeMotherDuckQuery(
@@ -132,7 +132,7 @@ async function ensureSchema(mdToken: string): Promise<void> {
       latitude DOUBLE,
       longitude DOUBLE,
       synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )`,
+    )`
   );
 
   await executeMotherDuckQuery(
@@ -144,7 +144,7 @@ async function ensureSchema(mdToken: string): Promise<void> {
       properties VARCHAR,
       timestamp TIMESTAMP,
       synced_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )`,
+    )`
   );
 
   await executeMotherDuckQuery(
@@ -154,7 +154,7 @@ async function ensureSchema(mdToken: string): Promise<void> {
       last_sync_at TIMESTAMP,
       records_synced INTEGER,
       sync_mode VARCHAR
-    )`,
+    )`
   );
 }
 
@@ -166,7 +166,7 @@ async function getLastSyncTime(mdToken: string, tableName: string): Promise<Date
   try {
     const result = (await executeMotherDuckQuery(
       mdToken,
-      `SELECT last_sync_at FROM sync_metadata WHERE table_name = '${tableName}'`,
+      `SELECT last_sync_at FROM sync_metadata WHERE table_name = '${tableName}'`
     )) as { data?: Array<{ last_sync_at: string }> };
 
     if (result.data && result.data.length > 0 && result.data[0].last_sync_at) {
@@ -182,12 +182,12 @@ async function updateSyncMetadata(
   mdToken: string,
   tableName: string,
   recordsSynced: number,
-  syncMode: string,
+  syncMode: string
 ): Promise<void> {
   await executeMotherDuckQuery(
     mdToken,
     `INSERT OR REPLACE INTO sync_metadata (table_name, last_sync_at, records_synced, sync_mode)
-     VALUES ('${tableName}', CURRENT_TIMESTAMP, ${recordsSynced}, '${syncMode}')`,
+     VALUES ('${tableName}', CURRENT_TIMESTAMP, ${recordsSynced}, '${syncMode}')`
   );
 }
 
@@ -195,7 +195,7 @@ async function getSyncStatus(mdToken: string): Promise<Array<Record<string, unkn
   try {
     const result = (await executeMotherDuckQuery(
       mdToken,
-      `SELECT table_name, last_sync_at, records_synced, sync_mode FROM sync_metadata ORDER BY table_name`,
+      `SELECT table_name, last_sync_at, records_synced, sync_mode FROM sync_metadata ORDER BY table_name`
     )) as { data?: Array<Record<string, unknown>> };
     return result.data || [];
   } catch {
@@ -217,13 +217,13 @@ async function syncUsers(mdToken: string, mode: "full" | "incremental"): Promise
   let query = supabase
     .from("profiles")
     .select(
-      "id, created_time, updated_at, email, nickname, first_name, second_name, is_active, is_verified, last_seen_at",
+      "id, created_time, updated_at, email, nickname, first_name, second_name, is_active, is_verified, last_seen_at"
     );
 
   if (mode === "incremental") {
     const lastSync = await getLastSyncTime(mdToken, "full_users");
-    const syncFrom = lastSync ||
-      new Date(Date.now() - CONFIG.defaultIncrementalHours * 60 * 60 * 1000);
+    const syncFrom =
+      lastSync || new Date(Date.now() - CONFIG.defaultIncrementalHours * 60 * 60 * 1000);
     query = query.gte("updated_at", syncFrom.toISOString());
   }
 
@@ -244,25 +244,19 @@ async function syncUsers(mdToken: string, mode: "full" | "incremental"): Promise
     const values = batch
       .map(
         (p) =>
-          `(${escapeValue(p.id)}, ${escapeValue(p.created_time)}, ${escapeValue(p.updated_at)}, ${
-            escapeValue(
-              p.email,
-            )
-          }, ${escapeValue(p.nickname)}, ${escapeValue(p.first_name)}, ${
-            escapeValue(
-              p.second_name,
-            )
-          }, ${escapeValue(p.is_active)}, ${escapeValue(p.is_verified)}, ${
-            escapeValue(
-              p.last_seen_at,
-            )
-          }, CURRENT_TIMESTAMP)`,
+          `(${escapeValue(p.id)}, ${escapeValue(p.created_time)}, ${escapeValue(p.updated_at)}, ${escapeValue(
+            p.email
+          )}, ${escapeValue(p.nickname)}, ${escapeValue(p.first_name)}, ${escapeValue(
+            p.second_name
+          )}, ${escapeValue(p.is_active)}, ${escapeValue(p.is_verified)}, ${escapeValue(
+            p.last_seen_at
+          )}, CURRENT_TIMESTAMP)`
       )
       .join(",");
 
     await executeMotherDuckQuery(
       mdToken,
-      `INSERT INTO full_users (id, created_at, updated_at, email, nickname, first_name, second_name, is_active, is_verified, last_seen_at, synced_at) VALUES ${values}`,
+      `INSERT INTO full_users (id, created_at, updated_at, email, nickname, first_name, second_name, is_active, is_verified, last_seen_at, synced_at) VALUES ${values}`
     );
   }
 
@@ -279,13 +273,13 @@ async function syncListings(mdToken: string, mode: "full" | "incremental"): Prom
   let query = supabase
     .from("posts_with_location")
     .select(
-      "id, created_at, updated_at, post_name, post_type, is_active, is_arranged, post_arranged_at, profile_id, post_views, post_like_counter, latitude, longitude",
+      "id, created_at, updated_at, post_name, post_type, is_active, is_arranged, post_arranged_at, profile_id, post_views, post_like_counter, latitude, longitude"
     );
 
   if (mode === "incremental") {
     const lastSync = await getLastSyncTime(mdToken, "full_listings");
-    const syncFrom = lastSync ||
-      new Date(Date.now() - CONFIG.defaultIncrementalHours * 60 * 60 * 1000);
+    const syncFrom =
+      lastSync || new Date(Date.now() - CONFIG.defaultIncrementalHours * 60 * 60 * 1000);
     query = query.gte("updated_at", syncFrom.toISOString());
   }
 
@@ -306,27 +300,21 @@ async function syncListings(mdToken: string, mode: "full" | "incremental"): Prom
     const values = batch
       .map(
         (p) =>
-          `(${p.id}, ${escapeValue(p.created_at)}, ${escapeValue(p.updated_at)}, ${
-            escapeValue(
-              p.post_name,
-            )
-          }, ${escapeValue(p.post_type)}, ${escapeValue(p.is_active)}, ${
-            escapeValue(
-              p.is_arranged,
-            )
-          }, ${escapeValue(p.post_arranged_at)}, ${escapeValue(p.profile_id)}, ${
+          `(${p.id}, ${escapeValue(p.created_at)}, ${escapeValue(p.updated_at)}, ${escapeValue(
+            p.post_name
+          )}, ${escapeValue(p.post_type)}, ${escapeValue(p.is_active)}, ${escapeValue(
+            p.is_arranged
+          )}, ${escapeValue(p.post_arranged_at)}, ${escapeValue(p.profile_id)}, ${
             p.post_views || 0
-          }, ${p.post_like_counter || 0}, ${escapeValue(p.latitude)}, ${
-            escapeValue(
-              p.longitude,
-            )
-          }, CURRENT_TIMESTAMP)`,
+          }, ${p.post_like_counter || 0}, ${escapeValue(p.latitude)}, ${escapeValue(
+            p.longitude
+          )}, CURRENT_TIMESTAMP)`
       )
       .join(",");
 
     await executeMotherDuckQuery(
       mdToken,
-      `INSERT INTO full_listings (id, created_at, updated_at, post_name, post_type, is_active, is_arranged, post_arranged_at, profile_id, post_views, post_like_counter, latitude, longitude, synced_at) VALUES ${values}`,
+      `INSERT INTO full_listings (id, created_at, updated_at, post_name, post_type, is_active, is_arranged, post_arranged_at, profile_id, post_views, post_like_counter, latitude, longitude, synced_at) VALUES ${values}`
     );
   }
 
@@ -347,8 +335,8 @@ async function handleGetStatus(ctx: HandlerContext): Promise<Response> {
   }
 
   // GET / — return sync status, or trigger incremental sync for cron
-  const isCron = ctx.headers.get("x-supabase-cron") === "true" ||
-    url.searchParams.get("cron") === "true";
+  const isCron =
+    ctx.headers.get("x-supabase-cron") === "true" || url.searchParams.get("cron") === "true";
 
   if (isCron) {
     return handleSync({
@@ -366,7 +354,7 @@ async function handleGetStatus(ctx: HandlerContext): Promise<Response> {
       version: CONFIG.version,
       tables: syncStatus,
     },
-    ctx,
+    ctx
   );
 }
 
@@ -401,7 +389,7 @@ async function handleSync(ctx: HandlerContext<SyncRequest>): Promise<Response> {
       durationMs,
       lastSyncAt: new Date().toISOString(),
     },
-    ctx,
+    ctx
   );
 }
 
@@ -429,5 +417,5 @@ Deno.serve(
         handler: handleSync,
       },
     },
-  }),
+  })
 );

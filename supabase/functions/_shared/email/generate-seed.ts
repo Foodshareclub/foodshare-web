@@ -404,7 +404,7 @@ function generateSQL(): string {
 
     lines.push(`-- Template: ${def.name}`);
     lines.push(
-      `INSERT INTO email_templates (slug, name, category, subject, html_content, text_content, variables, metadata, is_active, version)`,
+      `INSERT INTO email_templates (slug, name, category, subject, html_content, text_content, variables, metadata, is_active, version)`
     );
     lines.push(`VALUES (`);
     lines.push(`  '${escapeSQL(def.slug)}',`);

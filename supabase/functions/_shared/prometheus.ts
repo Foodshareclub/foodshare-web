@@ -42,7 +42,7 @@ export function formatPrometheusMetrics(): string {
 
     // Latency histogram
     lines.push(
-      "# HELP foodshare_http_request_duration_ms_bucket HTTP request duration in milliseconds.",
+      "# HELP foodshare_http_request_duration_ms_bucket HTTP request duration in milliseconds."
     );
     lines.push("# TYPE foodshare_http_request_duration_ms_bucket histogram");
     for (const [handler, data] of sliCounters) {
@@ -52,12 +52,12 @@ export function formatPrometheusMetrics(): string {
         const label = `le${boundary}`;
         const count = data.latencyBuckets[label] || 0;
         lines.push(
-          `foodshare_http_request_duration_ms_bucket{handler="${sanitized}",le="${boundary}"} ${count}`,
+          `foodshare_http_request_duration_ms_bucket{handler="${sanitized}",le="${boundary}"} ${count}`
         );
       }
       const infCount = data.latencyBuckets["leInf"] || 0;
       lines.push(
-        `foodshare_http_request_duration_ms_bucket{handler="${sanitized}",le="+Inf"} ${infCount}`,
+        `foodshare_http_request_duration_ms_bucket{handler="${sanitized}",le="+Inf"} ${infCount}`
       );
     }
     lines.push("");
@@ -68,7 +68,7 @@ export function formatPrometheusMetrics(): string {
   const cbEntries = Object.entries(circuitBreakers);
   if (cbEntries.length > 0) {
     lines.push(
-      "# HELP foodshare_circuit_breaker_state Circuit breaker state (0=closed, 1=half-open, 2=open).",
+      "# HELP foodshare_circuit_breaker_state Circuit breaker state (0=closed, 1=half-open, 2=open)."
     );
     lines.push("# TYPE foodshare_circuit_breaker_state gauge");
     for (const [name, cb] of cbEntries) {
@@ -81,11 +81,9 @@ export function formatPrometheusMetrics(): string {
     lines.push("# TYPE foodshare_circuit_breaker_failures_total counter");
     for (const [name, cb] of cbEntries) {
       lines.push(
-        `foodshare_circuit_breaker_failures_total{name="${
-          sanitizeLabel(
-            name,
-          )
-        }"} ${cb.totalFailures}`,
+        `foodshare_circuit_breaker_failures_total{name="${sanitizeLabel(
+          name
+        )}"} ${cb.totalFailures}`
       );
     }
     lines.push("");

@@ -69,7 +69,7 @@ export async function handleUpload(ctx: HandlerContext): Promise<Response> {
     bucket,
     path,
     compressed.buffer,
-    `image/${format}`,
+    `image/${format}`
   );
 
   let thumbnailUrl: string | undefined;
@@ -86,14 +86,14 @@ export async function handleUpload(ctx: HandlerContext): Promise<Response> {
         bucket,
         thumbPath,
         thumbnailBuffer,
-        "image/jpeg",
+        "image/jpeg"
       );
       thumbnailUrl = thumbResult.publicUrl;
       thumbnailPath = thumbPath;
     } catch (error) {
       logger.error(
         "Thumbnail upload failed",
-        error instanceof Error ? error : new Error(String(error)),
+        error instanceof Error ? error : new Error(String(error))
       );
     }
   }

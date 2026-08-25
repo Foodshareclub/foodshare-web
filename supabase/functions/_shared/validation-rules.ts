@@ -142,7 +142,7 @@ export function validateListing(
   title: string,
   description: string,
   quantity: number = 1,
-  expiresAt?: Date,
+  expiresAt?: Date
 ): ValidationResult {
   const errors: string[] = [];
   const trimmedTitle = title.trim();
@@ -189,7 +189,7 @@ export function validateListing(
  */
 export function validateProfile(
   nickname: string | null | undefined,
-  bio: string | null | undefined,
+  bio: string | null | undefined
 ): ValidationResult {
   const errors: string[] = [];
 
@@ -222,7 +222,7 @@ export function validateProfile(
 export function validateReview(
   rating: number,
   comment?: string | null,
-  revieweeId?: string | null,
+  revieweeId?: string | null
 ): ValidationResult {
   const errors: string[] = [];
 
@@ -392,7 +392,7 @@ export function sanitizeObject<T extends Record<string, unknown>>(
   options: {
     stripDangerous?: boolean;
     excludeKeys?: string[];
-  } = {},
+  } = {}
 ): T {
   const { stripDangerous = false, excludeKeys = [] } = options;
 
@@ -434,7 +434,7 @@ export function sanitizeObject<T extends Record<string, unknown>>(
  */
 export function parseIntSafe(
   value: string | number | null | undefined,
-  defaultValue: number = 0,
+  defaultValue: number = 0
 ): number {
   if (value === null || value === undefined) return defaultValue;
   if (typeof value === "number") {
@@ -451,7 +451,7 @@ export function parseIntSafe(
  */
 export function parseFloatSafe(
   value: string | number | null | undefined,
-  defaultValue: number = 0,
+  defaultValue: number = 0
 ): number {
   if (value === null || value === undefined) return defaultValue;
   if (typeof value === "number") {
@@ -470,7 +470,7 @@ export function parseIntSafeWithBounds(
   value: string | number | null | undefined,
   min: number,
   max: number,
-  defaultValue?: number,
+  defaultValue?: number
 ): number {
   const effectiveDefault = defaultValue ?? min;
   const parsed = parseIntSafe(value, effectiveDefault);
@@ -485,7 +485,7 @@ export function parseFloatSafeWithBounds(
   value: string | number | null | undefined,
   min: number,
   max: number,
-  defaultValue?: number,
+  defaultValue?: number
 ): number {
   const effectiveDefault = defaultValue ?? min;
   const parsed = parseFloatSafe(value, effectiveDefault);

@@ -95,7 +95,7 @@ function createMockSupabase(options: {
           is: (_field2: string, _value2: unknown) => {
             if (table === "profiles") {
               const matchedProfiles = profiles.filter(
-                (p) => values.includes(p.id) && !p.deleted_at,
+                (p) => values.includes(p.id) && !p.deleted_at
               );
               return { data: matchedProfiles, error: null };
             }
@@ -302,7 +302,7 @@ Deno.test("DisplayNameService - getDisplayName throws for non-existent user", as
   await assertRejects(
     () => service.getDisplayName("non-existent"),
     UserNotFoundError,
-    "User not found",
+    "User not found"
   );
 });
 
@@ -390,7 +390,7 @@ Deno.test("DisplayNameService - getDisplayNameBatch throws for batch > 100", asy
   await assertRejects(
     () => service.getDisplayNameBatch(userIds),
     BatchSizeExceededError,
-    "Batch size 101 exceeds maximum of 100",
+    "Batch size 101 exceeds maximum of 100"
   );
 });
 
@@ -452,7 +452,7 @@ Deno.test("DisplayNameService - setAdminOverride creates override", async () => 
     "user-1",
     "New Display Name",
     "User requested name change",
-    "admin-1",
+    "admin-1"
   );
 
   assertEquals(override.userId, "user-1");
@@ -470,13 +470,13 @@ Deno.test("DisplayNameService - setAdminOverride validates name length", async (
   await assertRejects(
     () => service.setAdminOverride("user-1", "A", "Reason", "admin-1"),
     InvalidDisplayNameError,
-    "at least 2 characters",
+    "at least 2 characters"
   );
 
   await assertRejects(
     () => service.setAdminOverride("user-1", "A".repeat(101), "Reason", "admin-1"),
     InvalidDisplayNameError,
-    "at most 100 characters",
+    "at most 100 characters"
   );
 });
 

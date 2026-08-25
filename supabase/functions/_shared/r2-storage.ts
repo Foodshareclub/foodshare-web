@@ -83,7 +83,7 @@ export async function isR2Configured(): Promise<boolean> {
 export async function uploadToR2(
   buffer: Uint8Array,
   path: string,
-  contentType: string,
+  contentType: string
 ): Promise<R2UploadResult> {
   const config = await getR2Config();
   if (!config) {
